@@ -1,6 +1,6 @@
 """Which rule-passed candidates to extract first when the budget covers only some ($0).
 
-Extraction costs about $0.014 a candidate on muse-spark-1.3, and in the first
+Extraction costs money for every candidate (about $0.014 on muse-spark-1.3 when this was written), and in the first
 local_ai batch 11 of 16 profiles turned out to be GUI apps or other tools a
 Linux sandbox cannot verify. This ranks the candidates not yet extracted by
 signals in the GitHub snapshot alone (no model): an executable entry point, a
@@ -33,6 +33,8 @@ from typing import Any
 
 from pickfit.discover.rules import _entry_points
 from pickfit.discover.store import PipelineDB
+from pickfit.meta import PROD_MODEL, PROD_MODELS
+from pickfit.schema import LISTED_CATEGORIES
 
 DONE = ("ok", "quotes_dropped")
 
@@ -150,17 +152,19 @@ def _screened_category(decision: dict[str, Any]) -> str | None:
     return result.get("category") if isinstance(result, dict) else None
 
 
-def shortlist(db: PipelineDB, *, category: str, model: str = "muse-spark-1.3",
+def shortlist(db: PipelineDB, *, category: str, model: str = PROD_MODEL,
               skip_repo_ids: set[str] | None = None, screened_as: str | None = None,
               channel: str | None = None) -> list[Ranked]:
-    """Rule-passed candidates of `category` with no finished extraction by `model`, best first.
+    """Rule-passed candidates of `category` with no finished extraction by `model` (for the prod model:
+    by the hackathon's prod model either), best first.
 
     screened_as: only candidates the prescreen put in that category (a CLI tool found by an MCP
     query, say, is left to its own category's queue).
     channel: only candidates a query of that channel found (`show_hn`).
     """
     skip = set(skip_repo_ids or ())
-    done = {e["repo_id"] for e in db.extractions() if e["model"] == model and e["status"] in DONE}
+    models = PROD_MODELS if model in PROD_MODELS else (model,)
+    done = {e["repo_id"] for e in db.extractions() if e["model"] in models and e["status"] in DONE}
     ranked = []
     decisions = db.prescreen_decisions()
     dropped = {repo_id for repo_id, d in decisions.items() if d.get("keep") is False}
@@ -195,12 +199,12 @@ def main(argv: list[str] | None = None) -> int:
     from pickfit.profiles import DEFAULT_OUT
 
     parser = argparse.ArgumentParser(prog="python -m pickfit.discover.shortlist", description=__doc__.split("\n")[0])
-    parser.add_argument("--category", required=True, choices=["dev_cli", "local_ai", "mcp_server"])
+    parser.add_argument("--category", required=True, choices=LISTED_CATEGORIES)
     parser.add_argument("--limit", type=int, default=40)
     parser.add_argument("--min-score", type=int, default=None, help="leave out candidates below this score")
     parser.add_argument("--db", type=Path, default=None, help="pipeline database (default runs/pipeline.db)")
     parser.add_argument("--ids-only", action="store_true", help="print only the repo ids")
-    parser.add_argument("--screened-as", choices=["dev_cli", "local_ai", "mcp_server", "other"], default=None,
+    parser.add_argument("--screened-as", choices=[*LISTED_CATEGORIES, "other"], default=None,
                         help="only candidates the prescreen put in this category")
     parser.add_argument("--channel", choices=["show_hn"], default=None,
                         help="only candidates this discovery channel found")

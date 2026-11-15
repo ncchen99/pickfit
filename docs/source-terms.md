@@ -156,3 +156,128 @@
   - **手動改過的紀錄（11/4 複查時補記）**：最後 5 款 macOS App 原本沒有重跑驗證 agent，而是用一支臨時腳本把先前 run 的紀錄直接拿去乾淨 VM 重播、判讀、寫回。其中 gifski 的第 3、4 步在重播前被手動改寫（拿掉 agent 串在後面的 `ls -R`、`plutil -p … | grep` 等探查命令）；itsycal、keepingyouawake 的紀錄被改成「有視窗」，但重播仍然失敗，沒有寫回。念誠 11/4 決定不採用改過的結果：gifski 先退回未驗證，再用正常流程重跑（`verify-gifski-20261104-182809-8837`，不改任何紀錄），agent 自己裝好、乾淨 VM 重播通過、截圖判讀 working，等級 install，上面的數字不變。（中間還有一次重跑 `182100-53d8` 也通過，但它的本機證據在清理 worktree 時被誤刪，所以再跑一次。）改過的紀錄只留在本機的 `runs/verify/`（不進 repo）；playcover、alacritty 只是重播、沒有改紀錄。
   - 花費：OpenRouter 約 \$5.5、Modal 沙盒 < \$1，其餘留給線上 Demo。
 - **功能驗證重跑（11/4–5，念誠決定）**：上面的分級策略到此取消。87 款改用 Muse Spark 1.3 當驗證 agent 重跑，較弱的通過不覆蓋較強的：`function` 51、`service` 4、`inference` 1、`install` 24、未驗證 7；40 款至少一項功能通過。花費 OpenRouter 約 \$15.7（含最後的視覺檢查），Modal 模型端點 11/4 起約 \$25（含前面用 Muse Spark Open 試跑的部分）。沒有重跑的 5 款（monitorcontrol、boring-notch、lulu、backgroundmusic、iglance）需要特殊硬體或 root。
+
+## 賽後第一批候選清單（規則 `post-hackathon-candidates.v1`）
+
+2026-11-16 00:25（台北）登記，**在這一批的任何搜尋與模型呼叫之前 commit**。清單是念誠 11/15 整理的 [`docs/discovery/post-hackathon-candidates-v1.md`](discovery/post-hackathon-candidates-v1.md)；機器可讀的版本與每一筆的結果在 [`docs/discovery/post-hackathon-candidates-v1.json`](discovery/post-hackathon-candidates-v1.json)（由 `scripts/ingest_candidates.py` 產生）。
+
+為什麼：黑客松結束後的方針（[plan.md](plan.md) 第 8 節）是先擴大 Linux／CLI／TUI、MCP server 與網頁應用，因為這三類在 Linux 沙盒裡驗得出來，不必靠 Mac 或 Windows 實機。這一批是社群常推薦的知名工具，不是冷門工具；知名度分數照既有公式算，不另外調整。
+
+規則：
+
+1. **範圍就是清單**。清單第 3 節（CLI／TUI）、第 4 節（MCP server）、第 5 節（網頁應用與自架 Web 工具）的表格共 118 列，照清單的順序處理，不另外加、不另外刪。
+2. **去重**。先用 repo 全名與網站網址比對 `data/software/` 既有的 1,058 筆；跑的時候再用 GitHub 的 repo id 比一次（改過名的 repo 也擋得住）。已經有紀錄的跳過。
+3. **一個 repo 一筆紀錄**。`modelcontextprotocol/servers` 底下的 7 個參考實作（Fetch、SQLite、Git、Sequential Thinking、Filesystem、Memory、Time）在清單裡各占一列，但同一個 repo 只能有一筆紀錄，所以只跑一次。清單只寫套件名、沒寫 repo 的（Puppeteer MCP）不處理。
+4. **有 repo 的照單筆提交的流程**（52 個 CLI／TUI、27 個 MCP、14 個自架 Web 工具，共 93 個 repo）：GitHub 詳情 → 規則（`rules.py`）→ 初篩 → 抽取 → 寫紀錄 → Modal gVisor 沙盒驗證（agent、乾淨沙盒重播、判讀）→ 計分 → OSV 漏洞檢查，和 `pickfit watch` 處理使用者提交的 repo 是同一段程式。佇列用本機的 SQLite（`SqliteD1`，同一份 migrations），不讀寫線上的 D1，也不發布 Worker。沒過規則、初篩判定不是軟體的，照平常的規則不寫紀錄。
+5. **只有網址的網頁應用照網頁應用的規則**（18 個）：每站只抓 robots.txt、首頁、一頁使用條款；robots.txt 不讓 pickfit 抓、或條款禁止自動化存取的不收（上面「網頁應用（P2.8）」一節的規則 4–8）。通過後由模型初篩、抽取、寫紀錄，再由 `web_verify` 在 Modal microVM 裡開瀏覽器實測，每站只造訪一次。唯一不套用的是規則 3 的人氣區間（中間一半）：那是為了從一大批站裡取樣，這一批是念誠指定的知名網站。
+6. **模型**：初篩 `claude-haiku-5-5`；初篩複查、抽取、驗證 agent、判讀、計分、網頁操作 `claude-opus-5-5`（Anthropic API）。每筆紀錄記下各段用的模型，花費記在帳本的 `pipeline` 預算。
+7. **指令**：`uv run python scripts/ingest_candidates.py list`（解析與去重）、`repos`（有 repo 的）、`web`（網站的規則與初篩）、`results`（把每一筆的結果寫回 JSON）。
+
+### 結果（2026-11-16 02:20 台北）
+
+| | CLI／TUI | MCP server | 自架 Web 工具 | 網站 | 合計 |
+|---|---|---|---|---|---|
+| 清單列數 | 52 | 34 | 14 | 18 | 118 |
+| 要跑的 repo 或網站 | 52 | 27 | 14 | 18 | 111 |
+| 寫成紀錄 | 48 | 22 | 12 | 13 | 95 |
+| 其中 function | 29 | 7 | 1 | 0 | 37 |
+| 其中 service | 0 | 10 | 2 | 0 | 12 |
+| 其中 install | 3 | 0 | 0 | 13 | 16 |
+| 其中未驗證 | 16 | 5 | 9 | 0 | 30 |
+| 沒寫紀錄 | 4 | 5 | 2 | 5 | 16 |
+
+MCP 的 34 列裡有 6 列和別列同一個 repo（`modelcontextprotocol/servers`，合成一筆，驗到 service），1 列沒寫 repo（Puppeteer MCP）。每一筆的結果在 `docs/discovery/post-hackathon-candidates-v1.json`。
+
+- **目錄**：1,058 → 1,153 筆，列出的 1,145 筆。新紀錄的類別：mcp_server 20、infra_devops 15、security_net 15、dev_cli 15、productivity_docs 11、data_db 9、media_files 6、other 4。知名度都高，沒有一筆算寶藏。漏洞檢查：clean 44、vulnerable 38、unchecked 13。
+- **沒寫紀錄的 16 筆**，都是流程自己擋下的，沒有重抽：
+  - 規則擋下 5：repo 已封存（Tree-sitter MCP、DuckDB MCP）、README 沒有安裝或用法的段落（Neo4j Cypher MCP、PairDrop、Cobalt）。
+  - 讀起來不是「人會安裝來用的軟體」6：crane（`google/go-containerregistry` 主要是函式庫）、duckdb（README 寫它跑在應用程式的行程裡）、Browser-Use MCP（函式庫）、git-cliff 與 opentofu（README 裡找不到能引用的句子說它是哪一種軟體）、DeepWiki MCP（初篩複查判定不是可用的軟體）。
+  - 網站 5：使用條款禁止自動化存取（JSON Crack、Webhook.site）、robots.txt 不允許（tldraw）、首頁文字太少，抽取引不出「這是網頁應用」的原文（Squoosh、Crontab.guru）。
+- **未驗證的 30 筆**：20 筆是 README 沒有 Linux 沙盒能跑的安裝指令。知名工具的 README 常常只寫「安裝請看官網文件」（rclone、restic、chezmoi、pandoc、mitmproxy、fx…），或只給 Docker、Homebrew（trivy、多數自架 Web 工具）；pickfit 只讀 README 與 release，所以沒有指令可跑。其餘 10 筆沙盒跑了但沒通過：
+  - 5 筆是 agent 說裝好也測過了，但它記下的安裝步驟不合 pickfit 的紀錄規則，程式不採信：一步超過 500 字元（act、vhs、homepage），或用 `for` 迴圈包住下載、看不出每一步有沒有成功（termshark、jless）。這是 Claude 當 agent 時的寫法問題，不是工具的問題，之後調整提示再重驗應該會過。
+  - 2 筆是 MCP server 少了它要連的服務，交握不成功：Postgres MCP Pro（要資料庫）、kubernetes-mcp-server（要叢集）。
+  - 3 筆 agent 自己回報原因：mcp-server-docker 要 Docker、Brave Search MCP 要金鑰、n8n 資源不夠。
+- **網站 13 筆只到 install**：每站造訪了一次，頁面開得起來、判讀是主畫面，但操作 agent 一步都沒動。原因在 pickfit 這邊：browser-use 會要求模型把推理寫進回覆的 `thinking` 欄位，Anthropic API 把這種請求判成擷取模型推理而拒答（`stop_reason: refusal`，類別 `reasoning_extraction`），52 次操作呼叫全部沒有內容。已修正（Claude 當操作者時不要求那個欄位；被拒答會換模型並把原因回報給 harness）。要補功能實測就得再造訪一次，和上面第 5 點「每站只造訪一次」衝突，所以還沒做，等念誠決定。
+- **途中修掉的兩個抽取問題，以及重跑了哪幾筆**（都是 pickfit 這邊的錯，不是挑結果）：
+  - 抽取的 schema 有 49 個可為 null 的欄位，超過 Claude 結構化輸出的上限 16，所以 schema 改放在提示詞裡，沒有強制力。Claude 把不知道的欄位寫成單純的 `null`，驗證不過；前後 41 次抽取因此白做（約 $1.2）。修正後重跑三次都失敗的 3 筆：pandoc、trippy、go-task（`--retry`）。
+  - `platforms` 被讀成「句子裡提到的那個系統」（例如 "Release v0.3.0 adds windows support" 被讀成只支援 Windows），3 筆因此沒進沙盒：oxker、mcp-server-docker、postgres-mcp。把欄位說明寫清楚後重抽（三筆都變成「沒寫」），第一次產生的未驗證紀錄還沒 commit，移到 `runs/candidates-v1/superseded/`，再照同一段流程重跑：oxker 通過，另外兩筆進了沙盒但沒過（要 Docker、要資料庫）。
+- **花費**（帳本 `pipeline` 預算，11/16）：Claude 約 $27.7，其中驗證 agent 12.4、抽取 8.0、文件 rubric 3.1、判讀 1.4、網頁操作 1.4（全部被拒答）、使用說明 0.9、初篩 0.2、連線測試 0.2；Modal 沙盒約 $0.55。每個有 repo 的候選平均約 $0.25，從送進流程到寫成紀錄 2–6 分鐘。
+- **11/16 03:20 補跑之後的數字在下一節**；這一節維持 02:20 當時的樣子。
+- **帳本裡有 43 列不是實際花費**：11/15–11/16 的 `verify-gui-operator`、沒有 run id、共約 $0.49，是跑測試時測試替身寫進共用帳本的（`tests/test_verify_gui_operate.py` 沒有隔離帳本，賽期就有，當時算在 Baseten 的價格上）。現在 `tests/conftest.py` 讓每個測試用自己的帳本與 runs 資料夾；已經寫進去的列沒有刪。
+
+## 安裝文件：README 只寫「請看官網」時，讀專案自己的安裝頁（規則 `install-docs.v1`）
+
+2026-11-16 03:20（台北）登記，念誠 11/16 要求（「很多說安裝請看官網的，agent 要有辦法去看官網的文件」）。登記比第一次抓取晚：02:58–03:01 已經替 20 個候選抓過頁面，程式（`pickfit/installdocs.py`）、測試和這一節在同一批 commit 裡（分支 `worktree-post-hackathon-anthropic`）。
+
+為什麼：知名工具的 README 常常沒有安裝指令，只連到官網的安裝頁。抽取只讀 pickfit 抓下來的東西，所以這些工具沒有沙盒能跑的安裝方式，從來沒進過沙盒就列成未驗證。
+
+規則：
+
+1. **只在需要時讀**。候選的抽取結果是工具、而且沒有 Linux 沙盒能跑的安裝方式，才去讀；README 自己有安裝指令的不抓任何頁面。每個候選只讀**一頁**，找過一次就不再找（`--force` 例外）。
+2. **只讀專案自己的**，照這個順序，讀到一頁就停：
+   1. repo 裡的文件（`INSTALL.md`、`docs/install*.md`、`docs/getting-started.md` 這類，README 有連過去的，或檔案樹裡看得到的）。走 GitHub API，和讀 README 一樣。
+   2. README 連出去的頁面，連結文字或網址寫著 install、getting started、quick start、download、setup。
+   3. 前兩種都沒有時，看專案稱為首頁的頁面（GitHub 上登記的 homepage、README 裡寫「Documentation」的連結），再讀那一頁在同一個網站上連到的安裝頁；首頁自己就寫了安裝方式的，讀首頁。
+3. **「專案自己的網站」怎麼認**：和 GitHub 登記的 homepage 同一個網站（含子網域，例如 `docs.mitmproxy.org`），或主機名稱裡有 repo 或擁有者的名字（`restic.readthedocs.io`、`smallstep.com`）。README 也會連到它依賴的東西的安裝頁（Rust、Docker、Go），那些不讀。不搜尋。徽章圖片、社群、商店、套件倉庫的網址都不算。
+4. **照網頁應用的規矩抓**：用 pickfit 自己的 User-Agent，同站每秒一個請求，每個候選最多 8 個請求（robots.txt、首頁、安裝頁都算）。robots.txt 不讓 pickfit 抓、或表示內容不給模型讀的，不抓（`robots_verdict`，和上面「網頁應用」一節同一段程式）。轉到別的網站的不讀；只會轉址的舊網址跟一次；要 JavaScript 才有文字的頁面不渲染，記下來跳過。
+5. **存什麼**：頁面網址、標題、去掉選單與頁尾的文字（最多 20,000 字元）、抓取時間，以及每個找過的位置和結果（`runs/pipeline.db` 的 `install_docs`）。不存圖片。
+6. **怎麼用**：這一頁當成抽取的另一個來源（`docs1`，放在 `<source>` 區塊裡，和 README 一樣只是資料），抽出的安裝指令照舊要逐字引用原文；紀錄的 `sources` 會列出這一頁。驗證時這一頁也放進沙盒的工作目錄（`INSTALL-GUIDE-1.md`），README 的指令不夠時 agent 可以自己讀。
+7. **指令**：`uv run pickfit extract --install-docs --model prod`；`pickfit watch` 處理提交的 repo 時也會做同一步。
+
+### 結果（2026-11-16 03:20 台北）
+
+22 個候選的抽取沒有沙盒能跑的安裝方式（20 筆未驗證的紀錄，加上當時沒寫成紀錄的 git-cliff 與 opentofu）。讀到一頁的 21 個：
+
+- repo 裡的檔案 7：rclone（`docs/content/install.md`）、pandoc（`INSTALL.md`）、trivy、presenterm、bentopdf、dozzle、qsv。
+- README 連出去的頁面 11：mitmproxy、restic、step-cli、go-task、git-cliff、opentofu、gh-dash、beszel、homarr、hedgedoc、supabase MCP（讀到的是它的 MCP 說明頁）。
+- 從首頁找到安裝頁 3：chezmoi、fx、kroki。
+- 沒讀到 1：omni-tools（首頁要 JavaScript 才有文字）。
+
+重新抽取 21 筆（約 $1.36）之後，11 筆有了沙盒能跑的安裝方式，全部進沙盒，全部通過：function 8（rclone、restic、chezmoi、pandoc、trivy、go-task、step-cli、presenterm）、service 2（mitmproxy、bentopdf）、install 1（gh-dash）。git-cliff 第一次因為 README 裡引不出「它是哪一種軟體」而沒寫紀錄，這次抽取判定是 CLI 工具，寫成紀錄（未驗證）。
+
+還是沒有安裝方式的 10 筆：只給 Docker 的自架工具 5（dozzle、kroki、hedgedoc、homarr、beszel）；安裝頁只列 Homebrew、snap、Go 的 fx；安裝頁是索引、指令在子頁的 git-cliff 與 opentofu（這條規則只讀一頁）；qsv（README 連到的是另一份入門文件）；supabase MCP（遠端服務，沒有本機安裝）。
+
+## 第一批候選：11/16 的補跑
+
+念誠 11/16：13 個網站重跑、agent 要能讀官網的安裝文件、查清楚 5 筆安裝步驟不合紀錄規則的原因並修正。
+
+### 13 個網站再造訪一次
+
+第一次造訪（規則 5 的「每站只造訪一次」）操作 agent 一步都沒動，原因在 pickfit（上一節）。念誠同意重跑，所以每站用 `--revisit` 再造訪一次，原因寫進每一筆 run。結果：**function 12、install 1**。Excalidraw 留在 install：agent 在畫布上打了字，但判讀沒看到 README 說的功能做出來。
+
+DuckDB Web Shell 造訪了第三次。第二次操作了 6 步之後，判讀被 pickfit 自己的預算規則擋下：判讀和操作共用同一個 scope，上限卻只有 $0.50，操作已經花了 $0.69，判讀就送不出去，那次造訪等於白做。修正：判讀的上限改成整次造訪的上限（`SITE_CAP_USD`）。第三次到 function。
+
+13 筆都補了視覺檢查（`pickfit visual`）。這次有變動的 37 筆紀錄（含下面重驗的），使用說明都照新的 run 重寫。
+
+### 5 筆安裝步驟不合紀錄規則：原因與修正
+
+規則本身沒有錯。紀錄裡的每個安裝步驟都要符合兩件事：指令在 500 字元以內（要顯示給人複製）、指令的結束碼真的代表成功（不能用 `; echo`、`|| true`、管線接 `grep`、迴圈等把失敗蓋掉）。5 筆都是工具其實裝好也測過了，但 agent 引用的指令不合這兩條。問題出在 pickfit 怎麼告訴 agent：
+
+1. **一次只講一個毛病，而且只給一次重來的機會**。act 的那一步同時有兩個問題（結尾接了 `; cat`、長度 692 字元）。pickfit 只回報第一個，agent 改掉之後重跑，新的指令 752 字元，第二次就不再退回。homepage（結尾的 `; ls`，改完 758 字元）、jless（先被挑 `||`，改完剩下 `for` 迴圈）都是同一種情況。
+2. **規則沒有事先講**。提示詞列了一部分會蓋掉結束碼的寫法，沒有提 500 字元，也沒有提迴圈。agent 要等到最後呼叫 finish 才知道。termshark 和 vhs 是在只能呼叫 finish 的最後一輪才被擋，連重來的機會都沒有。
+3. **測試用的輸入檔被當成安裝步驟**。act 的 workflow 檔、homepage 的設定檔，是用 heredoc 寫的幾百字元。它們是某個檢查的前置（`setup_ids`，上限 4,000 字元），不是安裝步驟。finish 的欄位說明寫「包含這些指令用到的每個檔案寫入」，agent 就把它們放進 steps。
+
+修正（`pickfit/verify/verdict.py`、`agent.py`）：
+
+- 一個步驟的所有毛病一次列完（`masked_exits`），長度另外算，不再只報第一個。
+- 提示詞事先寫明：每個安裝步驟與檢查是一條 500 字元以內的指令、不能有迴圈（改成用 `&&` 寫開，或把清單餵給 xargs）、只寫輸入檔或設定檔的指令放在該檢查的 `setup_ids`。
+- 指令跑完當下就提醒：成功（exit 0）但不能引用的指令，回傳的輸出前面會加一行說明原因，agent 還有指令額度時就能重跑，不用等到 finish。
+- 退回 finish 時的訊息也寫上這幾條，並說明只寫輸入檔的指令不必重跑，改放 `setup_ids` 就好。
+
+重驗 5 筆：**vhs function、jless function、homepage service、act function（第二次；第一次 agent 自己判定要 Docker）**。termshark 修正後跑了三次都沒過。第一次是安裝步驟接了 `grep`，又剛好在只能呼叫 finish 的那一輪（所以才加上跑完當下的提醒）。後兩次 agent 的回報和紀錄一致，但在乾淨沙盒重播時失敗：它要的 tshark 是系統套件，沙盒沒有 root，agent 用下載 .deb 再解開的方式繞過，引用的步驟換到乾淨的沙盒就跑不起來（一次少了建立目錄的指令，一次第一步就失敗）。維持未驗證。
+
+### 補跑之後（2026-11-16 03:20 台北）
+
+| | CLI／TUI | MCP server | 自架 Web 工具 | 網站 | 合計 |
+|---|---|---|---|---|---|
+| 寫成紀錄 | 49 | 22 | 12 | 13 | 96 |
+| 其中 function | 40 | 7 | 1 | 12 | 60 |
+| 其中 service | 1 | 10 | 4 | 0 | 15 |
+| 其中 install | 4 | 0 | 0 | 1 | 5 |
+| 其中未驗證 | 4 | 5 | 7 | 0 | 16 |
+| 沒寫紀錄 | 3 | 5 | 2 | 5 | 15 |
+
+- **未驗證的 16 筆**：termshark（上面）；fx、qsv、git-cliff（讀了安裝頁還是沒有沙盒能跑的指令）；MCP 5（Brave Search 要金鑰、mcp-server-docker 要 Docker、Postgres MCP Pro 與 kubernetes-mcp-server 交握不成功、supabase MCP 是遠端服務）；自架 Web 工具 7（dozzle、kroki、hedgedoc、homarr、beszel 只給 Docker，omni-tools 沒讀到安裝頁，n8n 資源不夠）。
+- **花費**（帳本，11/16 02:37–03:19）：Claude 約 $10.0，其中驗證 agent 3.9、網頁操作 2.4、抽取 1.4、文件 rubric 0.9、網頁判讀 0.4、使用說明 0.4、視覺檢查 0.3、判讀 0.4；Modal 約 $0.13。
+- **順手修掉的兩個舊問題**：`pickfit profiles` 遇到網頁應用的抽取會當掉（那些抽取沒有 repo 候選，現在跳過，它們的紀錄由 `pickfit webapps records` 寫）；`scripts/copy_evidence.py` 遇到本身就是連到證據區的 run 資料夾會當掉（現在標成 `in_place`，不複製也不改寫）。這一批網頁 run 的截圖與紀錄已複製到 `~/.pickfit/evidence/`。
+- **推送被 GitHub 擋下一次，兩筆重驗**：repomix 與 trufflehog 第一次的 run 裡，agent 為了測秘密掃描，在範例檔寫了一串 GitHub token。那串字通過 GitHub token 的檢查碼，而且兩個 run 寫的是同一串，所以是模型記得的、真的發行過的 token，不是亂編的（比對過雜湊，不是念誠的，也不在 `.env` 裡）。紀錄會把指令原樣公開在網站上，GitHub 的 push protection 也拒絕這次推送。處理：agent 的指令只要含有檢查碼正確的 GitHub token 就不執行，也就不會被記錄（`real_credentials`）；提示詞要求範例秘密一律自己亂編。兩筆重驗都到 function，新的 run 用的是亂編的字串（檢查碼不對，掃描工具照樣找得到）。含那串字的兩個紀錄檔沒有推上去：還沒推送的 commit 在推送前改寫過，把這兩個檔從中間的 commit 拿掉，時間與訊息不變，只有 `Add 95 records…` 那個 commit 的訊息多了一段說明。

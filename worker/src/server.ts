@@ -2,6 +2,7 @@
 import { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 import { CARD_FIELDS } from './cards.ts';
+import { NAMED_CATEGORIES } from './catalog.ts';
 import { findAlternatives, findSoftware, type Deps } from './find.ts';
 import { installGuide, PITFALL_KINDS, UnknownSlugError } from './install.ts';
 import { NOT_CHECKED_REASONS } from './features.ts';
@@ -11,7 +12,7 @@ import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './subm
 import { NO_INSTALL_LABEL } from './webapp.ts';
 
 const ABOUT =
-  "pickfit matches software to the user's need; each was installed and tested in a sandbox. Scope: dev CLIs, local AI tools, MCP servers, desktop GUI apps, web apps. ";
+  "pickfit matches software to the user's need; each was installed and tested in a sandbox. Scope: dev CLIs, local AI tools, MCP servers, DevOps, security, data, docs and media tools, desktop GUI apps, web apps. ";
 const RULES = "Ask 1-2 questions only if you can't guess (OS; must be free/offline). No ads or affiliate links; ranking is fit, not stars. ";
 /** How to write the answer to the user, from reading agents' answers: pick first, alternative before the steps, no narration. */
 const ANSWER =
@@ -205,7 +206,14 @@ const pick = z.object({
 
 /** The user's conditions, shared by find_software and find_alternatives. */
 const conditions = {
-  category: z.enum(['dev_cli', 'local_ai', 'mcp_server', 'any']).optional().describe('Default any; mcp_server = an MCP server to add to an AI client'),
+  category: z
+    .enum([...NAMED_CATEGORIES, 'any'])
+    .optional()
+    .describe(
+      'Default any. mcp_server = an MCP server to add to an AI client; infra_devops = containers, Kubernetes, CI/CD, IaC, monitoring, backup; ' +
+        'security_net = network diagnostics, TLS/PKI, encryption, secret scanning; data_db = SQL engines, database clients, JSON/CSV/log tools; ' +
+        'productivity_docs = notes, diagrams, document conversion, slides; media_files = media download and conversion, images, PDF, file transfer',
+    ),
   os: os.optional(),
   arch: arch.optional(),
   budget: z.enum(['free_only', 'free_or_paid']).optional(),
@@ -236,14 +244,14 @@ const alternativesInput = z.object({
 
 const findOutput = z.object({
   rec_id: z.string().describe(REC_ID_OUT),
-  matched_by: z.string().describe('The Meta model that chose the picks, or "rules"'),
+  matched_by: z.string().describe('The model that chose the picks (a Claude model id), or "rules"'),
   degraded: z.boolean().describe('true = ranked by rules without the model (off, budget or failure)'),
   degraded_reason: z.string().nullable(),
   model_attempts: z
     .number()
     .int()
-    .describe('Requests sent to Meta: 0 = model not used, 2 = retried once after a transient error'),
-  model_http_status: z.number().int().nullable().describe('When degraded_reason is model_http: the HTTP status Meta returned'),
+    .describe('Requests sent to the model API: 0 = model not used, 2 = retried once after a transient error'),
+  model_http_status: z.number().int().nullable().describe('When degraded_reason is model_http: the HTTP status the model API returned'),
   considered: z.number().int().describe('Verified tools that met the hard conditions'),
   picks: z.array(pick).max(3),
   best_free: z.object({ slug: z.string(), reason: z.string() }).nullable(),
@@ -486,7 +494,7 @@ export function buildServer(deps: Deps): McpServer {
         'well_known_option names a well-known free tool pickfit does not list that may fit better: tag it "(not verified by pickfit)" beside its name. ' +
         'If clarifying_question is set, ask it and call again. When matched_by is "rules", match_quality and each pick\'s match say how well they cover the request; present partial or weak picks as such. ' +
         'If no pick fits, answer without mentioning the search. ' +
-        'Next: get_install_guide(slug, os, rec_id). Coverage: developer CLI tools, local AI/LLM tools, MCP servers, desktop GUI apps and web apps (web_app set: open the URL, no install).',
+        'Next: get_install_guide(slug, os, rec_id). Coverage: developer CLI tools, local AI/LLM tools, MCP servers, DevOps, security, data, document and media tools, desktop GUI apps and web apps (web_app set: open the URL, no install).',
       inputSchema: findInput,
       outputSchema: findOutput,
       annotations: { readOnlyHint: true, openWorldHint: false },
@@ -596,8 +604,8 @@ export function buildServer(deps: Deps): McpServer {
       title: 'Submit a GitHub project or a web app to pickfit',
       description:
         'Use only when the user asks to add a software project to pickfit, often their own. Takes the GitHub repository URL, or the https URL of a web app people use in a browser. ' +
-        "pickfit's pipeline reads it with Meta's Muse Spark, tries it in a sandbox (a web app in a sandboxed browser) and lists it if it works; this takes minutes, so call again with the same url to check the status. " +
-        'Developer CLI tools, local AI/LLM tools, MCP servers, desktop GUI apps and web apps are taken; libraries and other code people import are rejected, and software pickfit cannot run in its sandbox is listed unverified. Nothing is published under the user\'s name.',
+        "pickfit's pipeline reads it with Claude, tries it in a sandbox (a web app in a sandboxed browser) and lists it if it works; this takes minutes, so call again with the same url to check the status. " +
+        'Developer CLI tools, local AI/LLM tools, MCP servers, DevOps, security, data, document and media tools, desktop GUI apps and web apps are taken; libraries and other code people import are rejected, and software pickfit cannot run in its sandbox is listed unverified. Nothing is published under the user\'s name.',
       inputSchema: submitInput,
       outputSchema: submitOutput,
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: true },

@@ -1,0 +1,613 @@
+{
+  "schema_version": "software.v1",
+  "slug": "trippy",
+  "repo_id": "gh:474961035",
+  "name": "Trippy",
+  "summary": "A terminal network diagnostic tool that combines traceroute and ping to help analyze networking issues.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "security_net",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "command-line-interface",
+    "command-line-tool",
+    "dns",
+    "icmp",
+    "linux",
+    "macos",
+    "mtr",
+    "netbsd",
+    "network"
+  ],
+  "use_cases": [
+    "trace the network path to a host",
+    "inspect DSCP/ECN QoS treatment of probes along a path"
+  ],
+  "alternatives_to": [
+    "mtr",
+    "traceroute",
+    "ping"
+  ],
+  "features": [
+    "combined traceroute and ping tracing",
+    "set Type of Service on probe packets",
+    "export JSON trace reports"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:38.712291Z",
+    "run_id": null,
+    "open_hint": "Run `trip <host>` in a terminal to start tracing the path to a host; raw socket access may require running it with sudo.",
+    "features": [
+      {
+        "feature": "combined traceroute and ping tracing",
+        "title": "Trace the route to a host and ping each hop",
+        "steps": []
+      },
+      {
+        "feature": "set Type of Service on probe packets",
+        "title": "Set the Type of Service on probe packets",
+        "steps": []
+      },
+      {
+        "feature": "export JSON trace reports",
+        "title": "Export trace reports as JSON",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": "https://trippy.rs",
+  "repo": {
+    "url": "https://github.com/fujiapple852/trippy",
+    "full_name": "fujiapple852/trippy",
+    "created_at": "2022-03-28T10:56:29Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install trippy",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Run with elevated privileges (sudo) or configure privileges"
+      ],
+      "check": null,
+      "first_task": "sudo trip example.com"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-trippy-20261116-011407-75ad",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "cd /tmp && curl -fsSLO https://github.com/fujiapple852/trippy/releases/download/0.13.0/trippy-0.13.0-x86_64-unknown-linux-musl.tar.gz && mkdir -p trippy-x && tar -xzf trippy-0.13.0-x86_64-unknown-linux-musl.tar.gz -C trippy-x && mkdir -p ~/.local/bin && install -m 755 $(find trippy-x -type f -name trip) ~/.local/bin/trip",
+          "purpose": "Download the official 0.13.0 x86_64 musl release tarball from GitHub and install trip into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "trip --version",
+        "expected_signal": "trip 0.13.0"
+      },
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install trippy --locked",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Run with elevated privileges (sudo) or configure privileges"
+      ],
+      "check": null,
+      "first_task": "sudo trip example.com"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "0.13.0",
+    "published_at": "2025-05-05T12:35:13Z",
+    "url": "https://github.com/fujiapple852/trippy/releases/tag/0.13.0"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T01:14:50.895676+08:00",
+    "runs": [
+      {
+        "id": "verify-trippy-20261116-011407-75ad",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:14:50.895676+08:00",
+        "tool_version": "trip 0.13.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd /tmp && curl -fsSLO https://github.com/fujiapple852/trippy/releases/download/0.13.0/trippy-0.13.0-x86_64-unknown-linux-musl.tar.gz && mkdir -p trippy-x && tar -xzf trippy-0.13.0-x86_64-unknown-linux-musl.tar.gz -C trippy-x && mkdir -p ~/.local/bin && install -m 755 $(find trippy-x -type f -name trip) ~/.local/bin/trip",
+            "purpose": "Download the official 0.13.0 x86_64 musl release tarball from GitHub and install trip into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "trip --version",
+            "expected_signal": "trip 0.13.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "trip 0.13.0",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install trippy --locked / apt install trippy / snap install trippy",
+            "actually_needed": "No Rust toolchain or root in this box; I installed the prebuilt GitHub release binary trippy-0.13.0-x86_64-unknown-linux-musl.tar.gz into ~/.local/bin instead (the README mentions precompiled binaries)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "sudo trip example.com",
+            "actually_needed": "Tracing needs root or raw-socket capabilities. Unprivileged mode (-u) failed here because this kernel has no ICMP datagram sockets (/proc/sys/net/ipv4/ping_group_range is missing)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Running `trip --version` printed 'trip 0.13.0' and exited 0, which matches the expected signal.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-trippy-20261116-011407-75ad/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-trippy-20261116-011407-75ad/check-1-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.120872,
+        "features": [
+          {
+            "feature": "combined traceroute and ping tracing",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "Tracing failed with 'privileges are required'; the -u (unprivileged) fallback is not supported on this platform"
+          },
+          {
+            "feature": "set Type of Service on probe packets",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "The --tos (-Q) trace failed with 'privileges are required'"
+          },
+          {
+            "feature": "export JSON trace reports",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "The JSON report needs a trace to run, which needs privileges"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:14:58+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/fujiapple852/trippy@6adca02f3a89",
+      "Cargo.lock"
+    ],
+    "packages_checked": 414,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:14:50+08:00",
+    "quality": {
+      "total": 68.1,
+      "confidence": 0.7,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.455,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.55,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 88.2,
+      "signals": {
+        "stars": 8168,
+        "monthly_downloads": 1212,
+        "forks": 299,
+        "dependents": null,
+        "release_downloads": 103124,
+        "hn_top_score": 0,
+        "registries_count": 2
+      },
+      "age_days": 1693,
+      "packages": [
+        "crates:trippy",
+        "homebrew:trippy"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 8.04
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:14:50.898430+08:00",
+      "sources_sha": "80a838361ad4c9f60016383f22f07de13360ac2ebc282cb490458c6c56fda979",
+      "items": {
+        "what_it_does": {
+          "score": 1,
+          "quote": "Trippy combines the functionality of traceroute and ping and is designed to assist with the analysis of networking"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "designed to assist with the analysis of networking"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "To use Trippy without elevated privileges, see"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "winget install trippy"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "sudo trip example.com"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "See the [Configuration Reference](https://trippy.rs/reference/configuration/)."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "### Why does Trippy show \"Awaiting data...\"?"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Trippy runs on Linux, BSD, macOS, and Windows."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/fujiapple852/trippy",
+      "fetched_at": "2026-11-16T01:13:56+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/fujiapple852/trippy/blob/master/README.md",
+      "fetched_at": "2026-11-16T01:13:56+08:00"
+    },
+    {
+      "id": "release:0.13.0",
+      "kind": "release",
+      "url": "https://github.com/fujiapple852/trippy/releases/tag/0.13.0",
+      "fetched_at": "2026-11-16T01:13:56+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "release:0.13.0",
+      "quote": "improvements to the TUI",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:14:05+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "To run a basic trace to `example.com` with default settings",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:14:05+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A network diagnostic tool",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:14:05+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Trippy combines the functionality of traceroute and ping and is designed to assist with the analysis of networking\nissues.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:14:05+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "Trippy combines the functionality of traceroute and ping",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:14:05+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Trippy runs on Linux, BSD, macOS, and Windows.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:14:05+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "github_api",
+      "quote": "A network diagnostic tool",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:14:05+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:13:56+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:13:56+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:13:56+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:13:56+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:13:56+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:0.13.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:13:56+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "To run a basic trace to `example.com` with default settings",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:14:05+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "release:0.13.0",
+      "quote": "adds two new columns to display the `DSCP` & `ECN` values",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:14:05+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Trippy draws heavily from [mtr](https://github.com/traviscross/mtr)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:14:05+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "combines the functionality of traceroute and ping",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:14:05+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "combines the functionality of traceroute and ping",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:14:05+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Trippy combines the functionality of traceroute and ping",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:14:05+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "release:0.13.0",
+      "quote": "Trippy allows setting the Type of Service (`ToS`) for IPv4 via the `--tos` (`-Q`) command-line argument",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:14:05+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "release:0.13.0",
+      "quote": "The `json` report has been enriched with start and end timestamps.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:14:05+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install trippy",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:14:05+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install trippy --locked",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:14:05+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install trippy --locked",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:14:05+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:05:25+08:00",
+  "updated_at": "2026-11-16T01:14:58+08:00"
+}

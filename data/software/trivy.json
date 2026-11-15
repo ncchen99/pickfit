@@ -1,0 +1,725 @@
+{
+  "schema_version": "software.v1",
+  "slug": "trivy",
+  "repo_id": "gh:180687624",
+  "name": "Trivy",
+  "summary": "Security scanner that finds vulnerabilities, misconfigurations, secrets, licenses and SBOM data in container images, filesystems, repositories and Kubernetes.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "security_net",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "containers",
+    "devsecops",
+    "docker",
+    "go",
+    "golang",
+    "hacktoberfest",
+    "iac",
+    "infrastructure-as-code",
+    "kubernetes",
+    "misconfiguration"
+  ],
+  "use_cases": [
+    "scan a container image for known CVEs",
+    "scan a project directory for vulnerabilities, secrets and misconfigurations",
+    "produce a security summary report of a Kubernetes cluster"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "detect known vulnerabilities (CVEs)",
+    "find IaC issues and misconfigurations",
+    "detect secrets and sensitive information",
+    "generate SBOM of packages and dependencies"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T19:19:18.297362Z",
+    "run_id": "verify-trivy-20261116-030348-3757",
+    "open_hint": "Run `trivy fs <directory>` to scan a project folder.",
+    "features": [
+      {
+        "feature": "detect known vulnerabilities (CVEs)",
+        "title": "Find known vulnerabilities (CVEs)",
+        "steps": []
+      },
+      {
+        "feature": "find IaC issues and misconfigurations",
+        "title": "Find infrastructure-as-code issues and misconfigurations",
+        "steps": [
+          "Run `trivy fs --scanners misconfig --skip-check-update <directory>`.",
+          "Read the listed issues, such as a Dockerfile whose last USER is root, with their severity."
+        ]
+      },
+      {
+        "feature": "detect secrets and sensitive information",
+        "title": "Find secrets and sensitive information",
+        "steps": [
+          "Run `trivy fs --scanners secret <directory>`.",
+          "Check the findings, such as exposed AWS access keys, with their severity."
+        ]
+      },
+      {
+        "feature": "generate SBOM of packages and dependencies",
+        "title": "Create an SBOM of packages and dependencies",
+        "steps": [
+          "Run `trivy fs --format cyclonedx <directory>`.",
+          "Read the CycloneDX output, which lists each package with its version and package URL."
+        ]
+      }
+    ]
+  },
+  "homepage": "https://trivy.dev",
+  "repo": {
+    "url": "https://github.com/aquasecurity/trivy",
+    "full_name": "aquasecurity/trivy",
+    "created_at": "2019-04-11T01:01:07Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install trivy",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "trivy --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-trivy-20261116-030348-3757",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/trivydl && curl -fsSL -o /tmp/trivydl/trivy.tgz https://github.com/aquasecurity/trivy/releases/download/v0.76.2/trivy_0.76.2_Linux-64bit.tar.gz && tar -xzf /tmp/trivydl/trivy.tgz -C /tmp/trivydl trivy && install -m 755 /tmp/trivydl/trivy ~/.local/bin/trivy",
+          "purpose": "Download trivy v0.76.2 Linux-64bit release tarball and install binary into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "trivy --version",
+        "expected_signal": "Version: 0.76.2"
+      },
+      "first_task": "trivy fs --scanners misconfig --skip-check-update myproject/"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "docker",
+      "steps": [
+        {
+          "command": "docker run aquasec/trivy",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "trivy --version"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.76.2",
+    "published_at": "2026-11-05T12:50:25Z",
+    "url": "https://github.com/aquasecurity/trivy/releases/tag/v0.76.2"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T03:05:09.669816+08:00",
+    "runs": [
+      {
+        "id": "verify-trivy-20261116-030348-3757",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T03:05:09.669816+08:00",
+        "tool_version": "0.76.2",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/trivydl && curl -fsSL -o /tmp/trivydl/trivy.tgz https://github.com/aquasecurity/trivy/releases/download/v0.76.2/trivy_0.76.2_Linux-64bit.tar.gz && tar -xzf /tmp/trivydl/trivy.tgz -C /tmp/trivydl trivy && install -m 755 /tmp/trivydl/trivy ~/.local/bin/trivy",
+            "purpose": "Download trivy v0.76.2 Linux-64bit release tarball and install binary into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "trivy --version",
+            "expected_signal": "Version: 0.76.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Version: 0.76.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "trivy fs --scanners misconfig --skip-check-update myproject/",
+            "expected_signal": "DS-0002 (HIGH): Last USER command in Dockerfile should not be 'root'",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "DS-0002 (HIGH): Last USER command in Dockerfile should not be 'root'",
+            "setup": [
+              {
+                "command": "mkdir -p myproject && cat > myproject/Dockerfile <<'EOF'\nFROM alpine:3.10\nRUN apk add curl\nUSER root\nEOF\ncat > myproject/config.py <<'EOF'\nAWS_ACCESS_KEY_ID = \"AKIA2E0A8F3B244C9986\"\nAWS_SECRET_ACCESS_KEY = \"fake/K7MDENG/bPxRfiCYEXAMPLEKEY12345678\"\nEOF\ncat > myproject/requirements.txt <<'EOF'\nrequests==2.19.1\nflask==0.12.2\nEOF\ncat > myproject/package-lock.json <<'EOF'\n{\"name\":\"demo\",\"version\":\"1.0.0\",\"lockfileVersion\":2,\"requires\":true,\"packages\":{\"\":{\"name\":\"demo\",\"version\":\"1.0.0\",\"dependencies\":{\"lodash\":\"4.17.4\"}},\"node_modules/lodash\":{\"version\":\"4.17.4\"}},\"dependencies\":{\"lodash\":{\"version\":\"4.17.4\"}}}\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "trivy fs --scanners secret myproject/",
+            "expected_signal": "CRITICAL: AWS (aws-access-key-id)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "CRITICAL: AWS (aws-access-key-id)",
+            "setup": [
+              {
+                "command": "mkdir -p myproject && cat > myproject/Dockerfile <<'EOF'\nFROM alpine:3.10\nRUN apk add curl\nUSER root\nEOF\ncat > myproject/config.py <<'EOF'\nAWS_ACCESS_KEY_ID = \"AKIA2E0A8F3B244C9986\"\nAWS_SECRET_ACCESS_KEY = \"fake/K7MDENG/bPxRfiCYEXAMPLEKEY12345678\"\nEOF\ncat > myproject/requirements.txt <<'EOF'\nrequests==2.19.1\nflask==0.12.2\nEOF\ncat > myproject/package-lock.json <<'EOF'\n{\"name\":\"demo\",\"version\":\"1.0.0\",\"lockfileVersion\":2,\"requires\":true,\"packages\":{\"\":{\"name\":\"demo\",\"version\":\"1.0.0\",\"dependencies\":{\"lodash\":\"4.17.4\"}},\"node_modules/lodash\":{\"version\":\"4.17.4\"}},\"dependencies\":{\"lodash\":{\"version\":\"4.17.4\"}}}\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "trivy fs --format cyclonedx myproject/",
+            "expected_signal": "\"purl\": \"pkg:npm/lodash@4.17.4\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"purl\": \"pkg:npm/lodash@4.17.4\",",
+            "setup": [
+              {
+                "command": "mkdir -p myproject && cat > myproject/Dockerfile <<'EOF'\nFROM alpine:3.10\nRUN apk add curl\nUSER root\nEOF\ncat > myproject/config.py <<'EOF'\nAWS_ACCESS_KEY_ID = \"AKIA2E0A8F3B244C9986\"\nAWS_SECRET_ACCESS_KEY = \"fake/K7MDENG/bPxRfiCYEXAMPLEKEY12345678\"\nEOF\ncat > myproject/requirements.txt <<'EOF'\nrequests==2.19.1\nflask==0.12.2\nEOF\ncat > myproject/package-lock.json <<'EOF'\n{\"name\":\"demo\",\"version\":\"1.0.0\",\"lockfileVersion\":2,\"requires\":true,\"packages\":{\"\":{\"name\":\"demo\",\"version\":\"1.0.0\",\"dependencies\":{\"lodash\":\"4.17.4\"}},\"node_modules/lodash\":{\"version\":\"4.17.4\"}},\"dependencies\":{\"lodash\":{\"version\":\"4.17.4\"}}}\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Install candidates: sudo apt-get/yum/pacman/zypper install trivy, nix-env, mise",
+            "actually_needed": "No root, nix or mise in this box; I installed the README's 'Download binary from releases' option (trivy_0.76.2_Linux-64bit.tar.gz) into ~/.local/bin instead",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "trivy image python:3.4-alpine / trivy fs --scanners vuln ...",
+            "actually_needed": "Vulnerability scanning first downloads a 134 MiB DB that unpacks into trivy.db. Here the write failed with 'file too large' because the box limits file size (ulimit -f 1572864 blocks). Any machine without that limit should be fine.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "(nothing about offline misconfig checks)",
+            "actually_needed": "With --skip-check-update and no cached checks, trivy logs an ERROR and then falls back to its embedded checks, so misconfig scanning works offline",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Misconfig scan reports DS-0002 HIGH for USER root (with a benign fallback-to-embedded-checks ERROR log), secret scan finds the CRITICAL AWS access key, and --version prints 0.76.2, all exiting 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-trivy-20261116-030348-3757/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-trivy-20261116-030348-3757/check-1-cmd7.judged.png",
+            "runs/verify/verify-trivy-20261116-030348-3757/check-2-cmd8.judged.png",
+            "runs/verify/verify-trivy-20261116-030348-3757/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.204736,
+        "features": [
+          {
+            "feature": "detect known vulnerabilities (CVEs)",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "Vuln DB download failed: 'write .../trivy.db: file too large' (box limits file size via ulimit -f)"
+          },
+          {
+            "feature": "find IaC issues and misconfigurations",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "detect secrets and sensitive information",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "generate SBOM of packages and dependencies",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T03:11:48+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/aquasecurity/trivy@239be7b2671a",
+      "go.mod"
+    ],
+    "packages_checked": 475,
+    "findings_total": 4,
+    "advisories_total": 4,
+    "findings": [
+      {
+        "package": "go:github.com/docker/docker",
+        "version": "v28.5.2+incompatible",
+        "advisory": "GHSA-rg2x-37c3-w2rh",
+        "cves": [
+          "CVE-2026-42306"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "Docker: Race condition in docker cp allows bind mount redirection to host path",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/docker/docker",
+        "version": "v28.5.2+incompatible",
+        "advisory": "GHSA-x86f-5xw2-fm2r",
+        "cves": [
+          "CVE-2026-41567"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "Docker: `PUT /containers/{id}/archive` executes container binary on the host",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/docker/docker",
+        "version": "v28.5.2+incompatible",
+        "advisory": "GO-2026-4887",
+        "cves": [
+          "CVE-2026-34040"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "Moby has AuthZ plugin bypass when provided oversized request bodies in github.com/docker/docker",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/klauspost/compress",
+        "version": "v1.20.1",
+        "advisory": "GO-2026-6865",
+        "cves": [
+          "CVE-2026-116591"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.2",
+        "summary": "Panic on two-block frames in github.com/klauspost/compress",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T03:11:03+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8611,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 99.9,
+      "signals": {
+        "stars": 39372,
+        "monthly_downloads": 16568,
+        "forks": 887,
+        "dependents": null,
+        "release_downloads": 29839360,
+        "hn_top_score": 102,
+        "registries_count": 1
+      },
+      "age_days": 2775,
+      "packages": [
+        "homebrew:trivy"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.08
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:11:03.852707+08:00",
+      "sources_sha": "ec66a87d747ad4a013c427567cda9587cab32302d59f12e0b4af57e5bb05a071",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Trivy has *scanners* that look for security issues, and *targets* where it can find those issues."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "If you are looking to integrate Trivy into another system, such as CI/CD, IDE, Kubernetes, etc, please see [Ecosystem section](../ecosystem/index.md)"
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "Download trivy_x.xx.x_windows-64bit.zip file from [releases page](https://github.com/aquasecurity/trivy/releases/)."
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "trivy image python:3.4-alpine"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "It is advisable to mount a persistent [cache dir](../guide/configuration/cache.md) on the host into the Trivy container."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Homebrew for macOS and Linux."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/aquasecurity/trivy",
+      "fetched_at": "2026-11-16T01:12:05+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/aquasecurity/trivy/blob/main/README.md",
+      "fetched_at": "2026-11-16T01:12:03+08:00"
+    },
+    {
+      "id": "release:v0.76.2",
+      "kind": "release",
+      "url": "https://github.com/aquasecurity/trivy/releases/tag/v0.76.2",
+      "fetched_at": "2026-11-16T01:12:03+08:00"
+    },
+    {
+      "id": "docs1",
+      "kind": "readme",
+      "url": "https://github.com/aquasecurity/trivy/blob/main/docs/getting-started/installation.md",
+      "fetched_at": "2026-11-16T03:01:08+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "trivy <target> [--scanners <scanner1,scanner2>] <subject>",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:26+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "trivy image python:3.4-alpine",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:26+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Trivy ([pronunciation][pronunciation]) is a comprehensive and versatile security scanner.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:26+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Find vulnerabilities, misconfigurations, secrets, SBOM in containers, Kubernetes, code repositories, clouds and more",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:26+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "Trivy ([pronunciation][pronunciation]) is a comprehensive and versatile security scanner.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:26+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "docs1",
+      "quote": "Download the file for your operating system/architecture from [GitHub Release assets]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:26+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:12:05+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:12:05+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:12:05+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:12:05+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:12:05+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.76.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:12:03+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "trivy image python:3.4-alpine",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:26+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "trivy fs --scanners vuln,secret,misconfig myproject/",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:26+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "trivy k8s --report summary cluster",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:26+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Known vulnerabilities (CVEs)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:26+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "IaC issues and misconfigurations",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:26+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Sensitive information and secrets",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:26+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "OS packages and software dependencies in use (SBOM)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:26+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install trivy",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:26+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "brew install trivy",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:26+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "docker run aquasec/trivy",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:26+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:12:03+08:00",
+  "updated_at": "2026-11-16T03:11:48+08:00"
+}

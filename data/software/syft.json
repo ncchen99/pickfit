@@ -1,0 +1,627 @@
+{
+  "schema_version": "software.v1",
+  "slug": "syft",
+  "repo_id": "gh:262126497",
+  "name": "Syft",
+  "summary": "A command-line tool and Go library that generates a Software Bill of Materials (SBOM) from container images and filesystems.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "security_net",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "containers",
+    "cyclonedx",
+    "docker",
+    "go",
+    "golang",
+    "hacktoberfest",
+    "oci",
+    "sbom",
+    "spdx",
+    "static-analysis"
+  ],
+  "use_cases": [
+    "list the packages inside a container image or directory",
+    "generate a CycloneDX or SPDX SBOM for an image",
+    "scan images from a local Podman or Buildah containers-storage store"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "generate SBOMs for images, filesystems, archives",
+    "detect packages across dozens of ecosystems",
+    "output and convert CycloneDX, SPDX, Syft JSON",
+    "create signed in-toto SBOM attestations"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:35.323929Z",
+    "run_id": "verify-syft-20261116-002835-cfcc",
+    "open_hint": "Run `syft version` to confirm it is installed, then `syft <directory>` to list the packages in a folder.",
+    "features": [
+      {
+        "feature": "generate SBOMs for images, filesystems, archives",
+        "title": "Generate an SBOM for an image, folder or archive",
+        "steps": [
+          "Run `syft <directory>` to list the packages in a folder.",
+          "Run `syft docker-archive:<image.tar>` to scan a saved container image.",
+          "Run `syft <archive.tar.gz>` to scan a compressed archive."
+        ]
+      },
+      {
+        "feature": "detect packages across dozens of ecosystems",
+        "title": "Detect packages from many language and OS ecosystems",
+        "steps": [
+          "Run `syft <directory>` on a project folder to see Go, Python, npm and other packages with their type.",
+          "Run `syft docker-archive:<image.tar>` to see OS packages such as apk packages in an image."
+        ]
+      },
+      {
+        "feature": "output and convert CycloneDX, SPDX, Syft JSON",
+        "title": "Write and convert CycloneDX, SPDX and Syft JSON SBOMs",
+        "steps": [
+          "Run `syft <directory> -o cyclonedx-json=<cdx.json> -o spdx-json=<spdx.json> -o syft-json=<syft.json>` to write several formats at once.",
+          "Run `syft convert <syft.json> -o spdx-tag-value` to convert a Syft JSON SBOM to another format."
+        ]
+      },
+      {
+        "feature": "create signed in-toto SBOM attestations",
+        "title": "Create signed in-toto SBOM attestations",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/anchore/syft",
+    "full_name": "anchore/syft",
+    "created_at": "2020-05-07T18:19:29Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-syft-20261116-002835-cfcc",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -sSfL https://get.anchore.io/syft -o /tmp/syft-install.sh",
+          "purpose": "download official install script"
+        },
+        {
+          "command": "DOWNLOAD_TAG_INSTALL_SCRIPT=false sh /tmp/syft-install.sh -b $HOME/.local/bin",
+          "purpose": "run the read script (no sudo, -b ~/.local/bin, DOWNLOAD_TAG_INSTALL_SCRIPT=false)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "syft version",
+        "expected_signal": "Version: 1.57.1"
+      },
+      "first_task": "syft version"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v1.57.1",
+    "published_at": "2026-11-09T14:39:42Z",
+    "url": "https://github.com/anchore/syft/releases/tag/v1.57.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T00:30:41.906675+08:00",
+    "runs": [
+      {
+        "id": "verify-syft-20261116-002835-cfcc",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T00:30:41.906675+08:00",
+        "tool_version": "1.57.1",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -sSfL https://get.anchore.io/syft -o /tmp/syft-install.sh",
+            "purpose": "download official install script"
+          },
+          {
+            "command": "DOWNLOAD_TAG_INSTALL_SCRIPT=false sh /tmp/syft-install.sh -b $HOME/.local/bin",
+            "purpose": "run the read script (no sudo, -b ~/.local/bin, DOWNLOAD_TAG_INSTALL_SCRIPT=false)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "syft version",
+            "expected_signal": "Version: 1.57.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Version: 1.57.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "syft ./my-project",
+            "expected_signal": "github.com/google/uuid v1.6.0 go-module",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "github.com/google/uuid v1.6.0 go-module",
+            "setup": [
+              {
+                "command": "mkdir -p my-project && cat > my-project/requirements.txt <<'EOF'\nrequests==2.31.0\nflask==3.0.0\nEOF\ncat > my-project/package-lock.json <<'EOF'\n{\n  \"name\": \"demo\",\n  \"version\": \"1.0.0\",\n  \"lockfileVersion\": 3,\n  \"requires\": true,\n  \"packages\": {\n    \"\": {\"name\": \"demo\", \"version\": \"1.0.0\", \"dependencies\": {\"lodash\": \"4.17.21\"}},\n    \"node_modules/lodash\": {\"version\": \"4.17.21\", \"resolved\": \"https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz\", \"integrity\": \"sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==\"}\n  }\n}\nEOF\ncat > my-project/go.mod <<'EOF'\nmodule example.com/demo\n\ngo 1.21\n\nrequire github.com/google/uuid v1.6.0\nEOF\ncat > my-project/go.sum <<'EOF'\ngithub.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=\ngithub.com/google/uuid v1.6.0/go.mod h1:TfmNfgnSOnhhfXBiswbRkXDjUlxl6g2cSf7tXFAa9b4=\nEOF\ntar -czf my-project.tar.gz my-project",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "syft docker-archive:demo-image.tar",
+            "expected_signal": "busybox 1.36.1-r29 apk",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "busybox 1.36.1-r29 apk",
+            "setup": [
+              {
+                "command": "set -e; rm -rf /tmp/img && mkdir -p /tmp/img/rootfs/lib/apk/db /tmp/img/rootfs/etc && cd /tmp/img && printf 'NAME=\"Alpine Linux\"\\nID=alpine\\nVERSION_ID=3.20.0\\nPRETTY_NAME=\"Alpine Linux v3.20\"\\n' > rootfs/etc/os-release && printf 'C:Q1abc=\\nP:musl\\nV:1.2.5-r0\\nA:x86_64\\nS:411000\\nI:636000\\nT:the musl c library\\nU:https://musl.libc.org/\\nL:MIT\\no:musl\\nm:Test <t@t>\\nt:1700000000\\nc:abc\\n\\nC:Q1def=\\nP:busybox\\nV:1.36.1-r29\\nA:x86_64\\nS:500000\\nI:900000\\nT:Size optimized toolbox\\nU:https://busybox.net/\\nL:GPL-2.0-only\\no:busybox\\nm:Test <t@t>\\nt:1700000000\\nc:def\\nD:so:libc.musl-x86_64.so.1\\n\\n' > rootfs/lib/apk/db/installed && tar -C rootfs -cf layer.tar . && D=$(sha256sum layer.tar | cut -d' ' -f1) && printf '{\"architecture\":\"amd64\",\"os\":\"linux\",\"config\":{},\"rootfs\":{\"type\":\"layers\",\"diff_ids\":[\"sha256:%s\"]},\"history\":[{\"created_by\":\"test\"}]}' \"$D\" > config.json && C=$(sha256sum config.json | cut -d' ' -f1) && mv config.json $C.json && printf '[{\"Config\":\"%s.json\",\"RepoTags\":[\"demo:latest\"],\"Layers\":[\"layer.tar\"]}]' \"$C\" > manifest.json && tar -cf /home/sbx/work/demo-image.tar manifest.json $C.json layer.tar && ls -l /home/sbx/work/demo-image.tar",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "syft ./my-project.tar.gz",
+            "expected_signal": "requests 2.31.0 python",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "requests 2.31.0 python",
+            "setup": [
+              {
+                "command": "mkdir -p my-project && cat > my-project/requirements.txt <<'EOF'\nrequests==2.31.0\nflask==3.0.0\nEOF\ncat > my-project/package-lock.json <<'EOF'\n{\n  \"name\": \"demo\",\n  \"version\": \"1.0.0\",\n  \"lockfileVersion\": 3,\n  \"requires\": true,\n  \"packages\": {\n    \"\": {\"name\": \"demo\", \"version\": \"1.0.0\", \"dependencies\": {\"lodash\": \"4.17.21\"}},\n    \"node_modules/lodash\": {\"version\": \"4.17.21\", \"resolved\": \"https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz\", \"integrity\": \"sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==\"}\n  }\n}\nEOF\ncat > my-project/go.mod <<'EOF'\nmodule example.com/demo\n\ngo 1.21\n\nrequire github.com/google/uuid v1.6.0\nEOF\ncat > my-project/go.sum <<'EOF'\ngithub.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=\ngithub.com/google/uuid v1.6.0/go.mod h1:TfmNfgnSOnhhfXBiswbRkXDjUlxl6g2cSf7tXFAa9b4=\nEOF\ntar -czf my-project.tar.gz my-project",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "syft ./my-project -o cyclonedx-json=./cdx.json -o spdx-json=./spdx.json -o syft-json=./syft.json && syft convert ./syft.json -o spdx-tag-value && grep -o '\"bomFormat\": *\"CycloneDX\"' cdx.json && grep -o '\"spdxVersion\": *\"SPDX-[0-9.]*\"' spdx.json",
+            "expected_signal": "\"bomFormat\":\"CycloneDX\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"bomFormat\":\"CycloneDX\"",
+            "setup": [
+              {
+                "command": "mkdir -p my-project && cat > my-project/requirements.txt <<'EOF'\nrequests==2.31.0\nflask==3.0.0\nEOF\ncat > my-project/package-lock.json <<'EOF'\n{\n  \"name\": \"demo\",\n  \"version\": \"1.0.0\",\n  \"lockfileVersion\": 3,\n  \"requires\": true,\n  \"packages\": {\n    \"\": {\"name\": \"demo\", \"version\": \"1.0.0\", \"dependencies\": {\"lodash\": \"4.17.21\"}},\n    \"node_modules/lodash\": {\"version\": \"4.17.21\", \"resolved\": \"https://registry.npmjs.org/lodash/-/lodash-4.17.21.tgz\", \"integrity\": \"sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==\"}\n  }\n}\nEOF\ncat > my-project/go.mod <<'EOF'\nmodule example.com/demo\n\ngo 1.21\n\nrequire github.com/google/uuid v1.6.0\nEOF\ncat > my-project/go.sum <<'EOF'\ngithub.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=\ngithub.com/google/uuid v1.6.0/go.mod h1:TfmNfgnSOnhhfXBiswbRkXDjUlxl6g2cSf7tXFAa9b4=\nEOF\ntar -czf my-project.tar.gz my-project",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -sSfL https://get.anchore.io/syft | sudo sh -s -- -b /usr/local/bin",
+            "actually_needed": "sh install.sh -b $HOME/.local/bin (no sudo available)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "pipe the install script into sh",
+            "actually_needed": "By default the script fetches and executes a second, per-tag install.sh unseen; set DOWNLOAD_TAG_INSTALL_SCRIPT=false so the read script does the install itself",
+            "kind": "note"
+          },
+          {
+            "readme_said": "syft alpine:latest",
+            "actually_needed": "Needs registry access; offline image scan was verified instead with a hand-built docker-archive tarball (syft docker-archive:demo-image.tar)",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exit 0 and print the expected signals: the go-module uuid row in the directory scan, the busybox apk row from the image archive, and Version 1.57.1; the ERROR lines are only the update check failing because the network is off.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-syft-20261116-002835-cfcc/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-syft-20261116-002835-cfcc/check-1-cmd5.judged.png",
+            "runs/verify/verify-syft-20261116-002835-cfcc/check-2-cmd7.judged.png",
+            "runs/verify/verify-syft-20261116-002835-cfcc/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.296808,
+        "features": [
+          {
+            "feature": "generate SBOMs for images, filesystems, archives",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2,
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "detect packages across dozens of ecosystems",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "output and convert CycloneDX, SPDX, Syft JSON",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "create signed in-toto SBOM attestations",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Not tried. Signed attestation needs signing keys, likely the cosign tool (not installed) and a container registry to push to."
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T00:30:57+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/anchore/syft@e543a0007a0a",
+      "go.mod"
+    ],
+    "packages_checked": 339,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T00:30:41+08:00",
+    "quality": {
+      "total": 81.8,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.6111,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.2,
+      "signals": {
+        "stars": 9898,
+        "monthly_downloads": 5390,
+        "forks": 1057,
+        "dependents": null,
+        "release_downloads": 13067725,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 2382,
+      "packages": [
+        "homebrew:syft"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 8.02
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:30:41.909791+08:00",
+      "sources_sha": "70b1819514fefe3ae79787b8332f93b0ae54bf2b7a1742b824c6bb97c19a33e9",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Generates SBOMs for **container images**, **filesystems**, **archives**"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Exceptional for vulnerability detection when used with a scanner like [Grype](https://github.com/anchore/grype)."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "curl -sSfL https://get.anchore.io/syft | sudo sh -s -- -b /usr/local/bin"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "syft alpine:latest"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "[configuration docs](https://oss.anchore.com/docs/reference/syft/configuration/)"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "syft_1.57.1_darwin_amd64.tar.gz, syft_1.57.1_darwin_arm64.sbom"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/anchore/syft",
+      "fetched_at": "2026-11-16T00:28:20+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/anchore/syft/blob/main/README.md",
+      "fetched_at": "2026-11-16T00:28:19+08:00"
+    },
+    {
+      "id": "release:v1.57.1",
+      "kind": "release",
+      "url": "https://github.com/anchore/syft/releases/tag/v1.57.1",
+      "fetched_at": "2026-11-16T00:28:19+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "CLI tool and library for generating a Software Bill of Materials from container images and filesystems",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:28:28+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "A CLI tool and Go library",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:28:28+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Exceptional for vulnerability detection when used with a scanner like [Grype](https://github.com/anchore/grype).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:28:28+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A CLI tool and Go library for generating a Software Bill of Materials (SBOM) from container images and filesystems.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:28:28+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Syft",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:28:28+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:28:20+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:28:20+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T00:28:20+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:28:20+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.57.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:28:19+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "See the packages within a container image or directory:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:28:28+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "syft <image> -o spdx-json=./spdx.json -o cyclonedx-json=./cdx.json",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:28:28+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "syft --from containers-storage localhost/myimage:latest",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:28:28+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Generates SBOMs for **container images**, **filesystems**, **archives**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:28:28+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Supports dozens of packaging ecosystems",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:28:28+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Multiple output formats (**CycloneDX**, **SPDX**, **Syft JSON**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:28:28+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Create signed SBOM attestations using the [in-toto specification]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:28:28+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T00:28:19+08:00",
+  "updated_at": "2026-11-16T00:30:57+08:00"
+}

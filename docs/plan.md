@@ -345,3 +345,23 @@ Meta 的 $150 credits 是整場的模型預算，Spend Limit 只寄信、不會�
 | 11/5 03:36 | P2／P3／P5／P7 | **b3.v6 上線、知名 87 款功能驗證、官網提交、MCP 路徑**（念誠 11/4–5）。**計分**：b3.v6 把沙盒 40 分拆成安裝 20、功能結果 20；只有算在軟體頭上的失敗才扣分，沒測到的功能從分母拿掉、只降信心度；網頁在品質下面顯示「品質信心度」，提示寫缺什麼。1,046 筆有分數的紀錄：+5 以上 275、-1 以下 94、-5 以下 11；寶藏 132 → 159（新增 29，其中 8 款只到 install；少 2）。**驗證**：87 款用 Muse Spark 1.3 重跑（念誠同意 OpenRouter 上限 $40 → $50，線上保留 $20）：function 51、service 4、inference 1、install 24、未驗證 7；至少一項功能通過 40 款。沒通過的多半要帳號、root、Kubernetes，或是選單列小工具（模型難操作）；btop、cli-cli 沒有再試。全部不是手改紀錄；較弱的通過不覆蓋較強的，沒有紀錄失去驗證。**官網提交**：`/submit` 與 `/submit/<id>`（四步真實狀態，6 秒輪詢，連結可回來看；不存 email）。referrer policy 改 same-origin，否則表單送出時 Origin 是 null、被擋。實測：線上表單送 `charmbracelet/glow`，12 分鐘列入目錄、MCP 第一名推薦；花費約 $0.19。watch 現在會跑漏洞檢查（OSV，免費）與桌面 App 視覺檢查（Linux 截圖，每款約 $0.01–0.03）；watch 開著，花費上限累計 $5，用 `claude/watch` 分支、不直接改 main。**MCP 設定**：沙盒家目錄轉 `$HOME`、測試檔轉佔位符、相對路徑接 `<install-folder>`，JSON 用戶端需要時走 `sh -c`；147 筆掃過無殘留（recallnest 的相對路徑仍無法確定）。**已知限制（不寫進根 README，念誠 11/5）**：網站連結的提交不會自動處理，由念誠手動跑批次；自動流程只跑 Linux，Mac 限定的 App 先列未驗證。**影片**：修 0:27 抖動與便利貼排版、倒帶不再後仰與問號、推鏡不掃過頭、logo 圓點改平面；2:30 改成真實提交畫面與新旁白 s15。OpenRouter 累計約 $42，Modal 模型端點約 $71，Meta 模型總計 $380.59、每款已驗證約 $0.52。 |
 | 11/5 08:30 | P7.2 | **影片修正，併入 main**（念誠 11/5 看完影片）：2:12 的 Large files 標題不再疊到視窗標題列；2:30 的提交頁在鏡頭移動時就轉進畫面、多留 2.8 秒、焦點對在頁面上，改播頁面自己的 In line → Read → Try → List（網站程式碼產生的畫面，時間壓縮，只有最後 12 分鐘是實測），取代卡片在四個方塊上跳動；四個方塊全部打勾後頁面縮到最後的勾上。配樂在 2:35 多放一段 2.5 秒樂句，讓結尾留在片尾卡下（接縫未經人耳確認）。全長 2:58.6。YouTube 新連結還沒換。 |
 | 11/5 08:43 | P7.2 | **影片定版連結，提交表單更新**（念誠 11/5：舊影片已刪除，新連結 https://youtu.be/Rjuf3dHW0SE ，2:59）：README、REPORT、報告頁換連結。Cerebral Valley 表單經念誠要求改：影片連結；說明的日期改 5 Nov、「647 replayed offline」改「in a fresh sandbox」（與 README 一致），加 /submit 一句；模型重要性的 $0.45 改 $0.52。 |
+| 11/15 | 賽後 | **黑客松結束，切換至賽後持續開發方針**（念誠 11/15）：記錄 Meta 黑客松已結束，解除凍結時程與硬性 credit 上限；模型 API 規劃切換至 Anthropic API；Modal 保留作沙盒與剩餘 API key 使用；軟體擴充聚焦 Linux、CLI、MCP 與網頁應用，並規劃擴增軟體類別（見第 8 節）。 |
+| 11/16 02:22 | 賽後 | **模型改用 Anthropic API、類別擴增到九類、第一批候選收錄 95 筆**（念誠 11/15；在分支 `worktree-post-hackathon-anthropic`，還沒併入 main）。**模型**：`call_meta` 的名字與呼叫方式不變，新增 `pickfit/anthropic_messages.py` 把 Chat／Responses 形狀的請求轉成 Messages API、再把回應轉回來（system、圖片、工具、JSON schema、effort、快取讀寫的用量與計費、重試）。`prod` 是 `claude-opus-5-5`，`dev` 與初篩用的 `open` 是 `claude-haiku-5-5`；賽期的 provider 仍可用模型 id 指定，影片判讀仍走 Modal 端點。帳本預設沒有總額與每日上限（要設就用 `PICKFIT_PIPELINE_TOTAL_CAP_USD`、`PICKFIT_PIPELINE_DAILY_CAP_USD`），各階段的單次上限保留、照 Claude 的價格調大。Worker 改打 `api.anthropic.com/v1/messages`，D1 `meta_budget` 只記帳、設了上限才擋；公開部署留一條每日 $20（`/mcp` 與搜尋框任何人都能用）。**類別**：新增 `infra_devops`、`security_net`、`data_db`、`productivity_docs`、`media_files`；schema、初篩、抽取、探索、計分與 Worker 的 enum、篩選、標籤、圖示都讀同一份清單，既有紀錄的類別沒動。**候選**（規則 `post-hackathon-candidates.v1`，細節在 [source-terms.md](source-terms.md) 最後一節）：清單 118 列 → 93 個 repo 與 18 個網站 → 寫成 95 筆紀錄（function 37、service 12、install 16、未驗證 30），16 筆被規則或抽取擋下沒寫；目錄 1,058 → 1,153 筆，列出 1,145，索引重建、`pickfit publish --dry-run` 檢查通過。未驗證的 30 筆裡 20 筆是 README 沒有 Linux 沙盒能跑的安裝指令。網站 13 筆只到 install：browser-use 要模型把推理寫進回覆，被 Anthropic API 拒答，已修正，要不要再造訪一次等念誠決定。**測試**：Python 1,702 通過、Worker 309 通過、型別檢查乾淨；另外用真的 API 驗過抽取、初篩、看圖判讀、agent 的工具呼叫與 Worker 的配對請求。**還沒做**：沒有部署（push 到 main 會自動部署 Worker，之前要先 `npx wrangler secret put ANTHROPIC_API_KEY`）；根目錄 README 仍寫產品用 Meta 的模型；既有 246 筆 `other` 還沒重新分類；5 筆因 agent 的安裝步驟太長而沒過的還沒重驗。 | Claude 約 $27.7（帳本 `pipeline`），Modal 沙盒約 $0.55 |
+
+---
+
+## 8. 賽後階段更新（2026-11-15 起）
+
+Meta Global AI Developer Hackathon（2026-10-27 – 11-04 ET）已正式結束。第 1–7 節保留為比賽期間的歷史紀錄；自 2026-11-15 起，專案方針調整如下：
+
+1. **解除時程與硬性額度限制**：
+   - 不再受黑客松功能凍結日或交件時程限制，可依產品品質與社群需求持續迭代。
+   - 不再受賽期 credit 硬性額度上限（如每日／總額硬停）限制；`~/.pickfit/ledger.sqlite` 仍可保留作為成本觀察與用量追蹤工具，但不再作為阻斷執行的硬關卡。
+2. **模型與沙盒平台切換**：
+   - **LLM API 切換為 Anthropic API**：解除先前「產品必須使用 Meta 模型」與「Anthropic 僅限評測」的規則，改用 Anthropic API（`ANTHROPIC_API_KEY`）支援發現初篩、抽取、驗證 agent 與線上配對。
+   - **Modal 平台持續沿用**：Modal 上仍有剩餘 API key 與沙盒額度，繼續作為 `ModalBox`（Linux gVisor / VM 沙盒與瀏覽器驗證）的主要執行環境。
+3. **軟體收錄與驗證策略（Linux / CLI / MCP / Web 優先）**：
+   - 優先擴大收錄 **Linux 工具、CLI / TUI、MCP server 與網頁應用（Web Apps）**。
+   - **原因**：CLI 與 MCP 工具在 Linux 沙盒的安裝與執行行為，與 macOS 及 Windows 具有高度一致性；在目前缺乏專職 macOS / Windows 實體驗證機器的情況下，先聚焦 Linux / CLI / MCP / Web 能以最低成本維持高可靠度的實測覆蓋。暫緩大量收錄驗證成本高的 macOS / Windows 桌面 GUI App。
+4. **擴增軟體類別（Category Expansion）**：
+   - 目前僅有 `dev_cli`、`local_ai`、`mcp_server`、`other` 四類，導致大量網頁應用、開發維運、生產力、影音、資安等軟體全數擠在 `other`（截至 11/5 已有 246 筆）。賽後將擴增軟體類別 enum 並同步更新 schema、管線與前端介面。

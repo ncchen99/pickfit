@@ -1,0 +1,848 @@
+{
+  "schema_version": "software.v1",
+  "slug": "lazydocker",
+  "repo_id": "gh:187335810",
+  "name": "lazydocker",
+  "summary": "A terminal UI for managing docker and docker-compose containers, services, images and volumes.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "infra_devops",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [
+    "view logs for a container or service",
+    "restart, remove or rebuild containers and services",
+    "prune unused containers, images or volumes to free disk space",
+    "attach to a running container"
+  ],
+  "alternatives_to": [
+    "docui",
+    "Portainer"
+  ],
+  "features": [
+    "view container environment state at a glance",
+    "view logs for containers and services",
+    "view ASCII graphs of container metrics",
+    "restart, remove or rebuild containers"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:13.651088Z",
+    "run_id": null,
+    "open_hint": "Run `lazydocker` in a terminal to open the dashboard of your containers, services, images and volumes.",
+    "features": [
+      {
+        "feature": "view container environment state at a glance",
+        "title": "See the state of your containers at a glance",
+        "steps": []
+      },
+      {
+        "feature": "view logs for containers and services",
+        "title": "View logs for containers and services",
+        "steps": []
+      },
+      {
+        "feature": "view ASCII graphs of container metrics",
+        "title": "View container metrics as ASCII graphs",
+        "steps": []
+      },
+      {
+        "feature": "restart, remove or rebuild containers",
+        "title": "Restart, remove or rebuild containers",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/jesseduffield/lazydocker",
+    "full_name": "jesseduffield/lazydocker",
+    "created_at": "2019-05-18T08:53:50Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "docker>=29.0.0",
+      "docker-compose>=1.23.2 (optional)"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install jesseduffield/lazydocker/lazydocker",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-lazydocker-20261116-005052-0f79",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/install_lazydocker.sh https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh",
+          "purpose": "download install_update_linux.sh"
+        },
+        {
+          "command": "cd /tmp && bash /tmp/install_lazydocker.sh",
+          "purpose": "run install script (downloads release binary to ~/.local/bin)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "lazydocker --version",
+        "expected_signal": "BuildSource: binaryRelease"
+      },
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install github.com/jesseduffield/lazydocker@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.25.2",
+    "published_at": "2026-04-19T02:54:16Z",
+    "url": "https://github.com/jesseduffield/lazydocker/releases/tag/v0.25.2"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T00:51:37.231527+08:00",
+    "runs": [
+      {
+        "id": "verify-lazydocker-20261116-005052-0f79",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T00:51:37.231527+08:00",
+        "tool_version": "0.25.2",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/install_lazydocker.sh https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh",
+            "purpose": "download install_update_linux.sh"
+          },
+          {
+            "command": "cd /tmp && bash /tmp/install_lazydocker.sh",
+            "purpose": "run install script (downloads release binary to ~/.local/bin)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "lazydocker --version",
+            "expected_signal": "BuildSource: binaryRelease",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "BuildSource: binaryRelease",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl .../install_update_linux.sh | bash",
+            "actually_needed": "Script fetches latest release tarball from GitHub and installs the binary to ~/.local/bin; the binary itself is unreadable but is the official release artifact",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Prerequisite docker>=29.0.0",
+            "actually_needed": "No docker engine in this box, so the TUI features cannot be exercised",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "lazydocker --version exited 0 and printed version 0.25.2 with BuildSource: binaryRelease, commit, OS and arch.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lazydocker-20261116-005052-0f79/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lazydocker-20261116-005052-0f79/check-1-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.121822,
+        "features": [
+          {
+            "feature": "view container environment state at a glance",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_container",
+            "failure": null,
+            "note": "Requires a running Docker engine and interactive TUI"
+          },
+          {
+            "feature": "view logs for containers and services",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_container",
+            "failure": null,
+            "note": "Requires a running Docker engine"
+          },
+          {
+            "feature": "view ASCII graphs of container metrics",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_container",
+            "failure": null,
+            "note": "Requires a running Docker engine"
+          },
+          {
+            "feature": "restart, remove or rebuild containers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_container",
+            "failure": null,
+            "note": "Requires a running Docker engine"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T00:51:45+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/jesseduffield/lazydocker@596fd59df6b0",
+      "go.mod"
+    ],
+    "packages_checked": 71,
+    "findings_total": 18,
+    "advisories_total": 18,
+    "findings": [
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.24.0",
+        "advisory": "GHSA-5cgq-3rg8-m6cv",
+        "cves": [
+          "CVE-2026-42508"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto vulnerable to auth bypass via unenforced @revoked status",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.24.0",
+        "advisory": "GHSA-89gr-r52h-f8rx",
+        "cves": [
+          "CVE-2026-39831"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: FIDO/U2F security key physical presence check can be bypassed",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.24.0",
+        "advisory": "GHSA-f5wc-c3c7-36mc",
+        "cves": [
+          "CVE-2026-39832"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto doesn't drop invoking agent constraints when forwarding keys",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.24.0",
+        "advisory": "GHSA-jppx-rxg9-jmrx",
+        "cves": [
+          "CVE-2026-39833"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto doesn't enforce invoking key constraints",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.24.0",
+        "advisory": "GHSA-rm3j-f69w-wqmq",
+        "cves": [
+          "CVE-2026-39834"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto vulnerable to infinite loop on large channel writes",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.24.0",
+        "advisory": "GHSA-v778-237x-gjrc",
+        "cves": [
+          "CVE-2024-45337"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.31.0",
+        "summary": "Misuse of ServerConfig.PublicKeyCallback may cause authorization bypass in golang.org/x/crypto",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.24.0",
+        "advisory": "GHSA-vgwf-h737-ff37",
+        "cves": [
+          "CVE-2026-39830"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking client can cause server deadlock on unexpected responses",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.24.0",
+        "advisory": "GHSA-x527-x647-q7gg",
+        "cves": [
+          "CVE-2026-46595"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking VerifiedPublicKeyCallback permissions skip enforcement",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/docker/cli",
+        "version": "v27.1.1+incompatible",
+        "advisory": "GHSA-p436-gjf2-799p",
+        "cves": [
+          "CVE-2025-15558"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "29.2.0",
+        "summary": "Docker CLI Plugins: Uncontrolled Search Path Element Leads to Local Privilege Escalation on Windows",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/docker/docker",
+        "version": "v28.5.2+incompatible",
+        "advisory": "GHSA-rg2x-37c3-w2rh",
+        "cves": [
+          "CVE-2026-42306"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "Docker: Race condition in docker cp allows bind mount redirection to host path",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/docker/docker",
+        "version": "v28.5.2+incompatible",
+        "advisory": "GHSA-x86f-5xw2-fm2r",
+        "cves": [
+          "CVE-2026-41567"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "Docker: `PUT /containers/{id}/archive` executes container binary on the host",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/docker/docker",
+        "version": "v28.5.2+incompatible",
+        "advisory": "GO-2026-4887",
+        "cves": [
+          "CVE-2026-34040"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "Moby has AuthZ plugin bypass when provided oversized request bodies in github.com/docker/docker",
+        "malicious": false
+      },
+      {
+        "package": "go:go.opentelemetry.io/otel/sdk",
+        "version": "v1.28.0",
+        "advisory": "GHSA-9h8m-3fm2-qjrq",
+        "cves": [
+          "CVE-2026-24051"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.40.0",
+        "summary": "OpenTelemetry Go SDK Vulnerable to Arbitrary Code Execution via PATH Hijacking",
+        "malicious": false
+      },
+      {
+        "package": "go:go.opentelemetry.io/otel/sdk",
+        "version": "v1.28.0",
+        "advisory": "GHSA-hfvc-g4fc-pqhx",
+        "cves": [
+          "CVE-2026-39883"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.43.0",
+        "summary": "opentelemetry-go: BSD kenv command not using absolute path enables PATH hijacking",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.24.0",
+        "advisory": "GHSA-hcg3-q754-cr77",
+        "cves": [
+          "CVE-2025-22869"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.35.0",
+        "summary": "golang.org/x/crypto Vulnerable to Denial of Service (DoS) via Slow or Incomplete Key Exchange",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.24.0",
+        "advisory": "GHSA-q4h4-gmj2-qvw2",
+        "cves": [
+          "CVE-2026-46597"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking byte arithmetic causes underflow and panic",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.24.0",
+        "advisory": "GHSA-w879-237q-wc7r",
+        "cves": [
+          "CVE-2026-39829"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking pathological RSA/DSA parameters may cause DoS",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.24.0",
+        "advisory": "GO-2025-4116",
+        "cves": [
+          "CVE-2025-47913"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.43.0",
+        "summary": "Potential denial of service in golang.org/x/crypto/ssh/agent",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T00:51:45+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.7,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.86,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.3811,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 97.2,
+      "signals": {
+        "stars": 53338,
+        "monthly_downloads": 1966,
+        "forks": 1717,
+        "dependents": null,
+        "release_downloads": 1544583,
+        "hn_top_score": 481,
+        "registries_count": 1
+      },
+      "age_days": 2738,
+      "packages": [
+        "homebrew:lazydocker"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 2.21
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:51:37.233407+08:00",
+      "sources_sha": "544a8e82bb1b22c06747112ab4eff4e9537219c824749304c4d85b35eb8e184f",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A simple terminal UI for both docker and docker-compose, written in Go with the [gocui](https://github.com/jroimartin/gocui 'gocui') library."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Memorising docker commands is hard. Memorising aliases is slightly less hard. Keeping track of your containers across multiple terminal windows is near impossible."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "- Docker >= **29.0.0** (API >= **1.24**)\n- Docker-Compose >= **1.23.2** (optional)"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "scoop install lazydocker"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Call `lazydocker` in your terminal."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "By opening lazydocker, clicking on the 'project' panel in the top left, and pressing 'o' (or 'e' if your editor is vim). See [Config Docs](/docs/Config.md)"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "#### For Install / Upgrade"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "### Binary Release (Linux/OSX/Windows)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/jesseduffield/lazydocker",
+      "fetched_at": "2026-11-16T00:50:42+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/jesseduffield/lazydocker/blob/master/README.md",
+      "fetched_at": "2026-11-16T00:50:42+08:00"
+    },
+    {
+      "id": "release:v0.25.2",
+      "kind": "release",
+      "url": "https://github.com/jesseduffield/lazydocker/releases/tag/v0.25.2",
+      "fetched_at": "2026-11-16T00:50:42+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A simple terminal UI for both docker and docker-compose",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Call `lazydocker` in your terminal.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "The lazier way to manage everything docker",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A simple terminal UI for both docker and docker-compose, written in Go with the [gocui](https://github.com/jroimartin/gocui 'gocui') library.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "Call `lazydocker` in your terminal.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "### Binary Release (Linux/OSX/Windows)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Docker >= **29.0.0** (API >= **1.24**)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "Docker-Compose >= **1.23.2** (optional)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:42+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:42+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:42+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.25.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:42+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "viewing logs for a container/service",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "restarting/removing/rebuilding containers/services",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "pruning containers, images, or volumes that are hogging up disk space",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "attaching to a container/service",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "[docui](https://github.com/skanehira/docui) - Skanehira beat me to the punch",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "[Portainer](https://github.com/portainer/portainer) - Portainer tries to solve the same problem",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "viewing the state of your docker or docker-compose container environment at a glance",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "viewing logs for a container/service",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "viewing ascii graphs of your containers' metrics",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "restarting/removing/rebuilding containers/services",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install jesseduffield/lazydocker/lazydocker",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/jesseduffield/lazydocker@latest",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:52+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T00:49:10+08:00",
+  "updated_at": "2026-11-16T00:51:45+08:00"
+}

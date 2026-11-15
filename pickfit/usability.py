@@ -32,13 +32,17 @@ operator stopped) are measured, never scored.
 Revision r1 (after 念誠's blind ratings, docs/usability-pilot.md section 6): checks instead of holistic scores, a
 problem quotes the text next to it, and no score from a first look alone.
 
-comfort.v1 (念誠 11/3, section 9): comfortable comes from one call to a visual inspector (COMFORT_MODEL, Muse Wonder, at
+comfort.v1 (念誠 11/3, section 9): comfortable comes from one call to a visual inspector (COMFORT_MODEL, at
 effort medium) that lists measurable defects on the first-look screens: text cut off, overlaps, clipped controls, bad
 wraps, low contrast, tiny text, raw markup, broken images, misalignment, cramping; never taste. No app defect 2, minor
 ones only 1, any major 0. Its defects are kept whether or not pickfit's OCR finds their text (found_by says which).
 
-The calls run under one ledger scope for the whole stage (STAGE_RUN_ID, STAGE_CAP_USD). Results go to
+The calls of one run share a ledger scope (STAGE_RUN_ID, STAGE_CAP_USD), so a run that goes wrong stops at its
+cap; during the hackathon the scope was the whole stage across runs. Results go to
 ~/.pickfit/usability/<slug>.json; `--write` adds them to the record as `usability` (schema.Usability).
+
+Since 2026-11-15 both the checklist reader and the visual inspector are Claude Opus; the results of the
+hackathon name muse-spark-1.3 and Muse Wonder, the models that wrote them.
 """
 
 from __future__ import annotations
@@ -59,26 +63,28 @@ from typing import Any, Literal
 from pydantic import BaseModel, Field
 
 from pickfit.ledger import BudgetExceeded, taipei_now
+from pickfit.meta import PROD_MODEL
 
 VERSION = "ease.v1"
 PROMPT_VERSION = "ease.v1.r1"
 STAGE = "usability"
-STAGE_RUN_ID = "usability-ease.v1"  # one ledger scope for the stage, across processes
-STAGE_CAP_USD = 12.0
-MODEL = "prod"  # muse-spark-1.3
+_STARTED = taipei_now().strftime("%Y%m%d-%H%M%S")
+STAGE_RUN_ID = f"usability-ease.v1-{_STARTED}"  # one ledger scope per run of the command
+STAGE_CAP_USD = 12.0  # per run
+MODEL = "prod"  # Claude Opus
 REASONING_EFFORT = "low"
 MAX_OUTPUT_TOKENS = 6_000
 SAMPLES = 2
 PROMPT_CACHE_KEY = "pickfit-ease-v1"
 
-# comfortable from measurable defects (comfort.v1, 念誠 11/3): Muse Wonder, one sample, effort medium.
+# comfortable from measurable defects (comfort.v1, 念誠 11/3): a visual inspector, one sample, effort medium.
 COMFORT_VERSION = "comfort.v1"
-COMFORT_MODEL = "muse-wonder-1.0"
+COMFORT_MODEL = PROD_MODEL  # Claude Opus; Muse Wonder to 11/4
 COMFORT_EFFORT = "medium"
 COMFORT_MAX_TOKENS = 16_000
-VISUAL_CAP_USD = 8.0  # the whole visual-check stage, across runs (one ledger scope)
-VISUAL_RUN_ID = "usability-visual-comfort.v1"
-VISUAL_COST_PER_APP = 0.035  # measured on the 12 pilot apps: $0.39 for 12 (section 9.1)
+VISUAL_CAP_USD = 8.0  # one run of the visual check (one ledger scope)
+VISUAL_RUN_ID = f"usability-visual-comfort.v1-{_STARTED}"
+VISUAL_COST_PER_APP = 0.035  # measured on the 12 pilot apps with Muse Wonder, at the same token prices: $0.39 for 12
 
 EVIDENCE_DIR = Path.home() / ".pickfit" / "evidence"
 RESULTS_DIR = Path.home() / ".pickfit" / "usability"

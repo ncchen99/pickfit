@@ -104,8 +104,10 @@ def _gui(run: VerificationRun) -> dict[str, Any] | None:
     out = {"tier": run.gui.tier, "screen": run.gui.screen, "display": run.gui.display,
            "launch_offline": launch.offline if launch else None}
     if run.gui.operations:
+        # operator_model: the page names the model that chose the actions (Muse Spark Open to 11/4, Claude since).
         out["operations"] = [{"feature": o.feature, "check": o.check, "passed": o.passed, "replay": o.replay,
-                              "goal": o.goal, "observed": o.observed} for o in run.gui.operations]
+                              "goal": o.goal, "observed": o.observed, "operator_model": o.operator_model}
+                             for o in run.gui.operations]
     return out
 
 
@@ -172,7 +174,7 @@ def _web(record: SoftwareRecord) -> dict[str, Any] | None:
             "pwa": web.pwa,
             "offline": web.offline,
             "operations": [{"feature": o.feature, "check": o.check, "passed": o.passed, "goal": o.goal,
-                            "observed": o.observed} for o in web.operations],
+                            "observed": o.observed, "operator_model": o.operator_model} for o in web.operations],
             "features": _feature_coverage(best),
         }
     return {"url": record.web.url, "check": check}

@@ -17,18 +17,18 @@ import { commandText, fixtureCatalog, fixtureIndex, makeD1 } from './helpers.ts'
 
 function site(env: Partial<Env> = {}) {
   const d1 = makeD1();
-  let metaCalls = 0;
+  let modelCalls = 0;
   const worker = makeWorker(fixtureIndex(), {
     fetch: (async () => {
-      metaCalls++;
+      modelCalls++;
       throw new Error('no model call expected');
     }) as unknown as typeof fetch,
     now: () => new Date('2026-10-30T12:00:00Z'),
   });
   const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
   const get = (path: string, accept = 'text/html') =>
-    worker.fetch(new Request(`http://127.0.0.1:8787${path}`, { headers: { accept } }), { DB: d1.db, MODEL_API_KEY: 'k', ...env } as Env, ctx);
-  return { get, metaCalls: () => metaCalls };
+    worker.fetch(new Request(`http://127.0.0.1:8787${path}`, { headers: { accept } }), { DB: d1.db, ANTHROPIC_API_KEY: 'k', ...env } as Env, ctx);
+  return { get, modelCalls: () => modelCalls };
 }
 
 test('every page answers with HTML under a nonce CSP that allows only this Worker’s images and font', async () => {
@@ -44,7 +44,7 @@ test('every page answers with HTML under a nonce CSP that allows only this Worke
     assert.ok(html.includes(`<script nonce="${nonce}">`) && html.includes(`<style nonce="${nonce}">`), path);
     assert.ok(!/ style="/.test(html), `${path} has an inline style attribute`);
   }
-  assert.equal(s.metaCalls(), 0);
+  assert.equal(s.modelCalls(), 0);
 });
 
 test('unknown tools and paths get the not-found page for a browser and the plain 404 otherwise; JSON health is unchanged', async () => {
@@ -114,7 +114,7 @@ test('At a glance is a measurement sheet that never drops a fact: unverified and
   entry.pricing = null;
   const worker = makeWorker(index, { fetch: (async () => { throw new Error('no model call expected'); }) as unknown as typeof fetch, now: () => new Date('2026-10-30T12:00:00Z') });
   const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
-  const raw = await (await worker.fetch(new Request('http://127.0.0.1:8787/tool/fixture-llm-runner', { headers: { accept: 'text/html' } }), { DB: makeD1().db, MODEL_API_KEY: 'k' } as Env, ctx)).text();
+  const raw = await (await worker.fetch(new Request('http://127.0.0.1:8787/tool/fixture-llm-runner', { headers: { accept: 'text/html' } }), { DB: makeD1().db, ANTHROPIC_API_KEY: 'k' } as Env, ctx)).text();
   assert.match(sheet(raw), /<div class="m m-caution[^"]*"><dt>Verified on<\/dt><dd>Not verified yet<\/dd>/);
   assert.match(row(raw, 'Price')?.[0] ?? '', /m-quiet/);
   assert.equal(row(raw, 'Price')?.[1], '<span class="unknown">not stated</span>');
@@ -133,7 +133,7 @@ test('a verified tool page leads with how to use it (how far each run got below 
   index.entries.find((e) => e.slug === 'fixture-llm-runner')!.install = {};
   const worker = makeWorker(index, { fetch: (async () => { throw new Error('no model call expected'); }) as unknown as typeof fetch, now: () => new Date('2026-10-30T12:00:00Z') });
   const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
-  const res = await worker.fetch(new Request('http://127.0.0.1:8787/tool/fixture-llm-runner', { headers: { accept: 'text/html' } }), { DB: makeD1().db, MODEL_API_KEY: 'k' } as Env, ctx);
+  const res = await worker.fetch(new Request('http://127.0.0.1:8787/tool/fixture-llm-runner', { headers: { accept: 'text/html' } }), { DB: makeD1().db, ANTHROPIC_API_KEY: 'k' } as Env, ctx);
   const raw = await res.text();
   assert.match(raw, /pickfit hasn’t verified Fixture LLM Runner yet/);
   const install = at(raw, 'install-title');
@@ -305,7 +305,7 @@ test('the tool page words what pickfit saw for a reader: why a feature was not t
   const worker = makeWorker(index, { now: () => new Date('2026-11-03T12:00:00Z') });
   const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
   const get = async (path: string) =>
-    (await worker.fetch(new Request(`http://127.0.0.1:8787${path}`, { headers: { accept: 'text/html' } }), { DB: makeD1().db, MODEL_API_KEY: 'k' } as Env, ctx)).text();
+    (await worker.fetch(new Request(`http://127.0.0.1:8787${path}`, { headers: { accept: 'text/html' } }), { DB: makeD1().db, ANTHROPIC_API_KEY: 'k' } as Env, ctx)).text();
   const html = await get('/tool/fixture-llm-runner');
   // Used but not shown working is labelled so (not "Not tested"), and its tooltip says what the run saw.
   assert.match(html, /<span class="feat-state" tabindex="0" data-tip="Output shows only a help screen\.">.*?Not shown working<\/span>/);
@@ -317,6 +317,6 @@ test('the tool page words what pickfit saw for a reader: why a feature was not t
   const start = web.indexOf('<details class="block tested">');
   const fold = web.slice(start, web.indexOf('</details>', start));
   assert.match(fold, /When pickfit opened it in a browser on 2 Nov 2026, the page loaded to its main screen\. pickfit then used it, and this worked: /);
-  assert.doesNotMatch(fold, /Chromium|Muse Spark|visited once|sandboxed browser/);
+  assert.doesNotMatch(fold, /Chromium|Muse Spark|Claude|visited once|sandboxed browser/);
   assert.match(await get('/tool/fixture-web-sketch?lang=zh-TW'), /pickfit 於 2026年11月2日 在瀏覽器中打開它時，頁面已載入主畫面。/);
 });

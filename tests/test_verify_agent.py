@@ -51,6 +51,10 @@ def task() -> VerifyTask:
     return load_fixture(FIXTURES / "evnx.json", fetch=lambda url: "# evnx\n\nInstall: `pipx install evnx`\n")
 
 
+# Chain mode carries history by previous_response_id, which only Meta's API keeps; Claude runs replay.
+CHAIN_MODEL = "muse-spark-1.3-contributor"
+
+
 def agent(task: VerifyTask, box: Box, server: FakeServer, ledger: Ledger, tmp_path: Path,
           **kwargs: Any) -> VerifyAgent:
     lines: list[str] = []
@@ -82,7 +86,7 @@ def test_chain_mode_reads_the_error_fixes_it_and_finishes(task, ledger, tmp_path
         response("r4", finish(steps=[1], smoke=SMOKE), summary="validate exit 1 is right."),
     )
     box = FakeBox(EVNX_BOX)
-    runner = agent(task, box, server, ledger, tmp_path, mode="chain")
+    runner = agent(task, box, server, ledger, tmp_path, mode="chain", model=CHAIN_MODEL)
     report = runner.run()
 
     assert report.stop_reason == "finished"
@@ -244,7 +248,7 @@ def test_finish_with_other_calls_is_not_recorded(task, ledger, tmp_path):
         response("r2", finish(level="install", steps=[1])),
         response("r3", finish(level="install", steps=[1])),
     )
-    report = agent(task, FakeBox(EVNX_BOX), server, ledger, tmp_path, mode="chain").run()
+    report = agent(task, FakeBox(EVNX_BOX), server, ledger, tmp_path, mode="chain", model=CHAIN_MODEL).run()
     outputs = [item["output"] for item in server.requests[1]["input"]]
     assert outputs[1].startswith("Not recorded: call finish alone")
     # No check in the log: sent back once, then the second identical finish stands.
@@ -298,6 +302,77 @@ def test_a_trailing_tail_or_echo_is_dropped_before_the_command_runs(task, ledger
     assert report.verdict["level"] == "install" and report.verdict["agrees"] and len(server.requests) == 3
 
 
+def test_a_command_that_cannot_be_cited_is_said_with_its_output(task, ledger, tmp_path):
+    # termshark, 11/16: its loop was refused at finish, on the finish-only turn, with no command left to redo it.
+    loop = 'for f in *.deb; do dpkg -x "$f" ~/root; done'
+    fixture = "cat > ci.yml <<'EOF'\n" + "name: CI\n" * 70 + "EOF"
+    box = FakeBox({**EVNX_BOX, loop: (0, "", ""), fixture: (0, "", "")})
+    version = {"setup_ids": [], "expected_signal": "0.10.18", "expected_exit_code": 0, "observed_excerpt": ""}
+    server = FakeServer(
+        response("r1", run_cmd(loop)),
+        response("r2", run_cmd(fixture)),
+        response("r3", run_cmd("pipx install evnx")),
+        response("r4", run_cmd("evnx --version")),
+        response("r5", finish(level="install", steps=[3], smoke=[{**version, "command_id": 4}])),
+    )
+    a = agent(task, box, server, ledger, tmp_path)
+    report = a.run()
+    told = [item["output"] for request in server.requests[1:4] for item in request["input"][-1:]]
+    assert told[0].startswith("note: as written, pickfit cannot count this command as an install step or a "
+                              "check: `for` decides the exit code itself. If it is one, run it again in a form that shows")
+    assert f"it is {len(fixture)} characters and a step or a check fits in 500" in told[1]
+    assert "setup_ids, up to 4000 characters" in told[1]
+    assert told[2].startswith("command_id: 3")  # an honest command gets no note
+    assert "    not citable as written: `for` decides the exit code itself" in a.lines
+    assert report.verdict["level"] == "install" and report.verdict["agrees"]
+
+
+def sample_github_token(body: str = "Ab3" * 10) -> str:
+    """A string with the form and checksum of a GitHub token, built here so that this file holds none."""
+    import zlib
+
+    digits, n = "", zlib.crc32(body.encode())
+    alphabet = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+    while n:
+        n, r = divmod(n, 62)
+        digits = alphabet[r] + digits
+    return "ghp" + "_" + body + digits.rjust(6, "0")
+
+
+def test_a_command_with_a_real_format_token_is_not_run_or_recorded(task, ledger, tmp_path):
+    # repomix and trufflehog, 11/16: the model wrote a GitHub token it remembered into a scanner's sample
+    # file, the record carried the command, and GitHub refused the push.
+    real, made_up = sample_github_token(), "ghp" + "_" + "x9" * 18
+    leak = f"printf 'github_token = {real}\\n' > leak.txt && evnx scan leak.txt"
+    fine = f"printf 'github_token = {made_up}\\n' > leak.txt && evnx --version"
+    box = FakeBox({**EVNX_BOX, fine: (0, "evnx 0.10.18", "")})
+    version = {"setup_ids": [], "expected_signal": "0.10.18", "expected_exit_code": 0, "observed_excerpt": ""}
+    server = FakeServer(
+        response("r1", run_cmd("pipx install evnx")),
+        response("r2", run_cmd(leak)),
+        response("r3", run_cmd(fine)),
+        response("r4", finish(level="install", steps=[1], smoke=[{**version, "command_id": 2}])),
+    )
+    a = agent(task, box, server, ledger, tmp_path)
+    report = a.run()
+    told = server.requests[2]["input"][-1]["output"]
+    assert told.startswith("error: not run. The command holds a string with the form and checksum of a real GitHub token")
+    assert real not in told and not any(real in line for line in a.lines)
+    assert not any(real in command for command, _ in box.ran)
+    assert [c.command for c in report.commands if c.tool == "run_command"] == ["pipx install evnx", fine]
+    assert "  run_command refused: the command holds a real-format GitHub token" in a.lines
+    assert report.verdict["level"] == "install"  # the made-up one ran as command 2: no budget was used
+    assert "make up random characters of your own" in a.instructions
+
+
+def test_the_prompt_states_the_record_rules_up_front(task, ledger, tmp_path):
+    a = agent(task, FakeBox(EVNX_BOX), FakeServer(), ledger, tmp_path)
+    assert "one command of at most 500 characters" in a.instructions
+    assert "Nor one with a loop (`for`, `while`)" in a.instructions
+    assert "`xargs -I{} tool {} < list.txt`" in a.instructions
+    assert "may be up to 4000 characters" in a.instructions
+
+
 def test_a_powershell_box_runs_the_command_as_written(task, ledger, tmp_path):
     class PwshBox(FakeBox):
         shell = "pwsh"
@@ -326,7 +401,7 @@ def test_invalid_finish_and_bad_tool_arguments_go_back_to_the_model(task, ledger
         response("r2", ("read_file", {"path": "README.md", "offset": 0}), ("nope", {})),
         response("r3", finish(level="install", steps=[1])),
     )
-    report = agent(task, FakeBox(EVNX_BOX), server, ledger, tmp_path, mode="chain").run()
+    report = agent(task, FakeBox(EVNX_BOX), server, ledger, tmp_path, mode="chain", model=CHAIN_MODEL).run()
     first_outputs = [item["output"] for item in server.requests[1]["input"]]
     assert first_outputs[0].startswith("error: invalid arguments for run_command")
     second_outputs = [item["output"] for item in server.requests[2]["input"]]

@@ -4,7 +4,7 @@ import { findAlternatives, findSoftware, type FindInput } from '../src/find.ts';
 import { guardWellKnown, sameTool } from '../src/guard.ts';
 import { MATCH_INSTRUCTIONS, type ModelAnswer } from '../src/prompt.ts';
 import { INSTRUCTIONS, READONLY_INSTRUCTIONS } from '../src/server.ts';
-import { answer, fixtureCatalog, harness, metaResponse } from './helpers.ts';
+import { answer, fixtureCatalog, harness, modelResponse } from './helpers.ts';
 
 const MAC_OFFLINE: FindInput = {
   need: 'run a small language model offline on my Mac (secret-project-xyz)',
@@ -19,7 +19,7 @@ const OLLAMA = {
 };
 
 test('a well-known free tool is named outside the picks, labelled unverified by code', async () => {
-  const h = harness(() => metaResponse(answer(OLLAMA)));
+  const h = harness(() => modelResponse(answer(OLLAMA)));
   const out = await findSoftware(MAC_OFFLINE, h.deps);
   await h.settle();
 
@@ -30,7 +30,7 @@ test('a well-known free tool is named outside the picks, labelled unverified by 
     why: 'Ollama is free, runs models offline on macOS and needs no API setup. It is also widely used.', // never cut
     verified: false,
     how_we_know:
-      "Named by muse-spark-1.3 from general knowledge, not from pickfit's data. " +
+      "Named by claude-opus-5-5 from general knowledge, not from pickfit's data. " +
       'pickfit has not installed it, has no install guide for it and has not checked its price, that it runs on macos or that it works offline.',
   });
 
@@ -41,13 +41,13 @@ test('a well-known free tool is named outside the picks, labelled unverified by 
 });
 
 test('how_we_know lists only the conditions the person gave', async () => {
-  const h = harness(() => metaResponse(answer({ well_known_name: 'jq', well_known_why: 'jq is free and does exactly this.' })));
+  const h = harness(() => modelResponse(answer({ well_known_name: 'jq', well_known_why: 'jq is free and does exactly this.' })));
   const out = await findSoftware({ need: 'query json in the terminal' }, h.deps);
   assert.match(out.well_known_option!.how_we_know, /has not checked its price\.$/);
 });
 
 test('the prompt asks for it rarely, and the schema allows only a name and a sentence', async () => {
-  const h = harness(() => metaResponse(answer()));
+  const h = harness(() => modelResponse(answer()));
   const out = await findSoftware(MAC_OFFLINE, h.deps);
   await h.settle();
   assert.equal(out.well_known_option, null);
@@ -56,9 +56,10 @@ test('the prompt asks for it rarely, and the schema allows only a name and a sen
 
   assert.match(MATCH_INSTRUCTIONS, /10\. well_known_name and well_known_why: usually both null/);
   assert.match(MATCH_INSTRUCTIONS, /never say it was verified or tested/);
-  const schema = h.requests[0].body.text.format.schema;
-  assert.deepEqual(schema.properties.well_known_name, { type: ['string', 'null'] });
-  assert.deepEqual(schema.properties.well_known_why, { type: ['string', 'null'] });
+  const schema = h.requests[0].body.output_config.format.schema;
+  const nullableString = { anyOf: [{ type: 'string' }, { type: 'null' }] };
+  assert.deepEqual(schema.properties.well_known_name, nullableString);
+  assert.deepEqual(schema.properties.well_known_why, nullableString);
   assert.ok(schema.required.includes('well_known_name') && schema.required.includes('well_known_why'));
 });
 
@@ -204,7 +205,7 @@ test('guard: every word that says someone ran or checked it is refused', () => {
 });
 
 test('a dropped option is not shown, but the log keeps the name and why', async () => {
-  const h = harness(() => metaResponse(answer({ well_known_name: 'Fixture Chat TUI', well_known_why: 'Free.' })));
+  const h = harness(() => modelResponse(answer({ well_known_name: 'Fixture Chat TUI', well_known_why: 'Free.' })));
   const out = await findSoftware(MAC_OFFLINE, h.deps);
   await h.settle();
   assert.equal(out.well_known_option, null);
@@ -215,13 +216,13 @@ test('a dropped option is not shown, but the log keeps the name and why', async 
 
 test('find_alternatives never offers the current tool as the well-known option', async () => {
   const h = harness(() =>
-    metaResponse(answer({ well_known_name: 'Ollama', well_known_why: 'Ollama is free.', keep_current: { recommended: true, reason: 'x' } })),
+    modelResponse(answer({ well_known_name: 'Ollama', well_known_why: 'Ollama is free.', keep_current: { recommended: true, reason: 'x' } })),
   );
   const out = await findAlternatives({ current_software: 'Ollama', pain_points: 'too heavy', os: 'linux' }, h.deps);
   assert.equal(out.well_known_option, null);
 
   const h2 = harness(() =>
-    metaResponse(answer({ well_known_name: 'llama.cpp', well_known_why: 'llama.cpp is free and much lighter.', keep_current: { recommended: false, reason: 'x' } })),
+    modelResponse(answer({ well_known_name: 'llama.cpp', well_known_why: 'llama.cpp is free and much lighter.', keep_current: { recommended: false, reason: 'x' } })),
   );
   const out2 = await findAlternatives({ current_software: 'Ollama', pain_points: 'too heavy', os: 'linux' }, h2.deps);
   assert.equal(out2.well_known_option?.name, 'llama.cpp');
@@ -248,7 +249,7 @@ test('a rejected answer degrades to rules, and the log still says which tool the
     ...OLLAMA,
     picks: [{ slug: 'fixture-llm-runner', fit: 'x', reasons: [{ claim: 'Paid', field: 'pricing', value: 'paid' }], tradeoffs: [], vs_well_known: null }],
   });
-  const h = harness(() => metaResponse(rejected));
+  const h = harness(() => modelResponse(rejected));
   const out = await findSoftware(MAC_OFFLINE, h.deps);
   await h.settle();
   assert.equal(out.degraded_reason, 'guard_rejected_all');
@@ -258,7 +259,7 @@ test('a rejected answer degrades to rules, and the log still says which tool the
 });
 
 test('a name that is not a plain name is logged without its text', async () => {
-  const h = harness(() => metaResponse(answer({ well_known_name: 'see https://internal.example/x?token=abc', well_known_why: 'Free.' })));
+  const h = harness(() => modelResponse(answer({ well_known_name: 'see https://internal.example/x?token=abc', well_known_why: 'Free.' })));
   await findSoftware(MAC_OFFLINE, h.deps);
   await h.settle();
   const row = h.sqlite.prepare('SELECT need FROM events').get() as any;

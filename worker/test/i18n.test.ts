@@ -11,7 +11,7 @@ import { fileURLToPath } from 'node:url';
 import type { Env } from '../src/env.ts';
 import { L, lang, pickLang, translateWith, withLang, type Translations } from '../src/i18n.ts';
 import { makeWorker } from '../src/worker.ts';
-import { answer, commandText, fixtureIndex, makeD1, metaResponse } from './helpers.ts';
+import { answer, commandText, fixtureIndex, makeD1, modelResponse } from './helpers.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const translations = JSON.parse(readFileSync(join(HERE, 'generated', 'zh-TW.json'), 'utf8')) as Translations;
@@ -20,11 +20,11 @@ const SUMMARY_EN = '(Fake test fixture) Runs small language models offline';
 
 function site() {
   const d1 = makeD1();
-  const metaCalls: string[] = [];
+  const modelCalls: string[] = [];
   const worker = makeWorker(fixtureIndex(), {
     fetch: (async (_url: string, init: RequestInit) => {
-      metaCalls.push(String(init.body));
-      return metaResponse(answer());
+      modelCalls.push(String(init.body));
+      return modelResponse(answer());
     }) as unknown as typeof fetch,
     now: () => new Date('2026-10-30T12:00:00Z'),
     translations,
@@ -33,10 +33,10 @@ function site() {
   const send = (path: string, headers: Record<string, string> = {}, init: RequestInit = {}) =>
     worker.fetch(
       new Request(`http://127.0.0.1:8787${path}`, { ...init, headers: { accept: 'text/html', ...headers } }),
-      { DB: d1.db, MODEL_API_KEY: 'test-key' } as unknown as Env,
+      { DB: d1.db, ANTHROPIC_API_KEY: 'test-key' } as unknown as Env,
       ctx as unknown as ExecutionContext,
     );
-  return { send, metaCalls };
+  return { send, modelCalls };
 }
 
 test('the build writes only translations whose English is still in the index', () => {
@@ -119,8 +119,8 @@ test('a zh-TW search sends the model exactly what an English search sends, and s
   const headers = (cookie: string) => ({ cookie, 'content-type': 'application/x-www-form-urlencoded', origin: 'http://127.0.0.1:8787' });
   const enPage = await (await en.send('/search', headers('pickfit_lang=en'), { method: 'POST', body })).text();
   const zhPage = await (await zh.send('/search', headers('pickfit_lang=zh-TW'), { method: 'POST', body })).text();
-  assert.equal(en.metaCalls.length, 1);
-  assert.deepEqual(zh.metaCalls, en.metaCalls);
+  assert.equal(en.modelCalls.length, 1);
+  assert.deepEqual(zh.modelCalls, en.modelCalls);
   assert.ok(enPage.includes(SUMMARY_EN) && !enPage.includes(SUMMARY_ZH));
   assert.ok(zhPage.includes(SUMMARY_ZH));
   assert.match(zhPage, /<html lang="zh-Hant-TW">/);

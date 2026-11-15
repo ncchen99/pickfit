@@ -5,6 +5,21 @@ export type Arch = 'arm64' | 'x86_64';
 export type Need = 'required' | 'optional' | 'none';
 export const OSES: readonly OS[] = ['macos', 'linux', 'windows'];
 
+/**
+ * The categories a request, a filter or a shelf can name, in the order pages list them. The one list the
+ * Worker's types, tool schemas, match schema, labels and icons are built from; pickfit/schema.py's Category
+ * has the same values. infra_devops: containers, Kubernetes, CI/CD, IaC, monitoring and backup; security_net:
+ * network diagnostics, packet analysis, TLS/PKI, encryption, secret scanning; data_db: local SQL engines,
+ * database clients, JSON/CSV/log processing; productivity_docs: notes, knowledge bases, whiteboards and
+ * diagrams, document conversion, slides; media_files: media download and transcoding, image compression,
+ * PDF tools, file transfer.
+ */
+export const NAMED_CATEGORIES = ['dev_cli', 'local_ai', 'mcp_server', 'infra_devops', 'security_net', 'data_db', 'productivity_docs', 'media_files'] as const;
+/** Every category a record can have: the named ones, then "other" for what fits none of them. */
+export const CATEGORIES = [...NAMED_CATEGORIES, 'other'] as const;
+export type NamedCategory = (typeof NAMED_CATEGORIES)[number];
+export type Category = (typeof CATEGORIES)[number];
+
 /** A run's verification clip (index.py _video): served at /video/<slug>/<file>, the poster at <clip stem>.jpg. */
 export interface RunVideo {
   clip: string;
@@ -55,7 +70,7 @@ export interface RunSummary {
 export interface GuiEvidence {
   /**
    * window: a window of the app's own process (per the X server); ui_rendered: the screen judge saw the app's own UI;
-   * action_checked: also, Muse Spark Open operated it from screenshots and pickfit's own check of the result passed.
+   * action_checked: also, a model operated it from screenshots and pickfit's own check of the result passed.
    */
   tier: 'window' | 'ui_rendered' | 'action_checked';
   /** What a separate model saw in a screenshot of the app's own windows. */
@@ -81,6 +96,8 @@ export interface GuiOperation {
   goal: string;
   /** pickfit's own line about what the check found. */
   observed: string;
+  /** The model that chose the clicks and keys (record field operator_model); absent in an index built before it was written out. */
+  operator_model?: string | null;
 }
 
 /** One advertised feature as the run behind a guide covered it (index.py _feature_coverage). */
@@ -170,6 +187,8 @@ export interface WebOperation {
   goal: string;
   /** pickfit's own line about what the check found. */
   observed: string;
+  /** The model that chose the actions (record field operator_model); absent in an index built before it was written out. */
+  operator_model?: string | null;
 }
 
 /**
@@ -225,7 +244,7 @@ export interface Entry {
   why_worth_it: string | null;
   /** Plain feature titles and how-to steps for the tool page; older indexes lack it. */
   usage_guide?: UsageGuide | null;
-  category: 'dev_cli' | 'local_ai' | 'mcp_server' | 'other';
+  category: Category;
   kind: string;
   maturity: string | null;
   tags: string[];

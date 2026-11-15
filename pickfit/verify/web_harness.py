@@ -147,7 +147,8 @@ def bridge_llm(channel: Channel) -> Any:
         def get_client(self) -> Any:  # type: ignore[override]
             return _Client()
 
-    return BridgeLLM(model="muse-spark-open", api_key="none-held-here", temperature=None, frequency_penalty=None,
+    # The name is a label inside the box only: the host picks the model (web_verify.OPERATOR_MODEL).
+    return BridgeLLM(model="pickfit-host", api_key="none-held-here", temperature=None, frequency_penalty=None,
                      reasoning_models=None, max_completion_tokens=None, max_retries=0)
 
 
@@ -511,7 +512,10 @@ async def operate(session: Any, channel: Channel, task: str, start: dict[str, An
                   use_vision=True, max_actions_per_step=3, max_failures=3, calculate_cost=False,
                   directly_open_url=False, available_file_paths=start.get("sample_files") or None,
                   generate_gif=False, llm_timeout=180, step_timeout=300, page_extraction_llm=llm,
-                  final_response_after_failure=True, max_clickable_elements_length=ELEMENTS_CHARS)
+                  final_response_after_failure=True, max_clickable_elements_length=ELEMENTS_CHARS,
+                  # The host says whether its model may be asked to write its reasoning out (web_verify:
+                  # operator_writes_thinking); a host that does not say is one from before the question came up.
+                  use_thinking=bool(start.get("operator_thinking", True)))
     history = await agent.run(max_steps=max_steps)
     await settle(2)
     after = await capture(session, f"{prefix}after", inline=True)

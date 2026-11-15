@@ -34,16 +34,39 @@ const CHECK_TEXT: Record<GuiOperation['check'], string> = {
   gone: 'a file pickfit saw before the app started and found gone after, which pickfit checked itself',
 };
 
+/** A model id as a reader's name for it: "Claude Opus 5.5", "Muse Spark Open". An id it does not know stays as written. */
+export function modelName(id: string): string {
+  const claude = /^claude-([a-z]+)-(\d+)(?:-(\d))?$/.exec(id);
+  if (claude) return `Claude ${claude[1][0].toUpperCase()}${claude[1].slice(1)} ${claude[2]}${claude[3] ? `.${claude[3]}` : ''}`;
+  if (/muse-spark-open/i.test(id)) return 'Muse Spark Open';
+  if (/^muse-spark/.test(id)) return 'Muse Spark';
+  if (/^muse-wonder/.test(id)) return 'Muse Wonder';
+  return id;
+}
+
+/** A model id as the pipeline writes one; anything else in that field is not put into a sentence. */
+const MODEL_ID = /^[\w./:-]{1,80}$/;
+
+/**
+ * The names of the models that operated these runs, each once, or [] when the index does not say
+ * (one built before it carried the record's operator_model names none, and the sentence then says "a model").
+ */
+export function operatorNames(operations: { operator_model?: string | null }[]): string[] {
+  const ids = operations.map((o) => o.operator_model).filter((id): id is string => typeof id === 'string' && MODEL_ID.test(id));
+  return [...new Set(ids.map(modelName))];
+}
+
 /**
  * The goals a GUI app was operated toward and passed, in words, or null when its tier is not action_checked.
- * "a model (Muse Spark Open) then operated it from screenshots, ...: save notes (checked by a file ...)"
+ * "a model (Claude Opus 5.5) then operated it from screenshots, ...: save notes (checked by a file ...)"
  */
 export function operatedText(gui: GuiEvidence): string | null {
   const passed = (gui.operations ?? []).filter((o) => o.passed);
   if (gui.tier !== 'action_checked' || passed.length === 0) return null;
   const what = passed.map((o) => `${o.feature ?? 'a task'} (checked by ${CHECK_TEXT[o.check]})`).join('; ');
+  const names = operatorNames(passed);
   return (
-    'a model (Muse Spark Open) then operated it from screenshots, pickfit performing every click and keystroke, ' +
+    `a model${names.length ? ` (${names.join(', ')})` : ''} then operated it from screenshots, pickfit performing every click and keystroke, ` +
     `and the result passed pickfit's own check in a fresh sandbox: ${what}`
   );
 }

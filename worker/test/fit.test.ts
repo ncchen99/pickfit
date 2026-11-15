@@ -4,7 +4,7 @@ import type { Catalog, Entry } from '../src/catalog.ts';
 import { fitNote, fitOf, jobOf } from '../src/fit.ts';
 import { rulesTerms, termsAsSaid } from '../src/relevance.ts';
 import { findAlternatives, findSoftware } from '../src/find.ts';
-import { answer, fixtureCatalog, harness, metaResponse } from './helpers.ts';
+import { answer, fixtureCatalog, harness, modelResponse } from './helpers.ts';
 
 const fixtures = fixtureCatalog();
 
@@ -142,9 +142,9 @@ test('find_alternatives: a pain point is read as said ("no dark mode" wants dark
 });
 
 test('the model path is untouched: no fit fields, picks as the model chose them', async () => {
-  const h = harness(() => metaResponse(answer()));
+  const h = harness(() => modelResponse(answer()));
   const out = await findSoftware({ need: 'search my Notion pages', os: 'macos' }, h.deps);
-  assert.equal(out.matched_by, 'muse-spark-1.3');
+  assert.equal(out.matched_by, 'claude-opus-5-5');
   assert.ok(!('match_quality' in out));
   assert.ok(out.picks.length > 0 && out.picks.every((p) => !('match' in p)));
 });

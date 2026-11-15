@@ -1,0 +1,666 @@
+{
+  "schema_version": "software.v1",
+  "slug": "procs",
+  "repo_id": "gh:167957539",
+  "name": "procs",
+  "summary": "A command-line replacement for ps that lists processes with colored output, keyword search, tree view and watch mode.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "infra_devops",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "process",
+    "rust"
+  ],
+  "use_cases": [
+    "search processes by keyword such as user or command",
+    "show process dependency tree",
+    "find which processes listen on TCP/UDP ports",
+    "see Docker container names of processes"
+  ],
+  "alternatives_to": [
+    "ps",
+    "top"
+  ],
+  "features": [
+    "colored human-readable process listing",
+    "multi-column keyword search",
+    "watch mode with live updates",
+    "process tree view"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:26.804989Z",
+    "run_id": "verify-procs-20261116-005053-77d6",
+    "open_hint": "Run `procs` to list running processes.",
+    "features": [
+      {
+        "feature": "colored human-readable process listing",
+        "title": "List processes in a colored, readable table",
+        "steps": [
+          "Run `procs --color always` to list processes with colored columns such as PID, User, CPU, MEM and Command."
+        ]
+      },
+      {
+        "feature": "multi-column keyword search",
+        "title": "Search processes by keyword across columns",
+        "steps": [
+          "Run `procs --or <keyword> <keyword>` to show processes matching any of the keywords, such as a command name or PID."
+        ]
+      },
+      {
+        "feature": "watch mode with live updates",
+        "title": "Watch the process list update live",
+        "steps": []
+      },
+      {
+        "feature": "process tree view",
+        "title": "Show processes as a tree",
+        "steps": [
+          "Run `procs --tree` to see each process under its parent."
+        ]
+      }
+    ]
+  },
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/dalance/procs",
+    "full_name": "dalance/procs",
+    "created_at": "2019-01-28T12:19:23Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install procs",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "procs"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-procs-20261116-005053-77d6",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p /tmp/procs && cd /tmp/procs && curl -fsSL -o procs.zip https://github.com/dalance/procs/releases/download/v0.14.12/procs-v0.14.12-x86_64-linux.zip && unzip -o procs.zip && mkdir -p ~/.local/bin && install -m 755 procs ~/.local/bin/procs",
+          "purpose": "download v0.14.12 linux release zip, extract, install to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "procs --version",
+        "expected_signal": "procs \"0.14.12"
+      },
+      "first_task": "procs --color always"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install procs",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "procs"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.14.12",
+    "published_at": "2026-06-25T10:12:30Z",
+    "url": "https://github.com/dalance/procs/releases/tag/v0.14.12"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T00:52:03.557796+08:00",
+    "runs": [
+      {
+        "id": "verify-procs-20261116-005053-77d6",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T00:52:03.557796+08:00",
+        "tool_version": "0.14.12",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p /tmp/procs && cd /tmp/procs && curl -fsSL -o procs.zip https://github.com/dalance/procs/releases/download/v0.14.12/procs-v0.14.12-x86_64-linux.zip && unzip -o procs.zip && mkdir -p ~/.local/bin && install -m 755 procs ~/.local/bin/procs",
+            "purpose": "download v0.14.12 linux release zip, extract, install to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "procs --version",
+            "expected_signal": "procs \"0.14.12",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "procs \"0.14.12 ( rev: 8ad5da5, rustc: 1.96.0, build at: 2026/06/25 10:10:38 )\"",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "procs --color always",
+            "expected_signal": "CPU Time",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[38;5;15mPID:▲\u001b[0m \u001b[38;5;15mUser \u001b[0m \u001b[38;5;15m│\u001b[0m \u001b[38;5;15mTTY\u001b[0m \u001b[38;5;15mCPU\u001b[0m \u001b[38;5;15mMEM\u001b[0m \u001b[38;5;15mCPU Time\u001b[0m \u001b[38;5;15m│\u001b[0m \u001b[38;5;15mCommand",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "procs --or procs 1",
+            "expected_signal": "/bin/dumb-init",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1 nobody │ 0.0 inf 00:00:00 │ /bin/dumb-init -- sleep 1320",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "procs --tree",
+            "expected_signal": "└┬──── 1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "└┬──── 1 nobody │ 0.0 inf 00:00:00 │ /bin/dumb-init -- sleep 1320",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Download from release page, and extract to the directory in PATH (no file name given)",
+            "actually_needed": "Asset name is procs-v0.14.12-x86_64-linux.zip; unzip and copy procs into ~/.local/bin",
+            "kind": "note"
+          },
+          {
+            "readme_said": "cargo install procs / sudo snap|apk|pacman|dnf|rpm / nix-env",
+            "actually_needed": "No Rust, root or nix in box; used the release binary instead",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "procs listed processes with a CPU Time column in color, filtered to PID 1 showing /bin/dumb-init, and printed version 0.14.12.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-procs-20261116-005053-77d6/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-procs-20261116-005053-77d6/check-1-cmd3.judged.png",
+            "runs/verify/verify-procs-20261116-005053-77d6/check-2-cmd4.judged.png",
+            "runs/verify/verify-procs-20261116-005053-77d6/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.173215,
+        "features": [
+          {
+            "feature": "colored human-readable process listing",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "multi-column keyword search",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "watch mode with live updates",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "watch mode sends DSR query (^[[5n) and waits for a real interactive terminal reply; none in box"
+          },
+          {
+            "feature": "process tree view",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T00:52:10+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/dalance/procs@7ffb8c4f2ecb",
+      "Cargo.lock"
+    ],
+    "packages_checked": 302,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T00:52:03+08:00",
+    "quality": {
+      "total": 77.3,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.75,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.3167,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 92.8,
+      "signals": {
+        "stars": 6223,
+        "monthly_downloads": 2193,
+        "forks": 168,
+        "dependents": null,
+        "release_downloads": 149199,
+        "hn_top_score": 2,
+        "registries_count": 2
+      },
+      "age_days": 2848,
+      "packages": [
+        "crates:procs",
+        "homebrew:procs"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 5.57
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:03.559871+08:00",
+      "sources_sha": "a7d60a60da7fae9ce1f2804fad8b0ac2c990c15c39f382ff69e5aef9740965fb",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "- Multi-column keyword search"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "**procs** is a replacement for `ps` written in [Rust](https://www.rust-lang.org/)."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "winget install procs"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Type `procs` only. It shows the information of all processes."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": " * Linux: `~/.config/procs/config.toml`, `/etc/procs/procs.toml`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "On macOS, normal users can't access any information on other users' processes."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "- Linux is supported."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/dalance/procs",
+      "fetched_at": "2026-11-16T00:50:42+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/dalance/procs/blob/master/README.md",
+      "fetched_at": "2026-11-16T00:50:42+08:00"
+    },
+    {
+      "id": "release:v0.14.12",
+      "kind": "release",
+      "url": "https://github.com/dalance/procs/releases/tag/v0.14.12",
+      "fetched_at": "2026-11-16T00:50:42+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Type `procs` only. It shows the information of all processes.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:53+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Type `procs` only. It shows the information of all processes.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:53+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A modern replacement for ps written in Rust",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:53+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "**procs** is a replacement for `ps` written in [Rust](https://www.rust-lang.org/).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:53+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "**procs** is a replacement for `ps` written in [Rust](https://www.rust-lang.org/).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:53+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "- Linux is supported.\n- macOS is experimentally supported.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:53+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:42+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:42+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:42+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:42+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.14.12",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:42+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "If you add any keyword as argument, it is matched to `USER`, `Command` by default.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:53+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "If `--tree` option is used, processes are sorted by dependency order and dependency tree is shown at left side.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:53+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "TCP/UDP port",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:53+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "If you have access permission to docker daemon ( `unix:///var/run/docker.sock` ), `Docker` column is added.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:53+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "github_api",
+      "quote": "A modern replacement for ps written in Rust",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:53+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "Watch mode (like `top`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:53+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Colored and human-readable output",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:53+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Multi-column keyword search",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:53+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Watch mode (like `top`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:53+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Tree view",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:53+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install procs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:53+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install procs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:53+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install procs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:53+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "It shows the information of all processes.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:53+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T00:49:09+08:00",
+  "updated_at": "2026-11-16T00:52:10+08:00"
+}

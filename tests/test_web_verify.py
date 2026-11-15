@@ -190,6 +190,56 @@ def test_operator_answer_falls_back_to_baseten_and_strips_extra_fields():
     assert spent.fallbacks == 1 and spent.calls == 1
 
 
+def test_a_declined_operator_call_tries_the_other_model_and_says_why_when_both_decline():
+    """11/16: the API declined every operator call (browser-use asked Claude to write its reasoning out), the
+    answer came back with no content, and the harness only saw "failed to parse" four times a site."""
+    declined = {"id": "c1", "object": "chat.completion", "created": 1, "model": "m",
+                "choices": [{"index": 0, "finish_reason": "content_filter",
+                             "message": {"role": "assistant", "content": None}}],
+                "stop_details": {"type": "refusal", "category": "reasoning_extraction"}}
+    answered = {"id": "c2", "object": "chat.completion", "created": 1, "model": "m",
+                "choices": [{"index": 0, "finish_reason": "stop", "message": {"role": "assistant", "content": "{}"}}]}
+    replies = {wv.OPERATOR_MODEL: SimpleNamespace(raw=declined, cost_usd=0.02, model="claude-opus-5-5",
+                                                  status="content_filter"),
+               wv.FALLBACK_MODEL: SimpleNamespace(raw=answered, cost_usd=0.01, model="claude-sonnet-5-5",
+                                                  status="stop")}
+    spent = wv.OperatorLedger()
+    answer = wv.operator_answer({"id": 3, "request": {"messages": []}}, run_id="r", scope="s", spent=spent,
+                                caller=lambda endpoint, body, **kw: replies[kw["model"]])
+    assert answer["type"] == "llm_result" and answer["response"]["choices"][0]["message"]["content"] == "{}"
+    assert spent.cost_usd == pytest.approx(0.03) and spent.calls == 2, "the declined call is paid for and counted"
+    assert spent.errors == ["claude-opus-5-5 declined the request (reasoning_extraction)"]
+
+    both = wv.operator_answer({"id": 4, "request": {"messages": []}}, run_id="r", scope="s",
+                              spent=wv.OperatorLedger(),
+                              caller=lambda endpoint, body, **kw: replies[wv.OPERATOR_MODEL])
+    assert both["type"] == "llm_error" and "declined the request (reasoning_extraction)" in both["error"]
+
+
+def test_claude_is_not_asked_to_write_its_reasoning_into_the_answer():
+    assert wv.operator_writes_thinking(wv.OPERATOR_MODEL) is False
+    assert wv.operator_writes_thinking(wv.FALLBACK_MODEL) is False and wv.operator_writes_thinking("open") is False
+    assert wv.operator_writes_thinking("open-modal") is True  # the hackathon's operator keeps its prompt
+    harness = (Path(wv.__file__).parent / "web_harness.py").read_text(encoding="utf-8")
+    assert 'use_thinking=bool(start.get("operator_thinking", True))' in harness
+
+
+def test_a_visits_judges_are_capped_with_the_operator_not_below_it():
+    # DuckDB's shell, 11/16: the operator spent $0.69 in the visit's scope, and the judge, capped at $0.50 in
+    # that same scope, was refused; the visit was lost. A judge's cap is the visit's.
+    caps: list[float] = []
+
+    def caller(endpoint, body, **kw):
+        caps.append(kw["scope_cap_usd"])
+        assert kw["scope"] == "web:duckdb-web-shell"
+        return SimpleNamespace(parsed=None, cost_usd=0.03)
+
+    state = {"screenshot_jpeg_b64": "AAAA", "url": "https://shell.duckdb.org", "title": "DuckDB", "text": "D"}
+    wv.judge_page("DuckDB Web Shell", state, run_id="web-x", scope="web:duckdb-web-shell", caller=caller)
+    assert caps == [wv.SITE_CAP_USD] and wv.SITE_CAP_USD == wv.OPERATE_CAP_USD + wv.JUDGE_CAP_USD
+    assert wv.WORST_SITE_USD >= wv.SITE_CAP_USD
+
+
 def test_operator_answer_reports_a_budget_stop():
     def caller(endpoint, body, **kw):
         raise BudgetExceeded("scope", 0.6, 0.6, 0.01)
@@ -221,13 +271,14 @@ def test_the_user_agent_is_honest():
     assert "HeadlessChrome/156.0.1" in ua and "pickfit-verifier" in ua
 
 
-def test_a_batch_stops_before_the_pipeline_or_task_caps():
-    spend = {"meta": 0.1, "modal": 1.0, "baseten": 0.0, "pipeline_total": 120.0}
-    assert wv.budget_stop(10, spend) is None
-    assert "158" in wv.budget_stop(10, {**spend, "pipeline_total": 157.9})
-    assert "modal" in wv.budget_stop(60, {**spend, "modal": 14.0})
-    near = wv.MY_CAPS_USD["modal"] - 0.3
-    assert "modal" in wv.budget_stop(1, {**spend, "modal": near}, wv.WORST_SITE_USD), "each site checks a worst case"
+def test_a_batch_stops_only_at_its_own_max_usd():
+    spend = {"anthropic": 3.0, "meta": 80.0, "modal": 19.9, "baseten": 4.9, "pipeline_total": 400.0}
+    assert wv.batch_spend(spend) == pytest.approx(107.8), "the pipeline's total is not the web verifier's"
+    # No cap: the hackathon's totals (Meta $8, Modal $20, the pipeline under $158) stop nothing any more.
+    assert wv.budget_stop(60, 107.8, None) is None
+    assert wv.budget_stop(1, 0.0, 20.0) is None
+    stop = wv.budget_stop(1, 20.0 - wv.WORST_SITE_USD + 0.01, 20.0)
+    assert "--max-usd 20.00" in stop, "each site is checked against a worst case before it starts"
 
 
 def test_typed_text_counts_only_when_the_app_rendered_it_outside_inputs():

@@ -9,12 +9,14 @@ LIFETIME_MARGIN_S = 120  # the box outlives the agent's time limit, so the last 
 MAC_GUI_AGENT_S = 45 * 60  # tart + display: room for a desktop app's long download (tart_box.GUI_COMMAND_S)
 TART_MAX_VMS = 2  # Apple's limit on macOS VMs running at once on one Mac
 # Display boxes: room for operate_gui (one per listed feature) after the install and the launch.
-GUI_LIMITS = {"max_turns": 32, "max_commands": 20, "max_seconds": 35 * 60, "scope_cap_usd": 0.80}
+GUI_LIMITS = {"max_turns": 32, "max_commands": 20, "max_seconds": 35 * 60, "scope_cap_usd": 5.00}
 VBOX_MAX_VMS = 1  # one Windows base, reset from its snapshot for every box
 
 
 def add_parser(sub: argparse._SubParsersAction) -> None:
-    v = sub.add_parser("verify", help="install, smoke-test, replay and judge one tool in a sandbox with Muse Spark")
+    from pickfit.schema import LISTED_CATEGORIES
+
+    v = sub.add_parser("verify", help="install, smoke-test, replay and judge one tool in a sandbox with Claude")
     v.add_argument("--fixture", help="JSON with slug, repo_url, readme_url and an ExtractionResult")
     v.add_argument("--batch", type=int, metavar="N", help="verify N extracted candidates from the pipeline database")
     v.add_argument("--concurrency", type=int, default=5, help="batch: tools verified at once (default 5)")
@@ -22,7 +24,7 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--repo", action="append", help="batch: only this repo id (gh:<id>) or owner/name")
     v.add_argument("--records", action="store_true",
                    help="batch: only candidates that have a record in --data-dir (the profiles)")
-    v.add_argument("--category", action="append", choices=["dev_cli", "local_ai", "mcp_server"],
+    v.add_argument("--category", action="append", choices=LISTED_CATEGORIES,
                    help="batch: only this category (repeatable)")
     v.add_argument("--force", action="store_true", help="batch: also tools that already have a run")
     v.add_argument("--since", metavar="YYYYmmdd-HHMMSS",
@@ -34,12 +36,13 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
                    help="local DockerBox (development), ModalBox (gVisor on Modal), TartBox (macOS VM on this Mac) "
                         "or VBoxBox (Windows 11 VM in VirtualBox on this PC)")
     v.add_argument("--model", default=None,
-                   help='agent model: "dev", "prod", "open" (Muse Spark Open on Baseten) or a model id '
-                        '(default: PICKFIT_MODE); the judges stay on muse-spark-1.3 when it is "open"')
+                   help='agent model: "prod" (Claude Opus), "dev" or "open" (Claude Haiku) or a model id '
+                        '(default: PICKFIT_MODE); the judges stay on the prod model when it is a cheaper tier')
     v.add_argument("--extraction-model", default=None,
                    help='batch: verify only extractions by this model ("prod", "open" or an id)')
     v.add_argument("--mode", choices=["chain", "replay"], default=None,
-                   help="carry history by previous_response_id (chain) or resend it (replay)")
+                   help="resend the history each turn (replay, the default) or carry it by previous_response_id "
+                        "(chain: Meta's API only)")
     v.add_argument("--max-turns", type=int, default=None, help="turn limit (default 25)")
     v.add_argument("--max-operations", type=int, default=None,
                    help="--display: operate_gui calls per run (default 6); 0 checks install only")

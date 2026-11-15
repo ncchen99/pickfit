@@ -1,0 +1,701 @@
+{
+  "schema_version": "software.v1",
+  "slug": "gron",
+  "repo_id": "gh:5724223",
+  "name": "gron",
+  "summary": "Command-line tool that transforms JSON into discrete assignments so it can be searched with grep, and converts them back into JSON.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "data_db",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "json"
+  ],
+  "use_cases": [
+    "explore large JSON API responses with poor documentation",
+    "diff two JSON files",
+    "find the path to a value in deeply nested JSON"
+  ],
+  "alternatives_to": [
+    "jq"
+  ],
+  "features": [
+    "flatten JSON into greppable assignments",
+    "turn filtered assignments back into JSON",
+    "read JSON from a file, URL, or stdin",
+    "output gron data as a JSON stream"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:08.832011Z",
+    "run_id": "verify-gron-20261116-002556-dfc0",
+    "open_hint": "Run `gron <file>` on a JSON file to see its contents as one assignment per line.",
+    "features": [
+      {
+        "feature": "flatten JSON into greppable assignments",
+        "title": "Flatten JSON into lines you can grep",
+        "steps": [
+          "Run `gron <file>` to print each value as an assignment such as `json.contact.twitter = \"...\";`.",
+          "Pipe the output to `grep` to find the path to a value."
+        ]
+      },
+      {
+        "feature": "turn filtered assignments back into JSON",
+        "title": "Turn filtered assignments back into JSON",
+        "steps": [
+          "Run `gron <file> | grep <pattern> | grep -v <pattern> | gron --ungron` to keep only the lines you want and rebuild them as JSON."
+        ]
+      },
+      {
+        "feature": "read JSON from a file, URL, or stdin",
+        "title": "Read JSON from a file, URL, or standard input",
+        "steps": [
+          "Pass a file directly with `gron <file>`.",
+          "Or pipe JSON in with `cat <file> | gron`."
+        ]
+      },
+      {
+        "feature": "output gron data as a JSON stream",
+        "title": "Output gron data as a JSON stream",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/tomnomnom/gron",
+    "full_name": "tomnomnom/gron",
+    "created_at": "2012-09-08T00:46:07Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install gron",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "gron --help",
+        "expected_signal": "Transform JSON (from a file, URL, or stdin) into discrete assignments to make it greppable"
+      },
+      "first_task": "gron --help"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-gron-20261116-002556-dfc0",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "cd /tmp && curl -fsSLO https://github.com/tomnomnom/gron/releases/download/v0.7.1/gron-linux-amd64-0.7.1.tgz && tar xzf gron-linux-amd64-0.7.1.tgz && mkdir -p ~/.local/bin && mv gron ~/.local/bin/",
+          "purpose": "Download gron v0.7.1 linux-amd64 release tarball, extract, move binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "gron --help",
+        "expected_signal": "Transform JSON (from a file, URL, or stdin) into discrete assignments to make it greppable"
+      },
+      "first_task": "gron testdata/two.json"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install github.com/tomnomnom/gron@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "gron --help",
+        "expected_signal": "Transform JSON (from a file, URL, or stdin) into discrete assignments to make it greppable"
+      },
+      "first_task": "gron --help"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.7.1",
+    "published_at": "2022-04-13T14:09:29Z",
+    "url": "https://github.com/tomnomnom/gron/releases/tag/v0.7.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T00:27:01.073084+08:00",
+    "runs": [
+      {
+        "id": "verify-gron-20261116-002556-dfc0",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T00:27:01.073084+08:00",
+        "tool_version": null,
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd /tmp && curl -fsSLO https://github.com/tomnomnom/gron/releases/download/v0.7.1/gron-linux-amd64-0.7.1.tgz && tar xzf gron-linux-amd64-0.7.1.tgz && mkdir -p ~/.local/bin && mv gron ~/.local/bin/",
+            "purpose": "Download gron v0.7.1 linux-amd64 release tarball, extract, move binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "gron --help",
+            "expected_signal": "Transform JSON (from a file, URL, or stdin) into discrete assignments to make it greppable",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Transform JSON (from a file, URL, or stdin) into discrete assignments to make it greppable",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "gron testdata/two.json",
+            "expected_signal": "json.contact.twitter = \"@TomNomNom\";",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "json.contact.twitter = \"@TomNomNom\";",
+            "setup": [
+              {
+                "command": "mkdir -p testdata && cat > testdata/two.json <<'EOF'\n{\"name\":\"Tom\",\"github\":\"https://github.com/tomnomnom/\",\"likes\":[\"code\",\"cheese\",\"meat\"],\"contact\":{\"email\":\"mail@tomnomnom.com\",\"twitter\":\"@TomNomNom\"}}\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "gron testdata/two.json | grep likes | grep -v cheese | gron --ungron",
+            "expected_signal": "\"likes\": [",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"likes\": [",
+            "setup": [
+              {
+                "command": "mkdir -p testdata && cat > testdata/two.json <<'EOF'\n{\"name\":\"Tom\",\"github\":\"https://github.com/tomnomnom/\",\"likes\":[\"code\",\"cheese\",\"meat\"],\"contact\":{\"email\":\"mail@tomnomnom.com\",\"twitter\":\"@TomNomNom\"}}\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cat testdata/two.json | gron",
+            "expected_signal": "json.likes[1] = \"cheese\";",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "json.likes[1] = \"cheese\";",
+            "setup": [
+              {
+                "command": "mkdir -p testdata && cat > testdata/two.json <<'EOF'\n{\"name\":\"Tom\",\"github\":\"https://github.com/tomnomnom/\",\"likes\":[\"code\",\"cheese\",\"meat\"],\"contact\":{\"email\":\"mail@tomnomnom.com\",\"twitter\":\"@TomNomNom\"}}\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "gron --json testdata/two.json | grep likes | gron --json --ungron",
+            "expected_signal": "\"cheese\",",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"cheese\",",
+            "setup": [
+              {
+                "command": "mkdir -p testdata && cat > testdata/two.json <<'EOF'\n{\"name\":\"Tom\",\"github\":\"https://github.com/tomnomnom/\",\"likes\":[\"code\",\"cheese\",\"meat\"],\"contact\":{\"email\":\"mail@tomnomnom.com\",\"twitter\":\"@TomNomNom\"}}\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "tar xzf gron-linux-amd64-0.1.5.tgz",
+            "actually_needed": "The current release is v0.7.1; download gron-linux-amd64-0.7.1.tgz from the GitHub releases page",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "sudo mv gron /usr/local/bin/",
+            "actually_needed": "mv gron ~/.local/bin/ (no root in this box)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "gron testdata/two.json",
+            "actually_needed": "testdata/two.json is in the repository but does not come with the binary; it was recreated by hand",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "gron flattened two.json into assignments including the twitter line, ungron rebuilt the filtered likes array (null in place of the removed element is normal gron behavior), and --help printed the expected description and usage.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-gron-20261116-002556-dfc0/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-gron-20261116-002556-dfc0/check-1-cmd4.judged.png",
+            "runs/verify/verify-gron-20261116-002556-dfc0/check-2-cmd5.judged.png",
+            "runs/verify/verify-gron-20261116-002556-dfc0/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.168478,
+        "features": [
+          {
+            "feature": "flatten JSON into greppable assignments",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "turn filtered assignments back into JSON",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "read JSON from a file, URL, or stdin",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "output gron data as a JSON stream",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: The JSON stream output is never shown, only the final ungron result after the pipeline."
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T00:27:09+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/tomnomnom/gron@88a6234ea2d0",
+      "go.mod"
+    ],
+    "packages_checked": 6,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T00:27:01+08:00",
+    "quality": {
+      "total": 65.5,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7225,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.2303,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 94.8,
+      "signals": {
+        "stars": 14539,
+        "monthly_downloads": 307,
+        "forks": 348,
+        "dependents": null,
+        "release_downloads": 467287,
+        "hn_top_score": 366,
+        "registries_count": 1
+      },
+      "age_days": 5181,
+      "packages": [
+        "homebrew:gron"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 3.41
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:27:01.088629+08:00",
+      "sources_sha": "db5c4453e82070acaf5af822a11e13cbe4ad76a5a1d0577ea21c035e3e85a0db",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "gron transforms JSON into discrete assignments to make it easier to `grep` for what you want and see the absolute 'path' to it."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "It eases the exploration of APIs that return large blobs of JSON but have terrible documentation."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "gron has no runtime dependencies."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "▶ tar xzf gron-linux-amd64-0.1.5.tgz\n▶ sudo mv gron /usr/local/bin/"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "▶ gron testdata/two.json | grep twitter\njson.contact.twitter = \"@TomNomNom\";"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "## FAQ"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "You can just [download a binary for Linux, Mac, Windows or FreeBSD and run it]"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/tomnomnom/gron",
+      "fetched_at": "2026-11-16T00:25:41+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/tomnomnom/gron/blob/master/README.mkd",
+      "fetched_at": "2026-11-16T00:25:38+08:00"
+    },
+    {
+      "id": "release:v0.7.1",
+      "kind": "release",
+      "url": "https://github.com/tomnomnom/gron/releases/tag/v0.7.1",
+      "fetched_at": "2026-11-16T00:25:38+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Transform JSON (from a file, URL, or stdin) into discrete assignments to make it greppable",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:50+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Put the binary in your `$PATH` (e.g. in `/usr/local/bin`) to make it easy to use:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:50+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Make JSON greppable!",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:50+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "gron transforms JSON into discrete assignments to make it easier to `grep` for what you want and see the absolute 'path' to it.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:50+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# gron",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:50+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "download a binary for Linux, Mac, Windows or FreeBSD and run it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:50+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Transform JSON (from a file, URL, or stdin)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:50+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:25:41+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:25:41+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T00:25:41+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:25:41+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.7.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:25:38+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "It eases the exploration of APIs that return large blobs of JSON but have terrible documentation.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:50+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "gron makes diffing JSON easy too:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:50+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "gron's primary purpose is to make it easy to find the path to a value in a deeply nested JSON blob",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:50+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Why shouldn't I just use jq?",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:50+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "gron transforms JSON into discrete assignments to make it easier to `grep` for what you want",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:50+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "gron can work backwards too, enabling you to turn your filtered data back into JSON:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:50+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Transform JSON (from a file, URL, or stdin)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:50+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "It's also possible to obtain the `gron` output as JSON stream via",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:50+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install gron",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:50+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "tar xzf gron-linux-amd64-0.1.5.tgz",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:50+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/tomnomnom/gron@latest",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:50+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "gron has no runtime dependencies.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:50+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T00:25:38+08:00",
+  "updated_at": "2026-11-16T00:27:09+08:00"
+}

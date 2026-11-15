@@ -1,10 +1,11 @@
 /**
- * Runs the product's keyword call (expand.ts, muse-spark-1.3) on the check
+ * Runs the product's keyword call (expand.ts, the model in meta.ts) on the check
  * set's needs in one language and writes the keywords for bench/shortlist.ts,
- * with latency and cost. Paid (about $0.001 a need): record the printed total
+ * with latency and cost. Paid: the run prints its total (it was about $0.001 a
+ * need on muse-spark-1.3; not measured on Claude yet). Record the printed total
  * in the shared ledger afterwards.
  *
- *   MODEL_API_KEY=… node bench/keywords.ts <index.json> <needs.json> <out.json> [zh|en] [limit]
+ *   ANTHROPIC_API_KEY=… node bench/keywords.ts <index.json> <needs.json> <out.json> [zh|en] [limit]
  */
 import { readFileSync, writeFileSync } from 'node:fs';
 import { loadCatalog } from '../src/catalog.ts';
@@ -12,8 +13,8 @@ import { englishKeywords, EXPAND_TIMEOUT_MS } from '../src/expand.ts';
 import { makeD1, SETTINGS } from '../test/helpers.ts';
 
 const [indexPath, needsPath, outPath, lang = 'zh', limitArg] = process.argv.slice(2);
-const apiKey = process.env.MODEL_API_KEY;
-if (!apiKey) throw new Error('MODEL_API_KEY is not set');
+const apiKey = process.env.ANTHROPIC_API_KEY;
+if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not set');
 const catalog = loadCatalog(JSON.parse(readFileSync(indexPath, 'utf8')));
 const needs: { slug: string; zh: string; en: string }[] = JSON.parse(readFileSync(needsPath, 'utf8')).needs;
 const todo = needs.slice(0, limitArg ? Number(limitArg) : needs.length);
@@ -22,7 +23,7 @@ const { db } = makeD1();
 const deps = {
   catalog,
   db,
-  settings: { ...SETTINGS, apiKey, dailyCapUsd: 5, totalCapUsd: 5, timeoutMs: 25_000 },
+  settings: { ...SETTINGS, apiKey, dailyCapUsd: 5, totalCapUsd: 5, timeoutMs: 40_000 }, // this run's own $5 stop
   now: () => new Date(),
   waitUntil: () => {},
 };

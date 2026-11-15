@@ -1,0 +1,693 @@
+{
+  "schema_version": "software.v1",
+  "slug": "mcp-youtube-transcript",
+  "repo_id": "gh:929211169",
+  "name": "YouTube Transcript MCP Server",
+  "summary": "An MCP server that fetches transcripts and metadata of YouTube videos for LLM clients, with pagination and proxy support.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "mcp-server",
+    "python",
+    "youtube"
+  ],
+  "use_cases": [
+    "get the plain-text transcript of a YouTube video",
+    "list available transcript languages for a video",
+    "fetch video title and channel metadata"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "fetch transcripts, timestamps and video metadata",
+    "paginate long transcripts in chunks",
+    "route requests through residential or HTTP proxies"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:17.474268Z",
+    "run_id": null,
+    "open_hint": "Add the server to your MCP client's configuration so it runs `mcp-youtube-transcript`; the client then lists the get_transcript, get_timed_transcript, get_video_info and get_available_languages tools.",
+    "features": [
+      {
+        "feature": "fetch transcripts, timestamps and video metadata",
+        "title": "Get transcripts, timestamps and video details",
+        "steps": []
+      },
+      {
+        "feature": "paginate long transcripts in chunks",
+        "title": "Read long transcripts in pages",
+        "steps": []
+      },
+      {
+        "feature": "route requests through residential or HTTP proxies",
+        "title": "Send requests through residential or HTTP proxies",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/jkawamoto/mcp-youtube-transcript",
+    "full_name": "jkawamoto/mcp-youtube-transcript",
+    "created_at": "2025-02-08T02:49:22Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "uv"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mcp-youtube-transcript-20261116-014701-04b0",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install git+https://github.com/jkawamoto/mcp-youtube-transcript",
+          "purpose": "uv tool install git+https://github.com/jkawamoto/mcp-youtube-transcript"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "mcp-youtube-transcript --help",
+        "expected_signal": "YouTube Transcript MCP server."
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v0.8.4",
+    "published_at": "2026-11-14T06:09:10Z",
+    "url": "https://github.com/jkawamoto/mcp-youtube-transcript/releases/tag/v0.8.4"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T01:47:50.985380+08:00",
+    "runs": [
+      {
+        "id": "verify-mcp-youtube-transcript-20261116-014701-04b0",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:47:50.985380+08:00",
+        "tool_version": "0.8.4",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install git+https://github.com/jkawamoto/mcp-youtube-transcript",
+            "purpose": "uv tool install git+https://github.com/jkawamoto/mcp-youtube-transcript"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mcp-youtube-transcript --help",
+            "expected_signal": "YouTube Transcript MCP server.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "YouTube Transcript MCP server.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- mcp-youtube-transcript",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Launch with uvx --from git+https://github.com/jkawamoto/mcp-youtube-transcript mcp-youtube-transcript",
+            "actually_needed": "uv tool install git+https://github.com/jkawamoto/mcp-youtube-transcript puts mcp-youtube-transcript on PATH, so it starts without fetching anything at launch",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The MCP probe completed initialize and tools/list with 4 tools and printed 'handshake: ok', and --help printed usage with 'YouTube Transcript MCP server.' and the options list, both exiting 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mcp-youtube-transcript-20261116-014701-04b0/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mcp-youtube-transcript-20261116-014701-04b0/check-1-cmd3.judged.png",
+            "runs/verify/verify-mcp-youtube-transcript-20261116-014701-04b0/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.122429,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "mcp-youtube-transcript"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "YouTube?Transcript",
+          "server_version": null,
+          "tools": [
+            "get_transcript",
+            "get_timed_transcript",
+            "get_video_info",
+            "get_available_languages"
+          ],
+          "tool_count": 4,
+          "called_tool": null,
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "fetch transcripts, timestamps and video metadata",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "get_transcript, get_timed_transcript and get_video_info all fetch from YouTube. That is an outside service, and the rerun has no network."
+          },
+          {
+            "feature": "paginate long transcripts in chunks",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Splitting long transcripts into pages (next_cursor) needs a transcript fetched from YouTube."
+          },
+          {
+            "feature": "route requests through residential or HTTP proxies",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Proxy routing needs Webshare or ScrapingAnt credentials, or an outside proxy server."
+          }
+        ]
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "uvx --from git+https://github.com/jkawamoto/mcp-youtube-transcript mcp-youtube-transcript",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"youtube-transcript\": {\n      \"command\": \"uvx\",\n      \"args\": [\n        \"--from\",\n        \"git+https://github.com/jkawamoto/mcp-youtube-transcript\",\n        \"mcp-youtube-transcript\"\n      ]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "WEBSHARE_PROXY_USERNAME",
+        "required": false,
+        "purpose": "Webshare proxy username"
+      },
+      {
+        "name": "WEBSHARE_PROXY_PASSWORD",
+        "required": false,
+        "purpose": "Webshare proxy password"
+      },
+      {
+        "name": "SCRAPINGANT_API_TOKEN",
+        "required": false,
+        "purpose": "ScrapingAnt API token"
+      },
+      {
+        "name": "HTTP_PROXY",
+        "required": false,
+        "purpose": "HTTP proxy endpoint"
+      },
+      {
+        "name": "HTTPS_PROXY",
+        "required": false,
+        "purpose": "HTTPS proxy endpoint"
+      }
+    ],
+    "tools": [
+      "get_transcript",
+      "get_timed_transcript",
+      "get_available_languages",
+      "get_video_info"
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:48:02+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/jkawamoto/mcp-youtube-transcript@1afa2d2f9cbb",
+      "pyproject.toml (resolved today)"
+    ],
+    "packages_checked": 41,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:47:50+08:00",
+    "quality": {
+      "total": 84.4,
+      "confidence": 0.7,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5346,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 77.3,
+      "signals": {
+        "stars": 498,
+        "monthly_downloads": null,
+        "forks": 79,
+        "dependents": null,
+        "release_downloads": 961,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 645,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 19.16
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:50.987969+08:00",
+      "sources_sha": "13cb953bb4875345b82d8003473eb2bae557f231cd77b08748794d62d9d27e49",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "that fetches transcripts and metadata from YouTube videos directly into your LLM workflows."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Designed specifically for AI agents, it seamlessly handles long-form videos through automatic pagination"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "You'll need [`uv`](https://docs.astral.sh/uv) installed on your system to use `uvx` command."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "Command: `uvx --from git+https://github.com/jkawamoto/mcp-youtube-transcript mcp-youtube-transcript`"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Specify custom proxy endpoints via `HTTP_PROXY` / `HTTPS_PROXY` (or `--http-proxy` / `--https-proxy`):"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "YouTube aggressively blocks automated transcript requests from cloud providers and data center IPs."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "  - **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/jkawamoto/mcp-youtube-transcript",
+      "fetched_at": "2026-11-16T01:46:49+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/jkawamoto/mcp-youtube-transcript/blob/main/README.md",
+      "fetched_at": "2026-11-16T01:46:47+08:00"
+    },
+    {
+      "id": "release:v0.8.4",
+      "kind": "release",
+      "url": "https://github.com/jkawamoto/mcp-youtube-transcript/releases/tag/v0.8.4",
+      "fetched_at": "2026-11-16T01:46:47+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "MCP server retrieving transcripts of YouTube videos",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Works with Claude Desktop, Cursor, LM Studio, Goose, and any standard MCP client.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "MCP server retrieving transcripts of YouTube videos",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "that fetches transcripts and metadata from YouTube videos directly into your LLM workflows.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# YouTube Transcript MCP Server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "You'll need [`uv`](https://docs.astral.sh/uv) installed on your system to use `uvx` command.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "fetches transcripts and metadata from YouTube videos",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:46:49+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:46:49+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:46:49+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:46:49+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.8.4",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:46:47+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Retrieves the plain-text transcript for a YouTube video URL.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Lists all available transcript languages (manual & auto-generated).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Fetches video metadata such as title and channel information.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Fetch raw text, timestamped segments, and video metadata in multiple languages.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Automatically chunks long transcripts (default: 50,000 characters)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Built-in support for residential proxies (Webshare, ScrapingAnt)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "fetches transcripts and metadata from YouTube videos",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "This server communicates via standard `stdio`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "Command: `uvx --from git+https://github.com/jkawamoto/mcp-youtube-transcript mcp-youtube-transcript`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"youtube-transcript\": {\n      \"command\": \"uvx\",\n      \"args\": [\n        \"--from\",\n        \"git+https://github.com/jkawamoto/mcp-youtube-transcript\",\n        \"mcp-youtube-transcript\"\n      ]\n    }\n  }\n}",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "WEBSHARE_PROXY_USERNAME",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "WEBSHARE_PROXY_PASSWORD",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "SCRAPINGANT_API_TOKEN",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "HTTP_PROXY",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/4",
+      "source_id": "readme",
+      "quote": "HTTPS_PROXY",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "| `get_transcript` |",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "| `get_timed_transcript` |",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "| `get_available_languages` |",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "| `get_video_info` |",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:01+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:46:47+08:00",
+  "updated_at": "2026-11-16T01:48:02+08:00"
+}

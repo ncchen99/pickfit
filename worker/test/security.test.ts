@@ -15,7 +15,7 @@ import { installGuide } from '../src/install.ts';
 import { EMPTY_FORM, renderResults } from '../src/page.ts';
 import { securityMark, securityNotice } from '../src/pages/tool.ts';
 import { makeWorker } from '../src/worker.ts';
-import { answer, fixtureIndex, harness, makeD1, metaResponse } from './helpers.ts';
+import { answer, fixtureIndex, harness, makeD1, modelResponse } from './helpers.ts';
 
 const SLUG = 'fixture-llm-runner';
 
@@ -64,7 +64,7 @@ function site(index: unknown) {
   });
   const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
   return (path: string) =>
-    worker.fetch(new Request(`http://127.0.0.1:8787${path}`, { headers: { accept: 'text/html' } }), { DB: d1.db, MODEL_API_KEY: 'k', MATCH_MODE: 'off' } as Env, ctx);
+    worker.fetch(new Request(`http://127.0.0.1:8787${path}`, { headers: { accept: 'text/html' } }), { DB: d1.db, ANTHROPIC_API_KEY: 'k', MATCH_MODE: 'off' } as Env, ctx);
 }
 
 test('tool page, vulnerable: a red shield with the count and its source, jumping to the warning that lists each advisory', () => {
@@ -223,7 +223,7 @@ test('get_install_guide: the security field, and a warning to tell the user befo
 });
 
 test('find_software: each pick carries its security check', async () => {
-  const h = harness(() => metaResponse(answer()));
+  const h = harness(() => modelResponse(answer()));
   h.deps.catalog = loadCatalog(indexWith(VULNERABLE));
   const out = await findSoftware({ need: 'run a language model offline on my laptop', os: 'macos', must_run_locally: true }, h.deps);
   await h.settle();
@@ -244,7 +244,7 @@ test('find_software: each pick carries its security check', async () => {
 });
 
 test('results: a vulnerable pick is flagged before its commands, with the count, the source and the list; others are not', async () => {
-  const h = harness(() => metaResponse(answer()));
+  const h = harness(() => modelResponse(answer()));
   const catalog = loadCatalog(indexWith(VULNERABLE));
   h.deps.catalog = catalog;
   const out = await findSoftware({ need: 'run a language model offline on my laptop', os: 'macos', must_run_locally: true }, h.deps);

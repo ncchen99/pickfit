@@ -8,11 +8,13 @@
  * - a per-visitor rate limit, keyed by a hash of the day and the IP (an IPv6
  *   address by its /64), held only in the rate limiter's counters (never in D1
  *   or logs);
- * - a lower daily Meta cap than the MCP's (WEB_DAILY_CAP_USD): before calling
- *   the model a search reserves its worst-case cost against that cap and the
- *   total cap in one D1 statement, so concurrent searches cannot all pass the
- *   check before any records spend; the rest of META_DAILY_CAP_USD stays for
- *   agents. Without a reservation the search is ranked by rules and says why;
+ * - when a spend cap is set (opt-in; none by default): a daily cap for the page
+ *   that can be lower than the MCP's (WEB_DAILY_CAP_USD). Before calling the
+ *   model a search reserves its worst-case cost against the caps in one D1
+ *   statement, so concurrent searches cannot all pass the check before any
+ *   records spend; the rest of META_DAILY_CAP_USD stays for agents. Without
+ *   a reservation the search is ranked by rules and says why. With no cap set
+ *   nothing is reserved and the search goes straight to the model;
  * - at most MAX_IN_FLIGHT model searches at once in an isolate; identical
  *   searches in flight share one call, and finished ones are kept 10 minutes
  *   (this isolate only; the MCP path never reads any of it).
@@ -20,9 +22,10 @@
  * not picked a tool yet, and that event means a pick in the MCP flow.
  */
 import { validateHostHeader, validateOriginHeader } from '@modelcontextprotocol/server';
-import { checkBudget, releaseSpend, reserveSpend, utcDay } from './budget.ts';
+import { capped, checkBudget, releaseSpend, reserveSpend, utcDay, type Caps } from './budget.ts';
 import type { Catalog } from './catalog.ts';
 import { settings, webSettings, type Env } from './env.ts';
+import { EXPAND_MAX_OUTPUT_TOKENS } from './expand.ts';
 import { findSoftware, type Deps } from './find.ts';
 import { estimateCostUsd } from './meta.ts';
 import { L, langCookie, localizedCatalog, pickLang, translateWith, withLang, type Lang, type Translations } from './i18n.ts';
@@ -50,14 +53,17 @@ export const NEED_MAX = 500;
 /** Model searches running at once in one isolate; the reservation bounds spend across isolates. */
 export const MAX_IN_FLIGHT = 6;
 /**
- * Held per search, covering both of its Meta calls: the match for a 150,000-character request (today's
- * 60 cards are about 84,000) and, when more than 60 tools pass, the keyword call (expand.ts: under
- * 8,000 characters, at most 600 output tokens).
+ * Held per search while a cap is set, covering both of its model calls: the match for a 150,000-character
+ * request (today's 60 cards are about 84,000) and, when more than 60 tools pass, the keyword call
+ * (expand.ts: under 8,000 characters).
  */
-export const WEB_RESERVE_USD = estimateCostUsd(150_000) + estimateCostUsd(8_000, 600);
+export const WEB_RESERVE_USD = estimateCostUsd(150_000) + estimateCostUsd(8_000, EXPAND_MAX_OUTPUT_TOKENS);
+
+/** The lower of two optional caps; null when neither is set. */
+const lowerCap = (a: number | null, b: number | null) => (a === null ? b : b === null ? a : Math.min(a, b));
 
 export interface WebOptions {
-  /** Test hook: replaces global fetch for the Meta call. */
+  /** Test hook: replaces global fetch for the model call. */
   fetch?: typeof fetch;
   now?: () => Date;
   /** The zh-TW sentences of each tool (generated/zh-TW.json); without them the zh-TW page shows the data in English. */
@@ -239,7 +245,7 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
       try {
         return (await env.WEB_RATE_LIMITER.limit({ key })).success;
       } catch (err) {
-        // The web's daily Meta cap still bounds spend, so a broken limiter does not take the page down.
+        // A broken limiter does not take the page down; a spend cap, when one is set, still bounds what it lets through.
         console.error(JSON.stringify({ event: 'web_rate_limit_failed', error: String(err) }));
         return true;
       }
@@ -343,8 +349,8 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
               'busy',
               L('Busy: too many searches from here', '搜尋太頻繁了'),
               L(
-                'Each search asks a Meta model, so pickfit limits how often one connection can search. Try again in a minute.',
-                '每次搜尋都會呼叫 Meta 的模型，所以 pickfit 會限制同一連線的搜尋次數。請一分鐘後再試。',
+                'Each search asks an AI model, so pickfit limits how often one connection can search. Try again in a minute.',
+                '每次搜尋都會呼叫 AI 模型，所以 pickfit 會限制同一連線的搜尋次數。請一分鐘後再試。',
               ),
             ),
           429,
@@ -389,33 +395,33 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
     return respond(form, results(result, form, { budget }));
   }
 
-  /** One search: reserve the worst-case cost, run find_software, release the hold. */
+  /** One search: with a cap set, reserve the worst-case cost, run find_software, release the hold; with none, just run it. */
   async function run(input: Parameters<typeof findSoftware>[0], form: FormValues, env: Env, ctx: ExecutionContext): Promise<Searched> {
     const config = settings(env);
     const now0 = now();
     const day = utcDay(now0);
-    const caps = { dailyCapUsd: Math.min(config.dailyCapUsd, webSettings(env).dailyCapUsd), totalCapUsd: config.totalCapUsd };
+    const caps: Caps = { dailyCapUsd: lowerCap(config.dailyCapUsd, webSettings(env).dailyCapUsd), totalCapUsd: config.totalCapUsd };
     let budget: BudgetStop | null = null;
     let held = false;
-    if (config.modelEnabled && config.apiKey) {
+    if (config.modelEnabled && config.apiKey && capped(caps)) {
       try {
         held = await reserveSpend(env.DB, now0, WEB_RESERVE_USD, caps);
         if (!held) {
           const state = await checkBudget(env.DB, now0, WEB_RESERVE_USD, caps);
-          budget = state.totalUsd + WEB_RESERVE_USD > caps.totalCapUsd ? 'total' : 'web_daily';
+          budget = caps.totalCapUsd !== null && (state.totalUsd ?? 0) + WEB_RESERVE_USD > caps.totalCapUsd ? 'total' : 'web_daily';
         }
       } catch {
         budget = 'unavailable';
       }
     }
-    // With the hold, find_software's own check must not count it a second time; without one, it must not call Meta.
-    const ownHold = held ? WEB_RESERVE_USD : 0;
+    // With the hold, find_software's own check must not count it a second time; refused one, it must not call the model.
+    const withHold = (cap: number | null) => (cap === null || !held ? cap : cap + WEB_RESERVE_USD);
     const deps: Deps = {
       catalog,
       db: env.DB,
       settings: budget
         ? { ...config, dailyCapUsd: 0, totalCapUsd: 0 }
-        : { ...config, dailyCapUsd: caps.dailyCapUsd + ownHold, totalCapUsd: caps.totalCapUsd + ownHold },
+        : { ...config, dailyCapUsd: withHold(caps.dailyCapUsd), totalCapUsd: withHold(caps.totalCapUsd) },
       now,
       waitUntil: (promise) => ctx.waitUntil(promise),
       fetch: options.fetch,

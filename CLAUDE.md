@@ -1,21 +1,19 @@
 # 給 agent 的說明
 
-本專案正在參加 Meta Global AI Developer Hackathon（開發期間 2026-10-27 – 11-04 ET）。
+本專案原為參加 Meta Global AI Developer Hackathon（開發期間 2026-10-27 – 11-04 ET）所建，**黑客松已於 2026-11-04 結束**，目前已進入**賽後持續開發與擴充階段**（2026-11-15 更新）。
 
 動手前先讀：
 
-1. [docs/brief.md](docs/brief.md)：這次要做什麼、目標、範圍、時程與待決定事項。
-2. [docs/hackathon-rules.md](docs/hackathon-rules.md)：比賽規則，特別是第 9 節的工作守則。
-3. [docs/plan.md](docs/plan.md)：任務清單，現在做到哪、下一步做什麼、花費守則。
+1. [docs/brief.md](docs/brief.md)：產品定位、目標與設計原則。
+2. [docs/hackathon-rules.md](docs/hackathon-rules.md)：歷史文件（比賽期間的工作守則，僅供追溯）。
+3. [docs/plan.md](docs/plan.md)：任務清單、歷史狀態紀錄，以及第 8 節「賽後階段更新」。
 
-最重要的守則：
+賽後階段的重要方針（2026-11-15 起）：
 
-- 不要竄改任何時間紀錄（commit 時間、歷史、檔案時間），也不要把賽前資料寫成比賽期間的成果。
-- **這個 repo 只放比賽期間的成果。** 不要把賽前的研究、規格、評測題目或素材複製進來；需要參考時，只取知識，不搬檔案。
-- 所有程式碼都在開發期間內寫並 commit；commit 要小而頻繁。
-- 產品必須使用 Meta 的模型；新增第三方程式碼、資料、素材前先確認授權。
-- 不要 commit API key 或其他機密。
-- 建資料與配對（發現、抽取、驗證、配對、計分）的 session 不讀 `eval/`，避免照著評測題目準備資料或調配對；只有評測執行與評分讀。
-- 每個 session 都在自己的 worktree 與分支上工作，不直接在主 checkout 的 `main` 上 commit；如果一開始就在主 checkout，先開 worktree 再改檔案。合併進 `main`、在 `docs/plan.md` 記進度，由協調的 session 做（狀態列的時間＝那次 commit 的時間）。
+- **不再受黑客松時程與凍結限制**：沒有比賽截止日或功能凍結期限，也不再受賽期 credit 硬性額度上限綁定（帳本仍可作成本追蹤）。
+- **API 切換為 Anthropic API**：解除「產品必須使用 Meta 模型」與「Anthropic 僅限評測」的限制，改以 **Anthropic API** 作為主要模型來源；**Modal** 平台仍有剩餘 API key 與沙盒（`ModalBox`）可持續使用。
+- **收錄與驗證策略（Linux / CLI / MCP / Web 優先）**：優先擴大收錄 **Linux、CLI、MCP server 與網頁應用（Web Apps）**。CLI 與 MCP 工具在 Linux 沙盒驗證的結果與 macOS / Windows 高度一致，可在無需維護大量 Mac / Windows 實體機的情況下維持高驗證品質；暫不優先收錄驗證成本高的 macOS / Windows 桌面 GUI App。
+- **保留歷史紀錄誠實性**：不要竄改任何過往 commit 時間、歷史紀錄或比賽期間的評測／帳本紀錄。
+- **安全與隔離**：不要 commit API key 或其他機密；新增第三方程式碼、資料、素材前先確認授權；若執行評測，建資料與配對的 session 仍不讀 `eval/`。
 
 賽前研究的位置記在 `CLAUDE.local.md`（不進 repo）。

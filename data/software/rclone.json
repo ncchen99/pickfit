@@ -1,0 +1,736 @@
+{
+  "schema_version": "software.v1",
+  "slug": "rclone",
+  "repo_id": "gh:17803236",
+  "name": "Rclone",
+  "summary": "Command-line program that syncs files and directories to and from many cloud storage providers.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "media_files",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "azure-blob",
+    "azure-blob-storage",
+    "azure-files",
+    "backblaze-b2",
+    "cloud-storage",
+    "dropbox",
+    "encryption",
+    "ftp",
+    "fuse-filesystem",
+    "go"
+  ],
+  "use_cases": [
+    "sync a local directory to cloud storage",
+    "mount cloud storage as a local filesystem via FUSE",
+    "encrypt files stored on a cloud remote",
+    "serve files over HTTP, WebDAV, FTP, SFTP or DLNA"
+  ],
+  "alternatives_to": [
+    "rsync"
+  ],
+  "features": [
+    "sync directories one way with cloud storage",
+    "two-way bidirectional sync",
+    "mount remote storage via FUSE",
+    "encrypt files on remotes"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T19:19:13.280007Z",
+    "run_id": "verify-rclone-20261116-030441-00e8",
+    "open_hint": "Run `rclone version` to confirm it is installed, then use subcommands such as `rclone sync`.",
+    "features": [
+      {
+        "feature": "sync directories one way with cloud storage",
+        "title": "Sync a directory one way to another location",
+        "steps": [
+          "Run `rclone sync <source> <destination> -v` to make the destination match the source.",
+          "Run `rclone check <source> <destination>` to confirm there are no differences.",
+          "Run `rclone ls <destination>` to list the synced files."
+        ]
+      },
+      {
+        "feature": "two-way bidirectional sync",
+        "title": "Keep two directories in sync both ways",
+        "steps": [
+          "Run `rclone bisync <path1> <path2> --resync --workdir <workdir> -v` once to set up the pair.",
+          "After changing files on either side, run `rclone bisync <path1> <path2> --workdir <workdir> -v`.",
+          "Run `rclone ls <path2>` to see the result."
+        ]
+      },
+      {
+        "feature": "mount remote storage via FUSE",
+        "title": "Mount remote storage as a local folder",
+        "steps": []
+      },
+      {
+        "feature": "encrypt files on remotes",
+        "title": "Encrypt files stored on a remote",
+        "steps": [
+          "Run `rclone copy <source> \":crypt,remote=<folder>,password=$(rclone obscure <password>):\" -v` to store encrypted copies.",
+          "Run `rclone cat \":crypt,remote=<folder>,password=$(rclone obscure <password>):<file>\"` to read a file back decrypted."
+        ]
+      }
+    ]
+  },
+  "homepage": "https://rclone.org",
+  "repo": {
+    "url": "https://github.com/rclone/rclone",
+    "full_name": "rclone/rclone",
+    "created_at": "2014-03-16T16:19:57Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "WinFsp (for mount on Windows)"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install rclone",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Configure remotes and storage provider accounts interactively"
+      ],
+      "check": {
+        "command": "docker run --rm rclone/rclone:latest version",
+        "expected_signal": "rclone v1.49.1\n- os/arch: linux/amd64\n- go version: go1.12.9"
+      },
+      "first_task": "rclone -h"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-rclone-20261116-030441-00e8",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "cd /tmp && curl -fsSLO https://downloads.rclone.org/rclone-current-linux-amd64.zip && rm -rf rcl && unzip -q rclone-current-linux-amd64.zip -d rcl && mkdir -p ~/.local/bin && cp rcl/*/rclone ~/.local/bin/rclone && chmod 755 ~/.local/bin/rclone",
+          "purpose": "Download rclone-current-linux-amd64.zip (the same zip install.sh fetches), unzip it and copy the binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "rclone version",
+        "expected_signal": "os/arch: amd64"
+      },
+      "first_task": "rclone version"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install github.com/rclone/rclone@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Configure remotes and storage provider accounts interactively"
+      ],
+      "check": {
+        "command": "docker run --rm rclone/rclone:latest version",
+        "expected_signal": "rclone v1.49.1\n- os/arch: linux/amd64\n- go version: go1.12.9"
+      },
+      "first_task": "rclone -h"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v1.76.0",
+    "published_at": "2026-11-06T16:29:59Z",
+    "url": "https://github.com/rclone/rclone/releases/tag/v1.76.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T03:05:47.107638+08:00",
+    "runs": [
+      {
+        "id": "verify-rclone-20261116-030441-00e8",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T03:05:47.107638+08:00",
+        "tool_version": "rclone v1.76.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd /tmp && curl -fsSLO https://downloads.rclone.org/rclone-current-linux-amd64.zip && rm -rf rcl && unzip -q rclone-current-linux-amd64.zip -d rcl && mkdir -p ~/.local/bin && cp rcl/*/rclone ~/.local/bin/rclone && chmod 755 ~/.local/bin/rclone",
+            "purpose": "Download rclone-current-linux-amd64.zip (the same zip install.sh fetches), unzip it and copy the binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "rclone version",
+            "expected_signal": "os/arch: amd64",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "- os/arch: amd64",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rclone sync /tmp/rt/src /tmp/rt/dst -v && rclone check /tmp/rt/src /tmp/rt/dst && rclone ls /tmp/rt/dst",
+            "expected_signal": "0 differences found",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2026/11/15 19:05:36 NOTICE: Local file system at /tmp/rt/dst: 0 differences found",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/rt && mkdir -p /tmp/rt/src/sub /tmp/rt/a /tmp/rt/b /tmp/rt/mnt && echo hello > /tmp/rt/src/one.txt && echo world > /tmp/rt/src/sub/two.txt && echo alpha > /tmp/rt/a/a.txt && echo beta > /tmp/rt/b/b.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "rclone bisync /tmp/rt/a /tmp/rt/b --resync --workdir /tmp/rt/bswd -v && echo gamma > /tmp/rt/a/c.txt && rclone bisync /tmp/rt/a /tmp/rt/b --workdir /tmp/rt/bswd -v && rclone ls /tmp/rt/b",
+            "expected_signal": "Bisync successful",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2026/11/15 19:05:37 INFO : \u001b[32mBisync successful\u001b[0m",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/rt && mkdir -p /tmp/rt/src/sub /tmp/rt/a /tmp/rt/b /tmp/rt/mnt && echo hello > /tmp/rt/src/one.txt && echo world > /tmp/rt/src/sub/two.txt && echo alpha > /tmp/rt/a/a.txt && echo beta > /tmp/rt/b/b.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "rclone copy /tmp/rt/src \":crypt,remote=/tmp/rt/enc,password=$(rclone obscure testpass):\" -v && rclone ls /tmp/rt/enc && rclone cat \":crypt,remote=/tmp/rt/enc,password=$(rclone obscure testpass):one.txt\"",
+            "expected_signal": "hello",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hello",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/rt && mkdir -p /tmp/rt/src/sub /tmp/rt/a /tmp/rt/b /tmp/rt/mnt && echo hello > /tmp/rt/src/one.txt && echo world > /tmp/rt/src/sub/two.txt && echo alpha > /tmp/rt/a/a.txt && echo beta > /tmp/rt/b/b.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "sudo -v ; curl https://rclone.org/install.sh | sudo bash",
+            "actually_needed": "No root here. I did by hand what the script does: downloaded https://downloads.rclone.org/rclone-current-linux-amd64.zip, unzipped it and copied the rclone binary to ~/.local/bin instead of /usr/bin. The script itself always writes to /usr/bin.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Optional FUSE mount (rclone mount)",
+            "actually_needed": "rclone mount needs the fusermount/fusermount3 helper (the fuse3 package). The box has /dev/fuse but not the helper, and installing it needs root.",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Sync copied files and check reported 0 differences, bisync completed with 'Bisync successful' and c.txt listed in destination, and rclone version printed v1.76.0 with os/arch: amd64.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-rclone-20261116-030441-00e8/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-rclone-20261116-030441-00e8/check-1-cmd5.judged.png",
+            "runs/verify/verify-rclone-20261116-030441-00e8/check-2-cmd6.judged.png",
+            "runs/verify/verify-rclone-20261116-030441-00e8/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.231881,
+        "features": [
+          {
+            "feature": "sync directories one way with cloud storage",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "two-way bidirectional sync",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "mount remote storage via FUSE",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "Mount daemon exited with code 1. fusermount isn't installed, and installing fuse3 needs apt/root."
+          },
+          {
+            "feature": "encrypt files on remotes",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T03:11:48+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/rclone/rclone@b0ef5f6a6eca",
+      "go.mod"
+    ],
+    "packages_checked": 269,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T03:11:03+08:00",
+    "quality": {
+      "total": 87.1,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.6111,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 100.0,
+      "signals": {
+        "stars": 61021,
+        "monthly_downloads": 23691,
+        "forks": 5700,
+        "dependents": null,
+        "release_downloads": 2178903,
+        "hn_top_score": 467,
+        "registries_count": 1
+      },
+      "age_days": 4627,
+      "packages": [
+        "homebrew:rclone"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.0
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:11:03.852707+08:00",
+      "sources_sha": "302b92da57fd639993c20e97ac9ac562d2aca4758d8266e3c0bb79692ecfa8c9",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Rclone *(\"rsync for cloud storage\")* is a command-line program to sync files and\ndirectories to and from different cloud storage providers."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "If your goal is to perform *periodic*\noperations, such as a regular [sync](https://rclone.org/commands/rclone_sync/), you\nwill probably want to configure your rclone command"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Make sure you have git and [Go](https://golang.org/) installed.\nGo version 1.26 or newer is required, the latest release is recommended."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "sudo -v ; curl https://rclone.org/install.sh | sudo bash"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "$ docker run --rm rclone/rclone:latest version\nrclone v1.49.1"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Run `rclone config` to setup. See [rclone config docs](/docs/) for more details."
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "winget uninstall Rclone.Rclone --force"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "This is free software under the terms of the MIT license"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/rclone/rclone",
+      "fetched_at": "2026-11-16T00:28:20+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/rclone/rclone/blob/master/README.md",
+      "fetched_at": "2026-11-16T00:28:19+08:00"
+    },
+    {
+      "id": "release:v1.76.0",
+      "kind": "release",
+      "url": "https://github.com/rclone/rclone/releases/tag/v1.76.0",
+      "fetched_at": "2026-11-16T00:28:19+08:00"
+    },
+    {
+      "id": "docs1",
+      "kind": "readme",
+      "url": "https://github.com/rclone/rclone/blob/master/docs/content/install.md",
+      "fetched_at": "2026-11-16T02:58:25+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "is a command-line program to sync files and",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "is a command-line program to sync files and",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "sync files and\ndirectories to and from different cloud storage providers",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Rclone *(\"rsync for cloud storage\")* is a command-line program to sync files and\ndirectories to and from different cloud storage providers.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Rclone",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "docs1",
+      "quote": "See below for some expanded Linux / macOS / Windows instructions.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "docs1",
+      "quote": "you will need to install the third party utility\n[WinFsp](https://winfsp.dev/) also.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:28:20+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:28:20+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T00:28:20+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:28:20+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:28:20+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.76.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:28:19+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "docs1",
+      "quote": "The `:latest` tag will always point to the latest stable release.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "[Sync](https://rclone.org/commands/rclone_sync/) (one way) mode to make a directory\n  identical",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Optional FUSE mount ([rclone mount](https://rclone.org/commands/rclone_mount/))",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Optional encryption ([Crypt](https://rclone.org/crypt/))",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "over HTTP/WebDAV/FTP/SFTP/DLNA",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "github_api",
+      "quote": "\"rsync for cloud storage\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "[Sync](https://rclone.org/commands/rclone_sync/) (one way) mode to make a directory\n  identical",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "[Bisync](https://rclone.org/bisync/) (two way) to keep two directories in sync\n  bidirectionally",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Optional FUSE mount ([rclone mount](https://rclone.org/commands/rclone_mount/))",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Optional encryption ([Crypt](https://rclone.org/crypt/))",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "docs1",
+      "quote": "brew install rclone",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "docs1",
+      "quote": "sudo -v ; curl https://rclone.org/install.sh | sudo bash",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "docs1",
+      "quote": "go install github.com/rclone/rclone@latest",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "This is free software under the terms of the MIT license",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Can sync to and from network, e.g. two different cloud accounts",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:47+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T00:28:19+08:00",
+  "updated_at": "2026-11-16T03:11:48+08:00"
+}

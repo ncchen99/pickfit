@@ -2,11 +2,11 @@
 
 Usage:
     uv run python scripts/translate_zh.py --dry-run                      # count what is missing
-    uv run python scripts/translate_zh.py [--slug S]... [--limit N]      # Muse Spark Open on Modal
-    uv run --with anthropic python scripts/translate_zh.py --model claude    # Claude, the fallback
+    uv run python scripts/translate_zh.py [--slug S]... [--limit N]      # Claude Opus
+    uv run python scripts/translate_zh.py --model open-modal             # Muse Spark Open on Modal's endpoint
 
 `pickfit publish` runs the same step before it builds the index, so this script is for
-backfills, comparisons (--out, --retranslate) and the Claude fallback.
+backfills and comparisons (--out, --retranslate).
 """
 
 from __future__ import annotations
@@ -15,10 +15,9 @@ import argparse
 import sys
 from pathlib import Path
 
-from pickfit.env import read_env
 from pickfit.i18n import i18n_dir
-from pickfit.index import DEFAULT_DATA_DIR, REPO_ROOT, IndexBuildError, build_index
-from pickfit.translate import BATCH_CHARS, MODELS, batches, missing, run
+from pickfit.index import DEFAULT_DATA_DIR, IndexBuildError, build_index
+from pickfit.translate import BATCH_CHARS, DEFAULT_MAX_USD, DEFAULT_MODEL, MODELS, batches, missing, run
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -27,14 +26,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--slug", action="append", help="only this tool (repeatable)")
     parser.add_argument("--limit", type=int, help="at most N requests")
     parser.add_argument("--concurrency", type=int, default=8)
-    parser.add_argument("--model", choices=MODELS, default="open-modal",
-                        help="open-modal: Muse Spark Open on Modal (default); claude: claude-opus-5-5")
-    parser.add_argument("--effort", default="medium", help="open-modal: reasoning effort (default medium)")
-    parser.add_argument("--max-usd", type=float, default=2.0, help="open-modal: stop spending past this for one run")
+    parser.add_argument("--model", choices=MODELS, default=DEFAULT_MODEL,
+                        help="claude: Claude Opus (default); open-modal: Muse Spark Open on Modal's endpoint")
+    parser.add_argument("--effort", default=None, help="reasoning effort (default: low for claude, medium for open-modal)")
+    parser.add_argument("--max-usd", type=float, default=DEFAULT_MAX_USD, help="stop spending past this for one run")
     parser.add_argument("--out", type=Path, help="write here instead of data/i18n/zh-TW (e.g. for a comparison)")
     parser.add_argument("--retranslate", action="store_true",
                         help="ask for the selected tools' sentences even if translated (with --out, for a comparison)")
-    parser.add_argument("--env", type=Path, default=REPO_ROOT / ".env", help="claude: dotenv file with ANTHROPIC_API_KEY")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
 
@@ -53,9 +51,8 @@ def main(argv: list[str] | None = None) -> int:
     print(f"translate_zh: {sum(map(len, groups))} sentences ({chars:,} chars) missing, {len(groups)} requests")
     if args.dry_run or not groups:
         return 0
-    key = read_env(["ANTHROPIC_API_KEY"], args.env).get("ANTHROPIC_API_KEY") if args.model == "claude" else None
     totals = run(groups, known, directory, model=args.model, effort=args.effort, max_usd=args.max_usd,
-                 concurrency=args.concurrency, anthropic_key=key, out=lambda line: print(line, flush=True))
+                 concurrency=args.concurrency, out=lambda line: print(line, flush=True))
     print(f"translate_zh: {totals.requests} requests done, {totals.failed} failed; ≈ ${totals.usd:.2f} ({args.model})")
     return 1 if totals.failed else 0
 

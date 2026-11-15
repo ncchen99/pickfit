@@ -1,7 +1,8 @@
 /**
  * Wall-clock latency of find_software against a running Worker (`npm run dev`),
- * one request at a time. Paid when the Worker has MODEL_API_KEY: about $0.04
- * a request; the Worker logs each Meta call's tokens and cost (meta_call).
+ * one request at a time. Paid when the Worker has ANTHROPIC_API_KEY (about $0.04
+ * a request on muse-spark-1.3; not measured on Claude yet); the Worker logs each
+ * model call's tokens and cost (meta_call).
  *
  *   node bench/latency.ts <url> <requests.json>
  *

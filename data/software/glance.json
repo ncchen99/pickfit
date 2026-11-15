@@ -1,0 +1,726 @@
+{
+  "schema_version": "software.v1",
+  "slug": "glance",
+  "repo_id": "gh:792861139",
+  "name": "Glance",
+  "summary": "A self-hosted dashboard that shows RSS, Reddit, YouTube, weather, market and other feeds on configurable pages.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "productivity_docs",
+  "kind": "self_hosted_web_app",
+  "audience": null,
+  "maturity": null,
+  "tags": [
+    "aggregator",
+    "dashboard",
+    "docker",
+    "feed-reader",
+    "go",
+    "homelab",
+    "homepage",
+    "monitoring",
+    "reddit",
+    "rss"
+  ],
+  "use_cases": [
+    "follow RSS feeds and subreddit posts on one page",
+    "monitor Docker container status and server stats",
+    "track YouTube channel uploads"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "display RSS feeds in dashboard widgets",
+    "show weather forecasts and market prices",
+    "create custom widgets from JSON APIs",
+    "apply custom themes and CSS"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:08.913429Z",
+    "run_id": "verify-glance-20261116-012053-588f",
+    "open_hint": "Run `glance --config <config file>` and open http://127.0.0.1:8080 in a browser to see your dashboard.",
+    "features": [
+      {
+        "feature": "display RSS feeds in dashboard widgets",
+        "title": "Show RSS feeds in dashboard widgets",
+        "steps": [
+          "In your glance.yml, add a widget with `type: rss` under a page column and list each feed under `feeds` with its `url` and `title`.",
+          "Check the file with `glance --config <config file> config:validate`.",
+          "Start Glance with `glance --config <config file>` and open the page to see the feed items."
+        ]
+      },
+      {
+        "feature": "show weather forecasts and market prices",
+        "title": "Show weather forecasts and market prices",
+        "steps": []
+      },
+      {
+        "feature": "create custom widgets from JSON APIs",
+        "title": "Build custom widgets from JSON APIs",
+        "steps": [
+          "In your glance.yml, add a widget with `type: custom-api`, a `url` pointing to the JSON API, and a `template` such as `{{ .JSON.String \"<key>\" }}` to show its fields.",
+          "Check the file with `glance --config <config file> config:validate`.",
+          "Start Glance with `glance --config <config file>` and open the page to see the widget."
+        ]
+      },
+      {
+        "feature": "apply custom themes and CSS",
+        "title": "Apply custom themes and CSS",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/glanceapp/glance",
+    "full_name": "glanceapp/glance",
+    "created_at": "2024-04-27T18:55:38Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "windows",
+    "macos"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "go>=1.23 (build from source)"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "mkdir glance && cd glance && curl -sL https://github.com/glanceapp/docker-compose-template/archive/refs/heads/main.tar.gz | tar -xzf - --strip-components 2",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Edit YAML config files to set widgets and layout"
+      ],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-glance-20261116-012053-588f",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/gl && curl -fsSL -o /tmp/gl/glance.tar.gz https://github.com/glanceapp/glance/releases/latest/download/glance-linux-amd64.tar.gz && tar -xzf /tmp/gl/glance.tar.gz -C /tmp/gl && install -m755 /tmp/gl/glance ~/.local/bin/glance",
+          "purpose": "Download the glance-linux-amd64 release tarball and install the binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "glance --version",
+        "expected_signal": "v0.8.8"
+      },
+      "first_task": "curl -fsS http://127.0.0.1:8080/api/pages/home/content/"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "mkdir glance && cd glance && curl -sL https://github.com/glanceapp/docker-compose-template/archive/refs/heads/main.tar.gz | tar -xzf - --strip-components 2",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Edit YAML config files to set widgets and layout"
+      ],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "AGPL-3.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.8.8",
+    "published_at": "2026-11-07T15:59:45Z",
+    "url": "https://github.com/glanceapp/glance/releases/tag/v0.8.8"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T01:22:03.480060+08:00",
+    "runs": [
+      {
+        "id": "verify-glance-20261116-012053-588f",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:22:03.480060+08:00",
+        "tool_version": "v0.8.8",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/gl && curl -fsSL -o /tmp/gl/glance.tar.gz https://github.com/glanceapp/glance/releases/latest/download/glance-linux-amd64.tar.gz && tar -xzf /tmp/gl/glance.tar.gz -C /tmp/gl && install -m755 /tmp/gl/glance ~/.local/bin/glance",
+            "purpose": "Download the glance-linux-amd64 release tarball and install the binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "glance --version",
+            "expected_signal": "v0.8.8",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "v0.8.8",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -fsS http://127.0.0.1:8080/api/pages/home/content/",
+            "expected_signal": "Hello Glance RSS Item",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "<a class=\"title size-title-dynamic color-primary-if-not-visited\" href=\"http://127.0.0.1:9000/item1\" target=\"_blank\" rel=\"noreferrer\">Hello Glance RSS Item</a>",
+            "setup": [
+              {
+                "command": "mkdir -p ~/gl/feeds ~/gl/assets && cd ~/gl && cat > feeds/rss.xml <<'EOF'\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<rss version=\"2.0\"><channel><title>Local Feed</title><link>http://127.0.0.1:9000/</link><description>test</description>\n<item><title>Hello Glance RSS Item</title><link>http://127.0.0.1:9000/item1</link><pubDate>Mon, 01 Jan 2024 00:00:00 GMT</pubDate></item>\n</channel></rss>\nEOF\ncat > feeds/data.json <<'EOF'\n{\"message\": \"CustomApiWorks\", \"count\": 42}\nEOF\ncat > assets/user.css <<'EOF'\n.my-custom-marker { color: red; }\nEOF\ncat > glance.yml <<'EOF'\nserver:\n  port: 8080\n  assets-path: /home/sbx/gl/assets\ntheme:\n  background-color: 50 1 6\n  primary-color: 24 97 58\n  contrast-multiplier: 1.3\n  custom-css-file: /assets/user.css\npages:\n  - name: Home\n    columns:\n      - size: full\n        widgets:\n          - type: rss\n            title: MyRSS\n            feeds:\n              - url: http://127.0.0.1:9000/rss.xml\n                title: Local Feed\n          - type: custom-api\n            title: MyAPI\n            url: http://127.0.0.1:9000/data.json\n            template: |\n              <p>Message: {{ .JSON.String \"message\" }} / {{ .JSON.Int \"count\" }}</p>\nEOF\nglance --config glance.yml config:validate",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd ~/gl/feeds && python3 -m http.server 9000 --bind 127.0.0.1",
+                "background": true,
+                "port": 9000
+              },
+              {
+                "command": "cd ~/gl && glance --config glance.yml",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsS http://127.0.0.1:8080/",
+            "expected_signal": "hsl(24.0, 97.0%, 58.0%)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "--color-primary: hsl(24.0, 97.0%, 58.0%);",
+            "setup": [
+              {
+                "command": "mkdir -p ~/gl/feeds ~/gl/assets && cd ~/gl && cat > feeds/rss.xml <<'EOF'\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<rss version=\"2.0\"><channel><title>Local Feed</title><link>http://127.0.0.1:9000/</link><description>test</description>\n<item><title>Hello Glance RSS Item</title><link>http://127.0.0.1:9000/item1</link><pubDate>Mon, 01 Jan 2024 00:00:00 GMT</pubDate></item>\n</channel></rss>\nEOF\ncat > feeds/data.json <<'EOF'\n{\"message\": \"CustomApiWorks\", \"count\": 42}\nEOF\ncat > assets/user.css <<'EOF'\n.my-custom-marker { color: red; }\nEOF\ncat > glance.yml <<'EOF'\nserver:\n  port: 8080\n  assets-path: /home/sbx/gl/assets\ntheme:\n  background-color: 50 1 6\n  primary-color: 24 97 58\n  contrast-multiplier: 1.3\n  custom-css-file: /assets/user.css\npages:\n  - name: Home\n    columns:\n      - size: full\n        widgets:\n          - type: rss\n            title: MyRSS\n            feeds:\n              - url: http://127.0.0.1:9000/rss.xml\n                title: Local Feed\n          - type: custom-api\n            title: MyAPI\n            url: http://127.0.0.1:9000/data.json\n            template: |\n              <p>Message: {{ .JSON.String \"message\" }} / {{ .JSON.Int \"count\" }}</p>\nEOF\nglance --config glance.yml config:validate",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd ~/gl/feeds && python3 -m http.server 9000 --bind 127.0.0.1",
+                "background": true,
+                "port": 9000
+              },
+              {
+                "command": "cd ~/gl && glance --config glance.yml",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsS http://127.0.0.1:8080/assets/user.css",
+            "expected_signal": ".my-custom-marker { color: red; }",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": ".my-custom-marker { color: red; }",
+            "setup": [
+              {
+                "command": "mkdir -p ~/gl/feeds ~/gl/assets && cd ~/gl && cat > feeds/rss.xml <<'EOF'\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<rss version=\"2.0\"><channel><title>Local Feed</title><link>http://127.0.0.1:9000/</link><description>test</description>\n<item><title>Hello Glance RSS Item</title><link>http://127.0.0.1:9000/item1</link><pubDate>Mon, 01 Jan 2024 00:00:00 GMT</pubDate></item>\n</channel></rss>\nEOF\ncat > feeds/data.json <<'EOF'\n{\"message\": \"CustomApiWorks\", \"count\": 42}\nEOF\ncat > assets/user.css <<'EOF'\n.my-custom-marker { color: red; }\nEOF\ncat > glance.yml <<'EOF'\nserver:\n  port: 8080\n  assets-path: /home/sbx/gl/assets\ntheme:\n  background-color: 50 1 6\n  primary-color: 24 97 58\n  contrast-multiplier: 1.3\n  custom-css-file: /assets/user.css\npages:\n  - name: Home\n    columns:\n      - size: full\n        widgets:\n          - type: rss\n            title: MyRSS\n            feeds:\n              - url: http://127.0.0.1:9000/rss.xml\n                title: Local Feed\n          - type: custom-api\n            title: MyAPI\n            url: http://127.0.0.1:9000/data.json\n            template: |\n              <p>Message: {{ .JSON.String \"message\" }} / {{ .JSON.Int \"count\" }}</p>\nEOF\nglance --config glance.yml config:validate",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd ~/gl/feeds && python3 -m http.server 9000 --bind 127.0.0.1",
+                "background": true,
+                "port": 9000
+              },
+              {
+                "command": "cd ~/gl && glance --config glance.yml",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Place the binary in /opt/glance/ and run /opt/glance/glance --config /etc/glance.yml",
+            "actually_needed": "No root here, so I installed the binary to ~/.local/bin and kept the config in ~/gl/glance.yml. Running it with --config works the same way.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Visit the latest release page for available binaries",
+            "actually_needed": "The direct download URL is https://github.com/glanceapp/glance/releases/latest/download/glance-linux-amd64.tar.gz.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Use the sample config with feeds from outside sites",
+            "actually_needed": "Smoke tests are replayed with the network off, so the RSS feed and the JSON for custom-api were served by a local python http.server on port 9000.",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The content API returned the RSS widget with 'Hello Glance RSS Item' (in the source text) and the custom API message, the home page HTML rendered with the default theme and a v0.8.8 footer, and `glance --version` printed v0.8.8.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-glance-20261116-012053-588f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-glance-20261116-012053-588f/check-1-cmd6.judged.png",
+            "runs/verify/verify-glance-20261116-012053-588f/check-2-cmd7.judged.png",
+            "runs/verify/verify-glance-20261116-012053-588f/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.19865,
+        "features": [
+          {
+            "feature": "display RSS feeds in dashboard widgets",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "show weather forecasts and market prices",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Weather and markets widgets fetch from outside APIs (open-meteo, Yahoo), and smoke tests are replayed with the network off."
+          },
+          {
+            "feature": "create custom widgets from JSON APIs",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "apply custom themes and CSS",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Serving a user.css file and the page HTML shows no applied theme customization (no theme colors or effects visible)."
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:22:10+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/glanceapp/glance@53aec7f392ca",
+      "go.mod"
+    ],
+    "packages_checked": 22,
+    "findings_total": 2,
+    "advisories_total": 2,
+    "findings": [
+      {
+        "package": "go:github.com/andybalholm/brotli",
+        "version": "v1.2.3",
+        "advisory": "GO-2026-6888",
+        "cves": [
+          "CVE-2026-111497"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "1.2.7",
+        "summary": "Excessive memory allocation when decompressing crafted streams in github.com/andybalholm/brotli",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/klauspost/compress",
+        "version": "v1.20.0",
+        "advisory": "GO-2026-6865",
+        "cves": [
+          "CVE-2026-116591"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.2",
+        "summary": "Panic on two-block frames in github.com/klauspost/compress",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:22:10+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.4214,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 38206,
+        "monthly_downloads": null,
+        "forks": 1523,
+        "dependents": null,
+        "release_downloads": 58281,
+        "hn_top_score": 211,
+        "registries_count": 0
+      },
+      "age_days": 931,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 7.9
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:22:03.483339+08:00",
+      "sources_sha": "7c79be4075a25c711ed4d9e6164e18164ef7cd7dc9c5a9dc66d0058b02a78dbe",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A lightweight, highly customizable dashboard that displays<br> your feeds in a beautiful, streamlined interface"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "A self-hosted dashboard that puts all your feeds in one place"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Requirements: [Go](https://go.dev/dl/) >= v1.23"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "docker compose up -d"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "You should then be able to run the executable and access the dashboard by visiting `http://localhost:8080` in your browser."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "`.env` to configure environment variables that will be available inside configuration files"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "The most common cause of this is when using Pi-Hole, AdGuard Home or other ad-blocking DNS services"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Precompiled binaries are available for Linux, Windows and macOS (x86, x86_64, ARM and ARM64 architectures)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/glanceapp/glance",
+      "fetched_at": "2026-11-16T01:20:45+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/glanceapp/glance/blob/main/README.md",
+      "fetched_at": "2026-11-16T01:20:43+08:00"
+    },
+    {
+      "id": "release:v0.8.8",
+      "kind": "release",
+      "url": "https://github.com/glanceapp/glance/releases/tag/v0.8.8",
+      "fetched_at": "2026-11-16T01:20:43+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "A self-hosted dashboard that puts all your feeds in one place",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:53+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:20:45+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A self-hosted dashboard that puts all your feeds in one place",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:53+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1 align=\"center\">Glance</h1>",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:53+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Precompiled binaries are available for Linux, Windows and macOS",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:53+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requirements: [Go](https://go.dev/dl/) >= v1.23",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:53+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "information is only fetched upon loading the page and then cached",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:53+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:20:45+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:20:45+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:20:45+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:20:45+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.8.8",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:20:43+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "* RSS feeds\n* Subreddit posts",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:53+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "* Docker containers status\n* Server stats",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:53+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "* YouTube channel uploads",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:53+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "* RSS feeds",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:53+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "* Weather forecasts",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:53+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "`custom-api` widget - fetch JSON from a URL and render it using custom HTML",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:53+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Easily create your own theme by tweaking a few numbers",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:53+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "mkdir glance && cd glance && curl -sL https://github.com/glanceapp/docker-compose-template/archive/refs/heads/main.tar.gz | tar -xzf - --strip-components 2",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:53+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "/opt/glance/glance --config /etc/glance.yml",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:53+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "mkdir glance && cd glance && curl -sL https://github.com/glanceapp/docker-compose-template/archive/refs/heads/main.tar.gz | tar -xzf - --strip-components 2",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:53+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:20:43+08:00",
+  "updated_at": "2026-11-16T01:22:10+08:00"
+}

@@ -139,6 +139,11 @@ def traces(runs: Path) -> list[dict[str, Any]]:
 
 
 def call(server: FakeServer, ledger: Ledger, endpoint: str = "chat", body: dict | None = None, **kwargs):
+    """call_meta against the fake server. This file tests call_meta's machinery (ledger, cache, retries,
+    traces) on the hackathon's path, an OpenAI-shaped API, so "dev" and "prod" mean Meta's models here;
+    the Claude path, the default since 11/15, is tested in test_anthropic.py."""
+    if kwargs.get("model") in (None, "dev", "prod"):
+        kwargs.setdefault("provider", "meta")
     kwargs.setdefault("public_data_only", True)
     kwargs.setdefault("max_output_tokens", 1000)
     return call_meta(endpoint, body or CHAT_BODY, stage="test", client=server.client(), ledger=ledger,
@@ -380,8 +385,8 @@ def test_prod_allowed_for_non_public_data(ledger: Ledger, monkeypatch: pytest.Mo
     assert server.requests[0]["model"] == "muse-spark-1.3"
 
 
-def test_open_alias_names_muse_spark_open_on_baseten():
-    assert resolve_model("open") == resolve_model("open", "baseten") == OPEN_MODEL
+def test_muse_spark_open_on_baseten_is_reached_by_its_id():
+    assert resolve_model(OPEN_MODEL) == resolve_model(OPEN_MODEL, "baseten") == OPEN_MODEL
     assert provider_for(OPEN_MODEL) == "baseten" and provider_for("muse-spark-1.3") == "meta"
     assert is_open_model("open") and is_open_model(OPEN_MODEL)
     assert not is_open_model("prod") and not is_open_model("muse-spark-1.3") and not is_open_model(None)
@@ -390,7 +395,7 @@ def test_open_alias_names_muse_spark_open_on_baseten():
 def test_open_model_is_sent_to_baseten_and_billed_to_its_budget(tmp_path: Path, runs: Path):
     server = FakeServer(ok({**RESPONSES_OK, "model": OPEN_MODEL}))
     result = call_meta("responses", {"input": "README text", "store": False}, stage="test", public_data_only=True,
-                       max_output_tokens=1000, model="open", client=server.client())
+                       max_output_tokens=1000, model=OPEN_MODEL, client=server.client())
     assert server.requests[0]["model"] == OPEN_MODEL
     assert (result.provider, result.model) == ("baseten", OPEN_MODEL)
     assert result.cost_usd == pytest.approx(0.0031)  # Baseten's list price, same as muse-spark-1.3
@@ -403,9 +408,9 @@ def test_open_model_is_sent_to_baseten_and_billed_to_its_budget(tmp_path: Path, 
 def test_open_model_cannot_be_sent_to_meta(ledger: Ledger):
     server = FakeServer()
     with pytest.raises(ModelRefused):
-        call(server, ledger, "responses", {"input": "x"}, model="open", provider="meta")
-    with pytest.raises(ValueError, match="stateless"):
-        call(server, ledger, "responses", {"input": "x", "previous_response_id": "resp_1"}, model="open")
+        call(server, ledger, "responses", {"input": "x"}, model=OPEN_MODEL, provider="meta")
+    with pytest.raises(ValueError, match="keeps no conversations"):
+        call(server, ledger, "responses", {"input": "x", "previous_response_id": "resp_1"}, model=OPEN_MODEL)
     assert server.requests == []
 
 
@@ -648,8 +653,8 @@ def test_api_key_never_in_trace_or_cache(ledger: Ledger, runs: Path):
 
 def test_ping_is_tiny_public_and_uncached(ledger: Ledger, runs: Path):
     server = FakeServer(ok(CHAT_OK), ok(CHAT_OK))
-    ping(client=server.client(), ledger=ledger)
-    ping(client=server.client(), ledger=ledger)
+    ping("meta", client=server.client(), ledger=ledger)
+    ping("meta", client=server.client(), ledger=ledger)
     assert len(server.requests) == 2
     assert server.requests[0]["max_completion_tokens"] == meta.PING_MAX_OUTPUT_TOKENS
     assert server.requests[0]["model"] == "muse-spark-1.3-contributor"
@@ -680,21 +685,22 @@ def test_muse_spark_open_on_modal_is_its_own_provider_and_budget(tmp_path, monke
     from pickfit.meta import MODAL_OPEN_MODEL, is_open_model, make_client, provider_for, resolve_model
 
     assert resolve_model("open-modal") == MODAL_OPEN_MODEL and provider_for(MODAL_OPEN_MODEL) == "modal"
-    assert is_open_model("open-modal") and provider_for(resolve_model("open")) == "baseten"
+    assert is_open_model("open-modal") and provider_for(resolve_model("open")) == "anthropic"
     monkeypatch.setenv("MODAL_PROXY_TOKEN_ID", "wk-id")
     monkeypatch.setenv("MODAL_PROXY_TOKEN_SECRET", "ws-secret")
     client = make_client("modal")
     assert client.api_key == "wk-id.ws-secret" and "modal.direct" in str(client.base_url)
     monkeypatch.setenv("PICKFIT_LEDGER", str(tmp_path / "l.sqlite"))
     book = ledger_mod.modal_llm_ledger()
-    assert book.budget == "modal-llm" and book.caps.total_usd == 100.0
+    assert book.budget == "modal-llm" and book.caps is ledger_mod.NO_CAPS
 
 
 def test_meta_models_go_to_openrouter_pinned_to_meta_when_meta_via_says_so(tmp_path: Path, runs: Path, monkeypatch):
     monkeypatch.setenv("PICKFIT_META_VIA", "openrouter")
     server = FakeServer(ok({**RESPONSES_OK, "model": "meta/muse-spark-1.3"}))
     result = call_meta("responses", {"input": "README text", "store": False}, stage="test", public_data_only=True,
-                       max_output_tokens=1000, model="prod", reasoning_effort="max", client=server.client())
+                       max_output_tokens=1000, model="prod", provider="meta", reasoning_effort="max",
+                       client=server.client())
     sent = server.requests[0]
     assert sent["model"] == "meta/muse-spark-1.3" and sent["reasoning"]["effort"] == "max"
     assert sent["provider"] == {"order": ["meta"], "allow_fallbacks": False, "data_collection": "deny"}
@@ -718,7 +724,7 @@ def test_openrouter_route_maps_models_and_refuses_what_it_cannot_serve(ledger: L
     with pytest.raises(ModelRefused, match="not on OpenRouter"):
         route("meta", "sam-3.1")
     server = FakeServer()
-    with pytest.raises(ValueError, match="stateless"):
+    with pytest.raises(ValueError, match="keeps no conversations"):
         call(server, ledger, "responses", {"input": "x", "previous_response_id": "resp_1"}, model="prod")
     assert server.requests == []
     monkeypatch.setenv("PICKFIT_META_VIA", "anthropic")
@@ -727,7 +733,7 @@ def test_openrouter_route_maps_models_and_refuses_what_it_cannot_serve(ledger: L
     monkeypatch.setenv("OPENROUTER_API_KEY", "or-key")
     assert "openrouter.ai" in str(make_client("openrouter").base_url)
     book = ledger_mod.openrouter_ledger()
-    assert book.budget == "openrouter" and book.caps.total_usd == 50.0
+    assert book.budget == "openrouter" and book.caps is ledger_mod.NO_CAPS
 
 
 def test_openrouter_bills_its_own_budget_even_when_the_caller_passes_a_meta_ledger(ledger: Ledger, monkeypatch):

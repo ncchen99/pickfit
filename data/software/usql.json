@@ -1,0 +1,700 @@
+{
+  "schema_version": "software.v1",
+  "slug": "usql",
+  "repo_id": "gh:83678416",
+  "name": "usql",
+  "summary": "A psql-style command-line client that connects to PostgreSQL, MySQL, Oracle, SQLite3, SQL Server and many other SQL and NoSQL databases.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "data_db",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "command-line",
+    "database",
+    "go",
+    "golang",
+    "mariadb",
+    "microsoft-sql-server",
+    "mysql",
+    "oracle",
+    "oracle-database",
+    "postgres"
+  ],
+  "use_cases": [
+    "connect to a PostgreSQL database from the terminal",
+    "run a SQL script file against a database",
+    "copy query results between different databases"
+  ],
+  "alternatives_to": [
+    "psql"
+  ],
+  "features": [
+    "query many SQL and NoSQL databases",
+    "copy data between databases",
+    "context-based completion",
+    "psql-style variables and backslash commands"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:43.594293Z",
+    "run_id": "verify-usql-20261116-010535-705c",
+    "open_hint": "Run `usql -c '\\drivers'` to list the database drivers your build supports.",
+    "features": [
+      {
+        "feature": "query many SQL and NoSQL databases",
+        "title": "Query many SQL and NoSQL databases",
+        "steps": [
+          "List the available drivers with `usql -c '\\drivers'`.",
+          "Run a SQL script against a database with `usql sq:<database file> -f <script.sql>`.",
+          "Run a single query with `usql sq:<database file> -c '<your query>'`."
+        ]
+      },
+      {
+        "feature": "copy data between databases",
+        "title": "Copy data between databases",
+        "steps": [
+          "Copy query results from one database into a table in another with `usql -c \"\\copy csvq:<folder> sq:<database file> '<select query>' '<table>(<columns>)'\"`.",
+          "Check the copied rows with `usql sq:<database file> -c '<your query>'`."
+        ]
+      },
+      {
+        "feature": "context-based completion",
+        "title": "Complete commands based on context",
+        "steps": []
+      },
+      {
+        "feature": "psql-style variables and backslash commands",
+        "title": "Use psql-style variables and backslash commands",
+        "steps": [
+          "Write a script using commands such as `\\set <name> <value>`, `\\echo :<name>` and `\\dt`, and use `:<name>` inside queries.",
+          "Run it with `usql sq:<database file> -f <script.sql>`."
+        ]
+      }
+    ]
+  },
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/xo/usql",
+    "full_name": "xo/usql",
+    "created_at": "2017-03-02T13:03:21Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install xo/xo/usql",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "usql --help",
+        "expected_signal": "usql, the universal command-line interface for SQL databases"
+      },
+      "first_task": "usql --help"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-usql-20261116-010535-705c",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "cd /tmp && curl -fsSLO https://github.com/xo/usql/releases/download/v0.21.6/usql-0.21.6-linux-amd64.tar.bz2 && mkdir -p /tmp/usqlx ~/.local/bin && python3 -c \"import tarfile;t=tarfile.open('/tmp/usql-0.21.6-linux-amd64.tar.bz2');print(t.getnames());t.extractall('/tmp/usqlx')\" && install -m755 /tmp/usqlx/usql ~/.local/bin/usql",
+          "purpose": "Download the v0.21.6 linux-amd64 release tarball, extract usql, and install it into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "usql --version",
+        "expected_signal": "usql 0.21.6"
+      },
+      "first_task": "usql -c '\\drivers'"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "binary",
+      "steps": [
+        {
+          "command": "Download a release for your platform",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "usql --help",
+        "expected_signal": "usql, the universal command-line interface for SQL databases"
+      },
+      "first_task": "usql --help"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.21.6",
+    "published_at": "2026-09-22T23:58:17Z",
+    "url": "https://github.com/xo/usql/releases/tag/v0.21.6"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T01:07:10.391267+08:00",
+    "runs": [
+      {
+        "id": "verify-usql-20261116-010535-705c",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:07:10.391267+08:00",
+        "tool_version": "usql 0.21.6",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd /tmp && curl -fsSLO https://github.com/xo/usql/releases/download/v0.21.6/usql-0.21.6-linux-amd64.tar.bz2 && mkdir -p /tmp/usqlx ~/.local/bin && python3 -c \"import tarfile;t=tarfile.open('/tmp/usql-0.21.6-linux-amd64.tar.bz2');print(t.getnames());t.extractall('/tmp/usqlx')\" && install -m755 /tmp/usqlx/usql ~/.local/bin/usql",
+            "purpose": "Download the v0.21.6 linux-amd64 release tarball, extract usql, and install it into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "usql --version",
+            "expected_signal": "usql 0.21.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usql 0.21.6",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "usql -c '\\drivers'",
+            "expected_signal": "Available Drivers:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Available Drivers:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/uq && usql sq:/tmp/uq/test.db -f setup.sql && usql sq:/tmp/uq/test.db -c 'select book_id, title from books order by book_id'",
+            "expected_signal": "The Dispossessed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2 | The Dispossessed",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/uq && cd /tmp/uq && rm -f test.db && cat > authors.csv <<'EOF'\nauthor_id,name\n1,Isaac Asimov\n2,Ursula K. Le Guin\nEOF\ncat > setup.sql <<'EOF'\ncreate table authors (author_id integer, name text);\ncreate table books (book_id integer, author_id integer, title text);\ninsert into books values (1, 1, 'Foundation'), (2, 2, 'The Dispossessed');\nEOF\ncat > vars.sql <<'EOF'\n\\set greeting 'hello from usql'\n\\echo :greeting\n\\set tbl books\nselect count(*) as n from :tbl;\n\\dt\nEOF\nls",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/uq && usql -c \"\\copy csvq:. sq:/tmp/uq/test.db 'select author_id, name from authors' 'authors(author_id, name)'\" && usql sq:/tmp/uq/test.db -c 'select * from authors order by author_id'",
+            "expected_signal": "COPY 2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "COPY 2",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/uq && cd /tmp/uq && rm -f test.db && cat > authors.csv <<'EOF'\nauthor_id,name\n1,Isaac Asimov\n2,Ursula K. Le Guin\nEOF\ncat > setup.sql <<'EOF'\ncreate table authors (author_id integer, name text);\ncreate table books (book_id integer, author_id integer, title text);\ninsert into books values (1, 1, 'Foundation'), (2, 2, 'The Dispossessed');\nEOF\ncat > vars.sql <<'EOF'\n\\set greeting 'hello from usql'\n\\echo :greeting\n\\set tbl books\nselect count(*) as n from :tbl;\n\\dt\nEOF\nls",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/uq && usql sq:/tmp/uq/test.db -f setup.sql && usql sq:/tmp/uq/test.db -c 'select book_id, title from books order by book_id'",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/uq && usql sq:/tmp/uq/test.db -f vars.sql",
+            "expected_signal": "hello from usql",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hello from usql",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/uq && cd /tmp/uq && rm -f test.db && cat > authors.csv <<'EOF'\nauthor_id,name\n1,Isaac Asimov\n2,Ursula K. Le Guin\nEOF\ncat > setup.sql <<'EOF'\ncreate table authors (author_id integer, name text);\ncreate table books (book_id integer, author_id integer, title text);\ninsert into books values (1, 1, 'Foundation'), (2, 2, 'The Dispossessed');\nEOF\ncat > vars.sql <<'EOF'\n\\set greeting 'hello from usql'\n\\echo :greeting\n\\set tbl books\nselect count(*) as n from :tbl;\n\\dt\nEOF\nls",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/uq && usql sq:/tmp/uq/test.db -f setup.sql && usql sq:/tmp/uq/test.db -c 'select book_id, title from books order by book_id'",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Download a release for your platform and extract the usql file from the .tar.bz2",
+            "actually_needed": "The Linux asset is usql-0.21.6-linux-amd64.tar.bz2 (there is also a usql_static build). I extracted it with Python's tarfile module, so I never checked whether this box has bzip2 for tar xjf.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "usql lists available drivers, creates a SQLite table and returns two rows including 'The Dispossessed', and prints version 0.21.6, all with exit code 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-usql-20261116-010535-705c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-usql-20261116-010535-705c/check-1-cmd4.judged.png",
+            "runs/verify/verify-usql-20261116-010535-705c/check-2-cmd7.judged.png",
+            "runs/verify/verify-usql-20261116-010535-705c/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.195456,
+        "features": [
+          {
+            "feature": "query many SQL and NoSQL databases",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "copy data between databases",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "context-based completion",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "Tab completion only works in an interactive terminal session, and commands here run with stdin closed."
+          },
+          {
+            "feature": "psql-style variables and backslash commands",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:07:16+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/xo/usql@23b8f7a9181b",
+      "go.mod"
+    ],
+    "packages_checked": 168,
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "go:github.com/andybalholm/brotli",
+        "version": "v1.2.4",
+        "advisory": "GO-2026-6888",
+        "cves": [
+          "CVE-2026-111497"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "1.2.7",
+        "summary": "Excessive memory allocation when decompressing crafted streams in github.com/andybalholm/brotli",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:07:16+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.8,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 10171,
+        "monthly_downloads": null,
+        "forks": 407,
+        "dependents": null,
+        "release_downloads": 88399,
+        "hn_top_score": 160,
+        "registries_count": 0
+      },
+      "age_days": 3545,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 7.9
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:07:10.396388+08:00",
+      "sources_sha": "c25df0a84cf3361cd167119726bb7c099ecd913ed8a94a5a162ec34b15bbf3c9",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "`usql` is a universal command-line interface for PostgreSQL, MySQL, Oracle\nDatabase, SQLite3, Microsoft SQL Server, [and many other databases][databases]"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Database administrators and developers that would prefer to work with a tool\nlike `psql` with non-PostgreSQL databases"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "<sup>†</sup> Requires CGO"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "$ brew install xo/xo/usql"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "Connected with driver sqlite3 (SQLite3 3.45.1)\nType \"help\" for help."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Database connections can be defined with [the `\\cset` command][connection-vars]\nor in [the `config.yaml` configuration file][config]."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Move the extracted executable to somewhere on your `$PATH` (Linux/macOS) or\n   `%PATH%` (Windows)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/xo/usql",
+      "fetched_at": "2026-11-16T01:05:26+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/xo/usql/blob/main/README.md",
+      "fetched_at": "2026-11-16T01:05:25+08:00"
+    },
+    {
+      "id": "release:v0.21.6",
+      "kind": "release",
+      "url": "https://github.com/xo/usql/releases/tag/v0.21.6",
+      "fetched_at": "2026-11-16T01:05:25+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Universal command-line interface for SQL databases",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:35+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Database administrators and developers that would prefer to work with a tool",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:35+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Universal command-line interface for SQL databases",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:35+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "`usql` is a universal command-line interface for PostgreSQL, MySQL, Oracle\nDatabase, SQLite3, Microsoft SQL Server, [and many other databases][databases]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:35+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "`usql` is a universal command-line interface for PostgreSQL",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:35+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Move the extracted executable to somewhere on your `$PATH` (Linux/macOS) or\n   `%PATH%` (Windows)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:35+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:05:26+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:05:26+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:05:26+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:05:26+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.21.6",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:05:25+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "$ usql postgres://booktest@localhost/booktest",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:35+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "$ usql pg://localhost/ -f script.sql",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:35+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "(not connected)=> \\copy csvq://. pg://localhost/ 'select * ....' 'myTable'",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:35+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "from a command line\nmodelled on PostgreSQL's `psql`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:35+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "[multiple database support][databases]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:35+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "[copying between databases][copying]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:35+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "[context-based completion][completion]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:35+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "such as [variables][variables], [backticks][backticks],\n[backslash commands][commands]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:35+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install xo/xo/usql",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:35+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "Download a release for your platform",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:35+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "Download a release for your platform",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:35+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:05:25+08:00",
+  "updated_at": "2026-11-16T01:07:16+08:00"
+}

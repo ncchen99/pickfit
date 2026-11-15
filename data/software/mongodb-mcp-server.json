@@ -1,0 +1,834 @@
+{
+  "schema_version": "software.v1",
+  "slug": "mongodb-mcp-server",
+  "repo_id": "gh:960484071",
+  "name": "MongoDB MCP Server",
+  "summary": "A Model Context Protocol server that lets AI clients query and manage MongoDB databases and MongoDB Atlas resources.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "mcp",
+    "mcp-server",
+    "mongodb",
+    "mongodb-atlas",
+    "mongodb-database"
+  ],
+  "use_cases": [
+    "run find queries and aggregations on MongoDB collections from an AI agent",
+    "create and manage MongoDB Atlas clusters",
+    "get Atlas performance advisor index suggestions"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "query and modify MongoDB collections",
+    "manage MongoDB Atlas clusters and users",
+    "search MongoDB documentation knowledge base"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:21.053432Z",
+    "run_id": "verify-mongodb-mcp-server-20261116-012059-96f5",
+    "open_hint": "Add `mongodb-mcp-server` as an MCP server in your AI client, with the MDB_MCP_CONNECTION_STRING environment variable set to your MongoDB connection string.",
+    "features": [
+      {
+        "feature": "query and modify MongoDB collections",
+        "title": "Query and change data in MongoDB collections",
+        "steps": [
+          "Set MDB_MCP_CONNECTION_STRING to your database, for example `mongodb://<host>:<port>`.",
+          "Start the server from your MCP client with `mongodb-mcp-server --readOnly`.",
+          "Ask your AI client to use the `find` tool with a database, a collection and a filter."
+        ]
+      },
+      {
+        "feature": "manage MongoDB Atlas clusters and users",
+        "title": "Manage MongoDB Atlas clusters and users",
+        "steps": []
+      },
+      {
+        "feature": "search MongoDB documentation knowledge base",
+        "title": "Search the MongoDB documentation",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/mongodb-js/mongodb-mcp-server",
+    "full_name": "mongodb-js/mongodb-mcp-server",
+    "created_at": "2025-04-04T14:10:44Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "node>=22.13.0"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "MongoDB connection string or Atlas service account API credentials"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mongodb-mcp-server-20261116-012059-96f5",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g mongodb-mcp-server@latest",
+          "purpose": "npm install -g mongodb-mcp-server@latest"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "mongodb-mcp-server --version",
+        "expected_signal": "3.3.0"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v3.3.0",
+    "published_at": "2026-11-09T12:01:53Z",
+    "url": "https://github.com/mongodb-js/mongodb-mcp-server/releases/tag/v3.3.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T01:23:46.492102+08:00",
+    "runs": [
+      {
+        "id": "verify-mongodb-mcp-server-20261116-012059-96f5",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:23:46.492102+08:00",
+        "tool_version": "3.3.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g mongodb-mcp-server@latest",
+            "purpose": "npm install -g mongodb-mcp-server@latest"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mongodb-mcp-server --version",
+            "expected_signal": "3.3.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "3.3.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- mongodb-mcp-server --readOnly",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "MDB_MCP_CONNECTION_STRING=mongodb://127.0.0.1:27017 python3 ~/.pickfit/mcp_probe.py --timeout 120 --call list-connections --args '{}' -- mongodb-mcp-server --readOnly",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=list-connections content=text text_chars=130",
+            "setup": [
+              {
+                "command": "mkdir -p ~/mongo && cd ~/mongo && curl -fsSLO https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-debian12-8.0.4.tgz && tar xzf mongodb-linux-x86_64-debian12-8.0.4.tgz && ls ~/mongo/mongodb-linux-x86_64-debian12-8.0.4/bin",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p /tmp/mdb && ~/mongo/mongodb-linux-x86_64-debian12-8.0.4/bin/mongod --dbpath /tmp/mdb --port 27017 --bind_ip 127.0.0.1",
+                "background": true,
+                "port": 27017
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "MDB_MCP_CONNECTION_STRING=mongodb://127.0.0.1:27017 python3 ~/.pickfit/mcp_probe.py --timeout 120 --call find --args '{\"connectionId\":\"preconfigured\",\"database\":\"admin\",\"collection\":\"system.version\",\"filter\":{},\"limit\":5}' -- mongodb-mcp-server --readOnly",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=find content=text,text text_chars=84",
+            "setup": [
+              {
+                "command": "mkdir -p ~/mongo && cd ~/mongo && curl -fsSLO https://fastdl.mongodb.org/linux/mongodb-linux-x86_64-debian12-8.0.4.tgz && tar xzf mongodb-linux-x86_64-debian12-8.0.4.tgz && ls ~/mongo/mongodb-linux-x86_64-debian12-8.0.4/bin",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p /tmp/mdb && ~/mongo/mongodb-linux-x86_64-debian12-8.0.4/bin/mongod --dbpath /tmp/mdb --port 27017 --bind_ip 127.0.0.1",
+                "background": true,
+                "port": 27017
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx -y mongodb-mcp-server@latest setup",
+            "actually_needed": "setup is an interactive wizard that needs a terminal. For a non-interactive install, I used npm install -g mongodb-mcp-server@latest and launched the server as `mongodb-mcp-server --readOnly`",
+            "kind": "note"
+          },
+          {
+            "readme_said": "A MongoDB connection string",
+            "actually_needed": "I needed a local MongoDB server to test the database tools. I downloaded the mongod 8.0.4 tarball from fastdl.mongodb.org, ran it on 127.0.0.1:27017 and set MDB_MCP_CONNECTION_STRING; the connection then shows up with connectionId \"preconfigured\"",
+            "kind": "note"
+          },
+          {
+            "readme_said": "`find` - Run a find query against a MongoDB collection",
+            "actually_needed": "With --readOnly, only read tools are listed (18 tools). Write tools need the flag removed",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks succeed: MCP handshake ok with 18 tools listed, the list-connections tool call returns a result, and --version prints 3.3.0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mongodb-mcp-server-20261116-012059-96f5/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mongodb-mcp-server-20261116-012059-96f5/check-1-cmd3.judged.png",
+            "runs/verify/verify-mongodb-mcp-server-20261116-012059-96f5/check-2-cmd7.judged.png",
+            "runs/verify/verify-mongodb-mcp-server-20261116-012059-96f5/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.236419,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "mongodb-mcp-server",
+            "--readOnly"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "MongoDB?MCP?Server",
+          "server_version": "3.3.0",
+          "tools": [
+            "aggregate-db",
+            "aggregate",
+            "collection-indexes",
+            "collection-schema",
+            "collection-storage-size",
+            "connect",
+            "count",
+            "db-stats",
+            "disconnect",
+            "explain",
+            "export",
+            "find",
+            "list-collections",
+            "list-connections",
+            "list-databases",
+            "mongodb-logs",
+            "search-knowledge",
+            "list-knowledge-sources"
+          ],
+          "tool_count": 18,
+          "called_tool": "list-connections",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "query and modify MongoDB collections",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "manage MongoDB Atlas clusters and users",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Atlas tools need Atlas service account credentials; they are not listed without them"
+          },
+          {
+            "feature": "search MongoDB documentation knowledge base",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "The knowledge base is MongoDB's hosted Assistant service. list-knowledge-sources answered with the network on (command 4), but a replay with the network off cannot reach it"
+          }
+        ]
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "npx -y mongodb-mcp-server@latest --readOnly",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"MongoDB\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"mongodb-mcp-server@latest\", \"--readOnly\"],\n      \"env\": {\n        \"MDB_MCP_CONNECTION_STRING\": \"mongodb://localhost:27017/myDatabase\"\n      }\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "MDB_MCP_CONNECTION_STRING",
+        "required": null,
+        "purpose": "MongoDB connection string"
+      },
+      {
+        "name": "MDB_MCP_API_CLIENT_ID",
+        "required": null,
+        "purpose": "Atlas service account client ID"
+      },
+      {
+        "name": "MDB_MCP_API_CLIENT_SECRET",
+        "required": null,
+        "purpose": "Atlas service account client secret"
+      },
+      {
+        "name": "MDB_MCP_READ_ONLY",
+        "required": false,
+        "purpose": "enable read-only mode"
+      }
+    ],
+    "tools": [
+      "aggregate",
+      "find",
+      "connect",
+      "list-databases",
+      "list-collections",
+      "collection-schema",
+      "insert-many",
+      "update-many",
+      "delete-many",
+      "atlas-list-clusters",
+      "atlas-create-cluster",
+      "search-knowledge"
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:23:54+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "npm:mongodb-mcp-server (fresh install, 437 packages)"
+    ],
+    "packages_checked": 431,
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "npm:basic-ftp",
+        "version": "5.3.1",
+        "advisory": "GHSA-c475-qrg2-pj4r",
+        "cves": [
+          "CVE-2026-102990"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "6.2.1",
+        "summary": "basic-ftp: Quadratic-time CPU denial of service in Client.list() Unix directory-listing parser (RE_LINE backtracking)",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:23:54+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.875,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 88.1,
+      "signals": {
+        "stars": 1162,
+        "monthly_downloads": 615646,
+        "forks": 299,
+        "dependents": null,
+        "release_downloads": 96,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 590,
+      "packages": [
+        "npm:mongodb-mcp-server"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 9.4
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:23:46.494383+08:00",
+      "sources_sha": "85cbd7a433a76ec460a3d728ba35a01d44a7f43a1ba330d9e8ac102f630f2710",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A Model Context Protocol server for interacting with MongoDB Databases and MongoDB Atlas."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "is the recommended way to connect to MongoDB Atlas from your AI agent"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "At least v22.13.0. Check with `node -v`."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npx -y mongodb-mcp-server@latest setup"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "npx -y mongodb-mcp-server@latest --readOnly"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "\"MDB_MCP_CONNECTION_STRING\": \"mongodb://localhost:27017/myDatabase\""
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "The examples above use Unix/Linux/macOS syntax. For Windows users, see [Environment Variables](#environment-variables) for platform-specific instructions."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/mongodb-js/mongodb-mcp-server",
+      "fetched_at": "2026-11-16T01:20:45+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/mongodb-js/mongodb-mcp-server/blob/main/README.md",
+      "fetched_at": "2026-11-16T01:20:43+08:00"
+    },
+    {
+      "id": "release:v3.3.0",
+      "kind": "release",
+      "url": "https://github.com/mongodb-js/mongodb-mcp-server/releases/tag/v3.3.0",
+      "fetched_at": "2026-11-16T01:20:43+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "A Model Context Protocol server to connect to MongoDB databases and MongoDB Atlas Clusters.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "runs the MongoDB MCP server locally and connects to any self-managed deployment",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A Model Context Protocol server to connect to MongoDB databases and MongoDB Atlas Clusters.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A Model Context Protocol server for interacting with MongoDB Databases and MongoDB Atlas.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# MongoDB MCP Server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "At least v22.13.0. Check with `node -v`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "A MongoDB connection string or Atlas API credentials.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:20:45+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:20:45+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:20:45+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:20:45+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v3.3.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:20:43+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "`find` - Run a find query against a MongoDB collection",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "`atlas-create-cluster` - Create a MongoDB Atlas cluster",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "`atlas-get-performance-advisor` - Get MongoDB Atlas performance advisor recommendations",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "`find` - Run a find query against a MongoDB collection",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "`atlas-create-db-user` - Create an MongoDB Atlas database user",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "`search-knowledge` - Search for information in the MongoDB Assistant knowledge base.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "\"type\": \"stdio\",",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "npx -y mongodb-mcp-server@latest --readOnly",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"MongoDB\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"mongodb-mcp-server@latest\", \"--readOnly\"],\n      \"env\": {\n        \"MDB_MCP_CONNECTION_STRING\": \"mongodb://localhost:27017/myDatabase\"\n      }\n    }\n  }\n}",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "MDB_MCP_CONNECTION_STRING",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "MDB_MCP_API_CLIENT_ID",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "MDB_MCP_API_CLIENT_SECRET",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "MDB_MCP_READ_ONLY",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`aggregate` - Run an aggregation against a MongoDB collection",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`find` - Run a find query against a MongoDB collection",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`connect` - Connect to a MongoDB instance",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`list-databases` - List all databases for a MongoDB connection",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`list-collections` - List all collections for a given database",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`collection-schema` - Describe the schema for a collection",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`insert-many` - Insert an array of documents into a MongoDB collection.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`update-many` - Updates all documents that match the specified filter",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`delete-many` - Removes all documents that match the filter",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`atlas-list-clusters` - List MongoDB Atlas clusters",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`atlas-create-cluster` - Create a MongoDB Atlas cluster",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`search-knowledge` - Search for information in the MongoDB Assistant knowledge base.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:59+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:20:43+08:00",
+  "updated_at": "2026-11-16T01:23:54+08:00"
+}

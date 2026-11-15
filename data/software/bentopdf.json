@@ -1,0 +1,709 @@
+{
+  "schema_version": "software.v1",
+  "slug": "bentopdf",
+  "repo_id": "gh:1074785178",
+  "name": "BentoPDF",
+  "summary": "Self-hostable, client-side PDF toolkit for editing, merging, converting and processing PDF files in the browser.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "media_files",
+  "kind": "self_hosted_web_app",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "adobe-acrobat",
+    "docker",
+    "hacktoberfest",
+    "javascript",
+    "jpgtopdf",
+    "pdf",
+    "pdf-converter",
+    "pdf-editor",
+    "pdf-generation",
+    "pdf-ocr"
+  ],
+  "use_cases": [
+    "merge multiple PDF files into one",
+    "convert Word documents to PDF",
+    "make scanned PDFs searchable with OCR",
+    "password-protect a PDF"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "merge and split PDFs",
+    "edit and annotate PDFs",
+    "convert office documents and images to PDF",
+    "compress, encrypt and sign PDFs"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T19:19:00.766015Z",
+    "run_id": null,
+    "open_hint": "Open http://localhost:5173/ in your web browser once the service is running to reach the BentoPDF tool page.",
+    "features": [
+      {
+        "feature": "merge and split PDFs",
+        "title": "Merge PDFs into one or split them apart",
+        "steps": []
+      },
+      {
+        "feature": "edit and annotate PDFs",
+        "title": "Edit and annotate PDFs",
+        "steps": []
+      },
+      {
+        "feature": "convert office documents and images to PDF",
+        "title": "Convert office documents and images to PDF",
+        "steps": []
+      },
+      {
+        "feature": "compress, encrypt and sign PDFs",
+        "title": "Compress, encrypt and sign PDFs",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": "https://bentopdf.com/",
+  "repo": {
+    "url": "https://github.com/alam00000/bentopdf",
+    "full_name": "alam00000/bentopdf",
+    "created_at": "2025-10-12T13:30:08Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-bentopdf-20261116-030516-3352",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone --depth 1 https://github.com/alam00000/bentopdf.git",
+          "purpose": "git clone the repo"
+        },
+        {
+          "command": "cd bentopdf && npm install",
+          "purpose": "npm install dependencies"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "curl -sf http://localhost:5173/ -o /tmp/index.html && grep -o \"<title>[^<]*</title>\" /tmp/index.html",
+        "expected_signal": "<title>BentoPDF - Free Online PDF Tools | Privacy-First PDF Toolkit</title>"
+      },
+      "first_task": "curl -sf http://localhost:5173/ -o /tmp/index.html && grep -o \"<title>[^<]*</title>\" /tmp/index.html"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "AGPL-3.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v2.8.11",
+    "published_at": "2026-10-31T11:31:39Z",
+    "url": "https://github.com/alam00000/bentopdf/releases/tag/v2.8.11"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T03:08:09.940308+08:00",
+    "runs": [
+      {
+        "id": "verify-bentopdf-20261116-030516-3352",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T03:08:09.940308+08:00",
+        "tool_version": "2.8.11",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone --depth 1 https://github.com/alam00000/bentopdf.git",
+            "purpose": "git clone the repo"
+          },
+          {
+            "command": "cd bentopdf && npm install",
+            "purpose": "npm install dependencies"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "curl -sf http://localhost:5173/ -o /tmp/index.html && grep -o \"<title>[^<]*</title>\" /tmp/index.html",
+            "expected_signal": "<title>BentoPDF - Free Online PDF Tools | Privacy-First PDF Toolkit</title>",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "<title>BentoPDF - Free Online PDF Tools | Privacy-First PDF Toolkit</title>",
+            "setup": [
+              {
+                "command": "cd bentopdf && npm run dev",
+                "background": true,
+                "port": 5173
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npm run dev; app at http://localhost:5173",
+            "actually_needed": "Worked as written. BentoPDF is a client-side browser app, so every PDF tool runs in the browser. Without a browser the only check is that the dev server serves the pages.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The curl fetch of localhost:5173 succeeded with exit code 0, and grep printed the expected BentoPDF title tag.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-bentopdf-20261116-030516-3352/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-bentopdf-20261116-030516-3352/check-1-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.132042,
+        "features": [
+          {
+            "feature": "merge and split PDFs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Merge/split runs client-side in a browser; no browser in the box"
+          },
+          {
+            "feature": "edit and annotate PDFs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Editing/annotation is an in-browser UI"
+          },
+          {
+            "feature": "convert office documents and images to PDF",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Conversion runs as WASM in the browser"
+          },
+          {
+            "feature": "compress, encrypt and sign PDFs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Compress/encrypt/sign run in the browser"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T03:11:48+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/alam00000/bentopdf@cc97429413ee",
+      "package-lock.json"
+    ],
+    "packages_checked": 472,
+    "findings_total": 10,
+    "advisories_total": 10,
+    "findings": [
+      {
+        "package": "npm:node-forge",
+        "version": "1.4.0",
+        "advisory": "GHSA-5x38-2vff-x55p",
+        "cves": [
+          "CVE-2026-119190"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.4.1",
+        "summary": "Forge: X.509 basicConstraints bypass in verifyCertificateChain() via deprecated extension OIDs 2.5.29.10 and 2.5.29.13",
+        "malicious": false
+      },
+      {
+        "package": "npm:node-forge",
+        "version": "1.4.0",
+        "advisory": "GHSA-6qrw-m8cv-hcxf",
+        "cves": [
+          "CVE-2026-119192"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.4.1",
+        "summary": "Forge: RSA PKCS#1 v1.5 signature forgery via non-canonical DigestInfo encoding",
+        "malicious": false
+      },
+      {
+        "package": "npm:node-forge",
+        "version": "1.4.0",
+        "advisory": "GHSA-7wch-p9px-956x",
+        "cves": [
+          "CVE-2026-118779"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.4.1",
+        "summary": "Forge: Regular expression denial of service in PEM decoding (pem.decode)",
+        "malicious": false
+      },
+      {
+        "package": "npm:node-forge",
+        "version": "1.4.0",
+        "advisory": "GHSA-86w9-cpqp-85rv",
+        "cves": [
+          "CVE-2026-33894",
+          "CVE-2026-85393"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "node-forge RSA PKCS#1 v1.5 signature verification accepts extra nested DigestAlgorithm elements",
+        "malicious": false
+      },
+      {
+        "package": "npm:node-forge",
+        "version": "1.4.0",
+        "advisory": "GHSA-8hrf-8g6f-7xwp",
+        "cves": [
+          "CVE-2026-119188"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.4.1",
+        "summary": "Forge: Denial of service in TLS record processing via a record interleaved with a fragmented handshake message",
+        "malicious": false
+      },
+      {
+        "package": "npm:node-forge",
+        "version": "1.4.0",
+        "advisory": "GHSA-hqq3-7jhf-c5jx",
+        "cves": [
+          "CVE-2026-119187"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.4.1",
+        "summary": "Forge: Denial of service in TLS record processing via call stack exhaustion",
+        "malicious": false
+      },
+      {
+        "package": "npm:node-forge",
+        "version": "1.4.0",
+        "advisory": "GHSA-jc66-7q78-782g",
+        "cves": [
+          "CVE-2026-118782"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.4.1",
+        "summary": "Forge: PKCS#12 MAC forgery and constant-key PBE via zero iteration count",
+        "malicious": false
+      },
+      {
+        "package": "npm:node-forge",
+        "version": "1.4.0",
+        "advisory": "GHSA-rhr8-3pm8-cq29",
+        "cves": [
+          "CVE-2026-119191"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.4.1",
+        "summary": "Forge: ASN.1 resource exhaustion via BIT STRING decoding in asn1.fromDer",
+        "malicious": false
+      },
+      {
+        "package": "npm:xlsx",
+        "version": "0.20.3",
+        "advisory": "GHSA-4r6h-8v6p-xvw6",
+        "cves": [
+          "CVE-2023-30533"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "Prototype Pollution in sheetJS",
+        "malicious": false
+      },
+      {
+        "package": "npm:xlsx",
+        "version": "0.20.3",
+        "advisory": "GHSA-5pgg-2g8v-p4x9",
+        "cves": [
+          "CVE-2024-22363"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "SheetJS Regular Expression Denial of Service (ReDoS)",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T03:11:03+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.7,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5321,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 86.7,
+      "signals": {
+        "stars": 16370,
+        "monthly_downloads": null,
+        "forks": 1462,
+        "dependents": null,
+        "release_downloads": 11778,
+        "hn_top_score": 4,
+        "registries_count": 0
+      },
+      "age_days": 399,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 10.51
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:11:03.852707+08:00",
+      "sources_sha": "32563e8d7f4bfde5aad9bacd3035f3e39eb626770f27cf7e430e25c532a7583a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "BentoPDF is a free, open-source, privacy-first PDF toolkit that runs **entirely in your browser**."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "the **Self-Hosted build** (`bentopdf-simple`, used above) for internal/team/organization deployments"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "- ✅ Chrome/Edge 90+"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "docker run -d -p 3000:8080 ghcr.io/alam00000/bentopdf-simple:latest"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Then open `http://localhost:3000` in your browser."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "**Zero-config by default.** WASM modules are loaded at runtime from jsDelivr CDN. No manual configuration is needed."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "`http://192.168.x.x` or other LAN IPs usually do not, so Word/Excel/PowerPoint conversions will require HTTPS when accessed from other devices on your network."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "BentoPDF is **dual-licensed** to fit your needs:"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/alam00000/bentopdf",
+      "fetched_at": "2026-11-16T01:15:14+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/alam00000/bentopdf/blob/main/README.md",
+      "fetched_at": "2026-11-16T01:15:12+08:00"
+    },
+    {
+      "id": "release:v2.8.11",
+      "kind": "release",
+      "url": "https://github.com/alam00000/bentopdf/releases/tag/v2.8.11",
+      "fetched_at": "2026-11-16T01:15:12+08:00"
+    },
+    {
+      "id": "docs1",
+      "kind": "readme",
+      "url": "https://github.com/alam00000/bentopdf/blob/main/docs/getting-started.md",
+      "fetched_at": "2026-11-16T03:01:09+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "privacy-first, client-side PDF toolkit that is self-hostable",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:15+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "docs1",
+      "quote": "Visit [bentopdf.com](https://www.bentopdf.com) to use BentoPDF instantly—no installation required.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:15+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "The Privacy First PDF Toolkit",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:15+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "client-side PDF toolkit that is self-hostable and allows you to manipulate, edit, merge, and process PDF files directly in your browser",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:15+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "**BentoPDF** is a powerful, privacy-first, client-side PDF toolkit",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:15+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "WASM modules are loaded at runtime from jsDelivr CDN.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:15+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:15:14+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:15:14+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:15:14+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:15:14+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:15:14+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.8.11",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:15:12+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Combine multiple PDF files into one. Preserves Bookmarks.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:15+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Convert Word documents (DOCX, DOC, ODT, RTF) to PDF.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:15+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Make scanned PDFs searchable and copyable using Optical Character Recognition.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:15+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Add a password to protect your PDF from unauthorized access.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:15+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "docs1",
+      "quote": "| **Organize**         | Merge, Split, Rotate, Delete Pages, Reorder                     |",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:15+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Annotate, highlight, redact, comment, add shapes/images, search, and view PDFs.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:15+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "docs1",
+      "quote": "| **Convert to PDF**   | Word, Excel, PowerPoint, Images, Markdown, EPUB, MOBI, and more |",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:15+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Reduce file size while maintaining quality.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:15+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "**Completely Free**: BentoPDF is a free and open-source tool for everyone.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:15+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "All processing happens in your browser. Your files are never uploaded to a server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:15+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:15:12+08:00",
+  "updated_at": "2026-11-16T03:11:48+08:00"
+}

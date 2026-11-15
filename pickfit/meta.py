@@ -1,17 +1,24 @@
 """call_meta: the only way pickfit calls a model.
 
+Since 2026-11-15 the models are Claude models on the Anthropic API (ANTHROPIC_API_KEY). The name and the
+request shapes are from the hackathon, when the product ran on Meta's models: callers still build Chat
+Completions or Responses requests, and pickfit.anthropic_messages turns them into Messages API calls and
+the answers back. The hackathon's providers (Meta, Baseten, Modal's endpoint, OpenRouter) stay reachable
+by naming one of their model ids or `provider=`; nothing routes to them by default. Modal's endpoint is
+still the only one that takes video ("open-modal").
+
 Every call goes through the same steps:
 
-1. Route the model ("dev" -> contributor, "prod" -> standard) and refuse models
+1. Route the model ("dev" and "open" -> Claude Haiku, "prod" -> Claude Opus) and refuse models
    without a known price, a contributor model for non-public data, and body
    keys that would get around these checks or the cost bound.
 2. Serve from the response cache when possible (free, still traced). The cache
-   is on by default for dev (contributor) models only, and keeps only complete,
+   is on by default for the dev model only, and keeps only complete,
    valid answers.
-3. Reserve a worst-case cost in the shared ledger; BudgetExceeded stops the
-   call before anything is sent.
+3. Reserve a worst-case cost in the shared ledger. The ledger records every call; it stops one
+   (BudgetExceeded, before anything is sent) only at a per-scope cap or a cap the user set.
 4. Send with the SDK's own retries off, so every attempt is visible: 429 backs
-   off (honoring Retry-After), 500/502/503 get up to 3 tries, 504 is retried
+   off (honoring Retry-After), 500/502/503/529 get up to 3 tries, 504 is retried
    once with streaming.
 5. Settle the ledger to the actual cost. A 4xx or a request that never left is
    released; a 5xx, timeout or dropped connection may still be billed, so it
@@ -34,9 +41,11 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any, Literal
 
+import anthropic
 import openai
 from pydantic import BaseModel, ValidationError
 
+from pickfit import anthropic_messages
 from pickfit.env import REPO_ROOT, get_env, require_env
 from pickfit.ledger import (
     BudgetExceeded,
@@ -60,7 +69,10 @@ class Provider:
     secret_env: str | None = None  # Modal's proxy auth is "<token id>.<token secret>"
 
 
+DEFAULT_PROVIDER = "anthropic"
 PROVIDERS: dict[str, Provider] = {
+    "anthropic": Provider("https://api.anthropic.com", "ANTHROPIC_API_KEY"),
+    # The hackathon's providers (to 2026-11-04): reached only by one of their model ids or provider=.
     "meta": Provider("https://api.meta.ai/v1", "MODEL_API_KEY"),
     "baseten": Provider("https://inference.baseten.co/v1", "BASETEN_API_KEY"),
     # Muse Spark Open on the hackathon's Modal Shared Endpoint (Modal credits), set up by the coordinating session.
@@ -80,28 +92,65 @@ OPENROUTER_MODELS = {"muse-spark-1.3": "meta/muse-spark-1.3", "muse-spark-1.3-co
                      "muse-wonder-1.0": "meta/muse-wonder"}
 OPENROUTER_PIN = {"order": ["meta"], "allow_fallbacks": False, "data_collection": "deny"}
 
-# PICKFIT_MODE (default dev) picks the model when a Meta caller passes none.
-MODE_ALIASES = {"dev": "muse-spark-1.3-contributor", "prod": "muse-spark-1.3"}
-# "open" is Muse Spark Open on Baseten (the hackathon's open-weight model). The model id says which
-# provider serves it, so call_meta routes and bills it to Baseten without the caller passing provider.
-OPEN_MODEL = "meta-models/muse-spark-open-1026"
+# The tiers the pipeline asks for by name. PICKFIT_MODE (default dev) picks one when a caller passes none.
+# - prod: the model behind every product decision (extraction, verification agent, judges, scoring).
+# - dev: the cheap model for trying a prompt; its answers are cached by default.
+# - open: the bulk model for screens over thousands of candidates. The name is from the hackathon, when this
+#   tier was Muse Spark Open (open weights) on Baseten.
+PROD_MODEL = "claude-opus-5-5"
+BULK_MODEL = "claude-haiku-5-5"
+# What "prod" has been. A candidate muse-spark-1.3 read during the hackathon counts as read by the prod
+# model, so asking for prod extractions does not pay to read a thousand of them again.
+PROD_MODELS = (PROD_MODEL, "muse-spark-1.3")
+MODE_ALIASES = {"dev": BULK_MODEL, "prod": PROD_MODEL}
+# With provider="meta" the same two names mean what they did during the hackathon.
+META_MODE_ALIASES = {"dev": "muse-spark-1.3-contributor", "prod": "muse-spark-1.3"}
+OPEN_MODEL = "meta-models/muse-spark-open-1026"  # Muse Spark Open on Baseten; existing records name it
 MODAL_OPEN_MODEL = "meta-models/Muse-Spark-Open-816B-A42B"  # the same open-weight model, on Modal
-OPEN_ALIASES = {"open": OPEN_MODEL, "open-modal": MODAL_OPEN_MODEL}
+# "open-modal" is still Modal's endpoint: the only model here that takes video.
+OPEN_ALIASES = {"open": BULK_MODEL, "open-modal": MODAL_OPEN_MODEL}
 BASETEN_PREFIX = "meta-models/"
+META_PREFIX = "muse-"
 OPEN_PROVIDERS = ("baseten", "modal")
+# Providers that keep no conversations: previous_response_id means nothing to them.
+STATELESS_PROVIDERS = (*OPEN_PROVIDERS, "openrouter", "anthropic")
 
 
 @dataclass(frozen=True)
 class Price:
-    """USD per 1M tokens. `cached=None` means unknown, so cached input is charged at `input`."""
+    """USD per 1M tokens. `cached=None` means unknown, so cached input is charged at `input`.
+
+    `cache_write` is input written to the provider's prompt cache (only Anthropic reports such tokens;
+    None charges them at `input`). `long_context` is (input tokens, factor): a request with more input
+    than that is billed at `factor` times every rate.
+    """
 
     input: float
     output: float
     cached: float | None = None
+    cache_write: float | None = None
+    long_context: tuple[int, float] | None = None
 
 
-# Measured or confirmed 2026-10-28. A model missing here is refused, never billed as $0.
+def _claude(input: float, output: float, cached: float | None = None,  # noqa: A002 - the price's own word
+            long_context: tuple[int, float] | None = None) -> Price:
+    """A Claude price: input written to the 5-minute prompt cache is billed at 1.25x input."""
+    return Price(input=input, output=output, cached=cached, cache_write=input * 1.25, long_context=long_context)
+
+
+# A model missing here is refused, never billed as $0.
 PRICES: dict[tuple[str, str], Price] = {
+    # Anthropic's list prices, 2026-11-03. Cache reads are 0.05x input on Opus 5.5 and Sonnet 5.5, 0.1x on
+    # Haiku. Haiku's rates are for prompts up to 100K tokens; a longer one is billed at 5x.
+    ("anthropic", "claude-opus-5-5"): _claude(4.00, 20.00, cached=0.20),
+    ("anthropic", "claude-sonnet-5-5"): _claude(2.00, 10.00, cached=0.10),
+    ("anthropic", "claude-haiku-5-5"): _claude(0.10, 0.50, cached=0.01, long_context=(100_000, 5.0)),
+    ("anthropic", "claude-fable-5-2"): _claude(8.00, 40.00, cached=0.20),
+    # Models a declined request may fall back to (anthropic_messages.FALLBACK_BETA): priced when one answers.
+    ("anthropic", "claude-opus-5"): _claude(5.00, 25.00),
+    ("anthropic", "claude-opus-4-8"): _claude(5.00, 25.00),
+    ("anthropic", "claude-sonnet-5"): _claude(2.00, 10.00),
+    # The hackathon's providers, measured or confirmed 2026-10-28.
     ("meta", "muse-spark-1.3"): Price(input=1.25, output=4.25, cached=0.15),
     ("meta", "muse-spark-1.3-contributor"): Price(input=0.10, output=0.20),
     ("meta", "muse-wonder-1.0"): Price(input=4.00, output=20.00),
@@ -114,8 +163,9 @@ PRICES: dict[tuple[str, str], Price] = {
 }
 WEB_SEARCH_USD = 2.50 / 1000
 
+# Claude has no "minimal": it runs as "low" (anthropic_messages.EFFORT), and its thinking cannot be switched off.
 EFFORTS = ("minimal", "low", "medium", "high", "xhigh", "max")
-MAX_EFFORT_MODELS = {"muse-spark-1.3", "muse-wonder-1.0"}
+MAX_EFFORT_MODELS = {"muse-spark-1.3", "muse-wonder-1.0"}  # of Meta's models; every Claude model takes "max"
 
 # Worst-case estimate knobs (used only to reserve budget before sending).
 BYTES_PER_TOKEN = 3  # UTF-8 JSON bytes per token; low on purpose so estimates run high
@@ -132,7 +182,7 @@ TOKENS_PER_WEB_SEARCH = 5_000
 # Retry policy (the SDK's own retries are disabled).
 RATE_LIMIT_TRIES = 6
 SERVER_ERROR_TRIES = 3
-RETRY_STATUSES = {500, 502, 503}
+RETRY_STATUSES = {500, 502, 503, 529}  # 529: Anthropic is overloaded
 # Meta's API has answered 404 "model not found" for a model it serves, on and off for minutes (10/29,
 # 11/1 01:46-01:49). A 404 is refused before generation, so it is released and tried again, backing off
 # for about two minutes in all; a model that is really gone fails after that.
@@ -141,7 +191,7 @@ BACKOFF_BASE_S = 2.0
 BACKOFF_MAX_S = 60.0
 CLIENT_TIMEOUT_S = 600.0
 
-PING_MAX_OUTPUT_TOKENS = 256  # reasoning shares this limit; 64 was cut off at minimal effort
+PING_MAX_OUTPUT_TOKENS = 1_024  # thinking shares this limit, and Claude always thinks
 TRACE_TEXT_LIMIT = 4_000
 
 # Request keys that call_meta sets itself; callers pass them as arguments instead.
@@ -158,7 +208,12 @@ _COMPLETE_STATUSES = {"stop", "tool_calls", "completed"}
 # Transport errors raised before the request was written, so nothing can have been billed.
 # Matched by name because the SDK's HTTP library differs across openai versions (httpx/httpx2).
 _UNSENT_ERRORS = {"ConnectError", "ConnectTimeout"}
-_KEY_PATTERN = re.compile(r"LLM_\d+_[A-Za-z0-9_\-]+")
+_KEY_PATTERN = re.compile(r"LLM_\d+_[A-Za-z0-9_\-]+|sk-ant-[A-Za-z0-9_\-]+")
+# The two SDKs raise their own classes with the same shape (status_code, response, message, body).
+_STATUS_ERRORS = (openai.APIStatusError, anthropic.APIStatusError)
+_TIMEOUT_ERRORS = (openai.APITimeoutError, anthropic.APITimeoutError)
+_CONNECTION_ERRORS = (openai.APIConnectionError, anthropic.APIConnectionError)
+_API_ERRORS = (openai.APIError, anthropic.APIError)
 
 sleep = time.sleep  # tests replace this to skip backoff waits
 
@@ -184,28 +239,37 @@ class Usage:
     output_tokens: int = 0
     reasoning_tokens: int = 0
     web_searches: int = 0
+    cache_write_tokens: int = 0  # of input_tokens, written to the provider's prompt cache (Anthropic)
 
     @classmethod
     def from_raw(cls, raw: dict[str, Any]) -> Usage | None:
-        """Read Chat (`prompt_tokens`) or Responses (`input_tokens`) usage; None if absent."""
+        """Read Chat (`prompt_tokens`) or Responses (`input_tokens`) usage; None if absent.
+
+        Claude's usage arrives in the same fields (anthropic_messages._usage). Its thinking is part of the
+        output tokens and is not counted apart, so reasoning_tokens stays 0 for it.
+        """
         u = raw.get("usage")
         if not isinstance(u, dict):
             return None
         searches = sum(1 for item in raw.get("output") or [] if item.get("type") == "web_search_call")
         if "prompt_tokens" in u:
+            details = u.get("prompt_tokens_details") or {}
             return cls(
                 input_tokens=u.get("prompt_tokens") or 0,
-                cached_tokens=(u.get("prompt_tokens_details") or {}).get("cached_tokens") or 0,
+                cached_tokens=details.get("cached_tokens") or 0,
                 output_tokens=u.get("completion_tokens") or 0,
                 reasoning_tokens=(u.get("completion_tokens_details") or {}).get("reasoning_tokens") or 0,
                 web_searches=searches,
+                cache_write_tokens=details.get("cache_write_tokens") or 0,
             )
+        details = u.get("input_tokens_details") or {}
         return cls(
             input_tokens=u.get("input_tokens") or 0,
-            cached_tokens=(u.get("input_tokens_details") or {}).get("cached_tokens") or 0,
+            cached_tokens=details.get("cached_tokens") or 0,
             output_tokens=u.get("output_tokens") or 0,
             reasoning_tokens=(u.get("output_tokens_details") or {}).get("reasoning_tokens") or 0,
             web_searches=searches,
+            cache_write_tokens=details.get("cache_write_tokens") or 0,
         )
 
 
@@ -244,8 +308,8 @@ class MetaResult:
 # ---------------------------------------------------------------- routing and pricing
 
 
-def resolve_model(model: str | None, provider: str = "meta") -> str:
-    """Map "dev"/"prod" (or PICKFIT_MODE when None) and "open" to a model id."""
+def resolve_model(model: str | None, provider: str = DEFAULT_PROVIDER) -> str:
+    """Map "dev"/"prod" (or PICKFIT_MODE when None), "open" and "open-modal" to a model id."""
     if provider not in PROVIDERS:
         raise ValueError(f"unknown provider {provider!r}; expected one of {sorted(PROVIDERS)}")
     if model in OPEN_ALIASES:
@@ -258,15 +322,18 @@ def resolve_model(model: str | None, provider: str = "meta") -> str:
         model = get_env("PICKFIT_MODE") or "dev"
         if model not in MODE_ALIASES:
             raise ValueError(f"PICKFIT_MODE must be one of {sorted(MODE_ALIASES)}, got {model!r}")
-    return MODE_ALIASES.get(model, model)
+    aliases = META_MODE_ALIASES if provider == "meta" else MODE_ALIASES
+    return aliases.get(model, model)
 
 
 def provider_for(model: str) -> str:
-    """The provider that serves a model id: Modal for its endpoint's model, Baseten for its meta-models/ slugs,
-    else Meta."""
+    """The provider that serves a model id: Anthropic, unless the id is one of the hackathon's (Modal's
+    endpoint model, Baseten's meta-models/ slugs, Meta's muse- models)."""
     if model == MODAL_OPEN_MODEL:
         return "modal"
-    return "baseten" if model.startswith(BASETEN_PREFIX) else "meta"
+    if model.startswith(BASETEN_PREFIX):
+        return "baseten"
+    return "meta" if model.startswith(META_PREFIX) else DEFAULT_PROVIDER
 
 
 def meta_via() -> str:
@@ -290,8 +357,12 @@ def route(provider: str, model: str) -> tuple[str, str]:
 
 
 def is_open_model(model: str | None) -> bool:
-    """True when `model` (an alias or an id) is Muse Spark Open (Baseten or Modal) rather than Meta's API."""
-    return model is not None and provider_for(OPEN_ALIASES.get(model, model)) in OPEN_PROVIDERS
+    """True when `model` (an alias or an id) is the bulk tier ("open", the dev model) or Muse Spark Open,
+    rather than the model product decisions are made with. A run on such a model keeps its judges on prod."""
+    if model is None:
+        return False
+    resolved = OPEN_ALIASES.get(model, MODE_ALIASES.get(model, model))
+    return resolved == BULK_MODEL or provider_for(resolved) in OPEN_PROVIDERS
 
 
 def price_for(provider: str, model: str) -> Price:
@@ -301,12 +372,18 @@ def price_for(provider: str, model: str) -> Price:
         raise ModelRefused(f"no price for {provider}/{model}; add it to PRICES before calling it") from None
 
 
+def _long_factor(price: Price, input_tokens: int) -> float:
+    return price.long_context[1] if price.long_context and input_tokens > price.long_context[0] else 1.0
+
+
 def cost_usd(price: Price, usage: Usage) -> float:
     cached = min(usage.cached_tokens, usage.input_tokens)
+    written = min(usage.cache_write_tokens, usage.input_tokens - cached)
     cached_rate = price.input if price.cached is None else price.cached
-    token_usd = ((usage.input_tokens - cached) * price.input + cached * cached_rate
-                 + usage.output_tokens * price.output) / 1_000_000
-    return token_usd + usage.web_searches * WEB_SEARCH_USD
+    write_rate = price.input if price.cache_write is None else price.cache_write
+    token_usd = ((usage.input_tokens - cached - written) * price.input + cached * cached_rate
+                 + written * write_rate + usage.output_tokens * price.output) / 1_000_000
+    return token_usd * _long_factor(price, usage.input_tokens) + usage.web_searches * WEB_SEARCH_USD
 
 
 def _has_web_search(body: dict[str, Any]) -> bool:
@@ -356,8 +433,10 @@ def estimate_cost(price: Price, request: dict[str, Any], max_output_tokens: int,
     """
     searches = request.get("max_tool_calls", WEB_SEARCHES_PER_CALL) if _has_web_search(request) else 0
     tokens_in = estimate_input_tokens(request, video_seconds) + context_tokens + searches * TOKENS_PER_WEB_SEARCH
-    token_usd = (tokens_in * price.input + max_output_tokens * price.output) / 1_000_000
-    return token_usd + searches * WEB_SEARCH_USD
+    # The worst case for input: none of it read from a cache, all of it written to one.
+    input_rate = max(price.input, price.cache_write or 0.0)
+    token_usd = (tokens_in * input_rate + max_output_tokens * price.output) / 1_000_000
+    return token_usd * _long_factor(price, tokens_in) + searches * WEB_SEARCH_USD
 
 
 def _previous_context(request: dict[str, Any], ledger: Ledger) -> int:
@@ -425,27 +504,34 @@ def _check_policy(provider: str, model: str, public_data_only: bool, effort: str
             f"{model} may train on its inputs; use model='prod' for data that is not public")
     if effort not in EFFORTS:
         raise ValueError(f"reasoning_effort must be one of {EFFORTS}")
-    if effort == "max" and model not in MAX_EFFORT_MODELS:
+    if effort == "max" and provider != "anthropic" and model not in MAX_EFFORT_MODELS:
         raise ValueError(f"{model} does not support reasoning_effort='max'")
     if not isinstance(max_output_tokens, int) or max_output_tokens <= 0:
         raise ValueError("max_output_tokens must be a positive int")
-    if provider in (*OPEN_PROVIDERS, "openrouter") and body.get("previous_response_id"):
-        raise ValueError(f"{provider} /responses is stateless; previous_response_id is not supported")
+    if provider in STATELESS_PROVIDERS and body.get("previous_response_id"):
+        raise ValueError(f"{provider} keeps no conversations; previous_response_id is not supported")
+    if provider == "anthropic" and _has_web_search(body):
+        raise ValueError("web_search is not wired for Claude models")
 
 
-_clients: dict[str, openai.OpenAI] = {}
+_clients: dict[str, Any] = {}
 _clients_lock = threading.Lock()
 
 
-def make_client(provider: str = "meta", *, http_client: Any = None) -> openai.OpenAI:
-    """OpenAI SDK client for a provider, with SDK retries off (call_meta retries itself)."""
+def make_client(provider: str = DEFAULT_PROVIDER, *, http_client: Any = None) -> Any:
+    """A client with `chat.completions.create` and `responses.create`, with SDK retries off (call_meta
+    retries itself): Anthropic's SDK behind pickfit.anthropic_messages.Client, or OpenAI's SDK for the
+    hackathon's providers. The base URL is always pickfit's own, never one from the environment."""
     info = PROVIDERS[provider]
     key = require_env(info.key_env) + (f".{require_env(info.secret_env)}" if info.secret_env else "")
-    return openai.OpenAI(api_key=key, base_url=info.base_url,
-                         max_retries=0, timeout=CLIENT_TIMEOUT_S, http_client=http_client)
+    options = dict(api_key=key, base_url=info.base_url, max_retries=0, timeout=CLIENT_TIMEOUT_S,
+                   http_client=http_client)
+    if provider == "anthropic":
+        return anthropic_messages.Client(anthropic.Anthropic(**options), fallbacks=_anthropic_fallbacks())
+    return openai.OpenAI(**options)
 
 
-def _default_client(provider: str) -> openai.OpenAI:
+def _default_client(provider: str) -> Any:
     with _clients_lock:
         if provider not in _clients:
             _clients[provider] = make_client(provider)
@@ -477,9 +563,17 @@ def _sdk_kwargs(create: Any, request: dict[str, Any]) -> dict[str, Any]:
     return kwargs
 
 
+def _anthropic_fallbacks() -> bool:
+    """Whether a request a safety classifier declines is retried on Anthropic's recommended fallback model
+    (on unless PICKFIT_ANTHROPIC_FALLBACKS is 0/false/no/off)."""
+    return (get_env("PICKFIT_ANTHROPIC_FALLBACKS") or "1").strip().lower() not in {"0", "false", "no", "off"}
+
+
 def _send(client: Any, endpoint: Endpoint, request: dict[str, Any], stream: bool) -> dict[str, Any]:
     create = client.chat.completions.create if endpoint == "chat" else client.responses.create
     kwargs = _sdk_kwargs(create, request)
+    if getattr(client, "returns_whole_response", False):  # pickfit's Anthropic client streams inside
+        return _to_dict(create(**kwargs, stream=stream))
     if not stream:
         return _to_dict(create(**kwargs))
     kwargs["stream"] = True
@@ -589,16 +683,17 @@ def _runs_dir(runs_dir: Path | str | None) -> Path:
 
 
 def _cache_enabled(cache: bool | None, model: str) -> bool:
-    """The `cache` argument, else PICKFIT_CACHE, else on only for dev (contributor) models.
+    """The `cache` argument, else PICKFIT_CACHE, else on only for the dev model (and Meta's contributor one).
 
-    Prod runs and re-verification must ask the model again, not replay an old answer.
+    Prod runs and re-verification must ask the model again, not replay an old answer. The bulk screens run
+    on the same model as dev, so they pass cache=False themselves.
     """
     if cache is not None:
         return cache
     setting = get_env("PICKFIT_CACHE")
     if setting is not None:
         return setting.strip().lower() not in {"0", "false", "no", "off"}
-    return model.endswith("-contributor")
+    return model == MODE_ALIASES["dev"] or model.endswith("-contributor")
 
 
 def _cacheable(result: MetaResult) -> bool:
@@ -679,7 +774,7 @@ def _header_wait_s(headers: Any) -> float | None:
         return None
 
 
-def _retry_after_s(err: openai.APIStatusError) -> float | None:
+def _retry_after_s(err: Any) -> float | None:
     """The wait the server asked for, clamped to [0, BACKOFF_MAX_S]; None if it gave none."""
     headers = err.response.headers if err.response is not None else {}
     wait = _header_wait_s(headers)
@@ -698,8 +793,9 @@ class _Retry:
     server_errors: int = 0
     not_found: int = 0
     stream: bool = False
+    retry_not_found: bool = True  # Meta's on-and-off 404; any other provider's 404 is a wrong model id
 
-    def after_http_error(self, err: openai.APIStatusError) -> bool:
+    def after_http_error(self, err: Any) -> bool:
         """Whether to try again after an HTTP error; sleeps first when backing off."""
         if err.status_code == 429:
             self.rate_limited += 1
@@ -710,7 +806,7 @@ class _Retry:
             return True
         if err.status_code in RETRY_STATUSES:
             return self.after_server_error()
-        if err.status_code == 404:
+        if err.status_code == 404 and self.retry_not_found:
             self.not_found += 1
             if self.not_found >= NOT_FOUND_TRIES:
                 return False
@@ -742,7 +838,7 @@ def _error_info(err: BaseException) -> dict[str, Any]:
 def _scrub_error(err: BaseException, secrets: list[str]) -> None:
     """Redact keys in the exception itself, so the caller's traceback is as clean as the trace."""
     err.args = tuple(_redact(a, secrets) if isinstance(a, str) else a for a in err.args)
-    if isinstance(err, openai.APIError):
+    if isinstance(err, _API_ERRORS):
         err.message = _redact(err.message, secrets)
         if err.body is not None:
             err.body = json.loads(_redact(json.dumps(err.body, default=str), secrets))
@@ -777,20 +873,23 @@ def call_meta(
     runs_dir: Path | str | None = None,
     video_seconds: float | None = None,
 ) -> MetaResult:
-    """Call a Meta model through Chat Completions (`chat`) or the Responses API (`responses`).
+    """Call a model with a Chat Completions (`chat`) or Responses (`responses`) request.
+
+    The model is a Claude model unless the id or `provider` names one of the hackathon's; a Claude call is
+    sent as a Messages API request and answered in the endpoint's own shape (pickfit.anthropic_messages).
 
     `body` is the request without model, output limit or reasoning effort, e.g.
-    {"messages": [...]} or {"input": ..., "tools": [...], "previous_response_id": ...}.
-    With a web_search tool, `max_tool_calls` (default WEB_SEARCHES_PER_CALL) caps searches.
+    {"messages": [...]} or {"input": ..., "tools": [...]} (Meta only: "previous_response_id",
+    and a web_search tool, whose searches `max_tool_calls` caps).
     `public_data_only` must be True for contributor models. `scope_cap_usd` caps what
-    `scope` may spend within `run_id` (e.g. "verify:<slug>" at 0.50 per verification run).
+    `scope` may spend within `run_id` (e.g. "verify:<slug>" per verification run).
     `output_model` validates the text output as JSON into that pydantic model.
-    `cache` defaults to PICKFIT_CACHE, else on for dev (contributor) models only.
-    `provider` defaults to the one serving the model (Baseten for "open" and meta-models/ ids), and
-    `ledger` to that provider's budget in the shared ledger. `video_seconds`: the videos' total length, so they
-    are reserved at their size rather than at VIDEO_TOKENS each.
+    `cache` defaults to PICKFIT_CACHE, else on for the dev model only.
+    `provider` defaults to the one serving the model, and `ledger` to that provider's budget in the shared
+    ledger (Claude calls: "pipeline"). `video_seconds`: the videos' total length, so they are reserved at
+    their size rather than at VIDEO_TOKENS each.
     """
-    model = resolve_model(model, provider or "meta")
+    model = resolve_model(model, provider or DEFAULT_PROVIDER)
     provider, wire_model = route(provider or provider_for(model), model)
     _check_policy(provider, model, public_data_only, reasoning_effort, body, max_output_tokens)
     if provider == "openrouter":
@@ -809,7 +908,9 @@ def call_meta(
                     attempts: int) -> MetaResult:
         read = _read_result(endpoint, raw)
         parsed, parse_error = _parse_output(read["text"], output_model)
-        return MetaResult(provider=provider, model=model, endpoint=endpoint, usage=usage, cost_usd=cost,
+        # A declined request another Claude model answered names that model, as records must.
+        return MetaResult(provider=provider, model=_fallback_model(provider, raw) or model, endpoint=endpoint,
+                          usage=usage, cost_usd=cost,
                           response_id=raw.get("id"), cache_hit=cache_hit, attempts=attempts,
                           request_hash=key, raw=raw, parsed=parsed, parse_error=parse_error, **read)
 
@@ -848,6 +949,16 @@ def _clip(text: str | None) -> str | None:
     return text[:TRACE_TEXT_LIMIT] if text else None
 
 
+def _fallback_model(provider: str, raw: dict[str, Any]) -> str | None:
+    """The priced model id of the fallback model that answered a declined request, else None. The API may
+    name a dated snapshot, so the longest priced id it starts with is taken."""
+    served = raw.get("fallback_model")
+    if not isinstance(served, str):
+        return None
+    known = [m for p, m in PRICES if p == provider and served.startswith(m)]
+    return max(known, key=len) if known else None
+
+
 def _trace_error(runs: Path, trace: dict[str, Any], secrets: list[str], err: BaseException,
                  http_status: int | None, cost: float, started: float) -> None:
     """Trace a failed attempt, and scrub keys from the exception before it reaches the caller."""
@@ -868,7 +979,8 @@ def _send_with_retries(
     keeps its worst-case estimate as status `unknown`; only a 4xx or a request that
     never left is released.
     """
-    retry = _Retry()
+    provider = base["provider"]
+    retry = _Retry(retry_not_found=provider == "meta")
     attempt = 0
     while True:
         attempt += 1
@@ -876,7 +988,7 @@ def _send_with_retries(
         trace = {**base, "attempt": attempt, "stream": retry.stream, "reserved_usd": round(estimate, 6)}
         try:
             row = ledger.reserve(estimate, run_id=base["run_id"], stage=base["stage"], scope=base["scope"],
-                                 provider=base["provider"], model=base["model"], attempt=attempt,
+                                 provider=provider, model=base["model"], attempt=attempt,
                                  scope_cap_usd=scope_cap_usd)
         except BudgetExceeded as err:
             _append_trace(runs, {**trace, "status": "budget_exceeded", "error": _error_info(err)}, secrets)
@@ -884,7 +996,7 @@ def _send_with_retries(
         started = time.monotonic()
         try:
             raw = _send(client, endpoint, request, retry.stream)
-        except openai.APIStatusError as err:
+        except _STATUS_ERRORS as err:
             # A 4xx (429 included) is refused before generation. A 5xx may come after the
             # upstream generated (504 gateway timeout, 503 persistence error): keep the estimate.
             held = estimate if err.status_code >= 500 else 0.0
@@ -893,14 +1005,14 @@ def _send_with_retries(
             if retry.after_http_error(err):
                 continue
             raise
-        except openai.APITimeoutError as err:
+        except _TIMEOUT_ERRORS as err:
             held = 0.0 if _never_sent(err) else estimate  # the server may still finish and bill it
             _hold_or_release(ledger, row, held)
             _trace_error(runs, trace, secrets, err, None, held, started)
             if retry.switch_to_stream():
                 continue
             raise
-        except openai.APIConnectionError as err:
+        except _CONNECTION_ERRORS as err:
             held = 0.0 if _never_sent(err) else estimate  # e.g. "Server disconnected" after sending
             _hold_or_release(ledger, row, held)
             _trace_error(runs, trace, secrets, err, None, held, started)
@@ -913,6 +1025,10 @@ def _send_with_retries(
             raise
         latency = round(time.monotonic() - started, 3)
         usage = Usage.from_raw(raw)
+        fallback = _fallback_model(provider, raw)  # it answered, so its rates apply (an approximation: the
+        if fallback:                               # declined attempt's own tokens are priced with it)
+            price = PRICES[(provider, fallback)]
+            trace["fallback_model"] = fallback
         cost = cost_usd(price, usage) if usage else estimate
         ledger.settle(row, cost, tokens=asdict(usage) if usage else None, response_id=raw.get("id"),
                       status="settled" if usage else "no_usage")
@@ -932,7 +1048,7 @@ def _hold_or_release(ledger: Ledger, row: int, held: float) -> None:
         ledger.release(row)
 
 
-def ping(provider: str = "meta", model: str | None = None, **kwargs: Any) -> MetaResult:
+def ping(provider: str = DEFAULT_PROVIDER, model: str | None = None, **kwargs: Any) -> MetaResult:
     """Smallest possible paid call (a few dozen tokens, never cached), for `pickfit ping`."""
     return call_meta("chat", {"messages": [{"role": "user", "content": "ping"}]}, stage="ping",
                      provider=provider, model=model, public_data_only=True,

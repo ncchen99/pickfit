@@ -38,7 +38,7 @@ from pickfit.schema import (
 from pickfit.score import refresh_scores
 from pickfit.verify import web_guard as guard
 from pickfit.verify.web_box import BROWSER_USE, image_name
-from pickfit.verify.web_verify import JUDGE_MODEL, WebTarget, site_of
+from pickfit.verify.web_verify import WebTarget, site_of
 
 DATA_DIR = REPO_ROOT / "data" / "software"
 RUNNER = "modal-vm-chromium"
@@ -199,7 +199,8 @@ def web_run(result: dict[str, Any], features: list[str], run_dir: Path) -> Verif
         image=image_name(), checked_at=datetime.fromisoformat(result["checked_at"]), install_method=None,
         replayed=False, steps=[InstallStep(command=f"open {url}", purpose="Open the app in a browser")],
         smoke_tests=smoke, judge=Judge(verdict="working", observed=(page.get("observed") or "main screen")[:300],
-                                       model="muse-spark-1.3" if JUDGE_MODEL == "prod" else JUDGE_MODEL),
+                                       # a visit saved before 11/15 names no judge: it was muse-spark-1.3
+                                       model=result.get("judge_model") or "muse-spark-1.3"),
         evidence=RunEvidence(trace_path=_rel(run_dir / "messages.jsonl"), log_path=_rel(run_dir / "harness.log"),
                              screenshot_paths=shots),
         actor_model=operator_model, cost_usd=round(sum(float(v or 0) for v in costs.values()), 4),

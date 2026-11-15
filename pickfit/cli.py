@@ -66,6 +66,17 @@ def _extract(args: argparse.Namespace) -> int:
         from pickfit.verify.result import DATA_DIR
 
         repo_ids = [*(repo_ids or []), *record_slugs(DATA_DIR)]
+    if args.install_docs:
+        from pickfit.discover.run import pipeline_db_path
+        from pickfit.discover.store import PipelineDB
+        from pickfit.extract import same_tier
+        from pickfit.installdocs import run_docs
+        from pickfit.meta import resolve_model
+
+        docs = run_docs(PipelineDB(pipeline_db_path()), models=same_tier(resolve_model(args.model)),
+                        repo_ids=repo_ids, force=args.force, log=lambda line: print(line, file=sys.stderr))
+        # A candidate that got a page is extracted again below without --force: its sources changed.
+        print(f"install guides: looked for {docs['looked']}, read for {len(docs['read'])}", file=sys.stderr)
     summary = run_extract(limit=args.limit, model=args.model, reasoning_effort=args.effort,
                           repo_ids=repo_ids, force=args.force, features_only=args.features_only,
                           concurrency=args.concurrency, max_attempts=args.attempts, categories=args.category)
@@ -210,27 +221,32 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
 
     from pickfit.prescreen import DEFAULT_CONCURRENCY as PRESCREEN_CONCURRENCY
 
-    s = sub.add_parser("prescreen", help="screen rule-passed candidates with Muse Spark Open on Baseten "
-                                         "(paid; low-confidence and a 5%% sample reviewed by muse-spark-1.3)")
+    s = sub.add_parser("prescreen", help="screen rule-passed candidates with the bulk model (Claude Haiku; "
+                                         "paid; low-confidence and a 5%% sample reviewed by Claude Opus)")
     s.add_argument("--limit", type=int, required=True, help="candidates to screen in this run")
     s.add_argument("--repo", action="append", help="screen this repo id (gh:<id>) or owner/name")
     s.add_argument("--force", action="store_true", help="screen again even if already screened")
     s.add_argument("--concurrency", type=int, default=PRESCREEN_CONCURRENCY,
-                   help=f"candidates in flight at once (default {PRESCREEN_CONCURRENCY}; Baseten allows 100 RPM)")
-    s.add_argument("--no-review", action="store_true", help="screen only; skip muse-spark-1.3 reviews")
+                   help=f"candidates in flight at once (default {PRESCREEN_CONCURRENCY})")
+    s.add_argument("--no-review", action="store_true", help="screen only; skip the prod-model reviews")
     s.add_argument("--category", action="append", choices=sorted(TOPICS),
                    help="only candidates of this discovery category (repeatable; default all)")
     s.set_defaults(func=_prescreen)
 
-    e = sub.add_parser("extract", help="read candidates with a Meta model into ExtractionResult (paid)")
+    e = sub.add_parser("extract", help="read candidates with a model into ExtractionResult (paid)")
     e.add_argument("--limit", type=int, required=True, help="candidates to extract in this run")
-    e.add_argument("--model", default="dev", help='"dev" (contributor, default), "prod", "open" (Muse Spark Open on Baseten) or a model id')
+    e.add_argument("--model", default="dev", help='"dev" (Claude Haiku, default), "prod" (Claude Opus), "open" (the bulk model) or a model id')
     e.add_argument("--effort", default="minimal", help="reasoning effort (default minimal)")
     e.add_argument("--repo", action="append", help="extract this repo id (gh:<id>) or owner/name")
     e.add_argument("--force", action="store_true", help="extract again even if already extracted")
     e.add_argument("--features-only", action="store_true",
                    help="ask only for the main advertised features (records extracted before features existed)")
     e.add_argument("--records", action="store_true", help="the candidates that have a record in data/software")
+    e.add_argument("--install-docs", action="store_true",
+                   help="first read the install guide a README points to (the repository's own docs, the linked "
+                        "page, or the homepage; robots.txt obeyed), for candidates whose extraction by this model "
+                        "names no install path the Linux sandbox can run; one that got a page is then extracted "
+                        "again, since its sources changed")
     e.add_argument("--concurrency", type=int, default=1, help="calls in flight at once (default 1)")
     e.add_argument("--attempts", type=int, default=2,
                    help="tries per candidate for transient failures (default 2)")
@@ -268,8 +284,8 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
     wa.add_argument("--seed", default=webapps.DEFAULT_SEED, help=f"pick order seed (default {webapps.DEFAULT_SEED})")
     wa.add_argument("--concurrency", type=int, default=4, help="pick: sites checked at once (default 4)")
     wa.add_argument("--max-checks", type=int, default=None, help="pick: stop after checking N sites")
-    wa.add_argument("--no-review", action="store_true", help="pick: skip muse-spark-1.3 reviews")
-    wa.add_argument("--model", default="prod", help='extract, records: "prod" (muse-spark-1.3, default) or a model id')
+    wa.add_argument("--no-review", action="store_true", help="pick: skip the prod-model reviews")
+    wa.add_argument("--model", default="prod", help='extract, records: "prod" (Claude Opus, default) or a model id')
     wa.add_argument("--effort", default="minimal", help="extract: reasoning effort (default minimal)")
     wa.add_argument("--limit", type=int, default=None, help="extract: at most N sites (default all selected)")
     wa.add_argument("--force", action="store_true", help="extract: again even if already extracted")
@@ -327,12 +343,12 @@ def _add_visual_command(sub: argparse._SubParsersAction) -> None:
     from pickfit.usability import VISUAL_CAP_USD, main_visual
 
     v = sub.add_parser("visual", help="measurable visual defects of desktop and web apps from pickfit's own "
-                                      "screenshots (Muse Wonder, one call each, paid); --write adds visual_check")
+                                      "screenshots (one model call each, paid); --write adds visual_check")
     v.add_argument("--slug", action="append", help="check this record (repeatable)")
     v.add_argument("--pilot", action="store_true", help="the 12 apps in data/calibration/ease-pilot.json")
     v.add_argument("--all", action="store_true", help="every desktop_app and web_app with copied evidence")
     v.add_argument("--data-dir", default=None, help="records (default data/software)")
-    v.add_argument("--cap", type=float, default=VISUAL_CAP_USD, help="the stage's ledger cap in USD, across runs")
+    v.add_argument("--cap", type=float, default=VISUAL_CAP_USD, help="this run's ledger cap in USD")
     v.add_argument("--force", action="store_true", help="check again even when the screens and prompt are the same")
     v.add_argument("--write", action="store_true", help="add each result to its record as visual_check")
     v.add_argument("--dry-run", action="store_true", help="count what would be checked and estimate the cost")
@@ -344,11 +360,11 @@ def _add_usability_command(sub: argparse._SubParsersAction) -> None:
     from pickfit.usability import COMFORT_MODEL, MODEL, SAMPLES, STAGE_CAP_USD, main_usability
 
     u = sub.add_parser("usability", help="how easy GUI and web apps are to use, from pickfit's own screenshots "
-                                         "(Muse Spark 1.3, paid; prints costs, never the scores)")
+                                         "(Claude Opus, paid; prints costs, never the scores)")
     u.add_argument("--slug", action="append", help="judge this record (repeatable)")
     u.add_argument("--pilot", action="store_true", help="judge the 12 apps in data/calibration/ease-pilot.json")
     u.add_argument("--data-dir", default=None, help="records (default data/software)")
-    u.add_argument("--model", default=MODEL, help='"prod" (muse-spark-1.3, default) or a model id')
+    u.add_argument("--model", default=MODEL, help='"prod" (Claude Opus, default) or a model id')
     u.add_argument("--samples", type=int, default=SAMPLES, help="times each call is made")
     u.add_argument("--comfort-model", default=COMFORT_MODEL,
                    help=f'who lists measurable visual defects for comfortable, one call (default {COMFORT_MODEL}, '
@@ -389,7 +405,7 @@ def _queue_status(d1) -> int:
 def _watch(args: argparse.Namespace) -> int:
     from pickfit.discover.github import GitHubError, runs_dir
     from pickfit.discover.run import pipeline_db_path
-    from pickfit.ledger import baseten_ledger, default_ledger
+    from pickfit.ledger import default_ledger
     from pickfit.watch import Settings, Watcher, hourly_cap, live_data_sha, live_steps
 
     d1 = _d1(args)
@@ -418,7 +434,7 @@ def _watch(args: argparse.Namespace) -> int:
         reverifier = Reverifier(d1, reverify_steps(runner=args.runner), data_dir=args.data, runs_dir=runs_dir(),
                                 db_path=pipeline_db_path(), commit=not args.no_commit,
                                 log=lambda line: print(line, flush=True))
-    watcher = Watcher(d1, steps, settings, meta_ledger=default_ledger(), baseten_ledger=baseten_ledger(),
+    watcher = Watcher(d1, steps, settings, meta_ledger=default_ledger(),
                       reverifier=reverifier, log=lambda line: print(line, flush=True),
                       live_sha=None if args.local else live_data_sha(args.worker))
     print(f"watch · {d1.where} · every {args.interval:.0f}s · {args.concurrency} at a time · "
@@ -454,7 +470,7 @@ def _reverify(args: argparse.Namespace) -> int:
                             commit=not args.no_commit, log=lambda line: print(line, flush=True))
     ledger = default_ledger()
     results = reverifier.run(args.limit, blocked=lambda: budget_blocked(
-        [("Meta pipeline", ledger, WORST_CASE_META_USD)]))
+        [("Model pipeline", ledger, WORST_CASE_META_USD)]))
     print(json.dumps([{k: v for k, v in vars(r).items() if k != "diff"} for r in results], ensure_ascii=False,
                      indent=2))
     return 0 if all(r.outcome != "retry" for r in results) else 1
@@ -486,7 +502,7 @@ def _add_queue_commands(sub: argparse._SubParsersAction) -> None:
     w.add_argument("--concurrency", type=int, default=DEFAULT_CONCURRENCY,
                    help=f"submissions processed at once (default {DEFAULT_CONCURRENCY})")
     w.add_argument("--max-usd", type=float, default=DEFAULT_MAX_USD,
-                   help="stop starting submissions after this much Meta and Baseten spend "
+                   help="stop starting submissions after this much model spend "
                         f"(default {DEFAULT_MAX_USD})")
     w.set_defaults(func=_watch)
 
@@ -555,7 +571,7 @@ def _add_publish_command(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--allow-dirty", action="store_true", help="publish even if data/software has uncommitted changes")
     p.add_argument("--env", help="deploy the env.<NAME> section of wrangler.jsonc (e.g. a frozen evaluation deployment)")
     p.add_argument("--no-translate", action="store_true",
-                   help="skip translating new page sentences into zh-TW (Muse Spark Open on Modal, at most $1)")
+                   help="skip translating new page sentences into zh-TW (Claude Opus, at most $1)")
     p.set_defaults(func=_publish)
 
 
@@ -565,7 +581,8 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command")
 
     p = sub.add_parser("ping", help="make the smallest possible model call through call_meta")
-    p.add_argument("--provider", default="meta", choices=["meta", "baseten"])
+    p.add_argument("--provider", default="anthropic", choices=["anthropic", "meta", "baseten"],
+                   help="anthropic (default); meta and baseten are the hackathon's providers")
     p.add_argument("--model", default=None, help='"dev", "prod", or a model id (default: PICKFIT_MODE)')
     p.set_defaults(func=_ping)
 

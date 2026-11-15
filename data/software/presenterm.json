@@ -1,0 +1,680 @@
+{
+  "schema_version": "software.v1",
+  "slug": "presenterm",
+  "repo_id": "gh:683837120",
+  "name": "presenterm",
+  "summary": "A terminal tool that runs slideshow presentations written in markdown, with themes, images, code highlighting and PDF/HTML export.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "productivity_docs",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "markdown",
+    "markdown-slides",
+    "presentation",
+    "rust",
+    "slides",
+    "slideshow",
+    "terminal"
+  ],
+  "use_cases": [
+    "give a presentation from the terminal using markdown slides",
+    "export a presentation to PDF or HTML"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "show images and animated gifs in slides",
+    "customize themes with colors and layouts",
+    "highlight code in many languages",
+    "export presentations to PDF and HTML"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T19:19:13.347752Z",
+    "run_id": "verify-presenterm-20261116-030348-f360",
+    "open_hint": "Run `presenterm <file>.md` in a terminal to present a markdown slide file.",
+    "features": [
+      {
+        "feature": "show images and animated gifs in slides",
+        "title": "Show images and animated GIFs in slides",
+        "steps": [
+          "Add an image to a slide in your markdown file with `![](<image file>)`.",
+          "Run `presenterm --image-protocol ascii-blocks --export-html --theme light <file>.md` to render the slides with the image included."
+        ]
+      },
+      {
+        "feature": "customize themes with colors and layouts",
+        "title": "Customize themes with colors and layouts",
+        "steps": [
+          "Pick a theme with the `--theme` flag, for example `presenterm --image-protocol ascii-blocks --export-html --theme dark <file>.md`.",
+          "Use `--theme light` instead for a light color scheme."
+        ]
+      },
+      {
+        "feature": "highlight code in many languages",
+        "title": "Highlight code in many languages",
+        "steps": [
+          "Put code in a fenced block with a language name, such as ```rust, in your markdown file.",
+          "Run `presenterm --image-protocol ascii-blocks --export-html --theme dark <file>.md` to get the code shown with syntax colors."
+        ]
+      },
+      {
+        "feature": "export presentations to PDF and HTML",
+        "title": "Export presentations to PDF and HTML",
+        "steps": [
+          "Run `presenterm --image-protocol ascii-blocks --export-html --theme light <file>.md`.",
+          "Open the HTML file with the same name as your markdown file, created next to it."
+        ]
+      }
+    ]
+  },
+  "homepage": "https://mfontanini.github.io/presenterm/",
+  "repo": {
+    "url": "https://github.com/mfontanini/presenterm",
+    "full_name": "mfontanini/presenterm",
+    "created_at": "2023-08-27T21:15:15Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install presenterm",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-presenterm-20261116-030348-f360",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p /tmp/pt ~/.local/bin && curl -fsSL -o /tmp/pt/p.tgz https://github.com/mfontanini/presenterm/releases/download/v0.16.1/presenterm-0.16.1-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/pt/p.tgz -C /tmp/pt && find /tmp/pt -name presenterm -type f -exec cp {} ~/.local/bin/presenterm \\; && chmod +x ~/.local/bin/presenterm",
+          "purpose": "Download the v0.16.1 x86_64 musl release tarball and copy the presenterm binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "presenterm --version",
+        "expected_signal": "presenterm 0.16.1"
+      },
+      "first_task": "cd /tmp/pt && mv tty.py ptydrv.py && rm -f demo.html && python3 ptydrv.py presenterm --image-protocol ascii-blocks --export-html --theme light demo.md && grep -o -E 'Demo Talk|hello|fn main|<img|data:image/png;base64|background-color:[^;\"]*' demo.html"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo binstall presenterm",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "BSD-2-Clause",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.16.1",
+    "published_at": "2026-02-20T01:51:07Z",
+    "url": "https://github.com/mfontanini/presenterm/releases/tag/v0.16.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T03:08:36.671482+08:00",
+    "runs": [
+      {
+        "id": "verify-presenterm-20261116-030348-f360",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T03:08:36.671482+08:00",
+        "tool_version": "presenterm 0.16.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p /tmp/pt ~/.local/bin && curl -fsSL -o /tmp/pt/p.tgz https://github.com/mfontanini/presenterm/releases/download/v0.16.1/presenterm-0.16.1-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/pt/p.tgz -C /tmp/pt && find /tmp/pt -name presenterm -type f -exec cp {} ~/.local/bin/presenterm \\; && chmod +x ~/.local/bin/presenterm",
+            "purpose": "Download the v0.16.1 x86_64 musl release tarball and copy the presenterm binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "presenterm --version",
+            "expected_signal": "presenterm 0.16.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "presenterm 0.16.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/pt && mv tty.py ptydrv.py && rm -f demo.html && python3 ptydrv.py presenterm --image-protocol ascii-blocks --export-html --theme light demo.md && grep -o -E 'Demo Talk|hello|fn main|<img|data:image/png;base64|background-color:[^;\"]*' demo.html",
+            "expected_signal": "data:image/png;base64",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "data:image/png;base64",
+            "setup": [
+              {
+                "command": "cd /tmp/pt && python3 -c \"import zlib,struct;c=lambda t,d:struct.pack('>I',len(d))+t+d+struct.pack('>I',zlib.crc32(t+d));open('img.png','wb').write(b'\\x89PNG\\r\\n\\x1a\\n'+c(b'IHDR',struct.pack('>IIBBBBB',4,4,8,2,0,0,0))+c(b'IDAT',zlib.compress(b''.join(b'\\x00'+b'\\xff\\x00\\x00'*4 for _ in range(4))))+c(b'IEND',b''))\" && cat > demo.md <<'EOF'\n---\ntitle: Demo Talk\nauthor: Tester\n---\n\nCode slide\n===\n\n```rust\nfn main() {\n    println!(\"hello\");\n}\n```\n\n<!-- end_slide -->\n\nImage slide\n===\n\n![](img.png)\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cat > /tmp/pt/tty.py <<'EOF'\nimport os, pty, sys, select, fcntl, termios, struct, time\npid, fd = pty.fork()\nif pid == 0:\n    os.execvp(sys.argv[1], sys.argv[1:])\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 40, 120, 1200, 800))\nbuf = b''\ndeadline = time.time() + 60\nreplies = [(b'\\x1b[c', b'\\x1b[?62;22c'), (b'\\x1b[0c', b'\\x1b[?62;22c'), (b'\\x1b[16t', b'\\x1b[6;20;10t'), (b'\\x1b[14t', b'\\x1b[4;800;1200t'), (b'\\x1b[18t', b'\\x1b[8;40;120t'), (b'\\x1b[6n', b'\\x1b[1;1R')]\nwhile time.time() < deadline:\n    r, _, _ = select.select([fd], [], [], 0.5)\n    if not r:\n        continue\n    try:\n        d = os.read(fd, 65536)\n    except OSError:\n        break\n    if not d:\n        break\n    buf += d\n    for q, a in replies:\n        if q in d:\n            os.write(fd, a)\n_, st = os.waitpid(pid, 0)\nsys.stderr.write('QUERIES:' + repr(buf[:400]) + '\\n')\nsys.exit(os.waitstatus_to_exitcode(st))\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/pt && rm -f demo.html && python3 ptydrv.py presenterm --image-protocol ascii-blocks --export-html --theme dark demo.md && grep -o -E 'background-color: #[0-9a-f]+|color: #[0-9a-f]+;?\">(fn|main|println!)<' demo.html",
+            "expected_signal": "color: #cc99cc\">fn<",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "color: #cc99cc\">fn<",
+            "setup": [
+              {
+                "command": "cd /tmp/pt && python3 -c \"import zlib,struct;c=lambda t,d:struct.pack('>I',len(d))+t+d+struct.pack('>I',zlib.crc32(t+d));open('img.png','wb').write(b'\\x89PNG\\r\\n\\x1a\\n'+c(b'IHDR',struct.pack('>IIBBBBB',4,4,8,2,0,0,0))+c(b'IDAT',zlib.compress(b''.join(b'\\x00'+b'\\xff\\x00\\x00'*4 for _ in range(4))))+c(b'IEND',b''))\" && cat > demo.md <<'EOF'\n---\ntitle: Demo Talk\nauthor: Tester\n---\n\nCode slide\n===\n\n```rust\nfn main() {\n    println!(\"hello\");\n}\n```\n\n<!-- end_slide -->\n\nImage slide\n===\n\n![](img.png)\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cat > /tmp/pt/tty.py <<'EOF'\nimport os, pty, sys, select, fcntl, termios, struct, time\npid, fd = pty.fork()\nif pid == 0:\n    os.execvp(sys.argv[1], sys.argv[1:])\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 40, 120, 1200, 800))\nbuf = b''\ndeadline = time.time() + 60\nreplies = [(b'\\x1b[c', b'\\x1b[?62;22c'), (b'\\x1b[0c', b'\\x1b[?62;22c'), (b'\\x1b[16t', b'\\x1b[6;20;10t'), (b'\\x1b[14t', b'\\x1b[4;800;1200t'), (b'\\x1b[18t', b'\\x1b[8;40;120t'), (b'\\x1b[6n', b'\\x1b[1;1R')]\nwhile time.time() < deadline:\n    r, _, _ = select.select([fd], [], [], 0.5)\n    if not r:\n        continue\n    try:\n        d = os.read(fd, 65536)\n    except OSError:\n        break\n    if not d:\n        break\n    buf += d\n    for q, a in replies:\n        if q in d:\n            os.write(fd, a)\n_, st = os.waitpid(pid, 0)\nsys.stderr.write('QUERIES:' + repr(buf[:400]) + '\\n')\nsys.exit(os.waitstatus_to_exitcode(st))\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/pt && mv tty.py ptydrv.py && rm -f demo.html && python3 ptydrv.py presenterm --image-protocol ascii-blocks --export-html --theme light demo.md && grep -o -E 'Demo Talk|hello|fn main|<img|data:image/png;base64|background-color:[^;\"]*' demo.html",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Install via cargo binstall / cargo install / pacman / nix",
+            "actually_needed": "The install guide's recommended pre-built binary from GitHub releases (presenterm-0.16.1-x86_64-unknown-linux-musl.tar.gz) works without Rust; cargo, pacman and nix are not available in this box",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "presenterm --export-html <file> (no terminal requirements mentioned)",
+            "actually_needed": "Exporting needs a real terminal: without a tty it fails with 'Not a tty (os error 25)', and under a bare `script` pty it hangs waiting for replies to terminal capability queries (kitty graphics, DA1, cursor position). A small Python pty driver that answers those queries made it work. --image-protoc…",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Export presentations to PDF",
+            "actually_needed": "PDF export needs weasyprint and its system library libpango-1.0-0. `uv tool install weasyprint` worked, but weasyprint cannot load libpango here (it needs apt/root), so presenterm said 'weasyprint not found'",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The light-theme HTML export contains the title, the slide text and an embedded base64 PNG image, the dark-theme export shows syntax-highlighted fn and main spans, and the version check prints presenterm 0.16.1.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-presenterm-20261116-030348-f360/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-presenterm-20261116-030348-f360/check-1-cmd11.judged.png",
+            "runs/verify/verify-presenterm-20261116-030348-f360/check-2-cmd12.judged.png",
+            "runs/verify/verify-presenterm-20261116-030348-f360/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.359216,
+        "features": [
+          {
+            "feature": "show images and animated gifs in slides",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "customize themes with colors and layouts",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "highlight code in many languages",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "export presentations to PDF and HTML",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T03:11:48+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/mfontanini/presenterm@e809175281f6",
+      "Cargo.lock"
+    ],
+    "packages_checked": 216,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T03:11:03+08:00",
+    "quality": {
+      "total": 73.3,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.86,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.75,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.4119,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 94.9,
+      "signals": {
+        "stars": 8980,
+        "monthly_downloads": 331,
+        "forks": 211,
+        "dependents": null,
+        "release_downloads": 36893,
+        "hn_top_score": 306,
+        "registries_count": 2
+      },
+      "age_days": 1175,
+      "packages": [
+        "crates:presenterm",
+        "homebrew:presenterm"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 3.74
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:11:03.852707+08:00",
+      "sources_sha": "6c50d3ea8255f005140700805f2a64912b583f1bb1ffebc24b1ed0c6238d2de6",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "_presenterm_ lets you create presentations in markdown format and run them from your terminal, with support for image "
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Define speaker notes][docs-speaker-notes] to aid you during presentations."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Alternatively, build from source by downloading [rust](https://www.rust-lang.org/) and running:"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "scoop install main/presenterm"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "* [Custom key bindings][docs-key-bindings]."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "_presenterm_ works on Linux, macOS, and Windows and can be installed in different ways:"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/mfontanini/presenterm",
+      "fetched_at": "2026-11-16T01:03:43+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/mfontanini/presenterm/blob/master/README.md",
+      "fetched_at": "2026-11-16T01:03:41+08:00"
+    },
+    {
+      "id": "release:v0.16.1",
+      "kind": "release",
+      "url": "https://github.com/mfontanini/presenterm/releases/tag/v0.16.1",
+      "fetched_at": "2026-11-16T01:03:41+08:00"
+    },
+    {
+      "id": "docs1",
+      "kind": "readme",
+      "url": "https://github.com/mfontanini/presenterm/blob/master/docs/src/install.md",
+      "fetched_at": "2026-11-16T02:59:35+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "A markdown terminal slideshow tool",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:33+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "run them from your terminal",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:33+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A markdown terminal slideshow tool",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:33+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "_presenterm_ lets you create presentations in markdown format and run them from your terminal",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:33+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "_presenterm_ lets you create presentations in markdown format",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:33+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "docs1",
+      "quote": "_presenterm_ works on Linux, macOS, and Windows",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:33+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:03:43+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:03:43+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:03:43+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:03:43+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:03:43+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.16.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:03:41+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "create presentations in markdown format and run them from your terminal",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:33+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "[Export presentations to PDF and HTML][docs-exports].",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:33+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "[Images and animated gifs][docs-images] on terminals like _kitty_, _iterm2_, _wezterm_, _ghostty_ and _foot_.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:33+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "[Customizable themes][docs-themes] including colors, margins, layout",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:33+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Code highlighting for a [wide list of programming languages][docs-code-highlight].",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:33+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "[Export presentations to PDF and HTML][docs-exports].",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:33+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "docs1",
+      "quote": "brew install presenterm",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:33+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "docs1",
+      "quote": "cargo binstall presenterm",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:33+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "docs1",
+      "quote": "cargo binstall presenterm",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:33+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "run them from your terminal",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:33+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:03:41+08:00",
+  "updated_at": "2026-11-16T03:11:48+08:00"
+}

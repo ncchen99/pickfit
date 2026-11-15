@@ -10,7 +10,7 @@ import { test } from 'node:test';
 import { CfWorkerJsonSchemaValidator } from '@modelcontextprotocol/server/validators/cf-worker';
 import type { Env } from '../src/env.ts';
 import { makeWorker } from '../src/worker.ts';
-import { answer, fixtureIndex, makeD1, metaResponse } from './helpers.ts';
+import { answer, fixtureIndex, makeD1, modelResponse } from './helpers.ts';
 
 /**
  * The fixture index plus shapes the fixtures lack: tagged pitfalls (one with a
@@ -92,24 +92,24 @@ async function conforming(s: ReturnType<typeof server>, schemas: Map<string, (v:
 }
 
 test('find_software conforms: picks, a clarifying question, empty, no candidates, degraded', async () => {
-  const s = server({ MODEL_API_KEY: 'k', META_TIMEOUT_MS: '2000' });
+  const s = server({ ANTHROPIC_API_KEY: 'k', META_TIMEOUT_MS: '2000' });
   const schemas = await validators(s);
   const call = (label: string, args: object) => conforming(s, schemas, label, 'find_software', args);
 
-  s.answers(() => metaResponse(answer()));
+  s.answers(() => modelResponse(answer()));
   const picks = await call('model picks', LLM);
   assert.ok(picks.picks.length > 0 && picks.best_free && !picks.degraded);
 
   s.answers(() =>
-    metaResponse(answer({ well_known_name: 'Ollama', well_known_why: 'Ollama is free, runs offline on macOS and is simpler to set up.' })),
+    modelResponse(answer({ well_known_name: 'Ollama', well_known_why: 'Ollama is free, runs offline on macOS and is simpler to set up.' })),
   );
   const outside = await call('well-known option', LLM);
   assert.deepEqual([outside.well_known_option.name, outside.well_known_option.verified], ['Ollama', false]);
 
-  s.answers(() => metaResponse(answer({ clarifying_question: 'Do you need a GUI or is a terminal fine?' })));
+  s.answers(() => modelResponse(answer({ clarifying_question: 'Do you need a GUI or is a terminal fine?' })));
   assert.ok((await call('clarifying question', LLM)).clarifying_question);
 
-  s.answers(() => metaResponse(answer({ picks: [], best_free_slug: null })));
+  s.answers(() => modelResponse(answer({ picks: [], best_free_slug: null })));
   const empty = await call('empty by the model', LLM);
   assert.deepEqual([empty.picks.length, empty.best_free], [0, null]);
   assert.ok(empty.coverage_note);
@@ -148,9 +148,9 @@ test('find_software conforms with the rules fit labels: good, partial, weak and 
   assert.deepEqual(none.picks.map((p: any) => p.match.quality), ['weak', 'weak', 'weak']); // still listed
   assert.match(none.coverage_note, /pickfit has no verified tool that clearly does this job/);
 
-  const s = server({ MODEL_API_KEY: 'k', META_TIMEOUT_MS: '2000' });
+  const s = server({ ANTHROPIC_API_KEY: 'k', META_TIMEOUT_MS: '2000' });
   const modelSchemas = await validators(s);
-  s.answers(() => metaResponse(answer()));
+  s.answers(() => modelResponse(answer()));
   const model = await conforming(s, modelSchemas, 'model picks', 'find_software', LLM);
   assert.ok(!('match_quality' in model));
   assert.ok(model.picks.every((p: any) => !('match' in p)));
@@ -161,11 +161,11 @@ test('find_software conforms with the rules fit labels: good, partial, weak and 
 });
 
 test('find_alternatives conforms: keep_current true, a better pick, and rules', async () => {
-  const s = server({ MODEL_API_KEY: 'k', META_TIMEOUT_MS: '2000' });
+  const s = server({ ANTHROPIC_API_KEY: 'k', META_TIMEOUT_MS: '2000' });
   const schemas = await validators(s);
   const args = { current_software: 'Ollama', pain_points: 'too heavy for my old laptop', os: 'linux' };
   const alt = (keep: { recommended: boolean; reason: string }, picks = answer().picks.slice(0, 1)) =>
-    metaResponse(answer({ picks, keep_current: keep, need: { ...answer().need, current_tool: 'Ollama', pain_points: ['too heavy'] } }));
+    modelResponse(answer({ picks, keep_current: keep, need: { ...answer().need, current_tool: 'Ollama', pain_points: ['too heavy'] } }));
 
   s.answers(() => alt({ recommended: true, reason: 'Nothing here is clearly lighter.' }, []));
   const keep = await conforming(s, schemas, 'keep current', 'find_alternatives', args);

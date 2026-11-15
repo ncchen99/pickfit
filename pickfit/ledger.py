@@ -1,14 +1,21 @@
 """One shared spending ledger for every pickfit process, session and worktree.
 
-Meta's Spend Limit only sends email, so caps are enforced here. The ledger is a
-SQLite file outside the repo (`~/.pickfit/ledger.sqlite`, override with
+The ledger is a SQLite file outside the repo (`~/.pickfit/ledger.sqlite`, override with
 PICKFIT_LEDGER). Each paid request first reserves a worst-case cost inside a
-`BEGIN IMMEDIATE` transaction, so parallel processes cannot both pass the same
-cap check, and is settled to the actual cost once the response arrives.
+`BEGIN IMMEDIATE` transaction and is settled to the actual cost once the response arrives,
+so the file is the record of what every model call cost.
+
+It can also stop a call before it is sent (BudgetExceeded). During the hackathon (to 2026-11-04)
+it did so at a total and a daily cap per budget, because the credits were fixed and the providers'
+own spend limits only sent email. Since 2026-11-15 no budget has a total or daily cap unless the
+user sets one (PICKFIT_PIPELINE_TOTAL_CAP_USD, PICKFIT_PIPELINE_DAILY_CAP_USD); what still stops a
+call is a caller's own per-scope cap (`scope_cap_usd`, e.g. one verification run), which keeps a
+loop that went wrong from spending without end. The hackathon's rows stay in the file as they are.
 """
 
 from __future__ import annotations
 
+import math
 import sqlite3
 from collections.abc import Callable, Iterator, Mapping
 from contextlib import contextmanager
@@ -71,70 +78,53 @@ class BudgetExceeded(RuntimeError):
         )
 
 
-def pipeline_daily_cap(day: date) -> float:
-    """$3 a day before 2026-10-29 (validation), $25 from then on; $80 on 10/31, $45 on 11/1-11/2 and
-    $50 on 11/3 (plan section 2; 念誠 raised 11/3 for the web app category, and again on 11/2 when he
-    raised the total)."""
-    if day < date(2026, 10, 29):
-        return 3.0
-    if day == date(2026, 10, 31):
-        return 80.0
-    if day == date(2026, 11, 3):
-        return 50.0
-    return 45.0 if date(2026, 11, 1) <= day <= date(2026, 11, 2) else 25.0
+def no_daily_cap(day: date) -> float:
+    return math.inf
 
 
 @dataclass(frozen=True)
 class Caps:
-    total_usd: float
-    daily_usd: Callable[[date], float]
+    """A budget's total and daily (Taipei day) limits in USD; math.inf means none, which is the default."""
+
+    total_usd: float = math.inf
+    daily_usd: Callable[[date], float] = no_daily_cap
 
 
-# 念誠 raised the total from $120 to $160 on 11/1 for the web app category; past Meta's $150 of
-# credits is his call (plan section 2). On 11/2 he allowed Meta up to $100 past the credits ($250 in
-# all) for the GUI and web work: $225 here, and the Worker's own caps ($15 live, $10 eval) the rest.
-PIPELINE_TOTAL_USD = 225.0
-PIPELINE_CAPS = Caps(total_usd=PIPELINE_TOTAL_USD, daily_usd=pipeline_daily_cap)
+NO_CAPS = Caps()
+
+# The hackathon's caps, for the record (plan section 2 has each change and who allowed it). They stopped
+# calls until 2026-11-04 and are not applied any more:
+# - pipeline (Meta's API): $225 in all; $3 a day before 10/29, then $25, with $80 on 10/31, $45 on
+#   11/1-11/2 and $50 on 11/3.
+# - baseten (Muse Spark Open, the hackathon's key): $100 in all; $25 a day, $70 on 11/1, $35 on 11/2.
+# - modal-llm (Muse Spark Open on Modal's endpoint, Modal credits): $100 in all, $50 a day.
+# - openrouter (Meta's models through OpenRouter, 念誠's balance): $50 in all, $40 a day.
+# Each budget keeps its name and its rows; Claude calls are recorded under "pipeline".
+PIPELINE_CAPS = NO_CAPS
+BASETEN_CAPS = NO_CAPS
+MODAL_LLM_CAPS = NO_CAPS
+OPENROUTER_CAPS = NO_CAPS
+
+
+def _cap_setting(name: str) -> float | None:
+    raw = get_env(name)
+    if raw is None:
+        return None
+    value = float(raw)  # a typo in a cap fails loudly instead of being ignored
+    if not value >= 0:
+        raise ValueError(f"{name} must be 0 or more")
+    return value
 
 
 def pipeline_caps() -> Caps:
-    """PIPELINE_CAPS, with the total lowered by PICKFIT_PIPELINE_TOTAL_CAP_USD when it is set.
-
-    The setting can only lower the total: a machine with its own ledger (the Windows host) gets a
-    small hard stop of its own, and nothing can raise the shared one.
-    """
-    raw = get_env("PICKFIT_PIPELINE_TOTAL_CAP_USD")
-    if raw is None:
+    """The pipeline budget's caps: none, unless the user sets PICKFIT_PIPELINE_TOTAL_CAP_USD (all the
+    budget's spending, the hackathon's included) or PICKFIT_PIPELINE_DAILY_CAP_USD (one Taipei day)."""
+    total = _cap_setting("PICKFIT_PIPELINE_TOTAL_CAP_USD")
+    daily = _cap_setting("PICKFIT_PIPELINE_DAILY_CAP_USD")
+    if total is None and daily is None:
         return PIPELINE_CAPS
-    lowered = float(raw)  # a typo meant to lower the cap fails loudly instead of being ignored
-    if not 0 <= lowered <= PIPELINE_TOTAL_USD:
-        raise ValueError(f"PICKFIT_PIPELINE_TOTAL_CAP_USD must be between 0 and {PIPELINE_TOTAL_USD:g}")
-    return Caps(total_usd=lowered, daily_usd=pipeline_daily_cap)
-
-
-# Baseten's hackathon credits are separate from Meta's, so they get their own budget in the same
-# file. $100 of credits and a $100 stop: the key is the hackathon's and is not charged past them.
-def baseten_daily_cap(day: date) -> float:
-    """$25 a day; $70 on 11/1 and $35 on 11/2.
-
-    念誠 raised 11/1 to $35, then to $45, for feature coverage and its rerun after the head/tail fix,
-    then to $70 so the Mac batch and the GUI and source work run that day; he also raised 11/2 to $35
-    and the total from $80 to $100 for GUI checks and new sources.
-    """
-    return {date(2026, 11, 1): 70.0, date(2026, 11, 2): 35.0}.get(day, 25.0)
-
-
-BASETEN_CAPS = Caps(total_usd=100.0, daily_usd=baseten_daily_cap)
-# Muse Spark Open on the hackathon's Modal Shared Endpoint, paid from Modal credits: its own budget,
-# $30 in all and $20 a day (the coordinating session, 11/1); 念誠 raised it to $60 in all and $30 a day
-# on 11/2 (verification videos: Muse watches pickfit's screen recordings), then to $100 and $50 a day
-# the same evening (web recordings and GUI checks).
-MODAL_LLM_CAPS = Caps(total_usd=100.0, daily_usd=lambda day: 50.0)
-# Meta's models through OpenRouter (PICKFIT_META_VIA=openrouter), paid from 念誠's OpenRouter balance: its own
-# budget. 11/3 Meta's API refused the team's key with 402 billing errors; 念誠 topped OpenRouter up with $50. The
-# live Worker spends the same balance (its own caps, in D1), so the pipeline stopped at $40 and left it about $10.
-# 11/4 evening: $26.15 spent here and $44 left on the balance; 念誠 allowed $24 more and keeps $20 for the live site.
-OPENROUTER_CAPS = Caps(total_usd=50.0, daily_usd=lambda day: 40.0)
+    return Caps(total_usd=math.inf if total is None else total,
+                daily_usd=no_daily_cap if daily is None else (lambda day: daily))
 
 
 def taipei_now(clock: Callable[[], datetime] | None = None) -> datetime:
@@ -147,14 +137,15 @@ def taipei_date(clock: Callable[[], datetime] | None = None) -> str:
 
 
 class Ledger:
-    """Spending ledger for one budget ("pipeline") inside a shared SQLite file."""
+    """Spending ledger for one budget ("pipeline") inside a shared SQLite file. `caps` are enforced
+    when given; the default is none."""
 
     def __init__(
         self,
         path: Path | str | None = None,
         *,
         budget: str = "pipeline",
-        caps: Caps = PIPELINE_CAPS,
+        caps: Caps = NO_CAPS,
         clock: Callable[[], datetime] | None = None,
     ) -> None:
         self.path = Path(path) if path else DEFAULT_PATH
@@ -298,8 +289,13 @@ class Ledger:
         return int(row[0]) if row else None
 
     def spend_summary(self) -> dict[str, Any]:
-        """Today (Taipei), total, open reservations, and spend by model and by stage."""
+        """Today (Taipei), total, open reservations, and spend by model and by stage. A cap that is not
+        set is None."""
         today = taipei_now(self.clock).date()
+
+        def cap(value: float) -> float | None:
+            return None if math.isinf(value) else value
+
         conn = self._connect()
         try:
             def grouped(column: str) -> dict[str, float]:
@@ -325,9 +321,9 @@ class Ledger:
                 "budget": self.budget,
                 "today": today.isoformat(),
                 "today_usd": round(self._spent(conn, " AND day = ?", (today.isoformat(),)), 6),
-                "daily_cap_usd": self.caps.daily_usd(today),
+                "daily_cap_usd": cap(self.caps.daily_usd(today)),
                 "total_usd": round(self._spent(conn), 6),
-                "total_cap_usd": self.caps.total_usd,
+                "total_cap_usd": cap(self.caps.total_usd),
                 "open_reservations_usd": round(float(open_usd), 6),
                 "calls": int(calls),
                 "cache_hits": int(cache_hits),
@@ -345,7 +341,7 @@ def default_ledger() -> Ledger:
 
 
 def baseten_ledger() -> Ledger:
-    """The Baseten budget in the shared ledger file (prescreen calls on Muse Spark Open)."""
+    """The Baseten budget in the shared ledger file (the hackathon's prescreen calls on Muse Spark Open)."""
     return Ledger(get_env("PICKFIT_LEDGER") or DEFAULT_PATH, budget="baseten", caps=BASETEN_CAPS)
 
 

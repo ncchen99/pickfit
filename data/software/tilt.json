@@ -1,0 +1,728 @@
+{
+  "schema_version": "software.v1",
+  "slug": "tilt",
+  "repo_id": "gh:143896900",
+  "name": "Tilt",
+  "summary": "Tilt automates the dev loop for microservice apps on Kubernetes: watching files, building container images and updating the environment.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "infra_devops",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "development-environment",
+    "kubernetes"
+  ],
+  "use_cases": [
+    "run a complete local dev environment for microservices on Kubernetes",
+    "automatically rebuild container images on code changes"
+  ],
+  "alternatives_to": [
+    "docker-compose"
+  ],
+  "features": [
+    "watch files and rebuild container images",
+    "define dev environment as code in a Tiltfile",
+    "extend Tiltfile functionality with extensions"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:39.171506Z",
+    "run_id": "verify-tilt-20261116-010054-5b03",
+    "open_hint": "Run `tilt version` to confirm the install, then run `tilt ci` in a folder that has a Tiltfile.",
+    "features": [
+      {
+        "feature": "watch files and rebuild container images",
+        "title": "Rebuild container images when files change",
+        "steps": []
+      },
+      {
+        "feature": "define dev environment as code in a Tiltfile",
+        "title": "Define your dev environment in a Tiltfile",
+        "steps": [
+          "Create a file named Tiltfile in your project folder and add resources, such as `local_resource('<name>', cmd='<command>', deps=['<file>'])`.",
+          "Run `tilt ci --port <port>` from that folder.",
+          "Check that the output ends with \"SUCCESS. All workloads are healthy.\""
+        ]
+      },
+      {
+        "feature": "extend Tiltfile functionality with extensions",
+        "title": "Add features to a Tiltfile with extensions",
+        "steps": [
+          "Put the extension's own Tiltfile in a folder, and register it with `v1alpha1.extension_repo(name='<repo>', url='file://<folder>')` and `v1alpha1.extension(name='<ext>', repo_name='<repo>', repo_path='",
+          "Load it with `load('ext://<ext>', '<function>')` and call the function in your Tiltfile.",
+          "Run `tilt ci --port <port>` and check for \"SUCCESS. All workloads are healthy.\""
+        ]
+      }
+    ]
+  },
+  "homepage": "https://tilt.dev/",
+  "repo": {
+    "url": "https://github.com/tilt-dev/tilt",
+    "full_name": "tilt-dev/tilt",
+    "created_at": "2018-08-07T16:00:26Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-tilt-20261116-010054-5b03",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh -o /tmp/tilt-install.sh",
+          "purpose": "download install.sh"
+        },
+        {
+          "command": "bash /tmp/tilt-install.sh",
+          "purpose": "run installer (puts tilt 0.37.9 binary in ~/.local/bin)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "tilt version",
+        "expected_signal": "v0.37.9"
+      },
+      "first_task": "tilt version"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.ps1'))",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.37.9",
+    "published_at": "2026-11-14T01:42:52Z",
+    "url": "https://github.com/tilt-dev/tilt/releases/tag/v0.37.9"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T01:02:16.810734+08:00",
+    "runs": [
+      {
+        "id": "verify-tilt-20261116-010054-5b03",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:02:16.810734+08:00",
+        "tool_version": "v0.37.9, built 2026-11-14",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh -o /tmp/tilt-install.sh",
+            "purpose": "download install.sh"
+          },
+          {
+            "command": "bash /tmp/tilt-install.sh",
+            "purpose": "run installer (puts tilt 0.37.9 binary in ~/.local/bin)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "tilt version",
+            "expected_signal": "v0.37.9",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "v0.37.9, built 2026-11-14",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /home/sbx/work/demo && tilt ci --port 10351",
+            "expected_signal": "SUCCESS. All workloads are healthy.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "SUCCESS. All workloads are healthy.",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/demo/exts/greet && cd /home/sbx/work/demo && cat > exts/greet/Tiltfile <<'EOF'\ndef greet(name):\n    print('hello from extension, ' + name)\nEOF\ncat > Tiltfile <<'EOF'\nv1alpha1.extension_repo(name='localrepo', url='file:///home/sbx/work/demo/exts')\nv1alpha1.extension(name='greet', repo_name='localrepo', repo_path='greet')\nload('ext://greet', 'greet')\ngreet('tilt')\nlocal_resource('hello', cmd='echo built-by-tilt-local-resource', deps=['src.txt'])\nEOF\necho hi > src.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /home/sbx/work/demo && sleep 2 && echo changed >> src.txt && sleep 5 && tilt logs --port 10350 hello",
+            "expected_signal": "1 File Changed: [src.txt]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1 File Changed: [src.txt]",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/demo/exts/greet && cd /home/sbx/work/demo && cat > exts/greet/Tiltfile <<'EOF'\ndef greet(name):\n    print('hello from extension, ' + name)\nEOF\ncat > Tiltfile <<'EOF'\nv1alpha1.extension_repo(name='localrepo', url='file:///home/sbx/work/demo/exts')\nv1alpha1.extension(name='greet', repo_name='localrepo', repo_path='greet')\nload('ext://greet', 'greet')\ngreet('tilt')\nlocal_resource('hello', cmd='echo built-by-tilt-local-resource', deps=['src.txt'])\nEOF\necho hi > src.txt",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /home/sbx/work/demo && tilt up --port 10350 --stream",
+                "background": true,
+                "port": 10350
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Tilt automates ... building container images ... Think docker build && kubectl apply",
+            "actually_needed": "No Docker daemon or Kubernetes cluster here, so only local_resource workloads could be tested. Tilt warns that it cannot reach /var/run/docker.sock but keeps running.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "curl -fsSL .../install.sh | bash",
+            "actually_needed": "The script downloaded the pinned release tarball (v0.37.9) into ~/.local/bin without needing sudo, because ~/.local/bin is on PATH. Otherwise it falls back to sudo mv into /usr/local/bin.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "tilt ci reports 'SUCCESS. All workloads are healthy.' despite a non-fatal Docker Prune warning, tilt logs shows '1 File Changed: [src.txt]' followed by a rebuild, and tilt version prints v0.37.9.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-tilt-20261116-010054-5b03/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-tilt-20261116-010054-5b03/check-1-cmd5.judged.png",
+            "runs/verify/verify-tilt-20261116-010054-5b03/check-2-cmd7.judged.png",
+            "runs/verify/verify-tilt-20261116-010054-5b03/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.154486,
+        "features": [
+          {
+            "feature": "watch files and rebuild container images",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: A file change triggered a rerun of a local echo command, but no container image was built (Docker was unavailable)."
+          },
+          {
+            "feature": "define dev environment as code in a Tiltfile",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "extend Tiltfile functionality with extensions",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:02:25+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/tilt-dev/tilt@30a5e684c83f",
+      "go.mod"
+    ],
+    "packages_checked": 246,
+    "findings_total": 8,
+    "advisories_total": 8,
+    "findings": [
+      {
+        "package": "go:github.com/containerd/containerd/v2",
+        "version": "v2.2.1",
+        "advisory": "GHSA-33vj-92qq-66hc",
+        "cves": [
+          "CVE-2026-53492"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.2.5",
+        "summary": "containerd CRI checkpoint restore CDI annotation smuggling",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/containerd/containerd/v2",
+        "version": "v2.2.1",
+        "advisory": "GHSA-fqw6-gf59-qr4w",
+        "cves": [
+          "CVE-2026-46680"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.2.4",
+        "summary": "containerd user ID handling bypass allows runAsNonRoot evasion",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/containerd/containerd/v2",
+        "version": "v2.2.1",
+        "advisory": "GHSA-p7v4-vr35-mj6f",
+        "cves": [
+          "CVE-2026-95837"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.2.7",
+        "summary": "containerd CRI plugin: Checkpoint restore bypasses destination security context",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/containerd/containerd/v2",
+        "version": "v2.2.1",
+        "advisory": "GHSA-rgh6-rfwx-v388",
+        "cves": [
+          "CVE-2026-53489"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.2.5",
+        "summary": "Arbitrary host CRI log file read via symlink following in CRI checkpoint restore",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/containerd/containerd/v2",
+        "version": "v2.2.1",
+        "advisory": "GHSA-xhf5-7wjv-pqxp",
+        "cves": [
+          "CVE-2026-53488"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.2.5",
+        "summary": "containerd CRI — image-config `LABEL` flows to restart-monitor `binary://` logger: host-root command execution from an image pull",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/klauspost/compress",
+        "version": "v1.19.1",
+        "advisory": "GO-2026-6865",
+        "cves": [
+          "CVE-2026-116591"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.2",
+        "summary": "Panic on two-block frames in github.com/klauspost/compress",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/whilp/git-urls",
+        "version": "v1.0.0",
+        "advisory": "GHSA-3f2q-6294-fmq5",
+        "cves": [
+          "CVE-2023-46402"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "Inefficient Regular Expression Complexity in git-urls",
+        "malicious": false
+      },
+      {
+        "package": "go:go.etcd.io/etcd/client/pkg/v3",
+        "version": "v3.7.0",
+        "advisory": "GO-2026-6107",
+        "cves": [
+          "CVE-2026-73500"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.7.1",
+        "summary": "Unbounded TLS handshake goroutines in go.etcd.io/etcd/client/pkg/v3",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:02:25+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.6333,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 99.1,
+      "signals": {
+        "stars": 10130,
+        "monthly_downloads": 8667,
+        "forks": 422,
+        "dependents": null,
+        "release_downloads": 2707069,
+        "hn_top_score": 136,
+        "registries_count": 1
+      },
+      "age_days": 3022,
+      "packages": [
+        "homebrew:tilt"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.71
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:02:16.812831+08:00",
+      "sources_sha": "58cdcc8fde4e114aeedc89a2c3d666c3e4d96c63144d80135a6af476914afdad",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Tilt automates all the steps from a code change to a new process: watching\nfiles, building container images, and bringing your environment\nup-to-date."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Define your dev environment as code. For microservice apps on Kubernetes."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Run `tilt up` to work in a complete dev environment configured for your team."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "**Optimizing a Tiltfile?** Search for the function you need in our "
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "[Upgrade Tilt](https://docs.tilt.dev/upgrade.html)"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Licensed under [the Apache License, Version 2.0](LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/tilt-dev/tilt",
+      "fetched_at": "2026-11-16T01:00:45+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/tilt-dev/tilt/blob/master/README.md",
+      "fetched_at": "2026-11-16T01:00:43+08:00"
+    },
+    {
+      "id": "release:v0.37.9",
+      "kind": "release",
+      "url": "https://github.com/tilt-dev/tilt/releases/tag/v0.37.9",
+      "fetched_at": "2026-11-16T01:00:43+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Installing the `tilt` binary is a one-step command.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:00:54+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Run `tilt up` to work in a complete dev environment configured for your team.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:00:54+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Define your dev environment as code. For microservice apps on Kubernetes.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:00:54+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Tilt automates all the steps from a code change to a new process: watching\nfiles, building container images, and bringing your environment\nup-to-date.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:00:54+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Tilt",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:00:54+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "### macOS/Linux",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:00:54+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:00:45+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:00:45+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:00:45+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:00:45+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:00:45+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.37.9",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:00:43+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Run `tilt up` to work in a complete dev environment configured for your team.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:00:54+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "watching\nfiles, building container images",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:00:54+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Think `docker build && kubectl apply` or `docker-compose up`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:00:54+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "watching\nfiles, building container images, and bringing your environment\nup-to-date",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:00:54+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "github_api",
+      "quote": "Define your dev environment as code.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:00:54+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "To extend the capabilities of Tilt via new Tiltfile functionality, read more about [Extensions]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:00:54+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:00:54+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.sh | bash",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:00:54+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/tilt-dev/tilt/master/scripts/install.ps1'))",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:00:54+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:00:43+08:00",
+  "updated_at": "2026-11-16T01:02:25+08:00"
+}

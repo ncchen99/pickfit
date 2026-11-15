@@ -134,7 +134,7 @@ def test_judge_sends_images_and_reads_boxes_back(tmp_path: Path):
     png = base64.b64decode(content[1]["image_url"].split(",", 1)[1])
     assert png.startswith(b"\x89PNG")
 
-    assert result.verdict == "working" and result.model == "muse-spark-1.3-contributor"
+    assert result.verdict == "working" and result.model == "claude-haiku-5-5"  # no model named: PICKFIT_MODE, dev
     first = result.regions[0]
     assert first.text.splitlines()[0] == "a ──▶ b"
     assert result.regions[1].box == (0, 1000, 900, 1000)  # clamped and ordered
@@ -142,7 +142,7 @@ def test_judge_sends_images_and_reads_boxes_back(tmp_path: Path):
     assert Path(result.annotated[0]).name == "check-1-cmd4.judged.png"
     assert all(Path(p).exists() for p in result.screenshots + result.annotated)
     assert result.cost_usd > 0
-    assert any(line.startswith("  judge · muse-spark-1.3-contributor") for line in lines)
+    assert any(line.startswith("  judge · claude-haiku-5-5") for line in lines)
 
 
 def test_unparseable_answer_is_inconclusive(tmp_path: Path):

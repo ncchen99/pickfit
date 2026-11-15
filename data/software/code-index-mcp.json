@@ -1,0 +1,842 @@
+{
+  "schema_version": "software.v1",
+  "slug": "code-index-mcp",
+  "repo_id": "gh:950338765",
+  "name": "Code Index MCP",
+  "summary": "An MCP server that lets AI assistants index, search, and analyze code repositories.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [
+    "find all places in a codebase that use an old API",
+    "locate where a function is called",
+    "search for error handling code while debugging"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "search code with regex and fuzzy matching",
+    "parse symbols with tree-sitter for 10 languages",
+    "auto-refresh index on file changes",
+    "summarize file structure and complexity"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:12:58.393106Z",
+    "run_id": "verify-code-index-mcp-20261116-015430-7ff1",
+    "open_hint": "Add `code-index-mcp --project-path <your project>` as an MCP server in your AI assistant, or run it over HTTP with `code-index-mcp --project-path <your project> --transport streamable-http --port <por",
+    "features": [
+      {
+        "feature": "search code with regex and fuzzy matching",
+        "title": "Search code with regex and fuzzy matching",
+        "steps": [
+          "Connect your assistant to `code-index-mcp --project-path <your project>`.",
+          "Call the `search_code_advanced` tool with a `pattern` such as `<your regex>` and `regex` set to true."
+        ]
+      },
+      {
+        "feature": "parse symbols with tree-sitter for 10 languages",
+        "title": "Parse code symbols in 10 languages with tree-sitter",
+        "steps": [
+          "Start `code-index-mcp --project-path <your project> --transport streamable-http --port <port>` and connect your assistant to `http://127.0.0.1:<port>/mcp`.",
+          "Call the `build_deep_index` tool.",
+          "Call `get_symbol_body` with a `file_path` and a `symbol_name` to see that symbol's code."
+        ]
+      },
+      {
+        "feature": "auto-refresh index on file changes",
+        "title": "Refresh the index automatically when files change",
+        "steps": []
+      },
+      {
+        "feature": "summarize file structure and complexity",
+        "title": "Summarize a file's structure and complexity",
+        "steps": [
+          "Start `code-index-mcp --project-path <your project> --transport streamable-http --port <port>` and connect your assistant to `http://127.0.0.1:<port>/mcp`.",
+          "Call the `build_deep_index` tool.",
+          "Call `get_file_summary` with the `file_path` of the file you want summarized."
+        ]
+      }
+    ]
+  },
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/johnhuang316/code-index-mcp",
+    "full_name": "johnhuang316/code-index-mcp",
+    "created_at": "2025-03-18T02:21:59Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.10",
+      "uv"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-code-index-mcp-20261116-015430-7ff1",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install code-index-mcp",
+          "purpose": "uv tool install code-index-mcp (puts code-index-mcp on PATH)"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v2.17.1",
+    "published_at": "2026-07-27T07:45:57Z",
+    "url": "https://github.com/johnhuang316/code-index-mcp/releases/tag/v2.17.1"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T01:56:01.987736+08:00",
+    "runs": [
+      {
+        "id": "verify-code-index-mcp-20261116-015430-7ff1",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:56:01.987736+08:00",
+        "tool_version": null,
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install code-index-mcp",
+            "purpose": "uv tool install code-index-mcp (puts code-index-mcp on PATH)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- code-index-mcp --project-path /home/sbx/work/sample",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/sample && cat > /home/sbx/work/sample/app.py <<'EOF'\nimport os\n\n\nclass Greeter:\n    def greet(self, name):\n        return \"hello \" + name\n\n\ndef authenticate(user, password):\n    if not user:\n        return False\n    return os.environ.get(\"PW\") == password\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call search_code_advanced --args '{\"pattern\": \"auth.*user\", \"regex\": true}' -- code-index-mcp --project-path /home/sbx/work/sample",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=search_code_advanced content=text text_chars=280",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/sample && cat > /home/sbx/work/sample/app.py <<'EOF'\nimport os\n\n\nclass Greeter:\n    def greet(self, name):\n        return \"hello \" + name\n\n\ndef authenticate(user, password):\n    if not user:\n        return False\n    return os.environ.get(\"PW\") == password\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call get_file_watcher_status --args '{}' -- code-index-mcp --project-path /home/sbx/work/sample",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_file_watcher_status content=text text_chars=599",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/sample && cat > /home/sbx/work/sample/app.py <<'EOF'\nimport os\n\n\nclass Greeter:\n    def greet(self, name):\n        return \"hello \" + name\n\n\ndef authenticate(user, password):\n    if not user:\n        return False\n    return os.environ.get(\"PW\") == password\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call build_deep_index --args '{}' --url http://127.0.0.1:8765/mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=build_deep_index content=text text_chars=34",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/sample && cat > /home/sbx/work/sample/app.py <<'EOF'\nimport os\n\n\nclass Greeter:\n    def greet(self, name):\n        return \"hello \" + name\n\n\ndef authenticate(user, password):\n    if not user:\n        return False\n    return os.environ.get(\"PW\") == password\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "code-index-mcp --project-path /home/sbx/work/sample --transport streamable-http --port 8765",
+                "background": true,
+                "port": 8765
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call get_file_summary --args '{\"file_path\": \"app.py\"}' --url http://127.0.0.1:8765/mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_file_summary content=text text_chars=723",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/sample && cat > /home/sbx/work/sample/app.py <<'EOF'\nimport os\n\n\nclass Greeter:\n    def greet(self, name):\n        return \"hello \" + name\n\n\ndef authenticate(user, password):\n    if not user:\n        return False\n    return os.environ.get(\"PW\") == password\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "code-index-mcp --project-path /home/sbx/work/sample --transport streamable-http --port 8765",
+                "background": true,
+                "port": 8765
+              },
+              {
+                "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call build_deep_index --args '{}' --url http://127.0.0.1:8765/mcp",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call get_symbol_body --args '{\"file_path\": \"app.py\", \"symbol_name\": \"authenticate\"}' --url http://127.0.0.1:8765/mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_symbol_body content=text text_chars=386",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/sample && cat > /home/sbx/work/sample/app.py <<'EOF'\nimport os\n\n\nclass Greeter:\n    def greet(self, name):\n        return \"hello \" + name\n\n\ndef authenticate(user, password):\n    if not user:\n        return False\n    return os.environ.get(\"PW\") == password\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "code-index-mcp --project-path /home/sbx/work/sample --transport streamable-http --port 8765",
+                "background": true,
+                "port": 8765
+              },
+              {
+                "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call build_deep_index --args '{}' --url http://127.0.0.1:8765/mcp",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Run build_deep_index, then get_file_summary uses the deep index (the README says indexes are persistently cached).",
+            "actually_needed": "When the server was started again over stdio in a separate process, it did not load the deep index built earlier: get_file_summary returned needs_deep_index (command 7) and get_symbol_body returned 'deep index not built' (command 8). To run several calls against one server, I started it with --tran…",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Launch with uvx code-index-mcp",
+            "actually_needed": "uv tool install code-index-mcp, then launch code-index-mcp (with --project-path to skip calling set_project_path). This lets it run with the network off.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three probes completed the MCP handshake with CodeIndexer 1.30.0, listed 14 tools, and both tool calls returned results: a regex search match in app.py and an active file watcher status.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-code-index-mcp-20261116-015430-7ff1/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-code-index-mcp-20261116-015430-7ff1/check-1-cmd3.judged.png",
+            "runs/verify/verify-code-index-mcp-20261116-015430-7ff1/check-2-cmd4.judged.png",
+            "runs/verify/verify-code-index-mcp-20261116-015430-7ff1/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.328568,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "code-index-mcp",
+            "--project-path",
+            "/home/sbx/work/sample"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "CodeIndexer",
+          "server_version": "1.30.0",
+          "tools": [
+            "set_project_path",
+            "search_code_advanced",
+            "find_files",
+            "get_file_summary",
+            "get_symbol_body",
+            "refresh_index",
+            "build_deep_index",
+            "get_settings_info",
+            "create_temp_directory",
+            "check_temp_directory",
+            "clear_settings",
+            "refresh_search_tools",
+            "get_file_watcher_status",
+            "configure_file_watcher"
+          ],
+          "tool_count": 14,
+          "called_tool": "search_code_advanced",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "search code with regex and fuzzy matching",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "parse symbols with tree-sitter for 10 languages",
+            "status": "checked",
+            "smoke_tests": [
+              3,
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "auto-refresh index on file changes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Only a status report saying the watcher is active; no file change was shown triggering an index update."
+          },
+          {
+            "feature": "summarize file structure and complexity",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "uvx code-index-mcp",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n     \"mcpServers\": {\n       \"code-index\": {\n         \"command\": \"uvx\",\n         \"args\": [\"code-index-mcp\"]\n       }\n     }\n   }"
+      }
+    ],
+    "env_vars": [],
+    "tools": [
+      "set_project_path",
+      "refresh_index",
+      "build_deep_index",
+      "get_settings_info",
+      "search_code_advanced",
+      "find_files",
+      "get_file_summary",
+      "get_file_watcher_status",
+      "configure_file_watcher",
+      "create_temp_directory",
+      "check_temp_directory",
+      "clear_settings",
+      "refresh_search_tools"
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:56:14+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "pypi:code-index-mcp (fresh install, 41 packages)"
+    ],
+    "packages_checked": 41,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:56:01+08:00",
+    "quality": {
+      "total": 89.1,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.86,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.4714,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 96.3,
+      "signals": {
+        "stars": 1005,
+        "monthly_downloads": 11360,
+        "forks": 119,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 5,
+        "registries_count": 1
+      },
+      "age_days": 607,
+      "packages": [
+        "pypi:code-index-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 3.3
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:56:01.998350+08:00",
+      "sources_sha": "d7432269612138dfdca1ff1d8a3f4baad76f1d3599edd23225b3338378bad66f",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "It provides intelligent indexing, advanced search capabilities, and detailed code analysis to help AI assistants understand and navigate your projects effectively."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "**Perfect for:** Code review, refactoring, documentation generation, debugging assistance, and architectural analysis."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "**Prerequisites:** Python 3.10+ and [uv](https://github.com/astral-sh/uv)"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install code-index-mcp"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Set the project path to /Users/dev/my-react-app"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "On Windows, `uvx` needs the standard profile directories to be present."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "If automatic index updates aren't working when files change, try:"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Linux and macOS already expose the required XDG paths and `HOME`, so you can usually omit the `env`"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/johnhuang316/code-index-mcp",
+      "fetched_at": "2026-11-16T01:54:19+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/johnhuang316/code-index-mcp/blob/master/README.md",
+      "fetched_at": "2026-11-16T01:54:17+08:00"
+    },
+    {
+      "id": "release:v2.17.1",
+      "kind": "release",
+      "url": "https://github.com/johnhuang316/code-index-mcp/releases/tag/v2.17.1",
+      "fetched_at": "2026-11-16T01:54:17+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Code Index MCP is a [Model Context Protocol](https://modelcontextprotocol.io) server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "The easiest way to get started with any MCP-compatible application",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A Model Context Protocol (MCP) server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A Model Context Protocol (MCP) server that helps large language models index, search, and analyze code repositories with minimal setup",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Code Index MCP",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "**Prerequisites:** Python 3.10+ and [uv](https://github.com/astral-sh/uv)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/1",
+      "source_id": "readme",
+      "quote": "**Prerequisites:** Python 3.10+ and [uv](https://github.com/astral-sh/uv)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:54:19+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:54:19+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:54:19+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.17.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:54:17+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "**Code Review**: \"Find all places using the old API\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "**Refactoring Help**: \"Where is this function called?\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "**Debugging**: \"Search for all error handling related code\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Smart search with literal-by-default matching, optional `regex=True`, fuzzy matching",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Specialized tree-sitter parsing for 10 core languages",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**File Watcher**: Automatic index updates when files change",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Analyze file structure, functions, imports, and complexity",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "type = \"stdio\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "npx @modelcontextprotocol/inspector uvx code-index-mcp",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n     \"mcpServers\": {\n       \"code-index\": {\n         \"command\": \"uvx\",\n         \"args\": [\"code-index-mcp\"]\n       }\n     }\n   }",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "**`set_project_path`**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "**`refresh_index`**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "**`build_deep_index`**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "**`get_settings_info`**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "**`search_code_advanced`**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "**`find_files`**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "**`get_file_summary`**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "**`get_file_watcher_status`**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "**`configure_file_watcher`**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "**`create_temp_directory`**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "**`check_temp_directory`**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "**`clear_settings`**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "**`refresh_search_tools`**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:30+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:54:17+08:00",
+  "updated_at": "2026-11-16T01:56:14+08:00"
+}

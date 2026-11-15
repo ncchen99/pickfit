@@ -5,7 +5,7 @@ import { findSoftware } from '../src/find.ts';
 import { hardFilter, MAX_CARDS } from '../src/filter.ts';
 import { dropNegated, queryTerms, relevance, rulesRelevance, rulesTerms, terms, zhToEnglish } from '../src/relevance.ts';
 import { rankByRules } from '../src/rules.ts';
-import { answer, fixtureCatalog, harness, metaResponse } from './helpers.ts';
+import { answer, fixtureCatalog, harness, isKeywordsCall, modelResponse } from './helpers.ts';
 
 const fixtures = fixtureCatalog();
 
@@ -128,18 +128,18 @@ test('rules only: a Chinese request ranks through the dictionary, a specific mat
   assert.equal(out.picks[0].slug, 'regex-renamer');
 });
 
-test('with keywords from Meta the cards sent to the model are the plain-BM25 shortlist, as before', async () => {
+test('with keywords from the model the cards sent to the model are the plain-BM25 shortlist, as before', async () => {
   const keywords = ['bulk rename', 'regex', 'files'];
   const need = '想找終端機工具，用正規表示式批次重新命名檔案';
   const h = harness((body) =>
-    body.text.format.name === 'pickfit_keywords'
-      ? metaResponse({ keywords })
-      : metaResponse(answer({ picks: [], best_free_slug: null })),
+    isKeywordsCall(body)
+      ? modelResponse({ keywords })
+      : modelResponse(answer({ picks: [], best_free_slug: null })),
   );
   const entries = many();
   h.deps.catalog = asCatalog(entries);
   await findSoftware({ need }, h.deps);
-  const sent = h.requests[1].body.text.format.schema.properties.picks.items.properties.slug.enum;
+  const sent = h.requests[1].body.output_config.format.schema.properties.picks.items.properties.slug.enum;
   const expected = hardFilter(entries, {}, { terms: queryTerms(need, ...keywords) }).candidates;
   assert.equal(expected.length, MAX_CARDS);
   assert.deepEqual(sent, slugs(expected));

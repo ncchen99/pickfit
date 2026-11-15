@@ -6,18 +6,18 @@
  *
  *   node bench/shortlist.ts <index.json> <needs.json> [zh=<keywords.json>] [en=<keywords.json>]
  *
- * keywords.json (from bench/keywords.ts): the English keywords Meta gave for
+ * keywords.json (from bench/keywords.ts): the English keywords the model gave for
  * each need in that language; those rows ("+kw") show the shortlist with them.
  */
 import { readFileSync } from 'node:fs';
-import { loadCatalog, type Entry } from '../src/catalog.ts';
+import { loadCatalog, type Entry, type NamedCategory } from '../src/catalog.ts';
 import { hardFilter, MAX_CARDS, type Conditions } from '../src/filter.ts';
 import { queryTerms } from '../src/relevance.ts';
 import { rankByRules } from '../src/rules.ts';
 
 interface Need {
   slug: string;
-  category: 'dev_cli' | 'local_ai' | 'mcp_server';
+  category: NamedCategory;
   en: string;
   zh: string;
 }

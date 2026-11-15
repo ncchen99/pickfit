@@ -4,10 +4,10 @@ One visit per site, in a Modal microVM (web_box), through pickfit's guard (web_g
 
 0. Before the browser: the site must not have been visited by this verifier before (VISITS), its robots.txt
    must allow pickfit-verifier on the URL, and its terms (links found on the home page) must not forbid
-   automated access (a 1.3 call reads only the sentences about bots and automation).
-1. install: Chromium opens the URL; a judge (muse-spark-1.3) says what the screenshot shows. Passed when the
+   automated access (a judge call reads only the sentences about bots and automation).
+1. install: Chromium opens the URL; a judge (Claude Opus) says what the screenshot shows. Passed when the
    site's main UI or landing page renders: not an error page, a parked domain, a sign-in wall or a bot check.
-2. function: browser-use, driven by Muse Spark Open (Modal endpoint, Baseten as fallback) through the host,
+2. function: browser-use, driven by Claude Opus (Claude Sonnet when a call fails) through the host,
    uses one advertised feature (step cap, slow pace). pickfit then checks the result itself, never on the
    agent's word: the text it names must be on the page now and not before, and not only what it typed; or a
    file must have arrived. A second judge sees the page before and after and says whether an advertised
@@ -44,21 +44,29 @@ from pydantic import BaseModel, Field
 
 from pickfit.env import REPO_ROOT, get_env
 from pickfit.ledger import BudgetExceeded, taipei_now
-from pickfit.meta import call_meta
+from pickfit.meta import call_meta, provider_for, resolve_model
 from pickfit.schema import meta_strict_schema
 from pickfit.verify import web_guard as guard
 
 STAGE_OPERATE = "web-operate"
 STAGE_JUDGE = "web-judge"
 STAGE_TERMS = "web-terms"
-OPERATOR_MODEL = "open-modal"
-FALLBACK_MODEL = "open"
+# To 11/4 the operator was Muse Spark Open ("open-modal", with "open" on Baseten as the fallback) and the
+# judges muse-spark-1.3; visits of that time name those models.
+OPERATOR_MODEL = "prod"
+FALLBACK_MODEL = "claude-sonnet-5-5"
 JUDGE_MODEL = "prod"
 OPERATOR_MAX_TOKENS = 10_000  # reasoning shares the limit; 6,000 was cut off on a 60-question page (11/2)
 OPERATOR_EFFORT = "low"
 JUDGE_MAX_TOKENS = 3_000
-OPERATE_CAP_USD = 0.60  # per site, per model provider
-JUDGE_CAP_USD = 0.10
+# Per site. Each call is reserved at its worst case before it is sent (an operator step about $0.25 on Claude
+# Opus, a judge about $0.08), so the caps hold a visit's steps at what they settle to plus one reservation.
+OPERATE_CAP_USD = 3.00
+JUDGE_CAP_USD = 0.50
+# The judges that read a visit share its scope with the operator, so their cap is the visit's: what the operator
+# may spend plus their own. With the judges' $0.50 alone, a site whose operator had spent more than that
+# (DuckDB's shell, 11/16: $0.69 in six steps) was refused its judge and lost the visit.
+SITE_CAP_USD = OPERATE_CAP_USD + JUDGE_CAP_USD
 MAX_STEPS = 12
 OFFLINE_STEPS = 8
 WAIT_BETWEEN_ACTIONS = 1.5
@@ -324,7 +332,8 @@ class OperatorLedger:
 
 def operator_answer(message: dict[str, Any], *, run_id: str, scope: str, spent: OperatorLedger,
                     caller: Callable[..., Any] = call_meta) -> dict[str, Any]:
-    """Answer one model call from the harness through call_meta: Modal endpoint, Baseten when it fails."""
+    """Answer one model call from the harness through call_meta: the operator model, the fallback when it
+    fails."""
     request = message.get("request") or {}
     body = {k: request[k] for k in ("messages", "response_format", "tools", "tool_choice") if k in request}
     last = ""
@@ -343,10 +352,26 @@ def operator_answer(message: dict[str, Any], *, run_id: str, scope: str, spent: 
             continue
         spent.calls += 1
         spent.cost_usd += result.cost_usd
+        if getattr(result, "status", None) == "content_filter":
+            # The provider's safety classifier declined (an answer with no content): the harness would only
+            # see "failed to parse" and ask again, so say what happened and try the other model.
+            category = (result.raw.get("stop_details") or {}).get("category") or "no category given"
+            last = f"{result.model} declined the request ({category})"
+            spent.errors.append(last[:200])
+            continue
         spent.models[result.model] = spent.models.get(result.model, 0) + 1
         spent.fallbacks += i
         return {"type": "llm_result", "id": message.get("id"), "response": chat_completion(result.raw)}
     return {"type": "llm_error", "id": message.get("id"), "error": last[:300]}
+
+
+def operator_writes_thinking(model: str) -> bool:
+    """Whether browser-use asks the operator to write its reasoning into a "thinking" field of every answer
+    (its default). Not for Claude: the API declines such a request as an attempt to extract the model's
+    reasoning (stop_reason refusal, category reasoning_extraction; all 52 operator calls of the first 13
+    sites on 11/16), so Claude reasons in its own thinking and answers with the rest of the fields. The
+    hackathon's models keep the field their visits were made with."""
+    return provider_for(resolve_model(model)) != "anthropic"
 
 
 # Top-level keys of an OpenAI chat completion; the Modal endpoint adds `metadata` (weight versions as a list),
@@ -423,7 +448,7 @@ def judge_page(name: str, state: dict[str, Any], *, run_id: str, scope: str,
                                                 "schema": meta_strict_schema(PageJudge), "strict": True}}}
     result = caller("responses", body, stage=STAGE_JUDGE, public_data_only=True, model=JUDGE_MODEL,
                     max_output_tokens=JUDGE_MAX_TOKENS, reasoning_effort="low", scope=scope,
-                    scope_cap_usd=JUDGE_CAP_USD, run_id=run_id, output_model=PageJudge, cache=False)
+                    scope_cap_usd=SITE_CAP_USD, run_id=run_id, output_model=PageJudge, cache=False)
     return result.parsed, result.cost_usd
 
 
@@ -446,7 +471,7 @@ def judge_function(target: WebTarget, before_b64: str | None, after_b64: str | N
                                                 "schema": meta_strict_schema(FunctionJudge), "strict": True}}}
     result = caller("responses", body, stage=STAGE_JUDGE, public_data_only=True, model=JUDGE_MODEL,
                     max_output_tokens=JUDGE_MAX_TOKENS, reasoning_effort="low", scope=scope,
-                    scope_cap_usd=JUDGE_CAP_USD, run_id=run_id, output_model=FunctionJudge, cache=False)
+                    scope_cap_usd=SITE_CAP_USD, run_id=run_id, output_model=FunctionJudge, cache=False)
     return result.parsed, result.cost_usd
 
 
@@ -473,7 +498,7 @@ def read_screenshot(png: Path, sought: str, *, run_id: str, scope: str,
                                 "schema": meta_strict_schema(ScreenRead), "strict": True}}}
     result = caller("responses", body, stage=STAGE_JUDGE, public_data_only=True, model=JUDGE_MODEL,
                     max_output_tokens=JUDGE_MAX_TOKENS, reasoning_effort="low", scope=scope,
-                    scope_cap_usd=JUDGE_CAP_USD, run_id=run_id, output_model=ScreenRead, cache=False)
+                    scope_cap_usd=SITE_CAP_USD, run_id=run_id, output_model=ScreenRead, cache=False)
     return result.parsed, result.cost_usd
 
 
@@ -697,7 +722,7 @@ def verify_site(target: WebTarget, *, max_steps: int = MAX_STEPS, revisit: str |
     out.mkdir(parents=True, exist_ok=True)
     result: dict[str, Any] = {"run_id": run_id, "slug": target.slug, "name": target.name, "url": target.url,
                               "site": site, "checked_at": taipei_now().isoformat(), "level": "unverified",
-                              "reason": None, "costs": {}}
+                              "reason": None, "costs": {}, "judge_model": resolve_model(JUDGE_MODEL)}
     began = time.monotonic()
 
     def finish(level: str, reason: str | None = None) -> dict[str, Any]:
@@ -740,7 +765,8 @@ def verify_site(target: WebTarget, *, max_steps: int = MAX_STEPS, revisit: str |
         chrome_version = box.root(["/usr/bin/chromium", "--version"], 30)[1].split()
         version = next((w for w in chrome_version if re.match(r"^\d+\.\d+", w)), "")
         start = {"url": target.url, "site": site, "user_agent": user_agent(version), "max_steps": max_steps,
-                 "wait_between_actions": wait, "sample_files": sample_paths, "settle_s": 6}
+                 "wait_between_actions": wait, "sample_files": sample_paths, "settle_s": 6,
+                 "operator_thinking": operator_writes_thinking(OPERATOR_MODEL)}
         result["user_agent"] = start["user_agent"]
 
         def handle(message: dict[str, Any]) -> dict[str, Any] | None:
@@ -998,23 +1024,21 @@ def reevaluate(run_dir: Path, target: WebTarget, log: Callable[[str], None] = pr
 # ---------------------------------------------------------------- spend
 
 
-# This task's caps (the coordinator's brief, 11/2): Meta for judges, Modal for the operator and the VMs,
-# Baseten for the fallback operator; and the whole Meta pipeline must stay under PIPELINE_STOP_USD.
-MY_CAPS_USD = {"meta": 8.0, "modal": 20.0, "baseten": 5.0}  # Modal $15 -> $20 for second visits (念誠, 11/2)
-PIPELINE_STOP_USD = 158.0
-# Planning: batch 1's means rounded up (Modal $0.14 a site); each site also checks a worst case before it starts.
-PER_SITE_USD = {"meta": 0.03, "modal": 0.18, "baseten": 0.05}
-WORST_SITE_USD = {"meta": 0.06, "modal": 0.40, "baseten": 0.10}
+# During the hackathon a batch stopped at fixed totals (Meta $8 for judges, Modal $20 for the operator and the
+# VMs, Baseten $5, and the whole Meta pipeline under $158). Those are gone; a batch now stops only at its own
+# --max-usd, when one is given. One more site is checked against a worst case: its operator and judge caps.
+WORST_SITE_USD = OPERATE_CAP_USD + JUDGE_CAP_USD + 0.50
 
 
 def web_spend(ledger_path: Path | None = None) -> dict[str, float]:
-    """What the web verifier spent: model calls from the shared ledger (stages web-*), VMs from saved results."""
+    """What the web verifier spent, all time: model calls from the shared ledger (stages web-*) by provider,
+    VMs from saved results (under "modal", with the Modal endpoint's model calls of the hackathon)."""
     import sqlite3
 
     from pickfit.ledger import DEFAULT_PATH
 
     path = ledger_path or Path(get_env("PICKFIT_LEDGER") or DEFAULT_PATH)
-    spend = {"meta": 0.0, "modal": 0.0, "baseten": 0.0, "pipeline_total": 0.0}
+    spend = {"anthropic": 0.0, "meta": 0.0, "modal": 0.0, "baseten": 0.0, "pipeline_total": 0.0}
     with sqlite3.connect(path) as conn:
         cost = "COALESCE(SUM(CASE WHEN status = 'reserved' THEN reserved_usd ELSE cost_usd END), 0)"
         for provider, usd in conn.execute(f"SELECT provider, {cost} FROM calls WHERE stage LIKE 'web-%' "
@@ -1029,14 +1053,16 @@ def web_spend(ledger_path: Path | None = None) -> dict[str, float]:
     return {k: round(v, 4) for k, v in spend.items()}
 
 
-def budget_stop(sites: int, spend: dict[str, float], per_site: dict[str, float] = PER_SITE_USD) -> str | None:
-    """Why a batch of `sites` (or one more site, with WORST_SITE_USD) must not start, or None."""
-    if spend["pipeline_total"] + sites * per_site["meta"] > PIPELINE_STOP_USD:
-        return (f"the Meta pipeline total ${spend['pipeline_total']:.2f} could pass ${PIPELINE_STOP_USD:.0f} "
-                f"with {sites} more sites")
-    for name, cap in MY_CAPS_USD.items():
-        if spend[name] + sites * per_site[name] > cap:
-            return f"{name} ${spend[name]:.2f} + {sites} sites could pass this task's ${cap:.0f}"
+def batch_spend(spend: dict[str, float]) -> float:
+    """Model calls and VMs of the web verifier in one number (web_spend without the pipeline's total)."""
+    return sum(v for k, v in spend.items() if k != "pipeline_total")
+
+
+def budget_stop(sites: int, spent_usd: float, max_usd: float | None, per_site: float = WORST_SITE_USD) -> str | None:
+    """Why `sites` more sites must not start under this batch's --max-usd, or None. No cap: never."""
+    if max_usd is not None and spent_usd + sites * per_site > max_usd:
+        return (f"this batch spent ${spent_usd:.2f}; {sites} more site(s) at up to ${per_site:.2f} each could "
+                f"pass --max-usd {max_usd:.2f}")
     return None
 
 
@@ -1054,6 +1080,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--reevaluate", action="store_true", help="evaluate each target's latest saved visit again")
     parser.add_argument("--concurrency", type=int, default=1, help="sites at once (each in its own VM)")
     parser.add_argument("--spend", action="store_true", help="print what the web verifier spent and stop")
+    parser.add_argument("--max-usd", type=float, default=None,
+                        help="stop starting sites once this batch's model calls and VMs could pass this (default: no cap)")
     args = parser.parse_args(argv)
     if args.spend:
         print(json.dumps(web_spend(), indent=1))
@@ -1074,15 +1102,12 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"[{target.slug}] {web_record.write_back_saved(target.slug, saved)[1]}")
         return 0
     todo = [t for t in targets if args.revisit or not past_visit(site_of(t.url))]
-    stop = budget_stop(len(todo), web_spend())
-    if stop:
-        print(f"not starting: {stop}")
-        return 2
+    before = batch_spend(web_spend())
     from concurrent.futures import ThreadPoolExecutor
 
     def one(target: WebTarget) -> dict[str, Any]:
         with _visits_lock:
-            stop = budget_stop(1, web_spend(), WORST_SITE_USD)
+            stop = budget_stop(1, batch_spend(web_spend()) - before, args.max_usd)
         if stop:
             print(f"[{target.slug}] not started: {stop}", flush=True)
             return {"slug": target.slug, "level": "not_started", "reason": stop}

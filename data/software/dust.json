@@ -1,0 +1,709 @@
+{
+  "schema_version": "software.v1",
+  "slug": "dust",
+  "repo_id": "gh:125563061",
+  "name": "Dust",
+  "summary": "A command-line disk usage tool, like du, that shows which directories and files use the most disk space with percentage bars.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "infra_devops",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [
+    "find the largest files on disk",
+    "see which directories use the most disk space",
+    "export directory sizes as JSON"
+  ],
+  "alternatives_to": [
+    "du",
+    "ncdu",
+    "dua",
+    "dutree"
+  ],
+  "features": [
+    "list biggest subdirectories with percentage bars",
+    "show only the largest files",
+    "group disk usage by filetype",
+    "output directory sizes as JSON"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:04.113825Z",
+    "run_id": "verify-dust-20261116-010352-3bf6",
+    "open_hint": "Run `dust` inside a directory to see which subdirectories and files use the most space.",
+    "features": [
+      {
+        "feature": "list biggest subdirectories with percentage bars",
+        "title": "List the biggest subdirectories with percentage bars",
+        "steps": [
+          "Go to the directory you want to check with `cd <directory>`.",
+          "Run `dust -n 10` to show the 10 largest entries with percentage bars."
+        ]
+      },
+      {
+        "feature": "show only the largest files",
+        "title": "Show only the largest files",
+        "steps": [
+          "Run `dust -F <directory>` to list only files, largest first."
+        ]
+      },
+      {
+        "feature": "group disk usage by filetype",
+        "title": "Group disk usage by file type",
+        "steps": [
+          "Run `dust -t <directory>` to see space used per file extension."
+        ]
+      },
+      {
+        "feature": "output directory sizes as JSON",
+        "title": "Output directory sizes as JSON",
+        "steps": [
+          "Run `dust -j <directory>` to print sizes as nested JSON."
+        ]
+      }
+    ]
+  },
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/bootandy/dust",
+    "full_name": "bootandy/dust",
+    "created_at": "2018-03-16T19:49:52Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install dust",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "dust -n 10"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-dust-20261116-010352-3bf6",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -sSfL -o /tmp/dust-install.sh https://raw.githubusercontent.com/bootandy/dust/refs/heads/master/install.sh",
+          "purpose": "Download install.sh"
+        },
+        {
+          "command": "sh /tmp/dust-install.sh",
+          "purpose": "Run installer (installs dust v1.2.7 musl binary to ~/.local/bin)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "dust --version",
+        "expected_signal": "Dust 1.2.7"
+      },
+      "first_task": "cd /tmp/sample && dust -n 10"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -sSfL https://raw.githubusercontent.com/bootandy/dust/refs/heads/master/install.sh | sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "dust -n 10"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.2.7",
+    "published_at": "2026-11-01T20:35:10Z",
+    "url": "https://github.com/bootandy/dust/releases/tag/v1.2.7"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T01:04:52.058591+08:00",
+    "runs": [
+      {
+        "id": "verify-dust-20261116-010352-3bf6",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:04:52.058591+08:00",
+        "tool_version": "Dust 1.2.7",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -sSfL -o /tmp/dust-install.sh https://raw.githubusercontent.com/bootandy/dust/refs/heads/master/install.sh",
+            "purpose": "Download install.sh"
+          },
+          {
+            "command": "sh /tmp/dust-install.sh",
+            "purpose": "Run installer (installs dust v1.2.7 musl binary to ~/.local/bin)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "dust --version",
+            "expected_signal": "Dust 1.2.7",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Dust 1.2.7",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/sample && dust -n 10",
+            "expected_signal": "├─┴ media",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "293Ki ├─┴ media │███████████████████████████ │ 57%",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sample/src/utils /tmp/sample/docs /tmp/sample/media && head -c 300000 /dev/urandom > /tmp/sample/media/big.png && head -c 120000 /dev/urandom > /tmp/sample/src/main.rs && head -c 40000 /dev/urandom > /tmp/sample/src/utils/helper.rs && head -c 60000 /dev/urandom > /tmp/sample/docs/guide.md && head -c 5000 /dev/urandom > /tmp/sample/docs/notes.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "dust -F /tmp/sample",
+            "expected_signal": "├── big.png",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "293Ki ├── big.png │██████████████████████████████ │ 57%",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sample/src/utils /tmp/sample/docs /tmp/sample/media && head -c 300000 /dev/urandom > /tmp/sample/media/big.png && head -c 120000 /dev/urandom > /tmp/sample/src/main.rs && head -c 40000 /dev/urandom > /tmp/sample/src/utils/helper.rs && head -c 60000 /dev/urandom > /tmp/sample/docs/guide.md && head -c 5000 /dev/urandom > /tmp/sample/docs/notes.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "dust -t /tmp/sample",
+            "expected_signal": "├── .png",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "293Ki ├── .png │████████████████████████████████ │ 57%",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sample/src/utils /tmp/sample/docs /tmp/sample/media && head -c 300000 /dev/urandom > /tmp/sample/media/big.png && head -c 120000 /dev/urandom > /tmp/sample/src/main.rs && head -c 40000 /dev/urandom > /tmp/sample/src/utils/helper.rs && head -c 60000 /dev/urandom > /tmp/sample/docs/guide.md && head -c 5000 /dev/urandom > /tmp/sample/docs/notes.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "dust -j /tmp/sample",
+            "expected_signal": "\"name\":\"/tmp/sample/media\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"size\":\"514Ki\",\"name\":\"/tmp/sample\",\"children\":[{\"size\":\"293Ki\",\"name\":\"/tmp/sample/media\",\"children\":[{\"size\":\"293Ki\",\"name\":\"/tmp/sample/media/big.png\",\"children\":[]}]},{\"size\":\"157Ki\",\"name\":\"/tmp/sample/src\",\"children\":[{\"size\":\"117Ki\",\"name\":\"/tmp/sample/src/main.rs\",\"children\":[]},{\"size\":\"3…",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sample/src/utils /tmp/sample/docs /tmp/sample/media && head -c 300000 /dev/urandom > /tmp/sample/media/big.png && head -c 120000 /dev/urandom > /tmp/sample/src/main.rs && head -c 40000 /dev/urandom > /tmp/sample/src/utils/helper.rs && head -c 60000 /dev/urandom > /tmp/sample/docs/guide.md && head -c 5000 /dev/urandom > /tmp/sample/docs/notes.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -sSfL .../install.sh | sh",
+            "actually_needed": "Works, but the script uses bash 'echo -e' with a bash shebang; under sh (dash) every message is prefixed with a literal '-e'. Purely cosmetic.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "curl ... | sh",
+            "actually_needed": "The script downloads a prebuilt release binary from GitHub (it cannot be read as a script) and, with no writable /usr/local/bin, installs to ~/.local/bin",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Dust printed a directory tree with sizes and bars including '├─┴ media', a files-only listing including '├── big.png', and the version 'Dust 1.2.7', all exiting 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-dust-20261116-010352-3bf6/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-dust-20261116-010352-3bf6/check-1-cmd5.judged.png",
+            "runs/verify/verify-dust-20261116-010352-3bf6/check-2-cmd6.judged.png",
+            "runs/verify/verify-dust-20261116-010352-3bf6/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.156946,
+        "features": [
+          {
+            "feature": "list biggest subdirectories with percentage bars",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "show only the largest files",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "group disk usage by filetype",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "output directory sizes as JSON",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:04:59+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/bootandy/dust@079c55266917",
+      "Cargo.lock"
+    ],
+    "packages_checked": 124,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:04:52+08:00",
+    "quality": {
+      "total": 85.7,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5711,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 95.9,
+      "signals": {
+        "stars": 12637,
+        "monthly_downloads": 11344,
+        "forks": 315,
+        "dependents": null,
+        "release_downloads": 651062,
+        "hn_top_score": 3,
+        "registries_count": 2
+      },
+      "age_days": 3165,
+      "packages": [
+        "crates:du-dust",
+        "homebrew:dust"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 3.51
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:04:52.074313+08:00",
+      "sources_sha": "1713b0bdb0c7f0a29fd417d4ef1b6f68853793a6242e1bfd4c696220075af03f",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Dust is meant to give you an instant overview of which directories are using disk space without requiring sort or head."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Because I want an easy way to see where my disk is being used."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Windows MSVC - requires: [VCRUNTIME140.dll](https://docs.microsoft.com/en-gb/cpp/windows/latest-supported-vc-redist?view=msvc-170)"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "### Quick Install (Linux, macOS, Windows) \n```bash\ncurl -sSfL https://raw.githubusercontent.com/bootandy/dust/refs/heads/master/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "`dust -n 10`, `dust -n 50`"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "$ cat ~/.config/dust/config.toml\nreverse=true\nlimit-filesystem=true"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Note: `dust` installed through `snap` can only access files stored in the `/home` directory."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "### Quick Install (Linux, macOS, Windows) "
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/bootandy/dust",
+      "fetched_at": "2026-11-16T01:03:42+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/bootandy/dust/blob/master/README.md",
+      "fetched_at": "2026-11-16T01:03:40+08:00"
+    },
+    {
+      "id": "release:v1.2.7",
+      "kind": "release",
+      "url": "https://github.com/bootandy/dust/releases/tag/v1.2.7",
+      "fetched_at": "2026-11-16T01:03:40+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "du + rust = dust. Like du but more intuitive.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Because I want an easy way to see where my disk is being used.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Because I want an easy way to see where my disk is being used.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Dust is meant to give you an instant overview of which directories are using disk space without requiring sort or head.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Dust",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "### Quick Install (Linux, macOS, Windows) ",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:03:42+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:03:42+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:03:42+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.2.7",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:03:40+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Usage: dust -F (Show only files - finds your largest files)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Dust is meant to give you an instant overview of which directories are using disk space",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Usage: dust -j (Prints JSON representation of directories, try: dust -j  | jq)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Like du but more intuitive.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "- [NCDU](https://dev.yorhel.nl/ncdu)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "- [dua](https://github.com/Byron/dua-cli/)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    },
+    {
+      "field": "/alternatives_to/3",
+      "source_id": "readme",
+      "quote": "- [dutree](https://github.com/nachoparker/dutree)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Dust will list a slightly-less-than-the-terminal-height number of the biggest subdirectories or files and will smartly recurse down the tree",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Usage: dust -F (Show only files - finds your largest files)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Usage: dust -t (Group by filetype)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Usage: dust -j (Prints JSON representation of directories, try: dust -j  | jq)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install dust",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -sSfL https://raw.githubusercontent.com/bootandy/dust/refs/heads/master/install.sh | sh",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "curl -sSfL https://raw.githubusercontent.com/bootandy/dust/refs/heads/master/install.sh | sh",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Because I want an easy way to see where my disk is being used.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:52+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:03:40+08:00",
+  "updated_at": "2026-11-16T01:04:59+08:00"
+}

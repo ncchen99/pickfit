@@ -1,0 +1,821 @@
+{
+  "schema_version": "software.v1",
+  "slug": "mcp-redis",
+  "repo_id": "gh:959084910",
+  "name": "Redis MCP Server",
+  "summary": "An MCP server that lets AI agents store, manage and search data in Redis through natural language.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "database",
+    "genai",
+    "llm",
+    "mcp",
+    "mcp-server",
+    "redis"
+  ],
+  "use_cases": [
+    "cache items and store sessions with expiration from an AI agent",
+    "store a conversation in a Redis stream",
+    "index and search vectors in Redis",
+    "manage event streams with consumer groups"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "query and update Redis with natural language",
+    "manage hashes, lists, sets, streams and more",
+    "manage vector indexes and run vector search",
+    "authenticate to Azure Managed Redis via EntraID"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:16.809323Z",
+    "run_id": null,
+    "open_hint": "Add `redis-mcp-server` as an MCP server in your AI client, pointed at your Redis instance, and its Redis tools become available to the agent.",
+    "features": [
+      {
+        "feature": "query and update Redis with natural language",
+        "title": "Query and update Redis in plain language",
+        "steps": []
+      },
+      {
+        "feature": "manage hashes, lists, sets, streams and more",
+        "title": "Manage hashes, lists, sets, streams and more",
+        "steps": []
+      },
+      {
+        "feature": "manage vector indexes and run vector search",
+        "title": "Manage vector indexes and run vector search",
+        "steps": []
+      },
+      {
+        "feature": "authenticate to Azure Managed Redis via EntraID",
+        "title": "Sign in to Azure Managed Redis with EntraID",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": "https://redis.io/docs/latest/integrate/redis-mcp/",
+  "repo": {
+    "url": "https://github.com/redis/mcp-redis",
+    "full_name": "redis/mcp-redis",
+    "created_at": "2025-04-02T08:42:13Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.14"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mcp-redis-20261116-014850-f2a2",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install redis-mcp-server",
+          "purpose": "uv tool install redis-mcp-server (0.5.1)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "redis-mcp-server --help",
+        "expected_signal": "Redis MCP Server - Model Context Protocol server for Redis."
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "0.5.1",
+    "published_at": "2026-08-05T12:04:27Z",
+    "url": "https://github.com/redis/mcp-redis/releases/tag/0.5.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T01:50:08.207431+08:00",
+    "runs": [
+      {
+        "id": "verify-mcp-redis-20261116-014850-f2a2",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:50:08.207431+08:00",
+        "tool_version": "0.5.1",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install redis-mcp-server",
+            "purpose": "uv tool install redis-mcp-server (0.5.1)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "redis-mcp-server --help",
+            "expected_signal": "Redis MCP Server - Model Context Protocol server for Redis.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Redis MCP Server - Model Context Protocol server for Redis.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- redis-mcp-server --url redis://localhost:6379/0",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Connect to a Redis server at redis://localhost:6379/0",
+            "actually_needed": "The box has no Redis server and no root; the PyPI redis-server wheel is macOS-only, so a fakeredis TcpFakeServer (installed in a separate venv) stood in on port 6379 for the tool calls",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "query engine tools to manage vector indexes and perform vector search",
+            "actually_needed": "A Redis with the Query Engine (Redis 8 / Redis Stack). fakeredis has no FT.* commands, so get_indexes returned 'unknown command ft._list'",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Python 3.14+ (uv python install 3.14)",
+            "actually_needed": "uv tool install redis-mcp-server installed and ran fine without a separate Python 3.14 step",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The MCP probe completed initialize and tools/list with 53 tools and printed 'handshake: ok', and the --help command printed the usage text with the expected description line.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mcp-redis-20261116-014850-f2a2/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mcp-redis-20261116-014850-f2a2/check-1-cmd2.judged.png",
+            "runs/verify/verify-mcp-redis-20261116-014850-f2a2/check-2-cmd9.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.237462,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "redis-mcp-server",
+            "--url",
+            "redis://localhost:6379/0"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "Redis?MCP?Server",
+          "server_version": "1.30.0",
+          "tools": [
+            "hset",
+            "hget",
+            "hdel",
+            "hgetall",
+            "hexists",
+            "set_vector_in_hash",
+            "get_vector_from_hash",
+            "json_set",
+            "json_get",
+            "json_del",
+            "lpush",
+            "rpush",
+            "lpop",
+            "rpop",
+            "lrange",
+            "llen",
+            "lrem",
+            "delete",
+            "type",
+            "expire",
+            "rename",
+            "scan_keys",
+            "scan_all_keys",
+            "search_redis_documents",
+            "publish",
+            "subscribe",
+            "psubscribe",
+            "read_messages",
+            "unsubscribe",
+            "get_indexes",
+            "get_index_info",
+            "get_indexed_keys_number",
+            "create_vector_index_hash",
+            "vector_search_hash",
+            "hybrid_search",
+            "dbsize",
+            "info",
+            "client_list",
+            "sadd",
+            "srem",
+            "smembers",
+            "zadd",
+            "zrange",
+            "zrem",
+            "xadd",
+            "xrange",
+            "xdel",
+            "xgroup_create",
+            "xgroup_destroy",
+            "xreadgroup",
+            "xack",
+            "set",
+            "get"
+          ],
+          "tool_count": 53,
+          "called_tool": null,
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "query and update Redis with natural language",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          },
+          {
+            "feature": "manage hashes, lists, sets, streams and more",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          },
+          {
+            "feature": "manage vector indexes and run vector search",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; get_indexes returned 'unknown command ft._list' because fakeredis has no query engine. A real Redis 8 or Redis Stack server is needed."
+          },
+          {
+            "feature": "authenticate to Azure Managed Redis via EntraID",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Needs an Azure Managed Redis instance and Entra ID credentials."
+          }
+        ]
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "uvx --from redis-mcp-server@latest redis-mcp-server --url redis://localhost:6379/0",
+    "client_configs": [
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"redis-mcp-server\": {\n        \"type\": \"stdio\",\n        \"command\": \"/Users/mortensi/.local/bin/uvx\",\n        \"args\": [\n            \"--from\", \"redis-mcp-server@latest\",\n            \"redis-mcp-server\",\n            \"--url\", \"redis://localhost:6379/0\"\n        ]\n    }\n  }\n}"
+      },
+      {
+        "client": "vscode",
+        "snippet": "\"servers\": {\n  \"redis\": {\n    \"type\": \"stdio\",\n    \"command\": \"uvx\",\n    \"args\": [\n      \"--from\", \"redis-mcp-server@latest\",\n      \"redis-mcp-server\",\n      \"--url\", \"redis://localhost:6379/0\"\n    ]\n  },\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "REDIS_HOST",
+        "required": false,
+        "purpose": "Redis hostname"
+      },
+      {
+        "name": "REDIS_PORT",
+        "required": false,
+        "purpose": "Redis port"
+      },
+      {
+        "name": "REDIS_DB",
+        "required": false,
+        "purpose": "database number"
+      },
+      {
+        "name": "REDIS_USERNAME",
+        "required": false,
+        "purpose": "database username"
+      },
+      {
+        "name": "REDIS_PWD",
+        "required": false,
+        "purpose": "database password"
+      },
+      {
+        "name": "REDIS_SSL",
+        "required": false,
+        "purpose": "enable SSL/TLS"
+      },
+      {
+        "name": "REDIS_CLUSTER_MODE",
+        "required": false,
+        "purpose": "enable cluster mode"
+      },
+      {
+        "name": "REDIS_ENTRAID_AUTH_FLOW",
+        "required": false,
+        "purpose": "EntraID authentication flow"
+      },
+      {
+        "name": "MCP_REDIS_LOG_LEVEL",
+        "required": false,
+        "purpose": "log level"
+      },
+      {
+        "name": "MCP_DOCS_SEARCH_URL",
+        "required": false,
+        "purpose": "docs search HTTP API URL"
+      }
+    ],
+    "tools": []
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:50:17+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "pypi:redis-mcp-server (fresh install, 54 packages)"
+    ],
+    "packages_checked": 54,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:50:08+08:00",
+    "quality": {
+      "total": 81.6,
+      "confidence": 0.7,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.4921,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 89.6,
+      "signals": {
+        "stars": 642,
+        "monthly_downloads": 13840,
+        "forks": 125,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 592,
+      "packages": [
+        "pypi:redis-mcp-server"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 8.49
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:50:08.210372+08:00",
+      "sources_sha": "9ec5f3211160ff7414f87a5da79a29c6cb82d0f65df72cbc8a3ce9bb973cf73b",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "The Redis MCP Server is a **natural language interface** designed for agentic applications to efficiently manage and search data in Redis."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "- **AI Assistants**: Enable LLMs to fetch, store, and process data in Redis."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "uv python install 3.14"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "pip install redis-mcp-server"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "uv run redis-mcp-server --url redis://localhost:6379/0"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "If desired, you can use environment variables. Defaults are provided for all variables."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "You can troubleshoot problems by tailing the log file."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "This project is licensed under the **MIT License**."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/redis/mcp-redis",
+      "fetched_at": "2026-11-16T01:48:36+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/redis/mcp-redis/blob/main/README.md",
+      "fetched_at": "2026-11-16T01:48:34+08:00"
+    },
+    {
+      "id": "release:0.5.1",
+      "kind": "release",
+      "url": "https://github.com/redis/mcp-redis/releases/tag/0.5.1",
+      "fetched_at": "2026-11-16T01:48:34+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "The official Redis MCP Server is a natural language interface",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Works with any **MCP client** for smooth communication.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "The official Redis MCP Server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "The Redis MCP Server is a **natural language interface** designed for agentic applications to efficiently manage and search data in Redis.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Redis MCP Server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "python-3.14%2B-blue",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:48:36+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:48:36+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:48:36+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:48:36+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:48:36+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:0.5.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:48:34+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "\"Store the session with an expiration time\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "\"Store the entire conversation in a stream\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "\"Index and search this vector\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Manage event streams with **Redis Streams**.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Enables AI agents to query and update Redis using natural language.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Handles **hashes, lists, sets, sorted sets, streams**, and more.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "`query engine` tools to manage vector indexes and perform vector search",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Native support for Azure Active Directory authentication with Azure Managed Redis.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "The Redis MCP Server supports the `stdio` [transport]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "uvx --from redis-mcp-server@latest redis-mcp-server --url redis://localhost:6379/0",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"redis-mcp-server\": {\n        \"type\": \"stdio\",\n        \"command\": \"/Users/mortensi/.local/bin/uvx\",\n        \"args\": [\n            \"--from\", \"redis-mcp-server@latest\",\n            \"redis-mcp-server\",\n            \"--url\", \"redis://localhost:6379/0\"\n        ]\n    }\n  }\n}",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "\"servers\": {\n  \"redis\": {\n    \"type\": \"stdio\",\n    \"command\": \"uvx\",\n    \"args\": [\n      \"--from\", \"redis-mcp-server@latest\",\n      \"redis-mcp-server\",\n      \"--url\", \"redis://localhost:6379/0\"\n    ]\n  },\n}",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "REDIS_HOST",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "REDIS_PORT",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "REDIS_DB",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "REDIS_USERNAME",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/4",
+      "source_id": "readme",
+      "quote": "REDIS_PWD",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/5",
+      "source_id": "readme",
+      "quote": "REDIS_SSL",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/6",
+      "source_id": "readme",
+      "quote": "REDIS_CLUSTER_MODE",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/7",
+      "source_id": "readme",
+      "quote": "REDIS_ENTRAID_AUTH_FLOW",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/8",
+      "source_id": "readme",
+      "quote": "MCP_REDIS_LOG_LEVEL",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/9",
+      "source_id": "readme",
+      "quote": "MCP_DOCS_SEARCH_URL",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:50+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:48:34+08:00",
+  "updated_at": "2026-11-16T01:50:17+08:00"
+}

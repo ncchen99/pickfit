@@ -1,0 +1,602 @@
+{
+  "schema_version": "software.v1",
+  "slug": "context7",
+  "repo_id": "gh:955620917",
+  "name": "Context7",
+  "summary": "Fetches up-to-date, version-specific library documentation and code examples into AI coding agents via an MCP server or CLI.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "llm",
+    "mcp",
+    "mcp-server",
+    "vibe-coding"
+  ],
+  "use_cases": [
+    "give a coding agent current docs for a specific library version",
+    "look up a library's Context7 ID from its name"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "fetch version-specific library docs for agents",
+    "search libraries by name for IDs",
+    "install agent skill using ctx7 CLI"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:12:57.230056Z",
+    "run_id": null,
+    "open_hint": "Add the Context7 MCP server to your AI coding agent's MCP settings, and the agent can then use the resolve-library-id and query-docs tools.",
+    "features": [
+      {
+        "feature": "fetch version-specific library docs for agents",
+        "title": "Give your agent docs for a specific library version",
+        "steps": []
+      },
+      {
+        "feature": "search libraries by name for IDs",
+        "title": "Find a library's ID by searching its name",
+        "steps": []
+      },
+      {
+        "feature": "install agent skill using ctx7 CLI",
+        "title": "Install an agent skill with the ctx7 CLI",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": "https://context7.com",
+  "repo": {
+    "url": "https://github.com/upstash/context7",
+    "full_name": "upstash/context7",
+    "created_at": "2025-03-26T23:40:39Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "node>=22.13"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": [
+      "Context7 API key (recommended for higher rate limits)"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-context7-20261116-014659-ad85",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g ctx7 @upstash/context7-mcp",
+          "purpose": "npm install -g ctx7 @upstash/context7-mcp"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ls ~/.local/bin && ctx7 --version",
+        "expected_signal": "0.11.1"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "mcpb-v4.7.0",
+    "published_at": "2026-11-12T09:03:39Z",
+    "url": "https://github.com/upstash/context7/releases/tag/mcpb-v4.7.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T01:48:02.133680+08:00",
+    "runs": [
+      {
+        "id": "verify-context7-20261116-014659-ad85",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:48:02.133680+08:00",
+        "tool_version": null,
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g ctx7 @upstash/context7-mcp",
+            "purpose": "npm install -g ctx7 @upstash/context7-mcp"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ls ~/.local/bin && ctx7 --version",
+            "expected_signal": "0.11.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.11.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- context7-mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npx ctx7 setup (authenticates via OAuth, generates an API key)",
+            "actually_needed": "Setup needs a browser OAuth login; for a local MCP server install the separate package @upstash/context7-mcp (npm install -g) and launch context7-mcp",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Packages: ctx7 - CLI",
+            "actually_needed": "The ctx7 package does not include the MCP server binary; @upstash/context7-mcp must be installed separately to run the server locally",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The MCP probe completed initialize and tools/list with 2 tools and printed 'handshake: ok', and ctx7 --version printed 0.11.1 after listing both binaries.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-context7-20261116-014659-ad85/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-context7-20261116-014659-ad85/check-1-cmd3.judged.png",
+            "runs/verify/verify-context7-20261116-014659-ad85/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.146459,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "context7-mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "Context7",
+          "server_version": "4.7.0",
+          "tools": [
+            "resolve-library-id",
+            "query-docs"
+          ],
+          "tool_count": 2,
+          "called_tool": null,
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "fetch version-specific library docs for agents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "query-docs / ctx7 docs fetch from the hosted Context7 API; checks rerun offline"
+          },
+          {
+            "feature": "search libraries by name for IDs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "resolve-library-id / ctx7 library query the hosted Context7 API"
+          },
+          {
+            "feature": "install agent skill using ctx7 CLI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "ctx7 setup authenticates via OAuth and generates an API key"
+          }
+        ]
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "streamable_http"
+    ],
+    "launch_command": null,
+    "client_configs": [],
+    "env_vars": [],
+    "tools": [
+      "resolve-library-id",
+      "query-docs"
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:48:15+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "npm:@upstash/context7-mcp (fresh install, 104 packages)"
+    ],
+    "packages_checked": 103,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:48:02+08:00",
+    "quality": {
+      "total": 91.1,
+      "confidence": 0.7,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 93.3,
+      "signals": {
+        "stars": 64853,
+        "monthly_downloads": 3482296,
+        "forks": 3254,
+        "dependents": null,
+        "release_downloads": 61,
+        "hn_top_score": 4,
+        "registries_count": 1
+      },
+      "age_days": 598,
+      "packages": [
+        "npm:@upstash/context7-mcp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.1
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:02.136784+08:00",
+      "sources_sha": "a0404de0e5d3ce5f37d653b59b0b98309c0a7cc937c4cd584ec632ba2bb71235",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Context7 pulls up-to-date, version-specific documentation and code examples straight from the source — and gives them to your coding agent."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Set up Context7 for your coding agents with a single command."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "The `ctx7` CLI requires Node.js 22.13 or newer."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "npx ctx7 setup"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "How do I set up a Next.js 16 proxy? use context7"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "To configure manually, use the Context7 server URL `https://mcp.context7.com/mcp` with your MCP client and pass your API key via the `Authorization: Bearer YOUR_API_KEY` header."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "To remove the generated setup later, run `npx ctx7 remove`."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "MIT"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/upstash/context7",
+      "fetched_at": "2026-11-16T01:46:50+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/upstash/context7/blob/master/README.md",
+      "fetched_at": "2026-11-16T01:46:48+08:00"
+    },
+    {
+      "id": "release:mcpb-v4.7.0",
+      "kind": "release",
+      "url": "https://github.com/upstash/context7/releases/tag/mcpb-v4.7.0",
+      "fetched_at": "2026-11-16T01:46:48+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "This repository hosts the MCP server’s source code.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:46:59+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Set up Context7 for your coding agents with a single command.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:46:59+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "registers a Context7 MCP server so your agent can call documentation tools natively",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:46:59+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Context7 pulls up-to-date, version-specific documentation and code examples straight from the source — and gives them to your coding agent.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:46:59+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Context7 - Up-to-date Docs for AI Agents",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:46:59+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "The `ctx7` CLI requires Node.js 22.13 or newer.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:46:59+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "use the Context7 server URL `https://mcp.context7.com/mcp`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:46:59+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "Get a free API key at [context7.com/dashboard](https://context7.com/dashboard?tab=settings) for higher rate limits.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:46:59+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:46:50+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:46:50+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:46:50+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:46:50+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:46:50+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:mcpb-v4.7.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:46:48+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "How do I set up a Next.js 16 proxy? use context7",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:46:59+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "`ctx7 library <name> <query>`: Searches the Context7 index by library name and returns matching libraries with their IDs.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:46:59+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Context7 fetches up-to-date code examples and documentation right into your coding agent's context.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:46:59+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "`ctx7 library <name> <query>`: Searches the Context7 index by library name and returns matching libraries with their IDs.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:46:59+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "installs a skill that guides your agent to fetch docs using `ctx7` CLI commands (no MCP required)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:46:59+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "use the Context7 server URL `https://mcp.context7.com/mcp`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:46:59+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "use the Context7 server URL `https://mcp.context7.com/mcp` with your MCP client",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:46:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`resolve-library-id`: Resolves a general library name into a Context7-compatible library ID.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:46:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`query-docs`: Retrieves documentation for a library using a Context7-compatible library ID.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:46:59+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:46:48+08:00",
+  "updated_at": "2026-11-16T01:48:15+08:00"
+}

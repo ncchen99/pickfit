@@ -1,0 +1,706 @@
+{
+  "schema_version": "software.v1",
+  "slug": "ast-grep-mcp",
+  "repo_id": "gh:957706925",
+  "name": "ast-grep MCP Server",
+  "summary": "MCP server that lets AI assistants search and analyze codebases with ast-grep structural AST pattern matching.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": "prototype",
+  "tags": [],
+  "use_cases": [
+    "find all console.log statements in a JavaScript codebase",
+    "find async functions that use await",
+    "debug why an ast-grep pattern isn't matching"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "search code by syntax structure patterns",
+    "write and test YAML search rules",
+    "visualize AST structures of code snippets"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:12:54.679313Z",
+    "run_id": "verify-ast-grep-mcp-20261116-012056-3e1c",
+    "open_hint": "Add `ast-grep-server` as a server command in your MCP client, then ask your assistant to use its tools such as find_code.",
+    "features": [
+      {
+        "feature": "search code by syntax structure patterns",
+        "title": "Search code by its syntax structure",
+        "steps": [
+          "Ask your assistant to call the `find_code` tool with your project folder, a pattern such as `console.log($$$)`, and the language.",
+          "Read the list of matching code locations it returns."
+        ]
+      },
+      {
+        "feature": "write and test YAML search rules",
+        "title": "Write and test YAML search rules",
+        "steps": [
+          "Write a YAML rule with an `id`, `language`, and `rule: pattern: <your pattern>`.",
+          "Ask your assistant to call the `test_match_code_rule` tool with the rule and a sample of <your code>.",
+          "Check the returned matches to confirm the rule works."
+        ]
+      },
+      {
+        "feature": "visualize AST structures of code snippets",
+        "title": "View the syntax tree of a code snippet",
+        "steps": [
+          "Ask your assistant to call the `dump_syntax_tree` tool with <your code> and its language.",
+          "Read the printed tree to see how the code is structured, for example to fix a pattern that does not match."
+        ]
+      }
+    ]
+  },
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/ast-grep/ast-grep-mcp",
+    "full_name": "ast-grep/ast-grep-mcp",
+    "created_at": "2025-03-31T01:31:16Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "uv"
+    ],
+    "system_packages": [
+      "ast-grep"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-ast-grep-mcp-20261116-012056-3e1c",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install git+https://github.com/ast-grep/ast-grep-mcp && uv tool install ast-grep-cli",
+          "purpose": "uv tool install the MCP server from git, plus ast-grep-cli for the ast-grep binary"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ast-grep --version",
+        "expected_signal": "ast-grep 0.51.2"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": null,
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T01:22:13.912761+08:00",
+    "runs": [
+      {
+        "id": "verify-ast-grep-mcp-20261116-012056-3e1c",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:22:13.912761+08:00",
+        "tool_version": null,
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install git+https://github.com/ast-grep/ast-grep-mcp && uv tool install ast-grep-cli",
+            "purpose": "uv tool install the MCP server from git, plus ast-grep-cli for the ast-grep binary"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ast-grep --version",
+            "expected_signal": "ast-grep 0.51.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ast-grep 0.51.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- ast-grep-server",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call find_code --args '{\"project_folder\":\"/home/sbx/work/sample\",\"pattern\":\"console.log($$$)\",\"language\":\"javascript\"}' -- ast-grep-server",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=find_code content=text text_chars=122",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/sample && cat > /home/sbx/work/sample/app.js <<'EOF'\nfunction greet(name) {\n  console.log(\"hello\", name);\n}\nasync function load() {\n  const x = await fetch(\"/x\");\n  console.log(x);\n}\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call test_match_code_rule --args '{\"code\":\"console.log(\\\"hi\\\", 1)\",\"yaml\":\"id: find-console-logs\\nlanguage: javascript\\nrule:\\n  pattern: console.log($$$)\\n\"}' -- ast-grep-server",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=test_match_code_rule content=text text_chars=802",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call dump_syntax_tree --args '{\"code\":\"console.log(1)\",\"language\":\"javascript\"}' -- ast-grep-server",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=dump_syntax_tree content=text text_chars=377",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Install ast-grep via brew, nix-shell or cargo",
+            "actually_needed": "`uv tool install ast-grep-cli` (published PyPI package) put ast-grep on PATH without root or a Rust toolchain",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "uv sync in a clone / uvx --from git+... ast-grep-server",
+            "actually_needed": "`uv tool install git+https://github.com/ast-grep/ast-grep-mcp` installs the ast-grep-server command on PATH so the server can start with the network off",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Complex rule example (async-with-await) for test_match_code_rule",
+            "actually_needed": "Run against `async function load() { const x = await fetch(1); }`, the README's async-with-await rule made test_match_code_rule return an error (the probe showed no message), possibly because the rule matched nothing. The README's simpler console.log rule worked.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The MCP handshake succeeded with 4 tools listed, the find_code call returned 2 console.log matches, and ast-grep --version printed 0.51.2, all with exit code 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ast-grep-mcp-20261116-012056-3e1c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ast-grep-mcp-20261116-012056-3e1c/check-1-cmd3.judged.png",
+            "runs/verify/verify-ast-grep-mcp-20261116-012056-3e1c/check-2-cmd5.judged.png",
+            "runs/verify/verify-ast-grep-mcp-20261116-012056-3e1c/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.180653,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "ast-grep-server"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "ast-grep",
+          "server_version": null,
+          "tools": [
+            "dump_syntax_tree",
+            "test_match_code_rule",
+            "find_code",
+            "find_code_by_rule"
+          ],
+          "tool_count": 4,
+          "called_tool": "find_code",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "search code by syntax structure patterns",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "write and test YAML search rules",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "visualize AST structures of code snippets",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio"
+    ],
+    "launch_command": "uvx --from git+https://github.com/ast-grep/ast-grep-mcp ast-grep-server",
+    "client_configs": [
+      {
+        "client": "cursor",
+        "snippet": "{\n  \"mcpServers\": {\n    \"ast-grep\": {\n      \"command\": \"uv\",\n      \"args\": [\"--directory\", \"/absolute/path/to/ast-grep-mcp\", \"run\", \"main.py\"],\n      \"env\": {}\n    }\n  }\n}"
+      },
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"ast-grep\": {\n      \"command\": \"uv\",\n      \"args\": [\"--directory\", \"/absolute/path/to/ast-grep-mcp\", \"run\", \"main.py\"],\n      \"env\": {}\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "AST_GREP_CONFIG",
+        "required": false,
+        "purpose": "path to sgconfig.yaml"
+      },
+      {
+        "name": "AST_GREP_PATH",
+        "required": false,
+        "purpose": "ast-grep executable path or command"
+      }
+    ],
+    "tools": [
+      "dump_syntax_tree",
+      "test_match_code_rule",
+      "find_code",
+      "find_code_by_rule"
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:22:20+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/ast-grep/ast-grep-mcp@51d5a23f025c",
+      "pyproject.toml (resolved today)"
+    ],
+    "packages_checked": 37,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:22:13+08:00",
+    "quality": {
+      "total": 77.8,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5071,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 76.1,
+      "signals": {
+        "stars": 495,
+        "monthly_downloads": null,
+        "forks": 29,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 594,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 18.59
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:22:13.915151+08:00",
+      "sources_sha": "753bf43c6e23f80f8394d150078a1d1da9a9cbd319792b180d417cf4b7e6f063",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "This MCP server enables AI assistants (like Cursor, Claude Desktop, etc.) to search and analyze codebases using Abstract Syntax Tree (AST) pattern matching rather than simple text-based search."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "provides AI assistants with powerful structural code search capabilities"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "3. **MCP-compatible client**: Such as Cursor, Claude Desktop, or other MCP clients"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "uvx --from git+https://github.com/ast-grep/ast-grep-mcp ast-grep-server"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "ast-grep --version"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "2. **Environment variable**: `AST_GREP_CONFIG=/path/to/sgconfig.yaml`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "1. **\"Command not found\" errors**: Ensure ast-grep is installed and in your PATH"
+        },
+        "license_and_platforms": {
+          "score": 0,
+          "quote": null
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/ast-grep/ast-grep-mcp",
+      "fetched_at": "2026-11-16T01:20:45+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/ast-grep/ast-grep-mcp/blob/main/README.md",
+      "fetched_at": "2026-11-16T01:20:43+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "An experimental [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "MCP-compatible client",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "An experimental [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "provides AI assistants with powerful structural code search capabilities using [ast-grep](https://ast-grep.github.io/).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# ast-grep MCP Server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "**Install uv**: Python package manager",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "**Install ast-grep**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:20:45+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:20:45+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:20:45+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "This is an experimental project.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Find all console.log statements",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Find async functions that use await",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Debug why a pattern isn't matching",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Find code patterns based on syntax structure, not just text matching",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Write and test complex search rules using YAML configuration",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Debug and visualize AST structures for better pattern development",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Ensure the server has read access to target directories",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "\"command\": \"uv\",",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "uvx --from git+https://github.com/ast-grep/ast-grep-mcp ast-grep-server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"ast-grep\": {\n      \"command\": \"uv\",\n      \"args\": [\"--directory\", \"/absolute/path/to/ast-grep-mcp\", \"run\", \"main.py\"],\n      \"env\": {}\n    }\n  }\n}",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"ast-grep\": {\n      \"command\": \"uv\",\n      \"args\": [\"--directory\", \"/absolute/path/to/ast-grep-mcp\", \"run\", \"main.py\"],\n      \"env\": {}\n    }\n  }\n}",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "AST_GREP_CONFIG",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "AST_GREP_PATH",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "### 🔍 `dump_syntax_tree`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "### 🧪 `test_match_code_rule`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "### 🎯 `find_code`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "### 🚀 `find_code_by_rule`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:20:56+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:20:43+08:00",
+  "updated_at": "2026-11-16T01:22:20+08:00"
+}

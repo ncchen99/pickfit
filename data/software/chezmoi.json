@@ -1,0 +1,575 @@
+{
+  "schema_version": "software.v1",
+  "slug": "chezmoi",
+  "repo_id": "gh:157245200",
+  "name": "chezmoi",
+  "summary": "A command-line tool that manages dotfiles across multiple machines.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "configuration",
+    "dotfile",
+    "dotfile-management",
+    "dotfile-manager",
+    "dotfile-managers",
+    "dotfiles",
+    "linux",
+    "macos",
+    "security",
+    "windows"
+  ],
+  "use_cases": [
+    "install chezmoi and apply dotfiles from a GitHub repo on a new machine"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "manage dotfiles across multiple machines"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T19:19:00.729754Z",
+    "run_id": "verify-chezmoi-20261116-030606-dd54",
+    "open_hint": "Run `chezmoi init` to create your dotfiles source directory.",
+    "features": [
+      {
+        "feature": "manage dotfiles across multiple machines",
+        "title": "Manage dotfiles across multiple machines",
+        "steps": [
+          "Run `chezmoi init` to set up chezmoi.",
+          "Run `chezmoi add <file>` to start managing a dotfile, and `chezmoi managed` to list managed files.",
+          "Run `chezmoi apply --force -v` to write your managed dotfiles back to your home directory."
+        ]
+      }
+    ]
+  },
+  "homepage": "https://www.chezmoi.io/",
+  "repo": {
+    "url": "https://github.com/twpayne/chezmoi",
+    "full_name": "twpayne/chezmoi",
+    "created_at": "2018-11-12T16:45:43Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "go>=1.25 (build from source)"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install chezmoi",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Add the installation directory to PATH when using the install script"
+      ],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-chezmoi-20261116-030606-dd54",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsLS https://get.chezmoi.io -o /tmp/get-chezmoi.sh",
+          "purpose": "download get.chezmoi.io install script"
+        },
+        {
+          "command": "sh /tmp/get-chezmoi.sh -b \"$HOME/.local/bin\"",
+          "purpose": "run script with -b ~/.local/bin (already on PATH)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "chezmoi --version",
+        "expected_signal": "chezmoi version v2.74.1"
+      },
+      "first_task": "export HOME=/home/sbx/czhome && chezmoi init && chezmoi add ~/.testrc && chezmoi managed && rm ~/.testrc && chezmoi apply --force -v && cat ~/.testrc"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "iex \"&{$(irm 'https://get.chezmoi.io/ps1')}\"",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Add the installation directory to PATH when using the install script"
+      ],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v2.74.1",
+    "published_at": "2026-11-10T21:42:48Z",
+    "url": "https://github.com/twpayne/chezmoi/releases/tag/v2.74.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T03:07:11.101957+08:00",
+    "runs": [
+      {
+        "id": "verify-chezmoi-20261116-030606-dd54",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T03:07:11.101957+08:00",
+        "tool_version": "v2.74.1",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsLS https://get.chezmoi.io -o /tmp/get-chezmoi.sh",
+            "purpose": "download get.chezmoi.io install script"
+          },
+          {
+            "command": "sh /tmp/get-chezmoi.sh -b \"$HOME/.local/bin\"",
+            "purpose": "run script with -b ~/.local/bin (already on PATH)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "chezmoi --version",
+            "expected_signal": "chezmoi version v2.74.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "chezmoi version v2.74.1, commit 2f68f47e745f69f78c137f46d4abe29230b74aa1, built at 2026-11-10T21:38:15Z, built by goreleaser",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export HOME=/home/sbx/czhome && chezmoi init && chezmoi add ~/.testrc && chezmoi managed && rm ~/.testrc && chezmoi apply --force -v && cat ~/.testrc",
+            "expected_signal": "export GREETING=\"hello from chezmoi\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "+export GREETING=\"hello from chezmoi\"",
+            "setup": [
+              {
+                "command": "rm -rf ~/czhome ~/czsrc && mkdir -p ~/czhome && cat > ~/czhome/.testrc <<'EOF'\nexport GREETING=\"hello from chezmoi\"\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "sh -c \"$(curl -fsLS get.chezmoi.io)\" installs into ./bin",
+            "actually_needed": "Pass -b ~/.local/bin (or add ./bin to PATH) so chezmoi is on PATH",
+            "kind": "note"
+          },
+          {
+            "readme_said": "(nothing)",
+            "actually_needed": "chezmoi apply after a managed file was changed/deleted prompts on /dev/tty; in a non-interactive shell use --force",
+            "kind": "note"
+          },
+          {
+            "readme_said": "(nothing)",
+            "actually_needed": "Pointing --source/--destination at custom dirs while adding from /tmp or a dir containing the source failed with 'cannot add chezmoi file to chezmoi (... is protected)'; using a separate HOME with default source dir worked",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Check 1 shows chezmoi managing .testrc, re-applying it via a diff after deletion, and cat printing the expected export line; check 2 prints chezmoi version v2.74.1.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-chezmoi-20261116-030606-dd54/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-chezmoi-20261116-030606-dd54/check-1-cmd10.judged.png",
+            "runs/verify/verify-chezmoi-20261116-030606-dd54/check-2-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.155633,
+        "features": [
+          {
+            "feature": "manage dotfiles across multiple machines",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T03:11:48+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/twpayne/chezmoi@cb4cf050e388",
+      "go.mod",
+      "pyproject.toml (resolved today)"
+    ],
+    "packages_checked": 243,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T03:11:03+08:00",
+    "quality": {
+      "total": 88.3,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8864,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 100.0,
+      "signals": {
+        "stars": 22275,
+        "monthly_downloads": 24132,
+        "forks": 698,
+        "dependents": null,
+        "release_downloads": 1548632,
+        "hn_top_score": 121,
+        "registries_count": 1
+      },
+      "age_days": 2925,
+      "packages": [
+        "homebrew:chezmoi"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.0
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:11:03.852707+08:00",
+      "sources_sha": "17c781c4ec9313329527f8909b141d8bf58aff926dc6a51f629adfc9b28810b1",
+      "items": {
+        "what_it_does": {
+          "score": 1,
+          "quote": "Manage your dotfiles across multiple diverse machines, securely."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "If you already have a dotfiles repo using chezmoi on GitHub"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Download, build, and install chezmoi for your system with Go 1.25 or later:"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "sh -c \"$(curl -fsLS https://get.chezmoi.io)\""
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "sh -c \"$(curl -fsLS https://get.chezmoi.io)\" -- init --apply $GITHUB_USERNAME"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "export PATH=\"$HOME/bin:$PATH\""
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "The installer does not modify your PATH. To run chezmoi by name, ensure its installation directory is on your PATH."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "topics: configuration, dotfile, dotfile-management, dotfile-manager, dotfile-managers, dotfiles, linux, macos, security, windows"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/twpayne/chezmoi",
+      "fetched_at": "2026-11-16T00:58:12+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/twpayne/chezmoi/blob/master/README.md",
+      "fetched_at": "2026-11-16T00:58:08+08:00"
+    },
+    {
+      "id": "release:v2.74.1",
+      "kind": "release",
+      "url": "https://github.com/twpayne/chezmoi/releases/tag/v2.74.1",
+      "fetched_at": "2026-11-16T00:58:08+08:00"
+    },
+    {
+      "id": "docs1",
+      "kind": "website",
+      "url": "https://www.chezmoi.io/install/",
+      "fetched_at": "2026-11-16T02:58:35+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "docs1",
+      "quote": "Install the correct binary for your operating system and architecture",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:30+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "docs1",
+      "quote": "Install chezmoi with your package manager with a single command:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:30+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Manage your dotfiles across multiple diverse machines, securely.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:30+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Manage your dotfiles across multiple diverse machines, securely.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:30+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "chezmoi's documentation is at",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:30+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "github_api",
+      "quote": "topics: configuration, dotfile, dotfile-management, dotfile-manager, dotfile-managers, dotfiles, linux, macos, security, windows",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:30+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "docs1",
+      "quote": "Download, build, and install chezmoi for your system with Go 1.25 or later:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:30+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:58:12+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:58:12+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T00:58:12+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:58:12+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:58:12+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.74.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:58:08+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "docs1",
+      "quote": "you can install\nchezmoi and your dotfiles with the single command:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:30+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "Manage your dotfiles across multiple diverse machines, securely.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:30+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "docs1",
+      "quote": "brew install chezmoi",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:30+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "docs1",
+      "quote": "sh -c \"$(curl -fsLS https://get.chezmoi.io)\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:30+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "docs1",
+      "quote": "iex \"&{$(irm 'https://get.chezmoi.io/ps1')}\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:30+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T00:58:08+08:00",
+  "updated_at": "2026-11-16T03:11:48+08:00"
+}

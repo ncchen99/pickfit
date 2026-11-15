@@ -2,7 +2,7 @@
  * find_software and find_alternatives (architecture F.2): hard filters
  * (code) -> at most MAX_CARDS candidate cards, the ones that best match the
  * request's words when more pass (filter.ts; English keywords for the request
- * from muse-spark-1.3 first, expand.ts) -> one muse-spark-1.3 call that
+ * from the model first, expand.ts) -> one model call (meta.ts: Claude) that
  * parses the request and chooses -> guard (code). Without the model (off, no
  * key, over budget, failure after one retry of a transient error, or every
  * pick rejected) it ranks by rules and says so: matched_by "rules", degraded
@@ -33,7 +33,7 @@ import { englishKeywords, EXPAND_TIMEOUT_MS, type Expansion } from './expand.ts'
 import { fitNote, fitOf, jobOf, type Fit, type MatchQuality } from './fit.ts';
 import { hardFilter, MAX_CARDS, needsOffline, replacesCurrent, type Conditions } from './filter.ts';
 import { clip, guardPicks, guardWellKnown, NO_WELL_KNOWN, parseAnswer, type GuardedPick, type GuardedWellKnown } from './guard.ts';
-import { callMeta, estimateCostUsd, MATCH_MODEL, MetaCallError, requestBody } from './meta.ts';
+import { callModel, estimateCostUsd, MATCH_MODEL, ModelCallError, requestBody } from './meta.ts';
 import { instructions, matchInput, matchSchema, type MatchKind, type ModelAnswer, type ModelReason } from './prompt.ts';
 import { dropNegated, queryTerms, rulesRelevance, rulesTerms, termsAsSaid } from './relevance.ts';
 import { leansInstall, rankByRules, templateReasons } from './rules.ts';
@@ -63,7 +63,7 @@ export interface Deps {
   client?: string | null;
   /** From the X-Pickfit-Reporter header; labels report_outcome rows. */
   reporter?: Reporter;
-  /** The wait before retrying Meta; a seam for tests. */
+  /** The wait before retrying the model call; a seam for tests. */
   sleep?: (ms: number) => Promise<void>;
   /** This deployment's origin when it serves /video/ (VIDEOS bound); null: no clip URLs. */
   videoBase?: string | null;
@@ -114,9 +114,9 @@ export interface FindOutput {
   matched_by: string;
   degraded: boolean;
   degraded_reason: string | null;
-  /** Requests sent to Meta: 0 (model not used), 1, or 2 when a transient error was retried. */
+  /** Requests sent to the model API: 0 (model not used), 1, or 2 when a transient error was retried. */
   model_attempts: number;
-  /** When degraded_reason is model_http: the status of Meta's last answer. */
+  /** When degraded_reason is model_http: the status of the model API's last answer. */
   model_http_status: number | null;
   considered: number;
   picks: PickOut[];
@@ -358,7 +358,7 @@ function fromRules(
 /** find_alternatives: a profile that names the current tool as what it replaces. */
 const replacing = (current: string): Fit => ({ quality: 'good', covers: [`an alternative to ${current}`], missing: [] });
 
-/** statuses: HTTP status of each request sent to Meta (null where none came back). */
+/** statuses: HTTP status of each request sent to the model API (null where none came back). */
 type Attempt = { cost: number; statuses: (number | null)[] } & (
   | { answer: ModelAnswer; picks: GuardedPick[] }
   | { failure: string; httpStatus: number | null; rejected?: ModelAnswer }
@@ -381,21 +381,20 @@ async function askModel(
   const body = requestBody({
     instructions: instructions(limit, kind),
     input: matchInput(request, [...cards.values()]),
-    schemaName: kind === 'alternatives' ? 'pickfit_alternatives' : 'pickfit_match',
     schema: matchSchema([...cards.keys()], kind),
   });
   try {
+    // With no cap set (the default) this passes without reading D1; the spend is recorded below either way.
     const budget = await checkBudget(deps.db, now, estimateCostUsd(JSON.stringify(body).length), settings);
     if (!budget.ok) return notSent('over_budget');
   } catch {
-    return notSent('budget_unavailable'); // cannot count spend, so do not spend
+    return notSent('budget_unavailable'); // a cap is set and spend cannot be counted, so do not spend
   }
   let cost = 0;
   try {
     // A retry fits in the cap checked above: the failed try was not charged.
-    const result = await callMeta(settings.apiKey, body, {
+    const result = await callModel(settings.apiKey, body, {
       timeoutMs,
-      via: settings.via,
       fetch: deps.fetch,
       clock: () => deps.now().getTime(),
       sleep: deps.sleep,
@@ -406,7 +405,7 @@ async function askModel(
     console.log(
       JSON.stringify({ event: 'meta_call', kind, model: MATCH_MODEL, cards: cards.size, ...result.usage, cost_usd: cost, latency_ms: result.latencyMs, statuses }),
     );
-    // From here on Meta has answered: a bad or rejected answer is never retried.
+    // From here on the model has answered: a bad or rejected answer is never retried.
     const answer = parseAnswer(result.text);
     if (!answer) return { failure: 'model_bad_output', httpStatus: null, cost, statuses };
     const guarded = guardPicks(answer, cards, limit);
@@ -415,7 +414,7 @@ async function askModel(
     }
     return { answer, picks: guarded.picks, cost, statuses };
   } catch (err) {
-    if (err instanceof MetaCallError) {
+    if (err instanceof ModelCallError) {
       cost = err.costUsd;
       const httpStatus = err.kind === 'http' ? err.status : null;
       return { failure: `model_${err.kind}`, httpStatus, cost, statuses: err.statuses };
@@ -450,7 +449,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   const cond = req.conditions;
   const limit = Math.min(Math.max(cond.limit ?? 3, 1), 3);
   const corpus = deps.catalog.entries;
-  // Without Meta's keywords (rules only, the call failed, or no shortlist cut) the rules' scorer chooses and ranks.
+  // Without the model's keywords (rules only, the call failed, or no shortlist cut) the rules' scorer chooses and ranks.
   // The rules' words: a negation is a constraint, except in pain points.
   const ruleTerms = (...keywords: string[]) =>
     req.painPoints ? [...new Set([...termsAsSaid(req.painPoints.said), ...rulesTerms(req.painPoints.rest, ...keywords)])] : rulesTerms(req.rulesText, ...keywords);
@@ -468,7 +467,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     }
   }
   const { candidates, passed, byRelevance } = filtered;
-  // The rules rank with their own scorer, adding Meta's keywords when there are some.
+  // The rules rank with their own scorer, adding the model's keywords when there are some.
   const rulesScores = () =>
     expansion?.keywords
       ? rulesRelevance(corpus, candidates, ruleTerms(...expansion.keywords))
@@ -485,7 +484,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   if (candidates.length === 0) {
     choice = NO_CHOICE;
   } else {
-    // META_TIMEOUT_MS bounds every Meta request of this call: the match gets what the keywords left.
+    // META_TIMEOUT_MS bounds every model request of this call: the match gets what the keywords left.
     const timeoutMs = Math.max(0, deps.settings.timeoutMs - (expansion?.latencyMs ?? 0));
     const attempt = await askModel({ ...req.modelRequest, limit }, req.kind, cards, limit, deps, now, timeoutMs);
     cost = attempt.cost;
@@ -510,7 +509,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   const notes: string[] = [];
   if (candidates.length === 0) {
     notes.push(
-      `No verified ${what} in pickfit meets these conditions. Coverage today: developer CLI tools, local AI/LLM tools, MCP servers, desktop GUI apps and some web apps. ` +
+      `No verified ${what} in pickfit meets these conditions. Coverage today: developer CLI tools, local AI/LLM tools, MCP servers, DevOps, security, data, document and media tools, desktop GUI apps and some web apps.` +
         "pickfit's catalog doesn't cover every tool yet, so a well-known one may still fit.",
     );
   } else if (choice.emptyByModel) {
