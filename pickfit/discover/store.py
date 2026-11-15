@@ -22,10 +22,13 @@ from pathlib import Path
 from typing import Any
 
 from pickfit.ledger import taipei_now
+from pickfit.schema import CATEGORY_GUIDE, LISTED_CATEGORIES
 
 # A repo found by queries of several categories goes to the most specific one: an MCP server
-# that also has a CLI mode is listed as an MCP server.
-CATEGORY_PRIORITY = ("mcp_server", "local_ai", "dev_cli")
+# that also has a CLI mode is listed as an MCP server, and a database tool found by a terminal
+# query too is a database tool. The order is the one models are given (schema.CATEGORY_GUIDE):
+# what the software is, then its subject, then dev_cli; "other" is not a discovery category.
+CATEGORY_PRIORITY: tuple[str, ...] = tuple(name for name, _ in CATEGORY_GUIDE if name in LISTED_CATEGORIES)
 
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS candidates (

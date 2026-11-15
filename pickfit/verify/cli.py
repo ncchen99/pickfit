@@ -14,6 +14,8 @@ VBOX_MAX_VMS = 1  # one Windows base, reset from its snapshot for every box
 
 
 def add_parser(sub: argparse._SubParsersAction) -> None:
+    from pickfit.schema import LISTED_CATEGORIES
+
     v = sub.add_parser("verify", help="install, smoke-test, replay and judge one tool in a sandbox with Claude")
     v.add_argument("--fixture", help="JSON with slug, repo_url, readme_url and an ExtractionResult")
     v.add_argument("--batch", type=int, metavar="N", help="verify N extracted candidates from the pipeline database")
@@ -22,7 +24,7 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--repo", action="append", help="batch: only this repo id (gh:<id>) or owner/name")
     v.add_argument("--records", action="store_true",
                    help="batch: only candidates that have a record in --data-dir (the profiles)")
-    v.add_argument("--category", action="append", choices=["dev_cli", "local_ai", "mcp_server"],
+    v.add_argument("--category", action="append", choices=LISTED_CATEGORIES,
                    help="batch: only this category (repeatable)")
     v.add_argument("--force", action="store_true", help="batch: also tools that already have a run")
     v.add_argument("--since", metavar="YYYYmmdd-HHMMSS",

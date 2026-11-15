@@ -34,6 +34,7 @@ from typing import Any
 from pickfit.discover.rules import _entry_points
 from pickfit.discover.store import PipelineDB
 from pickfit.meta import PROD_MODEL, PROD_MODELS
+from pickfit.schema import LISTED_CATEGORIES
 
 DONE = ("ok", "quotes_dropped")
 
@@ -198,12 +199,12 @@ def main(argv: list[str] | None = None) -> int:
     from pickfit.profiles import DEFAULT_OUT
 
     parser = argparse.ArgumentParser(prog="python -m pickfit.discover.shortlist", description=__doc__.split("\n")[0])
-    parser.add_argument("--category", required=True, choices=["dev_cli", "local_ai", "mcp_server"])
+    parser.add_argument("--category", required=True, choices=LISTED_CATEGORIES)
     parser.add_argument("--limit", type=int, default=40)
     parser.add_argument("--min-score", type=int, default=None, help="leave out candidates below this score")
     parser.add_argument("--db", type=Path, default=None, help="pipeline database (default runs/pipeline.db)")
     parser.add_argument("--ids-only", action="store_true", help="print only the repo ids")
-    parser.add_argument("--screened-as", choices=["dev_cli", "local_ai", "mcp_server", "other"], default=None,
+    parser.add_argument("--screened-as", choices=[*LISTED_CATEGORIES, "other"], default=None,
                         help="only candidates the prescreen put in this category")
     parser.add_argument("--channel", choices=["show_hn"], default=None,
                         help="only candidates this discovery channel found")

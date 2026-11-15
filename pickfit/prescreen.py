@@ -33,7 +33,7 @@ from collections.abc import Callable, Iterator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -47,7 +47,7 @@ from pickfit.ledger import (
     taipei_now,
 )
 from pickfit.meta import BULK_MODEL, DEFAULT_PROVIDER, PROD_MODEL, call_meta
-from pickfit.schema import Kind, meta_strict_schema
+from pickfit.schema import CATEGORY_DESCRIPTION, Category, Kind, meta_strict_schema
 
 STAGE = "prescreen"
 SCREEN_PROVIDER = DEFAULT_PROVIDER
@@ -86,20 +86,18 @@ for libraries and SDKs that are only imported, frameworks, models or datasets, b
 research code, demos and prototypes with no install path, tutorials, homework, templates, lists, \
 and config or dotfiles.
 - kind: the single best label. Must agree with usable_software.
-- category: dev_cli for developer tools used from a terminal or editor; local_ai for software \
-that runs AI models on the user's own machine or wraps them in a local app or agent; mcp_server \
-for a Model Context Protocol server that AI clients (Claude Code, Cursor, IDEs) start or connect to; \
-other for anything else.
+- category: what the software is for. {category_guide}
 - confidence: 0 to 1, how sure you are about usable_software.
 - reason: one short sentence in English pointing at what in the sources decided it.
 
-Judge only what the sources show. Popularity is not a signal and is not given to you."""
+Judge only what the sources show. Popularity is not a signal and is not given to you.""".replace(
+    "{category_guide}", CATEGORY_DESCRIPTION)  # the same order and words extraction is given (schema.py)
 
 
 class PrescreenResult(BaseModel):
     usable_software: bool
     kind: Kind
-    category: Literal["dev_cli", "local_ai", "mcp_server", "other"]
+    category: Category
     confidence: float = Field(ge=0, le=1)
     reason: str = Field(max_length=300)
 

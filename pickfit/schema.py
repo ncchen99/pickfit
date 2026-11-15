@@ -40,7 +40,10 @@ JSON_SCHEMA_DIALECT = "https://json-schema.org/draft/2020-12/schema"
 
 type OS = Literal["macos", "linux", "windows"]
 type Arch = Literal["x86_64", "arm64"]
-type Category = Literal["dev_cli", "local_ai", "mcp_server", "other"]
+# What the software is for. The first three are the hackathon's; the five subject categories were added on
+# 2026-11-15, when "other" had grown to 246 records. In CATEGORY_GUIDE's order the first that fits is the one.
+type Category = Literal["dev_cli", "local_ai", "mcp_server", "infra_devops", "security_net", "data_db",
+                        "productivity_docs", "media_files", "other"]
 type Kind = Literal[
     "cli_tool",
     "tui",
@@ -126,9 +129,29 @@ type EvidenceMethod = Literal["api", "model", "sandbox", "rule", "human"]
 type McpTransport = Literal["stdio", "streamable_http", "sse"]
 type McpClient = Literal["claude_code", "claude_desktop", "cursor", "vscode", "generic_json", "other"]
 
-# Categories pickfit lists and verifies; "other" is read but never written as a record.
-LISTED_CATEGORIES: tuple[str, ...] = ("dev_cli", "local_ai", "mcp_server")
+# The named categories, every one but "other" (which holds what fits none: it is written for apps people
+# install and run, and never for a repository that is not usable software).
+LISTED_CATEGORIES: tuple[str, ...] = tuple(c for c in get_args(Category.__value__) if c != "other")
 assert set(LISTED_CATEGORIES) | {"other"} == set(get_args(Category.__value__))
+
+# What each category holds, in the order a model is told to try them: what the software is (an MCP server,
+# a local AI tool) before its subject, the subject categories before the general developer tools.
+CATEGORY_GUIDE: tuple[tuple[str, str], ...] = (
+    ("mcp_server", "a Model Context Protocol server that AI clients start or connect to, whatever its subject"),
+    ("local_ai", "runs AI models on the user's machine (local LLMs, inference servers, offline AI tools)"),
+    ("infra_devops", "containers, Kubernetes, CI/CD, infrastructure as code, system monitoring and backup, as "
+                     "command-line tools or self-hosted panels"),
+    ("security_net", "network diagnostics, packet analysis, TLS and certificates, encryption, secret and "
+                     "vulnerability scanning"),
+    ("data_db", "SQL engines, database clients, and tools that process JSON, CSV or logs"),
+    ("productivity_docs", "notes, knowledge bases, whiteboards and diagrams, document conversion, slides"),
+    ("media_files", "media download and conversion, image compression, PDF tools, file transfer"),
+    ("dev_cli", "other tools developers use in a terminal or editor"),
+    ("other", "none of these"),
+)
+assert {name for name, _ in CATEGORY_GUIDE} == set(get_args(Category.__value__))
+CATEGORY_DESCRIPTION = "The first that fits, in this order. " + "; ".join(
+    f"{name}: {what}" for name, what in CATEGORY_GUIDE) + "."
 
 # Kinds that count as usable software (B.1); only these can be treasures.
 TOOL_KINDS: frozenset[str] = frozenset(
@@ -502,13 +525,7 @@ class ExtractionResult(_Model):
             "curated_list, dotfiles_config: not usable software."
         )
     )
-    category: Cited[Category] = Field(
-        description=(
-            "dev_cli: tools developers use in a terminal; local_ai: runs AI models on "
-            "the user's machine (local LLMs, inference servers, offline AI tools); "
-            "mcp_server: a Model Context Protocol server that AI clients start or connect to."
-        )
-    )
+    category: Cited[Category] = Field(description=CATEGORY_DESCRIPTION)
     audience: Cited[Audience] = Field(
         description=(
             "end_user: installed and run by people; import_only: only imported by "

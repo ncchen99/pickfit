@@ -685,6 +685,17 @@ POPULARITY_REFS: dict[str, dict[str, float]] = {
     "mcp_server": {"stars": 165.5, "forks": 28.0, "release_downloads": 2832.0, "monthly_downloads": 29208.3,
                    "registries_count": 1, "hn_top_score": 10, "star_velocity": 28.4},
 }
+# The five subject categories added on 2026-11-15 (infra_devops, security_net, data_db, productivity_docs,
+# media_files) and "other" have no candidate pool of their own to take a P95 from: their tools were
+# collected by the dev_cli queries, so they are scored against dev_cli's references until a category has
+# enough rule-passed candidates to calibrate (scripts/calibrate_popularity.py). A record that moves from
+# dev_cli into one of them keeps its popularity.
+POPULARITY_FALLBACK = "dev_cli"
+
+
+def popularity_refs(category: str) -> dict[str, float]:
+    """The reference values a category's signals are scored against: its own, else dev_cli's."""
+    return POPULARITY_REFS.get(category, POPULARITY_REFS[POPULARITY_FALLBACK])
 REF_FLOORS = {"monthly_downloads": 100, "registries_count": 1, "hn_top_score": 10}
 VELOCITY_MIN_AGE_DAYS = 90
 DAYS_PER_MONTH = 30.4375
@@ -710,7 +721,7 @@ def popularity_signals(snapshot: dict[str, Any], registry: Any = None) -> dict[s
 
 
 def popularity(signals: dict[str, int | None], category: str, age_days: int | None) -> float | None:
-    refs = POPULARITY_REFS.get(category, POPULARITY_REFS["dev_cli"])
+    refs = popularity_refs(category)
     have = {name: value for name, value in signals.items() if value is not None and name in refs}
     if not have:
         return None

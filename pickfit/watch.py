@@ -69,7 +69,7 @@ from pickfit.verify.task import VerifyTask
 
 MODEL = PROD_MODEL
 EXTRACT_EFFORT = "minimal"
-COVERED = LISTED_CATEGORIES  # dev_cli, local_ai, mcp_server
+COVERED = LISTED_CATEGORIES  # every named category (schema.Category without "other")
 # Category "other" is taken too when the kind is software people install and run (desktop and web apps, CLI tools
 # and the like, as the directory already lists them); libraries and non-software stay out (11/3).
 OTHER_KINDS = TOOL_KINDS

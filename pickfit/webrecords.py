@@ -14,8 +14,9 @@ post or the repository linked) are cited to that API. Web-app specifics:
 - repo_id is the repository's `gh:<id>` when the site has one, else the site's `web:` id,
   and `repo` is null then; `web.url` is the address to open (https only).
 - kind must read as web_app: a site the extraction calls something else is skipped.
-- category: as the sources show it (other for most; dev_cli for a developer tool; local_ai
-  when the AI runs on the user's device), never mcp_server.
+- category: as the sources show it (any category of schema.Category: data_db for a SQL
+  playground, productivity_docs for a whiteboard, local_ai when the AI runs on the user's
+  device, other when none fits), never mcp_server.
 - platforms: all three by rule, since a browser opens the app on each; network is required
   unless a source says otherwise; install stays empty.
 
@@ -30,7 +31,7 @@ import re
 from collections.abc import Callable
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, get_args
 
 from pydantic import ValidationError
 
@@ -48,9 +49,11 @@ from pickfit.profiles import (
     render,
     slugify,
 )
-from pickfit.schema import ExtractionResult, SoftwareRecord
+from pickfit.schema import Category, ExtractionResult, SoftwareRecord
 
 ALL_OS = ["macos", "linux", "windows"]
+# Every category a web app can be in: all of them but mcp_server, which is a program an AI client starts.
+WEB_CATEGORIES = frozenset(get_args(Category.__value__)) - {"mcp_server"}
 _SEGMENT_JUNK = re.compile(r"[^A-Za-z0-9._~-]+")
 
 
@@ -128,7 +131,7 @@ def build_web_record(site: dict[str, Any], extraction: dict[str, Any], *, slug: 
     if kind != "web_app":
         raise ValueError(f"not_web_app: kind {kind}")
     category = cited("/category", result.category.value, result.category.quote)
-    if category not in ("dev_cli", "local_ai", "other"):  # a web app is not an MCP server
+    if category not in WEB_CATEGORIES:  # a web app is not an MCP server; anything unreadable is "other"
         category = "other"
         ev.items = [e for e in ev.items if e["field"] != "/category"]
         ev.api("/category", "site", checked_at, method="rule")

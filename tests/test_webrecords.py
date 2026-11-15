@@ -107,6 +107,14 @@ def test_record_skips(over, reason):
         wr.build_web_record(_site(), _extraction(**over), slug="word-pad", now=NOW)
 
 
+def test_a_web_app_keeps_the_subject_category_its_sources_show():
+    quoted = "Count words in your browser."
+    for category in ("productivity_docs", "data_db", "media_files", "security_net", "infra_devops", "dev_cli"):
+        record = wr.build_web_record(_site(), _extraction(category=_c(category, quoted)), slug="w", now=NOW)
+        assert record.category == category
+        assert any(e["field"] == "/category" and e["quote"] == quoted for e in record.model_dump()["evidence"])
+
+
 def test_mcp_category_becomes_other_and_no_https_is_skipped():
     record = wr.build_web_record(_site(), _extraction(category=_c("mcp_server", "Word Pad")), slug="w", now=NOW)
     assert record.category == "other"

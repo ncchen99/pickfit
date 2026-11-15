@@ -20,7 +20,7 @@ where pickfit found the tool, not evidence for any field. An app a package store
 model read the store's entry, so it can be evidence.
 
 Only tools for end users are written (TOOL_KINDS, not import_only), by default
-only in the listed categories (dev_cli, local_ai, mcp_server). An MCP server also
+only in the named categories (schema.LISTED_CATEGORIES: every one but "other"). An MCP server also
 gets `mcp`: transports, launch command, client config snippets, environment
 variables and tool names, each kept only when its text is in the sources.
 """
