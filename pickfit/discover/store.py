@@ -143,6 +143,13 @@ CREATE TABLE IF NOT EXISTS listings (
     PRIMARY KEY (source, item_id)
 );
 CREATE INDEX IF NOT EXISTS listings_repo ON listings (repo_id);
+CREATE TABLE IF NOT EXISTS install_docs (
+    repo_id TEXT PRIMARY KEY,
+    rule TEXT NOT NULL,
+    pages TEXT NOT NULL,
+    tried TEXT NOT NULL,
+    fetched_at TEXT NOT NULL
+);
 """
 
 
@@ -345,7 +352,8 @@ class PipelineDB:
             row = conn.execute("SELECT * FROM candidates WHERE repo_id = ?", (repo_id,)).fetchone()
         if row is None:
             return None
-        return _row_to_candidate(row, [x for x in self.listings(repo_id=repo_id) if x["outcome"] == "candidate"])
+        return _row_to_candidate(row, [x for x in self.listings(repo_id=repo_id) if x["outcome"] == "candidate"],
+                                 (self.install_docs(repo_id) or {}).get("pages"))
 
     def candidates(self, where: str = "", params: tuple = ()) -> list[dict[str, Any]]:
         with self._connect() as conn:
@@ -355,7 +363,28 @@ class PipelineDB:
         for x in self.listings():
             if x["outcome"] == "candidate" and x["repo_id"]:
                 listed.setdefault(x["repo_id"], []).append(x)
-        return [_row_to_candidate(row, listed.get(row["repo_id"], [])) for row in rows]
+        with self._connect() as conn:
+            docs = {r["repo_id"]: _loads(r["pages"], []) for r in conn.execute("SELECT repo_id, pages FROM install_docs")}
+        return [_row_to_candidate(row, listed.get(row["repo_id"], []), docs.get(row["repo_id"])) for row in rows]
+
+    # -- install pages a README points to (pickfit.installdocs)
+
+    def save_install_docs(self, repo_id: str, docs: dict[str, Any]) -> None:
+        with self._write() as conn:
+            conn.execute(
+                "INSERT INTO install_docs (repo_id, rule, pages, tried, fetched_at) VALUES (?, ?, ?, ?, ?) "
+                "ON CONFLICT (repo_id) DO UPDATE SET rule = excluded.rule, pages = excluded.pages, "
+                "tried = excluded.tried, fetched_at = excluded.fetched_at",
+                (repo_id, docs["rule"], _dumps(docs["pages"]), _dumps(docs["tried"]), docs["fetched_at"]))
+
+    def install_docs(self, repo_id: str) -> dict[str, Any] | None:
+        """What pickfit read of a candidate's install pages, or None when it never looked."""
+        with self._connect() as conn:
+            row = conn.execute("SELECT * FROM install_docs WHERE repo_id = ?", (repo_id,)).fetchone()
+        if row is None:
+            return None
+        return {"rule": row["rule"], "pages": _loads(row["pages"], []), "tried": _loads(row["tried"], []),
+                "fetched_at": row["fetched_at"]}
 
     # -- extraction
 
@@ -585,7 +614,8 @@ def _preferred(categories: list[str]) -> str:
     return ranked[0] if ranked else categories[0]
 
 
-def _row_to_candidate(row: sqlite3.Row, listings: list[dict[str, Any]] | None = None) -> dict[str, Any]:
+def _row_to_candidate(row: sqlite3.Row, listings: list[dict[str, Any]] | None = None,
+                      docs: list[dict[str, Any]] | None = None) -> dict[str, Any]:
     c = dict(row)
     for key, default in (("aliases", []), ("categories", []), ("queries", []), ("repo", {}),
                          ("releases", []), ("files", []), ("manifests", {}), ("rule_reasons", [])):
@@ -593,6 +623,7 @@ def _row_to_candidate(row: sqlite3.Row, listings: list[dict[str, Any]] | None = 
     if c["rule_passed"] is not None:
         c["rule_passed"] = bool(c["rule_passed"])
     c["listings"] = listings or []
+    c["docs"] = docs or []  # install pages the README points to, read only when it holds no install path
     return c
 
 

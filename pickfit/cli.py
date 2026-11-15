@@ -66,6 +66,17 @@ def _extract(args: argparse.Namespace) -> int:
         from pickfit.verify.result import DATA_DIR
 
         repo_ids = [*(repo_ids or []), *record_slugs(DATA_DIR)]
+    if args.install_docs:
+        from pickfit.discover.run import pipeline_db_path
+        from pickfit.discover.store import PipelineDB
+        from pickfit.extract import same_tier
+        from pickfit.installdocs import run_docs
+        from pickfit.meta import resolve_model
+
+        docs = run_docs(PipelineDB(pipeline_db_path()), models=same_tier(resolve_model(args.model)),
+                        repo_ids=repo_ids, force=args.force, log=lambda line: print(line, file=sys.stderr))
+        # A candidate that got a page is extracted again below without --force: its sources changed.
+        print(f"install guides: looked for {docs['looked']}, read for {len(docs['read'])}", file=sys.stderr)
     summary = run_extract(limit=args.limit, model=args.model, reasoning_effort=args.effort,
                           repo_ids=repo_ids, force=args.force, features_only=args.features_only,
                           concurrency=args.concurrency, max_attempts=args.attempts, categories=args.category)
@@ -231,6 +242,11 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
     e.add_argument("--features-only", action="store_true",
                    help="ask only for the main advertised features (records extracted before features existed)")
     e.add_argument("--records", action="store_true", help="the candidates that have a record in data/software")
+    e.add_argument("--install-docs", action="store_true",
+                   help="first read the install guide a README points to (the repository's own docs, the linked "
+                        "page, or the homepage; robots.txt obeyed), for candidates whose extraction by this model "
+                        "names no install path the Linux sandbox can run; one that got a page is then extracted "
+                        "again, since its sources changed")
     e.add_argument("--concurrency", type=int, default=1, help="calls in flight at once (default 1)")
     e.add_argument("--attempts", type=int, default=2,
                    help="tries per candidate for transient failures (default 2)")

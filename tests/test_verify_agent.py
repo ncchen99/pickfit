@@ -302,6 +302,39 @@ def test_a_trailing_tail_or_echo_is_dropped_before_the_command_runs(task, ledger
     assert report.verdict["level"] == "install" and report.verdict["agrees"] and len(server.requests) == 3
 
 
+def test_a_command_that_cannot_be_cited_is_said_with_its_output(task, ledger, tmp_path):
+    # termshark, 11/16: its loop was refused at finish, on the finish-only turn, with no command left to redo it.
+    loop = 'for f in *.deb; do dpkg -x "$f" ~/root; done'
+    fixture = "cat > ci.yml <<'EOF'\n" + "name: CI\n" * 70 + "EOF"
+    box = FakeBox({**EVNX_BOX, loop: (0, "", ""), fixture: (0, "", "")})
+    version = {"setup_ids": [], "expected_signal": "0.10.18", "expected_exit_code": 0, "observed_excerpt": ""}
+    server = FakeServer(
+        response("r1", run_cmd(loop)),
+        response("r2", run_cmd(fixture)),
+        response("r3", run_cmd("pipx install evnx")),
+        response("r4", run_cmd("evnx --version")),
+        response("r5", finish(level="install", steps=[3], smoke=[{**version, "command_id": 4}])),
+    )
+    a = agent(task, box, server, ledger, tmp_path)
+    report = a.run()
+    told = [item["output"] for request in server.requests[1:4] for item in request["input"][-1:]]
+    assert told[0].startswith("note: as written, pickfit cannot count this command as an install step or a "
+                              "check: `for` decides the exit code itself. If it is one, run it again in a form that shows")
+    assert f"it is {len(fixture)} characters and a step or a check fits in 500" in told[1]
+    assert "setup_ids, up to 4000 characters" in told[1]
+    assert told[2].startswith("command_id: 3")  # an honest command gets no note
+    assert "    not citable as written: `for` decides the exit code itself" in a.lines
+    assert report.verdict["level"] == "install" and report.verdict["agrees"]
+
+
+def test_the_prompt_states_the_record_rules_up_front(task, ledger, tmp_path):
+    a = agent(task, FakeBox(EVNX_BOX), FakeServer(), ledger, tmp_path)
+    assert "one command of at most 500 characters" in a.instructions
+    assert "Nor one with a loop (`for`, `while`)" in a.instructions
+    assert "`xargs -I{} tool {} < list.txt`" in a.instructions
+    assert "may be up to 4000 characters" in a.instructions
+
+
 def test_a_powershell_box_runs_the_command_as_written(task, ledger, tmp_path):
     class PwshBox(FakeBox):
         shell = "pwsh"

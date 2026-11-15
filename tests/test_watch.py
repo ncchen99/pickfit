@@ -60,6 +60,8 @@ class Pipeline:
         self.calls: list[str] = []
         self.security: Any = None
         self.visual: Any = None
+        self.pages: list[dict[str, Any]] | None = None  # install pages the docs step reads; None: no docs step
+        self.result_with_docs: dict[str, Any] | None = None  # what extraction answers once it has them
 
     def steps(self) -> Steps:
         def prescreen(c: dict[str, Any], run_id: str) -> list[dict[str, Any]]:
@@ -68,8 +70,13 @@ class Pipeline:
 
         def extract(c: dict[str, Any], run_id: str) -> list[dict[str, Any]]:
             self.calls.append("extract")
-            return [extraction_row(c["repo_id"], run_id, self.result if self.extract_status == "ok" else None,
+            result = self.result_with_docs if c.get("docs") and self.result_with_docs else self.result
+            return [extraction_row(c["repo_id"], run_id, result if self.extract_status == "ok" else None,
                                    self.extract_status)]
+
+        def docs(c: dict[str, Any]) -> dict[str, Any]:
+            self.calls.append("docs")
+            return {"rule": "install-docs.v1", "pages": self.pages, "tried": [], "fetched_at": NOW.isoformat()}
 
         def verify(task: Any, data_dir: Path, log: Any) -> Any:
             self.calls.append("verify")
@@ -80,7 +87,8 @@ class Pipeline:
             return self.score_error
 
         return Steps(github=self.github, prescreen=prescreen, extract=extract, verify=verify, score=score,
-                     display=self.display, security=self.security, visual=self.visual)
+                     display=self.display, security=self.security, visual=self.visual,
+                     docs=docs if self.pages is not None else None)
 
 
 @pytest.fixture
@@ -127,6 +135,41 @@ def test_a_submission_becomes_a_committed_record_ready_to_publish(env: dict[str,
     assert saved["result"] == "ready" and saved["seconds_to_ready"] == 400.0
     # The submitter's note is never read, and the prescreen's free text never reaches D1.
     assert "ignore" not in json.dumps(saved) and "great" not in (row["reason"] or "")
+
+
+def test_a_readme_with_no_install_command_gets_its_install_page_read(env: dict[str, Any]) -> None:
+    # rclone, restic, chezmoi (11/16): the README links to the install guide; without it nothing ran.
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    page = {"url": "https://tinyq.dev/install", "kind": "website", "title": "Install", "truncated": False,
+            "text": "cargo install tinyq", "why": "the README links to it as 'Installation'",
+            "fetched_at": NOW.isoformat()}
+    pipeline = Pipeline(env["tmp"], result=extraction(install_methods=[]))
+    pipeline.pages, pipeline.result_with_docs = [page], extraction()
+    lines: list[str] = []
+    [job] = run_once(env, pipeline, lines=lines)
+    assert pipeline.calls == ["prescreen", "extract", "docs", "extract", "verify", "score"]
+    assert (job.result, job.level) == ("ready", "function")
+    assert "install guide read: https://tinyq.dev/install" in job.notes
+    assert any("install guide: 1 page(s) read · https://tinyq.dev/install" in line for line in lines)
+    assert pipeline.verify.tasks[0].guides == [page]  # the agent can read it in the box
+    record = SoftwareRecord.model_validate_json((env["data"] / "tinyq.json").read_text())
+    assert [(s.id, s.kind) for s in record.sources if s.id == "docs1"] == [("docs1", "website")]
+
+
+def test_no_page_is_fetched_when_the_readme_installs_or_when_none_is_found(env: dict[str, Any]) -> None:
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    pipeline = Pipeline(env["tmp"])  # the README's cargo install is a path the box can try
+    pipeline.pages = [{"url": "https://tinyq.dev/install", "kind": "website", "text": "x", "fetched_at": NOW.isoformat()}]
+    run_once(env, pipeline)
+    assert "docs" not in pipeline.calls
+    # No page found: the first extraction stands, and the tool is listed unverified as before.
+    submit(env["d1"], "sub_2", "https://github.com/someone/other")
+    bare = Pipeline(env["tmp"], repos={"someone/other": repo_item(8, "someone/other")},
+                    result=extraction(install_methods=[]))
+    bare.pages = []
+    [job] = run_once(env, bare)
+    assert bare.calls == ["prescreen", "extract", "docs", "score"]
+    assert any(note.startswith("not verified: no install path") for note in job.notes)
 
 
 def test_publish_deploys_and_lists(env: dict[str, Any]) -> None:

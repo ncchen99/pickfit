@@ -61,6 +61,7 @@ from pickfit.d1 import D1Error, Database, sql, timestamp
 from pickfit.discover.github import normalize_repo
 from pickfit.discover.rules import RULES_VERSION, classify
 from pickfit.discover.store import PipelineDB, repo_key
+from pickfit.installdocs import needs_install_docs
 from pickfit.ledger import TAIPEI, BudgetExceeded, Ledger, taipei_now
 from pickfit.meta import PROD_MODEL
 from pickfit.schema import LISTED_CATEGORIES, TOOL_KINDS, ExtractionResult, SoftwareRecord, is_passed
@@ -241,6 +242,8 @@ class Steps:
     display: verify gives a GUI app (kind desktop_app) a box with a virtual display
     security(data_dir, slug) -> None, or why the known-vulnerability check could not run; the record stays "unchecked"
     visual(data_dir, slug, log) -> (cost, why it did not finish or None) for a desktop app; the record stays unchecked
+    docs(candidate) -> pickfit.installdocs.read_docs' result: the install pages a README points to, read only
+        when the README itself holds no install path the sandbox can run
     """
 
     github: Any
@@ -251,6 +254,7 @@ class Steps:
     display: bool = False
     security: Callable[[Path, str], str | None] | None = None
     visual: Callable[[Path, str, Callable[[str], None]], tuple[float, str | None]] | None = None
+    docs: Callable[[dict[str, Any]], dict[str, Any]] | None = None
 
 
 def live_steps(*, runner: str = "modal") -> Steps:
@@ -308,11 +312,19 @@ def live_steps(*, runner: str = "modal") -> Steps:
         except Exception as err:  # noqa: BLE001 - OCR, a budget or a model answer must not lose a finished run
             return 0.0, f"{type(err).__name__}: {str(err)[:200]}"
 
-    return Steps(github=GitHub(github_token()),
+    github = GitHub(github_token())
+
+    def docs(candidate: dict[str, Any]) -> dict[str, Any]:
+        from pickfit.discover.webapps import Fetcher
+        from pickfit.installdocs import read_docs
+
+        return read_docs(candidate, fetch=Fetcher(), file_text=github.file_text)
+
+    return Steps(github=github,
                  prescreen=lambda c, run_id: screen_and_review(c, run_id=run_id),
                  extract=lambda c, run_id: extract_with_retries(c, model=MODEL, run_id=run_id,
                                                                 reasoning_effort=EXTRACT_EFFORT),
-                 verify=verify, score=score, display=display, security=security, visual=visual)
+                 verify=verify, score=score, display=display, security=security, visual=visual, docs=docs)
 
 
 def hourly_cap(worker_dir: Path) -> int:
@@ -569,6 +581,18 @@ class Watcher:
 
         with self._stage(job, "extract"):
             extraction = self._extract(candidate, run_id, job)
+        if self.steps.docs and not candidate.get("docs") and needs_install_docs(extraction["result"]):
+            # The README names no install path the sandbox can run: read the install guide it points to.
+            with self._stage(job, "docs"):
+                docs = self.steps.docs(candidate)
+            self.db.save_install_docs(job.repo_id, docs)
+            log(f"install guide: {len(docs['pages'])} page(s) read"
+                + "".join(f" · {p['url']}" for p in docs["pages"]))
+            if docs["pages"]:
+                candidate = self.db.candidate(job.repo_id)
+                with self._stage(job, "extract"):
+                    extraction = self._extract(candidate, run_id, job)
+                job.notes.append(f"install guide read: {', '.join(p['url'] for p in docs['pages'])}")
         record_dir = self.s.runs_dir / "watch" / job.submission_id / "software"
         record = self._write_record(job, candidate, extraction, record_dir)
         log(f"record {job.slug} [{record.category}/{record.kind}]")
@@ -582,7 +606,7 @@ class Watcher:
             log(f"no sandbox run: {why}")
         else:
             task = VerifyTask(slug=job.slug, repo_url=record.repo.url, readme=candidate["readme"], extraction=ex,
-                              category=record.category)
+                              category=record.category, guides=candidate.get("docs") or [])
             with self._stage(job, "verify"):
                 outcome = self.steps.verify(task, record_dir, log)
             job.run_id, job.level = outcome.run_id, outcome.run.level

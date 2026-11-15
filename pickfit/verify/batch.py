@@ -197,6 +197,10 @@ def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
             "ORDER BY e.id", DONE_STATUSES).fetchall()
         feature_rows = conn.execute("SELECT repo_id, model, result, id FROM extractions WHERE status = ? "
                                     "ORDER BY id", (FEATURES_STATUS,)).fetchall()
+        # Install pages the README points to; a database from before pickfit.installdocs has no such table.
+        has_docs = conn.execute("SELECT 1 FROM sqlite_master WHERE name = 'install_docs'").fetchone()
+        guides = {r["repo_id"]: json.loads(r["pages"]) for r in
+                  (conn.execute("SELECT repo_id, pages FROM install_docs") if has_docs else [])}
     features: dict[str, sqlite3.Row] = {}
     for row in feature_rows:
         held = features.get(row["repo_id"])
@@ -249,7 +253,8 @@ def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
             continue
         repo = json.loads(row["repo"] or "{}")
         url = repo.get("html_url") or f"https://github.com/{row['full_name']}"
-        task = VerifyTask(slug=slug, repo_url=url, readme=row["readme"], extraction=ex, category=category)
+        task = VerifyTask(slug=slug, repo_url=url, readme=row["readme"], extraction=ex, category=category,
+                          guides=guides.get(row["repo_id"], []))
         items.append(BatchItem(task, row["repo_id"], row["full_name"], category, ex.kind.value,
                                demo_priority(ex), row["model"]))
     items.sort(key=lambda i: (-i.priority, i.full_name.lower()))

@@ -310,6 +310,10 @@ def build_record(candidate: dict[str, Any], extraction: dict[str, Any], *, slug:
         source_ids[sid] = sid
         record_sources.append({"id": sid, "kind": "package_registry", "url": listing["item_url"],
                                "fetched_at": listing["last_seen_at"]})
+    for n, page in enumerate(candidate.get("docs") or [], start=1):  # install pages the README points to
+        source_ids[f"docs{n}"] = f"docs{n}"
+        record_sources.append({"id": f"docs{n}", "kind": page["kind"], "url": page["url"],
+                               "fetched_at": page["fetched_at"]})
     ev = _Evidence(sources, source_ids, model, extraction["created_at"])
 
     def cited(name: str, value: Any, quote: str | None) -> Any:
@@ -554,7 +558,9 @@ def write_profiles(db: PipelineDB, *, model: str, out_dir: Path = DEFAULT_OUT,
     for hit in db.channel_hits("show_hn"):
         if hit["outcome"] == "candidate":
             found_in.setdefault(hit["repo_id"], []).append(hit)
-    candidates = sorted((db.candidate(repo_id) for repo_id in extractions),
+    # A hosted web app's extraction is in the same table and has no repository candidate: its record is
+    # written by `pickfit webapps records`, not here.
+    candidates = sorted((c for c in (db.candidate(repo_id) for repo_id in extractions) if c is not None),
                         key=lambda c: (c["first_seen_at"], c["repo_id"]))
     for c in candidates:
         old = existing.get(c["repo_id"])

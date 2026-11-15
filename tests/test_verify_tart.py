@@ -566,13 +566,15 @@ def test_prompt_names_the_macos_box_and_its_rule():
     text = render_task(task, plan_for(task.extraction, "macos"), MacFakeBox(), AgentLimits())
     assert "Box: macOS 26.6.2 (25G83) arm64 virtual machine" in text and "Debian" not in text
     assert "1. [brew, readme]" in text
-    rules = INSTRUCTIONS.format(max_commands=15, max_turns=25, minutes=20, stdout_chars="6,000",
+    rules = INSTRUCTIONS.format(max_commands=15, max_turns=25, minutes=20, stdout_chars="6,000", command_max=500,
+                                setup_max=4000,
                                 box_kind=MacFakeBox.kind, box_rule=MacFakeBox.user_rule)
     assert 'disposable macOS virtual machine ("the box")' in rules and "not an admin" in rules
 
 
 def test_linux_prompt_is_unchanged():
-    rules = INSTRUCTIONS.format(max_commands=15, max_turns=25, minutes=20, stdout_chars="6,000",
+    rules = INSTRUCTIONS.format(max_commands=15, max_turns=25, minutes=20, stdout_chars="6,000", command_max=500,
+                                setup_max=4000,
                                 box_kind=FakeBox.kind, box_rule=FakeBox.user_rule)
     assert 'disposable Linux sandbox ("the box")' in rules
     assert "- You are not root: no sudo, no apt-get, nothing written outside $HOME and /tmp. Do not install" in rules
