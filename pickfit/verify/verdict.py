@@ -507,24 +507,37 @@ def modified_copy(step_commands: list[str], check_commands: list[str], repo_url:
 
 def masked_exit(command: str) -> str | None:
     """Why the recorded exit code of `command` may not be its real result, or None."""
+    reasons = masked_exits(command)
+    return reasons[0] if reasons else None
+
+
+def masked_exits(command: str) -> list[str]:
+    """Every reason the recorded exit code of `command` may not be its real result.
+
+    All of them, because a finish goes back to the model once: told about `||` alone, it reran the
+    command without `||` and kept the `for` loop next to it, and the run was lost to the second fault.
+    """
     parts = _top_level(command)
     if parts and parts[-1][0] == "&" and not parts[-1][1].strip():
-        return "a trailing `&` sends it to the background"
+        return ["a trailing `&` sends it to the background"]
     parts = [p for p in parts if p[1].strip()]
+    reasons: list[str] = []
     if any(op == "||" for op, _ in parts):
-        return "`||` runs another command when the first fails"
+        reasons.append("`||` runs another command when the first fails")
+    control = False  # one reason for a compound command, not one for each of its `for`, `do` and `done`
     for _, text in parts:
         words = text.split()
         if words[:1] == ["exit"] and (len(words) == 1 or words[1] == "0"):
-            return "`exit` sets the exit code itself"
-        if words[:2] == ["set", "+e"]:
-            return "`set +e` ignores failures"
-        if text.strip().startswith("!"):
-            return "`!` inverts the exit code"
-        if _first_word(text) in _CONTROL:
-            return f"`{_first_word(text)}` decides the exit code itself"
+            reasons.append("`exit` sets the exit code itself")
+        elif words[:2] == ["set", "+e"]:
+            reasons.append("`set +e` ignores failures")
+        elif text.strip().startswith("!"):
+            reasons.append("`!` inverts the exit code")
+        elif _first_word(text) in _CONTROL and not control:
+            control = True
+            reasons.append(f"`{_first_word(text)}` decides the exit code itself")
     if not parts:
-        return None
+        return []
     # The exit code is the last list's: everything after the last `;`, `&` or newline. Within that
     # list it is the last pipeline's last command, since `&&`/`||` yield their final command's code
     # (so `cat x && tool y` is tool y's result, not cat's).
@@ -534,10 +547,25 @@ def masked_exit(command: str) -> str | None:
     pipeline = tail[start:]
     last = _first_word(pipeline[-1][1])
     if cut and last in _TRIVIAL:
-        return f"the last command is `{last}`, so it hides the exit code before it"
+        reasons.append(f"the last command is `{last}`, so it hides the exit code before it")
     if len(pipeline) > 1 and last in _FILTERS:
-        return f"piping into `{last}` hides the exit code of the command before it"
-    return None
+        reasons.append(f"piping into `{last}` hides the exit code of the command before it")
+    return list(dict.fromkeys(reasons))
+
+
+def uncitable(command: str) -> list[str]:
+    """Why a command that exited 0 still cannot be cited as an install step or a check: every reason.
+
+    The agent says so with the command's output, while there are commands left to run it again. The
+    instructions list the masks, and a model still writes them into install steps (termshark, 11/16:
+    `apt-get update | tail -3 && apt-get download ... | grep`, refused at finish on the turn that may
+    only finish); it cannot count to the length limit at all. Exploration is full of the same forms
+    (`| grep`, `|| echo none`), so the note says that exploration and a check's setup are fine as they are.
+    """
+    reasons = masked_exits(command)
+    if len(command) > COMMAND_MAX:
+        reasons.append(f"it is {len(command)} characters and a step or a check fits in {COMMAND_MAX}")
+    return reasons
 
 
 # What `| head` and `| tail` may take for unmasked() to drop them: line or byte counts only.
@@ -885,17 +913,19 @@ def log_verdict(finish: FinishArgs, commands: list[CommandRecord], *, mcp: bool 
             problems.append(f"step cites no run_command with id {step.command_id}")
             continue
         step_ids.append(step.command_id)
-        masked = masked_exit(record.command)
+        # Every fault of the step, not the first: the model gets one chance to rerun it (see masked_exits).
+        masked = masked_exits(record.command)
         if record.exit_code != 0 or record.timed_out or masked:
             steps_ok = False
-            why = masked or ("timed out" if record.timed_out else f"exit {record.exit_code}")
+            why = "; ".join(masked) or ("timed out" if record.timed_out else f"exit {record.exit_code}")
             problems.append(f"step {step.command_id} does not show a success ({why}): "
                             f"{_one_line(record.command)}")
-        elif len(record.command) > COMMAND_MAX:
+        if len(record.command) > COMMAND_MAX:
             steps_ok = False
             problems.append(f"step {step.command_id} is {len(record.command)} characters; an install step "
-                            f"must fit in {COMMAND_MAX} (split it into shorter commands)")
-        elif mcp and credentials(record.command):
+                            f"must fit in {COMMAND_MAX} (split it into shorter commands; a command that only "
+                            "writes a check's input or config files is that check's setup_ids, not a step)")
+        if mcp and credentials(record.command):
             steps_ok = False
             problems.append(f"step {step.command_id} sets {', '.join(credentials(record.command))}: pickfit "
                             "never uses placeholder credentials")

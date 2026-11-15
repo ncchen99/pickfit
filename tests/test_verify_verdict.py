@@ -13,8 +13,10 @@ from pickfit.verify.verdict import (
     local_installs,
     log_verdict,
     masked_exit,
+    masked_exits,
     modified_copy,
     split_last,
+    uncitable,
     unmasked,
     unread_scripts,
     written_paths,
@@ -290,6 +292,41 @@ def test_a_failed_claim_needs_a_command_that_failed():
     assert verdict.problems == ["a failed claim needs failing_command_id: the command that failed"]
     verdict = log_verdict(claim("failed", [1], [], blocking_error="x", failing_command_id=2), LOG)
     assert verdict.level == "unverified" and verdict.problems == ["failing command 2 exited 0"]
+
+
+def test_every_fault_of_a_command_is_named_at_once():
+    # jless, 11/16: told about `||` alone, the model reran without it and kept the loop; the run was lost.
+    loop = 'cd /tmp/x && for u in a b; do curl -fsSLO "$B/$u.deb" || exit 1; done && for f in *.deb; do dpkg -x "$f" r; done'
+    assert masked_exits(loop) == ["`||` runs another command when the first fails",
+                                  "`for` decides the exit code itself"]
+    assert masked_exit(loop) == "`||` runs another command when the first fails"
+    assert masked_exits("pipx install evnx") == [] and masked_exits("") == []
+    # act, 11/16: a fixture write of 692 characters that also ended in `; cat`. One problem for each rule.
+    fixture = "mkdir -p demo; cat > demo/ci.yml <<'EOF'\n" + "name: CI\n" * 80 + "EOF\nls demo"
+    log = [rec(1, "pipx install tool", 0), rec(2, fixture, 0), rec(3, "tool --version", 0, "tool 1.0"),
+           rec(4, "cd demo && tool run", 0, "Job succeeded")]
+    tests = [{"command_id": 3, "expected_signal": "1.0"}, {"command_id": 4, "expected_signal": "Job succeeded"}]
+    verdict = log_verdict(claim("function", [1, 2], tests), log)
+    assert verdict.level == "unverified" and len(verdict.problems) == 2
+    assert "step 2 does not show a success (the last command is `ls`" in verdict.problems[0]
+    assert verdict.problems[1].startswith(f"step 2 is {len(fixture)} characters; an install step must fit in 500")
+    assert "that check's setup_ids, not a step" in verdict.problems[1]
+    # The same command as the check's setup is what it is: nothing to split, nothing refused.
+    tests[1]["setup_ids"] = [2]
+    verdict = log_verdict(claim("function", [1], tests), log)
+    assert verdict.level == "function" and verdict.problems == []
+
+
+def test_a_loop_or_a_long_command_is_not_citable_and_says_why():
+    assert uncitable("pipx install evnx") == []
+    assert uncitable("apt-get update | tail -3 && apt-get download tshark | grep Get") == [
+        "piping into `grep` hides the exit code of the command before it"]
+    assert uncitable('for f in *.deb; do dpkg -x "$f" root; done') == ["`for` decides the exit code itself"]
+    long_loop = "cd /tmp/debs && " + "apt-get download " + "libfoo " * 80 + '&& for f in *.deb; do dpkg -x "$f" r; done'
+    assert uncitable(long_loop) == ["`for` decides the exit code itself",
+                                    f"it is {len(long_loop)} characters and a step or a check fits in 500"]
+    # A heredoc body is data: its words are not the command's.
+    assert uncitable("cat > run.sh <<'EOF'\nfor f in *; do echo $f; done\nEOF") == []
 
 
 def test_long_steps_and_steps_cited_as_setup():
