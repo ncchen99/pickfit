@@ -224,6 +224,22 @@ def test_claude_is_not_asked_to_write_its_reasoning_into_the_answer():
     assert 'use_thinking=bool(start.get("operator_thinking", True))' in harness
 
 
+def test_a_visits_judges_are_capped_with_the_operator_not_below_it():
+    # DuckDB's shell, 11/16: the operator spent $0.69 in the visit's scope, and the judge, capped at $0.50 in
+    # that same scope, was refused; the visit was lost. A judge's cap is the visit's.
+    caps: list[float] = []
+
+    def caller(endpoint, body, **kw):
+        caps.append(kw["scope_cap_usd"])
+        assert kw["scope"] == "web:duckdb-web-shell"
+        return SimpleNamespace(parsed=None, cost_usd=0.03)
+
+    state = {"screenshot_jpeg_b64": "AAAA", "url": "https://shell.duckdb.org", "title": "DuckDB", "text": "D"}
+    wv.judge_page("DuckDB Web Shell", state, run_id="web-x", scope="web:duckdb-web-shell", caller=caller)
+    assert caps == [wv.SITE_CAP_USD] and wv.SITE_CAP_USD == wv.OPERATE_CAP_USD + wv.JUDGE_CAP_USD
+    assert wv.WORST_SITE_USD >= wv.SITE_CAP_USD
+
+
 def test_operator_answer_reports_a_budget_stop():
     def caller(endpoint, body, **kw):
         raise BudgetExceeded("scope", 0.6, 0.6, 0.01)

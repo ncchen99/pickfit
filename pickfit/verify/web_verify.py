@@ -63,6 +63,10 @@ JUDGE_MAX_TOKENS = 3_000
 # Opus, a judge about $0.08), so the caps hold a visit's steps at what they settle to plus one reservation.
 OPERATE_CAP_USD = 3.00
 JUDGE_CAP_USD = 0.50
+# The judges that read a visit share its scope with the operator, so their cap is the visit's: what the operator
+# may spend plus their own. With the judges' $0.50 alone, a site whose operator had spent more than that
+# (DuckDB's shell, 11/16: $0.69 in six steps) was refused its judge and lost the visit.
+SITE_CAP_USD = OPERATE_CAP_USD + JUDGE_CAP_USD
 MAX_STEPS = 12
 OFFLINE_STEPS = 8
 WAIT_BETWEEN_ACTIONS = 1.5
@@ -444,7 +448,7 @@ def judge_page(name: str, state: dict[str, Any], *, run_id: str, scope: str,
                                                 "schema": meta_strict_schema(PageJudge), "strict": True}}}
     result = caller("responses", body, stage=STAGE_JUDGE, public_data_only=True, model=JUDGE_MODEL,
                     max_output_tokens=JUDGE_MAX_TOKENS, reasoning_effort="low", scope=scope,
-                    scope_cap_usd=JUDGE_CAP_USD, run_id=run_id, output_model=PageJudge, cache=False)
+                    scope_cap_usd=SITE_CAP_USD, run_id=run_id, output_model=PageJudge, cache=False)
     return result.parsed, result.cost_usd
 
 
@@ -467,7 +471,7 @@ def judge_function(target: WebTarget, before_b64: str | None, after_b64: str | N
                                                 "schema": meta_strict_schema(FunctionJudge), "strict": True}}}
     result = caller("responses", body, stage=STAGE_JUDGE, public_data_only=True, model=JUDGE_MODEL,
                     max_output_tokens=JUDGE_MAX_TOKENS, reasoning_effort="low", scope=scope,
-                    scope_cap_usd=JUDGE_CAP_USD, run_id=run_id, output_model=FunctionJudge, cache=False)
+                    scope_cap_usd=SITE_CAP_USD, run_id=run_id, output_model=FunctionJudge, cache=False)
     return result.parsed, result.cost_usd
 
 
@@ -494,7 +498,7 @@ def read_screenshot(png: Path, sought: str, *, run_id: str, scope: str,
                                 "schema": meta_strict_schema(ScreenRead), "strict": True}}}
     result = caller("responses", body, stage=STAGE_JUDGE, public_data_only=True, model=JUDGE_MODEL,
                     max_output_tokens=JUDGE_MAX_TOKENS, reasoning_effort="low", scope=scope,
-                    scope_cap_usd=JUDGE_CAP_USD, run_id=run_id, output_model=ScreenRead, cache=False)
+                    scope_cap_usd=SITE_CAP_USD, run_id=run_id, output_model=ScreenRead, cache=False)
     return result.parsed, result.cost_usd
 
 
