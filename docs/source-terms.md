@@ -172,3 +172,34 @@
 5. **只有網址的網頁應用照網頁應用的規則**（18 個）：每站只抓 robots.txt、首頁、一頁使用條款；robots.txt 不讓 pickfit 抓、或條款禁止自動化存取的不收（上面「網頁應用（P2.8）」一節的規則 4–8）。通過後由模型初篩、抽取、寫紀錄，再由 `web_verify` 在 Modal microVM 裡開瀏覽器實測，每站只造訪一次。唯一不套用的是規則 3 的人氣區間（中間一半）：那是為了從一大批站裡取樣，這一批是念誠指定的知名網站。
 6. **模型**：初篩 `claude-haiku-5-5`；初篩複查、抽取、驗證 agent、判讀、計分、網頁操作 `claude-opus-5-5`（Anthropic API）。每筆紀錄記下各段用的模型，花費記在帳本的 `pipeline` 預算。
 7. **指令**：`uv run python scripts/ingest_candidates.py list`（解析與去重）、`repos`（有 repo 的）、`web`（網站的規則與初篩）、`results`（把每一筆的結果寫回 JSON）。
+
+### 結果（2026-11-16 02:20 台北）
+
+| | CLI／TUI | MCP server | 自架 Web 工具 | 網站 | 合計 |
+|---|---|---|---|---|---|
+| 清單列數 | 52 | 34 | 14 | 18 | 118 |
+| 要跑的 repo 或網站 | 52 | 27 | 14 | 18 | 111 |
+| 寫成紀錄 | 48 | 22 | 12 | 13 | 95 |
+| 其中 function | 29 | 7 | 1 | 0 | 37 |
+| 其中 service | 0 | 10 | 2 | 0 | 12 |
+| 其中 install | 3 | 0 | 0 | 13 | 16 |
+| 其中未驗證 | 16 | 5 | 9 | 0 | 30 |
+| 沒寫紀錄 | 4 | 5 | 2 | 5 | 16 |
+
+MCP 的 34 列裡有 6 列和別列同一個 repo（`modelcontextprotocol/servers`，合成一筆，驗到 service），1 列沒寫 repo（Puppeteer MCP）。每一筆的結果在 `docs/discovery/post-hackathon-candidates-v1.json`。
+
+- **目錄**：1,058 → 1,153 筆，列出的 1,145 筆。新紀錄的類別：mcp_server 20、infra_devops 15、security_net 15、dev_cli 15、productivity_docs 11、data_db 9、media_files 6、other 4。知名度都高，沒有一筆算寶藏。漏洞檢查：clean 44、vulnerable 38、unchecked 13。
+- **沒寫紀錄的 16 筆**，都是流程自己擋下的，沒有重抽：
+  - 規則擋下 5：repo 已封存（Tree-sitter MCP、DuckDB MCP）、README 沒有安裝或用法的段落（Neo4j Cypher MCP、PairDrop、Cobalt）。
+  - 讀起來不是「人會安裝來用的軟體」6：crane（`google/go-containerregistry` 主要是函式庫）、duckdb（README 寫它跑在應用程式的行程裡）、Browser-Use MCP（函式庫）、git-cliff 與 opentofu（README 裡找不到能引用的句子說它是哪一種軟體）、DeepWiki MCP（初篩複查判定不是可用的軟體）。
+  - 網站 5：使用條款禁止自動化存取（JSON Crack、Webhook.site）、robots.txt 不允許（tldraw）、首頁文字太少，抽取引不出「這是網頁應用」的原文（Squoosh、Crontab.guru）。
+- **未驗證的 30 筆**：20 筆是 README 沒有 Linux 沙盒能跑的安裝指令。知名工具的 README 常常只寫「安裝請看官網文件」（rclone、restic、chezmoi、pandoc、mitmproxy、fx…），或只給 Docker、Homebrew（trivy、多數自架 Web 工具）；pickfit 只讀 README 與 release，所以沒有指令可跑。其餘 10 筆沙盒跑了但沒通過：
+  - 5 筆是 agent 說裝好也測過了，但它記下的安裝步驟不合 pickfit 的紀錄規則，程式不採信：一步超過 500 字元（act、vhs、homepage），或用 `for` 迴圈包住下載、看不出每一步有沒有成功（termshark、jless）。這是 Claude 當 agent 時的寫法問題，不是工具的問題，之後調整提示再重驗應該會過。
+  - 2 筆是 MCP server 少了它要連的服務，交握不成功：Postgres MCP Pro（要資料庫）、kubernetes-mcp-server（要叢集）。
+  - 3 筆 agent 自己回報原因：mcp-server-docker 要 Docker、Brave Search MCP 要金鑰、n8n 資源不夠。
+- **網站 13 筆只到 install**：每站造訪了一次，頁面開得起來、判讀是主畫面，但操作 agent 一步都沒動。原因在 pickfit 這邊：browser-use 會要求模型把推理寫進回覆的 `thinking` 欄位，Anthropic API 把這種請求判成擷取模型推理而拒答（`stop_reason: refusal`，類別 `reasoning_extraction`），52 次操作呼叫全部沒有內容。已修正（Claude 當操作者時不要求那個欄位；被拒答會換模型並把原因回報給 harness）。要補功能實測就得再造訪一次，和上面第 5 點「每站只造訪一次」衝突，所以還沒做，等念誠決定。
+- **途中修掉的兩個抽取問題，以及重跑了哪幾筆**（都是 pickfit 這邊的錯，不是挑結果）：
+  - 抽取的 schema 有 49 個可為 null 的欄位，超過 Claude 結構化輸出的上限 16，所以 schema 改放在提示詞裡，沒有強制力。Claude 把不知道的欄位寫成單純的 `null`，驗證不過；前後 41 次抽取因此白做（約 $1.2）。修正後重跑三次都失敗的 3 筆：pandoc、trippy、go-task（`--retry`）。
+  - `platforms` 被讀成「句子裡提到的那個系統」（例如 "Release v0.3.0 adds windows support" 被讀成只支援 Windows），3 筆因此沒進沙盒：oxker、mcp-server-docker、postgres-mcp。把欄位說明寫清楚後重抽（三筆都變成「沒寫」），第一次產生的未驗證紀錄還沒 commit，移到 `runs/candidates-v1/superseded/`，再照同一段流程重跑：oxker 通過，另外兩筆進了沙盒但沒過（要 Docker、要資料庫）。
+- **花費**（帳本 `pipeline` 預算，11/16）：Claude 約 $27.7，其中驗證 agent 12.4、抽取 8.0、文件 rubric 3.1、判讀 1.4、網頁操作 1.4（全部被拒答）、使用說明 0.9、初篩 0.2、連線測試 0.2；Modal 沙盒約 $0.55。每個有 repo 的候選平均約 $0.25，從送進流程到寫成紀錄 2–6 分鐘。
+- **帳本裡有 43 列不是實際花費**：11/15–11/16 的 `verify-gui-operator`、沒有 run id、共約 $0.49，是跑測試時測試替身寫進共用帳本的（`tests/test_verify_gui_operate.py` 沒有隔離帳本，賽期就有，當時算在 Baseten 的價格上）。現在 `tests/conftest.py` 讓每個測試用自己的帳本與 runs 資料夾；已經寫進去的列沒有刪。

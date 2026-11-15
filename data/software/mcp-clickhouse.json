@@ -1,0 +1,770 @@
+{
+  "schema_version": "software.v1",
+  "slug": "mcp-clickhouse",
+  "repo_id": "gh:908231244",
+  "name": "ClickHouse MCP Server",
+  "summary": "An MCP server that lets AI assistants list databases and tables and run SQL queries on ClickHouse or the embedded chDB engine.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [
+    "run SQL queries on a ClickHouse cluster from an AI assistant",
+    "query files and URLs with embedded chDB without ETL",
+    "estimate query cost before running it"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "run SQL queries on ClickHouse",
+    "list databases and tables",
+    "query data with embedded chDB engine",
+    "read-only mode by default"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:15.746583Z",
+    "run_id": "verify-mcp-clickhouse-20261116-012430-c49c",
+    "open_hint": "Add `mcp-clickhouse` as an MCP server in your AI assistant's settings, with CHDB_ENABLED=true to use the embedded chDB engine or your ClickHouse connection details to query a cluster.",
+    "features": [
+      {
+        "feature": "run SQL queries on ClickHouse",
+        "title": "Run SQL queries on ClickHouse",
+        "steps": []
+      },
+      {
+        "feature": "list databases and tables",
+        "title": "List databases and tables",
+        "steps": []
+      },
+      {
+        "feature": "query data with embedded chDB engine",
+        "title": "Query data with the embedded chDB engine",
+        "steps": [
+          "Start the server with chDB on and ClickHouse off: `CHDB_ENABLED=true CLICKHOUSE_ENABLED=false mcp-clickhouse`.",
+          "Connect your MCP client to the server.",
+          "Ask the assistant to call the run_chdb_select_query tool with a SELECT query, such as `SELECT number, number*2 AS doubled FROM numbers(3)`."
+        ]
+      },
+      {
+        "feature": "read-only mode by default",
+        "title": "Use read-only mode by default",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/ClickHouse/mcp-clickhouse",
+    "full_name": "ClickHouse/mcp-clickhouse",
+    "created_at": "2024-12-25T14:15:46Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.10,<=3.15"
+    ],
+    "system_packages": [
+      "C compiler (for lz4 on Python 3.15)"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mcp-clickhouse-20261116-012430-c49c",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install 'mcp-clickhouse[chdb]'",
+          "purpose": "uv tool install 'mcp-clickhouse[chdb]' (puts mcp-clickhouse on PATH, with the chDB extra)"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.7.0",
+    "published_at": "2026-09-21T13:55:16Z",
+    "url": "https://github.com/ClickHouse/mcp-clickhouse/releases/tag/v0.7.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T01:25:57.864570+08:00",
+    "runs": [
+      {
+        "id": "verify-mcp-clickhouse-20261116-012430-c49c",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:25:57.864570+08:00",
+        "tool_version": "0.7.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install 'mcp-clickhouse[chdb]'",
+            "purpose": "uv tool install 'mcp-clickhouse[chdb]' (puts mcp-clickhouse on PATH, with the chDB extra)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "CHDB_ENABLED=true python3 ~/.pickfit/mcp_probe.py --timeout 120 -- mcp-clickhouse",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "CHDB_ENABLED=true CLICKHOUSE_ENABLED=false python3 ~/.pickfit/mcp_probe.py --timeout 120 --call run_chdb_select_query --args '{\"query\":\"SELECT number, number*2 AS doubled FROM numbers(3)\"}' -- mcp-clickhouse",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=run_chdb_select_query content=text text_chars=87",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install mcp-clickhouse (base package); run_chdb_select_query requires the optional chdb extra",
+            "actually_needed": "Installed with uv tool install 'mcp-clickhouse[chdb]' so the chDB tool works. Without CHDB_ENABLED=true only the ClickHouse tools are listed.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "ClickHouse tools need a reachable ClickHouse server (CLICKHOUSE_HOST etc.)",
+            "actually_needed": "The official ClickHouse binary from builds.clickhouse.com crashed with a segfault in this sandbox, so the box had no local server. run_query, list_databases and list_tables could not be tested.",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both checks show the MCP server completing its handshake; the first lists 4 tools, and the second calls run_chdb_select_query, which returns the correct rows for numbers(3).",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mcp-clickhouse-20261116-012430-c49c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mcp-clickhouse-20261116-012430-c49c/check-1-cmd4.judged.png",
+            "runs/verify/verify-mcp-clickhouse-20261116-012430-c49c/check-2-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.220901,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "mcp-clickhouse"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "mcp-clickhouse",
+          "server_version": "0.7.0",
+          "tools": [
+            "run_chdb_select_query"
+          ],
+          "tool_count": 1,
+          "called_tool": "run_chdb_select_query",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "run SQL queries on ClickHouse",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "run_query needs a ClickHouse server; the local ClickHouse binary crashed with a segfault here (commands 3, 6)"
+          },
+          {
+            "feature": "list databases and tables",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "list_databases/list_tables need a ClickHouse server; none could run in this box"
+          },
+          {
+            "feature": "query data with embedded chDB engine",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "read-only mode by default",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "read-only enforcement applies to run_query against a ClickHouse server, which could not be started"
+          }
+        ]
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "sse",
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "uv run --with mcp-clickhouse --python 3.12 mcp-clickhouse",
+    "client_configs": [
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"mcp-clickhouse\": {\n      \"command\": \"uv\",\n      \"args\": [\n        \"run\",\n        \"--with\",\n        \"mcp-clickhouse\",\n        \"--python\",\n        \"3.12\",\n        \"mcp-clickhouse\"\n      ],\n      \"env\": {\n        \"CLICKHOUSE_HOST\": \"sql-clickhouse.clickhouse.com\",\n        \"CLICKHOUSE_PORT\": \"8443\",\n        \"CLICKHOUSE_USER\": \"demo\",\n        \"CLICKHOUSE_PASSWORD\": \"\",\n        \"CLICKHOUSE_SECURE\": \"true\",\n        \"CLICKHOUSE_VERIFY\": \"true\",\n        \"CLICKHOUSE_CONNECT_TIMEOUT\": \"30\"\n      }\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "CLICKHOUSE_HOST",
+        "required": null,
+        "purpose": "ClickHouse host"
+      },
+      {
+        "name": "CLICKHOUSE_PORT",
+        "required": null,
+        "purpose": "ClickHouse port"
+      },
+      {
+        "name": "CLICKHOUSE_USER",
+        "required": null,
+        "purpose": "ClickHouse username"
+      },
+      {
+        "name": "CLICKHOUSE_PASSWORD",
+        "required": null,
+        "purpose": "ClickHouse password"
+      },
+      {
+        "name": "CLICKHOUSE_SECURE",
+        "required": null,
+        "purpose": "use HTTPS"
+      },
+      {
+        "name": "CLICKHOUSE_ALLOW_WRITE_ACCESS",
+        "required": false,
+        "purpose": "enable write queries"
+      },
+      {
+        "name": "CLICKHOUSE_ALLOW_DROP",
+        "required": false,
+        "purpose": "enable destructive operations"
+      },
+      {
+        "name": "CHDB_ENABLED",
+        "required": false,
+        "purpose": "enable chDB engine"
+      },
+      {
+        "name": "CHDB_DATA_PATH",
+        "required": null,
+        "purpose": "chDB data directory"
+      },
+      {
+        "name": "CLICKHOUSE_MCP_AUTH_TOKEN",
+        "required": null,
+        "purpose": "bearer token for HTTP/SSE auth"
+      }
+    ],
+    "tools": [
+      "run_query",
+      "list_databases",
+      "list_tables",
+      "run_chdb_select_query"
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:26:06+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "pypi:mcp-clickhouse (fresh install, 75 packages)"
+    ],
+    "packages_checked": 75,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:25:57+08:00",
+    "quality": {
+      "total": 86.2,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5429,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 94.9,
+      "signals": {
+        "stars": 906,
+        "monthly_downloads": 344589,
+        "forks": 209,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 2,
+        "registries_count": 1
+      },
+      "age_days": 690,
+      "packages": [
+        "pypi:mcp-clickhouse"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 4.4
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:25:57.867488+08:00",
+      "sources_sha": "a54354e335f7da39febd72f31212a3281d27c2627b883d934389afe686659d30",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Execute SQL queries on your ClickHouse cluster."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Connect ClickHouse to your AI assistants."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Python 3.10 through 3.15 are supported. Python 3.12 is recommended for local launches."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "python3 -m pip install mcp-clickhouse"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "curl http://localhost:8000/health\n# Response: OK"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "To allow DDL or INSERT statements, set the `CLICKHOUSE_ALLOW_WRITE_ACCESS` environment variable to `true`."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "python3 -m pip install --upgrade mcp-clickhouse"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "On Windows: `%APPDATA%/Claude/claude_desktop_config.json`"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/ClickHouse/mcp-clickhouse",
+      "fetched_at": "2026-11-16T01:24:15+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/ClickHouse/mcp-clickhouse/blob/main/README.md",
+      "fetched_at": "2026-11-16T01:24:13+08:00"
+    },
+    {
+      "id": "release:v0.7.0",
+      "kind": "release",
+      "url": "https://github.com/ClickHouse/mcp-clickhouse/releases/tag/v0.7.0",
+      "fetched_at": "2026-11-16T01:24:13+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "An MCP server for ClickHouse.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "github_api",
+      "quote": "Connect ClickHouse to your AI assistants.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "An MCP server for ClickHouse.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "An MCP server for ClickHouse.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# ClickHouse MCP Server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Python 3.10 through 3.15 are supported.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "A C compiler is\nrequired for `lz4`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:24:15+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:24:15+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:24:15+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.7.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:24:13+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Execute SQL queries on your ClickHouse cluster.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Query data directly from various sources (files, URLs, databases) without ETL processes.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "`run_query` also runs `DESCRIBE` and `EXPLAIN ESTIMATE`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Execute SQL queries on your ClickHouse cluster.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "List all databases on your ClickHouse cluster.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Execute SQL queries using [chDB](https://github.com/chdb-io/chdb)'s embedded ClickHouse engine.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Queries run in read-only mode by default",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "When using HTTP or SSE transport, authentication is **required by default**. The `stdio` transport (default)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "\"args\": [\"run\", \"--with\", \"mcp-clickhouse\", \"--python\", \"3.12\", \"mcp-clickhouse\"],",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"mcp-clickhouse\": {\n      \"command\": \"uv\",\n      \"args\": [\n        \"run\",\n        \"--with\",\n        \"mcp-clickhouse\",\n        \"--python\",\n        \"3.12\",\n        \"mcp-clickhouse\"\n      ],\n      \"env\": {\n        \"CLICKHOUSE_HOST\": \"sql-clickhouse.clickhouse.com\",\n        \"CLIC",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "CLICKHOUSE_HOST",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "CLICKHOUSE_PORT",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "CLICKHOUSE_USER",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "CLICKHOUSE_PASSWORD",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/4",
+      "source_id": "readme",
+      "quote": "CLICKHOUSE_SECURE",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/5",
+      "source_id": "readme",
+      "quote": "CLICKHOUSE_ALLOW_WRITE_ACCESS",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/6",
+      "source_id": "readme",
+      "quote": "CLICKHOUSE_ALLOW_DROP",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/7",
+      "source_id": "readme",
+      "quote": "CHDB_ENABLED",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/8",
+      "source_id": "readme",
+      "quote": "CHDB_DATA_PATH",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/9",
+      "source_id": "readme",
+      "quote": "CLICKHOUSE_MCP_AUTH_TOKEN",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "* `run_query`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "* `list_databases`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "* `list_tables`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "* `run_chdb_select_query`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:30+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:24:13+08:00",
+  "updated_at": "2026-11-16T01:26:06+08:00"
+}

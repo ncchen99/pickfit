@@ -1,0 +1,696 @@
+{
+  "schema_version": "software.v1",
+  "slug": "age",
+  "repo_id": "gh:187403699",
+  "name": "age",
+  "summary": "File encryption tool, format and Go library using small explicit keys, with support for SSH keys, passphrases and post-quantum keys.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "security_net",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "age-encryption",
+    "built-at-rc"
+  ],
+  "use_cases": [
+    "encrypt a tarball to a public key",
+    "encrypt a file to a GitHub user's SSH keys",
+    "encrypt a file with a passphrase"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "encrypt files to multiple recipients",
+    "generate hybrid post-quantum keys",
+    "encrypt to SSH public keys",
+    "inspect encrypted file metadata"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:12:54.873536Z",
+    "run_id": "verify-age-20261116-005522-c304",
+    "open_hint": "Run `age-keygen -o <key file>` to create your first key pair.",
+    "features": [
+      {
+        "feature": "encrypt files to multiple recipients",
+        "title": "Encrypt a file to several recipients at once",
+        "steps": [
+          "Create a key with `age-keygen -o <key file>` and print its public key with `age-keygen -y <key file>`.",
+          "Encrypt with one `-r` per recipient: `age -o <file>.age -r \"$(age-keygen -y <key file>)\" -r \"$(age-keygen -y <other key file>)\" <file>`.",
+          "Any recipient can decrypt with `age -d -i <key file> <file>.age`."
+        ]
+      },
+      {
+        "feature": "generate hybrid post-quantum keys",
+        "title": "Generate hybrid post-quantum keys",
+        "steps": []
+      },
+      {
+        "feature": "encrypt to SSH public keys",
+        "title": "Encrypt files to SSH public keys",
+        "steps": [
+          "Encrypt to a public key file with `age -R <id_ed25519.pub> <file> > <file>.age`.",
+          "Decrypt with the matching private key: `age -d -i <id_ed25519> <file>.age`."
+        ]
+      },
+      {
+        "feature": "inspect encrypted file metadata",
+        "title": "Inspect details of an encrypted file",
+        "steps": [
+          "Run `age-inspect <file>.age` to see details such as whether the file uses post-quantum encryption."
+        ]
+      }
+    ]
+  },
+  "homepage": "https://age-encryption.org",
+  "repo": {
+    "url": "https://github.com/FiloSottile/age",
+    "full_name": "FiloSottile/age",
+    "created_at": "2019-05-18T20:44:54Z",
+    "archived": false
+  },
+  "platforms": [
+    "windows",
+    "linux",
+    "macos"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install age",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "age-keygen -o key.txt"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-age-20261116-005522-c304",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/age.tar.gz \"https://dl.filippo.io/age/latest?for=linux/amd64\" && mkdir -p /tmp/agex && tar xzf /tmp/age.tar.gz -C /tmp/agex && mkdir -p ~/.local/bin && cp /tmp/agex/age/age* ~/.local/bin/",
+          "purpose": "Download the pre-built linux/amd64 tarball named in the README and copy the binaries to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "age --version",
+        "expected_signal": "v1.3.2"
+      },
+      "first_task": "age-keygen -o key.txt"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install filippo.io/age/cmd/...@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "age-keygen -o key.txt"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "BSD-3-Clause",
+  "processing": null,
+  "last_release": {
+    "tag": "v1.3.2",
+    "published_at": "2026-08-29T17:55:36Z",
+    "url": "https://github.com/FiloSottile/age/releases/tag/v1.3.2"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T00:56:26.562588+08:00",
+    "runs": [
+      {
+        "id": "verify-age-20261116-005522-c304",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T00:56:26.562588+08:00",
+        "tool_version": "v1.3.2",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/age.tar.gz \"https://dl.filippo.io/age/latest?for=linux/amd64\" && mkdir -p /tmp/agex && tar xzf /tmp/age.tar.gz -C /tmp/agex && mkdir -p ~/.local/bin && cp /tmp/agex/age/age* ~/.local/bin/",
+            "purpose": "Download the pre-built linux/amd64 tarball named in the README and copy the binaries to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "age --version",
+            "expected_signal": "v1.3.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "v1.3.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "age-keygen -o key.txt",
+            "expected_signal": "Public key: age1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Public key: age1yd36j6kvpx9ewtpnyywln2lgy4kns3cmywf4e00086qf4grj0c8scuh7df",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "age -o example.txt.age -r \"$(age-keygen -y key.txt)\" -r \"$(age-keygen -y key2.txt)\" example.txt && age -d -i key.txt example.txt.age && age -d -i key2.txt example.txt.age",
+            "expected_signal": "hello age hello age",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hello age",
+            "setup": [
+              {
+                "command": "age-keygen -o key.txt",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "rm -f key2.txt id_ed25519 id_ed25519.pub && echo \"hello age\" > example.txt && age-keygen -o key2.txt && uv run --with cryptography python -c \"\nfrom cryptography.hazmat.primitives.asymmetric import ed25519\nfrom cryptography.hazmat.primitives import serialization as s\nk=ed25519.Ed25519PrivateKey.generate()\nopen('id_ed25519','wb').write(k.private_bytes(s.Encoding.PEM,s.PrivateFormat.OpenSSH,s.NoEncryption()))\nopen('id_ed25519.pub','wb').write(k.public_key().public_bytes(s.Encoding.OpenSSH,s.PublicFormat.OpenSSH))\n\" && chmod 600 id_ed25519 && cat id_ed25519.pub",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "rm -f pqkey.txt && age-keygen -pq -o pqkey.txt && age-keygen -y pqkey.txt > pqrecipient.txt && cut -c1-8 pqrecipient.txt && age -R pqrecipient.txt example.txt > pq.age && age -d -i pqkey.txt pq.age",
+            "expected_signal": "age1pq1z",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "Public key: age1pq1ajsj7hfuceh7v4pm6eeaw3t64z5cxlv8ssfgxj2898ptlzu2206cr8632y37wtp6zex7ze5gr0znqj6h32jeju33carxcgq6hl6st0yxkz7hrfr03wrlxppz7kj5l7ng36duys8v7c52wgfmaru232cufpgrgjj07vh6ddzuptt6lc9r9wtetxdwftrv37rja3j29ntjhfw3jcl0wmzpd5m2wjg6y20kcaajy7usywya3nzkxdm6nz5k869v2fcjcygexxpq09sgk8mzww0rcmwk…",
+            "setup": [
+              {
+                "command": "rm -f key2.txt id_ed25519 id_ed25519.pub && echo \"hello age\" > example.txt && age-keygen -o key2.txt && uv run --with cryptography python -c \"\nfrom cryptography.hazmat.primitives.asymmetric import ed25519\nfrom cryptography.hazmat.primitives import serialization as s\nk=ed25519.Ed25519PrivateKey.generate()\nopen('id_ed25519','wb').write(k.private_bytes(s.Encoding.PEM,s.PrivateFormat.OpenSSH,s.NoEncryption()))\nopen('id_ed25519.pub','wb').write(k.public_key().public_bytes(s.Encoding.OpenSSH,s.PublicFormat.OpenSSH))\n\" && chmod 600 id_ed25519 && cat id_ed25519.pub",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "age -R id_ed25519.pub example.txt > ssh.age && age -d -i id_ed25519 ssh.age",
+            "expected_signal": "hello age",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hello age",
+            "setup": [
+              {
+                "command": "rm -f key2.txt id_ed25519 id_ed25519.pub && echo \"hello age\" > example.txt && age-keygen -o key2.txt && uv run --with cryptography python -c \"\nfrom cryptography.hazmat.primitives.asymmetric import ed25519\nfrom cryptography.hazmat.primitives import serialization as s\nk=ed25519.Ed25519PrivateKey.generate()\nopen('id_ed25519','wb').write(k.private_bytes(s.Encoding.PEM,s.PrivateFormat.OpenSSH,s.NoEncryption()))\nopen('id_ed25519.pub','wb').write(k.public_key().public_bytes(s.Encoding.OpenSSH,s.PublicFormat.OpenSSH))\n\" && chmod 600 id_ed25519 && cat id_ed25519.pub",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "age-inspect pq.age",
+            "expected_signal": "This file uses post-quantum encryption.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "This file uses post-quantum encryption.",
+            "setup": [
+              {
+                "command": "rm -f key2.txt id_ed25519 id_ed25519.pub && echo \"hello age\" > example.txt && age-keygen -o key2.txt && uv run --with cryptography python -c \"\nfrom cryptography.hazmat.primitives.asymmetric import ed25519\nfrom cryptography.hazmat.primitives import serialization as s\nk=ed25519.Ed25519PrivateKey.generate()\nopen('id_ed25519','wb').write(k.private_bytes(s.Encoding.PEM,s.PrivateFormat.OpenSSH,s.NoEncryption()))\nopen('id_ed25519.pub','wb').write(k.public_key().public_bytes(s.Encoding.OpenSSH,s.PublicFormat.OpenSSH))\n\" && chmod 600 id_ed25519 && cat id_ed25519.pub",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "rm -f pqkey.txt && age-keygen -pq -o pqkey.txt && age-keygen -y pqkey.txt > pqrecipient.txt && cut -c1-8 pqrecipient.txt && age -R pqrecipient.txt example.txt > pq.age && age -d -i pqkey.txt pq.age",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "go install filippo.io/age/cmd/...@latest / apt install age / pacman -S age",
+            "actually_needed": "Without Go or root, the README's pre-built binary link (https://dl.filippo.io/age/latest?for=linux/amd64) worked: extract the tarball and copy age/* onto PATH",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "age -R ~/.ssh/id_ed25519.pub example.jpg > example.jpg.age",
+            "actually_needed": "The box has no ssh-keygen, so the ed25519 OpenSSH key pair was generated with python cryptography (uv run --with cryptography)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "age-keygen -o key.txt",
+            "actually_needed": "age-keygen will not overwrite an existing output file ('file exists'), so remove it first when you rerun",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks succeeded: age-keygen printed an age1 public key, decryption with both keys printed 'hello age' twice, and age --version printed v1.3.2.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-age-20261116-005522-c304/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-age-20261116-005522-c304/check-1-cmd3.judged.png",
+            "runs/verify/verify-age-20261116-005522-c304/check-2-cmd7.judged.png",
+            "runs/verify/verify-age-20261116-005522-c304/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.194892,
+        "features": [
+          {
+            "feature": "encrypt files to multiple recipients",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "generate hybrid post-quantum keys",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "encrypt to SSH public keys",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "inspect encrypted file metadata",
+            "status": "checked",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T00:56:33+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/FiloSottile/age@b74dce4cdbe3",
+      "go.mod"
+    ],
+    "packages_checked": 9,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T00:56:26+08:00",
+    "quality": {
+      "total": 83.1,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5611,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 99.5,
+      "signals": {
+        "stars": 24332,
+        "monthly_downloads": 11995,
+        "forks": 682,
+        "dependents": null,
+        "release_downloads": 7587821,
+        "hn_top_score": 494,
+        "registries_count": 1
+      },
+      "age_days": 2737,
+      "packages": [
+        "homebrew:age"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.42
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:56:26.567871+08:00",
+      "sources_sha": "4efbe899ff3fbe2831343a5a2b8e7e6a4f83a73eee782187cc8010e6f16a7d03",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "It features small explicit keys, post-quantum support, no config options, and UNIX-style composability."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "age is a simple, modern and secure file encryption tool, format, and Go library."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "If your system has [a supported version of Go](https://go.dev/dl/), you can build from source."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "<code>winget install --id FiloSottile.age</code>"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "$ age-keygen -o key.txt\nPublic key: age1ql3z7hjy54pw3hyww5ayyfg7zqgvc7w3j2elw8zmrj2kg5sfn9aqmcac8p"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "small explicit keys, no config options"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "On Windows, Linux, macOS, and FreeBSD you can use the pre-built binaries."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/FiloSottile/age",
+      "fetched_at": "2026-11-16T00:55:13+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/FiloSottile/age/blob/main/README.md",
+      "fetched_at": "2026-11-16T00:55:11+08:00"
+    },
+    {
+      "id": "release:v1.3.2",
+      "kind": "release",
+      "url": "https://github.com/FiloSottile/age/releases/tag/v1.3.2",
+      "fetched_at": "2026-11-16T00:55:11+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "age [--encrypt] (-r RECIPIENT | -R PATH)... [--armor] [-o OUTPUT] [INPUT]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:22+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "age is a simple, modern and secure file encryption tool",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:22+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A simple, modern and secure encryption tool (and Go library)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:22+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "age is a simple, modern and secure file encryption tool, format, and Go library.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:22+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "age is a simple, modern and secure file encryption tool, format, and Go library.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:22+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "On Windows, Linux, macOS, and FreeBSD you can use the pre-built binaries.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:22+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:55:13+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:55:13+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T00:55:13+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:55:13+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:55:13+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.3.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:55:11+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "tar cvz ~/data | age -r age1ql3z7hjy54pw3hyww5ayyfg7zqgvc7w3j2elw8zmrj2kg5sfn9aqmcac8p > data.tar.gz.age",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:22+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "you can easily encrypt a file to the SSH keys listed on a GitHub profile.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:22+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Files can be encrypted with a passphrase by using `-p/--passphrase`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:22+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Files can be encrypted to multiple recipients by repeating `-r/--recipient`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:22+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "To generate hybrid post-quantum keys, which are secure against future quantum",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:22+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "age also supports encrypting to `ssh-rsa` and `ssh-ed25519` SSH public keys",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:22+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "The `age-inspect` command can display metadata about an encrypted file without decrypting it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:22+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install age",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:22+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "go install filippo.io/age/cmd/...@latest",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:22+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "go install filippo.io/age/cmd/...@latest",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:22+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T00:55:11+08:00",
+  "updated_at": "2026-11-16T00:56:33+08:00"
+}

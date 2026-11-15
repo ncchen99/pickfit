@@ -1,0 +1,849 @@
+{
+  "schema_version": "software.v1",
+  "slug": "mcp-server-qdrant",
+  "repo_id": "gh:897308110",
+  "name": "mcp-server-qdrant",
+  "summary": "An MCP server that stores and retrieves memories in the Qdrant vector search engine, acting as a semantic memory layer.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "claude",
+    "cursor",
+    "llm",
+    "mcp",
+    "mcp-server",
+    "semantic-search",
+    "windsurf"
+  ],
+  "use_cases": [
+    "store code snippets for later retrieval",
+    "search code examples semantically"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "store information in a Qdrant collection",
+    "semantic retrieval of stored information",
+    "semantic code search for coding agents"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:20.105079Z",
+    "run_id": "verify-mcp-server-qdrant-20261116-012439-caa8",
+    "open_hint": "Add `mcp-server-qdrant` as a server in your MCP client, setting QDRANT_LOCAL_PATH (or a Qdrant URL) and COLLECTION_NAME in its environment, and the client will list the qdrant-store and qdrant-find to",
+    "features": [
+      {
+        "feature": "store information in a Qdrant collection",
+        "title": "Store information in a Qdrant collection",
+        "steps": [
+          "Start `mcp-server-qdrant` from your MCP client with QDRANT_LOCAL_PATH=<folder> and COLLECTION_NAME=<collection> set in its environment.",
+          "Call the qdrant-store tool with an `information` text and optional `metadata`."
+        ]
+      },
+      {
+        "feature": "semantic retrieval of stored information",
+        "title": "Find stored information by meaning",
+        "steps": [
+          "Store some information with the qdrant-store tool.",
+          "Call the qdrant-find tool with a `query` written in plain language, such as <your question>."
+        ]
+      },
+      {
+        "feature": "semantic code search for coding agents",
+        "title": "Search code snippets by meaning for coding agents",
+        "steps": [
+          "Start `mcp-server-qdrant` with COLLECTION_NAME=<collection>, and set TOOL_STORE_DESCRIPTION and TOOL_FIND_DESCRIPTION to describe storing and finding code snippets.",
+          "Call qdrant-store with a description in `information` and the code in `metadata`, such as {\"code\": \"<your code>\"}.",
+          "Call qdrant-find with a `query` describing the code you need."
+        ]
+      }
+    ]
+  },
+  "homepage": "https://qdrant.tech",
+  "repo": {
+    "url": "https://github.com/qdrant/mcp-server-qdrant",
+    "full_name": "qdrant/mcp-server-qdrant",
+    "created_at": "2024-12-02T12:07:39Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mcp-server-qdrant-20261116-012439-caa8",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install mcp-server-qdrant && ~/.local/share/uv/tools/mcp-server-qdrant/bin/python -c \"from fastembed import TextEmbedding; m=TextEmbedding('sentence-transformers/all-MiniLM-L6-v2'); print(len(list(m.embed(['hi']))[0]))\"",
+          "purpose": "uv tool install mcp-server-qdrant and pre-download the default FastEmbed model so the server works offline"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.8.1",
+    "published_at": "2025-12-10T10:35:23Z",
+    "url": "https://github.com/qdrant/mcp-server-qdrant/releases/tag/v0.8.1"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T01:26:19.148380+08:00",
+    "runs": [
+      {
+        "id": "verify-mcp-server-qdrant-20261116-012439-caa8",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:26:19.148380+08:00",
+        "tool_version": "0.8.1",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install mcp-server-qdrant && ~/.local/share/uv/tools/mcp-server-qdrant/bin/python -c \"from fastembed import TextEmbedding; m=TextEmbedding('sentence-transformers/all-MiniLM-L6-v2'); print(len(list(m.embed(['hi']))[0]))\"",
+            "purpose": "uv tool install mcp-server-qdrant and pre-download the default FastEmbed model so the server works offline"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "env QDRANT_LOCAL_PATH=/tmp/qdrant-db COLLECTION_NAME=my-collection python3 ~/.pickfit/mcp_probe.py --timeout 120 -- mcp-server-qdrant",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "env QDRANT_LOCAL_PATH=/tmp/qdrant-db COLLECTION_NAME=my-collection python3 ~/.pickfit/mcp_probe.py --timeout 120 --call qdrant-store --args '{\"information\":\"Qdrant is a vector search engine written in Rust\",\"metadata\":{\"topic\":\"databases\"}}' -- mcp-server-qdrant",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=qdrant-store content=text text_chars=88",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "env QDRANT_LOCAL_PATH=/tmp/qdrant-db COLLECTION_NAME=my-collection python3 ~/.pickfit/mcp_probe.py --timeout 120 --call qdrant-find --args '{\"query\":\"which engine does vector search?\"}' -- mcp-server-qdrant",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=qdrant-find content=text text_chars=199",
+            "setup": [
+              {
+                "command": "env QDRANT_LOCAL_PATH=/tmp/qdrant-db COLLECTION_NAME=my-collection python3 ~/.pickfit/mcp_probe.py --timeout 120 --call qdrant-store --args '{\"information\":\"Qdrant is a vector search engine written in Rust\",\"metadata\":{\"topic\":\"databases\"}}' -- mcp-server-qdrant",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "env QDRANT_LOCAL_PATH=/tmp/qdrant-db COLLECTION_NAME=code-snippets TOOL_STORE_DESCRIPTION=\"Store reusable code snippets for later retrieval.\" TOOL_FIND_DESCRIPTION=\"Search for relevant code snippets based on natural language descriptions.\" python3 ~/.pickfit/mcp_probe.py --timeout 120 --call qdrant-store --args '{\"information\":\"Python function that reverses a string\",\"metadata\":{\"code\":\"def rev(s): return s[::-1]\"}}' -- mcp-server-qdrant",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=qdrant-store content=text text_chars=78",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "env QDRANT_LOCAL_PATH=/tmp/qdrant-db COLLECTION_NAME=code-snippets TOOL_STORE_DESCRIPTION=\"Store reusable code snippets for later retrieval.\" TOOL_FIND_DESCRIPTION=\"Search for relevant code snippets based on natural language descriptions.\" python3 ~/.pickfit/mcp_probe.py --timeout 120 --call qdrant-find --args '{\"query\":\"how to reverse text in python\"}' -- mcp-server-qdrant",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=qdrant-find content=text text_chars=202",
+            "setup": [
+              {
+                "command": "env QDRANT_LOCAL_PATH=/tmp/qdrant-db COLLECTION_NAME=code-snippets TOOL_STORE_DESCRIPTION=\"Store reusable code snippets for later retrieval.\" TOOL_FIND_DESCRIPTION=\"Search for relevant code snippets based on natural language descriptions.\" python3 ~/.pickfit/mcp_probe.py --timeout 120 --call qdrant-store --args '{\"information\":\"Python function that reverses a string\",\"metadata\":{\"code\":\"def rev(s): return s[::-1]\"}}' -- mcp-server-qdrant",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Examples use QDRANT_URL=http://localhost:6333 (a running Qdrant server)",
+            "actually_needed": "Used QDRANT_LOCAL_PATH=/tmp/qdrant-db (embedded local mode, documented in the README) because no Qdrant server runs here",
+            "kind": "note"
+          },
+          {
+            "readme_said": "uvx mcp-server-qdrant needs no specific installation",
+            "actually_needed": "On first use the server downloads the FastEmbed model sentence-transformers/all-MiniLM-L6-v2 from Hugging Face. To make it work offline, the model was downloaded ahead of time in the install step.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Code search example uses --transport sse for Cursor/Windsurf",
+            "actually_needed": "Tested the same store/find with custom tool descriptions over stdio",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exit 0: the MCP handshake lists 2 tools, qdrant-store remembers the text, and qdrant-find returns the stored entry with its metadata.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mcp-server-qdrant-20261116-012439-caa8/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mcp-server-qdrant-20261116-012439-caa8/check-1-cmd2.judged.png",
+            "runs/verify/verify-mcp-server-qdrant-20261116-012439-caa8/check-2-cmd3.judged.png",
+            "runs/verify/verify-mcp-server-qdrant-20261116-012439-caa8/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.193563,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "mcp-server-qdrant"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "mcp-server-qdrant",
+          "server_version": "1.30.0",
+          "tools": [
+            "qdrant-find",
+            "qdrant-store"
+          ],
+          "tool_count": 2,
+          "called_tool": "qdrant-store",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "store information in a Qdrant collection",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "semantic retrieval of stored information",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "semantic code search for coding agents",
+            "status": "checked",
+            "smoke_tests": [
+              3,
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "sse",
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "uvx mcp-server-qdrant",
+    "client_configs": [
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"qdrant\": {\n    \"command\": \"uvx\",\n    \"args\": [\"mcp-server-qdrant\"],\n    \"env\": {\n      \"QDRANT_LOCAL_PATH\": \"/path/to/qdrant/database\",\n      \"COLLECTION_NAME\": \"your-collection-name\",\n      \"EMBEDDING_MODEL\": \"sentence-transformers/all-MiniLM-L6-v2\"\n    }\n  }\n}"
+      },
+      {
+        "client": "vscode",
+        "snippet": "{\n  \"inputs\": [\n    {\n      \"type\": \"promptString\",\n      \"id\": \"qdrantUrl\",\n      \"description\": \"Qdrant URL\"\n    },\n    {\n      \"type\": \"promptString\",\n      \"id\": \"qdrantApiKey\",\n      \"description\": \"Qdrant API Key\",\n      \"password\": true\n    },\n    {\n      \"type\": \"promptString\",\n      \"id\": \"collectionName\",\n      \"description\": \"Collection Name\"\n    }\n  ],\n  \"servers\": {\n    \"qdrant\": {\n      \"command\": \"uvx\",\n      \"args\": [\"mcp-server-qdrant\"],\n      \"env\": {\n        \"QDRANT_URL\": \"${input:qdrantUrl}\",\n        \"QDRANT_API_KEY\": \"${input:qdrantApiKey}\",\n        \"COLLECTION_NAME\": \"${input:collectionName}\"\n      }\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "QDRANT_URL",
+        "required": null,
+        "purpose": "Qdrant server URL"
+      },
+      {
+        "name": "QDRANT_API_KEY",
+        "required": null,
+        "purpose": "Qdrant API key"
+      },
+      {
+        "name": "COLLECTION_NAME",
+        "required": null,
+        "purpose": "default collection name"
+      },
+      {
+        "name": "QDRANT_LOCAL_PATH",
+        "required": null,
+        "purpose": "local Qdrant database path"
+      },
+      {
+        "name": "EMBEDDING_PROVIDER",
+        "required": false,
+        "purpose": "embedding provider"
+      },
+      {
+        "name": "EMBEDDING_MODEL",
+        "required": false,
+        "purpose": "embedding model name"
+      },
+      {
+        "name": "TOOL_STORE_DESCRIPTION",
+        "required": false,
+        "purpose": "store tool description"
+      },
+      {
+        "name": "TOOL_FIND_DESCRIPTION",
+        "required": false,
+        "purpose": "find tool description"
+      },
+      {
+        "name": "QDRANT_SEARCH_LIMIT",
+        "required": false,
+        "purpose": "max search results"
+      },
+      {
+        "name": "QDRANT_READ_ONLY",
+        "required": false,
+        "purpose": "enable read-only mode"
+      }
+    ],
+    "tools": [
+      "qdrant-store",
+      "qdrant-find"
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:26:27+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "pypi:mcp-server-qdrant (fresh install, 68 packages)"
+    ],
+    "packages_checked": 68,
+    "findings_total": 5,
+    "advisories_total": 5,
+    "findings": [
+      {
+        "package": "pypi:fastmcp",
+        "version": "2.7.0",
+        "advisory": "GHSA-vv7q-7jx5-f767",
+        "cves": [
+          "CVE-2026-32871"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "3.2.0",
+        "summary": "FastMCP OpenAPI Provider has an SSRF & Path Traversal Vulnerability",
+        "malicious": false
+      },
+      {
+        "package": "pypi:fastmcp",
+        "version": "2.7.0",
+        "advisory": "GHSA-5h2m-4q8j-pqpj",
+        "cves": [
+          "CVE-2025-69196"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.14.2",
+        "summary": "FastMCP OAuth Proxy token reuse across MCP servers",
+        "malicious": false
+      },
+      {
+        "package": "pypi:fastmcp",
+        "version": "2.7.0",
+        "advisory": "GHSA-c2jp-c369-7pvx",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "2.13.0",
+        "summary": "FastMCP Auth Integration Allows for Confused Deputy Account Takeover",
+        "malicious": false
+      },
+      {
+        "package": "pypi:fastmcp",
+        "version": "2.7.0",
+        "advisory": "GHSA-rcfx-77hg-w2wv",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "2.14.0",
+        "summary": "FastMCP updated to MCP 1.23+ due to CVE-2025-66416",
+        "malicious": false
+      },
+      {
+        "package": "pypi:fastmcp",
+        "version": "2.7.0",
+        "advisory": "GHSA-rww4-4w9c-7733",
+        "cves": [
+          "CVE-2026-27124"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.2.0",
+        "summary": "FastMCP: Missing Consent Verification in OAuth Proxy Callback Facilitates Confused Deputy Vulnerabilities",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:26:27+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.56,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.3792,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 88.5,
+      "signals": {
+        "stars": 1570,
+        "monthly_downloads": null,
+        "forks": 311,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 146,
+        "registries_count": 0
+      },
+      "age_days": 713,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 9.08
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:26:19.150715+08:00",
+      "sources_sha": "7046c82a3dc0b95597b426357eb3e750c1bf252f679fdaa2d543d9a8378acfa6",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "An official Model Context Protocol server for keeping and retrieving memories in the Qdrant vector search engine."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Help developers find specific implementations or usage patterns"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "When using [`uvx`](https://docs.astral.sh/uv/guides/tools/#running-tools) no specific installation is needed to directly run *mcp-server-qdrant*."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npx @smithery/cli install mcp-server-qdrant --client claude"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "claude mcp list"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Configuration is done via environment variables. The only command-line argument is `--transport`, used to select the [transport protocol](#transport-protocols)."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "If you have successfully installed the `mcp-server-qdrant`, but still can't get it to work with Cursor, please"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "This MCP server is licensed under the Apache License 2.0."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/qdrant/mcp-server-qdrant",
+      "fetched_at": "2026-11-16T01:24:15+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/qdrant/mcp-server-qdrant/blob/master/README.md",
+      "fetched_at": "2026-11-16T01:24:13+08:00"
+    },
+    {
+      "id": "release:v0.8.1",
+      "kind": "release",
+      "url": "https://github.com/qdrant/mcp-server-qdrant/releases/tag/v0.8.1",
+      "fetched_at": "2026-11-16T01:24:13+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "An official Qdrant Model Context Protocol (MCP) server implementation",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "This MCP server can be used with any MCP-compatible client.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "An official Qdrant Model Context Protocol (MCP) server implementation",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "An official Model Context Protocol server for keeping and retrieving memories in the Qdrant vector search engine.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# mcp-server-qdrant: A Qdrant MCP server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:24:15+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:24:15+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:24:15+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:24:15+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:24:15+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.8.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:24:13+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Store code snippets, documentation, and implementation details",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Retrieve relevant code examples based on semantic search",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Store some information in the Qdrant database",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Retrieve relevant information from the Qdrant database",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "enabling semantic search over your\nexisting codebase",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "`streamable-http`: Streamable HTTP transport, perfect for remote clients, more recent than SSE",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "uvx mcp-server-qdrant",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"qdrant\": {\n    \"command\": \"uvx\",\n    \"args\": [\"mcp-server-qdrant\"],\n    \"env\": {\n      \"QDRANT_LOCAL_PATH\": \"/path/to/qdrant/database\",\n      \"COLLECTION_NAME\": \"your-collection-name\",\n      \"EMBEDDING_MODEL\": \"sentence-transformers/all-MiniLM-L6-v2\"\n    }\n  }\n}",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"inputs\": [\n    {\n      \"type\": \"promptString\",\n      \"id\": \"qdrantUrl\",\n      \"description\": \"Qdrant URL\"\n    },\n    {\n      \"type\": \"promptString\",\n      \"id\": \"qdrantApiKey\",\n      \"description\": \"Qdrant API Key\",\n      \"password\": true\n    },\n    {\n      \"type\": \"promptString\",\n      \"id\": \"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "QDRANT_URL",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "QDRANT_API_KEY",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "COLLECTION_NAME",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "QDRANT_LOCAL_PATH",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/4",
+      "source_id": "readme",
+      "quote": "EMBEDDING_PROVIDER",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/5",
+      "source_id": "readme",
+      "quote": "EMBEDDING_MODEL",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/6",
+      "source_id": "readme",
+      "quote": "TOOL_STORE_DESCRIPTION",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/7",
+      "source_id": "readme",
+      "quote": "TOOL_FIND_DESCRIPTION",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/8",
+      "source_id": "readme",
+      "quote": "QDRANT_SEARCH_LIMIT",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/9",
+      "source_id": "readme",
+      "quote": "QDRANT_READ_ONLY",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "1. `qdrant-store`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "2. `qdrant-find`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:24:39+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:24:13+08:00",
+  "updated_at": "2026-11-16T01:26:27+08:00"
+}

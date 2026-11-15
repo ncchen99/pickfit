@@ -1,0 +1,581 @@
+{
+  "schema_version": "software.v1",
+  "slug": "sops",
+  "repo_id": "gh:40684033",
+  "name": "SOPS",
+  "summary": "Editor for encrypted YAML, JSON, ENV, INI and binary files using AWS KMS, GCP KMS, Azure Key Vault, HuaweiCloud KMS, age or PGP.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "security_net",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "aws",
+    "azure",
+    "devops",
+    "gcp",
+    "pgp",
+    "secret-distribution",
+    "secret-management",
+    "security",
+    "sops"
+  ],
+  "use_cases": [
+    "edit encrypted YAML or JSON secret files"
+  ],
+  "alternatives_to": [
+    "hiera-eyaml",
+    "credstash"
+  ],
+  "features": [
+    "edit encrypted YAML, JSON, ENV, INI, binary files",
+    "encrypt with cloud KMS, age or PGP"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:32.524156Z",
+    "run_id": "verify-sops-20261116-005519-d709",
+    "open_hint": "Run `sops encrypt --age <age public key> <file> > <encrypted file>` to encrypt your first secrets file.",
+    "features": [
+      {
+        "feature": "edit encrypted YAML, JSON, ENV, INI, binary files",
+        "title": "Edit encrypted YAML, JSON, ENV, INI and binary files",
+        "steps": [
+          "Encrypt a file with `sops encrypt --age <age public key> <file> > <encrypted file>`.",
+          "Open it for editing with `SOPS_AGE_KEY_FILE=<key file> sops edit <encrypted file>`; it is re-encrypted when you save.",
+          "View the plain contents with `SOPS_AGE_KEY_FILE=<key file> sops decrypt <encrypted file>`."
+        ]
+      },
+      {
+        "feature": "encrypt with cloud KMS, age or PGP",
+        "title": "Encrypt with cloud KMS, age or PGP keys",
+        "steps": [
+          "Encrypt with an age key using `sops encrypt --age <age public key> <file> > <encrypted file>`.",
+          "Decrypt with `SOPS_AGE_KEY_FILE=<key file> sops decrypt <encrypted file>`."
+        ]
+      }
+    ]
+  },
+  "homepage": "https://getsops.io",
+  "repo": {
+    "url": "https://github.com/getsops/sops",
+    "full_name": "getsops/sops",
+    "created_at": "2015-08-13T22:11:00Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-sops-20261116-005519-d709",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin && curl -fL -o ~/.local/bin/sops https://github.com/getsops/sops/releases/download/v3.13.3/sops-v3.13.3.linux.amd64 && chmod +x ~/.local/bin/sops",
+          "purpose": "download sops v3.13.3 linux amd64 binary to ~/.local/bin and chmod +x"
+        },
+        {
+          "command": "curl -fL -o /tmp/age.tar.gz https://github.com/FiloSottile/age/releases/download/v1.2.1/age-v1.2.1-linux-amd64.tar.gz && tar -xzf /tmp/age.tar.gz -C /tmp && cp /tmp/age/age /tmp/age/age-keygen ~/.local/bin/ && age-keygen -o ~/age-key.txt",
+          "purpose": "download age v1.2.1 and generate an age key for the tests"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "sops --version --disable-version-check",
+        "expected_signal": "sops 3.13.3"
+      },
+      "first_task": "sops encrypt --age \"$(age-keygen -y ~/age-key.txt)\" secrets.yaml > secrets.enc.yaml && cat secrets.enc.yaml && SOPS_AGE_KEY_FILE=~/age-key.txt sops decrypt secrets.enc.yaml"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MPL-2.0",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v3.13.3",
+    "published_at": "2026-07-23T05:27:57Z",
+    "url": "https://github.com/getsops/sops/releases/tag/v3.13.3"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T00:56:18.017876+08:00",
+    "runs": [
+      {
+        "id": "verify-sops-20261116-005519-d709",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T00:56:18.017876+08:00",
+        "tool_version": "sops 3.13.3",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin && curl -fL -o ~/.local/bin/sops https://github.com/getsops/sops/releases/download/v3.13.3/sops-v3.13.3.linux.amd64 && chmod +x ~/.local/bin/sops",
+            "purpose": "download sops v3.13.3 linux amd64 binary to ~/.local/bin and chmod +x"
+          },
+          {
+            "command": "curl -fL -o /tmp/age.tar.gz https://github.com/FiloSottile/age/releases/download/v1.2.1/age-v1.2.1-linux-amd64.tar.gz && tar -xzf /tmp/age.tar.gz -C /tmp && cp /tmp/age/age /tmp/age/age-keygen ~/.local/bin/ && age-keygen -o ~/age-key.txt",
+            "purpose": "download age v1.2.1 and generate an age key for the tests"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "sops --version --disable-version-check",
+            "expected_signal": "sops 3.13.3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "sops 3.13.3",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sops encrypt --age \"$(age-keygen -y ~/age-key.txt)\" secrets.yaml > secrets.enc.yaml && cat secrets.enc.yaml && SOPS_AGE_KEY_FILE=~/age-key.txt sops decrypt secrets.enc.yaml",
+            "expected_signal": "db_password: hunter2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "db_password: hunter2",
+            "setup": [
+              {
+                "command": "cat > secrets.yaml <<'EOF'\ndb_user: admin\ndb_password: hunter2\nEOF\ncat > secrets.env <<'EOF'\nAPI_TOKEN=s3cr3tvalue\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "sops encrypt --age \"$(age-keygen -y ~/age-key.txt)\" secrets.env > secrets.enc.env && SOPS_AGE_KEY_FILE=~/age-key.txt EDITOR=\"sed -i s/s3cr3tvalue/editedvalue/\" sops edit secrets.enc.env && grep -c editedvalue secrets.enc.env ; SOPS_AGE_KEY_FILE=~/age-key.txt sops decrypt secrets.enc.env",
+            "expected_signal": "API_TOKEN=editedvalue",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "API_TOKEN=editedvalue",
+            "setup": [
+              {
+                "command": "cat > secrets.yaml <<'EOF'\ndb_user: admin\ndb_password: hunter2\nEOF\ncat > secrets.env <<'EOF'\nAPI_TOKEN=s3cr3tvalue\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "mv sops-v3.13.3.linux.amd64 /usr/local/bin/sops",
+            "actually_needed": "Without root I saved the binary to ~/.local/bin/sops, which is on PATH.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "encrypts with ... age",
+            "actually_needed": "SOPS does not make age keys itself. I downloaded the separate age release to run age-keygen.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "(no mention)",
+            "actually_needed": "`sops edit` exits 200 with 'File has not changed, exiting.' if the editor makes no changes (cmd 6).",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Version 3.13.3 printed; the YAML file was encrypted and decrypted back to db_password: hunter2; after sops edit, decrypt shows API_TOKEN=editedvalue (grep printing 0 is expected because the stored value is encrypted).",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-sops-20261116-005519-d709/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-sops-20261116-005519-d709/check-1-cmd3.judged.png",
+            "runs/verify/verify-sops-20261116-005519-d709/check-2-cmd5.judged.png",
+            "runs/verify/verify-sops-20261116-005519-d709/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.14478,
+        "features": [
+          {
+            "feature": "edit encrypted YAML, JSON, ENV, INI, binary files",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "encrypt with cloud KMS, age or PGP",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T00:56:26+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/getsops/sops@9aa10f12bcd8",
+      "functional-tests/Cargo.lock",
+      "go.mod"
+    ],
+    "packages_checked": 187,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T00:56:18+08:00",
+    "quality": {
+      "total": 73.7,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.4375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.6429,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 94.9,
+      "signals": {
+        "stars": 23723,
+        "monthly_downloads": 5111,
+        "forks": 1119,
+        "dependents": null,
+        "release_downloads": 20409455,
+        "hn_top_score": 3,
+        "registries_count": 1
+      },
+      "age_days": 4111,
+      "packages": [
+        "homebrew:sops"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 3.76
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:56:18.026704+08:00",
+      "sources_sha": "3b583bbc31d17c6eba5d0588ce69c444e0ab0d997cd55a81b4c0b08434cbcb05",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "**SOPS** is an editor of encrypted files that supports YAML, JSON, ENV, INI and BINARY\nformats and encrypts with AWS KMS, GCP KMS, Azure Key Vault, HuaweiCloud KMS, age, and PGP."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Simple and flexible tool for managing secrets"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "The Debian-based container images include any dependencies which may be required to make use of certain key services, such as GnuPG, AWS KMS, Azure Key Vault, and Google Cloud KMS."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "curl -LO https://github.com/getsops/sops/releases/download/v3.13.3/sops-v3.13.3.linux.amd64"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "These container images are available for the following architectures: `linux/amd64` and `linux/arm64`."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/getsops/sops",
+      "fetched_at": "2026-11-16T00:55:11+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/getsops/sops/blob/main/README.rst",
+      "fetched_at": "2026-11-16T00:55:11+08:00"
+    },
+    {
+      "id": "release:v3.13.3",
+      "kind": "release",
+      "url": "https://github.com/getsops/sops/releases/tag/v3.13.3",
+      "fetched_at": "2026-11-16T00:55:11+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "release:v3.13.3",
+      "quote": "download one of the pre-built binaries provided for your platform",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:19+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "release:v3.13.3",
+      "quote": "To install `sops`, download one of the pre-built binaries",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:19+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Simple and flexible tool for managing secrets",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:19+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "**SOPS** is an editor of encrypted files that supports YAML, JSON, ENV, INI and BINARY",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:19+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "SOPS: Secrets OPerationS",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:19+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "release:v3.13.3",
+      "quote": "if you are using Linux on an AMD64 architecture",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:19+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:55:11+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:55:11+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T00:55:11+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:55:11+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:55:11+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v3.13.3",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:55:11+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "**SOPS** is an editor of encrypted files that supports YAML, JSON, ENV, INI and BINARY",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:19+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "SOPS was inspired by `hiera-eyaml",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:19+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "`credstash <https://github.com/LuminalOSS/credstash>`_,",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:19+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**SOPS** is an editor of encrypted files that supports YAML, JSON, ENV, INI and BINARY",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:19+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "encrypts with AWS KMS, GCP KMS, Azure Key Vault, HuaweiCloud KMS, age, and PGP.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:19+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "release:v3.13.3",
+      "quote": "curl -LO https://github.com/getsops/sops/releases/download/v3.13.3/sops-v3.13.3.linux.amd64",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:19+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "encrypts with AWS KMS, GCP KMS, Azure Key Vault, HuaweiCloud KMS, age, and PGP.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:55:19+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T00:50:43+08:00",
+  "updated_at": "2026-11-16T00:56:26+08:00"
+}

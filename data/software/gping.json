@@ -1,0 +1,660 @@
+{
+  "schema_version": "software.v1",
+  "slug": "gping",
+  "repo_id": "gh:44440501",
+  "name": "gping",
+  "summary": "Terminal tool that pings one or more hosts, or times commands, and draws the results as a live graph.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "security_net",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "command-line",
+    "graph",
+    "linux",
+    "network-monitoring",
+    "ping",
+    "rust",
+    "shell"
+  ],
+  "use_cases": [
+    "compare ping latency of multiple hosts in a terminal graph",
+    "graph execution time of commands like curl",
+    "ping AWS cloud regions by shorthand"
+  ],
+  "alternatives_to": [
+    "ping"
+  ],
+  "features": [
+    "graph ping time for multiple hosts",
+    "graph command execution time",
+    "custom graph colours"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:08.531415Z",
+    "run_id": "verify-gping-20261116-005258-820e",
+    "open_hint": "Run `gping <host>` in a terminal to start a live ping graph for a host; press Ctrl+C to quit.",
+    "features": [
+      {
+        "feature": "graph ping time for multiple hosts",
+        "title": "Graph ping times for several hosts at once",
+        "steps": [
+          "Run `gping --tcp --tcp-port <port> <host1> <host2>` to ping several hosts over TCP and watch them on one graph.",
+          "Read each host's latest and minimum ping time in the legend.",
+          "Press Ctrl+C to stop."
+        ]
+      },
+      {
+        "feature": "graph command execution time",
+        "title": "Graph how long commands take to run",
+        "steps": []
+      },
+      {
+        "feature": "custom graph colours",
+        "title": "Choose your own graph colours",
+        "steps": [
+          "Run `gping --cmd -c '<colour1>,<colour2>' '<command1>' '<command2>'` with hex colours such as #ff0000.",
+          "Each line on the graph uses the colour given in the same order."
+        ]
+      }
+    ]
+  },
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/orf/gping",
+    "full_name": "orf/gping",
+    "created_at": "2015-10-17T14:34:25Z",
+    "archived": false
+  },
+  "platforms": [
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "rustc>=1.67.0 (for cargo install)"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install gping",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "gping --help",
+        "expected_signal": "Ping, but with a graph."
+      },
+      "first_task": "gping --help"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-gping-20261116-005258-820e",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/gp && curl -fsSL -o /tmp/gp/gping.tar.gz https://github.com/orf/gping/releases/download/gping-v1.21.0/gping-Linux-musl-x86_64.tar.gz && tar -xzf /tmp/gp/gping.tar.gz -C /tmp/gp && install -m 755 /tmp/gp/gping ~/.local/bin/gping",
+          "purpose": "Download the gping-v1.21.0 Linux musl x86_64 release tarball and install the binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "gping --help",
+        "expected_signal": "Ping, but with a graph."
+      },
+      "first_task": "sleep 5 | script -qfec \"stty cols 100 rows 25; timeout -s INT 3 gping --tcp --tcp-port 9 127.0.0.1 localhost\" /tmp/f1b.log >/dev/null; grep -a -o -E '(127\\.0\\.0\\.1|localhost)[^[]{0,40}|[0-9]+\\.[0-9]+ms' /tmp/f1b.log"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install gping",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "gping --help",
+        "expected_signal": "Ping, but with a graph."
+      },
+      "first_task": "gping --help"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "gping-v1.21.0",
+    "published_at": "2026-08-31T20:13:19Z",
+    "url": "https://github.com/orf/gping/releases/tag/gping-v1.21.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T00:54:58.119291+08:00",
+    "runs": [
+      {
+        "id": "verify-gping-20261116-005258-820e",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T00:54:58.119291+08:00",
+        "tool_version": null,
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/gp && curl -fsSL -o /tmp/gp/gping.tar.gz https://github.com/orf/gping/releases/download/gping-v1.21.0/gping-Linux-musl-x86_64.tar.gz && tar -xzf /tmp/gp/gping.tar.gz -C /tmp/gp && install -m 755 /tmp/gp/gping ~/.local/bin/gping",
+            "purpose": "Download the gping-v1.21.0 Linux musl x86_64 release tarball and install the binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "gping --help",
+            "expected_signal": "Ping, but with a graph.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Ping, but with a graph.",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sleep 5 | script -qfec \"stty cols 100 rows 25; timeout -s INT 3 gping --tcp --tcp-port 9 127.0.0.1 localhost\" /tmp/f1b.log >/dev/null; grep -a -o -E '(127\\.0\\.0\\.1|localhost)[^[]{0,40}|[0-9]+\\.[0-9]+ms' /tmp/f1b.log",
+            "expected_signal": "localhost (127.0.0.1)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "localhost (127.0.0.1) last 342µsmin 96µs",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sleep 5 | script -qfec \"stty cols 100 rows 25; timeout -s INT 3 gping --tcp --tcp-port 9 127.0.0.1 localhost\" /tmp/f1.log >/dev/null; grep -a -o -E '127\\.0\\.0\\.1|localhost|last [0-9.]+ms' /tmp/f1.log",
+            "expected_signal": "localhost",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "localhost",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sleep 5 | script -qfec \"stty cols 100 rows 25; timeout -s INT 3 gping --cmd -c '#ff0000,#0000ff' 'sleep 0.1' 'true'\" /tmp/f3.log >/dev/null; grep -a -o -E '38;2;255;0;0|38;2;0;0;255|sleep 0\\.1' /tmp/f3.log",
+            "expected_signal": "38;2;255;0;0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "38;2;255;0;0",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install gping / pacman / apk / apt install gping",
+            "actually_needed": "The box has no Rust toolchain and no root, so I used the prebuilt gping-Linux-musl-x86_64.tar.gz from GitHub releases (the README mentions the MUSL build for distributions with an old glibc)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Just run `gping [host]` (ICMP ping)",
+            "actually_needed": "The box has no system `ping` binary, which gping calls for ICMP. To check several hosts I used `--tcp --tcp-port 9` against local addresses, where a refused connection counts as a pong.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "gping is used interactively in a terminal",
+            "actually_needed": "gping is a full-screen terminal app and needs a terminal. Without one it drew nothing to stdout, so I ran it under `script` with `timeout -s INT` and searched the recorded output with grep.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "gping TCP-pinged 127.0.0.1 and localhost showing latency stats (last 186µs, 342µs), the grep found host labels in the second run, and --help printed 'Ping, but with a graph.' with full options.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-gping-20261116-005258-820e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-gping-20261116-005258-820e/check-1-cmd9.judged.png",
+            "runs/verify/verify-gping-20261116-005258-820e/check-2-cmd7.judged.png",
+            "runs/verify/verify-gping-20261116-005258-820e/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.204103,
+        "features": [
+          {
+            "feature": "graph ping time for multiple hosts",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "graph command execution time",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; --cmd 'sleep 0.1' 'true' drew a graph with ms timings"
+          },
+          {
+            "feature": "custom graph colours",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T00:55:04+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/orf/gping@fad1ee3c02fd",
+      "Cargo.lock"
+    ],
+    "packages_checked": 202,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T00:54:58+08:00",
+    "quality": {
+      "total": 75.3,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.25,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 96.9,
+      "signals": {
+        "stars": 12741,
+        "monthly_downloads": 1500,
+        "forks": 374,
+        "dependents": null,
+        "release_downloads": 108807,
+        "hn_top_score": 362,
+        "registries_count": 2
+      },
+      "age_days": 4047,
+      "packages": [
+        "crates:gping",
+        "homebrew:gping"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 2.33
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:54:58.121167+08:00",
+      "sources_sha": "d80785f14a27e4654b2c676e135452534abd2c82adf5ff7fbefbee1050f86043",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "* Graph the ping time for multiple hosts\n* Graph the _execution time_ for commands via the `--cmd` flag"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Ping, but with a graph."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Cargo (**This requires `rustc` version 1.67.0 or greater**): `cargo install gping`"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "Scoop: `scoop install gping`"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Just run `gping [host]`."
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "CentOS (and other distributions with an old glibc): Download the MUSL build from the latest release"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Windows, Mac and Linux support"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/orf/gping",
+      "fetched_at": "2026-11-16T00:52:50+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/orf/gping/blob/main/readme.md",
+      "fetched_at": "2026-11-16T00:52:48+08:00"
+    },
+    {
+      "id": "release:gping-v1.21.0",
+      "kind": "release",
+      "url": "https://github.com/orf/gping/releases/tag/gping-v1.21.0",
+      "fetched_at": "2026-11-16T00:52:48+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Ping, but with a graph.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:58+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Just run `gping [host]`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:58+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "topics: cli, command-line, graph, linux, network-monitoring, ping, rust, shell",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:58+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Graph the ping time for multiple hosts",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:58+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# gping 🚀",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:58+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Windows, Mac and Linux support",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:58+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Cargo (**This requires `rustc` version 1.67.0 or greater**): `cargo install gping`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:58+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Hosts or IPs to ping",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:58+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:52:50+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:52:50+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T00:52:50+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:52:50+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:gping-v1.21.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:52:48+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Graph the ping time for multiple hosts",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:58+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "`host` can be a command like `curl google.com` if the `--cmd` flag is used",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:58+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "shorthands like `aws:eu-west-1` or `aws:ca-central-1` to ping specific cloud regions",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:58+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Ping, but with a graph.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:58+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Graph the ping time for multiple hosts",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:58+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Graph the _execution time_ for commands via the `--cmd` flag",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:58+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Custom colours",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:58+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install gping",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:58+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install gping",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:58+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install gping",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:58+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Ping, but with a graph.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:58+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T00:52:48+08:00",
+  "updated_at": "2026-11-16T00:55:04+08:00"
+}

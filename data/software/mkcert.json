@@ -1,0 +1,910 @@
+{
+  "schema_version": "software.v1",
+  "slug": "mkcert",
+  "repo_id": "gh:138547797",
+  "name": "mkcert",
+  "summary": "Command-line tool that creates a local certificate authority, installs it in system and browser trust stores, and generates locally trusted development certificates.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "security_net",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "certificates",
+    "chrome",
+    "firefox",
+    "https",
+    "ios",
+    "linux",
+    "local-development",
+    "localhost",
+    "macos",
+    "root-ca"
+  ],
+  "use_cases": [
+    "serve localhost over HTTPS without browser trust errors",
+    "generate an S/MIME certificate for an email address",
+    "make Node.js trust local development certificates"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "install a local CA into system and browser trust stores",
+    "generate certificates for multiple names, wildcards and IPs",
+    "generate client, ECDSA or PKCS #12 certificates",
+    "sign certificates from a supplied CSR"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:21.541103Z",
+    "run_id": "verify-mkcert-20261116-011009-74bc",
+    "open_hint": "Run `mkcert <name>` with the domains or IPs you want a certificate for, such as `mkcert localhost 127.0.0.1`.",
+    "features": [
+      {
+        "feature": "install a local CA into system and browser trust stores",
+        "title": "Install a local CA into system and browser trust stores",
+        "steps": []
+      },
+      {
+        "feature": "generate certificates for multiple names, wildcards and IPs",
+        "title": "Create certificates for several names, wildcards and IPs",
+        "steps": [
+          "Run `mkcert <domain> \"*.<domain>\" localhost 127.0.0.1 ::1` with the names and IPs you need.",
+          "Find the new certificate and key files in the current folder."
+        ]
+      },
+      {
+        "feature": "generate client, ECDSA or PKCS #12 certificates",
+        "title": "Create client, ECDSA or PKCS #12 certificates",
+        "steps": [
+          "Run `mkcert -client -ecdsa -pkcs12 <domain>`.",
+          "Find the PKCS #12 bundle at `./<domain>-client.p12`."
+        ]
+      },
+      {
+        "feature": "sign certificates from a supplied CSR",
+        "title": "Sign a certificate from your own CSR",
+        "steps": [
+          "Create a certificate signing request file, for example with openssl.",
+          "Run `mkcert -csr <file>`.",
+          "Find the signed certificate in the current folder."
+        ]
+      }
+    ]
+  },
+  "homepage": "https://mkcert.dev",
+  "repo": {
+    "url": "https://github.com/FiloSottile/mkcert",
+    "full_name": "FiloSottile/mkcert",
+    "created_at": "2018-06-25T05:33:03Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "go>=1.13 (build from source only)"
+    ],
+    "system_packages": [
+      "certutil (libnss3-tools / nss-tools / nss) on Linux",
+      "nss on macOS for Firefox"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install mkcert",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Restart Firefox after installing the local CA",
+        "Install and fully trust the root CA profile manually on iOS/Android devices",
+        "May need to run as Administrator on Windows"
+      ],
+      "check": {
+        "command": "mkcert example.com \"*.example.com\" example.test localhost 127.0.0.1 ::1",
+        "expected_signal": "Created a new certificate valid for the following names 📜"
+      },
+      "first_task": "mkcert -CAROOT"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mkcert-20261116-011009-74bc",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fJLO \"https://dl.filippo.io/mkcert/latest?for=linux/amd64\" && chmod +x mkcert-v*-linux-amd64 && mkdir -p ~/.local/bin && cp mkcert-v*-linux-amd64 ~/.local/bin/mkcert",
+          "purpose": "Download the prebuilt linux/amd64 binary, chmod +x it and copy it to ~/.local/bin/mkcert"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "mkcert -version",
+        "expected_signal": "v1.4.4"
+      },
+      "first_task": "mkcert example.com \"*.example.com\" example.test localhost 127.0.0.1 ::1"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "choco install mkcert",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Restart Firefox after installing the local CA",
+        "Install and fully trust the root CA profile manually on iOS/Android devices",
+        "May need to run as Administrator on Windows"
+      ],
+      "check": {
+        "command": "mkcert example.com \"*.example.com\" example.test localhost 127.0.0.1 ::1",
+        "expected_signal": "Created a new certificate valid for the following names 📜"
+      },
+      "first_task": "mkcert -CAROOT"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "BSD-3-Clause",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.4.4",
+    "published_at": "2022-04-26T17:51:05Z",
+    "url": "https://github.com/FiloSottile/mkcert/releases/tag/v1.4.4"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T01:11:09.470872+08:00",
+    "runs": [
+      {
+        "id": "verify-mkcert-20261116-011009-74bc",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:11:09.470872+08:00",
+        "tool_version": "v1.4.4",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fJLO \"https://dl.filippo.io/mkcert/latest?for=linux/amd64\" && chmod +x mkcert-v*-linux-amd64 && mkdir -p ~/.local/bin && cp mkcert-v*-linux-amd64 ~/.local/bin/mkcert",
+            "purpose": "Download the prebuilt linux/amd64 binary, chmod +x it and copy it to ~/.local/bin/mkcert"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mkcert -version",
+            "expected_signal": "v1.4.4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "v1.4.4",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkcert example.com \"*.example.com\" example.test localhost 127.0.0.1 ::1",
+            "expected_signal": "Created a new certificate valid for the following names",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Created a new certificate valid for the following names 📜",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkcert -client -ecdsa -pkcs12 client.example.com",
+            "expected_signal": "The PKCS#12 bundle is at \"./client.example.com-client.p12\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "The PKCS#12 bundle is at \"./client.example.com-client.p12\" ✅",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mkcert -csr req.csr",
+            "expected_signal": "The certificate is at \"./csr.example.com.pem\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "The certificate is at \"./csr.example.com.pem\" ✅",
+            "setup": [
+              {
+                "command": "openssl req -new -newkey rsa:2048 -nodes -keyout csr-key.pem -out req.csr -subj \"/CN=csr.example.com\" -addext \"subjectAltName=DNS:csr.example.com\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "sudo cp mkcert-v*-linux-amd64 /usr/local/bin/mkcert",
+            "actually_needed": "Copied the binary to ~/.local/bin/mkcert instead, because the box has no sudo",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "On Linux, first install certutil (sudo apt install libnss3-tools)",
+            "actually_needed": "Not needed to make certificates. certutil is only used by -install for the NSS/Firefox store, and it could not be installed here without root",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "mkcert printed v1.4.4, created a certificate for all six requested names, and produced the client PKCS#12 bundle at ./client.example.com-client.p12, all with exit code 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mkcert-20261116-011009-74bc/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mkcert-20261116-011009-74bc/check-1-cmd2.judged.png",
+            "runs/verify/verify-mkcert-20261116-011009-74bc/check-2-cmd3.judged.png",
+            "runs/verify/verify-mkcert-20261116-011009-74bc/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.135289,
+        "features": [
+          {
+            "feature": "install a local CA into system and browser trust stores",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "Not tried: -install writes the system trust store with sudo, and certutil (needed for the NSS/Firefox store) needs apt"
+          },
+          {
+            "feature": "generate certificates for multiple names, wildcards and IPs",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "generate client, ECDSA or PKCS #12 certificates",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "sign certificates from a supplied CSR",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:11:18+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/FiloSottile/mkcert@1c1dc4ed27ed",
+      "go.mod"
+    ],
+    "packages_checked": 5,
+    "findings_total": 17,
+    "advisories_total": 17,
+    "findings": [
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20220331220935-ae2d96664a29",
+        "advisory": "GHSA-5cgq-3rg8-m6cv",
+        "cves": [
+          "CVE-2026-42508"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto vulnerable to auth bypass via unenforced @revoked status",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20220331220935-ae2d96664a29",
+        "advisory": "GHSA-89gr-r52h-f8rx",
+        "cves": [
+          "CVE-2026-39831"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: FIDO/U2F security key physical presence check can be bypassed",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20220331220935-ae2d96664a29",
+        "advisory": "GHSA-f5wc-c3c7-36mc",
+        "cves": [
+          "CVE-2026-39832"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto doesn't drop invoking agent constraints when forwarding keys",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20220331220935-ae2d96664a29",
+        "advisory": "GHSA-jppx-rxg9-jmrx",
+        "cves": [
+          "CVE-2026-39833"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto doesn't enforce invoking key constraints",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20220331220935-ae2d96664a29",
+        "advisory": "GHSA-rm3j-f69w-wqmq",
+        "cves": [
+          "CVE-2026-39834"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto vulnerable to infinite loop on large channel writes",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20220331220935-ae2d96664a29",
+        "advisory": "GHSA-v778-237x-gjrc",
+        "cves": [
+          "CVE-2024-45337"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.31.0",
+        "summary": "Misuse of ServerConfig.PublicKeyCallback may cause authorization bypass in golang.org/x/crypto",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20220331220935-ae2d96664a29",
+        "advisory": "GHSA-vgwf-h737-ff37",
+        "cves": [
+          "CVE-2026-39830"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking client can cause server deadlock on unexpected responses",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20220331220935-ae2d96664a29",
+        "advisory": "GHSA-x527-x647-q7gg",
+        "cves": [
+          "CVE-2026-46595"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking VerifiedPublicKeyCallback permissions skip enforcement",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20220331220935-ae2d96664a29",
+        "advisory": "GHSA-hcg3-q754-cr77",
+        "cves": [
+          "CVE-2025-22869"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.35.0",
+        "summary": "golang.org/x/crypto Vulnerable to Denial of Service (DoS) via Slow or Incomplete Key Exchange",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20220331220935-ae2d96664a29",
+        "advisory": "GHSA-q4h4-gmj2-qvw2",
+        "cves": [
+          "CVE-2026-46597"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking byte arithmetic causes underflow and panic",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20220331220935-ae2d96664a29",
+        "advisory": "GHSA-w879-237q-wc7r",
+        "cves": [
+          "CVE-2026-39829"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking pathological RSA/DSA parameters may cause DoS",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20220331220935-ae2d96664a29",
+        "advisory": "GO-2025-4116",
+        "cves": [
+          "CVE-2025-47913"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.43.0",
+        "summary": "Potential denial of service in golang.org/x/crypto/ssh/agent",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/net",
+        "version": "v0.0.0-20220421235706-1d1ef9303861",
+        "advisory": "GHSA-4374-p667-p6c8",
+        "cves": [
+          "CVE-2023-39325"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.17.0",
+        "summary": "HTTP/2 rapid reset can cause excessive work in net/http",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/net",
+        "version": "v0.0.0-20220421235706-1d1ef9303861",
+        "advisory": "GHSA-69cg-p879-7622",
+        "cves": [
+          "CVE-2022-27664"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.0.0-20220906165146-f3363e06e74c",
+        "summary": "golang.org/x/net/http2 Denial of Service vulnerability",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/net",
+        "version": "v0.0.0-20220421235706-1d1ef9303861",
+        "advisory": "GHSA-vvpx-j8f3-3w6h",
+        "cves": [
+          "CVE-2022-41723"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.7.0",
+        "summary": "golang.org/x/net vulnerable to Uncontrolled Resource Consumption",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/net",
+        "version": "v0.0.0-20220421235706-1d1ef9303861",
+        "advisory": "GO-2024-3333",
+        "cves": [
+          "CVE-2024-45338"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.33.0",
+        "summary": "Non-linear parsing of case-insensitive content in golang.org/x/net/html",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/text",
+        "version": "v0.3.7",
+        "advisory": "GHSA-69ch-w2m2-3vjp",
+        "cves": [
+          "CVE-2022-32149"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.3.8",
+        "summary": "golang.org/x/text/language Denial of service via crafted Accept-Language header",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:11:18+08:00",
+    "quality": {
+      "total": 72.7,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.75,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.2804,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 99.9,
+      "signals": {
+        "stars": 59862,
+        "monthly_downloads": 16767,
+        "forks": 3258,
+        "dependents": null,
+        "release_downloads": 24341017,
+        "hn_top_score": 267,
+        "registries_count": 1
+      },
+      "age_days": 3065,
+      "packages": [
+        "homebrew:mkcert"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.07
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:11:09.482396+08:00",
+      "sources_sha": "9bbd898e4104fda252f5b01ecd34c1aa046bcd28e2de3a91396823945d1be9b7",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "mkcert automatically creates and installs a local CA in the system root store, and generates locally-trusted certificates."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Remember that mkcert is meant for development purposes, not production"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "On Linux, first install `certutil`."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "choco install mkcert"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "$ mkcert -install\nCreated a new local CA 💥"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "you can set the `TRUST_STORES` environment variable to a comma-separated list. Options are: \"system\", \"java\" and \"nss\" (includes Firefox)."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "If you're running into permission problems try running `mkcert` as an Administrator."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "topics: certificates, chrome, firefox, https, ios, linux, local-development, localhost, macos, root-ca, tls, windows"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/FiloSottile/mkcert",
+      "fetched_at": "2026-11-16T01:09:45+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/FiloSottile/mkcert/blob/master/README.md",
+      "fetched_at": "2026-11-16T01:09:43+08:00"
+    },
+    {
+      "id": "release:v1.4.4",
+      "kind": "release",
+      "url": "https://github.com/FiloSottile/mkcert/releases/tag/v1.4.4",
+      "fetched_at": "2026-11-16T01:09:43+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "$ mkcert -install",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:10:09+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "mkcert is a simple tool for making locally-trusted development certificates.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:10:09+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "topics: certificates, chrome, firefox, https, ios, linux, local-development, localhost, macos, root-ca, tls, windows",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:10:09+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "mkcert automatically creates and installs a local CA in the system root store, and generates locally-trusted certificates.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:10:09+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "mkcert is a simple tool for making locally-trusted development certificates.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:10:09+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "github_api",
+      "quote": "topics: certificates, chrome, firefox, https, ios, linux, local-development, localhost, macos, root-ca, tls, windows",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:10:09+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "or build from source (requires Go 1.13+)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:10:09+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "On Linux, first install `certutil`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:10:09+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "brew install nss # if you use Firefox",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:10:09+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:09:45+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:09:45+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:09:45+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:09:45+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:09:45+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.4.4",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:09:43+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "self-signed certificates cause trust errors. Managing your own CA is the best solution",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:10:09+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "mkcert automatically generates an S/MIME certificate if one of the supplied names is an email address.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:10:09+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "export NODE_EXTRA_CA_CERTS=\"$(mkcert -CAROOT)/rootCA.pem\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:10:09+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "mkcert automatically creates and installs a local CA in the system root store",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:10:09+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "$ mkcert example.com \"*.example.com\" example.test localhost 127.0.0.1 ::1",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:10:09+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Generate a \".p12\" PKCS #12 file, also know as a \".pfx\" file,",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:10:09+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Generate a certificate based on the supplied CSR.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:10:09+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install mkcert",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:10:09+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -JLO \"https://dl.filippo.io/mkcert/latest?for=linux/amd64\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:10:09+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "choco install mkcert",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:10:09+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "mkcert automatically creates and installs a local CA in the system root store",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:10:09+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:09:43+08:00",
+  "updated_at": "2026-11-16T01:11:18+08:00"
+}

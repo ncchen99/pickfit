@@ -1,0 +1,717 @@
+{
+  "schema_version": "software.v1",
+  "slug": "exa-mcp-server",
+  "repo_id": "gh:895291604",
+  "name": "Exa MCP Server",
+  "summary": "MCP server that connects AI agents to Exa for web search, webpage content fetching and multi-step research.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "code-search",
+    "codesearch",
+    "crawling",
+    "mcp",
+    "mcp-server",
+    "model-context-protocol",
+    "web-search",
+    "websearch"
+  ],
+  "use_cases": [
+    "search the web from an AI agent",
+    "read a webpage as clean markdown",
+    "run multi-step research with an Exa Agent"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "search the web with clean content results",
+    "fetch webpages as markdown",
+    "run multi-step research agents",
+    "advanced search with domain and date filters"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:03.674310Z",
+    "run_id": null,
+    "open_hint": "Add exa-mcp-server to your MCP client's server list, and the client will show its tools, such as web_search_exa and web_fetch_exa.",
+    "features": [
+      {
+        "feature": "search the web with clean content results",
+        "title": "Search the web and get clean content results",
+        "steps": []
+      },
+      {
+        "feature": "fetch webpages as markdown",
+        "title": "Fetch webpages as markdown",
+        "steps": []
+      },
+      {
+        "feature": "run multi-step research agents",
+        "title": "Run multi-step research agents",
+        "steps": []
+      },
+      {
+        "feature": "advanced search with domain and date filters",
+        "title": "Search with domain and date filters",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": "https://exa.ai/docs/reference/exa-mcp",
+  "repo": {
+    "url": "https://github.com/exa-labs/exa-mcp-server",
+    "full_name": "exa-labs/exa-mcp-server",
+    "created_at": "2024-11-27T23:38:35Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": [
+      "Exa API key or OAuth sign-in (optional; needed for higher limits and Exa Agent)"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-exa-mcp-server-20261116-014847-8a44",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g exa-mcp-server && npm ls -g exa-mcp-server",
+          "purpose": "npm install -g exa-mcp-server (stdio server on PATH)"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "cloud",
+  "last_release": null,
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T01:50:00.009940+08:00",
+    "runs": [
+      {
+        "id": "verify-exa-mcp-server-20261116-014847-8a44",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:50:00.009940+08:00",
+        "tool_version": "3.4.3",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g exa-mcp-server && npm ls -g exa-mcp-server",
+            "purpose": "npm install -g exa-mcp-server (stdio server on PATH)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- exa-mcp-server",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Install with `claude plugin install exa@claude-plugins-official` or `codex mcp add exa --url https://mcp.exa.ai/mcp`",
+            "actually_needed": "Neither client CLI is installed here, and both commands only connect to Exa's hosted server. The npm package linked from the README (`npm install -g exa-mcp-server`) gives a local stdio server called `exa-mcp-server`.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "The hosted MCP server works anonymously with rate limits",
+            "actually_needed": "The local npm stdio server needs EXA_API_KEY for tool calls. Without it, web_search_exa and web_fetch_exa return tool errors, and the bundled code says 'API key must be provided as an argument or as an environment variable (EXA_API_KEY)'.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Enable optional tools by appending ?tools=... to the MCP URL",
+            "actually_needed": "For the local server, optional tools are enabled with the ENABLED_TOOLS or TOOLS environment variable (seen in the bundled source).",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The MCP probe initialized exa-search-server 3.4.3, listed 2 tools (web_search_exa, web_fetch_exa), and printed 'handshake: ok' with exit code 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-exa-mcp-server-20261116-014847-8a44/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-exa-mcp-server-20261116-014847-8a44/check-1-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.165926,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "exa-mcp-server"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "exa-search-server",
+          "server_version": "3.4.3",
+          "tools": [
+            "web_search_exa",
+            "web_fetch_exa"
+          ],
+          "tool_count": 2,
+          "called_tool": null,
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "search the web with clean content results",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "web_search_exa returned a tool error without EXA_API_KEY; the local server requires an Exa API key"
+          },
+          {
+            "feature": "fetch webpages as markdown",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "web_fetch_exa returned a tool error without EXA_API_KEY"
+          },
+          {
+            "feature": "run multi-step research agents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "README says Exa Agent requires OAuth or an API key"
+          },
+          {
+            "feature": "advanced search with domain and date filters",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "web_search_advanced_exa is an optional tool that calls the Exa API, which needs EXA_API_KEY on the local server"
+          }
+        ]
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "streamable_http"
+    ],
+    "launch_command": null,
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"exa\": {\n      \"type\": \"streamable-http\",\n      \"url\": \"https://mcp.exa.ai/mcp\",\n    }\n  }\n}"
+      },
+      {
+        "client": "other",
+        "snippet": "codex mcp add exa --url https://mcp.exa.ai/mcp"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "DYNAMIC_HIGHLIGHTS",
+        "required": false,
+        "purpose": "enable dynamic highlights when running locally"
+      }
+    ],
+    "tools": [
+      "web_search_exa",
+      "web_fetch_exa",
+      "agent_run",
+      "web_search_advanced_exa"
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:50:08+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "npm:exa-mcp-server (fresh install, 131 packages)"
+    ],
+    "packages_checked": 128,
+    "findings_total": 5,
+    "advisories_total": 5,
+    "findings": [
+      {
+        "package": "npm:@modelcontextprotocol/sdk",
+        "version": "1.26.0",
+        "advisory": "GHSA-22jm-h49p-29qw",
+        "cves": [
+          "CVE-2026-111767"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.32.0",
+        "summary": "MCP TypeScript SDK: Experimental tasks were not tied to the session that created them",
+        "malicious": false
+      },
+      {
+        "package": "npm:@modelcontextprotocol/sdk",
+        "version": "1.26.0",
+        "advisory": "GHSA-46jr-4wx8-v453",
+        "cves": [
+          "CVE-2026-111768"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.32.0",
+        "summary": "MCP TypeScript SDK: One HTTP request within the default size limit could exhaust server memory during validation",
+        "malicious": false
+      },
+      {
+        "package": "npm:@modelcontextprotocol/sdk",
+        "version": "1.26.0",
+        "advisory": "GHSA-6qxp-vccf-f47h",
+        "cves": [
+          "CVE-2026-104850"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.31.0",
+        "summary": "MCP TypeScript SDK: OAuth client could send credentials to an authorization server chosen by the MCP server",
+        "malicious": false
+      },
+      {
+        "package": "npm:@modelcontextprotocol/sdk",
+        "version": "1.26.0",
+        "advisory": "GHSA-f897-62hf-6gxq",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "1.30.1",
+        "summary": "MCP TypeScript SDK: HTTP server transports and handlers did not limit request body size or JSON-RPC batch length",
+        "malicious": false
+      },
+      {
+        "package": "npm:zod",
+        "version": "3.25.76",
+        "advisory": "GHSA-mrhx-c7xc-m3w5",
+        "cves": [
+          "CVE-2023-54404"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.6.6",
+        "summary": "Zod can exhaust memory while validating oversized constrained collections",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:50:08+08:00",
+    "quality": {
+      "total": 66.0,
+      "confidence": 0.7,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5929,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.6,
+      "signals": {
+        "stars": 5234,
+        "monthly_downloads": 176468,
+        "forks": 414,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 717,
+      "packages": [
+        "npm:exa-mcp-server"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.2
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:50:00.012436+08:00",
+      "sources_sha": "040d93982569c872569b2c868213d118ee5869225f8ca34b3b7ddd4c96c16da9",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Connect AI agents to Exa for web search, content fetching, and multi-step research."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Deep research, lead gen, competitive analysis, multi-step web investigation"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Most clients can be configured manually with the standard `mcpServers` shape:"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "codex mcp add exa --url https://mcp.exa.ai/mcp"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "The hosted MCP server works anonymously with rate limits. For higher limits and access to Exa Agent, use either OAuth or an API key."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 0,
+          "quote": null
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/exa-labs/exa-mcp-server",
+      "fetched_at": "2026-11-16T01:48:36+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/exa-labs/exa-mcp-server/blob/main/README.md",
+      "fetched_at": "2026-11-16T01:48:34+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Exa MCP for web search and web crawling!",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Connect to Exa's hosted MCP server:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Exa MCP for web search and web crawling!",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Connect AI agents to Exa for web search, content fetching, and multi-step research.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "Exa MCP Server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Connect to Exa's hosted MCP server:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "For higher limits and access to Exa Agent, use either OAuth or an API key.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:48:36+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:48:36+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:48:36+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:48:36+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:48:36+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Search the web for any topic and get clean, ready-to-use content",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Read a webpage's full content as clean markdown from one or more URLs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Run an [Exa Agent](https://docs.exa.ai/reference/agent-api-guide) for multi-step research, list-building, enrichment, and structured output",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Search the web for any topic and get clean, ready-to-use content",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Read a webpage's full content as clean markdown from one or more URLs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Run an [Exa Agent](https://docs.exa.ai/reference/agent-api-guide) for multi-step research, list-building, enrichment, and structured output",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Advanced search with filters, domains, dates, highlights, summaries, and subpage crawling",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Connect to Exa's hosted MCP server:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "\"type\": \"streamable-http\",",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"exa\": {\n      \"type\": \"streamable-http\",\n      \"url\": \"https://mcp.exa.ai/mcp\",\n    }\n  }\n}",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "codex mcp add exa --url https://mcp.exa.ai/mcp",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "DYNAMIC_HIGHLIGHTS",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`web_search_exa`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`web_fetch_exa`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`agent_run`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`web_search_advanced_exa`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:47+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:48:34+08:00",
+  "updated_at": "2026-11-16T01:50:08+08:00"
+}

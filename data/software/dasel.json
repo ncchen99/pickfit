@@ -1,0 +1,671 @@
+{
+  "schema_version": "software.v1",
+  "slug": "dasel",
+  "repo_id": "gh:297615696",
+  "name": "Dasel",
+  "summary": "Command-line tool and Go library for querying, modifying and converting JSON, YAML, TOML, XML, CSV, HCL, INI and KDL data.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "data_db",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "config",
+    "configuration",
+    "data-processing",
+    "data-structures",
+    "data-wrangling",
+    "devops-tools",
+    "go",
+    "golang",
+    "hcl2"
+  ],
+  "use_cases": [
+    "extract a value from JSON on the command line",
+    "convert a JSON file to YAML",
+    "update values in structured config files in place"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "query multiple data formats with one syntax",
+    "extract values from structured data",
+    "modify values in structured files",
+    "convert between data formats"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:01.009762Z",
+    "run_id": "verify-dasel-20261116-005651-a02f",
+    "open_hint": "Run `dasel version` to confirm it is installed.",
+    "features": [
+      {
+        "feature": "query multiple data formats with one syntax",
+        "title": "Query different data formats with one syntax",
+        "steps": [
+          "Pipe JSON in and give a selector: `echo '<your json>' | dasel -i json 'foo.bar'`",
+          "For YAML, set the input format: `cat <file> | dasel -i yaml 'foo.bar'`"
+        ]
+      },
+      {
+        "feature": "extract values from structured data",
+        "title": "Extract values from structured data",
+        "steps": [
+          "Pipe data in, name its format, and give the path to the value: `echo '<your json>' | dasel -i json 'foo.bar'`"
+        ]
+      },
+      {
+        "feature": "modify values in structured files",
+        "title": "Change values in structured files",
+        "steps": [
+          "Assign a new value and print the whole document with `--root`: `echo '<your json>' | dasel -i json --root 'foo.bar = \"<new value>\"'`"
+        ]
+      },
+      {
+        "feature": "convert between data formats",
+        "title": "Convert data from one format to another",
+        "steps": [
+          "Set the input and output formats: `echo '<your json>' | dasel -i json -o yaml`"
+        ]
+      }
+    ]
+  },
+  "homepage": "https://daseldocs.tomwright.me",
+  "repo": {
+    "url": "https://github.com/TomWright/dasel",
+    "full_name": "TomWright/dasel",
+    "created_at": "2020-09-22T10:33:56Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install dasel",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "echo '{\"foo\": {\"bar\": \"baz\"}}' | dasel -i json 'foo.bar'",
+        "expected_signal": "\"baz\""
+      },
+      "first_task": "echo '{\"foo\": {\"bar\": \"baz\"}}' | dasel -i json 'foo.bar'"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-dasel-20261116-005651-a02f",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin && curl -sSfL -o ~/.local/bin/dasel https://github.com/TomWright/dasel/releases/download/v3.11.2/dasel_linux_amd64 && chmod +x ~/.local/bin/dasel",
+          "purpose": "Download dasel_linux_amd64 v3.11.2 release binary into ~/.local/bin and make it executable"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "dasel version",
+        "expected_signal": "3.11.2"
+      },
+      "first_task": "dasel version"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install github.com/tomwright/dasel/v3/cmd/dasel@master",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "echo '{\"foo\": {\"bar\": \"baz\"}}' | dasel -i json 'foo.bar'",
+        "expected_signal": "\"baz\""
+      },
+      "first_task": "echo '{\"foo\": {\"bar\": \"baz\"}}' | dasel -i json 'foo.bar'"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v3.11.2",
+    "published_at": "2026-06-27T15:04:42Z",
+    "url": "https://github.com/TomWright/dasel/releases/tag/v3.11.2"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T00:57:43.335557+08:00",
+    "runs": [
+      {
+        "id": "verify-dasel-20261116-005651-a02f",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T00:57:43.335557+08:00",
+        "tool_version": "3.11.2",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin && curl -sSfL -o ~/.local/bin/dasel https://github.com/TomWright/dasel/releases/download/v3.11.2/dasel_linux_amd64 && chmod +x ~/.local/bin/dasel",
+            "purpose": "Download dasel_linux_amd64 v3.11.2 release binary into ~/.local/bin and make it executable"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "dasel version",
+            "expected_signal": "3.11.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "3.11.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "echo '{\"foo\": {\"bar\": \"baz\"}}' | dasel -i json 'foo.bar'",
+            "expected_signal": "\"baz\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"baz\"",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "echo '{\"foo\": {\"bar\": \"baz\"}}' | dasel -i json --root 'foo.bar = \"bong\"'",
+            "expected_signal": "\"bar\": \"bong\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"bar\": \"bong\"",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cat /tmp/data.yaml | dasel -i yaml 'foo.bar'",
+            "expected_signal": "baz",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "baz",
+            "setup": [
+              {
+                "command": "cat > /tmp/data.yaml <<'EOF'\nfoo:\n  bar: baz\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "echo '{\"foo\": {\"bar\": \"baz\"}}' | dasel -i json -o yaml",
+            "expected_signal": "bar: baz",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "bar: baz",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "go install github.com/tomwright/dasel/v3/cmd/dasel@master",
+            "actually_needed": "Go toolchain not available; used the prebuilt release binary dasel_linux_amd64 (v3.11.2) from GitHub Releases, which the README also offers",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "--root output shown with 2-space indent",
+            "actually_needed": "Actual output uses 4-space indentation; content identical",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks succeeded: the query printed \"baz\", the root update printed JSON with \"bar\": \"bong\", and the version command printed 3.11.2.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-dasel-20261116-005651-a02f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-dasel-20261116-005651-a02f/check-1-cmd5.judged.png",
+            "runs/verify/verify-dasel-20261116-005651-a02f/check-2-cmd6.judged.png",
+            "runs/verify/verify-dasel-20261116-005651-a02f/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.111536,
+        "features": [
+          {
+            "feature": "query multiple data formats with one syntax",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "extract values from structured data",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "modify values in structured files",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "convert between data formats",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T00:57:50+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/TomWright/dasel@521d3c39fe06",
+      "go.mod"
+    ],
+    "packages_checked": 39,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T00:57:43+08:00",
+    "quality": {
+      "total": 85.4,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.7833,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 96.1,
+      "signals": {
+        "stars": 8073,
+        "monthly_downloads": 807,
+        "forks": 184,
+        "dependents": null,
+        "release_downloads": 1523646,
+        "hn_top_score": 492,
+        "registries_count": 1
+      },
+      "age_days": 2245,
+      "packages": [
+        "homebrew:dasel"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 3.33
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:57:43.338648+08:00",
+      "sources_sha": "2f203e9d16c4e9d082dd1797b9de3caf9a2a6de4c9495c5ea09d1bed09cdfc3b",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Dasel (short for **Data-Select**) is a command-line tool and library for querying, modifying, and transforming data structures such as JSON, YAML, TOML, XML, CSV, and KDL."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "making it useful for developers, DevOps, and data wrangling tasks."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "### Homebrew (macOS/Linux)\n\n```sh\nbrew install dasel\n```"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "echo '{\"foo\": {\"bar\": \"baz\"}}' | dasel -i json 'foo.bar'\n# Output: \"baz\""
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Prebuilt binaries are available on the [Releases](https://github.com/TomWright/dasel/releases) page for Linux, macOS, and Windows."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/TomWright/dasel",
+      "fetched_at": "2026-11-16T00:56:42+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/TomWright/dasel/blob/master/README.md",
+      "fetched_at": "2026-11-16T00:56:41+08:00"
+    },
+    {
+      "id": "release:v3.11.2",
+      "kind": "release",
+      "url": "https://github.com/TomWright/dasel/releases/tag/v3.11.2",
+      "fetched_at": "2026-11-16T00:56:41+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "is a command-line tool and library",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:56:51+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "**Script-friendly**: Simple CLI integration for shell scripts and pipelines.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:56:51+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Unified querying, transformation, and modification of JSON, TOML, YAML, XML, INI, HCL, KDL and CSV.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:56:51+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Dasel (short for **Data-Select**) is a command-line tool and library for querying, modifying, and transforming data structures such as JSON, YAML, TOML, XML, CSV, and KDL.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:56:51+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Dasel",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:56:51+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Prebuilt binaries are available on the [Releases](https://github.com/TomWright/dasel/releases) page for Linux, macOS, and Windows.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:56:51+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:56:42+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:56:42+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T00:56:42+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:56:42+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:56:42+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v3.11.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:56:41+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Extract values, lists, or structures with intuitive syntax.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:56:51+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "cat data.json | dasel -i json -o yaml",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:56:51+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Update, insert, or delete values directly in structured files.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:56:51+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**Unified query syntax**: Access data in any format with the same selectors.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:56:51+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**Query & search**: Extract values, lists, or structures with intuitive syntax.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:56:51+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**Modify in place**: Update, insert, or delete values directly in structured files.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:56:51+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "**Convert between formats**: Seamlessly transform data from JSON → YAML, TOML → JSON, etc.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:56:51+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install dasel",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:56:51+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/tomwright/dasel/v3/cmd/dasel@master",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:56:51+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/tomwright/dasel/v3/cmd/dasel@master",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:56:51+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T00:56:41+08:00",
+  "updated_at": "2026-11-16T00:57:50+08:00"
+}

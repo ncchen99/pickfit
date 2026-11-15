@@ -1,0 +1,1090 @@
+{
+  "schema_version": "software.v1",
+  "slug": "postgres-mcp",
+  "repo_id": "gh:954215474",
+  "name": "Postgres MCP Pro",
+  "summary": "MCP server giving AI agents configurable read/write access to Postgres plus index tuning, explain plans and health checks.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [
+    "check the health of a Postgres database",
+    "find the slowest queries and speed them up",
+    "get index recommendations for a workload"
+  ],
+  "alternatives_to": [
+    "Reference PostgreSQL MCP Server",
+    "Dexter"
+  ],
+  "features": [
+    "analyze database health",
+    "recommend indexes for a workload",
+    "review EXPLAIN plans with hypothetical indexes",
+    "execute SQL with read-only access mode"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:23.123751Z",
+    "run_id": null,
+    "open_hint": null,
+    "features": [
+      {
+        "feature": "analyze database health",
+        "title": "Check the health of a Postgres database",
+        "steps": []
+      },
+      {
+        "feature": "recommend indexes for a workload",
+        "title": "Get index recommendations for a workload",
+        "steps": []
+      },
+      {
+        "feature": "review EXPLAIN plans with hypothetical indexes",
+        "title": "Review EXPLAIN plans with hypothetical indexes",
+        "steps": []
+      },
+      {
+        "feature": "execute SQL with read-only access mode",
+        "title": "Run SQL in read-only access mode",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/crystaldba/postgres-mcp",
+    "full_name": "crystaldba/postgres-mcp",
+    "created_at": "2025-03-24T18:28:53Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "python>=3.12"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "OpenAI API key (only for experimental LLM index tuning)"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.3.0",
+    "published_at": "2025-05-16T14:45:33Z",
+    "url": "https://github.com/crystaldba/postgres-mcp/releases/tag/v0.3.0"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "not_run",
+    "checked_at": null,
+    "runs": []
+  },
+  "mcp": {
+    "transports": [
+      "sse",
+      "stdio"
+    ],
+    "launch_command": "uvx postgres-mcp --access-mode=unrestricted",
+    "client_configs": [
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"postgres\": {\n      \"command\": \"uvx\",\n      \"args\": [\n        \"postgres-mcp\",\n        \"--access-mode=unrestricted\"\n      ],\n      \"env\": {\n        \"DATABASE_URI\": \"postgresql://username:password@localhost:5432/dbname\"\n      }\n    }\n  }\n}"
+      },
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"postgres\": {\n      \"command\": \"docker\",\n      \"args\": [\n        \"run\",\n        \"-i\",\n        \"--rm\",\n        \"-e\",\n        \"DATABASE_URI\",\n        \"crystaldba/postgres-mcp\",\n        \"--access-mode=unrestricted\"\n      ],\n      \"env\": {\n        \"DATABASE_URI\": \"postgresql://username:password@localhost:5432/dbname\"\n      }\n    }\n  }\n}"
+      },
+      {
+        "client": "cursor",
+        "snippet": "{\n    \"mcpServers\": {\n        \"postgres\": {\n            \"type\": \"sse\",\n            \"url\": \"http://localhost:8000/sse\"\n        }\n    }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "DATABASE_URI",
+        "required": true,
+        "purpose": "Postgres connection URI"
+      },
+      {
+        "name": "OPENAI_API_KEY",
+        "required": false,
+        "purpose": "OpenAI key for LLM index tuning"
+      }
+    ],
+    "tools": [
+      "list_schemas",
+      "list_objects",
+      "get_object_details",
+      "execute_sql",
+      "explain_query",
+      "get_top_queries",
+      "analyze_workload_indexes",
+      "analyze_query_indexes",
+      "analyze_db_health"
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T02:10:43+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/crystaldba/postgres-mcp@15c8e3335354",
+      "uv.lock"
+    ],
+    "packages_checked": 70,
+    "findings_total": 40,
+    "advisories_total": 40,
+    "findings": [
+      {
+        "package": "pypi:anyio",
+        "version": "4.9.0",
+        "advisory": "GHSA-82r6-8w77-94w6",
+        "cves": [
+          "CVE-2026-63374"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "4.14.2",
+        "summary": "AnyIO: TLSStream IDNA 2003 host name encoding enables potential TLS certificate spoofing",
+        "malicious": false
+      },
+      {
+        "package": "pypi:certifi",
+        "version": "2025.1.31",
+        "advisory": "GHSA-6q48-6c7w-9gw2",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "2026.10.18",
+        "summary": "certifi bundles emSign root CAs with compromised intermediate CA keys",
+        "malicious": false
+      },
+      {
+        "package": "pypi:h11",
+        "version": "0.14.0",
+        "advisory": "GHSA-vqfr-h8mv-ghfj",
+        "cves": [
+          "CVE-2025-43859"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.16.0",
+        "summary": "h11 accepts some malformed Chunked-Encoding bodies",
+        "malicious": false
+      },
+      {
+        "package": "pypi:pyjwt",
+        "version": "2.10.1",
+        "advisory": "GHSA-ffc3-869f-jxw9",
+        "cves": [
+          "CVE-2026-102268"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "2.14.0",
+        "summary": "PyJWT: Asymmetric-PEM detection bypass: whitespace/line-ending-mutated public keys skip the HS/asymmetric confusion guard",
+        "malicious": false
+      },
+      {
+        "package": "pypi:aiohttp",
+        "version": "3.11.16",
+        "advisory": "GHSA-2g87-pp6c-29x5",
+        "cves": [
+          "CVE-2026-123817"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.14.4",
+        "summary": "aiohttp: Multiple instances of excessive or unbounded memory/CPU use",
+        "malicious": false
+      },
+      {
+        "package": "pypi:aiohttp",
+        "version": "3.11.16",
+        "advisory": "GHSA-5wr8-gcqf-gqf3",
+        "cves": [
+          "CVE-2026-111064"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.14.4",
+        "summary": "aiohttp server lacks an initial request/header timeout",
+        "malicious": false
+      },
+      {
+        "package": "pypi:aiohttp",
+        "version": "3.11.16",
+        "advisory": "GHSA-6mq8-rvhq-8wgg",
+        "cves": [
+          "CVE-2025-69223"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.13.3",
+        "summary": "AIOHTTP's HTTP Parser auto_decompress feature is vulnerable to zip bomb",
+        "malicious": false
+      },
+      {
+        "package": "pypi:aiohttp",
+        "version": "3.11.16",
+        "advisory": "GHSA-9xw5-w5jj-pvcg",
+        "cves": [
+          "CVE-2026-111066"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.14.4",
+        "summary": "AIOHTTP: File descriptor exhaustion in multipart requests",
+        "malicious": false
+      },
+      {
+        "package": "pypi:aiohttp",
+        "version": "3.11.16",
+        "advisory": "GHSA-cq5v-8q36-5273",
+        "cves": [
+          "CVE-2026-69244"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.14.3",
+        "summary": "AIOHTTP: Out-of-bounds heap read in C HTTP response parser error path (malformed chunked response)",
+        "malicious": false
+      },
+      {
+        "package": "pypi:mcp",
+        "version": "1.25.0",
+        "advisory": "GHSA-hvrp-rf83-w775",
+        "cves": [
+          "CVE-2026-52870"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.27.2",
+        "summary": "MCP Python SDK: Experimental task handlers allow any client to access and cancel other clients' tasks",
+        "malicious": false
+      },
+      {
+        "package": "pypi:mcp",
+        "version": "1.25.0",
+        "advisory": "GHSA-jpw9-pfvf-9f58",
+        "cves": [
+          "CVE-2026-52869"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.27.2",
+        "summary": "MCP Python SDK: HTTP transports serve session requests without verifying the authenticated principal",
+        "malicious": false
+      },
+      {
+        "package": "pypi:mcp",
+        "version": "1.25.0",
+        "advisory": "GHSA-vj7q-gjh5-988w",
+        "cves": [
+          "CVE-2026-59950"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.28.1",
+        "summary": "MCP Python SDK: WebSocket server transport does not support Host/Origin validation",
+        "malicious": false
+      },
+      {
+        "package": "pypi:pyjwt",
+        "version": "2.10.1",
+        "advisory": "GHSA-752w-5fwx-jx9f",
+        "cves": [
+          "CVE-2026-32597"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.12.0",
+        "summary": "PyJWT accepts unknown `crit` header extensions",
+        "malicious": false
+      },
+      {
+        "package": "pypi:pyjwt",
+        "version": "2.10.1",
+        "advisory": "GHSA-9v7f-9g4p-ffgj",
+        "cves": [
+          "CVE-2026-102267"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.14.0",
+        "summary": "PyJWT: PyJWKClient follows redirects when fetching JWKS",
+        "malicious": false
+      },
+      {
+        "package": "pypi:pyjwt",
+        "version": "2.10.1",
+        "advisory": "GHSA-p4g4-x82p-q773",
+        "cves": [
+          "CVE-2026-102271"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.14.0",
+        "summary": "PyJWT: Public keys in DER form are accepted as HMAC secrets, bypassing the CVE-2022-29217 guard",
+        "malicious": false
+      },
+      {
+        "package": "pypi:pyjwt",
+        "version": "2.10.1",
+        "advisory": "GHSA-pxh4-856f-4h89",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "2.14.0",
+        "summary": "PyJWT: HS256/384/512 verify accepts empty HMAC key via oct JWK (PyJWK/PyJWKClient) enabling token forgery",
+        "malicious": false
+      },
+      {
+        "package": "pypi:pyjwt",
+        "version": "2.10.1",
+        "advisory": "GHSA-xgmm-8j9v-c9wx",
+        "cves": [
+          "CVE-2026-48526"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.13.0",
+        "summary": "PyJWT: Public-key JWK accepted as HMAC secret enables forged HS256 tokens when mixed families are allowed",
+        "malicious": false
+      },
+      {
+        "package": "pypi:pyjwt",
+        "version": "2.10.1",
+        "advisory": "PYSEC-2025-183",
+        "cves": [
+          "CVE-2025-45768"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "pyjwt v2.10.1 was discovered to contain weak encryption. NOTE: this is disputed by the Supplier because the key length is chosen by the application that uses the library (admittedly, library users may",
+        "malicious": false
+      },
+      {
+        "package": "pypi:python-multipart",
+        "version": "0.0.21",
+        "advisory": "GHSA-5rvq-cxj2-64vf",
+        "cves": [
+          "CVE-2026-53539"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.0.30",
+        "summary": "python-multipart: Quadratic-time querystring parsing with semicolon separators causes CPU denial of service",
+        "malicious": false
+      },
+      {
+        "package": "pypi:python-multipart",
+        "version": "0.0.21",
+        "advisory": "GHSA-pp6c-gr5w-3c5g",
+        "cves": [
+          "CVE-2026-42561"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.0.27",
+        "summary": "python-multipart has Denial of Service via unbounded multipart part headers",
+        "malicious": false
+      },
+      {
+        "package": "pypi:python-multipart",
+        "version": "0.0.21",
+        "advisory": "GHSA-wp53-j4wj-2cfg",
+        "cves": [
+          "CVE-2026-24486"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.0.22",
+        "summary": "Python-Multipart has Arbitrary File Write via Non-Default Configuration",
+        "malicious": false
+      },
+      {
+        "package": "pypi:starlette",
+        "version": "0.46.1",
+        "advisory": "GHSA-7f5h-v6xp-fcq8",
+        "cves": [
+          "CVE-2025-62727"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.49.1",
+        "summary": "Starlette vulnerable to O(n^2) DoS via Range header merging in ``starlette.responses.FileResponse``",
+        "malicious": false
+      },
+      {
+        "package": "pypi:starlette",
+        "version": "0.46.1",
+        "advisory": "GHSA-82w8-qh3p-5jfq",
+        "cves": [
+          "CVE-2026-54283"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.3.1",
+        "summary": "Starlette: request.form() limits silently ignored for application/x-www-form-urlencoded enable DoS",
+        "malicious": false
+      },
+      {
+        "package": "pypi:starlette",
+        "version": "0.46.1",
+        "advisory": "GHSA-wqp7-x3pw-xc5r",
+        "cves": [
+          "CVE-2026-48818"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.1.0",
+        "summary": "Starlette: SSRF and NTLM credential theft via UNC paths in StaticFiles on Windows",
+        "malicious": false
+      },
+      {
+        "package": "pypi:urllib3",
+        "version": "2.3.0",
+        "advisory": "GHSA-2xpw-w6gg-jr37",
+        "cves": [
+          "CVE-2025-66471"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.6.0",
+        "summary": "urllib3 streaming API improperly handles highly compressed data",
+        "malicious": false
+      },
+      {
+        "package": "pypi:urllib3",
+        "version": "2.3.0",
+        "advisory": "GHSA-38jv-5279-wg99",
+        "cves": [
+          "CVE-2026-21441"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.6.3",
+        "summary": "Decompression-bomb safeguards bypassed when following HTTP redirects (streaming API)",
+        "malicious": false
+      },
+      {
+        "package": "pypi:urllib3",
+        "version": "2.3.0",
+        "advisory": "GHSA-8988-9cw3-xx77",
+        "cves": [
+          "CVE-2026-97687"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.8.0",
+        "summary": "urllib3: HTTPS proxy TLS configuration may be ignored or overridden",
+        "malicious": false
+      },
+      {
+        "package": "pypi:urllib3",
+        "version": "2.3.0",
+        "advisory": "GHSA-gm62-xv2j-4w53",
+        "cves": [
+          "CVE-2025-66418"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.6.0",
+        "summary": "urllib3 allows an unbounded number of links in the decompression chain",
+        "malicious": false
+      },
+      {
+        "package": "pypi:urllib3",
+        "version": "2.3.0",
+        "advisory": "GHSA-qccp-gfcp-xxvc",
+        "cves": [
+          "CVE-2026-44431"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.7.0",
+        "summary": "urllib3: Sensitive headers forwarded across origins in proxied low-level redirects",
+        "malicious": false
+      },
+      {
+        "package": "pypi:urllib3",
+        "version": "2.3.0",
+        "advisory": "GHSA-vxq7-64xx-v4gw",
+        "cves": [
+          "CVE-2026-97689"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.8.0",
+        "summary": "urllib3: HTTPResponse.stream()/read_chunked() buffers an unbounded chunk-size line into memory",
+        "malicious": false
+      },
+      {
+        "package": "pypi:virtualenv",
+        "version": "20.36.1",
+        "advisory": "GHSA-394h-qwmc-48pf",
+        "cves": [
+          "CVE-2026-113718"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "21.14.9",
+        "summary": "virtualenv: Xonsh activation literals depend on the script decoding codec",
+        "malicious": false
+      },
+      {
+        "package": "pypi:virtualenv",
+        "version": "20.36.1",
+        "advisory": "GHSA-5vjq-rrrf-7h2q",
+        "cves": [
+          "CVE-2026-113726"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "21.14.4",
+        "summary": "virtualenv activate runs commands from the environment name in zsh with PROMPT_SUBST",
+        "malicious": false
+      },
+      {
+        "package": "pypi:virtualenv",
+        "version": "20.36.1",
+        "advisory": "GHSA-6w3r-xr62-4xcp",
+        "cves": [
+          "CVE-2026-113723"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "21.14.9",
+        "summary": "virtualenv: Bash prompt values can change meaning under older compatibility modes",
+        "malicious": false
+      },
+      {
+        "package": "pypi:virtualenv",
+        "version": "20.36.1",
+        "advisory": "GHSA-8rjx-v5ww-45pp",
+        "cves": [
+          "CVE-2026-113776"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "21.14.2",
+        "summary": "virtualenv activation scripts run code from a path that contains a placeholder name",
+        "malicious": false
+      },
+      {
+        "package": "pypi:virtualenv",
+        "version": "20.36.1",
+        "advisory": "GHSA-94p9-xgh2-xp45",
+        "cves": [
+          "CVE-2026-102930"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "21.7.12",
+        "summary": "virtualenv: Downloaded seed wheels (pip/setuptools) are not integrity-checked before use",
+        "malicious": false
+      },
+      {
+        "package": "pypi:virtualenv",
+        "version": "20.36.1",
+        "advisory": "GHSA-c947-3pg5-gm8q",
+        "cves": [
+          "CVE-2026-113732"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "21.14.2",
+        "summary": "virtualenv activate.fish runs commands from a path or prompt with a backslash before a quote",
+        "malicious": false
+      },
+      {
+        "package": "pypi:virtualenv",
+        "version": "20.36.1",
+        "advisory": "GHSA-c978-59m8-c77v",
+        "cves": [
+          "CVE-2026-113722"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "21.14.9",
+        "summary": "virtualenv: Generated POSIX console launchers interpret destination paths as shell syntax",
+        "malicious": false
+      },
+      {
+        "package": "pypi:virtualenv",
+        "version": "20.36.1",
+        "advisory": "GHSA-p58f-9548-mpm2",
+        "cves": [
+          "CVE-2026-102925"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "21.7.13",
+        "summary": "virtualenv bash and fish activation scripts execute commands embedded in paths",
+        "malicious": false
+      },
+      {
+        "package": "pypi:virtualenv",
+        "version": "20.36.1",
+        "advisory": "GHSA-vxj4-q4g9-crj7",
+        "cves": [
+          "CVE-2026-113725"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "21.14.7",
+        "summary": "virtualenv bash activate runs commands from an environment name with a backslash before $",
+        "malicious": false
+      },
+      {
+        "package": "pypi:virtualenv",
+        "version": "20.36.1",
+        "advisory": "GHSA-x78j-v8h9-3j2q",
+        "cves": [
+          "CVE-2026-102937"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "21.7.12",
+        "summary": "virtualenv: Command injection via --prompt in activate.bat (batch activator)",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T02:10:35+08:00",
+    "quality": {
+      "total": 66.6,
+      "confidence": 0.5,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.315,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.3256,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 87.6,
+      "signals": {
+        "stars": 3477,
+        "monthly_downloads": null,
+        "forks": 396,
+        "dependents": null,
+        "release_downloads": 427,
+        "hn_top_score": 11,
+        "registries_count": 0
+      },
+      "age_days": 600,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 8.26
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:10:35.785945+08:00",
+      "sources_sha": "a8cc1fd40abe68bba134c7c34191f67d93cac37cc42cad7896b9fa2ed5b3cccd",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A Postgres MCP server with index tuning, explain plans, health checks, and safe sql execution."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "built to support you and your AI agents throughout the **entire development process**"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "2. Docker *or* Python 3.12 or higher."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pipx install postgres-mcp"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "> Check the health of my database and identify any issues."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "you must provide an OpenAI API key by setting the `OPENAI_API_KEY` environment variable."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "## Frequently Asked Questions"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "- MacOS/Windows: Uses `host.docker.internal` automatically"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/crystaldba/postgres-mcp",
+      "fetched_at": "2026-11-16T02:08:48+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/crystaldba/postgres-mcp/blob/main/README.md",
+      "fetched_at": "2026-11-16T02:08:48+08:00"
+    },
+    {
+      "id": "release:v0.3.0",
+      "kind": "release",
+      "url": "https://github.com/crystaldba/postgres-mcp/releases/tag/v0.3.0",
+      "fetched_at": "2026-11-16T02:08:48+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A Postgres MCP server with index tuning, explain plans, health checks, and safe sql execution.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "built to support you and your AI agents throughout the **entire development process**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "A Postgres MCP server with index tuning, explain plans, health checks, and safe sql execution.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A Postgres MCP server with index tuning, explain plans, health checks, and safe sql execution.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "**Postgres MCP Pro** is an open source Model Context Protocol (MCP) server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Docker *or* Python 3.12 or higher.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "you must provide an OpenAI API key by setting the `OPENAI_API_KEY` environment variable.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T02:08:48+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T02:08:48+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T02:08:48+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.3.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T02:08:48+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Check the health of my database and identify any issues.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "What are the slowest queries in my database? And how can I speed them up?",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Analyze my database workload and suggest indexes to improve performance.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "This contrasts with the approach of other Postgres MCP servers, including the [Reference Postgres MCP Server]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "Compared to [Dexter](https://github.com/ankane/dexter/), an automatic indexing tool for Postgres, we search a larger space",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**🔍 Database Health** - analyze index health, connection utilization, buffer cache, vacuum health",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**⚡ Index Tuning** - explore thousands of possible indexes to find the best solution for your workload",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**📈 Query Plans** - validate and optimize performance by reviewing EXPLAIN plans and simulating the impact of hypothetical indexes.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "**🛡️ Safe SQL Execution** - configurable access control, including support for read-only mode",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "Postgres MCP Pro supports both the [Standard Input/Output (stdio)]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "\"command\": \"uvx\",",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"postgres\": {\n      \"command\": \"uvx\",\n      \"args\": [\n        \"postgres-mcp\",\n        \"--access-mode=unrestricted\"\n      ],\n      \"env\": {\n        \"DATABASE_URI\": \"postgresql://username:password@localhost:5432/dbname\"\n      }\n    }\n  }\n}",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"postgres\": {\n      \"command\": \"docker\",\n      \"args\": [\n        \"run\",\n        \"-i\",\n        \"--rm\",\n        \"-e\",\n        \"DATABASE_URI\",\n        \"crystaldba/postgres-mcp\",\n        \"--access-mode=unrestricted\"\n      ],\n      \"env\": {\n        \"DATABASE_URI\": \"postgresql://us",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/2",
+      "source_id": "readme",
+      "quote": "{\n    \"mcpServers\": {\n        \"postgres\": {\n            \"type\": \"sse\",\n            \"url\": \"http://localhost:8000/sse\"\n        }\n    }\n}",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "DATABASE_URI",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "OPENAI_API_KEY",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`list_schemas`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`list_objects`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`get_object_details`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`execute_sql`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`explain_query`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`get_top_queries`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`analyze_workload_indexes`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`analyze_query_indexes`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`analyze_db_health`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:08:15+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:54:17+08:00",
+  "updated_at": "2026-11-16T02:10:43+08:00"
+}

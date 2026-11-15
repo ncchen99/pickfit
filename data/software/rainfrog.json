@@ -1,0 +1,783 @@
+{
+  "schema_version": "software.v1",
+  "slug": "rainfrog",
+  "repo_id": "gh:801100155",
+  "name": "rainfrog",
+  "summary": "A terminal-based tool for querying and browsing PostgreSQL, MySQL, SQLite, DuckDB and other databases with vim-like keybindings.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "data_db",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": "beta",
+  "tags": [
+    "database-management",
+    "mysql",
+    "postgresql",
+    "ratatui",
+    "rust",
+    "sql",
+    "sqlite",
+    "terminal"
+  ],
+  "use_cases": [
+    "browse schemas and preview tables of a Postgres database in the terminal",
+    "export query results to CSV",
+    "save frequently used SQL queries as favorites"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "navigate with vim-like keybindings and mouse",
+    "SQL query editor with history and favorites",
+    "copy data, filter tables, switch schemas",
+    "view table metadata and properties"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:28.349062Z",
+    "run_id": "verify-rainfrog-20261116-010536-e9b7",
+    "open_hint": "Run `rainfrog --url <database-url>` (for example `rainfrog --url sqlite://<file>`) to open the menu of tables next to the query editor.",
+    "features": [
+      {
+        "feature": "navigate with vim-like keybindings and mouse",
+        "title": "Move around with vim-style keys and the mouse",
+        "steps": [
+          "Press Ctrl+k to focus the table list.",
+          "Use `j` and `k` to move down and up, and `G` to jump to the last table.",
+          "Press Enter on a table to load a preview of its rows."
+        ]
+      },
+      {
+        "feature": "SQL query editor with history and favorites",
+        "title": "Write SQL queries and reuse them from history or favorites",
+        "steps": [
+          "Press Alt+2 to open the query editor, press `i` and type your query, then press Esc and F5 to run it.",
+          "Press Alt+f, type a name and press Enter to save the query as a favorite.",
+          "Press Alt+4 to see query history and Alt+5 to see favorites."
+        ]
+      },
+      {
+        "feature": "copy data, filter tables, switch schemas",
+        "title": "Copy data, filter tables and switch schemas",
+        "steps": [
+          "Press Ctrl+k to focus the table list.",
+          "Press `/`, type part of a table name and press Enter to filter the list."
+        ]
+      },
+      {
+        "feature": "view table metadata and properties",
+        "title": "View table details such as columns and indexes",
+        "steps": [
+          "Press Ctrl+k and select a table in the list.",
+          "Press `1` to show its columns or `3` to show its indexes."
+        ]
+      }
+    ]
+  },
+  "homepage": "https://crates.io/crates/rainfrog",
+  "repo": {
+    "url": "https://github.com/achristmascarl/rainfrog",
+    "full_name": "achristmascarl/rainfrog",
+    "created_at": "2024-05-15T15:35:44Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "Oracle Client libraries (for the oracle driver)",
+      "jq and fzf (for the install script)"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install rainfrog",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Install a Nerd Font and use it in the terminal for icons"
+      ],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-rainfrog-20261116-010536-e9b7",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "set -e; B=rainfrog-v0.4.7-x86_64-unknown-linux-gnu; U=https://github.com/achristmascarl/rainfrog/releases/download/v0.4.7; mkdir -p ~/tmp/rf ~/.local/bin && cd ~/tmp/rf && curl -fsSL -o $B.tar.gz $U/$B.tar.gz && curl -fsSL -o $B.sha256 $U/$B.sha256 && sha256sum -c $B.sha256 && tar -xzf $B.tar.gz -C ~/.local/ && ln -sf ~/.local/rainfrog ~/.local/bin/rainfrog",
+          "purpose": "download v0.4.7 x86_64-unknown-linux-gnu release tarball + sha256, verify, unpack to ~/.local and link into ~/.local/bin (same steps as install.sh)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "rainfrog --version",
+        "expected_signal": "rainfrog 0.4.7"
+      },
+      "first_task": "python3 drive.py '[[\"s\",\"\\u000b\"],[\"s\",\"j\"],[\"s\",\"k\"],[\"s\",\"G\"],[\"s\",\"\\r\"],[\"w\",2],[\"d\",\"after G + Enter on users\"]]'"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install rainfrog --locked",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Install a Nerd Font and use it in the terminal for icons"
+      ],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.4.7",
+    "published_at": "2026-11-11T19:50:12Z",
+    "url": "https://github.com/achristmascarl/rainfrog/releases/tag/v0.4.7"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T01:09:19.717713+08:00",
+    "runs": [
+      {
+        "id": "verify-rainfrog-20261116-010536-e9b7",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:09:19.717713+08:00",
+        "tool_version": "0.4.7-2c7b5e6",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "set -e; B=rainfrog-v0.4.7-x86_64-unknown-linux-gnu; U=https://github.com/achristmascarl/rainfrog/releases/download/v0.4.7; mkdir -p ~/tmp/rf ~/.local/bin && cd ~/tmp/rf && curl -fsSL -o $B.tar.gz $U/$B.tar.gz && curl -fsSL -o $B.sha256 $U/$B.sha256 && sha256sum -c $B.sha256 && tar -xzf $B.tar.gz -C ~/.local/ && ln -sf ~/.local/rainfrog ~/.local/bin/rainfrog",
+            "purpose": "download v0.4.7 x86_64-unknown-linux-gnu release tarball + sha256, verify, unpack to ~/.local and link into ~/.local/bin (same steps as install.sh)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "rainfrog --version",
+            "expected_signal": "rainfrog 0.4.7",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "rainfrog 0.4.7-2c7b5e6 (2026-11-11)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 drive.py '[[\"s\",\"\\u000b\"],[\"s\",\"j\"],[\"s\",\"k\"],[\"s\",\"G\"],[\"s\",\"\\r\"],[\"w\",2],[\"d\",\"after G + Enter on users\"]]'",
+            "expected_signal": "select * from \"users\" limit 100",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "orders 1 select * from \"users\" limit 100",
+            "setup": [
+              {
+                "command": "pip install --user pyte && python3 - <<'EOF'\nimport sqlite3\nc=sqlite3.connect('/home/sbx/work/test.db')\nc.executescript(\"\"\"\ncreate table users(id integer primary key, name text, email text);\ninsert into users values (1,'alice','alice@example.com'),(2,'bob','bob@example.com'),(3,'carol','carol@example.com');\ncreate table orders(id integer primary key, user_id integer, item text);\ninsert into orders values (1,1,'frogspawn'),(2,2,'lilypad');\n\"\"\")\nc.commit()\nEOF\ncat > /home/sbx/work/drive.py <<'EOF'\nimport os, pty, sys, time, json, select, pyte\n# usage: drive.py '<json list of actions>'  actions: [\"s\", text] send, [\"w\", secs] wait, [\"d\", label] dump screen\nacts = json.loads(sys.argv[1])\ncols, rows = 160, 45\nscreen = pyte.Screen(cols, rows); stream = pyte.ByteStream(screen)\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.environ['COLUMNS'] = str(cols); os.environ['LINES'] = str(rows)\n    os.execvp('rainfrog', ['rainfrog', '--url', 'sqlite:///home/sbx/work/test.db'])\nimport fcntl, termios, struct\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', rows, cols, 0, 0))\ndef pump(t):\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.05)\n        if r:\n            try: data = os.read(fd, 65536)\n            except OSError: return\n            stream.feed(data)\n            # answer cursor position queries\n            if b'\\x1b[6n' in data: os.write(fd, b'\\x1b[1;1R')\npump(3)\nfor a in acts:\n    if a[0] == 's': os.write(fd, a[1].encode()); pump(0.6)\n    elif a[0] == 'w': pump(a[1])\n    elif a[0] == 'd':\n        print('===== SCREEN:', a[1], '=====')\n        for line in screen.display: \n            if line.strip(): print(line.rstrip())\nos.write(fd, b'\\x03'); pump(1)\ntry: os.kill(pid, 9)\nexcept Exception: pass\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 - <<'EOF'\np='/home/sbx/work/drive.py'; s=open(p).read()\ns=s.replace(\"if line.strip(): print(line.rstrip())\",\"t=' '.join(line.translate(str.maketrans('','','│█─┌┐└┘▀↑↓←→')).split())\\n            if t: print(t)\")\nopen(p,'w').write(s)\nEOF\npython3 /home/sbx/work/drive.py '[[\"d\",\"start\"]]'",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 drive.py '[[\"s\",\"\\u000b\"],[\"s\",\"G\"],[\"s\",\"1\"],[\"w\",2],[\"d\",\"users columns (key 1)\"],[\"s\",\"\\u000b\"],[\"s\",\"3\"],[\"w\",2],[\"d\",\"users indexes (key 3)\"]]'",
+            "expected_signal": "pragma table_info(\"users\")",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "orders 1 pragma table_info(\"users\")",
+            "setup": [
+              {
+                "command": "pip install --user pyte && python3 - <<'EOF'\nimport sqlite3\nc=sqlite3.connect('/home/sbx/work/test.db')\nc.executescript(\"\"\"\ncreate table users(id integer primary key, name text, email text);\ninsert into users values (1,'alice','alice@example.com'),(2,'bob','bob@example.com'),(3,'carol','carol@example.com');\ncreate table orders(id integer primary key, user_id integer, item text);\ninsert into orders values (1,1,'frogspawn'),(2,2,'lilypad');\n\"\"\")\nc.commit()\nEOF\ncat > /home/sbx/work/drive.py <<'EOF'\nimport os, pty, sys, time, json, select, pyte\n# usage: drive.py '<json list of actions>'  actions: [\"s\", text] send, [\"w\", secs] wait, [\"d\", label] dump screen\nacts = json.loads(sys.argv[1])\ncols, rows = 160, 45\nscreen = pyte.Screen(cols, rows); stream = pyte.ByteStream(screen)\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.environ['COLUMNS'] = str(cols); os.environ['LINES'] = str(rows)\n    os.execvp('rainfrog', ['rainfrog', '--url', 'sqlite:///home/sbx/work/test.db'])\nimport fcntl, termios, struct\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', rows, cols, 0, 0))\ndef pump(t):\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.05)\n        if r:\n            try: data = os.read(fd, 65536)\n            except OSError: return\n            stream.feed(data)\n            # answer cursor position queries\n            if b'\\x1b[6n' in data: os.write(fd, b'\\x1b[1;1R')\npump(3)\nfor a in acts:\n    if a[0] == 's': os.write(fd, a[1].encode()); pump(0.6)\n    elif a[0] == 'w': pump(a[1])\n    elif a[0] == 'd':\n        print('===== SCREEN:', a[1], '=====')\n        for line in screen.display: \n            if line.strip(): print(line.rstrip())\nos.write(fd, b'\\x03'); pump(1)\ntry: os.kill(pid, 9)\nexcept Exception: pass\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 - <<'EOF'\np='/home/sbx/work/drive.py'; s=open(p).read()\ns=s.replace(\"if line.strip(): print(line.rstrip())\",\"t=' '.join(line.translate(str.maketrans('','','│█─┌┐└┘▀↑↓←→')).split())\\n            if t: print(t)\")\nopen(p,'w').write(s)\nEOF\npython3 /home/sbx/work/drive.py '[[\"d\",\"start\"]]'",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 drive.py '[[\"s\",\"\\u000b\"],[\"s\",\"/\"],[\"s\",\"use\"],[\"s\",\"\\r\"],[\"w\",1],[\"d\",\"filtered tables /use\"]]'",
+            "expected_signal": "/ use",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "/ use 󰤏 query <alt+2>  history <alt+4>  favorites <alt+5>",
+            "setup": [
+              {
+                "command": "pip install --user pyte && python3 - <<'EOF'\nimport sqlite3\nc=sqlite3.connect('/home/sbx/work/test.db')\nc.executescript(\"\"\"\ncreate table users(id integer primary key, name text, email text);\ninsert into users values (1,'alice','alice@example.com'),(2,'bob','bob@example.com'),(3,'carol','carol@example.com');\ncreate table orders(id integer primary key, user_id integer, item text);\ninsert into orders values (1,1,'frogspawn'),(2,2,'lilypad');\n\"\"\")\nc.commit()\nEOF\ncat > /home/sbx/work/drive.py <<'EOF'\nimport os, pty, sys, time, json, select, pyte\n# usage: drive.py '<json list of actions>'  actions: [\"s\", text] send, [\"w\", secs] wait, [\"d\", label] dump screen\nacts = json.loads(sys.argv[1])\ncols, rows = 160, 45\nscreen = pyte.Screen(cols, rows); stream = pyte.ByteStream(screen)\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.environ['COLUMNS'] = str(cols); os.environ['LINES'] = str(rows)\n    os.execvp('rainfrog', ['rainfrog', '--url', 'sqlite:///home/sbx/work/test.db'])\nimport fcntl, termios, struct\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', rows, cols, 0, 0))\ndef pump(t):\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.05)\n        if r:\n            try: data = os.read(fd, 65536)\n            except OSError: return\n            stream.feed(data)\n            # answer cursor position queries\n            if b'\\x1b[6n' in data: os.write(fd, b'\\x1b[1;1R')\npump(3)\nfor a in acts:\n    if a[0] == 's': os.write(fd, a[1].encode()); pump(0.6)\n    elif a[0] == 'w': pump(a[1])\n    elif a[0] == 'd':\n        print('===== SCREEN:', a[1], '=====')\n        for line in screen.display: \n            if line.strip(): print(line.rstrip())\nos.write(fd, b'\\x03'); pump(1)\ntry: os.kill(pid, 9)\nexcept Exception: pass\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 - <<'EOF'\np='/home/sbx/work/drive.py'; s=open(p).read()\ns=s.replace(\"if line.strip(): print(line.rstrip())\",\"t=' '.join(line.translate(str.maketrans('','','│█─┌┐└┘▀↑↓←→')).split())\\n            if t: print(t)\")\nopen(p,'w').write(s)\nEOF\npython3 /home/sbx/work/drive.py '[[\"d\",\"start\"]]'",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 drive.py '[[\"s\",\"\\u001b2\"],[\"s\",\"i\"],[\"s\",\"select name, email from users where id = 2\"],[\"s\",\"\\u001b\"],[\"s\",\"\\u001b[15~\"],[\"w\",2],[\"d\",\"after F5 query\"],[\"s\",\"\\u001bf\"],[\"w\",1],[\"d\",\"after Alt+f\"],[\"s\",\"bobquery\"],[\"s\",\"\\r\"],[\"w\",1],[\"s\",\"\\u001b4\"],[\"w\",1],[\"d\",\"history Alt+4\"],[\"s\",\"\\u001b5\"],[\"w\",1],[\"d\",\"favorites Alt+5\"]]'",
+            "expected_signal": "bobquery",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "orders > bobquery",
+            "setup": [
+              {
+                "command": "pip install --user pyte && python3 - <<'EOF'\nimport sqlite3\nc=sqlite3.connect('/home/sbx/work/test.db')\nc.executescript(\"\"\"\ncreate table users(id integer primary key, name text, email text);\ninsert into users values (1,'alice','alice@example.com'),(2,'bob','bob@example.com'),(3,'carol','carol@example.com');\ncreate table orders(id integer primary key, user_id integer, item text);\ninsert into orders values (1,1,'frogspawn'),(2,2,'lilypad');\n\"\"\")\nc.commit()\nEOF\ncat > /home/sbx/work/drive.py <<'EOF'\nimport os, pty, sys, time, json, select, pyte\n# usage: drive.py '<json list of actions>'  actions: [\"s\", text] send, [\"w\", secs] wait, [\"d\", label] dump screen\nacts = json.loads(sys.argv[1])\ncols, rows = 160, 45\nscreen = pyte.Screen(cols, rows); stream = pyte.ByteStream(screen)\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.environ['COLUMNS'] = str(cols); os.environ['LINES'] = str(rows)\n    os.execvp('rainfrog', ['rainfrog', '--url', 'sqlite:///home/sbx/work/test.db'])\nimport fcntl, termios, struct\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', rows, cols, 0, 0))\ndef pump(t):\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.05)\n        if r:\n            try: data = os.read(fd, 65536)\n            except OSError: return\n            stream.feed(data)\n            # answer cursor position queries\n            if b'\\x1b[6n' in data: os.write(fd, b'\\x1b[1;1R')\npump(3)\nfor a in acts:\n    if a[0] == 's': os.write(fd, a[1].encode()); pump(0.6)\n    elif a[0] == 'w': pump(a[1])\n    elif a[0] == 'd':\n        print('===== SCREEN:', a[1], '=====')\n        for line in screen.display: \n            if line.strip(): print(line.rstrip())\nos.write(fd, b'\\x03'); pump(1)\ntry: os.kill(pid, 9)\nexcept Exception: pass\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 - <<'EOF'\np='/home/sbx/work/drive.py'; s=open(p).read()\ns=s.replace(\"if line.strip(): print(line.rstrip())\",\"t=' '.join(line.translate(str.maketrans('','','│█─┌┐└┘▀↑↓←→')).split())\\n            if t: print(t)\")\nopen(p,'w').write(s)\nEOF\npython3 /home/sbx/work/drive.py '[[\"d\",\"start\"]]'",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -LSsf .../install.sh | bash (needs jq and fzf)",
+            "actually_needed": "jq and fzf are absent, and the script picks the binary interactively with fzf, so it cannot run unattended; the README's 'release page binaries' path (download the x86_64-unknown-linux-gnu tarball, check sha256, unpack, link into ~/.local/bin) was used instead",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "script needs jq and fzf installed to run",
+            "actually_needed": "the script's need_cmd only prints a warning and continues when a command is missing, so a user without jq or fzf gets confusing later failures",
+            "kind": "note"
+          },
+          {
+            "readme_said": "terminal UI usage",
+            "actually_needed": "non-interactive testing needed a pty driver (python pty + pyte, pip install --user pyte) to send keystrokes and render the screen",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Rainfrog ran the users select query and returned 3 rows, showed pragma table_info and index_list results for users, and printed version 0.4.7.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-rainfrog-20261116-010536-e9b7/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-rainfrog-20261116-010536-e9b7/check-1-cmd8.judged.png",
+            "runs/verify/verify-rainfrog-20261116-010536-e9b7/check-2-cmd9.judged.png",
+            "runs/verify/verify-rainfrog-20261116-010536-e9b7/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.418751,
+        "features": [
+          {
+            "feature": "navigate with vim-like keybindings and mouse",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "SQL query editor with history and favorites",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "copy data, filter tables, switch schemas",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "view table metadata and properties",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:09:26+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/achristmascarl/rainfrog@2c7b5e61be6b",
+      "Cargo.lock"
+    ],
+    "packages_checked": 610,
+    "findings_total": 4,
+    "advisories_total": 2,
+    "findings": [
+      {
+        "package": "crates:quick-xml",
+        "version": "0.37.5",
+        "advisory": "RUSTSEC-2026-0194",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.38.3",
+        "advisory": "RUSTSEC-2026-0194",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.37.5",
+        "advisory": "RUSTSEC-2026-0195",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.38.3",
+        "advisory": "RUSTSEC-2026-0195",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:09:26+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.675,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 95.4,
+      "signals": {
+        "stars": 5406,
+        "monthly_downloads": 471,
+        "forks": 101,
+        "dependents": null,
+        "release_downloads": 9677,
+        "hn_top_score": 192,
+        "registries_count": 2
+      },
+      "age_days": 914,
+      "packages": [
+        "crates:rainfrog",
+        "homebrew:rainfrog"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 3.63
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:09:19.723902+08:00",
+      "sources_sha": "146ebe76bf262cff0d67db3838dea2dd0a4557ea3edf8093208bce7da46e069f",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "- query editor with keyword highlighting, session history, and favorites"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "the goal for rainfrog is to provide a lightweight, terminal-based tool for\ninteracting with databases."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "the oracle driver uses ODPI-C, which requires Oracle Client libraries to be installed."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "cargo install rainfrog --locked"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "rainfrog --url $(connection_url) --ssl-required"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export RAINFROG_CONFIG=~/.config/rainfrog"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "## known issues and limitations"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "- cross-platform (macOS, linux, windows, android via termux)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/achristmascarl/rainfrog",
+      "fetched_at": "2026-11-16T01:05:26+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/achristmascarl/rainfrog/blob/main/README.md",
+      "fetched_at": "2026-11-16T01:05:24+08:00"
+    },
+    {
+      "id": "release:v0.4.7",
+      "kind": "release",
+      "url": "https://github.com/achristmascarl/rainfrog/releases/tag/v0.4.7",
+      "fetched_at": "2026-11-16T01:05:24+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "a database tool for the terminal",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:36+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "github_api",
+      "quote": "a database tool for the terminal",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:36+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "a database tool for the terminal",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:36+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "the goal for rainfrog is to provide a lightweight, terminal-based tool for\ninteracting with databases.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:36+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# 🐸 rainfrog",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:36+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "cross-platform (macOS, linux, windows, android via termux)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:36+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "the oracle driver uses ODPI-C, which requires Oracle Client libraries to be installed.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:36+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "script also needs [jq](https://github.com/jqlang/jq) and\n[fzf](https://github.com/junegunn/fzf) installed to run.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:36+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:05:26+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:05:26+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:05:26+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:05:26+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:05:26+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.4.7",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:05:24+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "this software is currently under active development; expect breaking changes,",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:36+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "quickly copy data, filter tables, and switch between schemas",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:36+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "query results can be exported to csv.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:36+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "frequently used queries can be saved as favorites.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:36+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "efficient navigation via vim-like keybindings and mouse controls",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:36+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "query editor with keyword highlighting, session history, and favorites",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:36+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "quickly copy data, filter tables, and switch between schemas",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:36+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "shortcuts to view table metadata and properties",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:36+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install rainfrog",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:36+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -LSsf https://raw.githubusercontent.com/achristmascarl/rainfrog/main/install.sh | bash",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:36+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install rainfrog --locked",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:05:36+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:05:24+08:00",
+  "updated_at": "2026-11-16T01:09:26+08:00"
+}

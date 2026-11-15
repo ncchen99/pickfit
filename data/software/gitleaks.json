@@ -1,0 +1,864 @@
+{
+  "schema_version": "software.v1",
+  "slug": "gitleaks",
+  "repo_id": "gh:119190187",
+  "name": "Gitleaks",
+  "summary": "Command-line tool that detects secrets such as passwords, API keys and tokens in git repositories, files and stdin.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "security_net",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "ai-powered",
+    "ci-cd",
+    "cicd",
+    "cli",
+    "data-loss-prevention",
+    "devsecops",
+    "dlp",
+    "git",
+    "gitleaks",
+    "go"
+  ],
+  "use_cases": [
+    "scan a local git repository history for leaked secrets",
+    "block commits containing secrets with a pre-commit hook",
+    "run secret scanning in CI as a GitHub action",
+    "scan directories or files for secrets"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "scan git repositories for secrets",
+    "scan directories or files for secrets",
+    "detect secrets from stdin",
+    "write custom secret detection rules"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:08.359473Z",
+    "run_id": "verify-gitleaks-20261116-010353-a846",
+    "open_hint": "Run `gitleaks version` to confirm it is installed, then `gitleaks dir -v <path>` to scan files.",
+    "features": [
+      {
+        "feature": "scan git repositories for secrets",
+        "title": "Scan git repositories for secrets",
+        "steps": []
+      },
+      {
+        "feature": "scan directories or files for secrets",
+        "title": "Scan directories or files for secrets",
+        "steps": [
+          "Run `gitleaks dir -v <path>` on a file or directory.",
+          "Read each finding's rule ID, file, line and fingerprint in the output."
+        ]
+      },
+      {
+        "feature": "detect secrets from stdin",
+        "title": "Find secrets in text piped from stdin",
+        "steps": [
+          "Pipe text into Gitleaks with `cat <file> | gitleaks -v stdin`.",
+          "Check the RuleID of each finding to see what kind of secret was found."
+        ]
+      },
+      {
+        "feature": "write custom secret detection rules",
+        "title": "Write your own secret detection rules",
+        "steps": [
+          "Create a TOML config file with a `[[rules]]` entry that sets an `id`, `description`, `regex` and `keywords`.",
+          "Scan with your rules using `gitleaks dir -v --config <config.toml> <path>`."
+        ]
+      }
+    ]
+  },
+  "homepage": "https://gitleaks.io",
+  "repo": {
+    "url": "https://github.com/gitleaks/gitleaks",
+    "full_name": "gitleaks/gitleaks",
+    "created_at": "2018-01-27T18:19:31Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "go (for building from source)"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install gitleaks",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "gitleaks version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-gitleaks-20261116-010353-a846",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/gl && curl -fsSL -o /tmp/gl/gl.tgz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz && tar -xzf /tmp/gl/gl.tgz -C /tmp/gl && install -m 755 /tmp/gl/gitleaks ~/.local/bin/gitleaks",
+          "purpose": "Download the v8.30.1 linux_x64 release tarball and install the gitleaks binary into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "gitleaks version",
+        "expected_signal": "8.30.1"
+      },
+      "first_task": "gitleaks version"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "docker",
+      "steps": [
+        {
+          "command": "docker pull zricethezav/gitleaks:latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "gitleaks version"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v8.30.1",
+    "published_at": "2026-03-21T02:17:58Z",
+    "url": "https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T01:04:53.163416+08:00",
+    "runs": [
+      {
+        "id": "verify-gitleaks-20261116-010353-a846",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:04:53.163416+08:00",
+        "tool_version": "8.30.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/gl && curl -fsSL -o /tmp/gl/gl.tgz https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/gitleaks_8.30.1_linux_x64.tar.gz && tar -xzf /tmp/gl/gl.tgz -C /tmp/gl && install -m 755 /tmp/gl/gitleaks ~/.local/bin/gitleaks",
+            "purpose": "Download the v8.30.1 linux_x64 release tarball and install the gitleaks binary into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "gitleaks version",
+            "expected_signal": "8.30.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "8.30.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd ~/work/samples/repo && gitleaks git -v",
+            "expected_signal": "RuleID: aws-access-token",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "RuleID: aws-access-token",
+            "setup": [
+              {
+                "command": "mkdir -p ~/work/samples/repo && cd ~/work/samples && cat > secrets.txt <<'EOF'\naws_access_key_id = AKIAZ7X3Q4WERTY5UIOP\ngithub_token = ghp_aBcD1234eFgH5678iJkL9012mNoP3456qRsT\nEOF\ncat > custom.toml <<'EOF'\ntitle = \"Custom Gitleaks configuration\"\n[[rules]]\nid = \"acme-internal-token\"\ndescription = \"ACME internal token\"\nregex = '''acme_tok_[a-z0-9]{16}'''\nkeywords = [\"acme_tok_\"]\nEOF\ncat > acme.txt <<'EOF'\ntoken = \"acme_tok_k3j4h5g6f7d8s9a0\"\nEOF\ncd repo && git init -q && git config user.email t@example.com && git config user.name tester && cp ../secrets.txt config.env && git add . && git commit -qm \"add config\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "gitleaks dir -v samples/secrets.txt",
+            "expected_signal": "Fingerprint: samples/secrets.txt:aws-access-token:1",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "Fingerprint: samples/secrets.txt:aws-access-token:1",
+            "setup": [
+              {
+                "command": "mkdir -p ~/work/samples/repo && cd ~/work/samples && cat > secrets.txt <<'EOF'\naws_access_key_id = AKIAZ7X3Q4WERTY5UIOP\ngithub_token = ghp_aBcD1234eFgH5678iJkL9012mNoP3456qRsT\nEOF\ncat > custom.toml <<'EOF'\ntitle = \"Custom Gitleaks configuration\"\n[[rules]]\nid = \"acme-internal-token\"\ndescription = \"ACME internal token\"\nregex = '''acme_tok_[a-z0-9]{16}'''\nkeywords = [\"acme_tok_\"]\nEOF\ncat > acme.txt <<'EOF'\ntoken = \"acme_tok_k3j4h5g6f7d8s9a0\"\nEOF\ncd repo && git init -q && git config user.email t@example.com && git config user.name tester && cp ../secrets.txt config.env && git add . && git commit -qm \"add config\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cat samples/secrets.txt | gitleaks -v stdin",
+            "expected_signal": "RuleID: github-pat",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "RuleID: github-pat",
+            "setup": [
+              {
+                "command": "mkdir -p ~/work/samples/repo && cd ~/work/samples && cat > secrets.txt <<'EOF'\naws_access_key_id = AKIAZ7X3Q4WERTY5UIOP\ngithub_token = ghp_aBcD1234eFgH5678iJkL9012mNoP3456qRsT\nEOF\ncat > custom.toml <<'EOF'\ntitle = \"Custom Gitleaks configuration\"\n[[rules]]\nid = \"acme-internal-token\"\ndescription = \"ACME internal token\"\nregex = '''acme_tok_[a-z0-9]{16}'''\nkeywords = [\"acme_tok_\"]\nEOF\ncat > acme.txt <<'EOF'\ntoken = \"acme_tok_k3j4h5g6f7d8s9a0\"\nEOF\ncd repo && git init -q && git config user.email t@example.com && git config user.name tester && cp ../secrets.txt config.env && git add . && git commit -qm \"add config\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "gitleaks dir -v --config samples/custom.toml samples/acme.txt",
+            "expected_signal": "RuleID: acme-internal-token",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "RuleID: acme-internal-token",
+            "setup": [
+              {
+                "command": "mkdir -p ~/work/samples/repo && cd ~/work/samples && cat > secrets.txt <<'EOF'\naws_access_key_id = AKIAZ7X3Q4WERTY5UIOP\ngithub_token = ghp_aBcD1234eFgH5678iJkL9012mNoP3456qRsT\nEOF\ncat > custom.toml <<'EOF'\ntitle = \"Custom Gitleaks configuration\"\n[[rules]]\nid = \"acme-internal-token\"\ndescription = \"ACME internal token\"\nregex = '''acme_tok_[a-z0-9]{16}'''\nkeywords = [\"acme_tok_\"]\nEOF\ncat > acme.txt <<'EOF'\ntoken = \"acme_tok_k3j4h5g6f7d8s9a0\"\nEOF\ncd repo && git init -q && git config user.email t@example.com && git config user.name tester && cp ../secrets.txt config.env && git add . && git commit -qm \"add config\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "From Source (make sure `go` is installed): git clone ...; cd gitleaks; make build",
+            "actually_needed": "Go is not available in this box and may not be installed here, so I used the prebuilt release binary (gitleaks_8.30.1_linux_x64.tar.gz) from the releases page that the README links to.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "--exit-code int exit code when leaks have been encountered (default 1)",
+            "actually_needed": "Scans that find secrets exit 1 by default. That is expected, not an error. Use --exit-code 0 if a pipeline needs exit 0.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Gitleaks found 2 leaks in both dir and stdin scans (exit 1 as expected), and printed version 8.30.1.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-gitleaks-20261116-010353-a846/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-gitleaks-20261116-010353-a846/check-1-cmd6.judged.png",
+            "runs/verify/verify-gitleaks-20261116-010353-a846/check-2-cmd7.judged.png",
+            "runs/verify/verify-gitleaks-20261116-010353-a846/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.167006,
+        "features": [
+          {
+            "feature": "scan git repositories for secrets",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; gitleaks git -v found 2 leaks in a commit of a test repo"
+          },
+          {
+            "feature": "scan directories or files for secrets",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "detect secrets from stdin",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "write custom secret detection rules",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:05:00+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/gitleaks/gitleaks@5f6ec56cfa6f",
+      "go.mod"
+    ],
+    "packages_checked": 72,
+    "findings_total": 13,
+    "advisories_total": 13,
+    "findings": [
+      {
+        "package": "go:github.com/andybalholm/brotli",
+        "version": "v1.2.0",
+        "advisory": "GO-2026-6888",
+        "cves": [
+          "CVE-2026-111497"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "1.2.7",
+        "summary": "Excessive memory allocation when decompressing crafted streams in github.com/andybalholm/brotli",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.35.0",
+        "advisory": "GHSA-5cgq-3rg8-m6cv",
+        "cves": [
+          "CVE-2026-42508"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto vulnerable to auth bypass via unenforced @revoked status",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.35.0",
+        "advisory": "GHSA-89gr-r52h-f8rx",
+        "cves": [
+          "CVE-2026-39831"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: FIDO/U2F security key physical presence check can be bypassed",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.35.0",
+        "advisory": "GHSA-f5wc-c3c7-36mc",
+        "cves": [
+          "CVE-2026-39832"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto doesn't drop invoking agent constraints when forwarding keys",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.35.0",
+        "advisory": "GHSA-jppx-rxg9-jmrx",
+        "cves": [
+          "CVE-2026-39833"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto doesn't enforce invoking key constraints",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.35.0",
+        "advisory": "GHSA-rm3j-f69w-wqmq",
+        "cves": [
+          "CVE-2026-39834"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto vulnerable to infinite loop on large channel writes",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.35.0",
+        "advisory": "GHSA-vgwf-h737-ff37",
+        "cves": [
+          "CVE-2026-39830"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking client can cause server deadlock on unexpected responses",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.35.0",
+        "advisory": "GHSA-x527-x647-q7gg",
+        "cves": [
+          "CVE-2026-46595"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking VerifiedPublicKeyCallback permissions skip enforcement",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/klauspost/compress",
+        "version": "v1.18.0",
+        "advisory": "GHSA-259r-337f-4rfw",
+        "cves": [
+          "CVE-2026-63209"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.18.7",
+        "summary": "Compress/s2: Integer Overflow or Wraparound and Out-of-bounds Write in compress",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/klauspost/compress",
+        "version": "v1.18.0",
+        "advisory": "GO-2026-6865",
+        "cves": [
+          "CVE-2026-116591"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.2",
+        "summary": "Panic on two-block frames in github.com/klauspost/compress",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.35.0",
+        "advisory": "GHSA-q4h4-gmj2-qvw2",
+        "cves": [
+          "CVE-2026-46597"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking byte arithmetic causes underflow and panic",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.35.0",
+        "advisory": "GHSA-w879-237q-wc7r",
+        "cves": [
+          "CVE-2026-39829"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking pathological RSA/DSA parameters may cause DoS",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.35.0",
+        "advisory": "GO-2025-4116",
+        "cves": [
+          "CVE-2025-47913"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.43.0",
+        "summary": "Potential denial of service in golang.org/x/crypto/ssh/agent",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:05:00+08:00",
+    "quality": {
+      "total": 77.6,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.86,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.3625,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 95.5,
+      "signals": {
+        "stars": 31049,
+        "monthly_downloads": 20925,
+        "forks": 2381,
+        "dependents": null,
+        "release_downloads": 41144323,
+        "hn_top_score": 2,
+        "registries_count": 1
+      },
+      "age_days": 3213,
+      "packages": [
+        "homebrew:gitleaks"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 3.49
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:04:53.166152+08:00",
+      "sources_sha": "d135aeb58d913fbcca4d0b08751bebc47cb90495f786b45f04f69bf44ddb1380",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Gitleaks is a tool for **detecting** secrets like passwords, API keys, and tokens in git repos, files, and whatever else you wanna throw at it via `stdin`."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Gitleaks can be implemented as a pre-commit hook directly in your repo or as a GitHub action"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "# From Source (make sure `go` is installed)"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "# MacOS\nbrew install gitleaks"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "➜  ~/code(master) gitleaks git -v"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "2. Environment variable `GITLEAKS_CONFIG` with the file path:"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Gitleaks is also available in binary form for many popular platforms and OS types on the [releases page]"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/gitleaks/gitleaks",
+      "fetched_at": "2026-11-16T01:03:42+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/gitleaks/gitleaks/blob/master/README.md",
+      "fetched_at": "2026-11-16T01:03:40+08:00"
+    },
+    {
+      "id": "release:v8.30.1",
+      "kind": "release",
+      "url": "https://github.com/gitleaks/gitleaks/releases/tag/v8.30.1",
+      "fetched_at": "2026-11-16T01:03:40+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "gitleaks [command]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:53+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Gitleaks can be installed using Homebrew, Docker, or Go.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:53+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "detecting** secrets like passwords, API keys, and tokens",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:53+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Gitleaks is a tool for **detecting** secrets like passwords, API keys, and tokens in git repos, files, and whatever else you wanna throw at it via `stdin`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:53+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Gitleaks",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:53+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "release:v8.30.1",
+      "quote": "gitleaks_8.30.1_darwin_arm64.tar.gz, gitleaks_8.30.1_darwin_x64.tar.gz, gitleaks_8.30.1_linux_arm64.tar.gz",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:53+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "From Source (make sure `go` is installed)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:53+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:03:42+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:03:42+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:03:42+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:03:42+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:03:42+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v8.30.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:03:40+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "Gitleaks is feature complete.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:53+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "The `git` command lets you scan local git repos.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:53+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Gitleaks can be implemented as a pre-commit hook directly in your repo",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:53+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "as a GitHub action using [Gitleaks-Action]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:53+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "dir         scan directories or files for secrets",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:53+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "git         scan git repositories for secrets",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:53+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "dir         scan directories or files for secrets",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:53+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "stdin       detect secrets from stdin",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:53+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Gitleaks offers a configuration format you can follow to write your own secret detection rules",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:53+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install gitleaks",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:53+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "docker pull zricethezav/gitleaks:latest",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:53+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "docker pull zricethezav/gitleaks:latest",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:03:53+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:03:40+08:00",
+  "updated_at": "2026-11-16T01:05:00+08:00"
+}

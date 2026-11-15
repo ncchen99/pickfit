@@ -1,0 +1,1336 @@
+{
+  "schema_version": "software.v1",
+  "slug": "uptime-kuma",
+  "repo_id": "gh:382496361",
+  "name": "Uptime Kuma",
+  "summary": "Self-hosted monitoring tool that checks uptime of HTTP, TCP, ping, DNS and other services and sends notifications.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "infra_devops",
+  "kind": "self_hosted_web_app",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "docker",
+    "monitor",
+    "monitoring",
+    "responsive",
+    "self-hosted",
+    "selfhosted",
+    "single-page-app",
+    "socket-io",
+    "uptime",
+    "uptime-monitoring"
+  ],
+  "use_cases": [
+    "monitor uptime of HTTP(s) websites and TCP services",
+    "publish status pages on custom domains",
+    "get downtime alerts via Telegram, Discord or email"
+  ],
+  "alternatives_to": [
+    "Uptime Robot",
+    "statping"
+  ],
+  "features": [
+    "monitor HTTP, TCP, ping, DNS, Docker uptime",
+    "send notifications to 90+ services",
+    "host multiple status pages",
+    "show certificate info"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:40.488426Z",
+    "run_id": null,
+    "open_hint": "Open http://127.0.0.1:3001 in a web browser; the first screen asks you to set up the database and create an admin account.",
+    "features": [
+      {
+        "feature": "monitor HTTP, TCP, ping, DNS, Docker uptime",
+        "title": "Monitor uptime of HTTP, TCP, ping, DNS and Docker",
+        "steps": []
+      },
+      {
+        "feature": "send notifications to 90+ services",
+        "title": "Send notifications to more than 90 services",
+        "steps": []
+      },
+      {
+        "feature": "host multiple status pages",
+        "title": "Host multiple status pages",
+        "steps": []
+      },
+      {
+        "feature": "show certificate info",
+        "title": "Show certificate information",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": "https://uptime.kuma.pet",
+  "repo": {
+    "url": "https://github.com/louislam/uptime-kuma",
+    "full_name": "louislam/uptime-kuma",
+    "created_at": "2021-07-03T01:02:42Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "node>=20.4"
+    ],
+    "system_packages": [
+      "git"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-uptime-kuma-20261116-015823-8149",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone https://github.com/louislam/uptime-kuma.git && cd uptime-kuma",
+          "purpose": "git clone the repo"
+        },
+        {
+          "command": "cd uptime-kuma && npm run setup",
+          "purpose": "npm run setup (checks out 2.5.11, npm ci --omit dev, downloads prebuilt dist)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "curl -sS -X POST -H 'Content-Type: application/json' -d '{\"dbConfig\":{\"type\":\"sqlite\"}}' http://127.0.0.1:3001/setup-database && sleep 15 && curl -sS http://127.0.0.1:3001/api/entry-page",
+        "expected_signal": "{\"ok\":true}"
+      },
+      "first_task": "curl -sS -X POST -H 'Content-Type: application/json' -d '{\"dbConfig\":{\"type\":\"sqlite\"}}' http://127.0.0.1:3001/setup-database && sleep 15 && curl -sS http://127.0.0.1:3001/api/entry-page"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "docker",
+      "steps": [
+        {
+          "command": "docker run -d --restart=always -p 3001:3001 -v uptime-kuma:/app/data --name uptime-kuma louislam/uptime-kuma:2",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "2.5.11",
+    "published_at": "2026-11-12T09:20:06Z",
+    "url": "https://github.com/louislam/uptime-kuma/releases/tag/2.5.11"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T02:04:20.360867+08:00",
+    "runs": [
+      {
+        "id": "verify-uptime-kuma-20261116-015823-8149",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T02:04:20.360867+08:00",
+        "tool_version": "2.5.11",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/louislam/uptime-kuma.git && cd uptime-kuma",
+            "purpose": "git clone the repo"
+          },
+          {
+            "command": "cd uptime-kuma && npm run setup",
+            "purpose": "npm run setup (checks out 2.5.11, npm ci --omit dev, downloads prebuilt dist)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "curl -sS -X POST -H 'Content-Type: application/json' -d '{\"dbConfig\":{\"type\":\"sqlite\"}}' http://127.0.0.1:3001/setup-database && sleep 15 && curl -sS http://127.0.0.1:3001/api/entry-page",
+            "expected_signal": "{\"ok\":true}",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"ok\":true}{\"type\":\"entryPage\",\"entryPage\":null}",
+            "setup": [
+              {
+                "command": "cd /home/sbx/work/uptime-kuma && node server/server.js --data-dir=/tmp/kuma-data",
+                "background": true,
+                "port": 3001
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npm run setup, then node server/server.js; Uptime Kuma is now running on http://localhost:3001",
+            "actually_needed": "In v2, a first run waits on a database-setup step; with no browser, POST {\"dbConfig\":{\"type\":\"sqlite\"}} to /setup-database first, then create the admin account through the socket.io 'setup' event",
+            "kind": "note"
+          },
+          {
+            "readme_said": "(no mention of an API)",
+            "actually_needed": "Uptime Kuma has no REST API for monitors. A headless socket.io client hung until it sent an Origin header that matches the server URL; no connect_error was printed",
+            "kind": "note"
+          },
+          {
+            "readme_said": "git clone (master)",
+            "actually_needed": "npm run setup checks out the pinned release tag 2.5.11 and downloads a prebuilt dist.tar.gz from GitHub releases (a binary archive, not read)",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Database setup returned {\"ok\":true}, the test notification was received by the local webhook and reported \"Sent Successfully.\", and both status pages were created and returned GET 200.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-uptime-kuma-20261116-015823-8149/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-uptime-kuma-20261116-015823-8149/check-1-cmd5.judged.png",
+            "runs/verify/verify-uptime-kuma-20261116-015823-8149/check-2-cmd12.judged.png",
+            "runs/verify/verify-uptime-kuma-20261116-015823-8149/check-3-cmd13.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.328052,
+        "features": [
+          {
+            "feature": "monitor HTTP, TCP, ping, DNS, Docker uptime",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          },
+          {
+            "feature": "send notifications to 90+ services",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          },
+          {
+            "feature": "host multiple status pages",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          },
+          {
+            "feature": "show certificate info",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T02:04:29+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "npm:uptime-kuma (fresh install, 728 packages)"
+    ],
+    "packages_checked": 656,
+    "findings_total": 58,
+    "advisories_total": 48,
+    "findings": [
+      {
+        "package": "npm:mysql2",
+        "version": "2.3.3",
+        "advisory": "GHSA-4rch-2fh8-94vw",
+        "cves": [
+          "CVE-2024-21511"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "3.9.7",
+        "summary": "MySQL2 for Node Arbitrary Code Injection",
+        "malicious": false
+      },
+      {
+        "package": "npm:mysql2",
+        "version": "2.3.3",
+        "advisory": "GHSA-fpw7-j2hg-69v5",
+        "cves": [
+          "CVE-2024-21508"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "3.9.4",
+        "summary": "mysql2 Remote Code Execution (RCE) via the readCodeFor function",
+        "malicious": false
+      },
+      {
+        "package": "npm:protobufjs",
+        "version": "7.2.6",
+        "advisory": "GHSA-xq3m-2v4x-88gg",
+        "cves": [
+          "CVE-2026-41242"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "7.5.5",
+        "summary": "protobufjs has an arbitrary code execution issue",
+        "malicious": false
+      },
+      {
+        "package": "npm:tar",
+        "version": "6.1.15",
+        "advisory": "GHSA-23hp-3jrh-7fpw",
+        "cves": [
+          "CVE-2026-59873"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "7.5.19",
+        "summary": "node-tar: Decompression/parse DoS via unlimited input",
+        "malicious": false
+      },
+      {
+        "package": "npm:@grpc/grpc-js",
+        "version": "1.7.3",
+        "advisory": "GHSA-5375-pq7m-f5r2",
+        "cves": [
+          "CVE-2026-48068"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.9.16",
+        "summary": "@grpc/grpc-js: A malformed request can cause a server crash",
+        "malicious": false
+      },
+      {
+        "package": "npm:@grpc/grpc-js",
+        "version": "1.7.3",
+        "advisory": "GHSA-99f4-grh7-6pcq",
+        "cves": [
+          "CVE-2026-48069"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.9.16",
+        "summary": "@grpc/grpc-js: An incoming malformed compressed message can cause a client or server crash",
+        "malicious": false
+      },
+      {
+        "package": "npm:@grpc/grpc-js",
+        "version": "1.7.3",
+        "advisory": "GHSA-m9gg-hp2v-232j",
+        "cves": [
+          "CVE-2026-101916"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.13.6",
+        "summary": "@grpc/grpc-js: In certain configurations, getAuthContext can return unauthorized certificates as though they were authorized",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "0.27.2",
+        "advisory": "GHSA-3g43-6gmg-66jw",
+        "cves": [
+          "CVE-2026-44495"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.31.1",
+        "summary": "axios Vulnerable to Credential Theft and Response Hijacking via Prototype Pollution Gadget in Config Merge",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "0.21.4",
+        "advisory": "GHSA-3g43-6gmg-66jw",
+        "cves": [
+          "CVE-2026-44495"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.31.1",
+        "summary": "axios Vulnerable to Credential Theft and Response Hijacking via Prototype Pollution Gadget in Config Merge",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "0.27.2",
+        "advisory": "GHSA-43fc-jf86-j433",
+        "cves": [
+          "CVE-2026-25639"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.30.3",
+        "summary": "Axios is Vulnerable to Denial of Service via __proto__ Key in mergeConfig",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "0.21.4",
+        "advisory": "GHSA-43fc-jf86-j433",
+        "cves": [
+          "CVE-2026-25639"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.30.3",
+        "summary": "Axios is Vulnerable to Denial of Service via __proto__ Key in mergeConfig",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "0.27.2",
+        "advisory": "GHSA-6chq-wfr3-2hj9",
+        "cves": [
+          "CVE-2026-42035"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.31.1",
+        "summary": "Axios: Header Injection via Prototype Pollution",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "0.21.4",
+        "advisory": "GHSA-6chq-wfr3-2hj9",
+        "cves": [
+          "CVE-2026-42035"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.31.1",
+        "summary": "Axios: Header Injection via Prototype Pollution",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "0.27.2",
+        "advisory": "GHSA-hfxv-24rg-xrqf",
+        "cves": [
+          "CVE-2026-44496"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.32.0",
+        "summary": "Axios: Regular Expression Denial of Service (ReDoS) via Cookie Name Injection",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "0.21.4",
+        "advisory": "GHSA-hfxv-24rg-xrqf",
+        "cves": [
+          "CVE-2026-44496"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.32.0",
+        "summary": "Axios: Regular Expression Denial of Service (ReDoS) via Cookie Name Injection",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "0.27.2",
+        "advisory": "GHSA-j5f8-grm9-p9fc",
+        "cves": [
+          "CVE-2026-44486"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.32.0",
+        "summary": "Axios: Proxy-Authorization header leaks to redirect target when proxy is re-evaluated to direct connection",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "0.21.4",
+        "advisory": "GHSA-j5f8-grm9-p9fc",
+        "cves": [
+          "CVE-2026-44486"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.32.0",
+        "summary": "Axios: Proxy-Authorization header leaks to redirect target when proxy is re-evaluated to direct connection",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "0.27.2",
+        "advisory": "GHSA-jr5f-v2jv-69x6",
+        "cves": [
+          "CVE-2025-27152"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.30.0",
+        "summary": "axios Requests Vulnerable To Possible SSRF and Credential Leakage via Absolute URL",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "0.21.4",
+        "advisory": "GHSA-jr5f-v2jv-69x6",
+        "cves": [
+          "CVE-2025-27152"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.30.0",
+        "summary": "axios Requests Vulnerable To Possible SSRF and Credential Leakage via Absolute URL",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "0.27.2",
+        "advisory": "GHSA-p92q-9vqr-4j8v",
+        "cves": [
+          "CVE-2026-44487"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.32.0",
+        "summary": "Axios: Proxy-Authorization Credential Leak to Origin Server Across HTTP-to-HTTPS Redirect in Axios Node.js HTTP Adapter",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "0.21.4",
+        "advisory": "GHSA-p92q-9vqr-4j8v",
+        "cves": [
+          "CVE-2026-44487"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.32.0",
+        "summary": "Axios: Proxy-Authorization Credential Leak to Origin Server Across HTTP-to-HTTPS Redirect in Axios Node.js HTTP Adapter",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "0.27.2",
+        "advisory": "GHSA-pf86-5x62-jrwf",
+        "cves": [
+          "CVE-2026-42033"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.31.1",
+        "summary": "Axios: Prototype Pollution Gadgets - Response Tampering, Data Exfiltration, and Request Hijacking",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "0.21.4",
+        "advisory": "GHSA-pf86-5x62-jrwf",
+        "cves": [
+          "CVE-2026-42033"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.31.1",
+        "summary": "Axios: Prototype Pollution Gadgets - Response Tampering, Data Exfiltration, and Request Hijacking",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "0.27.2",
+        "advisory": "GHSA-pjwm-pj3p-43mv",
+        "cves": [
+          "CVE-2026-44492"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.32.0",
+        "summary": "axios's shouldBypassProxy does not recognize IPv4-mapped IPv6 addresses, allowing NO_PROXY bypass (incomplete fix for CVE-2025-62718)",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "0.21.4",
+        "advisory": "GHSA-pjwm-pj3p-43mv",
+        "cves": [
+          "CVE-2026-44492"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.32.0",
+        "summary": "axios's shouldBypassProxy does not recognize IPv4-mapped IPv6 addresses, allowing NO_PROXY bypass (incomplete fix for CVE-2025-62718)",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "0.27.2",
+        "advisory": "GHSA-pmwg-cvhr-8vh7",
+        "cves": [
+          "CVE-2026-42043"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.31.1",
+        "summary": "Axios: Incomplete Fix for CVE-2025-62718 — NO_PROXY Protection Bypassed via RFC 1122 Loopback Subnet (127.0.0.0/8) in Axios 1.15.0",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "0.21.4",
+        "advisory": "GHSA-pmwg-cvhr-8vh7",
+        "cves": [
+          "CVE-2026-42043"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.31.1",
+        "summary": "Axios: Incomplete Fix for CVE-2025-62718 — NO_PROXY Protection Bypassed via RFC 1122 Loopback Subnet (127.0.0.0/8) in Axios 1.15.0",
+        "malicious": false
+      },
+      {
+        "package": "npm:body-parser",
+        "version": "1.19.2",
+        "advisory": "GHSA-27r3-jxmh-p828",
+        "cves": [
+          "CVE-2026-111181"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.9",
+        "summary": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
+        "malicious": false
+      },
+      {
+        "package": "npm:body-parser",
+        "version": "1.19.2",
+        "advisory": "GHSA-qwcr-r2fm-qrc7",
+        "cves": [
+          "CVE-2024-45590"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.3",
+        "summary": "body-parser vulnerable to denial of service when url encoding is enabled",
+        "malicious": false
+      },
+      {
+        "package": "npm:compression",
+        "version": "1.7.5",
+        "advisory": "GHSA-vc2v-76pw-4v95",
+        "cves": [
+          "CVE-2026-87776"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.8.2",
+        "summary": "compression vulnerable to Denial of Service via memory leak on premature response close",
+        "malicious": false
+      },
+      {
+        "package": "npm:engine.io",
+        "version": "6.4.2",
+        "advisory": "GHSA-r635-g3xr-vw7x",
+        "cves": [
+          "CVE-2026-59725"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "6.6.7",
+        "summary": "Socket.IO: Engine.IO Polling Transport Connection Exhaustion",
+        "malicious": false
+      },
+      {
+        "package": "npm:glob",
+        "version": "10.3.16",
+        "advisory": "GHSA-5j98-mcp5-4vw2",
+        "cves": [
+          "CVE-2025-64756"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "10.5.0",
+        "summary": "glob CLI: Command injection via -c/--cmd executes matches with shell:true",
+        "malicious": false
+      },
+      {
+        "package": "npm:hoek",
+        "version": "6.1.3",
+        "advisory": "GHSA-c429-5p7v-vgjp",
+        "cves": [
+          "CVE-2020-36604"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "hoek subject to prototype pollution via the clone function.",
+        "malicious": false
+      },
+      {
+        "package": "npm:lodash",
+        "version": "4.17.23",
+        "advisory": "GHSA-r5fr-rjxr-66jc",
+        "cves": [
+          "CVE-2026-4800"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.18.0",
+        "summary": "lodash vulnerable to Code Injection via `_.template` imports key names",
+        "malicious": false
+      },
+      {
+        "package": "npm:mysql2",
+        "version": "2.3.3",
+        "advisory": "GHSA-3f6p-5ww8-9rcr",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "3.22.0",
+        "summary": "MySQL2: Auth Plugin Downgrade to mysql_clear_password Leaks Plaintext Credentials",
+        "malicious": false
+      },
+      {
+        "package": "npm:mysql2",
+        "version": "2.3.3",
+        "advisory": "GHSA-pmh2-wpjm-fj45",
+        "cves": [
+          "CVE-2024-21512"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.9.8",
+        "summary": "mysql2 vulnerable to Prototype Pollution",
+        "malicious": false
+      },
+      {
+        "package": "npm:nodemailer",
+        "version": "6.6.5",
+        "advisory": "GHSA-2x7j-588g-ccc2",
+        "cves": [
+          "CVE-2026-92596"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.1.0",
+        "summary": "Nodemailer: Quadratic (O(n²)) time complexity in addressparser allows remote denial of service via a crafted address list",
+        "malicious": false
+      },
+      {
+        "package": "npm:nodemailer",
+        "version": "6.6.5",
+        "advisory": "GHSA-p6gq-j5cr-w38f",
+        "cves": [
+          "CVE-2026-82659"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.1",
+        "summary": "Nodemailer: Message-level raw option bypasses disableFileAccess/disableUrlAccess, enabling arbitrary file read and full-response SSRF in the delivered message",
+        "malicious": false
+      },
+      {
+        "package": "npm:nodemailer",
+        "version": "6.6.5",
+        "advisory": "GHSA-r7g4-qg5f-qqm2",
+        "cves": [
+          "CVE-2026-82662"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "8.0.8",
+        "summary": "Nodemailer: Improper TLS Certificate Validation in OAuth2 Token Fetch Enables Credential Interception",
+        "malicious": false
+      },
+      {
+        "package": "npm:nodemailer",
+        "version": "6.6.5",
+        "advisory": "GHSA-rcmh-qjqh-p98v",
+        "cves": [
+          "CVE-2025-14874"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.0.11",
+        "summary": "Nodemailer’s addressparser is vulnerable to DoS caused by recursive calls",
+        "malicious": false
+      },
+      {
+        "package": "npm:nodemailer",
+        "version": "6.6.5",
+        "advisory": "GHSA-v53p-9fqp-m79j",
+        "cves": [
+          "CVE-2026-100700"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "10.0.6",
+        "summary": "Nodemailer: Quadratic backtracking in the addressparser free-text fallback allows remote denial of service",
+        "malicious": false
+      },
+      {
+        "package": "npm:path-to-regexp",
+        "version": "0.1.7",
+        "advisory": "GHSA-37ch-88jc-xwx2",
+        "cves": [
+          "CVE-2024-45296",
+          "CVE-2026-4867"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.1.13",
+        "summary": "path-to-regexp vulnerable to Regular Expression Denial of Service via multiple route parameters",
+        "malicious": false
+      },
+      {
+        "package": "npm:path-to-regexp",
+        "version": "0.1.7",
+        "advisory": "GHSA-rhx6-c78j-4q9w",
+        "cves": [
+          "CVE-2024-52798"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.1.12",
+        "summary": "path-to-regexp contains a ReDoS",
+        "malicious": false
+      },
+      {
+        "package": "npm:protobufjs",
+        "version": "7.2.6",
+        "advisory": "GHSA-66ff-xgx4-vchm",
+        "cves": [
+          "CVE-2026-44293"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.5.6",
+        "summary": "protobuf.js: Code injection through bytes field defaults in generated toObject code",
+        "malicious": false
+      },
+      {
+        "package": "npm:protobufjs",
+        "version": "7.2.6",
+        "advisory": "GHSA-685m-2w69-288q",
+        "cves": [
+          "CVE-2026-44289"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.5.6",
+        "summary": "protobuf.js: Denial of service through unbounded protobuf recursion",
+        "malicious": false
+      },
+      {
+        "package": "npm:protobufjs",
+        "version": "7.2.6",
+        "advisory": "GHSA-75px-5xx7-5xc7",
+        "cves": [
+          "CVE-2026-44291"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.5.6",
+        "summary": "protobuf.js: Code generation gadget after prototype pollution",
+        "malicious": false
+      },
+      {
+        "package": "npm:protobufjs",
+        "version": "7.2.6",
+        "advisory": "GHSA-jvwf-75h9-cwgg",
+        "cves": [
+          "CVE-2026-44290"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.5.6",
+        "summary": "protobuf.js: Process-wide denial of service through unsafe option paths",
+        "malicious": false
+      },
+      {
+        "package": "npm:protobufjs",
+        "version": "7.2.6",
+        "advisory": "GHSA-wcpc-wj8m-hjx6",
+        "cves": [
+          "CVE-2026-48712"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.6.1",
+        "summary": "protobufjs: Denial of service through unbounded Any expansion during JSON conversion",
+        "malicious": false
+      },
+      {
+        "package": "npm:tar",
+        "version": "6.1.15",
+        "advisory": "GHSA-34x7-hfp2-rc4v",
+        "cves": [
+          "CVE-2026-24842"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.5.7",
+        "summary": "node-tar Vulnerable to Arbitrary File Creation/Overwrite via Hardlink Path Traversal",
+        "malicious": false
+      },
+      {
+        "package": "npm:tar",
+        "version": "6.1.15",
+        "advisory": "GHSA-83g3-92jg-28cx",
+        "cves": [
+          "CVE-2026-26960"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.5.8",
+        "summary": "Arbitrary File Read/Write via Hardlink Target Escape Through Symlink Chain in node-tar Extraction",
+        "malicious": false
+      },
+      {
+        "package": "npm:tar",
+        "version": "6.1.15",
+        "advisory": "GHSA-8qq5-rm4j-mr97",
+        "cves": [
+          "CVE-2026-23745"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.5.3",
+        "summary": "node-tar is Vulnerable to Arbitrary File Overwrite and Symlink Poisoning via Insufficient Path Sanitization",
+        "malicious": false
+      },
+      {
+        "package": "npm:tar",
+        "version": "6.1.15",
+        "advisory": "GHSA-8x88-c5mf-7j5w",
+        "cves": [
+          "CVE-2026-59874"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.5.18",
+        "summary": "node-tar: Negative tar entry size causes infinite loop in archive replace",
+        "malicious": false
+      },
+      {
+        "package": "npm:tar",
+        "version": "6.1.15",
+        "advisory": "GHSA-9ppj-qmqm-q256",
+        "cves": [
+          "CVE-2026-31802"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.5.11",
+        "summary": "node-tar Symlink Path Traversal via Drive-Relative Linkpath",
+        "malicious": false
+      },
+      {
+        "package": "npm:tar",
+        "version": "6.1.15",
+        "advisory": "GHSA-qffp-2rhf-9h96",
+        "cves": [
+          "CVE-2026-29786"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.5.10",
+        "summary": "tar has Hardlink Path Traversal via Drive-Relative Linkpath",
+        "malicious": false
+      },
+      {
+        "package": "npm:tar",
+        "version": "6.1.15",
+        "advisory": "GHSA-r292-9mhp-454m",
+        "cves": [
+          "CVE-2026-73566"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.5.21",
+        "summary": "node-tar: Uncontrolled recursion in mapHas/filesFilter allows uncatchable stack-overflow DoS via crafted long-path tar with member selection",
+        "malicious": false
+      },
+      {
+        "package": "npm:tar",
+        "version": "6.1.15",
+        "advisory": "GHSA-r6q2-hw4h-h46w",
+        "cves": [
+          "CVE-2026-23950"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.5.4",
+        "summary": "Race Condition in node-tar Path Reservations via Unicode Ligature Collisions on macOS APFS",
+        "malicious": false
+      },
+      {
+        "package": "npm:ws",
+        "version": "8.11.0",
+        "advisory": "GHSA-3h5v-q93c-6h6q",
+        "cves": [
+          "CVE-2024-37890"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "8.17.1",
+        "summary": "ws affected by a DoS when handling a request with many HTTP headers",
+        "malicious": false
+      },
+      {
+        "package": "npm:ws",
+        "version": "8.11.0",
+        "advisory": "GHSA-96hv-2xvq-fx4p",
+        "cves": [
+          "CVE-2026-48779"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "8.21.0",
+        "summary": "ws: Memory exhaustion DoS from tiny fragments and data chunks",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T02:04:29+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.7,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8621,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 95.2,
+      "signals": {
+        "stars": 94412,
+        "monthly_downloads": 417,
+        "forks": 8841,
+        "dependents": null,
+        "release_downloads": 70316,
+        "hn_top_score": 59,
+        "registries_count": 1
+      },
+      "age_days": 1961,
+      "packages": [
+        "npm:uptime-kuma"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 3.79
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T02:04:20.367210+08:00",
+      "sources_sha": "55dd3872916b27af7fef127e27b03c4b075048ff77737d376e357cf0403b176c",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "- Monitoring uptime for HTTP(s) / TCP / HTTP(s) Keyword / HTTP(s) Json Query / Websocket / Ping / DNS Record / Push / Steam Game Server / Docker Containers"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "I was looking for a self-hosted monitoring tool like \"Uptime Robot\", but it is hard to find a suitable one."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "- [Node.js](https://nodejs.org/en/download/) >= 20.4"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "docker run -d --restart=always -p 3001:3001 -v uptime-kuma:/app/data --name uptime-kuma louislam/uptime-kuma:2"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "Uptime Kuma is now running on all network interfaces (e.g. http://localhost:3001 or http://your-ip:3001)."
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "## 🆙 How to Update"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "  - ✅ Windows 10 (x64), Windows Server 2012 R2 (x64) or higher"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/louislam/uptime-kuma",
+      "fetched_at": "2026-11-16T01:58:14+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/louislam/uptime-kuma/blob/master/README.md",
+      "fetched_at": "2026-11-16T01:58:12+08:00"
+    },
+    {
+      "id": "release:2.5.11",
+      "kind": "release",
+      "url": "https://github.com/louislam/uptime-kuma/releases/tag/2.5.11",
+      "fetched_at": "2026-11-16T01:58:12+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "A fancy self-hosted monitoring tool",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:23+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Uptime Kuma is an easy-to-use self-hosted monitoring tool.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:23+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Uptime Kuma is an easy-to-use self-hosted monitoring tool.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:23+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Uptime Kuma is an easy-to-use self-hosted monitoring tool.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:23+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Uptime Kuma",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:23+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Major Linux distros such as Debian, Ubuntu, Fedora and ArchLinux etc.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:23+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "[Node.js](https://nodejs.org/en/download/) >= 20.4",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:23+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "[Git](https://git-scm.com/downloads)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:23+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:58:14+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:58:14+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:58:14+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:58:14+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:58:14+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:2.5.11",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:58:12+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Monitoring uptime for HTTP(s) / TCP / HTTP(s) Keyword",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:23+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Map status pages to specific domains",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:23+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Notifications via Telegram, Discord, Gotify, Slack, Pushover, Email (SMTP)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:23+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "I was looking for a self-hosted monitoring tool like \"Uptime Robot\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:23+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "One of the closest ones is statping.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:23+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Monitoring uptime for HTTP(s) / TCP / HTTP(s) Keyword / HTTP(s) Json Query / Websocket / Ping / DNS Record / Push / Steam Game Server / Docker Containers",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:23+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "90+ notification services",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:23+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Multiple status pages",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:23+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Certificate info",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:23+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "docker run -d --restart=always -p 3001:3001 -v uptime-kuma:/app/data --name uptime-kuma louislam/uptime-kuma:2",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:23+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "docker run -d --restart=always -p 3001:3001 -v uptime-kuma:/app/data --name uptime-kuma louislam/uptime-kuma:2",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:23+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:58:12+08:00",
+  "updated_at": "2026-11-16T02:04:29+08:00"
+}

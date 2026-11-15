@@ -1,0 +1,642 @@
+{
+  "schema_version": "software.v1",
+  "slug": "changedetection-io",
+  "repo_id": "gh:333483116",
+  "name": "changedetection.io",
+  "summary": "Self-hosted tool that monitors web pages for changes and sends notifications via Discord, email, Slack, Telegram, webhooks and more.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "other",
+  "kind": "self_hosted_web_app",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "back-in-stock",
+    "change-alert",
+    "change-detection",
+    "change-monitoring",
+    "monitoring",
+    "notifications",
+    "restock-monitor",
+    "rss",
+    "self-hosted",
+    "url-monitor"
+  ],
+  "use_cases": [
+    "get alerts when a product's price drops or it is back in stock",
+    "monitor text changes in PDF files",
+    "monitor JSON API responses for changes",
+    "detect website defacement",
+    "create RSS feeds from web content changes"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "get change notifications via many services",
+    "AI change summaries and alert rules",
+    "select page parts with Visual Selector",
+    "run browser steps before checking"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:12:56.713485Z",
+    "run_id": "verify-changedetection-io-20261116-014846-f896",
+    "open_hint": "Run `changedetection.io -d <data folder> -p 5000`, then open http://127.0.0.1:5000/ in your browser to see the watch list.",
+    "features": [
+      {
+        "feature": "get change notifications via many services",
+        "title": "Get change alerts through many notification services",
+        "steps": [
+          "Start the server with `changedetection.io -d <data folder> -p <port>`.",
+          "Add a watch for the page URL and set a notification URL for your service, such as `json://<host>/<path>`.",
+          "When the page content changes, a notification is sent to that URL."
+        ]
+      },
+      {
+        "feature": "AI change summaries and alert rules",
+        "title": "Get AI summaries of changes and set alert rules",
+        "steps": []
+      },
+      {
+        "feature": "select page parts with Visual Selector",
+        "title": "Pick which parts of a page to watch with Visual Selector",
+        "steps": []
+      },
+      {
+        "feature": "run browser steps before checking",
+        "title": "Run browser steps before a page is checked",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": "https://changedetection.io",
+  "repo": {
+    "url": "https://github.com/dgtlmoon/changedetection.io",
+    "full_name": "dgtlmoon/changedetection.io",
+    "created_at": "2021-01-27T16:03:30Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-changedetection-io-20261116-014846-f896",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install changedetection.io",
+          "purpose": "uv tool install changedetection.io"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "changedetection.io --help",
+        "expected_signal": "Usage: changedetection.py [options]"
+      },
+      "first_task": "curl -sSf -o /dev/null -w 'HTTP %{http_code}\\n' http://127.0.0.1:5000/"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "freemium",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "0.70.3",
+    "published_at": "2026-11-09T14:57:31Z",
+    "url": "https://github.com/dgtlmoon/changedetection.io/releases/tag/0.70.3"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T01:53:52.298501+08:00",
+    "runs": [
+      {
+        "id": "verify-changedetection-io-20261116-014846-f896",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:53:52.298501+08:00",
+        "tool_version": null,
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install changedetection.io",
+            "purpose": "uv tool install changedetection.io"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "changedetection.io --help",
+            "expected_signal": "Usage: changedetection.py [options]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: changedetection.py [options]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -sSf -o /dev/null -w 'HTTP %{http_code}\\n' http://127.0.0.1:5000/",
+            "expected_signal": "HTTP 200",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "HTTP 200",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/cd-data && changedetection.io -d /tmp/cd-data -p 5000",
+                "background": true,
+                "port": 5000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 /tmp/notify_test2.py",
+            "expected_signal": "NOTIFICATION RECEIVED",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "NOTIFICATION RECEIVED",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/cd-data2 && ALLOW_IANA_RESTRICTED_ADDRESSES=true changedetection.io -d /tmp/cd-data2 -p 5001",
+                "background": true,
+                "port": 5001
+              },
+              {
+                "command": "cat > /tmp/notify_test.py <<'EOF'\nimport json, threading, time, urllib.request\nfrom http.server import BaseHTTPRequestHandler, HTTPServer\n\nstate = {\"content\": \"Price: $89.99\", \"notified\": []}\n\nclass H(BaseHTTPRequestHandler):\n    def log_message(self, *a): pass\n    def do_GET(self):\n        body = (\"<html><body><p>%s</p></body></html>\" % state[\"content\"]).encode()\n        self.send_response(200); self.send_header(\"Content-Type\", \"text/html\")\n        self.send_header(\"Content-Length\", str(len(body))); self.end_headers(); self.wfile.write(body)\n    def do_POST(self):\n        n = int(self.headers.get(\"Content-Length\", 0))\n        state[\"notified\"].append(self.rfile.read(n).decode())\n        self.send_response(200); self.end_headers()\n\nsrv = HTTPServer((\"127.0.0.1\", 8099), H)\nthreading.Thread(target=srv.serve_forever, daemon=True).start()\n\nkey = json.load(open(\"/tmp/cd-data/changedetection.json\"))[\"settings\"][\"application\"][\"api_access_token\"]\nbase = \"http://127.0.0.1:5000/api/v1\"\ndef api(path, data=None, method=None):\n    req = urllib.request.Request(base + path, data=json.dumps(data).encode() if data is not None else None,\n                                 method=method, headers={\"x-api-key\": key, \"Content-Type\": \"application/json\"})\n    with urllib.request.urlopen(req) as r:\n        t = r.read().decode()\n        return json.loads(t) if t.strip().startswith((\"{\", \"[\")) else t\n\nw = api(\"/watch\", {\"url\": \"http://127.0.0.1:8099/product\", \"notification_urls\": [\"json://127.0.0.1:8099/notify\"]}, \"POST\")\nuuid = w[\"uuid\"]\nprint(\"created watch\", uuid)\n\ndef wait_history(n):\n    for _ in range(60):\n        h = api(\"/watch/%s/history\" % uuid)\n        if isinstance(h, dict) and len(h) >= n:\n            return True\n        time.sleep(1)\n    return False\n\nprint(\"first snapshot:\", wait_history(1))\nstate[\"content\"] = \"Price: $67.00\"\napi(\"/watch/%s?recheck=1\" % uuid)\nprint(\"second snapshot:\", wait_history(2))\nfor _ in range(60):\n    if state[\"notified\"]: break\n    time.sleep(1)\nif not state[\"notified\"]:\n    raise SystemExit(\"NO NOTIFICATION RECEIVED\")\nprint(\"NOTIFICATION RECEIVED\")\nprint(state[\"notified\"][0][:800])\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "sed 's#/tmp/cd-data/#/tmp/cd-data2/#;s#127.0.0.1:5000#127.0.0.1:5001#' /tmp/notify_test.py > /tmp/notify_test2.py",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "changedetection.io -d /path/to/empty/data/dir -p 5000 then add watches",
+            "actually_needed": "Watching a URL on 127.0.0.1 or a private network fails with 'Fetch blocked: ... resolves to a private/reserved IP address ... Set ALLOW_IANA_RESTRICTED_ADDRESSES=true to allow.' The server had to be started with ALLOW_IANA_RESTRICTED_ADDRESSES=true. The README does not mention this.",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "pip3 install changedetection.io",
+            "actually_needed": "I used uv tool install changedetection.io to avoid PEP 668. It installs the changedetection.io and changedetection.py executables.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "-d /path/to/empty/data/dir",
+            "actually_needed": "A new datastore comes with example watches, such as Hacker News, that fetch outside sites as soon as the server starts. The API key is generated and stored in <datastore>/changedetection.json.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The web UI returned HTTP 200, the notification test detected a price change and printed NOTIFICATION RECEIVED with the diff payload, and --help printed the usage text, all with exit code 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-changedetection-io-20261116-014846-f896/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-changedetection-io-20261116-014846-f896/check-1-cmd11.judged.png",
+            "runs/verify/verify-changedetection-io-20261116-014846-f896/check-2-cmd10.judged.png",
+            "runs/verify/verify-changedetection-io-20261116-014846-f896/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.316085,
+        "features": [
+          {
+            "feature": "get change notifications via many services",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "AI change summaries and alert rules",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "AI summaries and alert rules need an LLM provider's API key or a local LLM server."
+          },
+          {
+            "feature": "select page parts with Visual Selector",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "The Visual Selector needs a Playwright/Chrome content fetcher (sockpuppetbrowser), which this box does not have."
+          },
+          {
+            "feature": "run browser steps before checking",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Browser Steps needs a Playwright browser connection, which this box does not have."
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:54:00+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/dgtlmoon/changedetection.io@5bea5703e464",
+      "requirements.txt"
+    ],
+    "packages_checked": 9,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:53:52+08:00",
+    "quality": {
+      "total": 87.2,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 88.5,
+      "signals": {
+        "stars": 35819,
+        "monthly_downloads": null,
+        "forks": 2248,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 253,
+        "registries_count": 0
+      },
+      "age_days": 2118,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 10.03
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:53:52.301679+08:00",
+      "sources_sha": "2af089a5febfd2dba9d4c3dfe180f46dee5dc7204c2f57bbf68e35469b0a3afb",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Monitor websites for updates — get notified via Discord, Email, Slack, Telegram, Webhook and many more"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "this software is depended on by network security, aerospace , data-science and data-journalist professionals"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "With Docker composer, just clone this repository and.."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "$ pip3 install changedetection.io"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "Then visit http://127.0.0.1:5000 , You should now be able to access the UI."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Simply set one or more notification URL's in the _[edit]_ tab of that watch."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "docker compose pull && docker compose up -d"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Raspberry Pi and linux/arm/v6 linux/arm/v7 arm64 devices are supported!"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/dgtlmoon/changedetection.io",
+      "fetched_at": "2026-11-16T01:48:35+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/dgtlmoon/changedetection.io/blob/master/README.md",
+      "fetched_at": "2026-11-16T01:48:35+08:00"
+    },
+    {
+      "id": "release:0.70.3",
+      "kind": "release",
+      "url": "https://github.com/dgtlmoon/changedetection.io/releases/tag/0.70.3",
+      "fetched_at": "2026-11-16T01:48:35+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Then visit http://127.0.0.1:5000 , You should now be able to access the UI.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:46+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Then visit http://127.0.0.1:5000 , You should now be able to access the UI.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:46+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:48:35+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Monitor websites for updates — get notified via Discord, Email, Slack, Telegram, Webhook and many more",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:46+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "pip3 install changedetection.io",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:46+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Monitor websites for updates",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:46+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:48:35+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:48:35+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:48:35+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:48:35+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:48:35+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:0.70.3",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:48:35+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "`:latest` tag is our latest stable release",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:46+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "_Out of stock notification_ and _Back In stock notification_",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:46+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Monitor and track PDF file changes, know when a PDF file has text changes.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:46+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Detect and monitor changes in JSON API responses ",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:46+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Website defacement monitoring",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:46+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Create RSS feeds based on changes in web content",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:46+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "get notified via Discord, Email, Slack, Telegram, Webhook and many more",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:46+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**AI change summaries** — instead of staring at a raw diff",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:46+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Target specific parts of the webpage using the Visual Selector tool.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:46+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Fill in text boxes, click buttons and more, setup your changedetection scenario.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:46+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "github_api",
+      "quote": "all for free or enjoy our SaaS plan!",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:46+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Self-hosted web page change monitoring",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:48:46+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:48:35+08:00",
+  "updated_at": "2026-11-16T01:54:00+08:00"
+}

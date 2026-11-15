@@ -1,0 +1,758 @@
+{
+  "schema_version": "software.v1",
+  "slug": "helmfile",
+  "repo_id": "gh:474521466",
+  "name": "Helmfile",
+  "summary": "Declarative spec and CLI for deploying Helm charts, Kustomize configs and Kubernetes manifests as Helm releases.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "infra_devops",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "helm",
+    "kubernetes",
+    "kustomize"
+  ],
+  "use_cases": [
+    "keep chart value files in version control",
+    "apply CI/CD to Kubernetes configuration changes",
+    "periodically sync clusters to avoid environment skew",
+    "generate all-in-one manifests for ArgoCD"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "declare and apply desired Helm release state",
+    "reuse infrastructure modules via Git or S3",
+    "deploy kustomizations and manifests as Helm releases",
+    "patch Kubernetes resources without forking charts"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:10.381459Z",
+    "run_id": "verify-helmfile-20261116-005259-3fb4",
+    "open_hint": "Run `helmfile create <project>` to start a new project with a helmfile.yaml.",
+    "features": [
+      {
+        "feature": "declare and apply desired Helm release state",
+        "title": "Declare the Helm releases you want and apply them",
+        "steps": [
+          "Write a helmfile.yaml listing each release with its name, namespace, chart and values.",
+          "Run `helmfile template -f helmfile.yaml` to render the manifests for those releases."
+        ]
+      },
+      {
+        "feature": "reuse infrastructure modules via Git or S3",
+        "title": "Reuse infrastructure modules from Git or S3",
+        "steps": [
+          "In your helmfile, add a `helmfiles:` entry with a `path` such as `git::<repo-url>@helmfile.yaml?ref=<branch>`.",
+          "Run `helmfile template -f <file>` to render the releases from that module."
+        ]
+      },
+      {
+        "feature": "deploy kustomizations and manifests as Helm releases",
+        "title": "Deploy kustomizations and manifests as Helm releases",
+        "steps": [
+          "Add a release whose `chart` points to a directory of plain Kubernetes manifests.",
+          "Run `helmfile template -f <file>` to render them as a Helm release."
+        ]
+      },
+      {
+        "feature": "patch Kubernetes resources without forking charts",
+        "title": "Patch Kubernetes resources without forking charts",
+        "steps": [
+          "Add a `strategicMergePatches` list to a release, naming the resource and the fields to change.",
+          "Run `helmfile template -f <file>` to see the chart output with the patch applied."
+        ]
+      }
+    ]
+  },
+  "homepage": "https://helmfile.readthedocs.io",
+  "repo": {
+    "url": "https://github.com/helmfile/helmfile",
+    "full_name": "helmfile/helmfile",
+    "created_at": "2022-03-27T03:07:09Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "helm",
+      "helm-diff"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install helmfile",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Run helmfile init once after installation to set up the helm-diff plugin"
+      ],
+      "check": null,
+      "first_task": "helmfile create my-project && cd my-project"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-helmfile-20261116-005259-3fb4",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "set -e; cd /tmp && curl -fsSLO https://github.com/helmfile/helmfile/releases/download/v1.8.4/helmfile_1.8.4_linux_amd64.tar.gz && tar xzf helmfile_1.8.4_linux_amd64.tar.gz helmfile && install -m755 helmfile ~/.local/bin/helmfile && curl -fsSLO https://get.helm.sh/helm-v4.3.2-linux-amd64.tar.gz && tar xzf helm-v4.3.2-linux-amd64.tar.gz && install -m755 linux-amd64/helm ~/.local/bin/helm",
+          "purpose": "Download helmfile v1.8.4 and helm v4.3.2 release binaries into ~/.local/bin"
+        },
+        {
+          "command": "set -e; cd /tmp && curl -fsSLO https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.8.3/kustomize_v5.8.3_linux_amd64.tar.gz && tar xzf kustomize_v5.8.3_linux_amd64.tar.gz && install -m755 kustomize ~/.local/bin/kustomize",
+          "purpose": "Install kustomize v5.8.3 release binary (needed for patches)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "helmfile --version",
+        "expected_signal": "helmfile version 1.8.4"
+      },
+      "first_task": "cd /tmp && rm -rf my-project && helmfile create my-project && cd my-project && find . -type f"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install github.com/helmfile/helmfile@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Run helmfile init once after installation to set up the helm-diff plugin"
+      ],
+      "check": null,
+      "first_task": "helmfile create my-project && cd my-project"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v1.8.4",
+    "published_at": "2026-11-13T01:16:52Z",
+    "url": "https://github.com/helmfile/helmfile/releases/tag/v1.8.4"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T00:54:43.825570+08:00",
+    "runs": [
+      {
+        "id": "verify-helmfile-20261116-005259-3fb4",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T00:54:43.825570+08:00",
+        "tool_version": "1.8.4",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "set -e; cd /tmp && curl -fsSLO https://github.com/helmfile/helmfile/releases/download/v1.8.4/helmfile_1.8.4_linux_amd64.tar.gz && tar xzf helmfile_1.8.4_linux_amd64.tar.gz helmfile && install -m755 helmfile ~/.local/bin/helmfile && curl -fsSLO https://get.helm.sh/helm-v4.3.2-linux-amd64.tar.gz && tar xzf helm-v4.3.2-linux-amd64.tar.gz && install -m755 linux-amd64/helm ~/.local/bin/helm",
+            "purpose": "Download helmfile v1.8.4 and helm v4.3.2 release binaries into ~/.local/bin"
+          },
+          {
+            "command": "set -e; cd /tmp && curl -fsSLO https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.8.3/kustomize_v5.8.3_linux_amd64.tar.gz && tar xzf kustomize_v5.8.3_linux_amd64.tar.gz && install -m755 kustomize ~/.local/bin/kustomize",
+            "purpose": "Install kustomize v5.8.3 release binary (needed for patches)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "helmfile --version",
+            "expected_signal": "helmfile version 1.8.4",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "helmfile version 1.8.4",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp && rm -rf my-project && helmfile create my-project && cd my-project && find . -type f",
+            "expected_signal": "helmfile project created in /tmp/my-project",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "helmfile project created in /tmp/my-project",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd ~/work/hf && helmfile template -f helmfile.yaml",
+            "expected_signal": "greeting: \"hello-from-helmfile\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "greeting: \"hello-from-helmfile\"",
+            "setup": [
+              {
+                "command": "set -e; mkdir -p ~/work/hf/chart/templates ~/work/hf/manifests && cd ~/work/hf\ncat > chart/Chart.yaml <<'EOF'\napiVersion: v2\nname: demo\nversion: 0.1.0\nEOF\ncat > chart/templates/cm.yaml <<'EOF'\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: {{ .Release.Name }}-cm\ndata:\n  greeting: {{ .Values.greeting | quote }}\nEOF\ncat > manifests/cm.yaml <<'EOF'\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: raw-cm\ndata:\n  from: manifests-dir\nEOF\ncat > helmfile.yaml <<'EOF'\nreleases:\n- name: declared\n  namespace: demo\n  chart: ./chart\n  set:\n  - name: greeting\n    value: hello-from-helmfile\nEOF\ncat > helmfile-manifests.yaml <<'EOF'\nreleases:\n- name: rawdir\n  namespace: demo\n  chart: ./manifests\nEOF\ncat > helmfile-patch.yaml <<'EOF'\nreleases:\n- name: patched\n  namespace: demo\n  chart: ./chart\n  values:\n  - greeting: original\n  strategicMergePatches:\n  - apiVersion: v1\n    kind: ConfigMap\n    metadata:\n      name: patched-cm\n    data:\n      patchedkey: added-by-patch\nEOF\nrm -rf /tmp/modrepo && mkdir -p /tmp/modrepo && cd /tmp/modrepo && git init -q -b main && mkdir -p charts/modchart/templates && cp ~/work/hf/chart/Chart.yaml charts/modchart/ && cp ~/work/hf/chart/templates/cm.yaml charts/modchart/templates/ && cat > helmfile.yaml <<'EOF'\nreleases:\n- name: frommodule\n  namespace: demo\n  chart: ./charts/modchart\n  set:\n  - name: greeting\n    value: hello-from-git-module\nEOF\ngit -c user.email=a@b -c user.name=a add -A && git -c user.email=a@b -c user.name=a commit -qm init\ncd ~/work/hf && cat > helmfile-module.yaml <<'EOF'\nhelmfiles:\n- path: git::file:///tmp/modrepo@helmfile.yaml?ref=main\nEOF\necho ok",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd ~/work/hf && helmfile template -f helmfile-manifests.yaml",
+            "expected_signal": "from: manifests-dir",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "from: manifests-dir",
+            "setup": [
+              {
+                "command": "set -e; mkdir -p ~/work/hf/chart/templates ~/work/hf/manifests && cd ~/work/hf\ncat > chart/Chart.yaml <<'EOF'\napiVersion: v2\nname: demo\nversion: 0.1.0\nEOF\ncat > chart/templates/cm.yaml <<'EOF'\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: {{ .Release.Name }}-cm\ndata:\n  greeting: {{ .Values.greeting | quote }}\nEOF\ncat > manifests/cm.yaml <<'EOF'\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: raw-cm\ndata:\n  from: manifests-dir\nEOF\ncat > helmfile.yaml <<'EOF'\nreleases:\n- name: declared\n  namespace: demo\n  chart: ./chart\n  set:\n  - name: greeting\n    value: hello-from-helmfile\nEOF\ncat > helmfile-manifests.yaml <<'EOF'\nreleases:\n- name: rawdir\n  namespace: demo\n  chart: ./manifests\nEOF\ncat > helmfile-patch.yaml <<'EOF'\nreleases:\n- name: patched\n  namespace: demo\n  chart: ./chart\n  values:\n  - greeting: original\n  strategicMergePatches:\n  - apiVersion: v1\n    kind: ConfigMap\n    metadata:\n      name: patched-cm\n    data:\n      patchedkey: added-by-patch\nEOF\nrm -rf /tmp/modrepo && mkdir -p /tmp/modrepo && cd /tmp/modrepo && git init -q -b main && mkdir -p charts/modchart/templates && cp ~/work/hf/chart/Chart.yaml charts/modchart/ && cp ~/work/hf/chart/templates/cm.yaml charts/modchart/templates/ && cat > helmfile.yaml <<'EOF'\nreleases:\n- name: frommodule\n  namespace: demo\n  chart: ./charts/modchart\n  set:\n  - name: greeting\n    value: hello-from-git-module\nEOF\ngit -c user.email=a@b -c user.name=a add -A && git -c user.email=a@b -c user.name=a commit -qm init\ncd ~/work/hf && cat > helmfile-module.yaml <<'EOF'\nhelmfiles:\n- path: git::file:///tmp/modrepo@helmfile.yaml?ref=main\nEOF\necho ok",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd ~/work/hf && helmfile template -f helmfile-patch.yaml",
+            "expected_signal": "patchedkey: added-by-patch",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "patchedkey: added-by-patch",
+            "setup": [
+              {
+                "command": "set -e; mkdir -p ~/work/hf/chart/templates ~/work/hf/manifests && cd ~/work/hf\ncat > chart/Chart.yaml <<'EOF'\napiVersion: v2\nname: demo\nversion: 0.1.0\nEOF\ncat > chart/templates/cm.yaml <<'EOF'\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: {{ .Release.Name }}-cm\ndata:\n  greeting: {{ .Values.greeting | quote }}\nEOF\ncat > manifests/cm.yaml <<'EOF'\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: raw-cm\ndata:\n  from: manifests-dir\nEOF\ncat > helmfile.yaml <<'EOF'\nreleases:\n- name: declared\n  namespace: demo\n  chart: ./chart\n  set:\n  - name: greeting\n    value: hello-from-helmfile\nEOF\ncat > helmfile-manifests.yaml <<'EOF'\nreleases:\n- name: rawdir\n  namespace: demo\n  chart: ./manifests\nEOF\ncat > helmfile-patch.yaml <<'EOF'\nreleases:\n- name: patched\n  namespace: demo\n  chart: ./chart\n  values:\n  - greeting: original\n  strategicMergePatches:\n  - apiVersion: v1\n    kind: ConfigMap\n    metadata:\n      name: patched-cm\n    data:\n      patchedkey: added-by-patch\nEOF\nrm -rf /tmp/modrepo && mkdir -p /tmp/modrepo && cd /tmp/modrepo && git init -q -b main && mkdir -p charts/modchart/templates && cp ~/work/hf/chart/Chart.yaml charts/modchart/ && cp ~/work/hf/chart/templates/cm.yaml charts/modchart/templates/ && cat > helmfile.yaml <<'EOF'\nreleases:\n- name: frommodule\n  namespace: demo\n  chart: ./charts/modchart\n  set:\n  - name: greeting\n    value: hello-from-git-module\nEOF\ngit -c user.email=a@b -c user.name=a add -A && git -c user.email=a@b -c user.name=a commit -qm init\ncd ~/work/hf && cat > helmfile-module.yaml <<'EOF'\nhelmfiles:\n- path: git::file:///tmp/modrepo@helmfile.yaml?ref=main\nEOF\necho ok",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd ~/work/hf && helmfile template -f helmfile-module.yaml",
+            "expected_signal": "greeting: \"hello-from-git-module\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "greeting: \"hello-from-git-module\"",
+            "setup": [
+              {
+                "command": "set -e; mkdir -p ~/work/hf/chart/templates ~/work/hf/manifests && cd ~/work/hf\ncat > chart/Chart.yaml <<'EOF'\napiVersion: v2\nname: demo\nversion: 0.1.0\nEOF\ncat > chart/templates/cm.yaml <<'EOF'\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: {{ .Release.Name }}-cm\ndata:\n  greeting: {{ .Values.greeting | quote }}\nEOF\ncat > manifests/cm.yaml <<'EOF'\napiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: raw-cm\ndata:\n  from: manifests-dir\nEOF\ncat > helmfile.yaml <<'EOF'\nreleases:\n- name: declared\n  namespace: demo\n  chart: ./chart\n  set:\n  - name: greeting\n    value: hello-from-helmfile\nEOF\ncat > helmfile-manifests.yaml <<'EOF'\nreleases:\n- name: rawdir\n  namespace: demo\n  chart: ./manifests\nEOF\ncat > helmfile-patch.yaml <<'EOF'\nreleases:\n- name: patched\n  namespace: demo\n  chart: ./chart\n  values:\n  - greeting: original\n  strategicMergePatches:\n  - apiVersion: v1\n    kind: ConfigMap\n    metadata:\n      name: patched-cm\n    data:\n      patchedkey: added-by-patch\nEOF\nrm -rf /tmp/modrepo && mkdir -p /tmp/modrepo && cd /tmp/modrepo && git init -q -b main && mkdir -p charts/modchart/templates && cp ~/work/hf/chart/Chart.yaml charts/modchart/ && cp ~/work/hf/chart/templates/cm.yaml charts/modchart/templates/ && cat > helmfile.yaml <<'EOF'\nreleases:\n- name: frommodule\n  namespace: demo\n  chart: ./charts/modchart\n  set:\n  - name: greeting\n    value: hello-from-git-module\nEOF\ngit -c user.email=a@b -c user.name=a add -A && git -c user.email=a@b -c user.name=a commit -qm init\ncd ~/work/hf && cat > helmfile-module.yaml <<'EOF'\nhelmfiles:\n- path: git::file:///tmp/modrepo@helmfile.yaml?ref=main\nEOF\necho ok",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Install candidates: go install / pacman / zypper / mise",
+            "actually_needed": "Used README option 1 (binary download from GitHub releases): no Go toolchain, no pacman/zypper on Debian, mise is not installed",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Prerequisites: helm and helm-diff",
+            "actually_needed": "strategicMergePatches/jsonPatches (and kustomizations) also need the kustomize binary on PATH; without it helmfile fails with 'exec: \"kustomize\": executable file not found in $PATH'",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "helmfile apply syncs your cluster",
+            "actually_needed": "No Kubernetes cluster here; checked the features with 'helmfile template' instead. helm-diff and 'helmfile init' were not needed for template",
+            "kind": "note"
+          },
+          {
+            "readme_said": "helm (any version)",
+            "actually_needed": "helmfile 1.8.4 templated charts with helm v4.3.2 without problems",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exited 0 with their expected output: the project files and the line 'helmfile project created in /tmp/my-project' (image 1), a rendered ConfigMap containing greeting \"hello-from-helmfile\" (image 2), and 'helmfile version 1.8.4' (image 3).",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-helmfile-20261116-005259-3fb4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-helmfile-20261116-005259-3fb4/check-1-cmd3.judged.png",
+            "runs/verify/verify-helmfile-20261116-005259-3fb4/check-2-cmd5.judged.png",
+            "runs/verify/verify-helmfile-20261116-005259-3fb4/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.274871,
+        "features": [
+          {
+            "feature": "declare and apply desired Helm release state",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "reuse infrastructure modules via Git or S3",
+            "status": "checked",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "deploy kustomizations and manifests as Helm releases",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "patch Kubernetes resources without forking charts",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T00:54:52+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/helmfile/helmfile@53456973ca54",
+      "go.mod"
+    ],
+    "packages_checked": 380,
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "go:github.com/klauspost/compress",
+        "version": "v1.19.1",
+        "advisory": "GO-2026-6865",
+        "cves": [
+          "CVE-2026-116591"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.2",
+        "summary": "Panic on two-block frames in github.com/klauspost/compress",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T00:54:52+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.595,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 89.7,
+      "signals": {
+        "stars": 5230,
+        "monthly_downloads": 3737,
+        "forks": 374,
+        "dependents": null,
+        "release_downloads": 1627387,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 1694,
+      "packages": [
+        "homebrew:helmfile"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 8.14
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:54:43.830653+08:00",
+      "sources_sha": "09246ed1f4ea624f5b05509a8f9e60c4d28c0699f6307ca451a77b611144a4a3",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Helmfile is a declarative spec for deploying helm charts. It lets you..."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Modularize common patterns of your infrastructure, distribute it via Git, S3, etc. to be reused across the entire company"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "the `helmfile` executable delegates to `helm` - as a result, the following must be installed"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "* Linux/macOS/Windows (using [mise](https://mise.jdx.dev)): `mise use -g helmfile@latest`"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Sync your Kubernetes cluster state to the desired one by running:"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "* [Configuration](https://helmfile.readthedocs.io/en/latest/#configuration)"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "* Linux/macOS/Windows (using [mise](https://mise.jdx.dev)): `mise use -g helmfile@latest`"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/helmfile/helmfile",
+      "fetched_at": "2026-11-16T00:52:49+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/helmfile/helmfile/blob/main/README.md",
+      "fetched_at": "2026-11-16T00:52:47+08:00"
+    },
+    {
+      "id": "release:v1.8.4",
+      "kind": "release",
+      "url": "https://github.com/helmfile/helmfile/releases/tag/v1.8.4",
+      "fetched_at": "2026-11-16T00:52:47+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "the `helmfile` executable delegates to `helm`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:59+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Helmfile has been used by many users in production",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:59+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Deploy Kubernetes Helm Charts",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:59+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Declaratively deploy your Kubernetes manifests, Kustomize configs, and Charts as Helm releases.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:59+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Helmfile",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:59+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Linux/macOS/Windows (using [mise](https://mise.jdx.dev)): `mise use -g helmfile@latest`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:59+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "- [helm](https://helm.sh/docs/intro/install/)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:59+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "- [helm-diff](https://github.com/databus23/helm-diff)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:59+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:52:49+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:52:49+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T00:52:49+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:52:49+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:52:49+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.8.4",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:52:47+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "Helmfile v1.0 and v1.1 has been released.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:59+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Keep a directory of chart value files and maintain changes in version control.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:59+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Apply CI/CD to configuration changes.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:59+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Periodically sync to avoid skew in environments.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:59+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "github_api",
+      "quote": "Generate all-in-one manifests for use with ArgoCD.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:59+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Write, version-control, apply the desired state file for visibility and reproducibility.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:59+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Modularize common patterns of your infrastructure, distribute it via Git, S3, etc.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:59+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Manage your cluster consisting of charts, [kustomizations](https://github.com/kubernetes-sigs/kustomize), and directories of Kubernetes resources, turning everything to Helm releases",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:59+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "JSON/Strategic-Merge Patch Kubernetes resources before `helm-install`ing, without forking upstream charts",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:59+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install helmfile",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:59+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/helmfile/helmfile@latest",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:59+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/helmfile/helmfile@latest",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:59+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T00:52:47+08:00",
+  "updated_at": "2026-11-16T00:54:52+08:00"
+}

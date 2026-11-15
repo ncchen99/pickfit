@@ -1,0 +1,864 @@
+{
+  "schema_version": "software.v1",
+  "slug": "terraform-mcp-server",
+  "repo_id": "gh:969282615",
+  "name": "Terraform MCP Server",
+  "summary": "An MCP server that connects AI assistants to the Terraform Registry and HCP Terraform/Terraform Enterprise APIs for infrastructure-as-code work.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [
+    "look up Terraform provider documentation from an AI assistant",
+    "manage HCP Terraform workspaces, variables, tags and runs"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "query Terraform Registry providers, modules, policies",
+    "manage HCP Terraform and Enterprise workspaces",
+    "create, update, delete workspaces and runs",
+    "export OTel metrics on tool usage"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:37.898294Z",
+    "run_id": "verify-terraform-mcp-server-20261116-015831-a2b3",
+    "open_hint": "Add `terraform-mcp-server stdio` as an MCP server in your AI assistant's settings, then ask the assistant about Terraform providers or modules.",
+    "features": [
+      {
+        "feature": "query Terraform Registry providers, modules, policies",
+        "title": "Look up Terraform Registry providers, modules and policies",
+        "steps": [
+          "Register `terraform-mcp-server stdio` as an MCP server in your AI client.",
+          "Ask your assistant for registry information, for example the latest version of a provider.",
+          "The assistant calls a tool such as get_latest_provider_version with a namespace and name, like hashicorp and aws."
+        ]
+      },
+      {
+        "feature": "manage HCP Terraform and Enterprise workspaces",
+        "title": "Manage HCP Terraform and Enterprise workspaces",
+        "steps": []
+      },
+      {
+        "feature": "create, update, delete workspaces and runs",
+        "title": "Create, update and delete workspaces and runs",
+        "steps": []
+      },
+      {
+        "feature": "export OTel metrics on tool usage",
+        "title": "Export OpenTelemetry metrics on tool usage",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/hashicorp/terraform-mcp-server",
+    "full_name": "hashicorp/terraform-mcp-server",
+    "created_at": "2025-04-19T19:49:09Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "docker"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": [
+      "Terraform Enterprise / HCP Terraform API token (optional, for authenticated tools)"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-terraform-mcp-server-20261116-015831-a2b3",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/tfmcp && cd /tmp/tfmcp && curl -fsSLO https://releases.hashicorp.com/terraform-mcp-server/1.4.1/terraform-mcp-server_1.4.1_linux_amd64.zip && curl -fsSLO https://releases.hashicorp.com/terraform-mcp-server/1.4.1/terraform-mcp-server_1.4.1_SHA256SUMS && grep linux_amd64.zip terraform-mcp-server_1.4.1_SHA256SUMS | sha256sum -c - && unzip -o terraform-mcp-server_1.4.1_linux_amd64.zip -d ~/.local/bin terraform-mcp-server && chmod +x ~/.local/bin/terraform-mcp-server",
+          "purpose": "Download the official 1.4.1 linux_amd64 release zip from releases.hashicorp.com, check its SHA256 and unzip the binary into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "terraform-mcp-server --version",
+        "expected_signal": "Version: 1.4.1"
+      },
+      "first_task": "curl -sS http://localhost:8080/health"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MPL-2.0",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v1.4.1",
+    "published_at": "2026-10-23T21:25:22Z",
+    "url": "https://github.com/hashicorp/terraform-mcp-server/releases/tag/v1.4.1"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T01:59:46.944531+08:00",
+    "runs": [
+      {
+        "id": "verify-terraform-mcp-server-20261116-015831-a2b3",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:59:46.944531+08:00",
+        "tool_version": "1.4.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/tfmcp && cd /tmp/tfmcp && curl -fsSLO https://releases.hashicorp.com/terraform-mcp-server/1.4.1/terraform-mcp-server_1.4.1_linux_amd64.zip && curl -fsSLO https://releases.hashicorp.com/terraform-mcp-server/1.4.1/terraform-mcp-server_1.4.1_SHA256SUMS && grep linux_amd64.zip terraform-mcp-server_1.4.1_SHA256SUMS | sha256sum -c - && unzip -o terraform-mcp-server_1.4.1_linux_amd64.zip -d ~/.local/bin terraform-mcp-server && chmod +x ~/.local/bin/terraform-mcp-server",
+            "purpose": "Download the official 1.4.1 linux_amd64 release zip from releases.hashicorp.com, check its SHA256 and unzip the binary into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "terraform-mcp-server --version",
+            "expected_signal": "Version: 1.4.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Version: 1.4.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- terraform-mcp-server stdio --toolsets=all",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 --call get_latest_provider_version --args '{\"namespace\":\"hashicorp\",\"name\":\"aws\"}' -- terraform-mcp-server stdio",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=get_latest_provider_version content=text text_chars=6",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "curl -sS http://localhost:8080/health",
+            "expected_signal": "\"status\":\"ok\",\"service\":\"terraform-mcp-server\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\":\"ok\",\"service\":\"terraform-mcp-server\",\"transport\":\"streamable-http\",\"endpoint\":\"/mcp\",\"version\":\"1.4.1\"}",
+            "setup": [
+              {
+                "command": "terraform-mcp-server streamable-http --transport-port 8080 --transport-host 127.0.0.1",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 --url http://127.0.0.1:8080/mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "terraform-mcp-server streamable-http --transport-port 8080 --transport-host 127.0.0.1",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Install with docker run, or with go install ...@latest",
+            "actually_needed": "Neither Docker nor Go was available. HashiCorp publishes prebuilt binaries at releases.hashicorp.com/terraform-mcp-server, and installing the 1.4.1 linux_amd64 zip worked. The README does not mention these binaries.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Toolsets: registry, terraform, all",
+            "actually_needed": "Without TFE_TOKEN, only the 9 registry tools are listed, even with --toolsets=all. The HCP Terraform workspace and run tools need a token.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Registry tools query the public Terraform Registry",
+            "actually_needed": "The tool call in check 6 reaches the public registry over the internet. If the box has no network, this call will fail even though the server works.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks succeeded: the MCP handshake listed 9 tools, the get_latest_provider_version call returned 6.73.0, and --version printed Version: 1.4.1.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-terraform-mcp-server-20261116-015831-a2b3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-terraform-mcp-server-20261116-015831-a2b3/check-1-cmd5.judged.png",
+            "runs/verify/verify-terraform-mcp-server-20261116-015831-a2b3/check-2-cmd6.judged.png",
+            "runs/verify/verify-terraform-mcp-server-20261116-015831-a2b3/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.241056,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "terraform-mcp-server",
+            "stdio"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "terraform-mcp-server",
+          "server_version": "1.4.1",
+          "tools": [
+            "get_latest_module_version",
+            "get_latest_provider_version",
+            "get_module_details",
+            "get_policy_details",
+            "get_provider_capabilities",
+            "get_provider_details",
+            "search_modules",
+            "search_policies",
+            "search_provider_docs"
+          ],
+          "tool_count": 9,
+          "called_tool": "get_latest_provider_version",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "query Terraform Registry providers, modules, policies",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "manage HCP Terraform and Enterprise workspaces",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "The workspace and organization tools need TFE_TOKEN for HCP Terraform or Terraform Enterprise. Without a token they are not listed."
+          },
+          {
+            "feature": "create, update, delete workspaces and runs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Creating and running workspaces needs a TFE_TOKEN and an HCP Terraform organization, and would change things outside the box."
+          },
+          {
+            "feature": "export OTel metrics on tool usage",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "OTel metrics need OTEL_METRICS_ENABLED and an OTel collector endpoint, and no collector runs in this box."
+          }
+        ]
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "docker run -i --rm hashicorp/terraform-mcp-server",
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add terraform -s user -t stdio -- docker run -i --rm hashicorp/terraform-mcp-server"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"terraform\": {\n      \"command\": \"docker\",\n      \"args\": [\n        \"run\",\n        \"-i\",\n        \"--rm\",\n        \"-e\", \"TFE_ADDRESS=<<PASTE_TFE_ADDRESS_HERE>>\",\n        \"-e\", \"TFE_TOKEN=<<PASTE_TFE_TOKEN_HERE>>\",\n        \"hashicorp/terraform-mcp-server:1.4.1\"\n      ]\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "TFE_TOKEN",
+        "required": null,
+        "purpose": "Terraform Enterprise API token"
+      },
+      {
+        "name": "TFE_ADDRESS",
+        "required": false,
+        "purpose": "HCP Terraform/TFE address"
+      },
+      {
+        "name": "TRANSPORT_MODE",
+        "required": false,
+        "purpose": "transport selection"
+      },
+      {
+        "name": "TRANSPORT_PORT",
+        "required": false,
+        "purpose": "HTTP server port"
+      },
+      {
+        "name": "TRANSPORT_HOST",
+        "required": false,
+        "purpose": "HTTP bind host"
+      },
+      {
+        "name": "TF_WORKSPACE",
+        "required": false,
+        "purpose": "default workspace"
+      },
+      {
+        "name": "TF_CLOUD_ORGANIZATION",
+        "required": false,
+        "purpose": "default organization"
+      },
+      {
+        "name": "ENABLE_TF_OPERATIONS",
+        "required": false,
+        "purpose": "enable approval-required tools"
+      },
+      {
+        "name": "LOG_LEVEL",
+        "required": false,
+        "purpose": "logging level"
+      },
+      {
+        "name": "MCP_SESSION_MODE",
+        "required": false,
+        "purpose": "stateful or stateless sessions"
+      }
+    ],
+    "tools": [
+      "search_provider_docs",
+      "get_provider_details",
+      "list_workspaces",
+      "execute_search_query",
+      "prepare_import",
+      "verify_import_plan"
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:59:53+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/hashicorp/terraform-mcp-server@3e38ca694399",
+      "go.mod"
+    ],
+    "packages_checked": 73,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:59:46+08:00",
+    "quality": {
+      "total": 83.1,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.875,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 92.7,
+      "signals": {
+        "stars": 1562,
+        "monthly_downloads": 141,
+        "forks": 202,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 105,
+        "registries_count": 1
+      },
+      "age_days": 574,
+      "packages": [
+        "homebrew:terraform-mcp-server"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.07
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:59:46.947877+08:00",
+      "sources_sha": "35e92df1f1f44796a5b5c0d5af16c5bb389cd6578e3192ede6dfc3aefb1ffe89",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "- **Workspace Operations**: Create, update, delete workspaces with support for variables, tags, and run management"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "enabling advanced automation and interaction capabilities for Infrastructure as Code (IaC) development."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "1. Ensure [Docker](https://www.docker.com/) is installed and running to use the server in a containerized environment."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "claude mcp add terraform -s user -t stdio -- docker run -i --rm hashicorp/terraform-mcp-server"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "curl http://localhost:8080/health"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| `TFE_TOKEN` | Terraform Enterprise API token | `\"\"` (empty) |"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 0,
+          "quote": null
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/hashicorp/terraform-mcp-server",
+      "fetched_at": "2026-11-16T01:58:14+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/hashicorp/terraform-mcp-server/blob/main/README.md",
+      "fetched_at": "2026-11-16T01:58:13+08:00"
+    },
+    {
+      "id": "release:v1.4.1",
+      "kind": "release",
+      "url": "https://github.com/hashicorp/terraform-mcp-server/releases/tag/v1.4.1",
+      "fetched_at": "2026-11-16T01:58:13+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "The Terraform MCP Server is a [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Install an AI assistant that supports the Model Context Protocol (MCP).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "The Terraform MCP Server is a [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "server that integrates seamlessly with [Terraform Registry](https://developer.hashicorp.com/terraform/registry/api-docs) and [HCP Terraform]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# <img src=\"public/images/Terraform-LogoMark_onDark.svg\" width=\"30\" align=\"left\" style=\"margin-right: 12px;\"/> Terraform MCP Server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Ensure [Docker](https://www.docker.com/) is installed and running",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Direct integration with public Terraform Registry APIs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "Add `TFE_ADDRESS` and `TFE_TOKEN` to the Docker commands for authenticated HCP Terraform or Terraform Enterprise tools.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:58:14+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:58:14+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:58:14+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.4.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:58:13+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "docker run -i --rm terraform-mcp-server:dev --tools=search_provider_docs,get_provider_details",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Create, update, delete workspaces with support for variables, tags, and run management",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Direct integration with public Terraform Registry APIs for providers, modules, and policies",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Full workspace management, organization/project listing, and private registry access",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Create, update, delete workspaces with support for variables, tags, and run management",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Integration with open telemetry meters to track tool-call volume, latency and failures",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Direct integration with public Terraform Registry APIs for providers, modules, and policies",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "Both Stdio and StreamableHTTP transports with configurable endpoints",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "claude mcp add terraform -s user -t stdio -- docker run -i --rm hashicorp/terraform-mcp-server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add terraform -s user -t stdio -- docker run -i --rm hashicorp/terraform-mcp-server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"terraform\": {\n      \"command\": \"docker\",\n      \"args\": [\n        \"run\",\n        \"-i\",\n        \"--rm\",\n        \"-e\", \"TFE_ADDRESS=<<PASTE_TFE_ADDRESS_HERE>>\",\n        \"-e\", \"TFE_TOKEN=<<PASTE_TFE_TOKEN_HERE>>\",\n        \"hashicorp/terraform-mcp-server:1.4.1\"\n      ]\n    }\n  }\n",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "TFE_TOKEN",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "TFE_ADDRESS",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "TRANSPORT_MODE",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "TRANSPORT_PORT",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/4",
+      "source_id": "readme",
+      "quote": "TRANSPORT_HOST",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/5",
+      "source_id": "readme",
+      "quote": "TF_WORKSPACE",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/6",
+      "source_id": "readme",
+      "quote": "TF_CLOUD_ORGANIZATION",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/7",
+      "source_id": "readme",
+      "quote": "ENABLE_TF_OPERATIONS",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/8",
+      "source_id": "readme",
+      "quote": "LOG_LEVEL",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/9",
+      "source_id": "readme",
+      "quote": "MCP_SESSION_MODE",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "--tools=search_provider_docs,get_provider_details,list_workspaces",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "--tools=search_provider_docs,get_provider_details,list_workspaces",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "--tools=search_provider_docs,get_provider_details,list_workspaces",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "Before calling `execute_search_query`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "pass the complete target explicitly to `prepare_import` and `verify_import_plan`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "pass the complete target explicitly to `prepare_import` and `verify_import_plan`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:58:31+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:58:13+08:00",
+  "updated_at": "2026-11-16T01:59:53+08:00"
+}
