@@ -80,6 +80,9 @@ def copy_run(run: dict, roots: list[Path], *, dry_run: bool) -> dict:
     root, rel = found[0]
     src = root / rel
     dest = EVIDENCE / run["run_id"]
+    if dest.exists() and src.resolve() == dest.resolve():
+        # The run folder is a link to its place in the evidence store: nothing to copy, and not ours to rewrite.
+        return {"run_id": run["run_id"], "status": "in_place", "source": str(src)}
     want = manifest(src)
     if (dest / "MANIFEST.sha256").exists():
         have = manifest(dest)
