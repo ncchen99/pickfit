@@ -1,0 +1,88 @@
+---
+name: pickfit-loop
+description: 跑 pickfit 的收錄與修 harness 的 loop。從 loop/queue.jsonl 拿一個項目，在沙盒裡驗證；沒過就分辨是軟體的問題還是 pickfit 驗證環境的問題，是後者就修 harness、補測試、重跑，記錄後拿下一個，中途不停下來問人。使用者說「跑 loop」「繼續收錄」「修 harness」，或 /goal 的條件指到這個 skill 時使用。
+---
+
+# pickfit loop：收錄、驗證、修 harness
+
+給在 loop worktree（分支 `loop/*`）裡工作的 session。為什麼這樣設計寫在 [docs/loop.md](../../../docs/loop.md)，這裡只寫怎麼做。
+
+## 三條原則
+
+1. **不停下來問。** 遇到問題先自己解。解不了就記下來，換下一個項目。「留給念誠的事」那一節列的幾件事也一樣：寫進 journal，然後繼續做別的。
+2. **狀態放在磁碟上。** 佇列和問題清單用 `scripts/loop_state.py` 改。`loop/queue.jsonl` 和 `loop/issues.md` 的標題列不手改。下一個 session 什麼都不記得，只看得到 `loop/` 裡寫了什麼。
+3. **通過與否不由你決定。** 判定來自 pickfit 的管線（安裝 agent、全新箱子重播、judge）。你修的是環境和操作層，標準不動。
+
+## 開工前（每個 session 做一次）
+
+- `git branch --show-current` 要是 `loop/…`。不是的話停下來，請使用者先跑 `scripts/loop_setup.sh`。
+- `uv run pytest -q` 要全過。沒過就先修到過，那是上一個 session 留下的。
+- 讀 `loop/issues.md`，以及 `loop/journal.md` 最後 40 行。
+- 印一次 `uv run python scripts/loop_state.py status`。
+
+## 一圈
+
+1. **拿項目**：`uv run python scripts/loop_state.py next`。exit code 3 表示佇列空了，直接收尾。
+2. **跑驗證**：
+   - `reverify`（target 是 slug）：從 `data/software/<slug>.json` 讀 `repo.full_name`，先跑
+     `uv run pickfit verify --batch 1 --repo <full_name> --force --runner modal --dry-run`。
+     清單上只有目標那一款，才拿掉 `--dry-run` 跑真的。不要加 `--records`，它和 `--repo` 是聯集，會選到別款（H-001）。箱子不夠用時加 `--runtime vm`、`--display`、`--memory-mb`、`--file-mb`。
+   - `new`（target 是 `owner/name` 或網址）：照 `uv run pickfit --help` 的管線順序做，discover、prescreen、extract、profiles、verify。網頁應用走 `pickfit webapps`。
+   - 會跑超過兩分鐘的指令放背景執行，等它結束的通知，不要輪詢。
+3. **看結果**：`runs/verify/<run>/report.json` 和 `verification_run.json`。
+4. **分流**：照下一節。
+5. **寫回**：通過而且重播過的 run 用 `uv run python scripts/guarded_write_back.py <run 目錄>` 寫回，它會確認紀錄沒有因此變差。不手改 `data/software/`。
+6. **記錄**：`loop_state.py finish` 或 `park`；在 `loop/journal.md` 最後加一段（格式在那個檔案開頭）；commit，一個項目一個 commit，訊息用英文。`docs/plan.md` 的狀態紀錄只有協調的 session 寫，這裡不碰。
+7. 印 `loop_state.py status`，回到第 1 步。
+
+## 分流：這次沒過，是誰的問題
+
+| 看到什麼 | 是誰的問題 | 怎麼做 |
+|---|---|---|
+| 照它自己的文件裝，它自己的指令報錯；換一個全新的箱子結果一樣 | 軟體 | `finish --result unverified`，note 寫原因。不修。 |
+| 要帳號、要付費、要真的硬體、要下載數 GB 的模型 | 驗證環境合理的限制 | `finish --result unverified`。確認紀錄的原因代碼說的是「pickfit 的環境沒有 X」，不是「軟體不能用」。 |
+| 箱子少東西（編譯器、root、Docker、資源）、動作送不進 App、安裝 agent 走錯路、judge 把對的判成錯、管線指令本身壞了 | pickfit 的 harness | 進「修 harness」。 |
+
+分不出來的時候，當成 harness 的問題查一次：在全新的箱子裡用最小的指令重現。重現不了，就照第一列處理。
+
+## 修 harness
+
+1. **對到 issue**。`loop/issues.md` 裡有同一個問題就用它，沒有就 `loop_state.py issue-new "標題"`。補上 symptom 和 reproduce，然後 `issue-status H-00X fixing`。
+2. **先重現**。挑最小、最便宜的方式：能用 DockerBox 就不開 Modal，能不呼叫模型就不呼叫。
+3. **先寫一個會失敗的測試**（放 `tests/`，用 fixture，不打付費 API），再動手修。
+4. **能改的範圍**：`pickfit/verify/` 裡的箱子、映像、操作層、安裝 agent 的工具與提示，`pickfit/discover/`，管線的指令。判定、計分、schema、限制檢查不在範圍內，清單是 `scripts/loop_guard.py` 的 `PROTECTED`，hook 會擋。
+5. **驗收，三樣都要過**：
+   - `uv run pytest -q` 全過。既有的測試可以因為行為真的改了而修改，不能刪，也不能為了過關把斷言改鬆。
+   - 動到箱子或映像時，`uv run pickfit verify --limits-test --runner modal` 全過，用到的 `--runtime`、`--display` 組合也要跑。讓隔離變鬆的修法不算修好。
+   - 原本失敗的項目重跑後通過。另外挑一筆原本就通過、用同一種箱子的紀錄重跑，確認沒有變差。
+6. **修好了**：commit，`issue-status H-00X fixed`。等這個 issue 的項目會自動排回佇列。在 issue 的 tried 寫下做法。
+7. **同一個 issue 試了三種不同的做法都不行**：`issue-status H-00X parked`，寫清楚試過什麼、各自為什麼不行，然後往下走。不試第四次。
+8. **非改受保護的檔案不可**：把檔案複製到 `runs/loop/draft/` 改，用 `diff -u` 產生 `loop/proposals/H-00X.patch`，在 issue 裡寫理由，`issue-status H-00X review`，往下走。
+
+## 先找現成的套件
+
+修 harness 之前先查有沒有人做好了。操作電腦、開瀏覽器、裝套件這類事，用現成的比自己重寫可靠（念誠 11/15）。
+
+- 可以直接加的授權：MIT、Apache-2.0、BSD、ISC。其他的（AGPL、GPL、FSL、BUSL、沒寫授權）不加，寫成 proposal，issue 設 `review`。被測的軟體裝在沙盒裡，不受這條限制。
+- 加了就記進 `NOTICE`（名稱、版本、授權、來源），版本要釘住。
+- 裝在箱子裡的控制程式走 exec 通道（Modal 的 exec、`tart exec`），不開對外的連接埠。金鑰和模型呼叫留在主機。驗收照舊由 pickfit 自己檢查，套件和被測的 App 都不能替自己回報結果。
+
+## 留給念誠的事
+
+hook 會直接擋下這些：`git push`、`pickfit publish`、`wrangler deploy`、合併 PR、改受保護的檔案、手改紀錄、刪測試、讀 `eval/` 與 `.env`。
+
+下面這幾件 hook 擋不到，也不要做：
+
+- 在這台 Mac 上裝系統層的東西（`brew install`、改系統設定、下載數十 GB 的 VM 映像）。
+- 建帳號、接受條款、開始用新的付費服務。
+- 單一項目花超過 US$5，或當天的 loop 花超過 US$40。用 `uv run pickfit spend` 看帳本。
+
+遇到了就在 journal 那一段寫「需要你」，講清楚要決定什麼、卡住哪些項目，把那些項目 park，繼續下一個。
+
+## 收尾
+
+佇列空了，或這個 session 的目標達成時：
+
+- 印 `loop_state.py status`。
+- 在 journal 加一段小結：這次處理了幾筆、修好哪些 issue、哪些在等念誠。
+- 不 push，不合併。分支留給念誠或協調的 session 看。
