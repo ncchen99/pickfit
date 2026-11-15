@@ -38,18 +38,22 @@
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
-    "generated_at": "2026-11-15T18:12:57.821360Z",
-    "run_id": null,
-    "open_hint": "Open https://godbolt.org in your web browser; the page opens with a source code editor next to a compiler output pane.",
+    "generated_at": "2026-11-15T19:19:01.229334Z",
+    "run_id": "web-compiler-explorer-20261116-024309-9d93",
+    "open_hint": "Open https://godbolt.org in your browser; it starts with a source code editor next to a compiler output pane.",
     "features": [
       {
         "feature": "view compiled assembly in real time",
         "title": "See compiled assembly as you type",
-        "steps": []
+        "steps": [
+          "Close the privacy dialog if it appears.",
+          "Edit the code in the source editor pane.",
+          "Watch the compiler's assembly pane update with the new output."
+        ]
       },
       {
         "feature": "execute the code",
-        "title": "Run your code",
+        "title": "Run the code",
         "steps": []
       },
       {
@@ -99,20 +103,20 @@
   "processing": "cloud",
   "last_release": null,
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-16T00:54:09.689931+08:00",
+    "checked_at": "2026-11-16T02:43:09.301030+08:00",
     "runs": [
       {
-        "id": "web-compiler-explorer-20261116-005409-da92",
-        "level": "install",
+        "id": "web-compiler-explorer-20261116-024309-9d93",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-vm-chromium",
         "image": "pickfit-web:5ba46ffecfd8",
-        "checked_at": "2026-11-16T00:54:09.689931+08:00",
+        "checked_at": "2026-11-16T02:43:09.301030+08:00",
         "tool_version": null,
         "install_method": null,
         "replayed": false,
@@ -131,6 +135,15 @@
             "observed_excerpt": "Compiler Explorer's editor and assembly output panes are loaded behind a dismissible 'New Privacy Policy' modal dialog with a Close button.",
             "setup": [],
             "offline": null
+          },
+          {
+            "command": "browser: Use view compiled assembly in real time and get a visible result",
+            "expected_signal": "the result text appears on the page",
+            "exit_code": null,
+            "passed": true,
+            "observed_excerpt": "'add     eax, 7' appeared on the page; the judge saw the feature work: The privacy dialog was closed, the source was edited to return num * num + 7, and the gcc assembly pane now shows the recompiled output including an add eax, 7 instruction.",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [],
@@ -141,22 +154,22 @@
           "model": "claude-opus-5-5"
         },
         "evidence": {
-          "trace_path": "runs/web/compiler-explorer/web-compiler-explorer-20261116-005409-da92/messages.jsonl",
-          "log_path": "runs/web/compiler-explorer/web-compiler-explorer-20261116-005409-da92/harness.log",
+          "trace_path": "runs/web/compiler-explorer/web-compiler-explorer-20261116-024309-9d93/messages.jsonl",
+          "log_path": "runs/web/compiler-explorer/web-compiler-explorer-20261116-024309-9d93/harness.log",
           "screenshot_paths": [
-            "runs/web/compiler-explorer/web-compiler-explorer-20261116-005409-da92/install.png",
-            "runs/web/compiler-explorer/web-compiler-explorer-20261116-005409-da92/after.png"
+            "runs/web/compiler-explorer/web-compiler-explorer-20261116-024309-9d93/install.png",
+            "runs/web/compiler-explorer/web-compiler-explorer-20261116-024309-9d93/after.png"
           ],
           "evidence_url": null
         },
         "actor_model": "claude-opus-5-5",
-        "cost_usd": 0.1298,
+        "cost_usd": 0.1579,
         "web": {
           "url": "https://godbolt.org",
           "final_url": "https://godbolt.org/",
           "screen": "main_ui",
           "browser": "Chromium 156 headless via browser-use 0.13.14",
-          "account_needed": null,
+          "account_needed": false,
           "ads_seen": true,
           "third_party_domains": 3,
           "third_party_hosts": [
@@ -167,14 +180,31 @@
           "data_sent": "unknown",
           "data_sent_note": "pickfit typed only short values, too short to trace in requests.",
           "pwa": false,
-          "offline": "not_tested"
+          "offline": "not_tested",
+          "operations": [
+            {
+              "feature": "view compiled assembly in real time",
+              "goal": "Use view compiled assembly in real time and get a visible result",
+              "check": "page_text",
+              "expected": [
+                "add     eax, 7"
+              ],
+              "passed": true,
+              "observed": "'add     eax, 7' appeared on the page; the judge saw the feature work: The privacy dialog was closed, the source was edited to return num * num + 7, and the gcc assembly pane now shows the recompiled output including an add eax, 7 instruction.",
+              "smoke_test": 1,
+              "actions": 4,
+              "operator_model": "claude-opus-5-5"
+            }
+          ]
         },
         "features": [
           {
             "feature": "view compiled assembly in real time",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
             "note": null
           },
@@ -212,7 +242,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-16T01:15:45+08:00",
+    "checked_at": "2026-11-16T03:11:48+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -237,18 +267,49 @@
       }
     ]
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "web-compiler-explorer-20261116-024309-9d93",
+    "score": 1,
+    "status": "scored",
+    "defects": [
+      {
+        "item": "comfortable",
+        "operation": null,
+        "cause": "app",
+        "problem": "The compile timing and filter summary in the compiler pane's bottom status bar is drawn in very small italic text that is hard to read.",
+        "screenshot": "after.png",
+        "box": [
+          724,
+          972,
+          848,
+          993
+        ],
+        "quote": "- 253ms (2930B) ~177 lines filtered",
+        "found_by": "ocr",
+        "kind": "tiny_text",
+        "severity": "minor"
+      }
+    ],
+    "screens": 2,
+    "model": "claude-opus-5-5",
+    "effort": "medium",
+    "inputs_sha": "55a4e38c1ddb8ff47918575a11db86245c065025f4334301f84a0ff8b1fd7086",
+    "checked_at": "2026-11-16T03:14:00+08:00",
+    "cost_usd": 0.032762
+  },
   "scores": {
-    "formula_version": "web.v1",
-    "computed_at": "2026-11-16T01:15:45+08:00",
+    "formula_version": "web.v1+visual.v1",
+    "computed_at": "2026-11-16T03:14:00+08:00",
     "quality": {
-      "total": 33.3,
+      "total": 70.9,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
-        "responsiveness": {
-          "score": null,
-          "weight": 0.0
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 50
         },
         "maintenance": {
           "score": null,
@@ -258,28 +319,33 @@
           "score": null,
           "weight": 0.0
         },
-        "engineering_hygiene": {
-          "score": null,
-          "weight": 0.0
-        },
         "usage_outcomes": {
           "score": null,
           "weight": 10
         },
-        "sandbox_verification": {
-          "score": 0.6,
-          "weight": 50
+        "responsiveness": {
+          "score": null,
+          "weight": 0.0
+        },
+        "engineering_hygiene": {
+          "score": null,
+          "weight": 0.0
         },
         "browser_facts": {
-          "score": 0.0,
+          "score": 0.4286,
           "weight": 40
         }
+      },
+      "visual": {
+        "factor": 0.95,
+        "before": 74.6,
+        "defects": 1
       }
     },
     "popularity": {
       "score": 100.0,
       "signals": {
-        "stars": 19188,
+        "stars": 19189,
         "monthly_downloads": null,
         "forks": null,
         "dependents": null,
@@ -528,5 +594,5 @@
     }
   ],
   "first_seen_at": "2026-11-16T00:48:55+08:00",
-  "updated_at": "2026-11-16T01:15:45+08:00"
+  "updated_at": "2026-11-16T03:14:00+08:00"
 }

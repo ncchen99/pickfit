@@ -35,9 +35,9 @@
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
-    "generated_at": "2026-11-15T18:13:10.368613Z",
-    "run_id": null,
-    "open_hint": null,
+    "generated_at": "2026-11-15T19:19:08.375398Z",
+    "run_id": "verify-homepage-20261116-024650-daae",
+    "open_hint": "Run `HOMEPAGE_ALLOWED_HOSTS=localhost:3000 pnpm start` in the homepage folder, then open http://localhost:3000 in your browser.",
     "features": [
       {
         "feature": "integrate widgets for over 100 services",
@@ -46,13 +46,17 @@
       },
       {
         "feature": "discover Docker services automatically via labels",
-        "title": "Find Docker services automatically through labels",
+        "title": "Find Docker services automatically from labels",
         "steps": []
       },
       {
         "feature": "add service and web bookmarks",
-        "title": "Add service and web bookmarks",
-        "steps": []
+        "title": "Add services and web bookmarks",
+        "steps": [
+          "Create the config folder with `mkdir -p config && cp -rn src/skeleton/* config/`, then list your services in `config/services.yaml` and your links in `config/bookmarks.yaml`.",
+          "Start the dashboard with `HOMEPAGE_ALLOWED_HOSTS=localhost:3000 pnpm start`.",
+          "Check your bookmarks with `curl -sS -f http://localhost:3000/api/bookmarks`."
+        ]
       },
       {
         "feature": "show weather, time, date and search widgets",
@@ -80,7 +84,31 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-homepage-20261116-024650-daae",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone --depth 1 https://github.com/gethomepage/homepage.git && npm install -g pnpm",
+          "purpose": "git clone repo and install pnpm via npm"
+        },
+        {
+          "command": "cd homepage && pnpm install",
+          "purpose": "pnpm install"
+        },
+        {
+          "command": "cd homepage && pnpm build",
+          "purpose": "pnpm build"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "curl -sS -f http://localhost:3000/api/healthcheck",
+        "expected_signal": "up"
+      },
+      "first_task": "curl -sS -f http://localhost:3000/api/healthcheck"
+    },
     "windows": null
   },
   "pricing": {
@@ -96,15 +124,217 @@
     "url": "https://github.com/gethomepage/homepage/releases/tag/v2.8.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T02:52:48.812632+08:00",
+    "runs": [
+      {
+        "id": "verify-homepage-20261116-024650-daae",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T02:52:48.812632+08:00",
+        "tool_version": null,
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone --depth 1 https://github.com/gethomepage/homepage.git && npm install -g pnpm",
+            "purpose": "git clone repo and install pnpm via npm"
+          },
+          {
+            "command": "cd homepage && pnpm install",
+            "purpose": "pnpm install"
+          },
+          {
+            "command": "cd homepage && pnpm build",
+            "purpose": "pnpm build"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "curl -sS -f http://localhost:3000/api/healthcheck",
+            "expected_signal": "up",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "up",
+            "setup": [
+              {
+                "command": "cd homepage && mkdir -p config && cp -rn src/skeleton/* config/ && cat > config/services.yaml <<'EOF'\n- Media:\n    - Self:\n        href: http://localhost:3000/\n        description: Homepage itself\n        widget:\n          type: customapi\n          url: http://localhost:3000/api/healthcheck\n          mappings:\n            - field: status\n              label: Status\n    - Sonarr:\n        href: http://localhost:8989/\n        widget:\n          type: sonarr\n          url: http://localhost:8989\n          key: dummy\nEOF\ncat > config/bookmarks.yaml <<'EOF'\n- Developer:\n    - Github:\n        - abbr: GH\n          href: https://github.com/\nEOF\ncat > config/widgets.yaml <<'EOF'\n- datetime:\n    text_size: xl\n    format:\n      timeStyle: short\n- search:\n    provider: duckduckgo\n    target: _blank\n- openmeteo:\n    label: Berlin\n    latitude: 52.52\n    longitude: 13.41\n    units: metric\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd homepage && HOMEPAGE_ALLOWED_HOSTS=localhost:3000 pnpm start",
+                "background": true,
+                "port": 3000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -sS -f http://localhost:3000/api/services",
+            "expected_signal": "\"type\":\"customapi\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[{\"name\":\"Media\",\"services\":[{\"name\":\"Self\",\"href\":\"http://localhost:3000/\",\"description\":\"Homepage itself\",\"weight\":100,\"type\":\"service\",\"widgets\":[{\"type\":\"customapi\",\"fields\":null,\"hide_errors\":false,\"service_name\":\"Self\",\"service_group\":\"Media\",\"index\":0,\"mappings\":[{\"field\":\"status\",\"label\":\"S…",
+            "setup": [
+              {
+                "command": "cd homepage && mkdir -p config && cp -rn src/skeleton/* config/ && cat > config/services.yaml <<'EOF'\n- Media:\n    - Self:\n        href: http://localhost:3000/\n        description: Homepage itself\n        widget:\n          type: customapi\n          url: http://localhost:3000/api/healthcheck\n          mappings:\n            - field: status\n              label: Status\n    - Sonarr:\n        href: http://localhost:8989/\n        widget:\n          type: sonarr\n          url: http://localhost:8989\n          key: dummy\nEOF\ncat > config/bookmarks.yaml <<'EOF'\n- Developer:\n    - Github:\n        - abbr: GH\n          href: https://github.com/\nEOF\ncat > config/widgets.yaml <<'EOF'\n- datetime:\n    text_size: xl\n    format:\n      timeStyle: short\n- search:\n    provider: duckduckgo\n    target: _blank\n- openmeteo:\n    label: Berlin\n    latitude: 52.52\n    longitude: 13.41\n    units: metric\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd homepage && HOMEPAGE_ALLOWED_HOSTS=localhost:3000 pnpm start",
+                "background": true,
+                "port": 3000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -sS -f http://localhost:3000/api/bookmarks",
+            "expected_signal": "\"name\":\"Github\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[{\"name\":\"Developer\",\"bookmarks\":[{\"name\":\"Github\",\"abbr\":\"GH\",\"href\":\"https://github.com/\"}]}]",
+            "setup": [
+              {
+                "command": "cd homepage && mkdir -p config && cp -rn src/skeleton/* config/ && cat > config/services.yaml <<'EOF'\n- Media:\n    - Self:\n        href: http://localhost:3000/\n        description: Homepage itself\n        widget:\n          type: customapi\n          url: http://localhost:3000/api/healthcheck\n          mappings:\n            - field: status\n              label: Status\n    - Sonarr:\n        href: http://localhost:8989/\n        widget:\n          type: sonarr\n          url: http://localhost:8989\n          key: dummy\nEOF\ncat > config/bookmarks.yaml <<'EOF'\n- Developer:\n    - Github:\n        - abbr: GH\n          href: https://github.com/\nEOF\ncat > config/widgets.yaml <<'EOF'\n- datetime:\n    text_size: xl\n    format:\n      timeStyle: short\n- search:\n    provider: duckduckgo\n    target: _blank\n- openmeteo:\n    label: Berlin\n    latitude: 52.52\n    longitude: 13.41\n    units: metric\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd homepage && HOMEPAGE_ALLOWED_HOSTS=localhost:3000 pnpm start",
+                "background": true,
+                "port": 3000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -sS -f http://localhost:3000/api/widgets",
+            "expected_signal": "\"type\":\"datetime\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[{\"type\":\"datetime\",\"options\":{\"index\":0,\"text_size\":\"xl\",\"format\":{\"timeStyle\":\"short\"}}},{\"type\":\"search\",\"options\":{\"index\":1,\"provider\":\"duckduckgo\",\"target\":\"_blank\"}},{\"type\":\"openmeteo\",\"options\":{\"index\":2,\"label\":\"Berlin\",\"latitude\":52.52,\"longitude\":13.41,\"units\":\"metric\"}}]",
+            "setup": [
+              {
+                "command": "cd homepage && mkdir -p config && cp -rn src/skeleton/* config/ && cat > config/services.yaml <<'EOF'\n- Media:\n    - Self:\n        href: http://localhost:3000/\n        description: Homepage itself\n        widget:\n          type: customapi\n          url: http://localhost:3000/api/healthcheck\n          mappings:\n            - field: status\n              label: Status\n    - Sonarr:\n        href: http://localhost:8989/\n        widget:\n          type: sonarr\n          url: http://localhost:8989\n          key: dummy\nEOF\ncat > config/bookmarks.yaml <<'EOF'\n- Developer:\n    - Github:\n        - abbr: GH\n          href: https://github.com/\nEOF\ncat > config/widgets.yaml <<'EOF'\n- datetime:\n    text_size: xl\n    format:\n      timeStyle: short\n- search:\n    provider: duckduckgo\n    target: _blank\n- openmeteo:\n    label: Berlin\n    latitude: 52.52\n    longitude: 13.41\n    units: metric\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd homepage && HOMEPAGE_ALLOWED_HOSTS=localhost:3000 pnpm start",
+                "background": true,
+                "port": 3000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -sS -f http://localhost:3000/ -o /tmp/index.html && grep -o 'Homepage itself' /tmp/index.html",
+            "expected_signal": "Homepage itself",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Homepage itself",
+            "setup": [
+              {
+                "command": "cd homepage && mkdir -p config && cp -rn src/skeleton/* config/ && cat > config/services.yaml <<'EOF'\n- Media:\n    - Self:\n        href: http://localhost:3000/\n        description: Homepage itself\n        widget:\n          type: customapi\n          url: http://localhost:3000/api/healthcheck\n          mappings:\n            - field: status\n              label: Status\n    - Sonarr:\n        href: http://localhost:8989/\n        widget:\n          type: sonarr\n          url: http://localhost:8989\n          key: dummy\nEOF\ncat > config/bookmarks.yaml <<'EOF'\n- Developer:\n    - Github:\n        - abbr: GH\n          href: https://github.com/\nEOF\ncat > config/widgets.yaml <<'EOF'\n- datetime:\n    text_size: xl\n    format:\n      timeStyle: short\n- search:\n    provider: duckduckgo\n    target: _blank\n- openmeteo:\n    label: Berlin\n    latitude: 52.52\n    longitude: 13.41\n    units: metric\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd homepage && HOMEPAGE_ALLOWED_HOSTS=localhost:3000 pnpm start",
+                "background": true,
+                "port": 3000
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pnpm install / pnpm build",
+            "actually_needed": "pnpm is not preinstalled; npm install -g pnpm first",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "HOMEPAGE_ALLOWED_HOSTS=gethomepage.dev:1234 pnpm start",
+            "actually_needed": "Works, but next start warns it does not work with output: standalone and suggests node .next/standalone/server.js",
+            "kind": "note"
+          },
+          {
+            "readme_said": "copy src/skeleton to config/",
+            "actually_needed": "pnpm build already copies missing skeleton files into config/",
+            "kind": "tool_handled"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three curl checks exited 0 and printed their expected signals: 'up' from the healthcheck, a services JSON containing a customapi widget, and a bookmarks JSON containing Github.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-homepage-20261116-024650-daae/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-homepage-20261116-024650-daae/check-1-cmd6.judged.png",
+            "runs/verify/verify-homepage-20261116-024650-daae/check-2-cmd7.judged.png",
+            "runs/verify/verify-homepage-20261116-024650-daae/check-3-cmd8.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.21163,
+        "features": [
+          {
+            "feature": "integrate widgets for over 100 services",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: The output only lists the configured services and their widget definitions; it shows no widget pulling data from a service."
+          },
+          {
+            "feature": "discover Docker services automatically via labels",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_container",
+            "failure": null,
+            "note": "Docker label discovery needs a Docker socket; no Docker daemon in box"
+          },
+          {
+            "feature": "add service and web bookmarks",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "show weather, time, date and search widgets",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: The output lists the widget configurations (datetime, search, openmeteo) but shows no rendered weather data, time or search result."
+          }
+        ]
+      }
+    ]
   },
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-16T01:58:03+08:00",
+    "checked_at": "2026-11-16T03:11:48+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -119,15 +349,15 @@
   },
   "scores": {
     "formula_version": "b3.v6",
-    "computed_at": "2026-11-16T01:57:54+08:00",
+    "computed_at": "2026-11-16T02:52:48+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 81.3,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.7225,
           "weight": 20.0
         },
         "install_docs": {
@@ -151,7 +381,7 @@
           "weight": 10.0
         },
         "feature_results": {
-          "score": null,
+          "score": 1.0,
           "weight": 20.0
         }
       }
@@ -172,7 +402,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 12.28
+      "value": 14.47
     },
     "docs_rubric": {
       "model": "claude-opus-5-5",
@@ -415,5 +645,5 @@
     }
   ],
   "first_seen_at": "2026-11-16T01:54:17+08:00",
-  "updated_at": "2026-11-16T01:58:03+08:00"
+  "updated_at": "2026-11-16T03:11:48+08:00"
 }

@@ -3,7 +3,7 @@
   "slug": "pandoc",
   "repo_id": "gh:571770",
   "name": "Pandoc",
-  "summary": "A Haskell library and command-line tool that converts documents between many markup formats, including Markdown, HTML, LaTeX, docx and EPUB.",
+  "summary": "A Haskell library and command-line tool that converts documents between many markup formats, such as Markdown, HTML, LaTeX, docx and EPUB.",
   "aliases": [],
   "status": "listed",
   "status_reason": null,
@@ -23,43 +23,52 @@
     "publishing"
   ],
   "use_cases": [
-    "convert Markdown to Word docx",
-    "produce PDF output from a document",
-    "create reveal.js slide shows"
+    "convert a Markdown file to PDF",
+    "convert Word docx documents to other markup formats",
+    "create slide shows such as reveal.js or beamer"
   ],
   "alternatives_to": [],
   "features": [
-    "convert documents between markup formats",
-    "produce PDF via LaTeX, Groff ms or HTML",
-    "modify documents with custom Lua filters",
-    "write extended Markdown with citations and math"
+    "convert documents between dozens of markup formats",
+    "produce PDF output via LaTeX, Groff ms or HTML",
+    "modify the document AST with custom filters",
+    "use custom Lua readers and writers"
   ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
-    "generated_at": "2026-11-15T18:13:23.248611Z",
-    "run_id": null,
-    "open_hint": "Run `pandoc --help` in a terminal to see the available options.",
+    "generated_at": "2026-11-15T19:19:13.032499Z",
+    "run_id": "verify-pandoc-20261116-030348-2c8a",
+    "open_hint": "Run `pandoc -f markdown -t html <file>` to convert a Markdown file to HTML.",
     "features": [
       {
-        "feature": "convert documents between markup formats",
-        "title": "Convert documents between markup formats",
-        "steps": []
+        "feature": "convert documents between dozens of markup formats",
+        "title": "Convert documents between many markup formats",
+        "steps": [
+          "Run `pandoc -f markdown -t html <file>` to convert a Markdown file to HTML.",
+          "Change the `-f` (from) and `-t` (to) values to pick other formats."
+        ]
       },
       {
-        "feature": "produce PDF via LaTeX, Groff ms or HTML",
+        "feature": "produce PDF output via LaTeX, Groff ms or HTML",
         "title": "Make PDFs through LaTeX, Groff ms or HTML",
         "steps": []
       },
       {
-        "feature": "modify documents with custom Lua filters",
-        "title": "Change documents with your own Lua filters",
-        "steps": []
+        "feature": "modify the document AST with custom filters",
+        "title": "Change the document structure with custom filters",
+        "steps": [
+          "Write a Lua filter file, for example one that returns `pandoc.Str(el.text:upper())` from a `Str` function.",
+          "Run `pandoc --lua-filter <filter.lua> -t plain <file>` to apply it during conversion."
+        ]
       },
       {
-        "feature": "write extended Markdown with citations and math",
-        "title": "Write Markdown with citations and math",
-        "steps": []
+        "feature": "use custom Lua readers and writers",
+        "title": "Use your own Lua readers and writers",
+        "steps": [
+          "Write a Lua reader with a `Reader(input)` function and a Lua writer with a `Writer(doc, opts)` function.",
+          "Run `pandoc -f <reader.lua> -t <writer.lua> <file>` to convert with them."
+        ]
       }
     ]
   },
@@ -70,14 +79,12 @@
     "created_at": "2010-03-20T20:34:23Z",
     "archived": false
   },
-  "platforms": [
-    "linux",
-    "macos",
-    "windows"
-  ],
+  "platforms": [],
   "prerequisites": {
     "runtimes": [],
-    "system_packages": [],
+    "system_packages": [
+      "LaTeX (optional, for PDF output)"
+    ],
     "gpu": null,
     "apple_silicon_only": null,
     "min_ram_gb": null,
@@ -85,9 +92,51 @@
     "api_keys": []
   },
   "install": {
-    "macos": null,
-    "linux": null,
-    "windows": null
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install pandoc",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "pandoc --help"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-pandoc-20261116-030348-2c8a",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "V=$(curl -fsSL https://api.github.com/repos/jgm/pandoc/releases/latest | python3 -c 'import sys,json;print(json.load(sys.stdin)[\"tag_name\"])') && curl -fsSLo /tmp/pandoc.tgz https://github.com/jgm/pandoc/releases/download/$V/pandoc-$V-linux-amd64.tar.gz && mkdir -p $HOME/.local && tar xvzf /tmp/pandoc.tgz --strip-components 1 -C $HOME/.local",
+          "purpose": "download latest linux-amd64 release tarball and extract into ~/.local"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "pandoc --version",
+        "expected_signal": "Features: +server +lua"
+      },
+      "first_task": "pandoc -f markdown -t html in.md"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "choco install pandoc",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "pandoc --help"
+    }
   },
   "pricing": {
     "model": null,
@@ -95,22 +144,169 @@
   },
   "open_source": true,
   "license": "GPL-2.0",
-  "processing": null,
+  "processing": "local",
   "last_release": {
     "tag": "3.14",
     "published_at": "2026-11-12T04:32:26Z",
     "url": "https://github.com/jgm/pandoc/releases/tag/3.14"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T03:05:00.820399+08:00",
+    "runs": [
+      {
+        "id": "verify-pandoc-20261116-030348-2c8a",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T03:05:00.820399+08:00",
+        "tool_version": "pandoc 3.14",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "V=$(curl -fsSL https://api.github.com/repos/jgm/pandoc/releases/latest | python3 -c 'import sys,json;print(json.load(sys.stdin)[\"tag_name\"])') && curl -fsSLo /tmp/pandoc.tgz https://github.com/jgm/pandoc/releases/download/$V/pandoc-$V-linux-amd64.tar.gz && mkdir -p $HOME/.local && tar xvzf /tmp/pandoc.tgz --strip-components 1 -C $HOME/.local",
+            "purpose": "download latest linux-amd64 release tarball and extract into ~/.local"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "pandoc --version",
+            "expected_signal": "Features: +server +lua",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Features: +server +lua",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "pandoc -f markdown -t html in.md",
+            "expected_signal": "<h1 id=\"hello\">Hello</h1>",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "<h1 id=\"hello\">Hello</h1>",
+            "setup": [
+              {
+                "command": "cat > in.md <<'EOF'\n# Hello\n\nSome *emphasis* and a [link](https://example.com).\nEOF\ncat > upper.lua <<'EOF'\nfunction Str(el)\n  return pandoc.Str(el.text:upper())\nend\nEOF\ncat > myreader.lua <<'EOF'\nfunction Reader(input)\n  local blocks = {}\n  for line in tostring(input):gmatch(\"[^\\n]+\") do\n    table.insert(blocks, pandoc.Para{pandoc.Str(line)})\n  end\n  return pandoc.Pandoc(blocks)\nend\nEOF\ncat > mywriter.lua <<'EOF'\nfunction Writer(doc, opts)\n  return \"WORDS: \" .. pandoc.utils.stringify(doc) .. \"\\n\"\nend\nEOF\ncat > lines.txt <<'EOF'\nfirst line\nsecond line\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "pandoc --lua-filter upper.lua -t plain in.md",
+            "expected_signal": "SOME EMPHASIS AND A LINK.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "SOME EMPHASIS AND A LINK.",
+            "setup": [
+              {
+                "command": "cat > in.md <<'EOF'\n# Hello\n\nSome *emphasis* and a [link](https://example.com).\nEOF\ncat > upper.lua <<'EOF'\nfunction Str(el)\n  return pandoc.Str(el.text:upper())\nend\nEOF\ncat > myreader.lua <<'EOF'\nfunction Reader(input)\n  local blocks = {}\n  for line in tostring(input):gmatch(\"[^\\n]+\") do\n    table.insert(blocks, pandoc.Para{pandoc.Str(line)})\n  end\n  return pandoc.Pandoc(blocks)\nend\nEOF\ncat > mywriter.lua <<'EOF'\nfunction Writer(doc, opts)\n  return \"WORDS: \" .. pandoc.utils.stringify(doc) .. \"\\n\"\nend\nEOF\ncat > lines.txt <<'EOF'\nfirst line\nsecond line\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "pandoc -f myreader.lua -t mywriter.lua lines.txt",
+            "expected_signal": "WORDS: first linesecond line",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "WORDS: first linesecond line",
+            "setup": [
+              {
+                "command": "cat > in.md <<'EOF'\n# Hello\n\nSome *emphasis* and a [link](https://example.com).\nEOF\ncat > upper.lua <<'EOF'\nfunction Str(el)\n  return pandoc.Str(el.text:upper())\nend\nEOF\ncat > myreader.lua <<'EOF'\nfunction Reader(input)\n  local blocks = {}\n  for line in tostring(input):gmatch(\"[^\\n]+\") do\n    table.insert(blocks, pandoc.Para{pandoc.Str(line)})\n  end\n  return pandoc.Pandoc(blocks)\nend\nEOF\ncat > mywriter.lua <<'EOF'\nfunction Writer(doc, opts)\n  return \"WORDS: \" .. pandoc.utils.stringify(doc) .. \"\\n\"\nend\nEOF\ncat > lines.txt <<'EOF'\nfirst line\nsecond line\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "sudo dpkg -i $DEB",
+            "actually_needed": "No root in this box; used the release tarball extracted into ~/.local instead",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Pandoc can also produce PDF output via LaTeX, Groff ms, or HTML (LaTeX optional prerequisite)",
+            "actually_needed": "A separate PDF engine (LaTeX, groff, or weasyprint with system pango libs) must be installed; none was available without root",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exit 0 and print their expected signals: the HTML heading, the uppercased plain text from the Lua filter, and the version output with Features: +server +lua.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-pandoc-20261116-030348-2c8a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-pandoc-20261116-030348-2c8a/check-1-cmd6.judged.png",
+            "runs/verify/verify-pandoc-20261116-030348-2c8a/check-2-cmd7.judged.png",
+            "runs/verify/verify-pandoc-20261116-030348-2c8a/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.233864,
+        "features": [
+          {
+            "feature": "convert documents between dozens of markup formats",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "produce PDF output via LaTeX, Groff ms or HTML",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "no LaTeX/groff; weasyprint engine needs system libpango (apt, root)"
+          },
+          {
+            "feature": "modify the document AST with custom filters",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "use custom Lua readers and writers",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
   },
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-16T01:14:12+08:00",
+    "checked_at": "2026-11-16T03:11:48+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_lockfile",
     "sources": [],
@@ -121,19 +317,19 @@
   },
   "scores": {
     "formula_version": "b3.v6",
-    "computed_at": "2026-11-16T01:14:03+08:00",
+    "computed_at": "2026-11-16T03:11:03+08:00",
     "quality": {
-      "total": 65.6,
-      "confidence": 0.5,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 91.3,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 1.0,
           "weight": 20.0
         },
         "install_docs": {
-          "score": 0.375,
+          "score": 0.75,
           "weight": 25.0
         },
         "maintenance": {
@@ -153,7 +349,7 @@
           "weight": 10.0
         },
         "feature_results": {
-          "score": null,
+          "score": 1.0,
           "weight": 20.0
         }
       }
@@ -180,8 +376,8 @@
     },
     "docs_rubric": {
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:03.869878+08:00",
-      "sources_sha": "ed04daa26c426213caa65dd54b1d4ac17d64656c3f80f9411be9d79c62965256",
+      "checked_at": "2026-11-16T03:11:03.852707+08:00",
+      "sources_sha": "dd3af7cc1019e66585873174e7b8c06226dc51f91f5effdf93de7453a1da7aa9",
       "items": {
         "what_it_does": {
           "score": 2,
@@ -189,31 +385,31 @@
         },
         "who_it_is_for": {
           "score": 1,
-          "quote": "topics: commonmark, converter, document, haskell, markdown, markup, pandoc, presentation, publishing"
+          "quote": "Most users should use the\nquick install, but this information may be of use to packagers."
         },
         "prerequisites": {
-          "score": 0,
-          "quote": null
+          "score": 2,
+          "quote": "The executable is statically linked and\nhas no dynamic dependencies or dependencies on external\ndata files."
         },
         "install_per_os": {
-          "score": 0,
-          "quote": null
+          "score": 2,
+          "quote": "    brew install pandoc"
         },
         "first_run_example": {
-          "score": 0,
-          "quote": null
+          "score": 1,
+          "quote": "        pandoc --help"
         },
         "config_and_keys": {
           "score": 1,
-          "quote": "Support `PANDOC_DATA_DIRS` for data file lookup (#7922)."
+          "quote": "Pandoc now searches a path given in an enviornment variable\n  PANDOC_DATA_DIRS when looking up data files"
         },
         "troubleshooting_uninstall": {
-          "score": 0,
-          "quote": null
+          "score": 2,
+          "quote": "If you receive errors warning of fonts not found:\n\n    tlmgr install collection-fontsrecommended"
         },
         "license_and_platforms": {
-          "score": 2,
-          "quote": "assets: pandoc-3.14-1-amd64.deb, pandoc-3.14-1-arm64.deb, pandoc-3.14-arm64-macOS.pkg"
+          "score": 1,
+          "quote": "version 2 or greater. This software carries no warranty of any kind."
         }
       },
       "unquoted": []
@@ -278,24 +474,30 @@
       "kind": "release",
       "url": "https://github.com/jgm/pandoc/releases/tag/3.14",
       "fetched_at": "2026-11-16T01:13:56+08:00"
+    },
+    {
+      "id": "docs1",
+      "kind": "readme",
+      "url": "https://github.com/jgm/pandoc/blob/main/INSTALL.md",
+      "fetched_at": "2026-11-16T02:59:24+08:00"
     }
   ],
   "evidence": [
     {
       "field": "/kind",
       "source_id": "readme",
-      "quote": "a command-line tool that uses this\nlibrary",
+      "quote": "and a command-line tool that uses this\nlibrary.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:03+08:00"
+      "checked_at": "2026-11-16T03:02:25+08:00"
     },
     {
       "field": "/audience",
       "source_id": "readme",
-      "quote": "a command-line tool that uses this\nlibrary",
+      "quote": "and a command-line tool that uses this\nlibrary.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:03+08:00"
+      "checked_at": "2026-11-16T03:02:25+08:00"
     },
     {
       "field": "/category",
@@ -303,7 +505,7 @@
       "quote": "Universal markup converter",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:03+08:00"
+      "checked_at": "2026-11-16T03:02:25+08:00"
     },
     {
       "field": "/summary",
@@ -311,7 +513,7 @@
       "quote": "Pandoc is a [Haskell](https://haskell.org) library for converting from\none markup format to another, and a command-line tool that uses this\nlibrary.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:03+08:00"
+      "checked_at": "2026-11-16T03:02:25+08:00"
     },
     {
       "field": "/name",
@@ -319,15 +521,15 @@
       "quote": "# Pandoc",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:03+08:00"
+      "checked_at": "2026-11-16T03:02:25+08:00"
     },
     {
-      "field": "/platforms",
-      "source_id": "release:3.14",
-      "quote": "pandoc-3.14-linux-amd64.tar.gz, pandoc-3.14-linux-arm64.tar.gz, pandoc-3.14-wasm.zip, pandoc-3.14-windows-x86_64.msi",
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "docs1",
+      "quote": "By default, Pandoc creates PDFs using LaTeX.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:03+08:00"
+      "checked_at": "2026-11-16T03:02:25+08:00"
     },
     {
       "field": "/repo",
@@ -379,19 +581,19 @@
     },
     {
       "field": "/use_cases/0",
-      "source_id": "readme",
-      "quote": "- `docx` ([Word docx](https://en.wikipedia.org/wiki/Office_Open_XML))",
+      "source_id": "docs1",
+      "quote": "To run pandoc using Docker, converting `README.md` to `README.pdf`:",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:03+08:00"
+      "checked_at": "2026-11-16T03:02:25+08:00"
     },
     {
       "field": "/use_cases/1",
       "source_id": "readme",
-      "quote": "Pandoc can also produce PDF output via LaTeX, Groff ms, or HTML.",
+      "quote": "- `docx` ([Word docx](https://en.wikipedia.org/wiki/Office_Open_XML))",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:03+08:00"
+      "checked_at": "2026-11-16T03:02:25+08:00"
     },
     {
       "field": "/use_cases/2",
@@ -399,15 +601,15 @@
       "quote": "- `revealjs` ([reveal.js](https://revealjs.com/) HTML5 + JavaScript\n  slide show)",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:03+08:00"
+      "checked_at": "2026-11-16T03:02:25+08:00"
     },
     {
       "field": "/features/0",
       "source_id": "readme",
-      "quote": "library for converting from\none markup format to another",
+      "quote": "Pandoc is a [Haskell](https://haskell.org) library for converting from\none markup format to another",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:03+08:00"
+      "checked_at": "2026-11-16T03:02:25+08:00"
     },
     {
       "field": "/features/1",
@@ -415,7 +617,7 @@
       "quote": "Pandoc can also produce PDF output via LaTeX, Groff ms, or HTML.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:03+08:00"
+      "checked_at": "2026-11-16T03:02:25+08:00"
     },
     {
       "field": "/features/2",
@@ -423,17 +625,49 @@
       "quote": "Users\ncan also run custom pandoc filters to modify the intermediate AST",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:03+08:00"
+      "checked_at": "2026-11-16T03:02:25+08:00"
     },
     {
       "field": "/features/3",
       "source_id": "readme",
-      "quote": "Pandoc’s enhanced version of Markdown includes syntax for tables,\ndefinition lists, metadata blocks, footnotes, citations, math",
+      "quote": "the path of a custom Lua reader",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:03+08:00"
+      "checked_at": "2026-11-16T03:02:25+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "docs1",
+      "quote": "brew install pandoc",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:25+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "docs1",
+      "quote": "sudo dpkg -i $DEB",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:25+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "docs1",
+      "quote": "choco install pandoc",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:25+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "docs1",
+      "quote": "The executable is statically linked and\nhas no dynamic dependencies or dependencies on external\ndata files.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:25+08:00"
     }
   ],
   "first_seen_at": "2026-11-16T00:52:48+08:00",
-  "updated_at": "2026-11-16T01:14:12+08:00"
+  "updated_at": "2026-11-16T03:11:48+08:00"
 }

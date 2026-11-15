@@ -3,14 +3,14 @@
   "slug": "restic",
   "repo_id": "gh:19205896",
   "name": "restic",
-  "summary": "A command-line backup program that stores encrypted, deduplicated snapshots in local or remote storage backends.",
+  "summary": "Command-line backup program that stores encrypted, deduplicated snapshots on local disks, SFTP, REST servers or cloud storage.",
   "aliases": [],
   "status": "listed",
   "status_reason": null,
   "category": "infra_devops",
   "kind": "cli_tool",
   "audience": "end_user",
-  "maturity": null,
+  "maturity": "stable",
   "tags": [
     "backup",
     "dedupe",
@@ -22,40 +22,49 @@
   "use_cases": [
     "back up a directory to a local repository",
     "back up to an SFTP server over SSH",
-    "browse old snapshots via a FUSE mount"
+    "store backups in Amazon S3 or S3-compatible storage",
+    "browse files from previous snapshots via FUSE mount"
   ],
   "alternatives_to": [],
   "features": [
     "create encrypted backup snapshots",
     "deduplicate data before storing",
-    "restore files or mount snapshots via FUSE",
-    "verify that backups can be restored"
+    "restore files or mount snapshots",
+    "store backups on many cloud backends"
   ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
-    "generated_at": "2026-11-15T18:13:28.520179Z",
-    "run_id": null,
-    "open_hint": "Run `restic --help` to see the available commands.",
+    "generated_at": "2026-11-15T19:19:16.271099Z",
+    "run_id": "verify-restic-20261116-030500-6af8",
+    "open_hint": "Run `restic version` to confirm it works, then create a repository with `restic init --repo <repo> --password-file <password-file>`.",
     "features": [
       {
         "feature": "create encrypted backup snapshots",
         "title": "Create encrypted backup snapshots",
-        "steps": []
+        "steps": [
+          "Create a repository with `restic init --repo <repo> --password-file <password-file>`.",
+          "Back up a folder with `restic --repo <repo> --password-file <password-file> backup <folder>`.",
+          "Verify the repository with `restic --repo <repo> --password-file <password-file> check`."
+        ]
       },
       {
         "feature": "deduplicate data before storing",
-        "title": "Deduplicate data before it is stored",
-        "steps": []
+        "title": "Store duplicate data only once",
+        "steps": [
+          "Run `restic --repo <repo> --password-file <password-file> backup <folder>`; identical file contents are stored only once."
+        ]
       },
       {
-        "feature": "restore files or mount snapshots via FUSE",
-        "title": "Restore files or mount snapshots with FUSE",
-        "steps": []
+        "feature": "restore files or mount snapshots",
+        "title": "Restore files or mount snapshots",
+        "steps": [
+          "Restore a folder from the newest snapshot with `restic --repo <repo> --password-file <password-file> restore latest:<folder> --target <restore-folder>`."
+        ]
       },
       {
-        "feature": "verify that backups can be restored",
-        "title": "Verify that backups can be restored",
+        "feature": "store backups on many cloud backends",
+        "title": "Store backups on many cloud storage services",
         "steps": []
       }
     ]
@@ -73,18 +82,62 @@
     "windows"
   ],
   "prerequisites": {
-    "runtimes": [],
+    "runtimes": [
+      "go>=1.26.10 (only for building from source)"
+    ],
     "system_packages": [],
     "gpu": null,
     "apple_silicon_only": null,
     "min_ram_gb": null,
-    "network": "optional",
+    "network": null,
     "api_keys": []
   },
   "install": {
-    "macos": null,
-    "linux": null,
-    "windows": null
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install restic",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "restic version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-restic-20261116-030500-6af8",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin && curl -fsSL -o /tmp/restic.bz2 https://github.com/restic/restic/releases/download/v0.19.1/restic_0.19.1_linux_amd64.bz2 && bunzip2 -c /tmp/restic.bz2 > ~/.local/bin/restic && chmod +x ~/.local/bin/restic",
+          "purpose": "Download the official v0.19.1 linux_amd64 release binary, unpack it into ~/.local/bin/restic and make it executable"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "restic version",
+        "expected_signal": "restic 0.19.1 compiled with"
+      },
+      "first_task": "restic version"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "docker",
+      "steps": [
+        {
+          "command": "docker pull restic/restic",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "restic version"
+    }
   },
   "pricing": {
     "model": null,
@@ -92,26 +145,220 @@
   },
   "open_source": true,
   "license": "BSD-2-Clause",
-  "processing": "hybrid",
+  "processing": null,
   "last_release": {
     "tag": "v0.19.1",
     "published_at": "2026-07-05T08:13:33Z",
     "url": "https://github.com/restic/restic/releases/tag/v0.19.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T03:06:22.259808+08:00",
+    "runs": [
+      {
+        "id": "verify-restic-20261116-030500-6af8",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T03:06:22.259808+08:00",
+        "tool_version": "restic 0.19.1 compiled with go1.26.4 on linux/amd64",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin && curl -fsSL -o /tmp/restic.bz2 https://github.com/restic/restic/releases/download/v0.19.1/restic_0.19.1_linux_amd64.bz2 && bunzip2 -c /tmp/restic.bz2 > ~/.local/bin/restic && chmod +x ~/.local/bin/restic",
+            "purpose": "Download the official v0.19.1 linux_amd64 release binary, unpack it into ~/.local/bin/restic and make it executable"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "restic version",
+            "expected_signal": "restic 0.19.1 compiled with",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "restic 0.19.1 compiled with go1.26.4 on linux/amd64",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "restic init --repo /tmp/backup --password-file /tmp/restic-pw",
+            "expected_signal": "created restic repository",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "created restic repository dfa7604ed0 at /tmp/backup",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/backup /tmp/restore /tmp/rdata && mkdir -p /tmp/rdata/sub && head -c 2000000 /dev/urandom > /tmp/rdata/big.bin && cp /tmp/rdata/big.bin /tmp/rdata/sub/copy.bin && echo \"hello restic\" > /tmp/rdata/hello.txt && printf 'testpass123\\n' > /tmp/restic-pw",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "restic --repo /tmp/backup --password-file /tmp/restic-pw backup /tmp/rdata",
+            "expected_signal": "Files: 3 new",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Files: 3 new, 0 changed, 0 unmodified",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/backup /tmp/restore /tmp/rdata && mkdir -p /tmp/rdata/sub && head -c 2000000 /dev/urandom > /tmp/rdata/big.bin && cp /tmp/rdata/big.bin /tmp/rdata/sub/copy.bin && echo \"hello restic\" > /tmp/rdata/hello.txt && printf 'testpass123\\n' > /tmp/restic-pw",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "restic init --repo /tmp/backup --password-file /tmp/restic-pw",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "rm -rf /tmp/restore2 && restic --repo /tmp/backup --password-file /tmp/restic-pw restore latest:/tmp/rdata --target /tmp/restore2 && diff -r /tmp/rdata /tmp/restore2 && echo RESTORE_IDENTICAL",
+            "expected_signal": "RESTORE_IDENTICAL",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "RESTORE_IDENTICAL",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/backup /tmp/restore /tmp/rdata && mkdir -p /tmp/rdata/sub && head -c 2000000 /dev/urandom > /tmp/rdata/big.bin && cp /tmp/rdata/big.bin /tmp/rdata/sub/copy.bin && echo \"hello restic\" > /tmp/rdata/hello.txt && printf 'testpass123\\n' > /tmp/restic-pw",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "restic init --repo /tmp/backup --password-file /tmp/restic-pw",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "restic --repo /tmp/backup --password-file /tmp/restic-pw backup /tmp/rdata",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "restic --repo /tmp/backup --password-file /tmp/restic-pw check",
+            "expected_signal": "no errors were found",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "no errors were found",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/backup /tmp/restore /tmp/rdata && mkdir -p /tmp/rdata/sub && head -c 2000000 /dev/urandom > /tmp/rdata/big.bin && cp /tmp/rdata/big.bin /tmp/rdata/sub/copy.bin && echo \"hello restic\" > /tmp/rdata/hello.txt && printf 'testpass123\\n' > /tmp/restic-pw",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "restic init --repo /tmp/backup --password-file /tmp/restic-pw",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "restic --repo /tmp/backup --password-file /tmp/restic-pw backup /tmp/rdata",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Build from source with git clone + go run build.go, or install with apk/pacman/apt-get/dnf/mise",
+            "actually_needed": "No Go toolchain or root here, and mise isn't installed, so I used the official prebuilt binary from GitHub releases (restic_0.19.1_linux_amd64.bz2), which the install guide also offers",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "restic init / backup prompt for a password",
+            "actually_needed": "I passed --password-file so the commands run without anyone typing (stdin is closed)",
+            "kind": "note"
+          },
+          {
+            "readme_said": "use `restic restore` to restore files",
+            "actually_needed": "Restoring 'latest' into a target recreated the /tmp parent directory, and lchown on it failed in this box (exit 1, though all the file data was written). Restoring the subtree with 'latest:/tmp/rdata' avoided this.",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks succeed: the repository is created, the backup saves snapshot 3e2c3694 with 3 new files, and the version output reads restic 0.19.1 compiled with go1.26.4.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-restic-20261116-030500-6af8/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-restic-20261116-030500-6af8/check-1-cmd5.judged.png",
+            "runs/verify/verify-restic-20261116-030500-6af8/check-2-cmd6.judged.png",
+            "runs/verify/verify-restic-20261116-030500-6af8/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.179764,
+        "features": [
+          {
+            "feature": "create encrypted backup snapshots",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2,
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "deduplicate data before storing",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "restore files or mount snapshots",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "store backups on many cloud backends",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Only the local-directory backend was exercised; S3, B2, Azure, GCS, sftp and rest-server need outside services or accounts"
+          }
+        ]
+      }
+    ]
   },
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-16T01:03:56+08:00",
+    "checked_at": "2026-11-16T03:11:48+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/restic/restic@354f6aeed656",
+      "github.com/restic/restic@d7aa4145e0b1",
       "go.mod"
     ],
     "packages_checked": 100,
@@ -134,19 +381,19 @@
   },
   "scores": {
     "formula_version": "b3.v6",
-    "computed_at": "2026-11-16T01:03:50+08:00",
+    "computed_at": "2026-11-16T03:11:03+08:00",
     "quality": {
-      "total": 63.9,
-      "confidence": 0.5,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 79.0,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.85,
           "weight": 20.0
         },
         "install_docs": {
-          "score": 0.4375,
+          "score": 0.8125,
           "weight": 25.0
         },
         "maintenance": {
@@ -166,7 +413,7 @@
           "weight": 10.0
         },
         "feature_results": {
-          "score": null,
+          "score": 1.0,
           "weight": 20.0
         }
       }
@@ -189,12 +436,12 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 1.21
+      "value": 1.5
     },
     "docs_rubric": {
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:03:50.217226+08:00",
-      "sources_sha": "fe26d041e84307c16a6eb10c2d2f40ecd28bb18cea903336e3fd1b630fdfed62",
+      "checked_at": "2026-11-16T03:11:03.852707+08:00",
+      "sources_sha": "0b94068a4b4197fe779790564491656522fadf22029d32f8279d7ec3b5977a99",
       "items": {
         "what_it_does": {
           "score": 2,
@@ -202,27 +449,27 @@
         },
         "who_it_is_for": {
           "score": 1,
-          "quote": "Doing backups should be a frictionless process, otherwise\n   you might be tempted to skip it."
+          "quote": "Saving a backup on the same machine is nice but not a real backup strategy."
         },
         "prerequisites": {
-          "score": 0,
-          "quote": null
+          "score": 2,
+          "quote": "These are up to date binaries, built in a reproducible and verifiable way, that\nyou can download and run without having to do additional installation work."
         },
         "install_per_os": {
-          "score": 0,
-          "quote": null
+          "score": 2,
+          "quote": "$ brew install restic"
         },
         "first_run_example": {
           "score": 2,
-          "quote": "$ restic init --repo /tmp/backup"
+          "quote": "$ restic init --repo /tmp/backup\n    enter password for new backend:"
         },
         "config_and_keys": {
-          "score": 0,
-          "quote": null
+          "score": 1,
+          "quote": "The environment variable $GITHUB_ACCESS_TOKEN can be set to use a personal\naccess token when updating."
         },
         "troubleshooting_uninstall": {
-          "score": 0,
-          "quote": null
+          "score": 1,
+          "quote": "Official binaries can be updated in place by using the restic self-update\ncommand."
         },
         "license_and_platforms": {
           "score": 2,
@@ -291,24 +538,30 @@
       "kind": "release",
       "url": "https://github.com/restic/restic/releases/tag/v0.19.1",
       "fetched_at": "2026-11-16T01:03:41+08:00"
+    },
+    {
+      "id": "docs1",
+      "kind": "website",
+      "url": "https://restic.readthedocs.io/en/latest/020_installation.html",
+      "fetched_at": "2026-11-16T02:59:31+08:00"
     }
   ],
   "evidence": [
     {
       "field": "/kind",
       "source_id": "readme",
-      "quote": "$ restic init --repo /tmp/backup",
+      "quote": "$ restic --repo /tmp/backup backup ~/work",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:03:50+08:00"
+      "checked_at": "2026-11-16T03:02:08+08:00"
     },
     {
       "field": "/audience",
-      "source_id": "readme",
-      "quote": "Doing backups should be a frictionless process",
+      "source_id": "docs1",
+      "quote": "Just download and run the one matching your system.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:03:50+08:00"
+      "checked_at": "2026-11-16T03:02:08+08:00"
     },
     {
       "field": "/category",
@@ -316,7 +569,7 @@
       "quote": "Fast, secure, efficient backup program",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:03:50+08:00"
+      "checked_at": "2026-11-16T03:02:08+08:00"
     },
     {
       "field": "/summary",
@@ -324,7 +577,7 @@
       "quote": "restic is a backup program that is fast, efficient and secure.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:03:50+08:00"
+      "checked_at": "2026-11-16T03:02:08+08:00"
     },
     {
       "field": "/name",
@@ -332,7 +585,7 @@
       "quote": "restic is a backup program that is fast, efficient and secure.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:03:50+08:00"
+      "checked_at": "2026-11-16T03:02:08+08:00"
     },
     {
       "field": "/platforms",
@@ -340,15 +593,15 @@
       "quote": "It supports the three major operating systems (Linux, macOS, Windows)",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:03:50+08:00"
+      "checked_at": "2026-11-16T03:02:08+08:00"
     },
     {
-      "field": "/prerequisites/network",
-      "source_id": "readme",
-      "quote": "Local directory",
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "docs1",
+      "quote": "you need at least\nGo version 1.26.10",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:03:50+08:00"
+      "checked_at": "2026-11-16T03:02:08+08:00"
     },
     {
       "field": "/repo",
@@ -399,12 +652,20 @@
       "checked_at": "2026-11-16T01:03:41+08:00"
     },
     {
+      "field": "/maturity",
+      "source_id": "docs1",
+      "quote": "These builds\nare considered stable and releases are made regularly in a controlled manner.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:08+08:00"
+    },
+    {
       "field": "/use_cases/0",
       "source_id": "readme",
       "quote": "restic --repo /tmp/backup backup ~/work",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:03:50+08:00"
+      "checked_at": "2026-11-16T03:02:08+08:00"
     },
     {
       "field": "/use_cases/1",
@@ -412,15 +673,23 @@
       "quote": "sftp server (via SSH)",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:03:50+08:00"
+      "checked_at": "2026-11-16T03:02:08+08:00"
     },
     {
       "field": "/use_cases/2",
       "source_id": "readme",
-      "quote": "use `restic\nmount` to mount the repository via fuse and browse the files from previous\nsnapshots",
+      "quote": "Amazon S3](https://restic.readthedocs.io/en/latest/030_preparing_a_new_repo.html#amazon-s3) (or any other S3-compatible storage)",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:03:50+08:00"
+      "checked_at": "2026-11-16T03:02:08+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "mount` to mount the repository via fuse and browse the files from previous\nsnapshots",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:08+08:00"
     },
     {
       "field": "/features/0",
@@ -428,7 +697,7 @@
       "quote": "Restic uses cryptography to guarantee confidentiality and\n   integrity of your data.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:03:50+08:00"
+      "checked_at": "2026-11-16T03:02:08+08:00"
     },
     {
       "field": "/features/1",
@@ -436,33 +705,49 @@
       "quote": "duplicate\n   data should be de-duplicated before it is actually written to the\n   storage back end",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:03:50+08:00"
+      "checked_at": "2026-11-16T03:02:08+08:00"
     },
     {
       "field": "/features/2",
       "source_id": "readme",
-      "quote": "Next you can either use `restic restore` to restore files or use `restic\nmount`",
+      "quote": "use `restic restore` to restore files or use `restic\nmount` to mount the repository via fuse",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:03:50+08:00"
+      "checked_at": "2026-11-16T03:02:08+08:00"
     },
     {
       "field": "/features/3",
       "source_id": "readme",
-      "quote": "restic enables you to easily verify that all data can be restored.",
+      "quote": "restic supports the following backends for storing backups natively",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:03:50+08:00"
+      "checked_at": "2026-11-16T03:02:08+08:00"
     },
     {
-      "field": "/processing",
-      "source_id": "readme",
-      "quote": "Saving a backup on the same machine is nice but not a real backup strategy.",
+      "field": "/install/macos/steps/0",
+      "source_id": "docs1",
+      "quote": "brew install restic",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:03:50+08:00"
+      "checked_at": "2026-11-16T03:02:08+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "docs1",
+      "quote": "docker pull restic/restic",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:08+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "docs1",
+      "quote": "docker pull restic/restic",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:08+08:00"
     }
   ],
   "first_seen_at": "2026-11-16T01:03:41+08:00",
-  "updated_at": "2026-11-16T01:03:56+08:00"
+  "updated_at": "2026-11-16T03:11:48+08:00"
 }

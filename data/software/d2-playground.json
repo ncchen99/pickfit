@@ -29,14 +29,17 @@
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
-    "generated_at": "2026-11-15T18:12:58.830732Z",
-    "run_id": null,
-    "open_hint": "Open https://play.d2lang.com in your web browser to get the editor.",
+    "generated_at": "2026-11-15T19:19:03.528556Z",
+    "run_id": "web-d2-playground-20261116-024437-0cb9",
+    "open_hint": "Open https://play.d2lang.com in your browser; the editor opens with a sample script next to the diagram pane.",
     "features": [
       {
         "feature": "live editing of D2 diagram scripts",
-        "title": "Edit D2 diagram scripts and see changes live",
-        "steps": []
+        "title": "Edit D2 scripts and see the diagram update live",
+        "steps": [
+          "Type or change your D2 script in the editor, for example `<name> -> <name>`.",
+          "Watch the diagram pane redraw to match your script."
+        ]
       },
       {
         "feature": "choose Dagre, ELK or TALA layout engine",
@@ -85,20 +88,20 @@
   "processing": "local",
   "last_release": null,
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-16T00:55:06.336145+08:00",
+    "checked_at": "2026-11-16T02:44:37.420781+08:00",
     "runs": [
       {
-        "id": "web-d2-playground-20261116-005506-a770",
-        "level": "install",
+        "id": "web-d2-playground-20261116-024437-0cb9",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-vm-chromium",
         "image": "pickfit-web:5ba46ffecfd8",
-        "checked_at": "2026-11-16T00:55:06.336145+08:00",
+        "checked_at": "2026-11-16T02:44:37.420781+08:00",
         "tool_version": null,
         "install_method": null,
         "replayed": false,
@@ -117,6 +120,15 @@
             "observed_excerpt": "D2 Playground with a live code editor containing 'x -> y' and a rendered diagram of x pointing to y, plus layout, theme, renderer and export controls.",
             "setup": [],
             "offline": null
+          },
+          {
+            "command": "browser: Use live editing of D2 diagram scripts and get a visible result",
+            "expected_signal": "the page visibly changed the way the feature should",
+            "exit_code": null,
+            "passed": true,
+            "observed_excerpt": "'rendered' appeared on the page; the judge saw the feature work: The script changed from 'x -> y' to 'pickfit76b727 -> rendered', and the diagram pane now renders a pickfit76b727 box with an arrow to a rendered box instead of x -> y.",
+            "setup": [],
+            "offline": null
           }
         ],
         "pitfalls": [],
@@ -127,35 +139,52 @@
           "model": "claude-opus-5-5"
         },
         "evidence": {
-          "trace_path": "runs/web/d2-playground/web-d2-playground-20261116-005506-a770/messages.jsonl",
-          "log_path": "runs/web/d2-playground/web-d2-playground-20261116-005506-a770/harness.log",
+          "trace_path": "runs/web/d2-playground/web-d2-playground-20261116-024437-0cb9/messages.jsonl",
+          "log_path": "runs/web/d2-playground/web-d2-playground-20261116-024437-0cb9/harness.log",
           "screenshot_paths": [
-            "runs/web/d2-playground/web-d2-playground-20261116-005506-a770/install.png",
-            "runs/web/d2-playground/web-d2-playground-20261116-005506-a770/after.png"
+            "runs/web/d2-playground/web-d2-playground-20261116-024437-0cb9/install.png",
+            "runs/web/d2-playground/web-d2-playground-20261116-024437-0cb9/after.png"
           ],
           "evidence_url": null
         },
         "actor_model": "claude-opus-5-5",
-        "cost_usd": 0.1118,
+        "cost_usd": 0.12,
         "web": {
           "url": "https://play.d2lang.com",
           "final_url": "https://play.d2lang.com/?script=qlDQtVOo5AIMAA%3D%3D&",
           "screen": "main_ui",
           "browser": "Chromium 156 headless via browser-use 0.13.14",
-          "account_needed": null,
+          "account_needed": false,
           "ads_seen": false,
           "third_party_domains": 0,
-          "data_sent": "unknown",
-          "data_sent_note": "pickfit typed only short values, too short to trace in requests.",
+          "data_sent": "none",
+          "data_sent_note": "No request carried what pickfit typed or chose (checked in addresses, bodies and WebSocket messages, plain and encoded).",
           "pwa": false,
-          "offline": "not_tested"
+          "offline": "not_tested",
+          "operations": [
+            {
+              "feature": "live editing of D2 diagram scripts",
+              "goal": "Use live editing of D2 diagram scripts and get a visible result",
+              "check": "element",
+              "expected": [
+                "rendered"
+              ],
+              "passed": true,
+              "observed": "'rendered' appeared on the page; the judge saw the feature work: The script changed from 'x -> y' to 'pickfit76b727 -> rendered', and the diagram pane now renders a pickfit76b727 box with an arrow to a rendered box instead of x -> y.",
+              "smoke_test": 1,
+              "actions": 3,
+              "operator_model": "claude-opus-5-5"
+            }
+          ]
         },
         "features": [
           {
             "feature": "live editing of D2 diagram scripts",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
             "note": null
           },
@@ -185,7 +214,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-16T01:15:45+08:00",
+    "checked_at": "2026-11-16T03:11:48+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -197,24 +226,63 @@
     "advisories_total": 0,
     "findings": []
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "web-d2-playground-20261116-024437-0cb9",
+    "score": 2,
+    "status": "scored",
+    "defects": [
+      {
+        "item": "comfortable",
+        "operation": null,
+        "cause": "operator",
+        "problem": "A \"Ctrl+S\" hover tooltip from the Compile button is drawn over the d2 version line below the subtitle, hiding part of it while the pointer rests on the button.",
+        "screenshot": "after.png",
+        "box": [
+          420,
+          255,
+          580,
+          275
+        ],
+        "quote": "Ctrl+S",
+        "found_by": "ocr",
+        "kind": "overlap",
+        "severity": "minor"
+      }
+    ],
+    "screens": 2,
+    "model": "claude-opus-5-5",
+    "effort": "medium",
+    "inputs_sha": "64237305a7cf4ddfe52071ebf02ba70720f56ad56f9240f8992bb85f23965ee7",
+    "checked_at": "2026-11-16T03:14:15+08:00",
+    "cost_usd": 0.023076
+  },
   "scores": {
-    "formula_version": "web.v1",
-    "computed_at": "2026-11-16T01:15:29+08:00",
+    "formula_version": "web.v1+visual.v1",
+    "computed_at": "2026-11-16T03:14:15+08:00",
     "quality": {
-      "total": 55.6,
+      "total": 91.1,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": 0.6,
-          "weight": 50.0
+          "score": 1.0,
+          "weight": 50
+        },
+        "maintenance": {
+          "score": null,
+          "weight": 0.0
         },
         "install_docs": {
           "score": null,
           "weight": 0.0
         },
-        "maintenance": {
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        },
+        "responsiveness": {
           "score": null,
           "weight": 0.0
         },
@@ -222,18 +290,15 @@
           "score": null,
           "weight": 0.0
         },
-        "responsiveness": {
-          "score": null,
-          "weight": 0.0
-        },
-        "usage_outcomes": {
-          "score": null,
-          "weight": 10.0
-        },
         "browser_facts": {
-          "score": 0.5,
-          "weight": 40.0
+          "score": 0.8,
+          "weight": 40
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 91.1,
+        "defects": 0
       }
     },
     "popularity": {
@@ -252,7 +317,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 16.74
+      "value": 27.42
     },
     "docs_rubric": null
   },
@@ -472,5 +537,5 @@
     }
   ],
   "first_seen_at": "2026-11-16T00:49:50+08:00",
-  "updated_at": "2026-11-16T01:15:45+08:00"
+  "updated_at": "2026-11-16T03:14:15+08:00"
 }

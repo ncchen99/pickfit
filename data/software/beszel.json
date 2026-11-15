@@ -3,7 +3,7 @@
   "slug": "beszel",
   "repo_id": "gh:825470378",
   "name": "Beszel",
-  "summary": "Self-hosted server monitoring platform with a hub dashboard and per-system agents that track host and Docker metrics, history, and alerts.",
+  "summary": "Self-hosted server monitoring platform with a hub and agents that collects system and Docker metrics, keeps history, and sends alerts.",
   "aliases": [],
   "status": "listed",
   "status_reason": null,
@@ -17,43 +17,42 @@
     "self-hosted"
   ],
   "use_cases": [
-    "track CPU, memory and network history per Docker container",
-    "get notified on disk drive failure via S.M.A.R.T. data",
-    "monitor response time and interruptions from agents",
-    "back up monitoring data to disk or S3-compatible storage"
+    "track CPU, memory and network history of Docker containers",
+    "get notified about disk health and drive failure",
+    "monitor response time and interruptions from agents"
   ],
   "alternatives_to": [],
   "features": [
-    "configurable alerts for most metrics",
-    "Docker container stats history",
-    "network response time monitoring",
-    "S.M.A.R.T. disk health monitoring"
+    "configurable alerts with notification services",
+    "per-container Docker stats history",
+    "S.M.A.R.T. disk health monitoring",
+    "automatic backups to disk or S3"
   ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
-    "generated_at": "2026-11-15T18:12:52.398691Z",
+    "generated_at": "2026-11-15T19:19:01.018125Z",
     "run_id": null,
     "open_hint": null,
     "features": [
       {
-        "feature": "configurable alerts for most metrics",
-        "title": "Set up alerts for most metrics",
+        "feature": "configurable alerts with notification services",
+        "title": "Set up alerts and send them to notification services",
         "steps": []
       },
       {
-        "feature": "Docker container stats history",
-        "title": "View history of Docker container stats",
-        "steps": []
-      },
-      {
-        "feature": "network response time monitoring",
-        "title": "Monitor network response time",
+        "feature": "per-container Docker stats history",
+        "title": "View stats history for each Docker container",
         "steps": []
       },
       {
         "feature": "S.M.A.R.T. disk health monitoring",
         "title": "Monitor disk health with S.M.A.R.T. data",
+        "steps": []
+      },
+      {
+        "feature": "automatic backups to disk or S3",
+        "title": "Back up automatically to disk or S3",
         "steps": []
       }
     ]
@@ -101,7 +100,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-16T01:24:27+08:00",
+    "checked_at": "2026-11-16T03:11:48+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -115,9 +114,9 @@
   },
   "scores": {
     "formula_version": "b3.v6",
-    "computed_at": "2026-11-16T01:24:21+08:00",
+    "computed_at": "2026-11-16T03:11:03+08:00",
     "quality": {
-      "total": 66.4,
+      "total": 69.0,
       "confidence": 0.5,
       "cap": 69,
       "cap_reason": "unverified",
@@ -127,7 +126,7 @@
           "weight": 20.0
         },
         "install_docs": {
-          "score": 0.375,
+          "score": 0.6875,
           "weight": 25.0
         },
         "maintenance": {
@@ -170,12 +169,12 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 6.51
+      "value": 6.76
     },
     "docs_rubric": {
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:24:21.632784+08:00",
-      "sources_sha": "55be3fd68664f7be413a5b46c83fef05c1630f5eb72bda9d71b4913a03af5b82",
+      "checked_at": "2026-11-16T03:11:03.852707+08:00",
+      "sources_sha": "291cc878424fbe9d735d767465ca8cdfa3c3bcbfcf16b955f1113afc670d8ebc",
       "items": {
         "what_it_does": {
           "score": 2,
@@ -186,27 +185,27 @@
           "quote": "topics: homelab, monitoring, self-hosted"
         },
         "prerequisites": {
-          "score": 0,
-          "quote": null
+          "score": 1,
+          "quote": "Install Docker and Docker Compose if you haven't already."
         },
         "install_per_os": {
-          "score": 0,
-          "quote": null
+          "score": 1,
+          "quote": "The install script is for Linux only"
         },
         "first_run_example": {
-          "score": 0,
-          "quote": null
+          "score": 2,
+          "quote": "You will see the new system in table. If it flips to green, you're good to go."
         },
         "config_and_keys": {
-          "score": 1,
-          "quote": "Add `FAN_SENSORS` to include or exclude fan sensors (#2713)"
+          "score": 2,
+          "quote": "Update the KEY and TOKEN environment variables with your public key and token, then restart the agent:"
         },
         "troubleshooting_uninstall": {
-          "score": 0,
-          "quote": null
+          "score": 1,
+          "quote": "If it changes to red, check the Common Issues page."
         },
         "license_and_platforms": {
-          "score": 2,
+          "score": 1,
           "quote": "Beszel is licensed under the MIT License."
         }
       },
@@ -272,16 +271,22 @@
       "kind": "release",
       "url": "https://github.com/henrygd/beszel/releases/tag/v0.21.2",
       "fetched_at": "2026-11-16T01:24:12+08:00"
+    },
+    {
+      "id": "docs1",
+      "kind": "website",
+      "url": "https://beszel.dev/guide/getting-started",
+      "fetched_at": "2026-11-16T03:01:18+08:00"
     }
   ],
   "evidence": [
     {
       "field": "/kind",
-      "source_id": "readme",
-      "quote": "**Hub**: A web application built on [PocketBase](https://pocketbase.io/) that provides a dashboard for viewing and managing connected systems.",
+      "source_id": "docs1",
+      "quote": "The hub can be run with a single binary file or with Docker / Podman.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:24:21+08:00"
+      "checked_at": "2026-11-16T03:02:38+08:00"
     },
     {
       "field": "/audience",
@@ -289,7 +294,7 @@
       "quote": "It has a friendly web interface, simple configuration, and is ready to use out of the box.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:24:21+08:00"
+      "checked_at": "2026-11-16T03:02:38+08:00"
     },
     {
       "field": "/category",
@@ -297,7 +302,7 @@
       "quote": "Lightweight server monitoring with historical data, docker stats, and alerts.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:24:21+08:00"
+      "checked_at": "2026-11-16T03:02:38+08:00"
     },
     {
       "field": "/summary",
@@ -305,7 +310,7 @@
       "quote": "Beszel is a lightweight server monitoring platform that includes Docker statistics, historical data, and alert functions.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:24:21+08:00"
+      "checked_at": "2026-11-16T03:02:38+08:00"
     },
     {
       "field": "/name",
@@ -313,7 +318,7 @@
       "quote": "# Beszel",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:24:21+08:00"
+      "checked_at": "2026-11-16T03:02:38+08:00"
     },
     {
       "field": "/repo",
@@ -369,7 +374,7 @@
       "quote": "Tracks CPU, memory, and network usage history for each container.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:24:21+08:00"
+      "checked_at": "2026-11-16T03:02:38+08:00"
     },
     {
       "field": "/use_cases/1",
@@ -377,7 +382,7 @@
       "quote": "Disk health data and notifications on drive failure.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:24:21+08:00"
+      "checked_at": "2026-11-16T03:02:38+08:00"
     },
     {
       "field": "/use_cases/2",
@@ -385,15 +390,7 @@
       "quote": "Monitor response time and interruptions directly from agents.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:24:21+08:00"
-    },
-    {
-      "field": "/use_cases/3",
-      "source_id": "readme",
-      "quote": "Save to and restore from disk or S3-compatible storage.",
-      "method": "model",
-      "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:24:21+08:00"
+      "checked_at": "2026-11-16T03:02:38+08:00"
     },
     {
       "field": "/features/0",
@@ -401,7 +398,7 @@
       "quote": "Configurable alerts for most metrics. Supports many notification services.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:24:21+08:00"
+      "checked_at": "2026-11-16T03:02:38+08:00"
     },
     {
       "field": "/features/1",
@@ -409,25 +406,25 @@
       "quote": "Tracks CPU, memory, and network usage history for each container.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:24:21+08:00"
+      "checked_at": "2026-11-16T03:02:38+08:00"
     },
     {
       "field": "/features/2",
       "source_id": "readme",
-      "quote": "Monitor response time and interruptions directly from agents.",
+      "quote": "Disk health data and notifications on drive failure.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:24:21+08:00"
+      "checked_at": "2026-11-16T03:02:38+08:00"
     },
     {
       "field": "/features/3",
       "source_id": "readme",
-      "quote": "Disk health data and notifications on drive failure.",
+      "quote": "Save to and restore from disk or S3-compatible storage.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:24:21+08:00"
+      "checked_at": "2026-11-16T03:02:38+08:00"
     }
   ],
   "first_seen_at": "2026-11-16T01:24:12+08:00",
-  "updated_at": "2026-11-16T01:24:27+08:00"
+  "updated_at": "2026-11-16T03:11:48+08:00"
 }

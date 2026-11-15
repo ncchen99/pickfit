@@ -33,29 +33,45 @@
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
-    "generated_at": "2026-11-15T18:13:11.561291Z",
-    "run_id": null,
-    "open_hint": "Run `jless <file>` in a terminal to open a JSON file in the viewer.",
+    "generated_at": "2026-11-15T19:19:09.161532Z",
+    "run_id": "verify-jless-20261116-024650-5266",
+    "open_hint": "Run `jless <file>` to open a JSON file in the viewer, and press q to quit.",
     "features": [
       {
         "feature": "syntax-highlighted display of JSON data",
         "title": "View JSON with syntax highlighting",
-        "steps": []
+        "steps": [
+          "Run `jless <file>` to open a JSON file.",
+          "Read the colored, line-numbered tree of keys and values.",
+          "Press q to quit."
+        ]
       },
       {
         "feature": "expand and collapse objects and arrays",
         "title": "Expand and collapse objects and arrays",
-        "steps": []
+        "steps": [
+          "Open a file with `jless <file>`.",
+          "Move to an object or array and press Space to collapse it into one line.",
+          "Press Space again to expand it."
+        ]
       },
       {
         "feature": "vim-inspired movement commands",
         "title": "Move around with vim-style keys",
-        "steps": []
+        "steps": [
+          "Open a file with `jless <file>`.",
+          "Press j to move down one line.",
+          "Press G to jump to the last item; the status bar shows its path, such as .note."
+        ]
       },
       {
         "feature": "regex-based search through JSON",
         "title": "Search JSON with regular expressions",
-        "steps": []
+        "steps": [
+          "Open a file with `jless <file>`.",
+          "Type / followed by a regular expression and press Enter.",
+          "Press n to go to the next match; the status bar shows the match count and path."
+        ]
       }
     ]
   },
@@ -95,18 +111,33 @@
       "first_task": null
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "cargo",
+      "basis": "replayed",
+      "run_id": "verify-jless-20261116-024650-5266",
+      "method": "binary",
       "steps": [
         {
-          "command": "cargo install jless",
-          "purpose": null
+          "command": "mkdir -p ~/.local/bin /tmp/jl && curl -fsSL -o /tmp/jl/jless.zip https://github.com/PaulJuliusMartinez/jless/releases/download/v0.9.0/jless-v0.9.0-x86_64-unknown-linux-gnu.zip && unzip -o /tmp/jl/jless.zip -d ~/.local/bin && chmod +x ~/.local/bin/jless",
+          "purpose": "Download and unzip the v0.9.0 x86_64 Linux release binary"
+        },
+        {
+          "command": "cd /tmp/jl && curl -fsSLO http://deb.debian.org/debian/pool/main/libx/libxcb/libxcb1_1.15-1_amd64.deb && curl -fsSLO http://deb.debian.org/debian/pool/main/libx/libxau/libxau6_1.0.9-1_amd64.deb && curl -fsSLO http://deb.debian.org/debian/pool/main/libx/libxdmcp/libxdmcp6_1.1.2-3_amd64.deb && mkdir -p ~/.local/xcb && dpkg -x libxcb1_1.15-1_amd64.deb ~/.local/xcb && dpkg -x libxau6_1.0.9-1_amd64.deb ~/.local/xcb && dpkg -x libxdmcp6_1.1.2-3_amd64.deb ~/.local/xcb",
+          "purpose": "Download libxcb1, libxau6 and libxdmcp6 debs from the Debian pool and unpack them into ~/.local/xcb"
+        },
+        {
+          "command": "unzip -o /tmp/jl/jless.zip -d ~/.local/xcb && printf '#!/bin/sh\\nLD_LIBRARY_PATH=\"$HOME/.local/xcb/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}\" exec \"$HOME/.local/xcb/jless\" \"$@\"\\n' > ~/.local/bin/jless && chmod +x ~/.local/bin/jless ~/.local/xcb/jless",
+          "purpose": "Put the binary in ~/.local/xcb and add a wrapper in ~/.local/bin that sets LD_LIBRARY_PATH"
+        },
+        {
+          "command": "cd /tmp/jl && B=http://deb.debian.org/debian/pool/main/libx/libxcb && curl -fsSLO $B/libxcb-render0_1.15-1_amd64.deb && curl -fsSLO $B/libxcb-shape0_1.15-1_amd64.deb && curl -fsSLO $B/libxcb-xfixes0_1.15-1_amd64.deb && dpkg -x libxcb-render0_1.15-1_amd64.deb ~/.local/xcb && dpkg -x libxcb-shape0_1.15-1_amd64.deb ~/.local/xcb && dpkg -x libxcb-xfixes0_1.15-1_amd64.deb ~/.local/xcb && jless --version",
+          "purpose": "Unpack libxcb-render0, libxcb-shape0 and libxcb-xfixes0, then confirm jless --version"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": null
+      "check": {
+        "command": "cd /tmp/jl && B=http://deb.debian.org/debian/pool/main/libx/libxcb && curl -fsSLO $B/libxcb-render0_1.15-1_amd64.deb && curl -fsSLO $B/libxcb-shape0_1.15-1_amd64.deb && curl -fsSLO $B/libxcb-xfixes0_1.15-1_amd64.deb && dpkg -x libxcb-render0_1.15-1_amd64.deb ~/.local/xcb && dpkg -x libxcb-shape0_1.15-1_amd64.deb ~/.local/xcb && dpkg -x libxcb-xfixes0_1.15-1_amd64.deb ~/.local/xcb && jless --version",
+        "expected_signal": "jless 0.9.0"
+      },
+      "first_task": "cd ~/work && python3 drive.py sample.json"
     },
     "windows": null
   },
@@ -123,15 +154,201 @@
     "url": "https://github.com/PaulJuliusMartinez/jless/releases/tag/v0.9.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T02:49:46.620946+08:00",
+    "runs": [
+      {
+        "id": "verify-jless-20261116-024650-5266",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T02:49:46.620946+08:00",
+        "tool_version": "jless 0.9.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/jl && curl -fsSL -o /tmp/jl/jless.zip https://github.com/PaulJuliusMartinez/jless/releases/download/v0.9.0/jless-v0.9.0-x86_64-unknown-linux-gnu.zip && unzip -o /tmp/jl/jless.zip -d ~/.local/bin && chmod +x ~/.local/bin/jless",
+            "purpose": "Download and unzip the v0.9.0 x86_64 Linux release binary"
+          },
+          {
+            "command": "cd /tmp/jl && curl -fsSLO http://deb.debian.org/debian/pool/main/libx/libxcb/libxcb1_1.15-1_amd64.deb && curl -fsSLO http://deb.debian.org/debian/pool/main/libx/libxau/libxau6_1.0.9-1_amd64.deb && curl -fsSLO http://deb.debian.org/debian/pool/main/libx/libxdmcp/libxdmcp6_1.1.2-3_amd64.deb && mkdir -p ~/.local/xcb && dpkg -x libxcb1_1.15-1_amd64.deb ~/.local/xcb && dpkg -x libxau6_1.0.9-1_amd64.deb ~/.local/xcb && dpkg -x libxdmcp6_1.1.2-3_amd64.deb ~/.local/xcb",
+            "purpose": "Download libxcb1, libxau6 and libxdmcp6 debs from the Debian pool and unpack them into ~/.local/xcb"
+          },
+          {
+            "command": "unzip -o /tmp/jl/jless.zip -d ~/.local/xcb && printf '#!/bin/sh\\nLD_LIBRARY_PATH=\"$HOME/.local/xcb/usr/lib/x86_64-linux-gnu${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}\" exec \"$HOME/.local/xcb/jless\" \"$@\"\\n' > ~/.local/bin/jless && chmod +x ~/.local/bin/jless ~/.local/xcb/jless",
+            "purpose": "Put the binary in ~/.local/xcb and add a wrapper in ~/.local/bin that sets LD_LIBRARY_PATH"
+          },
+          {
+            "command": "cd /tmp/jl && B=http://deb.debian.org/debian/pool/main/libx/libxcb && curl -fsSLO $B/libxcb-render0_1.15-1_amd64.deb && curl -fsSLO $B/libxcb-shape0_1.15-1_amd64.deb && curl -fsSLO $B/libxcb-xfixes0_1.15-1_amd64.deb && dpkg -x libxcb-render0_1.15-1_amd64.deb ~/.local/xcb && dpkg -x libxcb-shape0_1.15-1_amd64.deb ~/.local/xcb && dpkg -x libxcb-xfixes0_1.15-1_amd64.deb ~/.local/xcb && jless --version",
+            "purpose": "Unpack libxcb-render0, libxcb-shape0 and libxcb-xfixes0, then confirm jless --version"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd /tmp/jl && B=http://deb.debian.org/debian/pool/main/libx/libxcb && curl -fsSLO $B/libxcb-render0_1.15-1_amd64.deb && curl -fsSLO $B/libxcb-shape0_1.15-1_amd64.deb && curl -fsSLO $B/libxcb-xfixes0_1.15-1_amd64.deb && dpkg -x libxcb-render0_1.15-1_amd64.deb ~/.local/xcb && dpkg -x libxcb-shape0_1.15-1_amd64.deb ~/.local/xcb && dpkg -x libxcb-xfixes0_1.15-1_amd64.deb ~/.local/xcb && jless --version",
+            "expected_signal": "jless 0.9.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "jless 0.9.0",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "cd ~/work && python3 drive.py sample.json",
+            "expected_signal": "name : \"jules\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1 ▼ (5) {name: \"jules\", kind: \"jellyfish\", tags: […], stats: {…}, note: \"fou…\"} 2 name : \"jules\" 3 kind : \"jellyfish\" 4 ▽ tags : (2) [\"mascot\", \"logo\"] 5 [0] : \"mascot\" 6 [1] : \"logo\" 8 ▽ stats : (2) {arms: 8, alive: true} 9 arms : 8 10 alive : true 12 note : \"found in the deep sea\" ~ ~ ~ ~ ~ ~ ~ ~…",
+            "setup": [
+              {
+                "command": "cd ~/work && cat > sample.json <<'EOF'\n{\"name\": \"jules\", \"kind\": \"jellyfish\", \"tags\": [\"mascot\", \"logo\"], \"stats\": {\"arms\": 8, \"alive\": true}, \"note\": \"found in the deep sea\"}\nEOF\ncat > drive.py <<'EOF'\nimport os, pty, sys, time, re, select, struct, fcntl, termios\nf = sys.argv[1]; keys = sys.argv[2:]\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.execvp('jless', ['jless', f])\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 24, 80, 0, 0))\ndef read(t=1.0):\n    out = b''; end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try: d = os.read(fd, 65536)\n            except OSError: break\n            if not d: break\n            out += d\n    return out.decode('utf-8', 'replace')\ndef show(label, s):\n    colors = len(re.findall(r'\\x1b\\[[0-9;]*3[0-9;]*m', s))\n    txt = re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]', ' ', s)\n    txt = re.sub(r'\\x1b[()][A-Z0-9]|\\x1b[=>]', '', txt)\n    txt = re.sub(r'[ \\t]+', ' ', txt)\n    print('=== %s (color escapes: %d) ===' % (label, colors))\n    print(txt.strip())\nshow('initial', read(1.5))\nfor k in keys:\n    k = k.encode().decode('unicode_escape')\n    os.write(fd, k.encode()); show('after %r' % k, read(0.8))\nos.write(fd, b'q'); read(0.8)\n_, st = os.waitpid(pid, 0)\nprint('jless exit status:', os.waitstatus_to_exitcode(st))\nsys.exit(os.waitstatus_to_exitcode(st))\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd ~/work && python3 drive.py sample.json ' '",
+            "expected_signal": "1 ▶ (5) {name: \"jules\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1 ▶ (5) {name: \"jules\", kind: \"jellyfish\", tags: […], stats: {…}, note: \"fou…\"} ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~",
+            "setup": [
+              {
+                "command": "cd ~/work && cat > sample.json <<'EOF'\n{\"name\": \"jules\", \"kind\": \"jellyfish\", \"tags\": [\"mascot\", \"logo\"], \"stats\": {\"arms\": 8, \"alive\": true}, \"note\": \"found in the deep sea\"}\nEOF\ncat > drive.py <<'EOF'\nimport os, pty, sys, time, re, select, struct, fcntl, termios\nf = sys.argv[1]; keys = sys.argv[2:]\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.execvp('jless', ['jless', f])\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 24, 80, 0, 0))\ndef read(t=1.0):\n    out = b''; end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try: d = os.read(fd, 65536)\n            except OSError: break\n            if not d: break\n            out += d\n    return out.decode('utf-8', 'replace')\ndef show(label, s):\n    colors = len(re.findall(r'\\x1b\\[[0-9;]*3[0-9;]*m', s))\n    txt = re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]', ' ', s)\n    txt = re.sub(r'\\x1b[()][A-Z0-9]|\\x1b[=>]', '', txt)\n    txt = re.sub(r'[ \\t]+', ' ', txt)\n    print('=== %s (color escapes: %d) ===' % (label, colors))\n    print(txt.strip())\nshow('initial', read(1.5))\nfor k in keys:\n    k = k.encode().decode('unicode_escape')\n    os.write(fd, k.encode()); show('after %r' % k, read(0.8))\nos.write(fd, b'q'); read(0.8)\n_, st = os.waitpid(pid, 0)\nprint('jless exit status:', os.waitstatus_to_exitcode(st))\nsys.exit(os.waitstatus_to_exitcode(st))\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd ~/work && python3 drive.py sample.json j j j G",
+            "expected_signal": "input .note sample.json",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "input .note sample.json :",
+            "setup": [
+              {
+                "command": "cd ~/work && cat > sample.json <<'EOF'\n{\"name\": \"jules\", \"kind\": \"jellyfish\", \"tags\": [\"mascot\", \"logo\"], \"stats\": {\"arms\": 8, \"alive\": true}, \"note\": \"found in the deep sea\"}\nEOF\ncat > drive.py <<'EOF'\nimport os, pty, sys, time, re, select, struct, fcntl, termios\nf = sys.argv[1]; keys = sys.argv[2:]\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.execvp('jless', ['jless', f])\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 24, 80, 0, 0))\ndef read(t=1.0):\n    out = b''; end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try: d = os.read(fd, 65536)\n            except OSError: break\n            if not d: break\n            out += d\n    return out.decode('utf-8', 'replace')\ndef show(label, s):\n    colors = len(re.findall(r'\\x1b\\[[0-9;]*3[0-9;]*m', s))\n    txt = re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]', ' ', s)\n    txt = re.sub(r'\\x1b[()][A-Z0-9]|\\x1b[=>]', '', txt)\n    txt = re.sub(r'[ \\t]+', ' ', txt)\n    print('=== %s (color escapes: %d) ===' % (label, colors))\n    print(txt.strip())\nshow('initial', read(1.5))\nfor k in keys:\n    k = k.encode().decode('unicode_escape')\n    os.write(fd, k.encode()); show('after %r' % k, read(0.8))\nos.write(fd, b'q'); read(0.8)\n_, st = os.waitpid(pid, 0)\nprint('jless exit status:', os.waitstatus_to_exitcode(st))\nsys.exit(os.waitstatus_to_exitcode(st))\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd ~/work && timeout 25 python3 drive.py sample.json / 'arm.' '\\r' n",
+            "expected_signal": "/arm. [1/1]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "input .stats.arms sample.json /arm. [1/1]",
+            "setup": [
+              {
+                "command": "cd ~/work && cat > sample.json <<'EOF'\n{\"name\": \"jules\", \"kind\": \"jellyfish\", \"tags\": [\"mascot\", \"logo\"], \"stats\": {\"arms\": 8, \"alive\": true}, \"note\": \"found in the deep sea\"}\nEOF\ncat > drive.py <<'EOF'\nimport os, pty, sys, time, re, select, struct, fcntl, termios\nf = sys.argv[1]; keys = sys.argv[2:]\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.execvp('jless', ['jless', f])\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 24, 80, 0, 0))\ndef read(t=1.0):\n    out = b''; end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try: d = os.read(fd, 65536)\n            except OSError: break\n            if not d: break\n            out += d\n    return out.decode('utf-8', 'replace')\ndef show(label, s):\n    colors = len(re.findall(r'\\x1b\\[[0-9;]*3[0-9;]*m', s))\n    txt = re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]', ' ', s)\n    txt = re.sub(r'\\x1b[()][A-Z0-9]|\\x1b[=>]', '', txt)\n    txt = re.sub(r'[ \\t]+', ' ', txt)\n    print('=== %s (color escapes: %d) ===' % (label, colors))\n    print(txt.strip())\nshow('initial', read(1.5))\nfor k in keys:\n    k = k.encode().decode('unicode_escape')\n    os.write(fd, k.encode()); show('after %r' % k, read(0.8))\nos.write(fd, b'q'); read(0.8)\n_, st = os.waitpid(pid, 0)\nprint('jless exit status:', os.waitstatus_to_exitcode(st))\nsys.exit(os.waitstatus_to_exitcode(st))\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Install via cargo install jless or OS package managers (pacman, xbps, pkgin, pkg)",
+            "actually_needed": "No Rust toolchain or root here, so I used the prebuilt release binary the README links from its releases page (v0.9.0 x86_64-unknown-linux-gnu zip)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "The release binary is presented as a single standalone binary; X11 libraries are mentioned only for building from source",
+            "actually_needed": "The prebuilt Linux binary is dynamically linked against libxcb.so.1, libxcb-render.so.0, libxcb-shape.so.0 and libxcb-xfixes.so.0 and fails to start without them (libxcb1, libxcb-render0, libxcb-shape0, libxcb-xfixes0 runtime packages)",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "sudo apt-get install the libxcb packages",
+            "actually_needed": "Without root: download the bookworm .debs from deb.debian.org, unpack them with dpkg -x into ~/.local/xcb, and run jless through a wrapper that sets LD_LIBRARY_PATH",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "jless is an interactive viewer",
+            "actually_needed": "It needs a TTY, so the checks drove it through a Python pty script (drive.py, setup command 7) that sends keystrokes and prints the screen with ANSI codes stripped. Typed-ahead input after '/' was dropped, so the keys must be sent separately",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The captured output shows jless rendering sample.json with name : \"jules\", collapsing the root to '1 ▶ (5) {name: \"jules\"' after a space keypress, and printing 'jless 0.9.0'; the screenshots of the first two checks show only the header and status lines, not the rendered JSON.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-jless-20261116-024650-5266/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-jless-20261116-024650-5266/check-1-cmd8.judged.png",
+            "runs/verify/verify-jless-20261116-024650-5266/check-2-cmd9.judged.png",
+            "runs/verify/verify-jless-20261116-024650-5266/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.274136,
+        "features": [
+          {
+            "feature": "syntax-highlighted display of JSON data",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "expand and collapse objects and arrays",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "vim-inspired movement commands",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "regex-based search through JSON",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
   },
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-16T01:03:25+08:00",
+    "checked_at": "2026-11-16T03:11:48+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -173,15 +390,15 @@
   },
   "scores": {
     "formula_version": "b3.v6",
-    "computed_at": "2026-11-16T01:03:17+08:00",
+    "computed_at": "2026-11-16T03:11:03+08:00",
     "quality": {
-      "total": 49.6,
-      "confidence": 0.5,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 63.0,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.595,
           "weight": 20.0
         },
         "install_docs": {
@@ -205,7 +422,7 @@
           "weight": 10.0
         },
         "feature_results": {
-          "score": null,
+          "score": 1.0,
           "weight": 20.0
         }
       }
@@ -214,7 +431,7 @@
       "score": 96.6,
       "signals": {
         "stars": 5520,
-        "monthly_downloads": 1182,
+        "monthly_downloads": 1183,
         "forks": 123,
         "dependents": null,
         "release_downloads": 139937,
@@ -229,7 +446,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 1.69
+      "value": 2.14
     },
     "docs_rubric": {
       "model": "claude-opus-5-5",
@@ -512,5 +729,5 @@
     }
   ],
   "first_seen_at": "2026-11-16T00:58:07+08:00",
-  "updated_at": "2026-11-16T01:03:25+08:00"
+  "updated_at": "2026-11-16T03:11:48+08:00"
 }

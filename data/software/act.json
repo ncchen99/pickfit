@@ -32,23 +32,30 @@
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
-    "generated_at": "2026-11-15T18:12:52.508823Z",
-    "run_id": null,
-    "open_hint": "Run `act` from the root of a repository that has workflow files in .github/workflows.",
+    "generated_at": "2026-11-15T19:19:03.093564Z",
+    "run_id": "verify-act-20261116-025316-96da",
+    "open_hint": "Go to a Git repository that has workflow files in `.github/workflows` and run `act push -P ubuntu-latest=-self-hosted`.",
     "features": [
       {
         "feature": "run GitHub Actions workflows locally",
         "title": "Run GitHub Actions workflows on your own machine",
-        "steps": []
+        "steps": [
+          "Go to a Git repository with a workflow file in `.github/workflows`.",
+          "Run `act push -P ubuntu-latest=-self-hosted` to run the workflows triggered by a push.",
+          "Check the output for a \"Job succeeded\" line for each job."
+        ]
       },
       {
         "feature": "replace a Makefile with workflow jobs",
         "title": "Use workflow jobs in place of a Makefile",
-        "steps": []
+        "steps": [
+          "Define the tasks you want as jobs in a workflow file in `.github/workflows`.",
+          "Run a single job with `act -j <job> -P ubuntu-latest=-self-hosted`."
+        ]
       },
       {
         "feature": "match GitHub's environment variables and filesystem",
-        "title": "Match GitHub's environment variables and filesystem",
+        "title": "Use the same environment variables and files as GitHub",
         "steps": []
       }
     ]
@@ -80,7 +87,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-act-20261116-025316-96da",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/act && curl -fsSL -o /tmp/act/act.tar.gz https://github.com/nektos/act/releases/latest/download/act_Linux_x86_64.tar.gz && tar -xzf /tmp/act/act.tar.gz -C /tmp/act && install -m755 /tmp/act/act ~/.local/bin/act",
+          "purpose": "Download the act_Linux_x86_64 release tarball and install the act binary into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "act --version",
+        "expected_signal": "act version"
+      },
+      "first_task": "cd /tmp/demo && act push -P ubuntu-latest=-self-hosted"
+    },
     "windows": null
   },
   "pricing": {
@@ -96,15 +119,142 @@
     "url": "https://github.com/nektos/act/releases/tag/v0.2.97"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T02:55:21.995246+08:00",
+    "runs": [
+      {
+        "id": "verify-act-20261116-025316-96da",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T02:55:21.995246+08:00",
+        "tool_version": "0.2.97",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/act && curl -fsSL -o /tmp/act/act.tar.gz https://github.com/nektos/act/releases/latest/download/act_Linux_x86_64.tar.gz && tar -xzf /tmp/act/act.tar.gz -C /tmp/act && install -m755 /tmp/act/act ~/.local/bin/act",
+            "purpose": "Download the act_Linux_x86_64 release tarball and install the act binary into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "act --version",
+            "expected_signal": "act version",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "act version 0.2.97",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/demo && act push -P ubuntu-latest=-self-hosted",
+            "expected_signal": "[CI/test ] 🏁 Job succeeded",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[CI/test ] 🏁 Job succeeded",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/demo/.github/workflows && cd /tmp/demo && git init -q && cat > .github/workflows/ci.yml <<'EOF'\nname: CI\non: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo \"hello from act $GITHUB_WORKSPACE\"\n  test:\n    runs-on: ubuntu-latest\n    needs: build\n    steps:\n      - run: echo testing\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "cd /tmp/demo && act -j build -P ubuntu-latest=-self-hosted",
+            "expected_signal": "[CI/build] 🏁 Job succeeded",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[CI/build] 🏁 Job succeeded",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/demo/.github/workflows && cd /tmp/demo && git init -q && cat > .github/workflows/ci.yml <<'EOF'\nname: CI\non: push\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo \"hello from act $GITHUB_WORKSPACE\"\n  test:\n    runs-on: ubuntu-latest\n    needs: build\n    steps:\n      - run: echo testing\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Install Go, git clone git@github.com:nektos/act.git, make install",
+            "actually_needed": "Prebuilt release binary from https://github.com/nektos/act/releases/latest/download/act_Linux_x86_64.tar.gz (no Go needed). The SSH clone URL also needs a GitHub SSH key; HTTPS would be needed for anonymous cloning",
+            "kind": "note"
+          },
+          {
+            "readme_said": "act uses the Docker API to run containers for each action",
+            "actually_needed": "No Docker in this box: container runs fail with 'failed to connect to the docker API'. Running with -P ubuntu-latest=-self-hosted runs the jobs on the host instead",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "(not mentioned)",
+            "actually_needed": "On the first run without -P or ~/.config/act/actrc, act asks you to choose a default image and waits for input (it hung in non-interactive mode). Pass -P to skip the prompt",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exited 0: the push run and the build job each end with 'Job succeeded' after their echo steps print output, and act --version prints 'act version 0.2.97'; the git ref and docker messages are only warnings.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-act-20261116-025316-96da/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-act-20261116-025316-96da/check-1-cmd8.judged.png",
+            "runs/verify/verify-act-20261116-025316-96da/check-2-cmd9.judged.png",
+            "runs/verify/verify-act-20261116-025316-96da/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.162812,
+        "features": [
+          {
+            "feature": "run GitHub Actions workflows locally",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "replace a Makefile with workflow jobs",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "match GitHub's environment variables and filesystem",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_container",
+            "failure": null,
+            "note": "Matching GitHub's filesystem relies on the Docker runner images; no Docker daemon here"
+          }
+        ]
+      }
+    ]
   },
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-16T00:48:01+08:00",
+    "checked_at": "2026-11-16T03:11:48+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -131,15 +281,15 @@
   },
   "scores": {
     "formula_version": "b3.v6",
-    "computed_at": "2026-11-16T00:47:54+08:00",
+    "computed_at": "2026-11-16T02:55:21+08:00",
     "quality": {
-      "total": 60.5,
-      "confidence": 0.5,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 71.9,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.7225,
           "weight": 20.0
         },
         "install_docs": {
@@ -163,7 +313,7 @@
           "weight": 10.0
         },
         "feature_results": {
-          "score": null,
+          "score": 1.0,
           "weight": 20.0
         }
       }
@@ -186,7 +336,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 0.36
+      "value": 0.43
     },
     "docs_rubric": {
       "model": "claude-opus-5-5",
@@ -461,5 +611,5 @@
     }
   ],
   "first_seen_at": "2026-11-16T00:36:30+08:00",
-  "updated_at": "2026-11-16T00:48:01+08:00"
+  "updated_at": "2026-11-16T03:11:48+08:00"
 }

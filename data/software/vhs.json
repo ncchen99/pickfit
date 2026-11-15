@@ -36,28 +36,32 @@
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
-    "generated_at": "2026-11-15T18:13:41.474750Z",
-    "run_id": null,
-    "open_hint": "Run `vhs --help` in a terminal to see the available commands.",
+    "generated_at": "2026-11-15T19:19:19.657876Z",
+    "run_id": "verify-vhs-20261116-024650-e1e7",
+    "open_hint": "Run `vhs record --shell bash` to start recording a terminal session as a tape script.",
     "features": [
       {
         "feature": "render scripted tape files to terminal GIFs",
-        "title": "Turn a scripted tape file into a terminal GIF",
+        "title": "Turn tape scripts into terminal GIFs",
         "steps": []
       },
       {
         "feature": "record terminal actions into a tape file",
-        "title": "Record your terminal actions into a tape file",
-        "steps": []
+        "title": "Record terminal actions into a tape file",
+        "steps": [
+          "Run `vhs record --shell bash` to start recording.",
+          "Type your commands as usual, then type `exit` to stop.",
+          "VHS prints the recorded actions as tape commands, such as `Type \"<your text>\"`."
+        ]
       },
       {
         "feature": "publish GIFs for sharing",
-        "title": "Publish GIFs so you can share them",
+        "title": "Publish GIFs to share them",
         "steps": []
       },
       {
         "feature": "run a built-in SSH rendering server",
-        "title": "Run the built-in SSH server for rendering",
+        "title": "Run the built-in SSH rendering server",
         "steps": []
       }
     ]
@@ -102,18 +106,25 @@
       "first_task": "vhs new demo.tape"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "go",
+      "basis": "replayed",
+      "run_id": "verify-vhs-20261116-024650-e1e7",
+      "method": "binary",
       "steps": [
         {
-          "command": "go install github.com/charmbracelet/vhs@latest",
-          "purpose": null
+          "command": "cd /tmp && V=$(curl -fsSL https://api.github.com/repos/charmbracelet/vhs/releases/latest | python3 -c 'import sys,json;print(json.load(sys.stdin)[\"tag_name\"].lstrip(\"v\"))') && curl -fsSLO https://github.com/charmbracelet/vhs/releases/download/v$V/vhs_${V}_Linux_x86_64.tar.gz && tar xzf vhs_${V}_Linux_x86_64.tar.gz && mkdir -p ~/.local/bin && cp vhs_${V}_Linux_x86_64/vhs ~/.local/bin/",
+          "purpose": "Download the vhs v0.12.1 Linux x86_64 release binary into ~/.local/bin"
+        },
+        {
+          "command": "cd /tmp && curl -fsSL -o ~/.local/bin/ttyd https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64 && chmod +x ~/.local/bin/ttyd && curl -fsSLO https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz && tar xJf ffmpeg-master-latest-linux64-gpl.tar.xz && cp ffmpeg-master-latest-linux64-gpl/bin/ffmpeg ~/.local/bin/ && ffmpeg -version",
+          "purpose": "Install the ttyd and ffmpeg static binaries (README prerequisites) into ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "vhs new demo.tape"
+      "check": {
+        "command": "vhs --version",
+        "expected_signal": "vhs version v0.12.1"
+      },
+      "first_task": "(sleep 2; printf 'echo hello\\r'; sleep 1; printf 'exit\\r'; sleep 2) | timeout 30 script -qec \"vhs record --shell bash\" /dev/null"
     },
     "windows": {
       "basis": "readme_claim",
@@ -143,15 +154,157 @@
     "url": "https://github.com/charmbracelet/vhs/releases/tag/v0.12.1"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T02:48:52.313120+08:00",
+    "runs": [
+      {
+        "id": "verify-vhs-20261116-024650-e1e7",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T02:48:52.313120+08:00",
+        "tool_version": "v0.12.1 (24fa225)",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd /tmp && V=$(curl -fsSL https://api.github.com/repos/charmbracelet/vhs/releases/latest | python3 -c 'import sys,json;print(json.load(sys.stdin)[\"tag_name\"].lstrip(\"v\"))') && curl -fsSLO https://github.com/charmbracelet/vhs/releases/download/v$V/vhs_${V}_Linux_x86_64.tar.gz && tar xzf vhs_${V}_Linux_x86_64.tar.gz && mkdir -p ~/.local/bin && cp vhs_${V}_Linux_x86_64/vhs ~/.local/bin/",
+            "purpose": "Download the vhs v0.12.1 Linux x86_64 release binary into ~/.local/bin"
+          },
+          {
+            "command": "cd /tmp && curl -fsSL -o ~/.local/bin/ttyd https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64 && chmod +x ~/.local/bin/ttyd && curl -fsSLO https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz && tar xJf ffmpeg-master-latest-linux64-gpl.tar.xz && cp ffmpeg-master-latest-linux64-gpl/bin/ffmpeg ~/.local/bin/ && ffmpeg -version",
+            "purpose": "Install the ttyd and ffmpeg static binaries (README prerequisites) into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "vhs --version",
+            "expected_signal": "vhs version v0.12.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "vhs version v0.12.1 (24fa225)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "(sleep 2; printf 'echo hello\\r'; sleep 1; printf 'exit\\r'; sleep 2) | timeout 30 script -qec \"vhs record --shell bash\" /dev/null",
+            "expected_signal": "Type \"echo hello\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Type \"echo hello\"",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "vhs serve",
+            "expected_signal": "Starting SSH server on localhost:1976",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Starting SSH server on localhost:1976",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "vhs demo.tape && ls -la demo.gif",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "File: demo.tape could not start browser: browser exited unexpectedly before its debugging endpoint was ready recording failed",
+            "setup": [
+              {
+                "command": "cat > demo.tape <<'EOF'\nOutput demo.gif\nSet FontSize 46\nSet Width 1200\nSet Height 600\nType \"echo 'Welcome to VHS!'\"\nSleep 500ms\nEnter\nSleep 5s\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Install with go install, pacman, nix, xbps, brew or apt (all need a toolchain, root or another distro)",
+            "actually_needed": "The release tarball vhs_0.12.1_Linux_x86_64.tar.gz from GitHub releases, copied to ~/.local/bin, plus static ttyd (tsl0922 releases) and ffmpeg (BtbN builds)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "VHS requires ttyd and ffmpeg",
+            "actually_needed": "VHS also downloads Chromium at runtime (go-rod, to ~/.cache/rod) on the first render, which needs network and system libraries (libnss3, libatk, libX11, libgbm, libcairo, libasound and more). Without them rendering fails with 'could not start browser'.",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "vhs record > cassette.tape",
+            "actually_needed": "It needs a real TTY: with no terminal it fails with 'inappropriate ioctl for device'. Running it under `script` worked.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "vhs record emitted tape commands including Type \"echo hello\", vhs serve started an SSH server on localhost:1976, and vhs --version printed v0.12.1, all exiting 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-vhs-20261116-024650-e1e7/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-vhs-20261116-024650-e1e7/check-1-cmd10.judged.png",
+            "runs/verify/verify-vhs-20261116-024650-e1e7/check-2-cmd8.judged.png",
+            "runs/verify/verify-vhs-20261116-024650-e1e7/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.235829,
+        "features": [
+          {
+            "feature": "render scripted tape files to terminal GIFs",
+            "status": "test_failed",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "The Chromium that VHS downloaded could not start: ldd showed libnss3, libX11, libgbm and others missing. apt needs root here."
+          },
+          {
+            "feature": "record terminal actions into a tape file",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "publish GIFs for sharing",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "publish uploads to vhs.charm.sh, and there was no GIF to upload."
+          },
+          {
+            "feature": "run a built-in SSH rendering server",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "The SSH server started and the port opened, but rendering over SSH needs Chromium, whose system libraries need root."
+          }
+        ]
+      }
+    ]
   },
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-16T01:00:22+08:00",
+    "checked_at": "2026-11-16T03:11:48+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -178,15 +331,15 @@
   },
   "scores": {
     "formula_version": "b3.v6",
-    "computed_at": "2026-11-16T01:00:14+08:00",
+    "computed_at": "2026-11-16T02:48:52+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.5,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 77.8,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.595,
           "weight": 20.0
         },
         "install_docs": {
@@ -210,7 +363,7 @@
           "weight": 10.0
         },
         "feature_results": {
-          "score": null,
+          "score": 1.0,
           "weight": 20.0
         }
       }
@@ -233,7 +386,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 2.35
+      "value": 2.65
     },
     "docs_rubric": {
       "model": "claude-opus-5-5",
@@ -524,5 +677,5 @@
     }
   ],
   "first_seen_at": "2026-11-16T00:58:08+08:00",
-  "updated_at": "2026-11-16T01:00:22+08:00"
+  "updated_at": "2026-11-16T03:11:48+08:00"
 }

@@ -26,28 +26,32 @@
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
-    "generated_at": "2026-11-15T18:13:33.112066Z",
-    "run_id": null,
-    "open_hint": "Open https://svgomg.net in your web browser to start.",
+    "generated_at": "2026-11-15T19:19:16.475385Z",
+    "run_id": "web-svgomg-20261116-024153-9bce",
+    "open_hint": "Open https://svgomg.net in your web browser to start with the main page, where you can load or paste an SVG.",
     "features": [
       {
         "feature": "optimize and minify SVG files",
-        "title": "Optimize and minify SVG files",
+        "title": "Optimize and shrink SVG files",
         "steps": []
       },
       {
         "feature": "toggle individual SVGO optimization plugins",
-        "title": "Turn individual SVGO optimization plugins on or off",
-        "steps": []
+        "title": "Turn individual optimization plugins on or off",
+        "steps": [
+          "Load an SVG into the app.",
+          "In the settings list, switch on or off the options you want, such as Multipass or Remove xmlns.",
+          "Check the size readout for the new file size and savings."
+        ]
       },
       {
         "feature": "paste SVG markup for optimization",
-        "title": "Paste SVG markup to optimize it",
+        "title": "Paste SVG code to optimize it",
         "steps": []
       },
       {
         "feature": "compare original and gzipped sizes",
-        "title": "Compare original and gzipped file sizes",
+        "title": "Compare original and gzipped sizes",
         "steps": []
       }
     ]
@@ -87,20 +91,20 @@
   "processing": "local",
   "last_release": null,
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-16T00:53:00.830519+08:00",
+    "checked_at": "2026-11-16T02:41:53.635996+08:00",
     "runs": [
       {
-        "id": "web-svgomg-20261116-005300-b205",
-        "level": "install",
+        "id": "web-svgomg-20261116-024153-9bce",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-vm-chromium",
         "image": "pickfit-web:5ba46ffecfd8",
-        "checked_at": "2026-11-16T00:53:00.830519+08:00",
+        "checked_at": "2026-11-16T02:41:53.635996+08:00",
         "tool_version": null,
         "install_method": null,
         "replayed": false,
@@ -116,7 +120,16 @@
             "expected_signal": "the app's main screen",
             "exit_code": null,
             "passed": true,
-            "observed_excerpt": "SVGOMG's working optimizer screen showing a demo red car SVG, a settings panel with toggles and sliders, download buttons, and a size reduction readout (8.54k → 5.03k).",
+            "observed_excerpt": "SVGOMG's working optimizer screen showing a demo red car SVG, global settings and feature toggles panel, and a size reduction readout (8.54k → 5.03k).",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "browser: Use toggle individual SVGO optimization plugins and get a visible result",
+            "expected_signal": "the result text appears on the page",
+            "exit_code": null,
+            "passed": true,
+            "observed_excerpt": "'8.54k → 5.02k 58.81%' appeared on the page; the judge saw the feature work: Multipass and Remove xmlns were toggled on, and the size readout changed from 8.54k → 5.03k (58.9%) to 8.54k → 5.02k (58.81%); the image preview disappeared, as expected when xmlns is removed.",
             "setup": [],
             "offline": null
           }
@@ -125,26 +138,26 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "SVGOMG's working optimizer screen showing a demo red car SVG, a settings panel with toggles and sliders, download buttons, and a size reduction readout (8.54k → 5.03k).",
+          "observed": "SVGOMG's working optimizer screen showing a demo red car SVG, global settings and feature toggles panel, and a size reduction readout (8.54k → 5.03k).",
           "model": "claude-opus-5-5"
         },
         "evidence": {
-          "trace_path": "runs/web/svgomg/web-svgomg-20261116-005300-b205/messages.jsonl",
-          "log_path": "runs/web/svgomg/web-svgomg-20261116-005300-b205/harness.log",
+          "trace_path": "runs/web/svgomg/web-svgomg-20261116-024153-9bce/messages.jsonl",
+          "log_path": "runs/web/svgomg/web-svgomg-20261116-024153-9bce/harness.log",
           "screenshot_paths": [
-            "runs/web/svgomg/web-svgomg-20261116-005300-b205/install.png",
-            "runs/web/svgomg/web-svgomg-20261116-005300-b205/after.png"
+            "runs/web/svgomg/web-svgomg-20261116-024153-9bce/install.png",
+            "runs/web/svgomg/web-svgomg-20261116-024153-9bce/after.png"
           ],
           "evidence_url": null
         },
         "actor_model": "claude-opus-5-5",
-        "cost_usd": 0.1284,
+        "cost_usd": 0.1355,
         "web": {
           "url": "https://svgomg.net",
           "final_url": "https://svgomg.net/",
           "screen": "main_ui",
           "browser": "Chromium 156 headless via browser-use 0.13.14",
-          "account_needed": null,
+          "account_needed": false,
           "ads_seen": true,
           "third_party_domains": 8,
           "third_party_hosts": [
@@ -160,7 +173,22 @@
           "data_sent": "unknown",
           "data_sent_note": "pickfit typed only short values, too short to trace in requests.",
           "pwa": false,
-          "offline": "not_tested"
+          "offline": "not_tested",
+          "operations": [
+            {
+              "feature": "toggle individual SVGO optimization plugins",
+              "goal": "Use toggle individual SVGO optimization plugins and get a visible result",
+              "check": "page_text",
+              "expected": [
+                "8.54k → 5.02k 58.81%"
+              ],
+              "passed": true,
+              "observed": "'8.54k → 5.02k 58.81%' appeared on the page; the judge saw the feature work: Multipass and Remove xmlns were toggled on, and the size readout changed from 8.54k → 5.03k (58.9%) to 8.54k → 5.02k (58.81%); the image preview disappeared, as expected when xmlns is removed.",
+              "smoke_test": 1,
+              "actions": 3,
+              "operator_model": "claude-opus-5-5"
+            }
+          ]
         },
         "features": [
           {
@@ -173,9 +201,11 @@
           },
           {
             "feature": "toggle individual SVGO optimization plugins",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
             "note": null
           },
@@ -205,7 +235,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-16T01:15:45+08:00",
+    "checked_at": "2026-11-16T03:11:48+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_lockfile",
     "sources": [],
@@ -214,28 +244,33 @@
     "advisories_total": 0,
     "findings": []
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "web-svgomg-20261116-024153-9bce",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 2,
+    "model": "claude-opus-5-5",
+    "effort": "medium",
+    "inputs_sha": "422a95d226123602b915754dd5f977ec93568310f9e8b73d8a4c7054bbc0b2d8",
+    "checked_at": "2026-11-16T03:15:18+08:00",
+    "cost_usd": 0.019216
+  },
   "scores": {
-    "formula_version": "web.v1",
-    "computed_at": "2026-11-16T01:15:29+08:00",
+    "formula_version": "web.v1+visual.v1",
+    "computed_at": "2026-11-16T03:15:18+08:00",
     "quality": {
-      "total": 33.3,
+      "total": 74.6,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
-        "sandbox_verification": {
-          "score": 0.6,
-          "weight": 50.0
-        },
-        "install_docs": {
-          "score": null,
-          "weight": 0.0
-        },
         "maintenance": {
           "score": null,
           "weight": 0.0
         },
-        "engineering_hygiene": {
+        "install_docs": {
           "score": null,
           "weight": 0.0
         },
@@ -243,14 +278,27 @@
           "score": null,
           "weight": 0.0
         },
+        "engineering_hygiene": {
+          "score": null,
+          "weight": 0.0
+        },
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 50
+        },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
+          "weight": 10
         },
         "browser_facts": {
-          "score": 0.0,
-          "weight": 40.0
+          "score": 0.4286,
+          "weight": 40
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 74.6,
+        "defects": 0
       }
     },
     "popularity": {
@@ -497,5 +545,5 @@
     }
   ],
   "first_seen_at": "2026-11-16T00:50:14+08:00",
-  "updated_at": "2026-11-16T01:15:45+08:00"
+  "updated_at": "2026-11-16T03:15:18+08:00"
 }

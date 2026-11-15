@@ -37,14 +37,18 @@
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
-    "generated_at": "2026-11-15T18:13:01.585698Z",
-    "run_id": null,
-    "open_hint": "Open https://shell.duckdb.org in your web browser; a DuckDB SQL prompt appears on the page.",
+    "generated_at": "2026-11-15T19:19:04.199025Z",
+    "run_id": "web-duckdb-web-shell-20261116-031647-5131",
+    "open_hint": "Open https://shell.duckdb.org in your browser; an empty SQL shell loads, ready for queries.",
     "features": [
       {
         "feature": "run SQL queries in the browser",
-        "title": "Run SQL queries in your browser",
-        "steps": []
+        "title": "Run SQL queries in the browser",
+        "steps": [
+          "Type `LOAD httpfs;` in the shell and press Enter.",
+          "Type a query such as `FROM '<parquet file URL>';` and press Enter.",
+          "Read the result table below the query, which shows the row count and the first rows."
+        ]
       },
       {
         "feature": "read Parquet, CSV and JSON files",
@@ -98,20 +102,20 @@
   "processing": "local",
   "last_release": null,
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-16T00:54:06.034550+08:00",
+    "checked_at": "2026-11-16T03:16:47.374255+08:00",
     "runs": [
       {
-        "id": "web-duckdb-web-shell-20261116-005406-2070",
-        "level": "install",
+        "id": "web-duckdb-web-shell-20261116-031647-5131",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-vm-chromium",
         "image": "pickfit-web:5ba46ffecfd8",
-        "checked_at": "2026-11-16T00:54:06.034550+08:00",
+        "checked_at": "2026-11-16T03:16:47.374255+08:00",
         "tool_version": null,
         "install_method": null,
         "replayed": false,
@@ -127,7 +131,16 @@
             "expected_signal": "the app's main screen",
             "exit_code": null,
             "passed": true,
-            "observed_excerpt": "The DuckDB Web Shell terminal is loaded with version info and a 'memory D' prompt ready for SQL input, plus New/Share/Import/Datasets menu items.",
+            "observed_excerpt": "The DuckDB Web Shell terminal is loaded with version info and a 'memory D' SQL prompt, plus New/Share/Import/Datasets menu items.",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "browser: Use Query remote Parquet file with SQL in the browser and get a visible result",
+            "expected_signal": "the result text appears on the page",
+            "exit_code": null,
+            "passed": true,
+            "observed_excerpt": "'380959 rows (40 shown)' appeared on the page; the judge saw the feature work: The empty shell now shows LOAD httpfs and a FROM query on a remote train_services.parquet file, with a result table of 8 columns and 380959 rows (40 shown).",
             "setup": [],
             "offline": null
           }
@@ -136,26 +149,26 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The DuckDB Web Shell terminal is loaded with version info and a 'memory D' prompt ready for SQL input, plus New/Share/Import/Datasets menu items.",
+          "observed": "The DuckDB Web Shell terminal is loaded with version info and a 'memory D' SQL prompt, plus New/Share/Import/Datasets menu items.",
           "model": "claude-opus-5-5"
         },
         "evidence": {
-          "trace_path": "runs/web/duckdb-web-shell/web-duckdb-web-shell-20261116-005406-2070/messages.jsonl",
-          "log_path": "runs/web/duckdb-web-shell/web-duckdb-web-shell-20261116-005406-2070/harness.log",
+          "trace_path": "runs/web/duckdb-web-shell/web-duckdb-web-shell-20261116-031647-5131/messages.jsonl",
+          "log_path": "runs/web/duckdb-web-shell/web-duckdb-web-shell-20261116-031647-5131/harness.log",
           "screenshot_paths": [
-            "runs/web/duckdb-web-shell/web-duckdb-web-shell-20261116-005406-2070/install.png",
-            "runs/web/duckdb-web-shell/web-duckdb-web-shell-20261116-005406-2070/after.png"
+            "runs/web/duckdb-web-shell/web-duckdb-web-shell-20261116-031647-5131/install.png",
+            "runs/web/duckdb-web-shell/web-duckdb-web-shell-20261116-031647-5131/after.png"
           ],
           "evidence_url": null
         },
         "actor_model": "claude-opus-5-5",
-        "cost_usd": 0.0821,
+        "cost_usd": 0.2626,
         "web": {
           "url": "https://shell.duckdb.org",
           "final_url": "https://shell.duckdb.org/",
           "screen": "main_ui",
           "browser": "Chromium 156 headless via browser-use 0.13.14",
-          "account_needed": null,
+          "account_needed": false,
           "ads_seen": false,
           "third_party_domains": 2,
           "third_party_hosts": [
@@ -165,14 +178,31 @@
           "data_sent": "unknown",
           "data_sent_note": "pickfit typed only short values, too short to trace in requests.",
           "pwa": false,
-          "offline": "not_tested"
+          "offline": "not_tested",
+          "operations": [
+            {
+              "feature": "run SQL queries in the browser",
+              "goal": "Use Query remote Parquet file with SQL in the browser and get a visible result",
+              "check": "page_text",
+              "expected": [
+                "380959 rows (40 shown)"
+              ],
+              "passed": true,
+              "observed": "'380959 rows (40 shown)' appeared on the page; the judge saw the feature work: The empty shell now shows LOAD httpfs and a FROM query on a remote train_services.parquet file, with a result table of 8 columns and 380959 rows (40 shown).",
+              "smoke_test": 1,
+              "actions": 6,
+              "operator_model": "claude-opus-5-5"
+            }
+          ]
         },
         "features": [
           {
             "feature": "run SQL queries in the browser",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
             "note": null
           },
@@ -209,8 +239,6 @@
   },
   "security": {
     "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-16T01:15:45+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -231,18 +259,33 @@
         "summary": "Generated code can read and write out of bounds in safe code",
         "malicious": false
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:15:45+08:00"
+  },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "web-duckdb-web-shell-20261116-031647-5131",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 2,
+    "model": "claude-opus-5-5",
+    "effort": "medium",
+    "inputs_sha": "20b2388d19449224c964bdf38bf76cbd9fcd88c3085881fc983d82bd9158da7d",
+    "checked_at": "2026-11-16T03:18:45+08:00",
+    "cost_usd": 0.026216
   },
   "scores": {
-    "formula_version": "web.v1",
-    "computed_at": "2026-11-16T01:15:45+08:00",
+    "formula_version": "web.v1+visual.v1",
+    "computed_at": "2026-11-16T03:18:45+08:00",
     "quality": {
-      "total": 55.6,
+      "total": 79.0,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
-        "responsiveness": {
+        "engineering_hygiene": {
           "score": null,
           "weight": 0.0
         },
@@ -250,11 +293,11 @@
           "score": null,
           "weight": 0.0
         },
-        "install_docs": {
-          "score": null,
-          "weight": 0.0
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 50
         },
-        "engineering_hygiene": {
+        "responsiveness": {
           "score": null,
           "weight": 0.0
         },
@@ -262,14 +305,19 @@
           "score": null,
           "weight": 10
         },
-        "sandbox_verification": {
-          "score": 0.6,
-          "weight": 50
+        "install_docs": {
+          "score": null,
+          "weight": 0.0
         },
         "browser_facts": {
-          "score": 0.5,
+          "score": 0.7143,
           "weight": 40
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 79.0,
+        "defects": 0
       }
     },
     "popularity": {
@@ -524,5 +572,5 @@
     }
   ],
   "first_seen_at": "2026-11-16T00:49:04+08:00",
-  "updated_at": "2026-11-16T01:15:45+08:00"
+  "updated_at": "2026-11-16T03:18:45+08:00"
 }

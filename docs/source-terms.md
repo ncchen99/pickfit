@@ -202,4 +202,81 @@ MCP 的 34 列裡有 6 列和別列同一個 repo（`modelcontextprotocol/server
   - 抽取的 schema 有 49 個可為 null 的欄位，超過 Claude 結構化輸出的上限 16，所以 schema 改放在提示詞裡，沒有強制力。Claude 把不知道的欄位寫成單純的 `null`，驗證不過；前後 41 次抽取因此白做（約 $1.2）。修正後重跑三次都失敗的 3 筆：pandoc、trippy、go-task（`--retry`）。
   - `platforms` 被讀成「句子裡提到的那個系統」（例如 "Release v0.3.0 adds windows support" 被讀成只支援 Windows），3 筆因此沒進沙盒：oxker、mcp-server-docker、postgres-mcp。把欄位說明寫清楚後重抽（三筆都變成「沒寫」），第一次產生的未驗證紀錄還沒 commit，移到 `runs/candidates-v1/superseded/`，再照同一段流程重跑：oxker 通過，另外兩筆進了沙盒但沒過（要 Docker、要資料庫）。
 - **花費**（帳本 `pipeline` 預算，11/16）：Claude 約 $27.7，其中驗證 agent 12.4、抽取 8.0、文件 rubric 3.1、判讀 1.4、網頁操作 1.4（全部被拒答）、使用說明 0.9、初篩 0.2、連線測試 0.2；Modal 沙盒約 $0.55。每個有 repo 的候選平均約 $0.25，從送進流程到寫成紀錄 2–6 分鐘。
+- **11/16 03:20 補跑之後的數字在下一節**；這一節維持 02:20 當時的樣子。
 - **帳本裡有 43 列不是實際花費**：11/15–11/16 的 `verify-gui-operator`、沒有 run id、共約 $0.49，是跑測試時測試替身寫進共用帳本的（`tests/test_verify_gui_operate.py` 沒有隔離帳本，賽期就有，當時算在 Baseten 的價格上）。現在 `tests/conftest.py` 讓每個測試用自己的帳本與 runs 資料夾；已經寫進去的列沒有刪。
+
+## 安裝文件：README 只寫「請看官網」時，讀專案自己的安裝頁（規則 `install-docs.v1`）
+
+2026-11-16 03:20（台北）登記，念誠 11/16 要求（「很多說安裝請看官網的，agent 要有辦法去看官網的文件」）。登記比第一次抓取晚：02:58–03:01 已經替 20 個候選抓過頁面，程式（`pickfit/installdocs.py`）、測試和這一節在同一批 commit 裡（分支 `worktree-post-hackathon-anthropic`）。
+
+為什麼：知名工具的 README 常常沒有安裝指令，只連到官網的安裝頁。抽取只讀 pickfit 抓下來的東西，所以這些工具沒有沙盒能跑的安裝方式，從來沒進過沙盒就列成未驗證。
+
+規則：
+
+1. **只在需要時讀**。候選的抽取結果是工具、而且沒有 Linux 沙盒能跑的安裝方式，才去讀；README 自己有安裝指令的不抓任何頁面。每個候選只讀**一頁**，找過一次就不再找（`--force` 例外）。
+2. **只讀專案自己的**，照這個順序，讀到一頁就停：
+   1. repo 裡的文件（`INSTALL.md`、`docs/install*.md`、`docs/getting-started.md` 這類，README 有連過去的，或檔案樹裡看得到的）。走 GitHub API，和讀 README 一樣。
+   2. README 連出去的頁面，連結文字或網址寫著 install、getting started、quick start、download、setup。
+   3. 前兩種都沒有時，看專案稱為首頁的頁面（GitHub 上登記的 homepage、README 裡寫「Documentation」的連結），再讀那一頁在同一個網站上連到的安裝頁；首頁自己就寫了安裝方式的，讀首頁。
+3. **「專案自己的網站」怎麼認**：和 GitHub 登記的 homepage 同一個網站（含子網域，例如 `docs.mitmproxy.org`），或主機名稱裡有 repo 或擁有者的名字（`restic.readthedocs.io`、`smallstep.com`）。README 也會連到它依賴的東西的安裝頁（Rust、Docker、Go），那些不讀。不搜尋。徽章圖片、社群、商店、套件倉庫的網址都不算。
+4. **照網頁應用的規矩抓**：用 pickfit 自己的 User-Agent，同站每秒一個請求，每個候選最多 8 個請求（robots.txt、首頁、安裝頁都算）。robots.txt 不讓 pickfit 抓、或表示內容不給模型讀的，不抓（`robots_verdict`，和上面「網頁應用」一節同一段程式）。轉到別的網站的不讀；只會轉址的舊網址跟一次；要 JavaScript 才有文字的頁面不渲染，記下來跳過。
+5. **存什麼**：頁面網址、標題、去掉選單與頁尾的文字（最多 20,000 字元）、抓取時間，以及每個找過的位置和結果（`runs/pipeline.db` 的 `install_docs`）。不存圖片。
+6. **怎麼用**：這一頁當成抽取的另一個來源（`docs1`，放在 `<source>` 區塊裡，和 README 一樣只是資料），抽出的安裝指令照舊要逐字引用原文；紀錄的 `sources` 會列出這一頁。驗證時這一頁也放進沙盒的工作目錄（`INSTALL-GUIDE-1.md`），README 的指令不夠時 agent 可以自己讀。
+7. **指令**：`uv run pickfit extract --install-docs --model prod`；`pickfit watch` 處理提交的 repo 時也會做同一步。
+
+### 結果（2026-11-16 03:20 台北）
+
+22 個候選的抽取沒有沙盒能跑的安裝方式（20 筆未驗證的紀錄，加上當時沒寫成紀錄的 git-cliff 與 opentofu）。讀到一頁的 21 個：
+
+- repo 裡的檔案 7：rclone（`docs/content/install.md`）、pandoc（`INSTALL.md`）、trivy、presenterm、bentopdf、dozzle、qsv。
+- README 連出去的頁面 11：mitmproxy、restic、step-cli、go-task、git-cliff、opentofu、gh-dash、beszel、homarr、hedgedoc、supabase MCP（讀到的是它的 MCP 說明頁）。
+- 從首頁找到安裝頁 3：chezmoi、fx、kroki。
+- 沒讀到 1：omni-tools（首頁要 JavaScript 才有文字）。
+
+重新抽取 21 筆（約 $1.36）之後，11 筆有了沙盒能跑的安裝方式，全部進沙盒，全部通過：function 8（rclone、restic、chezmoi、pandoc、trivy、go-task、step-cli、presenterm）、service 2（mitmproxy、bentopdf）、install 1（gh-dash）。git-cliff 第一次因為 README 裡引不出「它是哪一種軟體」而沒寫紀錄，這次抽取判定是 CLI 工具，寫成紀錄（未驗證）。
+
+還是沒有安裝方式的 10 筆：只給 Docker 的自架工具 5（dozzle、kroki、hedgedoc、homarr、beszel）；安裝頁只列 Homebrew、snap、Go 的 fx；安裝頁是索引、指令在子頁的 git-cliff 與 opentofu（這條規則只讀一頁）；qsv（README 連到的是另一份入門文件）；supabase MCP（遠端服務，沒有本機安裝）。
+
+## 第一批候選：11/16 的補跑
+
+念誠 11/16：13 個網站重跑、agent 要能讀官網的安裝文件、查清楚 5 筆安裝步驟不合紀錄規則的原因並修正。
+
+### 13 個網站再造訪一次
+
+第一次造訪（規則 5 的「每站只造訪一次」）操作 agent 一步都沒動，原因在 pickfit（上一節）。念誠同意重跑，所以每站用 `--revisit` 再造訪一次，原因寫進每一筆 run。結果：**function 12、install 1**。Excalidraw 留在 install：agent 在畫布上打了字，但判讀沒看到 README 說的功能做出來。
+
+DuckDB Web Shell 造訪了第三次。第二次操作了 6 步之後，判讀被 pickfit 自己的預算規則擋下：判讀和操作共用同一個 scope，上限卻只有 $0.50，操作已經花了 $0.69，判讀就送不出去，那次造訪等於白做。修正：判讀的上限改成整次造訪的上限（`SITE_CAP_USD`）。第三次到 function。
+
+13 筆都補了視覺檢查（`pickfit visual`）。這次有變動的 37 筆紀錄（含下面重驗的），使用說明都照新的 run 重寫。
+
+### 5 筆安裝步驟不合紀錄規則：原因與修正
+
+規則本身沒有錯。紀錄裡的每個安裝步驟都要符合兩件事：指令在 500 字元以內（要顯示給人複製）、指令的結束碼真的代表成功（不能用 `; echo`、`|| true`、管線接 `grep`、迴圈等把失敗蓋掉）。5 筆都是工具其實裝好也測過了，但 agent 引用的指令不合這兩條。問題出在 pickfit 怎麼告訴 agent：
+
+1. **一次只講一個毛病，而且只給一次重來的機會**。act 的那一步同時有兩個問題（結尾接了 `; cat`、長度 692 字元）。pickfit 只回報第一個，agent 改掉之後重跑，新的指令 752 字元，第二次就不再退回。homepage（結尾的 `; ls`，改完 758 字元）、jless（先被挑 `||`，改完剩下 `for` 迴圈）都是同一種情況。
+2. **規則沒有事先講**。提示詞列了一部分會蓋掉結束碼的寫法，沒有提 500 字元，也沒有提迴圈。agent 要等到最後呼叫 finish 才知道。termshark 和 vhs 是在只能呼叫 finish 的最後一輪才被擋，連重來的機會都沒有。
+3. **測試用的輸入檔被當成安裝步驟**。act 的 workflow 檔、homepage 的設定檔，是用 heredoc 寫的幾百字元。它們是某個檢查的前置（`setup_ids`，上限 4,000 字元），不是安裝步驟。finish 的欄位說明寫「包含這些指令用到的每個檔案寫入」，agent 就把它們放進 steps。
+
+修正（`pickfit/verify/verdict.py`、`agent.py`）：
+
+- 一個步驟的所有毛病一次列完（`masked_exits`），長度另外算，不再只報第一個。
+- 提示詞事先寫明：每個安裝步驟與檢查是一條 500 字元以內的指令、不能有迴圈（改成用 `&&` 寫開，或把清單餵給 xargs）、只寫輸入檔或設定檔的指令放在該檢查的 `setup_ids`。
+- 指令跑完當下就提醒：成功（exit 0）但不能引用的指令，回傳的輸出前面會加一行說明原因，agent 還有指令額度時就能重跑，不用等到 finish。
+- 退回 finish 時的訊息也寫上這幾條，並說明只寫輸入檔的指令不必重跑，改放 `setup_ids` 就好。
+
+重驗 5 筆：**vhs function、jless function、homepage service、act function（第二次；第一次 agent 自己判定要 Docker）**。termshark 修正後跑了三次都沒過。第一次是安裝步驟接了 `grep`，又剛好在只能呼叫 finish 的那一輪（所以才加上跑完當下的提醒）。後兩次 agent 的回報和紀錄一致，但在乾淨沙盒重播時失敗：它要的 tshark 是系統套件，沙盒沒有 root，agent 用下載 .deb 再解開的方式繞過，引用的步驟換到乾淨的沙盒就跑不起來（一次少了建立目錄的指令，一次第一步就失敗）。維持未驗證。
+
+### 補跑之後（2026-11-16 03:20 台北）
+
+| | CLI／TUI | MCP server | 自架 Web 工具 | 網站 | 合計 |
+|---|---|---|---|---|---|
+| 寫成紀錄 | 49 | 22 | 12 | 13 | 96 |
+| 其中 function | 40 | 7 | 1 | 12 | 60 |
+| 其中 service | 1 | 10 | 4 | 0 | 15 |
+| 其中 install | 4 | 0 | 0 | 1 | 5 |
+| 其中未驗證 | 4 | 5 | 7 | 0 | 16 |
+| 沒寫紀錄 | 3 | 5 | 2 | 5 | 15 |
+
+- **未驗證的 16 筆**：termshark（上面）；fx、qsv、git-cliff（讀了安裝頁還是沒有沙盒能跑的指令）；MCP 5（Brave Search 要金鑰、mcp-server-docker 要 Docker、Postgres MCP Pro 與 kubernetes-mcp-server 交握不成功、supabase MCP 是遠端服務）；自架 Web 工具 7（dozzle、kroki、hedgedoc、homarr、beszel 只給 Docker，omni-tools 沒讀到安裝頁，n8n 資源不夠）。
+- **花費**（帳本，11/16 02:37–03:19）：Claude 約 $10.0，其中驗證 agent 3.9、網頁操作 2.4、抽取 1.4、文件 rubric 0.9、網頁判讀 0.4、使用說明 0.4、視覺檢查 0.3、判讀 0.4；Modal 約 $0.13。
+- **順手修掉的兩個舊問題**：`pickfit profiles` 遇到網頁應用的抽取會當掉（那些抽取沒有 repo 候選，現在跳過，它們的紀錄由 `pickfit webapps records` 寫）；`scripts/copy_evidence.py` 遇到本身就是連到證據區的 run 資料夾會當掉（現在標成 `in_place`，不複製也不改寫）。這一批網頁 run 的截圖與紀錄已複製到 `~/.pickfit/evidence/`。

@@ -26,14 +26,18 @@
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
-    "generated_at": "2026-11-15T18:13:11.175514Z",
-    "run_id": null,
-    "open_hint": "Open https://www.jwt.io/ in your web browser; the token debugger loads on the main page.",
+    "generated_at": "2026-11-15T19:19:07.793477Z",
+    "run_id": "web-jwt-io-20261116-024758-d9b5",
+    "open_hint": "Open https://www.jwt.io/ in your web browser; the debugger page loads with a sample token.",
     "features": [
       {
         "feature": "decode JSON Web Tokens",
         "title": "Decode a JSON Web Token",
-        "steps": []
+        "steps": [
+          "Open the debugger on the jwt.io page.",
+          "Replace the sample token with your own JWT.",
+          "Read the decoded claims in the Decoded Payload panel."
+        ]
       },
       {
         "feature": "generate JSON Web Tokens",
@@ -77,20 +81,20 @@
   "processing": null,
   "last_release": null,
   "verification": {
-    "level": "install",
+    "level": "function",
     "unverified_reason": null,
-    "checked_at": "2026-11-16T00:57:39.931743+08:00",
+    "checked_at": "2026-11-16T02:47:58.661343+08:00",
     "runs": [
       {
-        "id": "web-jwt-io-20261116-005739-a124",
-        "level": "install",
+        "id": "web-jwt-io-20261116-024758-d9b5",
+        "level": "function",
         "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-vm-chromium",
         "image": "pickfit-web:5ba46ffecfd8",
-        "checked_at": "2026-11-16T00:57:39.931743+08:00",
+        "checked_at": "2026-11-16T02:47:58.661343+08:00",
         "tool_version": null,
         "install_method": null,
         "replayed": false,
@@ -106,7 +110,16 @@
             "expected_signal": "the app's main screen",
             "exit_code": null,
             "passed": true,
-            "observed_excerpt": "The jwt.io JWT Debugger is shown with an encoded token input and decoded header panel, partly covered by a cookie consent banner at the bottom.",
+            "observed_excerpt": "The jwt.io JWT Debugger tool is shown with an encoded token input and decoded header, partially covered by a cookie consent banner at the bottom.",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "browser: Use decode JSON Web Tokens and get a visible result",
+            "expected_signal": "the result text appears on the page",
+            "exit_code": null,
+            "passed": true,
+            "observed_excerpt": "'\"note\": \"pickfit888862 hello\"' appeared on the page; the judge saw the feature work: The agent replaced the sample token with a custom JWT, and the Decoded Payload panel now shows the decoded claim from its base64 payload.",
             "setup": [],
             "offline": null
           }
@@ -115,26 +128,26 @@
         "blocking_error": null,
         "judge": {
           "verdict": "working",
-          "observed": "The jwt.io JWT Debugger is shown with an encoded token input and decoded header panel, partly covered by a cookie consent banner at the bottom.",
+          "observed": "The jwt.io JWT Debugger tool is shown with an encoded token input and decoded header, partially covered by a cookie consent banner at the bottom.",
           "model": "claude-opus-5-5"
         },
         "evidence": {
-          "trace_path": "runs/web/jwt-io/web-jwt-io-20261116-005739-a124/messages.jsonl",
-          "log_path": "runs/web/jwt-io/web-jwt-io-20261116-005739-a124/harness.log",
+          "trace_path": "runs/web/jwt-io/web-jwt-io-20261116-024758-d9b5/messages.jsonl",
+          "log_path": "runs/web/jwt-io/web-jwt-io-20261116-024758-d9b5/harness.log",
           "screenshot_paths": [
-            "runs/web/jwt-io/web-jwt-io-20261116-005739-a124/install.png",
-            "runs/web/jwt-io/web-jwt-io-20261116-005739-a124/after.png"
+            "runs/web/jwt-io/web-jwt-io-20261116-024758-d9b5/install.png",
+            "runs/web/jwt-io/web-jwt-io-20261116-024758-d9b5/after.png"
           ],
           "evidence_url": null
         },
         "actor_model": "claude-opus-5-5",
-        "cost_usd": 0.1191,
+        "cost_usd": 0.0953,
         "web": {
           "url": "https://www.jwt.io/",
           "final_url": null,
           "screen": "main_ui",
           "browser": "Chromium 156 headless via browser-use 0.13.14",
-          "account_needed": null,
+          "account_needed": false,
           "ads_seen": true,
           "third_party_domains": 22,
           "third_party_hosts": [
@@ -161,17 +174,34 @@
             "t.co",
             "twitter.com"
           ],
-          "data_sent": "unknown",
-          "data_sent_note": "pickfit typed only short values, too short to trace in requests.",
+          "data_sent": "none",
+          "data_sent_note": "No request carried what pickfit typed or chose (checked in addresses, bodies and WebSocket messages, plain and encoded).",
           "pwa": false,
-          "offline": "not_tested"
+          "offline": "not_tested",
+          "operations": [
+            {
+              "feature": "decode JSON Web Tokens",
+              "goal": "Use decode JSON Web Tokens and get a visible result",
+              "check": "page_text",
+              "expected": [
+                "\"note\": \"pickfit888862 hello\""
+              ],
+              "passed": true,
+              "observed": "'\"note\": \"pickfit888862 hello\"' appeared on the page; the judge saw the feature work: The agent replaced the sample token with a custom JWT, and the Decoded Payload panel now shows the decoded claim from its base64 payload.",
+              "smoke_test": 1,
+              "actions": 2,
+              "operator_model": "claude-opus-5-5"
+            }
+          ]
         },
         "features": [
           {
             "feature": "decode JSON Web Tokens",
-            "status": "not_checked",
-            "smoke_tests": [],
-            "reason": "not_attempted",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
             "failure": null,
             "note": null
           },
@@ -201,7 +231,7 @@
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-16T01:15:45+08:00",
+    "checked_at": "2026-11-16T03:11:48+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_source",
     "sources": [],
@@ -210,28 +240,33 @@
     "advisories_total": 0,
     "findings": []
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "web-jwt-io-20261116-024758-d9b5",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 2,
+    "model": "claude-opus-5-5",
+    "effort": "medium",
+    "inputs_sha": "fc0695796b74d005d7b95678c0342ad8449051239ba05c47b35c9d9e46c5ae5c",
+    "checked_at": "2026-11-16T03:14:55+08:00",
+    "cost_usd": 0.016436
+  },
   "scores": {
-    "formula_version": "web.v1",
-    "computed_at": "2026-11-16T01:15:29+08:00",
+    "formula_version": "web.v1+visual.v1",
+    "computed_at": "2026-11-16T03:14:55+08:00",
     "quality": {
-      "total": 33.3,
+      "total": 82.2,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
-        "sandbox_verification": {
-          "score": 0.6,
-          "weight": 50.0
-        },
-        "install_docs": {
-          "score": null,
-          "weight": 0.0
-        },
         "maintenance": {
           "score": null,
           "weight": 0.0
         },
-        "engineering_hygiene": {
+        "install_docs": {
           "score": null,
           "weight": 0.0
         },
@@ -239,14 +274,27 @@
           "score": null,
           "weight": 0.0
         },
+        "engineering_hygiene": {
+          "score": null,
+          "weight": 0.0
+        },
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 50
+        },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
+          "weight": 10
         },
         "browser_facts": {
-          "score": 0.0,
-          "weight": 40.0
+          "score": 0.6,
+          "weight": 40
         }
+      },
+      "visual": {
+        "factor": 1.0,
+        "before": 82.2,
+        "defects": 0
       }
     },
     "popularity": {
@@ -441,5 +489,5 @@
     }
   ],
   "first_seen_at": "2026-11-16T00:49:18+08:00",
-  "updated_at": "2026-11-16T01:15:45+08:00"
+  "updated_at": "2026-11-16T03:14:55+08:00"
 }

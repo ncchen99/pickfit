@@ -3,7 +3,7 @@
   "slug": "task",
   "repo_id": "gh:83252983",
   "name": "Task",
-  "summary": "A cross-platform build tool and task runner inspired by Make.",
+  "summary": "A cross-platform build tool and task runner inspired by Make that runs tasks defined in a Taskfile.",
   "aliases": [],
   "status": "listed",
   "status_reason": null,
@@ -22,36 +22,43 @@
     "taskfile"
   ],
   "use_cases": [
-    "include and run a remote Taskfile"
+    "install and run Task in a GitHub Actions workflow",
+    "include a remote Taskfile over HTTP"
   ],
   "alternatives_to": [
     "Make"
   ],
   "features": [
-    "run project tasks defined in a Taskfile",
-    "shell completion for task names and flags",
-    "watch source paths"
+    "run build tasks defined in a Taskfile",
+    "include remote Taskfiles",
+    "shell completions for five shells"
   ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
-    "generated_at": "2026-11-15T18:13:34.188775Z",
-    "run_id": null,
-    "open_hint": "Run `task --list` in a project folder that has a Taskfile to see the tasks you can run.",
+    "generated_at": "2026-11-15T19:19:16.779454Z",
+    "run_id": "verify-task-20261116-030348-ea38",
+    "open_hint": "In a folder that contains a Taskfile.yml, run `task` to run the default task.",
     "features": [
       {
-        "feature": "run project tasks defined in a Taskfile",
-        "title": "Run project tasks defined in a Taskfile",
-        "steps": []
+        "feature": "run build tasks defined in a Taskfile",
+        "title": "Run build tasks defined in a Taskfile",
+        "steps": [
+          "Write your tasks in a `Taskfile.yml` in your project folder.",
+          "In that folder, run `task` to run the default task and its dependencies."
+        ]
       },
       {
-        "feature": "shell completion for task names and flags",
-        "title": "Complete task names and flags in your shell",
-        "steps": []
+        "feature": "include remote Taskfiles",
+        "title": "Include Taskfiles from a remote URL",
+        "steps": [
+          "Add the remote file under `includes:` in your `Taskfile.yml`, for example `<name>: <url>`.",
+          "Run `TASK_X_REMOTE_TASKFILES=1 task --yes --insecure <name>:<task>` to run a task from the remote Taskfile."
+        ]
       },
       {
-        "feature": "watch source paths",
-        "title": "Watch source paths for changes",
+        "feature": "shell completions for five shells",
+        "title": "Use shell completions in five shells",
         "steps": []
       }
     ]
@@ -64,8 +71,8 @@
     "archived": false
   },
   "platforms": [
-    "linux",
     "macos",
+    "linux",
     "windows"
   ],
   "prerequisites": {
@@ -78,9 +85,51 @@
     "api_keys": []
   },
   "install": {
-    "macos": null,
-    "linux": null,
-    "windows": null
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install go-task/tap/go-task",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "task --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-task-20261116-030348-ea38",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install go-task-bin",
+          "purpose": "uv tool install go-task-bin (installs task 3.54.0)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "task --version",
+        "expected_signal": "3.54.0"
+      },
+      "first_task": "cd /tmp/proj && task"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @go-task/cli",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "task --version"
+    }
   },
   "pricing": {
     "model": null,
@@ -95,41 +144,193 @@
     "url": "https://github.com/go-task/task/releases/tag/v3.54.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T03:04:41.071198+08:00",
+    "runs": [
+      {
+        "id": "verify-task-20261116-030348-ea38",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T03:04:41.071198+08:00",
+        "tool_version": "3.54.0+pypi",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install go-task-bin",
+            "purpose": "uv tool install go-task-bin (installs task 3.54.0)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "task --version",
+            "expected_signal": "3.54.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "3.54.0+pypi",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/proj && task",
+            "expected_signal": "Building hello-app",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Building hello-app",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/proj /tmp/remote && cat > /tmp/proj/Taskfile.yml <<'EOF'\nversion: '3'\n\ntasks:\n  build:\n    desc: Build the project\n    cmds:\n      - echo \"Building {{.NAME}}\"\n    vars:\n      NAME: hello-app\n  default:\n    deps: [build]\n    cmds:\n      - echo \"All done\"\nEOF\ncat > /tmp/remote/Taskfile.yml <<'EOF'\nversion: '3'\n\ntasks:\n  greet:\n    cmds:\n      - echo \"Hello from remote Taskfile\"\nEOF\nmkdir -p /tmp/proj2 && cat > /tmp/proj2/Taskfile.yml <<'EOF'\nversion: '3'\n\nincludes:\n  rem: http://127.0.0.1:8765/Taskfile.yml\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/proj2 && TASK_X_REMOTE_TASKFILES=1 task --yes --insecure rem:greet",
+            "expected_signal": "Hello from remote Taskfile",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[0mHello from remote Taskfile",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/proj /tmp/remote && cat > /tmp/proj/Taskfile.yml <<'EOF'\nversion: '3'\n\ntasks:\n  build:\n    desc: Build the project\n    cmds:\n      - echo \"Building {{.NAME}}\"\n    vars:\n      NAME: hello-app\n  default:\n    deps: [build]\n    cmds:\n      - echo \"All done\"\nEOF\ncat > /tmp/remote/Taskfile.yml <<'EOF'\nversion: '3'\n\ntasks:\n  greet:\n    cmds:\n      - echo \"Hello from remote Taskfile\"\nEOF\nmkdir -p /tmp/proj2 && cat > /tmp/proj2/Taskfile.yml <<'EOF'\nversion: '3'\n\nincludes:\n  rem: http://127.0.0.1:8765/Taskfile.yml\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 -m http.server 8765 --bind 127.0.0.1 --directory /tmp/remote",
+                "background": true,
+                "port": 8765
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "task --completion bash",
+            "expected_signal": "complete -F _task \"$TASK_CMD\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "complete -F _task \"$TASK_CMD\"",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install go-task-bin",
+            "actually_needed": "uv tool install go-task-bin (isolated install; it prints the version as 3.54.0+pypi)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Remote Taskfiles (an experiment in older docs)",
+            "actually_needed": "No TASK_X_REMOTE_TASKFILES needed: task warns 'Experiment \"REMOTE_TASKFILES\" is released'. A plain http:// include needed --insecure, and --yes to skip the trust prompt.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks succeeded: the local Taskfile printed 'Building hello-app' and 'All done', the remote Taskfile task printed 'Hello from remote Taskfile', and --version printed 3.54.0+pypi.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-task-20261116-030348-ea38/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-task-20261116-030348-ea38/check-1-cmd5.judged.png",
+            "runs/verify/verify-task-20261116-030348-ea38/check-2-cmd6.judged.png",
+            "runs/verify/verify-task-20261116-030348-ea38/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.147327,
+        "features": [
+          {
+            "feature": "run build tasks defined in a Taskfile",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "include remote Taskfiles",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "shell completions for five shells",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Only the bash completion script was printed, with no completion actually performed and no other shells checked."
+          }
+        ]
+      }
+    ]
   },
   "security": {
     "version": "sec.v1",
     "database": "OSV.dev",
-    "checked_at": "2026-11-16T01:14:09+08:00",
-    "status": "clean",
+    "checked_at": "2026-11-16T03:11:48+08:00",
+    "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/go-task/task@bb2a8adae96a",
-      "go.mod"
+      "npm:@go-task/cli (fresh install, 48 packages)"
     ],
-    "packages_checked": 126,
-    "findings_total": 0,
-    "advisories_total": 0,
-    "findings": []
+    "packages_checked": 48,
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "npm:basic-ftp",
+        "version": "5.3.1",
+        "advisory": "GHSA-c475-qrg2-pj4r",
+        "cves": [
+          "CVE-2026-102990"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "6.2.1",
+        "summary": "basic-ftp: Quadratic-time CPU denial of service in Client.list() Unix directory-listing parser (RE_LINE backtracking)",
+        "malicious": false
+      }
+    ]
   },
   "scores": {
     "formula_version": "b3.v6",
-    "computed_at": "2026-11-16T01:14:02+08:00",
+    "computed_at": "2026-11-16T03:11:48+08:00",
     "quality": {
-      "total": 54.5,
-      "confidence": 0.5,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 79.0,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": null,
-          "weight": 20.0
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
-          "score": 0.25,
+          "score": 0.5,
           "weight": 25.0
         },
         "maintenance": {
@@ -146,36 +347,34 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       }
     },
     "popularity": {
-      "score": 90.0,
+      "score": 100.0,
       "signals": {
         "stars": 16352,
-        "monthly_downloads": null,
+        "monthly_downloads": 208017,
         "forks": 944,
         "dependents": null,
         "release_downloads": 25630842,
         "hn_top_score": 38,
-        "registries_count": 0
+        "registries_count": 1
       },
       "age_days": 3548,
-      "packages": []
+      "packages": [
+        "npm:@go-task/cli"
+      ]
     },
     "treasure": {
       "is_treasure": false,
-      "value": 5.45
+      "value": 0.0
     },
     "docs_rubric": {
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:02.161512+08:00",
-      "sources_sha": "3c17a9aa90dcd714f0d9a3e977689886981260b1a34595231ab59653919063c3",
+      "checked_at": "2026-11-16T03:11:03.852707+08:00",
+      "sources_sha": "3d4f16a30cb29aa45d723db3bf21a1c7cd58634da05b32e3857aa27e5c123e72",
       "items": {
         "what_it_does": {
           "score": 1,
@@ -183,19 +382,19 @@
         },
         "who_it_is_for": {
           "score": 1,
-          "quote": "Bumped the minimum Go version to 1.26. Task follows Go's two-latest support"
+          "quote": "If you're working in a Go project, a nice possibility is using go tool."
         },
         "prerequisites": {
-          "score": 0,
-          "quote": null
+          "score": 1,
+          "quote": "It downloads a prebuilt binary and verifies its checksum; no Go installation is needed."
         },
         "install_per_os": {
-          "score": 0,
-          "quote": null
+          "score": 2,
+          "quote": "winget install Task.Task"
         },
         "first_run_example": {
-          "score": 0,
-          "quote": null
+          "score": 1,
+          "quote": "task --version"
         },
         "config_and_keys": {
           "score": 1,
@@ -207,7 +406,7 @@
         },
         "license_and_platforms": {
           "score": 1,
-          "quote": "task_windows_amd64.zip"
+          "quote": "macOS · Linux · Windows"
         }
       },
       "unquoted": []
@@ -272,24 +471,30 @@
       "kind": "release",
       "url": "https://github.com/go-task/task/releases/tag/v3.54.0",
       "fetched_at": "2026-11-16T01:13:56+08:00"
+    },
+    {
+      "id": "docs1",
+      "kind": "website",
+      "url": "https://taskfile.dev/docs/installation",
+      "fetched_at": "2026-11-16T03:01:08+08:00"
     }
   ],
   "evidence": [
     {
       "field": "/kind",
-      "source_id": "readme",
-      "quote": "Task: The Modern Task Runner",
+      "source_id": "docs1",
+      "quote": "After installing, open a terminal and check that Task is available:",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:02+08:00"
+      "checked_at": "2026-11-16T03:02:05+08:00"
     },
     {
       "field": "/audience",
-      "source_id": "readme",
-      "quote": "Task: The Modern Task Runner",
+      "source_id": "docs1",
+      "quote": "After installing, open a terminal and check that Task is available:",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:02+08:00"
+      "checked_at": "2026-11-16T03:02:05+08:00"
     },
     {
       "field": "/category",
@@ -297,7 +502,7 @@
       "quote": "A fast, cross-platform build tool inspired by Make",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:02+08:00"
+      "checked_at": "2026-11-16T03:02:05+08:00"
     },
     {
       "field": "/summary",
@@ -305,7 +510,7 @@
       "quote": "A fast, cross-platform build tool inspired by Make, designed for modern workflows.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:02+08:00"
+      "checked_at": "2026-11-16T03:02:05+08:00"
     },
     {
       "field": "/name",
@@ -313,15 +518,15 @@
       "quote": "Task: The Modern Task Runner",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:02+08:00"
+      "checked_at": "2026-11-16T03:02:05+08:00"
     },
     {
       "field": "/platforms",
-      "source_id": "release:v3.54.0",
-      "quote": "task_darwin_arm64.tar.gz",
+      "source_id": "docs1",
+      "quote": "macOS · Linux · Windows",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:02+08:00"
+      "checked_at": "2026-11-16T03:02:05+08:00"
     },
     {
       "field": "/repo",
@@ -373,11 +578,19 @@
     },
     {
       "field": "/use_cases/0",
-      "source_id": "release:v3.54.0",
-      "quote": "when downloading a\n  remote Taskfile",
+      "source_id": "docs1",
+      "quote": "Add the official setup action to your job's steps before running Task",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:02+08:00"
+      "checked_at": "2026-11-16T03:02:05+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "release:v3.54.0",
+      "quote": "send HTTP headers when downloading a\n  remote Taskfile",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:05+08:00"
     },
     {
       "field": "/alternatives_to/0",
@@ -385,33 +598,57 @@
       "quote": "build tool inspired by Make",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:02+08:00"
+      "checked_at": "2026-11-16T03:02:05+08:00"
     },
     {
       "field": "/features/0",
-      "source_id": "readme",
-      "quote": "Task: The Modern Task Runner",
+      "source_id": "docs1",
+      "quote": "You're ready to create your first Taskfile.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:02+08:00"
+      "checked_at": "2026-11-16T03:02:05+08:00"
     },
     {
       "field": "/features/1",
       "source_id": "release:v3.54.0",
-      "quote": "`task --completion <shell>` now serves a new completion engine",
+      "quote": "Added a `remote.headers` config option to send HTTP headers when downloading a\n  remote Taskfile",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:02+08:00"
+      "checked_at": "2026-11-16T03:02:05+08:00"
     },
     {
       "field": "/features/2",
-      "source_id": "release:v3.54.0",
-      "quote": "watching source paths",
+      "source_id": "docs1",
+      "quote": "Bash, Zsh, Fish, Nushell and PowerShell all offer the same task names, aliases, flags, flag values and requires vars.",
       "method": "model",
       "model": "claude-opus-5-5",
-      "checked_at": "2026-11-16T01:14:02+08:00"
+      "checked_at": "2026-11-16T03:02:05+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "docs1",
+      "quote": "brew install go-task/tap/go-task",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:05+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "docs1",
+      "quote": "npm install -g @go-task/cli",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:05+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "docs1",
+      "quote": "npm install -g @go-task/cli",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:05+08:00"
     }
   ],
   "first_seen_at": "2026-11-16T01:09:43+08:00",
-  "updated_at": "2026-11-16T01:14:09+08:00"
+  "updated_at": "2026-11-16T03:11:48+08:00"
 }
