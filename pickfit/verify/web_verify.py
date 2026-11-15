@@ -44,7 +44,7 @@ from pydantic import BaseModel, Field
 
 from pickfit.env import REPO_ROOT, get_env
 from pickfit.ledger import BudgetExceeded, taipei_now
-from pickfit.meta import call_meta, resolve_model
+from pickfit.meta import call_meta, provider_for, resolve_model
 from pickfit.schema import meta_strict_schema
 from pickfit.verify import web_guard as guard
 
@@ -348,10 +348,26 @@ def operator_answer(message: dict[str, Any], *, run_id: str, scope: str, spent: 
             continue
         spent.calls += 1
         spent.cost_usd += result.cost_usd
+        if getattr(result, "status", None) == "content_filter":
+            # The provider's safety classifier declined (an answer with no content): the harness would only
+            # see "failed to parse" and ask again, so say what happened and try the other model.
+            category = (result.raw.get("stop_details") or {}).get("category") or "no category given"
+            last = f"{result.model} declined the request ({category})"
+            spent.errors.append(last[:200])
+            continue
         spent.models[result.model] = spent.models.get(result.model, 0) + 1
         spent.fallbacks += i
         return {"type": "llm_result", "id": message.get("id"), "response": chat_completion(result.raw)}
     return {"type": "llm_error", "id": message.get("id"), "error": last[:300]}
+
+
+def operator_writes_thinking(model: str) -> bool:
+    """Whether browser-use asks the operator to write its reasoning into a "thinking" field of every answer
+    (its default). Not for Claude: the API declines such a request as an attempt to extract the model's
+    reasoning (stop_reason refusal, category reasoning_extraction; all 52 operator calls of the first 13
+    sites on 11/16), so Claude reasons in its own thinking and answers with the rest of the fields. The
+    hackathon's models keep the field their visits were made with."""
+    return provider_for(resolve_model(model)) != "anthropic"
 
 
 # Top-level keys of an OpenAI chat completion; the Modal endpoint adds `metadata` (weight versions as a list),
@@ -745,7 +761,8 @@ def verify_site(target: WebTarget, *, max_steps: int = MAX_STEPS, revisit: str |
         chrome_version = box.root(["/usr/bin/chromium", "--version"], 30)[1].split()
         version = next((w for w in chrome_version if re.match(r"^\d+\.\d+", w)), "")
         start = {"url": target.url, "site": site, "user_agent": user_agent(version), "max_steps": max_steps,
-                 "wait_between_actions": wait, "sample_files": sample_paths, "settle_s": 6}
+                 "wait_between_actions": wait, "sample_files": sample_paths, "settle_s": 6,
+                 "operator_thinking": operator_writes_thinking(OPERATOR_MODEL)}
         result["user_agent"] = start["user_agent"]
 
         def handle(message: dict[str, Any]) -> dict[str, Any] | None:

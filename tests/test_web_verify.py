@@ -190,6 +190,40 @@ def test_operator_answer_falls_back_to_baseten_and_strips_extra_fields():
     assert spent.fallbacks == 1 and spent.calls == 1
 
 
+def test_a_declined_operator_call_tries_the_other_model_and_says_why_when_both_decline():
+    """11/16: the API declined every operator call (browser-use asked Claude to write its reasoning out), the
+    answer came back with no content, and the harness only saw "failed to parse" four times a site."""
+    declined = {"id": "c1", "object": "chat.completion", "created": 1, "model": "m",
+                "choices": [{"index": 0, "finish_reason": "content_filter",
+                             "message": {"role": "assistant", "content": None}}],
+                "stop_details": {"type": "refusal", "category": "reasoning_extraction"}}
+    answered = {"id": "c2", "object": "chat.completion", "created": 1, "model": "m",
+                "choices": [{"index": 0, "finish_reason": "stop", "message": {"role": "assistant", "content": "{}"}}]}
+    replies = {wv.OPERATOR_MODEL: SimpleNamespace(raw=declined, cost_usd=0.02, model="claude-opus-5-5",
+                                                  status="content_filter"),
+               wv.FALLBACK_MODEL: SimpleNamespace(raw=answered, cost_usd=0.01, model="claude-sonnet-5-5",
+                                                  status="stop")}
+    spent = wv.OperatorLedger()
+    answer = wv.operator_answer({"id": 3, "request": {"messages": []}}, run_id="r", scope="s", spent=spent,
+                                caller=lambda endpoint, body, **kw: replies[kw["model"]])
+    assert answer["type"] == "llm_result" and answer["response"]["choices"][0]["message"]["content"] == "{}"
+    assert spent.cost_usd == pytest.approx(0.03) and spent.calls == 2, "the declined call is paid for and counted"
+    assert spent.errors == ["claude-opus-5-5 declined the request (reasoning_extraction)"]
+
+    both = wv.operator_answer({"id": 4, "request": {"messages": []}}, run_id="r", scope="s",
+                              spent=wv.OperatorLedger(),
+                              caller=lambda endpoint, body, **kw: replies[wv.OPERATOR_MODEL])
+    assert both["type"] == "llm_error" and "declined the request (reasoning_extraction)" in both["error"]
+
+
+def test_claude_is_not_asked_to_write_its_reasoning_into_the_answer():
+    assert wv.operator_writes_thinking(wv.OPERATOR_MODEL) is False
+    assert wv.operator_writes_thinking(wv.FALLBACK_MODEL) is False and wv.operator_writes_thinking("open") is False
+    assert wv.operator_writes_thinking("open-modal") is True  # the hackathon's operator keeps its prompt
+    harness = (Path(wv.__file__).parent / "web_harness.py").read_text(encoding="utf-8")
+    assert 'use_thinking=bool(start.get("operator_thinking", True))' in harness
+
+
 def test_operator_answer_reports_a_budget_stop():
     def caller(endpoint, body, **kw):
         raise BudgetExceeded("scope", 0.6, 0.6, 0.01)
