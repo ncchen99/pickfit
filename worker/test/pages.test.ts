@@ -243,6 +243,7 @@ test('the about page names the team and links it from every page footer, home in
   assert.match(about, /Nian-Cheng Chen/);
   assert.match(about, /href="https:\/\/www\.linkedin\.com\/in\/ncchen99\/"/);
   assert.doesNotMatch(about, /Inc\.|Ltd\.|registered company/);
+  assert.match(about, /href="mailto:founders@pickfit\.app"/);
   const home = await (await s.get('/')).text();
   assert.match(home, /<a href="\/about">About pickfit<\/a>/);
   const zh = await (await s.get('/about?lang=zh-TW')).text();

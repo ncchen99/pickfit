@@ -90,6 +90,8 @@ export function renderAbout(catalog: Catalog, nonce: string): string {
   const repo = 'https://github.com/ncchen99/pickfit';
   const linkedin = 'https://www.linkedin.com/in/ncchen99/';
   const github = 'https://github.com/ncchen99';
+  // Cloudflare Email Routing forwards this address to the founder (rule on the pickfit.app zone).
+  const mail = 'founders@pickfit.app';
   const main =
     head(
       L('About pickfit', '關於 pickfit'),
@@ -108,7 +110,7 @@ export function renderAbout(catalog: Catalog, nonce: string): string {
     `<h2>${L('Where it started', '怎麼開始的')}</h2>` +
     `<p>${L('pickfit began in October 2026 as an entry to the Meta Global AI Developer Hackathon and has kept growing since. It is run from Tainan, Taiwan.', 'pickfit 在 2026 年 10 月為了參加 Meta Global AI Developer Hackathon 開始開發，比賽結束後持續擴充，目前在台灣台南營運。')}</p>` +
     `<h2 id="contact">${L('Contact', '聯絡我們')}</h2>` +
-    `<p>${L(`For questions or partnerships, message Nian-Cheng on <a href="${linkedin}">LinkedIn</a> or open an issue on <a href="${repo}/issues">GitHub</a>. To suggest software, use <a href="/submit">Recommend software</a>.`, `有問題或合作提案，可以在 <a href="${linkedin}">LinkedIn</a> 上傳訊息給念誠，或到 <a href="${repo}/issues">GitHub</a> 開 issue。想推薦軟體，請用<a href="/submit">推薦軟體</a>頁面。`)}</p>` +
+    `<p>${L(`For questions or partnerships, email <a href="mailto:${mail}" translate="no">${mail}</a>, message Nian-Cheng on <a href="${linkedin}">LinkedIn</a>, or open an issue on <a href="${repo}/issues">GitHub</a>. To suggest software, use <a href="/submit">Recommend software</a>.`, `有問題或合作提案，請寄信到 <a href="mailto:${mail}" translate="no">${mail}</a>，也可以在 <a href="${linkedin}">LinkedIn</a> 上傳訊息給念誠，或到 <a href="${repo}/issues">GitHub</a> 開 issue。想推薦軟體，請用<a href="/submit">推薦軟體</a>頁面。`)}</p>` +
     `</article></div>`;
   return renderShell({ nonce, title: L('About pickfit · pickfit', '關於 pickfit · pickfit'), description: L('Who makes pickfit, what it does, and how to reach the team.', 'pickfit 是誰做的、在做什麼，以及怎麼聯絡團隊。'), active: null, tray: false, main });
 }
