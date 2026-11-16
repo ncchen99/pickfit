@@ -77,3 +77,10 @@
 - 做了什麼：紀錄上次是在 macOS VM 跑的（`needs_root`）。它有 Linux 的發行檔，改在 Linux 驗。抽取出來沒有任何安裝指令，dry-run 印 `skip cardinal  no install path the Linux box can run`，所以跑了 `pickfit extract --install-docs` 讓管線去讀 README 指到的安裝文件，再抽一次就選得到。第一次用 `--display` 跑：CardinalNative 找不到音訊裝置就直接結束，沒有視窗，未驗證。箱子本來就有 `--audio`（PulseAudio），第二次加上去就開得起來。
 - 結果：level `install`，全新箱子重播通過，GUI judge 看到整個 rack 畫出來。操作層加了一個 VCF 模組，但「存檔」沒有成功，因為 Cardinal 靠系統的 zenity 或 kdialog 開檔案對話框，箱子裡沒有（開了 H-007），所以到不了 `function`，3 項功能都沒 checked。run `runs/verify/verify-cardinal-20261116-131620-914e`，用 `guarded_write_back.py` 寫回：多一筆 Linux 的 run，整體從 unverified 變成 install，macOS 那筆原樣留著。花費：兩次抽取 US$0.151、第一次 US$0.008、第二次模型 US$0.756（GUI 操作用掉的）、沙盒 US$0.049，合計約 US$0.96。
 - harness：開了 H-007（顯示箱子沒有 zenity、kdialog），還沒修。沒改程式。
+
+## 2026-11-16 14:05 reverify:castor → verified
+
+- 做了什麼：`discover --repo`、抽取。新的抽取結果寫它一定要 GPU，dry-run 印 `skip castor  needs a GPU`，所以用 `--toolchain --gpu T4`。這個組合先跑了 `--limits-test`，23/23 通過（`runs/verify/limits-modal-gvisor-20261116-131305.json`）。npm 套件只是一個啟動器，真正的執行檔要 `cargo install --path .` 從原始碼建，約 5 分鐘。跑了兩次：第一次 agent 和重播都過，但 screen judge 判 inconclusive（它挑 `cargo test` 當檢查，輸出太長，截圖裡看不到最後的通過行），管線照規則記成未驗證。這種結果本來就是要再查一次，所以重跑；第二次 agent 改用 `castor --help` 和 `castor stats -j` 當檢查。
+- 結果：level `function`，全新箱子重播通過，judge 判 working，功能 1 項 checked。run `runs/verify/verify-castor-20261116-133353-ea1f`，用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 function。花費：抽取 US$0.067、兩次模型共 US$0.089、兩次沙盒共 US$0.855（有 T4），合計約 US$1.01。
+- harness：無。用的是 H-002 的建置箱子。
+- 需要你：兩次都沒有真的用到 GPU（agent 的筆記寫沒有跑本機的模型引擎）。抽取把 GPU 記成必要，管線就只肯在有 GPU 的箱子驗它，沙盒費因此貴了幾倍。這是抽取的判讀問題，loop 沒有動。
