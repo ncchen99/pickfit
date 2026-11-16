@@ -60,7 +60,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-ducklab-20261116-130958-039a",
+      "method": "source",
+      "steps": [
+        {
+          "command": "cd /home/sbx/work && git clone --depth 1 https://github.com/jrullan/ducklab && cd ducklab && mkdir -p ~/.local/bin && go build -o ~/.local/bin/ducklab-cli ./cmd/ducklab && go build -o ~/.local/bin/ducklab ./cmd/ducklab && go build -o ~/.local/bin/ducklab-engine ./cmd/ducklab-engine",
+          "purpose": "git clone the ducklab repo and go build the ducklab CLI, ducklab-engine and ducklab binaries into ~/.local/bin (candidate 3; candidates 1 and 2 skipped: apt needs root, GTK dev headers absent)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ducklab --version",
+        "expected_signal": "ducklab dev"
+      },
+      "first_task": "ducklab mcp serve < /home/sbx/work/mcp_init.jsonl"
+    },
     "windows": null
   },
   "pricing": {
@@ -76,43 +92,150 @@
     "url": "https://github.com/jrullan/ducklab/releases/tag/v0.9.5"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "needs_toolchain",
-    "checked_at": "2026-10-31T00:37:58.333776+08:00",
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T13:12:37.889464+08:00",
     "runs": [
       {
-        "id": "verify-ducklab-20261031-003740-9396",
-        "level": "unverified",
-        "unverified_reason": "needs_toolchain",
+        "id": "verify-ducklab-20261116-130958-039a",
+        "level": "function",
+        "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:37:58.333776+08:00",
-        "tool_version": null,
-        "install_method": null,
-        "replayed": false,
-        "steps": [],
-        "smoke_tests": [],
-        "pitfalls": [],
+        "image": "pickfit-sbx-build:23f212c715b1",
+        "checked_at": "2026-11-16T13:12:37.889464+08:00",
+        "tool_version": "dev",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd /home/sbx/work && git clone --depth 1 https://github.com/jrullan/ducklab && cd ducklab && mkdir -p ~/.local/bin && go build -o ~/.local/bin/ducklab-cli ./cmd/ducklab && go build -o ~/.local/bin/ducklab ./cmd/ducklab && go build -o ~/.local/bin/ducklab-engine ./cmd/ducklab-engine",
+            "purpose": "git clone the ducklab repo and go build the ducklab CLI, ducklab-engine and ducklab binaries into ~/.local/bin (candidate 3; candidates 1 and 2 skipped: apt needs root, GTK dev headers absent)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ducklab --version",
+            "expected_signal": "ducklab dev",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ducklab dev (dev@unknown, go1.24+, linux/amd64)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ducklab mcp serve < /home/sbx/work/mcp_init.jsonl",
+            "expected_signal": "\"name\":\"test_build\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"id\":2,\"jsonrpc\":\"2.0\",\"result\":{\"tools\":[{\"description\":\"Read deterministic configuration findings; this never changes the project.\",\"inputSchema\":{\"properties\":{\"project_id\":{\"description\":\"the project id\",\"type\":\"string\"}},\"required\":[\"project_id\"],\"type\":\"object\"},\"name\":\"config_doctor\"},{\"des…",
+            "setup": [
+              {
+                "command": "cat > /home/sbx/work/mcp_init.jsonl <<'EOF'\n{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},\"clientInfo\":{\"name\":\"pickfit-check\",\"version\":\"0.0.1\"}}}\n{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}\n{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\",\"params\":{}}\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /home/sbx/work/demo2 && ducklab roster suggest",
+            "expected_signal": "ranked from recorded runs only",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ranked from recorded runs only — no model was consulted.",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/demo2 && cd /home/sbx/work/demo2 && git init -q && ducklab project init --name Demo2",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "sudo apt install libgtk-3-dev libwebkit2gtk-4.1-dev; make desktop && make install",
+            "actually_needed": "Desktop needs root for apt and GTK/WebKit dev headers (pkg-config gtk+-3.0 missing on this box). Not attempted; only the CLI and engine were built.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "go build -o ducklab-cli ./cmd/ducklab (then ducklab commands used as on PATH)",
+            "actually_needed": "The CLI auto-starts the engine by looking for ducklab-engine on PATH, so ducklab-engine must be built and installed too (make install does this). Built all three binaries into ~/.local/bin.",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "ducklab duckling scorecard",
+            "actually_needed": "No such verb: 'unknown duckling command: scorecard'. Duckling verbs are list, add, probe, test, remove, show, set, suggest. Seat suggestions with pass rates come from 'ducklab roster suggest'.",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "ducklab roster suggest / cycle commands run from a project",
+            "actually_needed": "Commands need a ducklab project: 'no ducklab project at ... or any parent' outside one. Create it with git init and ducklab project init --name ...",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Needs Go 1.25+",
+            "actually_needed": "Built with the box's Go 1.27.4 with no problems; the module downloads needed network during the build step.",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
-        "judge": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The MCP server answered initialize and listed its tools, including test_build; roster suggest printed a ranked table ending with the 'ranked from recorded runs only' note; and --version printed 'ducklab dev'.",
+          "model": "claude-opus-5-5"
+        },
         "evidence": {
-          "trace_path": "runs/verify/verify-ducklab-20261031-003740-9396/report.json",
+          "trace_path": null,
           "log_path": null,
           "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.016393
+        "actor_model": "claude-haiku-5-5",
+        "cost_usd": 0.038064,
+        "features": [
+          {
+            "feature": "generate requirements, spec and plan from a brief",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Brief to requirements/spec/plan calls a model provider (intake/spec/plan); no API key or account here, and no local model was run."
+          },
+          {
+            "feature": "run tasks in solo, pair, tournament, split, council modes",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Run modes solo/pair/tournament/split/council need model seats; no provider configured or key available."
+          },
+          {
+            "feature": "assign model seats from measured scorecards",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: The roster suggestion ran but every role shows 0 runs and 'no recorded runs', so no seat was assigned from measured scorecards."
+          },
+          {
+            "feature": "operate the loop from another model via MCP",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: The output is only the tool listing schema from the MCP server, a listing of capabilities rather than the loop actually being operated."
+          }
+        ]
       }
     ]
   },
   "security": {
     "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -136,19 +259,21 @@
         "summary": "golang.org/x/image/tiff has excessive resource consumption in PackBits decompression",
         "malicious": false
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-03T21:41:45+08:00"
   },
   "scores": {
     "formula_version": "b3.v6",
-    "computed_at": "2026-11-05T03:16:32+08:00",
+    "computed_at": "2026-11-16T14:05:39+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 76.7,
+      "confidence": 0.6,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.6141,
           "weight": 20.0
         },
         "install_docs": {
@@ -193,7 +318,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 40.57
+      "value": 45.1
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -468,5 +593,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-11-05T03:16:32+08:00"
+  "updated_at": "2026-11-16T14:05:39.331453+08:00"
 }

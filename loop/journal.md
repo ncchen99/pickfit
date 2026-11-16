@@ -91,3 +91,9 @@
 - 結果：level `function`，全新箱子重播通過，judge 判 working。功能 1 項 checked（JSON 輸出）；DNS-over-TLS、DNS-over-HTTPS 這次的建置沒有包進去，記成 `needs_root`；彩色輸出 judge 在截圖裡看不到顏色碼，沒算。run `runs/verify/verify-dog-20261116-130958-e0c8`，用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 function。花費：模型 US$0.030、沙盒 US$0.011。
 - harness：無。用的是 H-002 的建置箱子。原本掛在 H-003，其實是工具鏈的問題。
 - 需要你：安裝指南現在是不含 TLS 的建置。使用者照著做會少 DoT、DoH 兩個功能，run 的 pitfall 有寫。要不要在工具頁上講得更明顯，請你看一眼。
+
+## 2026-11-16 14:05 reverify:ducklab → verified
+
+- 做了什麼：本機有候選、沒有抽取，抽取後選得到。README 的 CLI 是 `go build`，要 Go 1.25 以上，用 `--toolchain` 跑（映像裡是 Go 1.27.4）。桌面版另外要 apt 裝 GTK、WebKit 的 `-dev` 套件，這次沒有驗桌面版。
+- 結果：level `function`，全新箱子重播通過，judge 判 working（MCP 伺服器回了 initialize 和工具清單，`roster suggest` 印出排名表）。列出的 4 項功能 feature judge 一項都沒認（兩項跑了但看不出功能真的在動，兩項沒查），所以 checked 是 0。run `runs/verify/verify-ducklab-20261116-130958-039a`，用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 function。花費：抽取 US$0.097、模型 US$0.038、沙盒 US$0.018。
+- harness：無。用的是 H-002 的建置箱子。
