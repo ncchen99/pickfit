@@ -126,3 +126,9 @@
 - 做了什麼：還沒輪到就先處理（`park` 可以直接對 todo 的項目做）。`discover --repo` 存進本機，沒有抽取。10/31 的筆記：安裝只有 `run.sh`、`deploy.sh`（兩個都先檢查 docker、bun、uv，缺了就結束）或 Docker 映像，整個平台還要 PostgreSQL。箱子一樣沒有 Docker，沒有重跑。
 - 結果：park，等 H-004。花費 US$0。
 - harness：無。
+
+## 2026-11-16 14:08 reverify:iglance → parked (H-005)
+
+- 做了什麼：只有 macOS 版，Modal 的 dry-run 印 `skip iglance  GUI app`。11/4 在 macOS VM 那次是下載發行檔太慢（11.5 MB、約 40 KB/s）超時，記成 `needs_more_resources`，Homebrew 也沒有這個 cask。要重驗得開 tart 的 VM，loop 沒有做（見 backgroundmusic 那段的「需要你」）。
+- 結果：park，留在 H-005。花費 US$0。
+- harness：無。
