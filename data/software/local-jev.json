@@ -52,7 +52,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-local-jev-20261116-131604-6a74",
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install local-jev",
+          "purpose": "cargo install local-jev (crates.io, compiled with box Rust in about 41s; installs ~/.cargo/bin/local-jev)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "local-jev --version",
+        "expected_signal": "local-jev 2.0.0"
+      },
+      "first_task": "local-jev benchmark --iterations 1000"
+    },
     "windows": null
   },
   "pricing": {
@@ -68,43 +84,201 @@
     "url": "https://github.com/ronitgupta138/Local-Jev/releases/tag/v1.0.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "needs_toolchain",
-    "checked_at": "2026-10-30T23:56:09.566992+08:00",
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T13:18:26.372083+08:00",
     "runs": [
       {
-        "id": "verify-local-jev-20261030-235551-0915",
-        "level": "unverified",
-        "unverified_reason": "needs_toolchain",
+        "id": "verify-local-jev-20261116-131604-6a74",
+        "level": "service",
+        "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-30T23:56:09.566992+08:00",
-        "tool_version": null,
-        "install_method": null,
-        "replayed": false,
-        "steps": [],
-        "smoke_tests": [],
-        "pitfalls": [],
+        "image": "pickfit-sbx-build:23f212c715b1",
+        "checked_at": "2026-11-16T13:18:26.372083+08:00",
+        "tool_version": "local-jev 2.0.0",
+        "install_method": "cargo",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cargo install local-jev",
+            "purpose": "cargo install local-jev (crates.io, compiled with box Rust in about 41s; installs ~/.cargo/bin/local-jev)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "local-jev --version",
+            "expected_signal": "local-jev 2.0.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "local-jev 2.0.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "local-jev benchmark --iterations 1000",
+            "expected_signal": "Latency SLA:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Latency SLA:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "local-jev route --prompt \"Deploy new release to production\" --routes \"deploy_agent,triage_agent,review_agent\"",
+            "expected_signal": "Route: deploy_agent",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✔ Route: deploy_agent (confidence: 100.0%, latency: 0.03ms)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -sS -X POST http://localhost:8080/v1/systemone/choice -H \"Content-Type: application/json\" -d '{\"state\": \"The compiler returned unresolved import crate::auth::User\", \"question\": \"Which command should be executed to locate the definition?\", \"options\": [\"grep -rn User\", \"git commit\", \"docker stop\"], \"temperature\": 0.1}'",
+            "expected_signal": "\"choice\":\"grep -rn User\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"choice\":\"grep -rn User\",\"confidence\":0.999406,\"probabilities\":[{\"option\":\"grep -rn User\",\"probability\":0.999406,\"logit\":0.9},{\"option\":\"git commit\",\"probability\":0.0004706912,\"logit\":0.13392857},{\"option\":\"docker stop\",\"probability\":0.00012333649,\"logit\":0.0}],\"latency_ms\":0.023213,\"cached\":false}",
+            "setup": [
+              {
+                "command": "local-jev serve --port 8080",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -sS -X POST http://localhost:8080/v1/chat/completions -H \"Content-Type: application/json\" -d '{\"model\": \"claude-3-5-sonnet\", \"messages\": [{ \"role\": \"user\", \"content\": \"Please read src/main.rs to verify entrypoint\" }], \"tools\": [{ \"type\": \"function\", \"function\": { \"name\": \"read_file\" } }, { \"type\": \"function\", \"function\": { \"name\": \"terminal\" } }]}'",
+            "expected_signal": "\"speculative\":true",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"id\":\"chatcmpl-speculative-18e86ed11025ad01\",\"object\":\"chat.completion\",\"created\":1794806295,\"model\":\"claude-3-5-sonnet\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":null,\"tool_calls\":[{\"id\":\"call_18e86ed11025a69f\",\"type\":\"function\",\"function\":{\"name\":\"read_file\",\"arguments\":\"{\\\"p…",
+            "setup": [
+              {
+                "command": "local-jev serve --port 8080",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -sS -X POST http://localhost:8080/v1/systemone/batch -H \"Content-Type: application/json\" -d '{\"requests\": [{ \"state\": \"build failed\", \"question\": \"Fix?\", \"options\": [\"cargo check\", \"reboot\"] }, { \"state\": \"test timeout\", \"question\": \"Action?\", \"options\": [\"rerun\", \"ignore\"] }]}'",
+            "expected_signal": "\"responses\":[{\"choice\":\"cargo check\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"responses\":[{\"choice\":\"cargo check\",\"confidence\":0.5,\"probabilities\":[{\"option\":\"cargo check\",\"probability\":0.5,\"logit\":0.0},{\"option\":\"reboot\",\"probability\":0.5,\"logit\":0.0}],\"latency_ms\":0.013165,\"cached\":false},{\"choice\":\"rerun\",\"confidence\":0.5,\"probabilities\":[{\"option\":\"rerun\",\"probability\"…",
+            "setup": [
+              {
+                "command": "local-jev serve --port 8080",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -sS http://localhost:8080/metrics",
+            "expected_signal": "# HELP jev_decisions_total",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "# HELP jev_decisions_total Total number of decisions evaluated",
+            "setup": [
+              {
+                "command": "local-jev serve --port 8080",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install local-jev (Quickstart) and cargo test shows 23 passing tests",
+            "actually_needed": "cargo install local-jev worked with no extra steps; the README's cargo test was not run here.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "p50 Latency 1.0µs; Throughput 1,000,000+ decisions/second",
+            "actually_needed": "The benchmark on this box printed p50 0.00µs and 'inf decisions/sec' (timer resolution); the README's measured figures were not reproduced and were not judged.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Rust: 1.80+",
+            "actually_needed": "Box has Rust 1.100.0; not tested on older toolchains.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Choice response example shows logits 5.5/1.2/1.1 and confidence 0.984",
+            "actually_needed": "Real output gave logits 0.9/0.13/0.0 and confidence 0.999; the example numbers are illustrative, the same choice was picked.",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
-        "judge": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The benchmark printed a 'Latency SLA:' block, though with degenerate 0.00µs latencies and inf throughput; the route command selected deploy_agent; and --version printed local-jev 2.0.0, all exiting 0.",
+          "model": "claude-opus-5-5"
+        },
         "evidence": {
-          "trace_path": "runs/verify/verify-local-jev-20261030-235551-0915/report.json",
+          "trace_path": null,
           "log_path": null,
           "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.024179
+        "actor_model": "claude-haiku-5-5",
+        "cost_usd": 0.026519,
+        "features": [
+          {
+            "feature": "select among options with confidence scores",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "speculative tool-call proxy for coding agents",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "batch evaluation of decision queries",
+            "status": "checked",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "export Prometheus metrics",
+            "status": "checked",
+            "smoke_tests": [
+              6
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "security": {
     "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -114,19 +288,21 @@
     "packages_checked": 111,
     "findings_total": 0,
     "advisories_total": 0,
-    "findings": []
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-03T21:41:45+08:00"
   },
   "scores": {
     "formula_version": "b3.v6",
-    "computed_at": "2026-11-05T03:16:32+08:00",
+    "computed_at": "2026-11-16T14:55:52+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 86.3,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 1.0,
           "weight": 20.0
         },
         "install_docs": {
@@ -150,7 +326,7 @@
           "weight": 10.0
         },
         "feature_results": {
-          "score": null,
+          "score": 1.0,
           "weight": 20.0
         }
       }
@@ -172,8 +348,8 @@
       ]
     },
     "treasure": {
-      "is_treasure": false,
-      "value": 39.81
+      "is_treasure": true,
+      "value": 49.8
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -432,5 +608,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:59+08:00",
-  "updated_at": "2026-11-05T03:16:32+08:00"
+  "updated_at": "2026-11-16T14:55:52.799010+08:00"
 }

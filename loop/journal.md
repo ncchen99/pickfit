@@ -225,3 +225,9 @@
 - 做了什麼：本機有候選、沒有抽取，抽取後 dry-run 印 `skip llamampere  needs a GPU`，所以加 `--gpu T4`。第一次（一般箱子加 T4）停在沒有編譯器；第二次用 `--toolchain --gpu T4`，編譯器有了，CMake 的設定階段找不到 `nvcc`。
 - 結果：未驗證，沒有寫回。README 只有一條路：CMake 加 `-DGGML_CUDA=ON` 從原始碼建，一定要 NVIDIA 的 CUDA toolkit；範例模型（14.4 GB）還要 24 GB 的顯示卡，T4 是 15 GB。這是 pickfit 的環境沒有的東西，不是軟體壞了。紀錄上的原因碼還是 `needs_root`，意思一樣是環境的限制；這次實際缺的是 CUDA toolkit，`guarded_write_back.py` 只寫通過的 run，所以原因碼沒有更新。run `runs/verify/verify-llamampere-20261116-145343-ba45`。花費：抽取 US$0.076、兩次模型共 US$0.010、兩次沙盒共 US$0.043。
 - harness：無。CUDA toolkit 是 NVIDIA 自己的授權，不在可以直接加的範圍，沒有加進映像，也沒有寫提案（還要更大的顯示卡才有意義）。
+
+## 2026-11-16 14:55 reverify:local-jev → verified
+
+- 做了什麼：本機有候選、沒有抽取，抽取後用 `--toolchain` 跑（和 khive、mdma、neoth 平行先跑的那批）。
+- 結果：level `service`，全新箱子重播通過，judge 判 working，4 項功能都 checked。run `runs/verify/verify-local-jev-20261116-131604-6a74`，用 `guarded_write_back.py` 寫回，確認過紀錄的 level 是 `service`。花費：抽取 US$0.054、模型 US$0.027、沙盒 US$0.016。
+- harness：無。用的是 H-002 的建置箱子。
