@@ -71,3 +71,9 @@
 - 結果：level `install`，全新箱子重播通過，judge 判 working，GUI judge 看到主視窗，功能 1 項 checked。沒有到 `function`，因為 GUI App 要有一個操作通過 pickfit 自己的檢查才算，這次沒有做操作。run `runs/verify/verify-bindiff-20261116-131045-79c2`。用 `guarded_write_back.py` 寫回：紀錄多一筆 Linux 的 run，整體從 unverified 變成 install；macOS 那筆 `needs_root` 原樣留著。花費：抽取 US$0.076、模型 US$0.054、沙盒 US$0.007。
 - harness：無。
 - 需要你：hook 又擋到一次不相干的東西（第四種）：指令裡有 install 這個英文字，而且同一段最後一個字是紀錄的路徑，就被當成用 `install` 指令覆蓋紀錄。我原本想在同一個指令裡用 `jq` 印寫回後的安裝步驟。改成寫回單獨跑一個指令，沒有印那一段。
+
+## 2026-11-16 13:30 reverify:cardinal → verified
+
+- 做了什麼：紀錄上次是在 macOS VM 跑的（`needs_root`）。它有 Linux 的發行檔，改在 Linux 驗。抽取出來沒有任何安裝指令，dry-run 印 `skip cardinal  no install path the Linux box can run`，所以跑了 `pickfit extract --install-docs` 讓管線去讀 README 指到的安裝文件，再抽一次就選得到。第一次用 `--display` 跑：CardinalNative 找不到音訊裝置就直接結束，沒有視窗，未驗證。箱子本來就有 `--audio`（PulseAudio），第二次加上去就開得起來。
+- 結果：level `install`，全新箱子重播通過，GUI judge 看到整個 rack 畫出來。操作層加了一個 VCF 模組，但「存檔」沒有成功，因為 Cardinal 靠系統的 zenity 或 kdialog 開檔案對話框，箱子裡沒有（開了 H-007），所以到不了 `function`，3 項功能都沒 checked。run `runs/verify/verify-cardinal-20261116-131620-914e`，用 `guarded_write_back.py` 寫回：多一筆 Linux 的 run，整體從 unverified 變成 install，macOS 那筆原樣留著。花費：兩次抽取 US$0.151、第一次 US$0.008、第二次模型 US$0.756（GUI 操作用掉的）、沙盒 US$0.049，合計約 US$0.96。
+- harness：開了 H-007（顯示箱子沒有 zenity、kdialog），還沒修。沒改程式。

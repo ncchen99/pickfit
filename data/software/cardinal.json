@@ -91,7 +91,20 @@
       "check": null,
       "first_task": null
     },
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-cardinal-20261116-131620-914e",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/apps && cd ~/apps && curl -sL -o cardinal-linux-x86_64.tar.gz https://github.com/DISTRHO/Cardinal/releases/download/26.02/Cardinal-linux-x86_64-26.02.tar.gz && tar -xzf cardinal-linux-x86_64.tar.gz",
+          "purpose": "download Cardinal-linux-x86_64-26.02.tar.gz from the GitHub release and extract it into ~/apps"
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "/home/sbx/apps/CardinalNative"
+    },
     "windows": null
   },
   "pricing": {
@@ -107,9 +120,9 @@
     "url": "https://github.com/DISTRHO/Cardinal/releases/tag/26.02"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "needs_root",
-    "checked_at": "2026-11-02T05:57:40.644519+08:00",
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T13:30:14.129034+08:00",
     "runs": [
       {
         "id": "verify-cardinal-20261102-054843-4899",
@@ -137,32 +150,128 @@
         },
         "actor_model": "muse-spark-1.3",
         "cost_usd": 0.033997
+      },
+      {
+        "id": "verify-cardinal-20261116-131620-914e",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui-audio:10d84baf8f1c",
+        "checked_at": "2026-11-16T13:30:14.129034+08:00",
+        "tool_version": null,
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/apps && cd ~/apps && curl -sL -o cardinal-linux-x86_64.tar.gz https://github.com/DISTRHO/Cardinal/releases/download/26.02/Cardinal-linux-x86_64-26.02.tar.gz && tar -xzf cardinal-linux-x86_64.tar.gz",
+            "purpose": "download Cardinal-linux-x86_64-26.02.tar.gz from the GitHub release and extract it into ~/apps"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "/home/sbx/apps/CardinalNative",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Cardinal releases have official builds for Linux (see Wiki/Install); the build from source is the other option.",
+            "actually_needed": "The Linux x86_64 release tarball Cardinal-linux-x86_64-26.02.tar.gz extracts to a folder with CardinalNative (self-extracting, unpacks to /tmp/Cardinal at start) and CardinalJACK; no root or missing libraries (ldd showed none missing).",
+            "kind": "note"
+          },
+          {
+            "readme_said": "(no --help text in the README; the tool's own --help was tried)",
+            "actually_needed": "./CardinalNative --help does not print help: it unpacks and starts the GUI, which fails without a display here (exit 124 after timeout). No --version either.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Cardinal is a standalone app for Linux.",
+            "actually_needed": "Save as (File menu or Ctrl+Shift+S) opens no dialog on this box: no zenity, kdialog or other file-chooser helper is installed, so a patch file cannot be saved from the GUI.",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Cardinal's rack is fully drawn with the default patch: Host MIDI, VCO, ADSR, VCA, Host Audio, Host MIDI CC Map and a text editor module, connected by cables, under a File/Edit/View/Engine/Help menu bar.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "claude-haiku-5-5",
+        "cost_usd": 0.75574,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "/home/sbx/apps/CardinalNative",
+          "window_title": "DISTRHO: Cardinal",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "microphone": "simulated: a PulseAudio source playing fresh random words pickfit spoke with flite for each check",
+        "features": [
+          {
+            "feature": "patch virtual Eurorack-style modules",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_desktop",
+            "failure": null,
+            "note": "operation stopped: give_up after 28 actions; check: file /home/sbx/pickfit-out/patch.vcv: missing; Adding the Fundamental VCF module worked in the rack, but Save as opened no file dialog (no zenity/kdialog or portal), so the patch file the check needs was never written."
+          },
+          {
+            "feature": "host other plugins inside the rack",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Hosting other plugins (Carla/Ildaeil host modules) needs third-party plugins the box does not have; not attempted."
+          },
+          {
+            "feature": "real CV ports to and from the plugin",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Real CV ports to and from a plugin only exist when Cardinal runs as a plugin inside a DAW or host; the standalone has none and no host is available here."
+          }
+        ]
       }
     ]
   },
   "security": {
     "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_lockfile",
     "sources": [],
     "packages_checked": 0,
     "findings_total": 0,
     "advisories_total": 0,
-    "findings": []
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00"
   },
   "scores": {
     "formula_version": "b3.v6",
-    "computed_at": "2026-11-05T03:16:32+08:00",
+    "computed_at": "2026-11-16T13:30:30+08:00",
     "quality": {
-      "total": 42.9,
-      "confidence": 0.5,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 59.2,
+      "confidence": 0.7,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 1.0,
           "weight": 20.0
         },
         "install_docs": {
@@ -207,7 +316,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 4.29
+      "value": 5.92
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -480,5 +589,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:46:43+08:00",
-  "updated_at": "2026-11-05T03:16:32+08:00"
+  "updated_at": "2026-11-16T13:30:30.960037+08:00"
 }

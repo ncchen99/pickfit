@@ -73,3 +73,11 @@ reason: needs_more_resources
 - 授權：MIT、Apache、BSD 可以，AGPL 不行（11/1 已經因此沒裝 cua 的影像辨識擴充）。新增前記進 `NOTICE`。
 - 方向：見 `docs/loop.md` 的「GUI 操作改用現成套件」一節。
 - tried: 11/1 試過 MIT 授權的 cua-driver 取元件編號清單（brief 2.1 節）。
+
+## H-007 [open] 顯示箱子沒有 zenity 或 kdialog：靠它們開檔案對話框的 App 存不了檔
+
+- opened: 2026-11-16T13:30:41+08:00
+- symptom: Cardinal 的「存檔」不開自己的對話框，而是去叫系統的 zenity 或 kdialog。顯示箱子的映像兩個都沒有，所以操作層選了「Save as」之後什麼都沒出現，pickfit 檢查 `~/pickfit-out/patch.vcv` 不存在，操作判失敗，紀錄只能到 `install`。用同一種做法開檔案對話框的 App（JUCE、DPF、部分 SDL 與 Electron 的 portal 後備路徑）都會遇到。
+- reproduce: `uv run pickfit verify --batch 1 --repo DISTRHO/Cardinal --force --runner modal --display --audio`，run `verify-cardinal-20261116-131620-914e` 的 report 裡有 `gui check failed · file /home/sbx/pickfit-out/patch.vcv: missing`，agent 的 pitfall 寫「no zenity/kdialog here」。
+- 方向（還沒試）：在 `gui.GUI_PACKAGES` 加 `zenity`（Debian 套件，LGPL-2.1-or-later，當獨立程式執行，照 `NOTICE` 裡 GUI 套件的寫法記）。加了要重跑 `--limits-test --runner modal --display`，再拿 Cardinal 重跑看操作過不過。
+- tried:
