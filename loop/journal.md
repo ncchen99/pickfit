@@ -30,3 +30,9 @@
 - 做了什麼：dry-run 印 `0 to verify`，用新的 `discover --repo` 存進本機（`refreshed`，規則通過）。看了紀錄裡 10/31 那次的筆記：README 在 Linux 上唯一的路是 `bash linux/scripts/bootstrap_toolchain.sh`，腳本第一步就停在 `required command not found: sudo`，它要用 apt 裝 cmake 和編譯器，再裝 rustup。箱子在這兩點上和 10/31 一樣，重跑只會得到同一個結果，所以沒有花錢重跑，也還沒抽取。
 - 結果：park，等 H-003（以 root 代裝具名套件），也用得到 H-002（工具鏈）。花費 US$0。
 - harness：無。
+
+## 2026-11-16 12:45 reverify:architecture-intelligence-platform → parked (H-004)
+
+- 做了什麼：dry-run 印 `0 to verify`，`discover --repo` 存進本機（`added`，規則通過）。10/31 的筆記：本機安裝只有 `docker compose`，要 Neo4j，`pyproject` 還要 Python 3.13 以上；README 另一條路是連到作者託管的唯讀示範站，那不算安裝。箱子現在一樣沒有 Docker 或 Podman，沒有重跑，也沒抽取。
+- 結果：park，等 H-004。花費 US$0。
+- harness：無。H-004 這個 session 還沒動。
