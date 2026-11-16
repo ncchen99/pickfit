@@ -58,3 +58,9 @@
   1. 建置箱子一筆的沙盒費約 US$0.2 到 0.5（bamboo-agent 是 0.223），`box` 那本帳每天上限 US$10，大約夠 20 到 40 筆。佇列裡還有十幾筆要建置，照跑會吃掉今天大半的沙盒額度，loop 會跑到上限就停。
   2. 紀錄的 `prerequisites.runtimes` 還是空的，新的抽取結果寫的是「rust>=1.95 (source build)」。安裝指南現在是 `cargo install`，使用者得先有 Rust。run 的 pitfall 有寫，但 `prerequisites` 要靠 `pickfit profiles` 重寫才會更新，loop 不手改紀錄，沒有做。
   3. hook 有三次擋到不是它要擋的東西，都照它的意思換了寫法，沒有繞過保護的內容：(a) 用 Python 的 `open()` 讀 `data/software/` 的紀錄會被當成寫入，改用 `jq` 讀；(b) commit 訊息裡提到環境檔的檔名會被當成讀取它，改掉用字；(c) 同一行同時出現 `open(` 和 `data/software/` 才會擋，分成兩行就不擋，所以這條規則其實擋不住真的寫入。
+
+## 2026-11-16 13:12 reverify:datanexa → parked (H-003)
+
+- 做了什麼：還沒輪到它就先處理了（`park` 可以直接對 todo 的項目做），因為前面的 bindiff、cardinal 正在跑。`discover --repo` 存進本機（`added`，規則通過），沒有抽取。10/31 的筆記寫得很清楚：它的 MCP 是包在 Tauri 桌面 App 裡的 HTTP 伺服器，沒有 Linux 的發行檔，只能從原始碼建置，要 Rust、pnpm 9、JDK 21、Maven 3.9，還要 apt 裝 `libwebkit2gtk-4.1-dev`、`libayatana-appindicator3-dev`、`librsvg2-dev`。新的建置箱子有 Rust，但沒有這些 `-dev` 套件和 JDK，重跑會停在同一個地方，所以沒有花錢重跑。
+- 結果：park，等 H-003（以 root 代裝具名套件）。原本掛在 H-002，改掛 H-003。花費 US$0。
+- harness：無。
