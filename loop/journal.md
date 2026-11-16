@@ -109,3 +109,9 @@
 - 做了什麼：`discover --repo`、抽取後選得到。10/31 停在 `needs_root`，實際原因是 `llama-cpp-python` 在 PyPI 只有原始碼，要 gcc 和 cmake 才編得起來。用 `--toolchain` 跑，在 venv 裡 `pip install -e`，約 2.5 分鐘編完。
 - 結果：level `install`，全新箱子重播通過，judge 判 working（`gutsy-inference --help` 印出用法）。沒有下載模型，所以 4 項功能都沒 checked，到不了 `inference`。run `runs/verify/verify-gutsy-20261116-130958-1f0b`，用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 install。花費：抽取 US$0.081、模型 US$0.013、沙盒 US$0.050。
 - harness：無。用的是 H-002 的建置箱子。原本掛在 H-003，其實缺的是編譯器。
+
+## 2026-11-16 14:06 reverify:gyrfalcon → verified
+
+- 做了什麼：`discover --repo`、抽取後選得到。README 是 `cargo build --release`，用 `--toolchain` 跑。
+- 結果：level `service`，全新箱子重播通過，judge 判 working（MCP 握手成功、列出 19 個工具，`--version` 有印）。功能 1 項 checked；「索引完整的 1C 設定」那一項 feature judge 沒認，因為回來的物件是空的。run `runs/verify/verify-gyrfalcon-20261116-130958-c3b4`，用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 service。花費：抽取 US$0.126、模型 US$0.042、沙盒 US$0.026。
+- harness：無。用的是 H-002 的建置箱子。

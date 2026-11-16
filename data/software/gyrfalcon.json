@@ -44,7 +44,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-gyrfalcon-20261116-130958-c3b4",
+      "method": "source",
+      "steps": [
+        {
+          "command": "cd /home/sbx/work && git clone --depth 1 https://github.com/aleksandrgradoboev-svg/gyrfalcon && cd gyrfalcon && cargo build --release",
+          "purpose": "git clone the repository and cargo build --release (about 73 s, no errors)"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && cp /home/sbx/work/gyrfalcon/target/release/gyrfalcon ~/.local/bin/ && gyrfalcon --version",
+          "purpose": "copy target/release/gyrfalcon to ~/.local/bin so it is on PATH"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "mkdir -p ~/.local/bin && cp /home/sbx/work/gyrfalcon/target/release/gyrfalcon ~/.local/bin/ && gyrfalcon --version",
+        "expected_signal": "gyrfalcon 0.1.25"
+      },
+      "first_task": "cd /home/sbx/work && gyrfalcon install --plan"
+    },
     "windows": null
   },
   "pricing": {
@@ -60,36 +80,232 @@
     "url": "https://github.com/aleksandrgradoboev-svg/gyrfalcon/releases/tag/v0.1.22"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "needs_toolchain",
-    "checked_at": "2026-11-01T00:19:28.707955+08:00",
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T13:13:47.868895+08:00",
     "runs": [
       {
-        "id": "verify-gyrfalcon-20261101-001855-02e5",
-        "level": "unverified",
-        "unverified_reason": "needs_toolchain",
+        "id": "verify-gyrfalcon-20261116-130958-c3b4",
+        "level": "service",
+        "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:19:28.707955+08:00",
-        "tool_version": null,
-        "install_method": null,
-        "replayed": false,
-        "steps": [],
-        "smoke_tests": [],
-        "pitfalls": [],
+        "image": "pickfit-sbx-build:23f212c715b1",
+        "checked_at": "2026-11-16T13:13:47.868895+08:00",
+        "tool_version": "gyrfalcon 0.1.25",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd /home/sbx/work && git clone --depth 1 https://github.com/aleksandrgradoboev-svg/gyrfalcon && cd gyrfalcon && cargo build --release",
+            "purpose": "git clone the repository and cargo build --release (about 73 s, no errors)"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && cp /home/sbx/work/gyrfalcon/target/release/gyrfalcon ~/.local/bin/ && gyrfalcon --version",
+            "purpose": "copy target/release/gyrfalcon to ~/.local/bin so it is on PATH"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mkdir -p ~/.local/bin && cp /home/sbx/work/gyrfalcon/target/release/gyrfalcon ~/.local/bin/ && gyrfalcon --version",
+            "expected_signal": "gyrfalcon 0.1.25",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gyrfalcon 0.1.25",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /home/sbx/work && gyrfalcon install --plan",
+            "expected_signal": "=== Claude Code — MCP ===",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "=== Claude Code — MCP ===",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /home/sbx/work && python3 ~/.pickfit/mcp_probe.py --timeout 120 -- gyrfalcon serve --db config.db",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [
+              {
+                "command": "cd /home/sbx/work && mkdir -p src/CommonModules/Util/Ext && cat > src/Configuration.xml <<'EOF'\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<MetaDataObject xmlns=\"http://v8.1c.ru/8.3/MDClasses\" version=\"2.11\">\n  <Configuration>\n    <Properties>\n      <Name>TestConfig</Name>\n      <Synonym/>\n      <Version>1.0.0.1</Version>\n    </Properties>\n    <ChildObjects>\n      <CommonModule>Util</CommonModule>\n    </ChildObjects>\n  </Configuration>\n</MetaDataObject>\nEOF\ncat > src/CommonModules/Util.xml <<'EOF'\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<MetaDataObject xmlns=\"http://v8.1c.ru/8.3/MDClasses\" version=\"2.11\">\n  <CommonModule uuid=\"11111111-2222-3333-4444-555555555555\">\n    <Properties>\n      <Name>Util</Name>\n      <Synonym/>\n      <Global>false</Global>\n      <ClientManagedApplication>false</ClientManagedApplication>\n      <Server>true</Server>\n      <ExternalConnection>false</ExternalConnection>\n      <ClientOrdinaryApplication>false</ClientOrdinaryApplication>\n      <ServerCall>false</ServerCall>\n    </Properties>\n  </CommonModule>\n</MetaDataObject>\nEOF\ncat > src/CommonModules/Util/Ext/Module.bsl <<'EOF'\nФункция ПолучитьСумму(А, Б) Экспорт\n\tВозврат ВычислитьСлагаемое(А) + Б;\nКонецФункции\n\nФункция ВычислитьСлагаемое(А)\n\tВозврат А * 2;\nКонецФункции\nEOF\ngyrfalcon build src --out config.db",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /home/sbx/work && python3 ~/.pickfit/mcp_probe.py --call object --args '{\"name\":\"Util\"}' -- gyrfalcon serve --db config.db",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=object content=text text_chars=1922",
+            "setup": [
+              {
+                "command": "cd /home/sbx/work && mkdir -p src/CommonModules/Util/Ext && cat > src/Configuration.xml <<'EOF'\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<MetaDataObject xmlns=\"http://v8.1c.ru/8.3/MDClasses\" version=\"2.11\">\n  <Configuration>\n    <Properties>\n      <Name>TestConfig</Name>\n      <Synonym/>\n      <Version>1.0.0.1</Version>\n    </Properties>\n    <ChildObjects>\n      <CommonModule>Util</CommonModule>\n    </ChildObjects>\n  </Configuration>\n</MetaDataObject>\nEOF\ncat > src/CommonModules/Util.xml <<'EOF'\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<MetaDataObject xmlns=\"http://v8.1c.ru/8.3/MDClasses\" version=\"2.11\">\n  <CommonModule uuid=\"11111111-2222-3333-4444-555555555555\">\n    <Properties>\n      <Name>Util</Name>\n      <Synonym/>\n      <Global>false</Global>\n      <ClientManagedApplication>false</ClientManagedApplication>\n      <Server>true</Server>\n      <ExternalConnection>false</ExternalConnection>\n      <ClientOrdinaryApplication>false</ClientOrdinaryApplication>\n      <ServerCall>false</ServerCall>\n    </Properties>\n  </CommonModule>\n</MetaDataObject>\nEOF\ncat > src/CommonModules/Util/Ext/Module.bsl <<'EOF'\nФункция ПолучитьСумму(А, Б) Экспорт\n\tВозврат ВычислитьСлагаемое(А) + Б;\nКонецФункции\n\nФункция ВычислитьСлагаемое(А)\n\tВозврат А * 2;\nКонецФункции\nEOF\ngyrfalcon build src --out config.db",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /home/sbx/work && python3 ~/.pickfit/mcp_probe.py --call callers --args '{\"method\":\"ВычислитьСлагаемое\"}' -- gyrfalcon serve --db config.db",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=callers content=text text_chars=692",
+            "setup": [
+              {
+                "command": "cd /home/sbx/work && mkdir -p src/CommonModules/Util/Ext && cat > src/Configuration.xml <<'EOF'\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<MetaDataObject xmlns=\"http://v8.1c.ru/8.3/MDClasses\" version=\"2.11\">\n  <Configuration>\n    <Properties>\n      <Name>TestConfig</Name>\n      <Synonym/>\n      <Version>1.0.0.1</Version>\n    </Properties>\n    <ChildObjects>\n      <CommonModule>Util</CommonModule>\n    </ChildObjects>\n  </Configuration>\n</MetaDataObject>\nEOF\ncat > src/CommonModules/Util.xml <<'EOF'\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<MetaDataObject xmlns=\"http://v8.1c.ru/8.3/MDClasses\" version=\"2.11\">\n  <CommonModule uuid=\"11111111-2222-3333-4444-555555555555\">\n    <Properties>\n      <Name>Util</Name>\n      <Synonym/>\n      <Global>false</Global>\n      <ClientManagedApplication>false</ClientManagedApplication>\n      <Server>true</Server>\n      <ExternalConnection>false</ExternalConnection>\n      <ClientOrdinaryApplication>false</ClientOrdinaryApplication>\n      <ServerCall>false</ServerCall>\n    </Properties>\n  </CommonModule>\n</MetaDataObject>\nEOF\ncat > src/CommonModules/Util/Ext/Module.bsl <<'EOF'\nФункция ПолучитьСумму(А, Б) Экспорт\n\tВозврат ВычислитьСлагаемое(А) + Б;\nКонецФункции\n\nФункция ВычислитьСлагаемое(А)\n\tВозврат А * 2;\nКонецФункции\nEOF\ngyrfalcon build src --out config.db",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /home/sbx/work && python3 ~/.pickfit/mcp_probe.py --call overrides --args '{\"object\":\"Util\"}' -- gyrfalcon serve --db config.db",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=overrides content=text text_chars=163",
+            "setup": [
+              {
+                "command": "cd /home/sbx/work && mkdir -p src/CommonModules/Util/Ext && cat > src/Configuration.xml <<'EOF'\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<MetaDataObject xmlns=\"http://v8.1c.ru/8.3/MDClasses\" version=\"2.11\">\n  <Configuration>\n    <Properties>\n      <Name>TestConfig</Name>\n      <Synonym/>\n      <Version>1.0.0.1</Version>\n    </Properties>\n    <ChildObjects>\n      <CommonModule>Util</CommonModule>\n    </ChildObjects>\n  </Configuration>\n</MetaDataObject>\nEOF\ncat > src/CommonModules/Util.xml <<'EOF'\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<MetaDataObject xmlns=\"http://v8.1c.ru/8.3/MDClasses\" version=\"2.11\">\n  <CommonModule uuid=\"11111111-2222-3333-4444-555555555555\">\n    <Properties>\n      <Name>Util</Name>\n      <Synonym/>\n      <Global>false</Global>\n      <ClientManagedApplication>false</ClientManagedApplication>\n      <Server>true</Server>\n      <ExternalConnection>false</ExternalConnection>\n      <ClientOrdinaryApplication>false</ClientOrdinaryApplication>\n      <ServerCall>false</ServerCall>\n    </Properties>\n  </CommonModule>\n</MetaDataObject>\nEOF\ncat > src/CommonModules/Util/Ext/Module.bsl <<'EOF'\nФункция ПолучитьСумму(А, Б) Экспорт\n\tВозврат ВычислитьСлагаемое(А) + Б;\nКонецФункции\n\nФункция ВычислитьСлагаемое(А)\n\tВозврат А * 2;\nКонецФункции\nEOF\ngyrfalcon build src --out config.db",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /home/sbx/work && python3 ~/.pickfit/mcp_probe.py --call object --args '{\"name\":\"Util\",\"parts\":[\"dcs\"]}' -- gyrfalcon serve --db config.db",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=object content=text text_chars=353",
+            "setup": [
+              {
+                "command": "cd /home/sbx/work && mkdir -p src/CommonModules/Util/Ext && cat > src/Configuration.xml <<'EOF'\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<MetaDataObject xmlns=\"http://v8.1c.ru/8.3/MDClasses\" version=\"2.11\">\n  <Configuration>\n    <Properties>\n      <Name>TestConfig</Name>\n      <Synonym/>\n      <Version>1.0.0.1</Version>\n    </Properties>\n    <ChildObjects>\n      <CommonModule>Util</CommonModule>\n    </ChildObjects>\n  </Configuration>\n</MetaDataObject>\nEOF\ncat > src/CommonModules/Util.xml <<'EOF'\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<MetaDataObject xmlns=\"http://v8.1c.ru/8.3/MDClasses\" version=\"2.11\">\n  <CommonModule uuid=\"11111111-2222-3333-4444-555555555555\">\n    <Properties>\n      <Name>Util</Name>\n      <Synonym/>\n      <Global>false</Global>\n      <ClientManagedApplication>false</ClientManagedApplication>\n      <Server>true</Server>\n      <ExternalConnection>false</ExternalConnection>\n      <ClientOrdinaryApplication>false</ClientOrdinaryApplication>\n      <ServerCall>false</ServerCall>\n    </Properties>\n  </CommonModule>\n</MetaDataObject>\nEOF\ncat > src/CommonModules/Util/Ext/Module.bsl <<'EOF'\nФункция ПолучитьСумму(А, Б) Экспорт\n\tВозврат ВычислитьСлагаемое(А) + Б;\nКонецФункции\n\nФункция ВычислитьСлагаемое(А)\n\tВозврат А * 2;\nКонецФункции\nEOF\ngyrfalcon build src --out config.db",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Скачать готовый бинарь / gyrfalcon build <путь к src> --out config.db (1C configuration export required)",
+            "actually_needed": "Built from source with cargo (no network needed at build time beyond crates). Index was built from a tiny synthetic 1C dump written by hand (one common module), because the real export is not available in this box. The server needs a built --db file before it starts.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "gyrfalcon serve --db config.db",
+            "actually_needed": "Works once config.db exists (built with gyrfalcon build). Not tested with a real 1C configuration.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Сборка из исходников: нужен свежий стабильный Rust",
+            "actually_needed": "cargo build --release succeeded with the box's Rust toolchain in about 73 s.",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
-        "judge": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The install plan printed MCP and hook configs for Claude Code, Kilo and Codex, the MCP probe reported 19 tools and 'handshake: ok', and --version printed 'gyrfalcon 0.1.25'.",
+          "model": "claude-opus-5-5"
+        },
         "evidence": {
-          "trace_path": "runs/verify/verify-gyrfalcon-20261101-001855-02e5/report.json",
+          "trace_path": null,
           "log_path": null,
           "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.042209
+        "actor_model": "claude-haiku-5-5",
+        "cost_usd": 0.041915,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "gyrfalcon",
+            "serve",
+            "--db",
+            "config.db"
+          ],
+          "url": null,
+          "protocol_version": "2025-06-18",
+          "server_name": "gyrfalcon",
+          "server_version": "0.1.25",
+          "tools": [
+            "list_projects",
+            "delete_project",
+            "kb_1c",
+            "project_practices",
+            "standards_1c",
+            "find",
+            "object",
+            "assist_bsl",
+            "callers",
+            "read",
+            "overrides",
+            "movements",
+            "detect_changes",
+            "impact",
+            "schema",
+            "coverage",
+            "grep",
+            "check_bsl",
+            "sql"
+          ],
+          "tool_count": 19,
+          "called_tool": "object",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "index a full 1C configuration",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: The object call for Util returned attributes with count 0 and a truncated result, so it does not demonstrate a full configuration being indexed or a structural answer."
+          },
+          {
+            "feature": "call graph with resolution class",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "extension intercepts with both addresses",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "overrides call passed but the synthetic fixture has no extension, so it returned count 0 and the two-address intercept output was never seen"
+          },
+          {
+            "feature": "data composition schemas in index",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "object parts=dcs call passed but the fixture has no data composition schema, so dcs count was 0"
+          }
+        ]
       }
     ]
   },
@@ -147,8 +363,6 @@
   },
   "security": {
     "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -223,19 +437,21 @@
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
         "malicious": false
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-03T21:41:45+08:00"
   },
   "scores": {
     "formula_version": "b3.v6",
-    "computed_at": "2026-11-05T03:16:32+08:00",
+    "computed_at": "2026-11-16T14:06:41+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 79.0,
+      "confidence": 0.8,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.85,
           "weight": 20.0
         },
         "install_docs": {
@@ -259,7 +475,7 @@
           "weight": 10.0
         },
         "feature_results": {
-          "score": null,
+          "score": 1.0,
           "weight": 20.0
         }
       }
@@ -280,7 +496,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 46.02
+      "value": 52.69
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -659,5 +875,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:34+08:00",
-  "updated_at": "2026-11-05T03:16:32+08:00"
+  "updated_at": "2026-11-16T14:06:41.396417+08:00"
 }
