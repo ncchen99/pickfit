@@ -36,3 +36,10 @@
 - 做了什麼：dry-run 印 `0 to verify`，`discover --repo` 存進本機（`added`，規則通過）。10/31 的筆記：本機安裝只有 `docker compose`，要 Neo4j，`pyproject` 還要 Python 3.13 以上；README 另一條路是連到作者託管的唯讀示範站，那不算安裝。箱子現在一樣沒有 Docker 或 Podman，沒有重跑，也沒抽取。
 - 結果：park，等 H-004。花費 US$0。
 - harness：無。H-004 這個 session 還沒動。
+
+## 2026-11-16 12:50 reverify:backgroundmusic → parked (H-003)
+
+- 做了什麼：本機有抽取結果。用 Modal 的 dry-run 印 `0 to verify · 1 set aside`，`skip backgroundmusic  GUI app`：它只有 macOS 版，Linux 箱子驗不了。11/4 那次是在 tart 的 macOS VM 跑的，停在 `needs_root`：安裝檔是 `.pkg`，要把音訊驅動裝進 `/Library`，要管理者密碼。沒有重跑。
+- 結果：park，等 H-003（由 harness 以 root 代跑安裝那一步，macOS 這邊是 `/usr/sbin/installer`）。花費 US$0。
+- harness：無。
+- 需要你：佇列裡有 6 筆只有 macOS 版（backgroundmusic、iglance、lulu、mac-performance-monitor、macos-enterprise-privileges、outset），另外 bindiff、cardinal 上次也是在 macOS VM 跑的。重驗它們要 `--runner tart --display`，在這台 Mac 上開 macOS VM（`tart list` 看得到 `pickfit-macos-26` 和 `pickfit-macos-26-gui` 兩個基底，不用另外下載）。skill 的指令只寫 `--runner modal`，賽後方針也說 macOS GUI 先不排，所以 loop 沒有在你的 Mac 上開 VM。要不要讓 loop 跑 tart，請你決定。在那之前這幾筆輪到時會 park，或在原因很明確時照實記成未驗證。
