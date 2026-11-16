@@ -3,6 +3,7 @@
  * from the browser run in the index (never by the model). A web app is opened at its URL, never installed.
  */
 import { webCheck, type Entry, type WebCheck, type WebOperation } from './catalog.ts';
+import { operatorNames } from './evidence.ts';
 import { L, isZh } from './i18n.ts';
 
 export const NO_INSTALL_LABEL = 'No install, just open it';
@@ -58,9 +59,11 @@ function operatedText(check: WebCheck): string | null {
       return L(`${feature} (checked by ${how})`, `${feature}（檢查依據：${how}）`);
     })
     .join(isZh() ? '；' : '; ');
+  // The run's own record says which model used the page; an index from before it carried that names none.
+  const names = operatorNames(passed);
   return L(
-    `a model (Muse Spark) then used it in the page and the result passed pickfit's own check: ${what}`,
-    `接著由模型（Muse Spark）在頁面中實際操作，結果通過了 pickfit 自己的檢查：${what}`,
+    `a model${names.length ? ` (${names.join(', ')})` : ''} then used it in the page and the result passed pickfit's own check: ${what}`,
+    `接著由模型${names.length ? `（${names.join('、')}）` : ''}在頁面中實際操作，結果通過了 pickfit 自己的檢查：${what}`,
   );
 }
 

@@ -1,0 +1,690 @@
+{
+  "schema_version": "software.v1",
+  "slug": "watchexec",
+  "repo_id": "gh:68546136",
+  "name": "Watchexec",
+  "summary": "A standalone command-line tool that watches a path and runs a command whenever it detects file modifications.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "command-line",
+    "developer-tools",
+    "file-watchers",
+    "linux",
+    "macos",
+    "rust",
+    "windows"
+  ],
+  "use_cases": [
+    "automatically run unit tests on file changes",
+    "run linters or syntax checkers on change",
+    "rebuild artifacts when sources change",
+    "restart a Python server when Python files change"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "watch directory tree and run command on changes",
+    "coalesce multiple filesystem events into one",
+    "respect .gitignore and .ignore files",
+    "pass changed paths via environment or STDIN"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:44.498552Z",
+    "run_id": "verify-watchexec-20261116-005257-468f",
+    "open_hint": "From your project folder, run `watchexec --postpone -- <command>` to run a command each time a file changes.",
+    "features": [
+      {
+        "feature": "watch directory tree and run command on changes",
+        "title": "Run a command when files in a folder change",
+        "steps": [
+          "Open a terminal in your project folder.",
+          "Run `watchexec --postpone -- <command>`.",
+          "Edit any file in the folder or its subfolders and the command runs."
+        ]
+      },
+      {
+        "feature": "coalesce multiple filesystem events into one",
+        "title": "Group many quick changes into one run",
+        "steps": [
+          "Run `watchexec --postpone -- <command>` in your project folder.",
+          "Save several files in quick succession. The command runs once for the batch."
+        ]
+      },
+      {
+        "feature": "respect .gitignore and .ignore files",
+        "title": "Skip files listed in .gitignore and .ignore",
+        "steps": [
+          "List files to skip in your project's .gitignore.",
+          "Run `watchexec --postpone --emit-events-to=environment -- '<command>'` in the project folder.",
+          "Changes to ignored files do not trigger the command. Other changes do."
+        ]
+      },
+      {
+        "feature": "pass changed paths via environment or STDIN",
+        "title": "Pass changed file paths to your command",
+        "steps": [
+          "Run `watchexec --postpone --emit-events-to=environment -- 'echo $WATCHEXEC_WRITTEN_PATH'` to read the changed path from an environment variable.",
+          "Or run `watchexec --postpone --emit-events-to=json-stdio -- <command>` to send each change as JSON to your command's standard input."
+        ]
+      }
+    ]
+  },
+  "homepage": "https://watchexec.github.io",
+  "repo": {
+    "url": "https://github.com/watchexec/watchexec",
+    "full_name": "watchexec/watchexec",
+    "created_at": "2016-09-18T20:41:31Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo binstall watchexec-cli",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "watchexec --help"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-watchexec-20261116-005257-468f",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/wx && cd /tmp/wx && URL=$(curl -fsSL https://api.github.com/repos/watchexec/watchexec/releases/latest | python3 -c 'import json,sys; d=json.load(sys.stdin); print([a[\"browser_download_url\"] for a in d[\"assets\"] if a[\"name\"].endswith(\"x86_64-unknown-linux-musl.tar.xz\")][0])') && curl -fsSLO \"$URL\" && tar xf *.tar.xz && cp */watchexec ~/.local/bin/",
+          "purpose": "Download v2.8.0 x86_64 musl prebuilt release tarball from GitHub and copy watchexec into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "watchexec --version",
+        "expected_signal": "watchexec 2.8.0"
+      },
+      "first_task": "cd /tmp/proj && (sleep 2; echo x >> sub/deep/a.txt) & cd /tmp/proj && timeout --preserve-status -s INT 5 watchexec --postpone -- echo F1-RAN-ON-CHANGE"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo binstall watchexec-cli",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "watchexec --help"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v2.8.0",
+    "published_at": "2026-10-06T17:04:04Z",
+    "url": "https://github.com/watchexec/watchexec/releases/tag/v2.8.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T00:54:42.917553+08:00",
+    "runs": [
+      {
+        "id": "verify-watchexec-20261116-005257-468f",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T00:54:42.917553+08:00",
+        "tool_version": "2.8.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/wx && cd /tmp/wx && URL=$(curl -fsSL https://api.github.com/repos/watchexec/watchexec/releases/latest | python3 -c 'import json,sys; d=json.load(sys.stdin); print([a[\"browser_download_url\"] for a in d[\"assets\"] if a[\"name\"].endswith(\"x86_64-unknown-linux-musl.tar.xz\")][0])') && curl -fsSLO \"$URL\" && tar xf *.tar.xz && cp */watchexec ~/.local/bin/",
+            "purpose": "Download v2.8.0 x86_64 musl prebuilt release tarball from GitHub and copy watchexec into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "watchexec --version",
+            "expected_signal": "watchexec 2.8.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "watchexec 2.8.0 (07e2b99e 2026-10-05) +pid1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/proj && (sleep 2; echo x >> sub/deep/a.txt) & cd /tmp/proj && timeout --preserve-status -s INT 5 watchexec --postpone -- echo F1-RAN-ON-CHANGE",
+            "expected_signal": "F1-RAN-ON-CHANGE",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "F1-RAN-ON-CHANGE",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/proj && mkdir -p /tmp/proj/sub/deep && cd /tmp/proj && git init -q && printf 'ignored.txt\\n' > .gitignore && echo a > sub/deep/a.txt && echo b > sub/b.txt && echo i > ignored.txt && echo ok",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/proj && (sleep 2; for i in 1 2 3 4 5; do echo $i >> sub/b.txt; echo $i >> sub/deep/a.txt; done) & cd /tmp/proj && timeout --preserve-status -s INT 5 watchexec --postpone -- echo F2-COALESCED-RUN",
+            "expected_signal": "F2-COALESCED-RUN",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "F2-COALESCED-RUN",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/proj && mkdir -p /tmp/proj/sub/deep && cd /tmp/proj && git init -q && printf 'ignored.txt\\n' > .gitignore && echo a > sub/deep/a.txt && echo b > sub/b.txt && echo i > ignored.txt && echo ok",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/proj && (sleep 2; echo y >> ignored.txt; sleep 1.5; echo z >> sub/b.txt) & cd /tmp/proj && timeout --preserve-status -s INT 6 watchexec --postpone --emit-events-to=environment -- 'echo F3-TRIGGERED-BY: $WATCHEXEC_WRITTEN_PATH'",
+            "expected_signal": "F3-TRIGGERED-BY: b.txt",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "F3-TRIGGERED-BY: b.txt",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/proj && mkdir -p /tmp/proj/sub/deep && cd /tmp/proj && git init -q && printf 'ignored.txt\\n' > .gitignore && echo a > sub/deep/a.txt && echo b > sub/b.txt && echo i > ignored.txt && echo ok",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/proj && (sleep 2; echo w >> sub/deep/a.txt) & cd /tmp/proj && timeout --preserve-status -s INT 5 watchexec --postpone --emit-events-to=json-stdio -- head -n1",
+            "expected_signal": "\"absolute\":\"/tmp/proj/sub/deep/a.txt\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"tags\":[{\"kind\":\"source\",\"source\":\"filesystem\"},{\"kind\":\"fs\",\"simple\":\"modify\",\"full\":\"Modify(Data(Any))\"},{\"kind\":\"path\",\"absolute\":\"/tmp/proj/sub/deep/a.txt\",\"filetype\":\"file\"}]}",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/proj && mkdir -p /tmp/proj/sub/deep && cd /tmp/proj && git init -q && printf 'ignored.txt\\n' > .gitignore && echo a > sub/deep/a.txt && echo b > sub/b.txt && echo i > ignored.txt && echo ok",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo binstall watchexec-cli / cargo install --locked watchexec-cli",
+            "actually_needed": "No Rust toolchain in the box; I used the README's other documented option, the prebuilt binary from GitHub releases (watchexec-2.8.0-x86_64-unknown-linux-musl.tar.xz)",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks show the expected output: the command ran once on a file change, rapid changes were coalesced into a single run, and the version printed as watchexec 2.8.0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-watchexec-20261116-005257-468f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-watchexec-20261116-005257-468f/check-1-cmd4.judged.png",
+            "runs/verify/verify-watchexec-20261116-005257-468f/check-2-cmd5.judged.png",
+            "runs/verify/verify-watchexec-20261116-005257-468f/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.150259,
+        "features": [
+          {
+            "feature": "watch directory tree and run command on changes",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "coalesce multiple filesystem events into one",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "respect .gitignore and .ignore files",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "pass changed paths via environment or STDIN",
+            "status": "checked",
+            "smoke_tests": [
+              3,
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T00:54:52+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/watchexec/watchexec@f71af3b18d57",
+      "Cargo.lock"
+    ],
+    "packages_checked": 443,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T00:54:42+08:00",
+    "quality": {
+      "total": 82.7,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8333,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 93.8,
+      "signals": {
+        "stars": 7294,
+        "monthly_downloads": 4641,
+        "forks": 209,
+        "dependents": null,
+        "release_downloads": 1839358,
+        "hn_top_score": 2,
+        "registries_count": 2
+      },
+      "age_days": 3709,
+      "packages": [
+        "crates:watchexec-cli",
+        "homebrew:watchexec"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 5.13
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:54:42.922164+08:00",
+      "sources_sha": "d4ac982fc883f3379f27553b6f14999d6f7ecb75347816b4b5f0f8efa2655d6e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "`watchexec` is a simple, standalone tool that watches a path and runs a command whenever it detects modifications."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "* Automatically run unit tests"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "* Does not require a language runtime, not tied to any particular language or ecosystem"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "From source with Cargo: `cargo install --locked watchexec-cli`"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "$ watchexec -e js,css,html npm run build"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "* Provides the paths that changed in environment variables or STDIN"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "* Runs on OS X, Linux, and Windows"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/watchexec/watchexec",
+      "fetched_at": "2026-11-16T00:52:50+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/watchexec/watchexec/blob/main/README.md",
+      "fetched_at": "2026-11-16T00:52:48+08:00"
+    },
+    {
+      "id": "release:v2.8.0",
+      "kind": "release",
+      "url": "https://github.com/watchexec/watchexec/releases/tag/v2.8.0",
+      "fetched_at": "2026-11-16T00:52:48+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "`watchexec` is a simple, standalone tool that watches a path and runs a command whenever it detects modifications.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:57+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "`watchexec` is a simple, standalone tool",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:57+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "topics: command-line, developer-tools, file-watchers",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:57+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "`watchexec` is a simple, standalone tool that watches a path and runs a command whenever it detects modifications.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:57+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Watchexec",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:57+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Runs on OS X, Linux, and Windows",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:57+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:52:50+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:52:50+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T00:52:50+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:52:50+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:52:50+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.8.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:52:48+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Automatically run unit tests",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:57+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Run linters/syntax checkers",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:57+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Rebuild artifacts",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:57+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Call/restart `python server.py` when any Python file in the current directory (and all subdirectories) changes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:57+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Monitors current directory and all subdirectories for changes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:57+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Coalesces multiple filesystem events into one, for editors that use swap/backup files during saving",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:57+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Loads `.gitignore` and `.ignore` files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:57+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Provides the paths that changed in environment variables or STDIN",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:57+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "cargo binstall watchexec-cli",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:57+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo binstall watchexec-cli",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:57+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cargo binstall watchexec-cli",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:57+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T00:52:48+08:00",
+  "updated_at": "2026-11-16T00:54:52+08:00"
+}

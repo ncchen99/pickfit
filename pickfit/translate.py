@@ -8,12 +8,12 @@ uses a sentence only while the record still says exactly that, so a failed or sk
 translation just leaves that sentence in English.
 
 Translation is page copy, not part of matching or verification: find_software, the MCP tools
-and every pipeline step run on the English records. The default model is Muse Spark Open on
-Modal's endpoint through call_meta (the modal-llm budget in the shared ledger, Modal credits).
-On 11/2 a blind comparison on 20 held-out tools (246 sentences, judged by Claude) found meaning
-errors in about 1-2% of its sentences at effort medium, against under 1% for Claude Opus 5.5,
-at about $0.0045 a tool. The first full translation (856 tools) was made with claude-opus-5-5,
-which stays available as the fallback (`--model claude`, key ANTHROPIC_API_KEY).
+and every pipeline step run on the English records. Since 2026-11-15 the default model is Claude
+Opus ("claude") through call_meta, recorded in the pipeline budget of the shared ledger; it made
+the first full translation (856 tools) too. During the hackathon the default was Muse Spark Open
+on Modal's endpoint ("open-modal", the modal-llm budget, Modal credits), which stays available:
+on 11/2 a blind comparison on 20 held-out tools (246 sentences, judged by Claude) found meaning
+errors in about 1-2% of its sentences at effort medium, against under 1% for Claude Opus 5.5.
 """
 
 from __future__ import annotations
@@ -29,12 +29,15 @@ from typing import Any
 
 from pickfit.i18n import load, prose, save
 
-MODELS = ("open-modal", "claude")
-CLAUDE_MODEL = "claude-opus-5-5"
-CLAUDE_PRICE_IN, CLAUDE_PRICE_OUT = 4.0 / 1e6, 20.0 / 1e6
+MODELS = ("claude", "open-modal")
+DEFAULT_MODEL = "claude"
 # English characters per request: Muse Spark Open gets smaller batches, so one bad answer costs less to redo.
 BATCH_CHARS = {"open-modal": 4000, "claude": 9000}
 STAGE = "translate"
+# Thinking shares the limit. A request is reserved at its worst case before it is sent (about $0.35 on
+# Claude Opus), so a run's cap has to hold as many of those as run at once.
+MAX_OUTPUT_TOKENS = 16_000
+DEFAULT_MAX_USD = 4.0
 
 SYSTEM = """You translate short English text from a software catalog website into Traditional Chinese as used in Taiwan (zh-TW).
 
@@ -110,37 +113,25 @@ def answers(text: str, size: int) -> dict[int, str]:
     return {item["i"]: item["zh"].strip() for item in items if 0 <= item["i"] < size and item["zh"].strip()}
 
 
-def translate_open(batch: list[tuple[str, str]], run_id: str, max_usd: float, effort: str) -> tuple[dict[int, str], float]:
-    """Muse Spark Open on Modal through call_meta: billed to the modal-llm budget, `max_usd` per run."""
+def translate_batch(batch: list[tuple[str, str]], run_id: str, max_usd: float, effort: str,
+                    model: str = DEFAULT_MODEL) -> tuple[dict[int, str], float]:
+    """One request through call_meta, `max_usd` per run: Claude Opus (the pipeline budget) or, for
+    "open-modal", Muse Spark Open on Modal's endpoint (the modal-llm budget)."""
     from pickfit.ledger import modal_llm_ledger
-    from pickfit.meta import call_meta
+    from pickfit.meta import PROD_MODEL, call_meta
 
     body = {
         "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": request_text(batch)}],
         "response_format": {"type": "json_schema", "json_schema": {"name": "translations", "schema": SCHEMA, "strict": True}},
     }
-    result = call_meta("chat", body, stage=STAGE, public_data_only=True, max_output_tokens=16000, model="open-modal",
-                       provider="modal", reasoning_effort=effort, scope=f"{STAGE}:{run_id}", scope_cap_usd=max_usd,
-                       run_id=run_id, cache=False, ledger=modal_llm_ledger())
+    where: dict[str, Any] = (dict(model="open-modal", provider="modal", ledger=modal_llm_ledger())
+                             if model == "open-modal" else dict(model=PROD_MODEL))
+    result = call_meta("chat", body, stage=STAGE, public_data_only=True, max_output_tokens=MAX_OUTPUT_TOKENS,
+                       reasoning_effort=effort, scope=f"{STAGE}:{run_id}", scope_cap_usd=max_usd,
+                       run_id=run_id, cache=False, **where)
     if result.status not in (None, "stop"):
         raise RuntimeError(f"finish_reason {result.status}")
     return answers(result.text or "", len(batch)), result.cost_usd
-
-
-def translate_claude(client: Any, batch: list[tuple[str, str]]) -> tuple[dict[int, str], float]:
-    with client.messages.stream(
-        model=CLAUDE_MODEL,
-        max_tokens=32000,
-        system=SYSTEM,
-        output_config={"effort": "low", "format": {"type": "json_schema", "schema": SCHEMA}},
-        messages=[{"role": "user", "content": request_text(batch)}],
-    ) as stream:
-        response = stream.get_final_message()
-    if response.stop_reason in ("refusal", "max_tokens"):
-        raise RuntimeError(f"stop_reason {response.stop_reason}")
-    text = next(block.text for block in response.content if block.type == "text")
-    cost = response.usage.input_tokens * CLAUDE_PRICE_IN + response.usage.output_tokens * CLAUDE_PRICE_OUT
-    return answers(text, len(batch)), cost
 
 
 @dataclass
@@ -156,26 +147,23 @@ def run(
     known: dict[str, dict[str, str]],
     directory: Path,
     *,
-    model: str = "open-modal",
-    effort: str = "medium",
-    max_usd: float = 2.0,
+    model: str = DEFAULT_MODEL,
+    effort: str | None = None,
+    max_usd: float = DEFAULT_MAX_USD,
     concurrency: int = 8,
-    anthropic_key: str | None = None,
     out: Callable[[str], None] = print,
 ) -> Totals:
-    """Translate `groups` and save each tool's file as its answers arrive; a failed request is counted, not raised."""
-    if model == "claude":
-        import anthropic
+    """Translate `groups` and save each tool's file as its answers arrive; a failed request is counted, not raised.
 
-        client = anthropic.Anthropic(api_key=anthropic_key) if anthropic_key else anthropic.Anthropic()
-        translate = lambda batch: translate_claude(client, batch)  # noqa: E731
-    elif model == "open-modal":
-        from pickfit.ledger import taipei_now
+    effort: reasoning effort; unset, low for Claude and medium for Muse Spark Open (what each was measured at).
+    """
+    from pickfit.ledger import taipei_now
 
-        run_id = f"translate-{taipei_now():%Y%m%d-%H%M%S}"
-        translate = lambda batch: translate_open(batch, run_id, max_usd, effort)  # noqa: E731
-    else:
+    if model not in MODELS:
         raise ValueError(f"model must be one of {MODELS}")
+    effort = effort or ("medium" if model == "open-modal" else "low")
+    run_id = f"translate-{taipei_now():%Y%m%d-%H%M%S}"
+    translate = lambda batch: translate_batch(batch, run_id, max_usd, effort, model)  # noqa: E731
     lock = threading.Lock()
     totals = Totals()
 

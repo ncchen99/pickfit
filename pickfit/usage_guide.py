@@ -8,9 +8,9 @@ record keeps the guide as a snapshot. Records change after it is written (a re-v
 the run, an extraction changes the features), so the index shows it through shown_guide(): a title only
 for a feature the record still lists, steps only while a passed run still checks that feature.
 
-The product writes these with a Meta model (call_meta, default muse-spark-1.3). `--provider anthropic`
-writes them with Claude instead; 念誠 chose that for the 11/2 backfill of records that already existed
-(the tool page changed after the data was built). Every guide records the model that wrote it.
+The guides are written through call_meta by the prod model (Claude Opus since 2026-11-15, as in the
+11/2 backfill of the records that already existed; muse-spark-1.3 before). Every guide records the model
+that wrote it.
 """
 
 from __future__ import annotations
@@ -31,9 +31,6 @@ from pydantic import BaseModel, ConfigDict, Field
 from pickfit.schema import SoftwareRecord, UsageGuide, VerificationRun, is_passed, meta_strict_schema
 
 STAGE = "usage_guide"
-ANTHROPIC_MODEL = "claude-opus-5-5"
-# claude-opus-5-5 per million tokens (input, output); thinking is billed as output.
-ANTHROPIC_PRICE = (4.00, 20.00)
 EXCERPT_MAX = 400
 MAX_OUTPUT_TOKENS = 4000
 
@@ -159,24 +156,6 @@ class Generated:
     usage: dict[str, int] = field(default_factory=dict)
 
 
-def _call_anthropic(text: str, client: Any) -> Generated:
-    response = client.messages.create(
-        model=ANTHROPIC_MODEL,
-        max_tokens=MAX_OUTPUT_TOKENS,
-        system=INSTRUCTIONS,
-        output_config={"effort": "low",
-                       "format": {"type": "json_schema", "schema": meta_strict_schema(GuideOut)}},
-        messages=[{"role": "user", "content": text}],
-    )
-    if response.stop_reason != "end_turn":
-        raise RuntimeError(f"stop_reason {response.stop_reason}")
-    body = next(b.text for b in response.content if b.type == "text")
-    u = response.usage
-    cost = (u.input_tokens * ANTHROPIC_PRICE[0] + u.output_tokens * ANTHROPIC_PRICE[1]) / 1e6
-    return Generated(GuideOut.model_validate_json(body), ANTHROPIC_MODEL, cost,
-                     {"input": u.input_tokens, "output": u.output_tokens})
-
-
 def _call_meta(text: str, model: str | None, run_id: str) -> Generated:
     from pickfit.meta import call_meta
 
@@ -188,8 +167,9 @@ def _call_meta(text: str, model: str | None, run_id: str) -> Generated:
     meta = call_meta("responses", body, stage=STAGE, public_data_only=True, max_output_tokens=MAX_OUTPUT_TOKENS,
                      model=model or "prod", reasoning_effort="low", run_id=run_id, output_model=GuideOut)
     if meta.parsed is None:
-        raise RuntimeError(f"no parsed output: {meta.parse_error}")
-    return Generated(meta.parsed, meta.model, meta.cost_usd)
+        raise RuntimeError(f"no parsed output: {meta.status} {meta.parse_error}")
+    usage = {"input": meta.usage.input_tokens, "output": meta.usage.output_tokens} if meta.usage else {}
+    return Generated(meta.parsed, meta.model, meta.cost_usd, usage)
 
 
 # --- Records -------------------------------------------------------------------------------------
@@ -254,8 +234,7 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--data-dir", default="data/software")
     p.add_argument("--slug", action="append", help="only this record (repeatable)")
     p.add_argument("--limit", type=int, default=None)
-    p.add_argument("--provider", choices=["meta", "anthropic"], default="meta")
-    p.add_argument("--model", default=None, help='meta: "prod" (default), "dev" or a model id')
+    p.add_argument("--model", default=None, help='"prod" (Claude Opus, default), "dev" or a model id')
     p.add_argument("--max-usd", type=float, default=5.0, help="stop starting new calls past this spend")
     p.add_argument("--concurrency", type=int, default=6)
     p.add_argument("--force", action="store_true", help="rewrite guides that are already current")
@@ -276,12 +255,6 @@ def main(argv: list[str] | None = None) -> int:
         print(f"\n{len(todo)} records would get a guide", file=sys.stderr)
         return 0
 
-    client = None
-    if args.provider == "anthropic":
-        import anthropic
-
-        from pickfit.env import get_env
-        client = anthropic.Anthropic(api_key=get_env("ANTHROPIC_API_KEY"))
     run_id = f"usage-guide-{datetime.now(timezone.utc):%Y%m%d-%H%M%S}"
     log_dir = Path("runs") / "usage-guide"
     log_dir.mkdir(parents=True, exist_ok=True)
@@ -291,8 +264,7 @@ def main(argv: list[str] | None = None) -> int:
     def one(path: Path, record: SoftwareRecord) -> tuple[Path, SoftwareRecord, VerificationRun | None, Generated]:
         run = best_run(record)
         text = render_input(record, run)
-        gen = _call_anthropic(text, client) if client else _call_meta(text, args.model, run_id)
-        return path, record, run, gen
+        return path, record, run, _call_meta(text, args.model, run_id)
 
     started = time.monotonic()
     with ThreadPoolExecutor(max_workers=args.concurrency) as pool:

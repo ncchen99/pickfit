@@ -1,0 +1,710 @@
+{
+  "schema_version": "software.v1",
+  "slug": "doggo",
+  "repo_id": "gh:319848237",
+  "name": "doggo",
+  "summary": "Command-line DNS client, similar to dig, with readable output and support for DoH, DoT, DoQ and DNSCrypt.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "security_net",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "dns",
+    "dns-client",
+    "doh"
+  ],
+  "use_cases": [
+    "query MX records using a specific nameserver",
+    "resolve a domain over DNS over HTTPS",
+    "perform a reverse DNS lookup of an IP",
+    "trace the DNS delegation chain"
+  ],
+  "alternatives_to": [
+    "dig",
+    "dog"
+  ],
+  "features": [
+    "human-readable color-coded tabular DNS output",
+    "JSON output for scripting",
+    "iterative delegation tracing",
+    "query over DoH, DoT, DoQ, DNSCrypt"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:01.567957Z",
+    "run_id": "verify-doggo-20261116-002556-cafb",
+    "open_hint": "Run `doggo <domain>` to look up a domain's records.",
+    "features": [
+      {
+        "feature": "human-readable color-coded tabular DNS output",
+        "title": "See DNS answers in a readable color-coded table",
+        "steps": [
+          "Run `doggo <domain>` to see name, type, class, TTL, address and nameserver in a table."
+        ]
+      },
+      {
+        "feature": "JSON output for scripting",
+        "title": "Get DNS results as JSON for scripts",
+        "steps": [
+          "Run `doggo <domain> --json` to print the results as JSON."
+        ]
+      },
+      {
+        "feature": "iterative delegation tracing",
+        "title": "Trace the DNS delegation chain step by step",
+        "steps": [
+          "Run `doggo <domain> --trace` to follow the lookup from the root servers down."
+        ]
+      },
+      {
+        "feature": "query over DoH, DoT, DoQ, DNSCrypt",
+        "title": "Query over DoH, DoT, DoQ or DNSCrypt",
+        "steps": [
+          "For DNS over HTTPS, run `doggo <domain> @https://cloudflare-dns.com/dns-query`.",
+          "For DNS over TLS, run `doggo <domain> @tls://1.1.1.1`."
+        ]
+      }
+    ]
+  },
+  "homepage": "https://doggo.mrkaran.dev/",
+  "repo": {
+    "url": "https://github.com/mr-karan/doggo",
+    "full_name": "mr-karan/doggo",
+    "created_at": "2020-12-09T05:07:07Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "windows",
+    "macos"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install doggo",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "doggo example.com"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-doggo-20261116-002556-cafb",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "cd /tmp && rm -rf dx doggo.tgz && curl -fsSL -o doggo.tgz https://github.com/mr-karan/doggo/releases/download/v1.4.2/doggo-linux-x86_64.tar.gz && mkdir -p dx ~/.local/bin && tar -xzf doggo.tgz -C dx && install -m755 \"$(find dx -name doggo -type f)\" ~/.local/bin/doggo",
+          "purpose": "Download the v1.4.2 doggo-linux-x86_64.tar.gz release asset and install the binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "doggo --version",
+        "expected_signal": "v1.4.2"
+      },
+      "first_task": "doggo example.com"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install github.com/mr-karan/doggo/cmd/doggo@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "doggo example.com"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "GPL-3.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v1.4.2",
+    "published_at": "2026-10-22T06:25:40Z",
+    "url": "https://github.com/mr-karan/doggo/releases/tag/v1.4.2"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T00:27:18.434284+08:00",
+    "runs": [
+      {
+        "id": "verify-doggo-20261116-002556-cafb",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T00:27:18.434284+08:00",
+        "tool_version": "v1.4.2",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd /tmp && rm -rf dx doggo.tgz && curl -fsSL -o doggo.tgz https://github.com/mr-karan/doggo/releases/download/v1.4.2/doggo-linux-x86_64.tar.gz && mkdir -p dx ~/.local/bin && tar -xzf doggo.tgz -C dx && install -m755 \"$(find dx -name doggo -type f)\" ~/.local/bin/doggo",
+            "purpose": "Download the v1.4.2 doggo-linux-x86_64.tar.gz release asset and install the binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "doggo --version",
+            "expected_signal": "v1.4.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "v1.4.2 (021e46c 2026-10-22T06:19:44Z) - unknown",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "doggo example.com",
+            "expected_signal": "NAME TYPE CLASS TTL",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "NAME TYPE CLASS TTL ADDRESS NAMESERVER",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "doggo example.com --json",
+            "expected_signal": "\"questions\": [",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"questions\": [",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "doggo example.com --trace",
+            "expected_signal": "TRACE example.com. A IN",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "TRACE example.com. A IN",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "doggo example.com @https://cloudflare-dns.com/dns-query",
+            "expected_signal": "https://cloudflare-dns.com/dns-query",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "example.com. A IN 171s 104.20.23.154 https://cloudflare-dns.com/dns-query",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "doggo example.com @tls://1.1.1.1",
+            "expected_signal": "1.1.1.1:853",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "example.com. A IN 230s 172.66.147.243 1.1.1.1:853",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://raw.githubusercontent.com/mr-karan/doggo/main/install.sh | sh",
+            "actually_needed": "The script runs `sudo mv` to put the binary in /usr/local/bin and needs the `file` command. Without root, download the release tarball (doggo-linux-x86_64.tar.gz) and copy the binary into ~/.local/bin yourself.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "All examples query live DNS",
+            "actually_needed": "Every example needs network access to DNS resolvers, DoH and DoT servers, and the root servers. A rerun with the network off will fail.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "doggo printed a DNS results table for example.com, valid JSON output with a questions array, and version v1.4.2, all with exit code 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-doggo-20261116-002556-cafb/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-doggo-20261116-002556-cafb/check-1-cmd4.judged.png",
+            "runs/verify/verify-doggo-20261116-002556-cafb/check-2-cmd5.judged.png",
+            "runs/verify/verify-doggo-20261116-002556-cafb/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.258959,
+        "features": [
+          {
+            "feature": "human-readable color-coded tabular DNS output",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "JSON output for scripting",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "iterative delegation tracing",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "query over DoH, DoT, DoQ, DNSCrypt",
+            "status": "checked",
+            "smoke_tests": [
+              4,
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T00:27:31+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/mr-karan/doggo@7f318144623b",
+      "go.mod"
+    ],
+    "packages_checked": 39,
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "go:github.com/andybalholm/brotli",
+        "version": "v1.2.6",
+        "advisory": "GO-2026-6888",
+        "cves": [
+          "CVE-2026-111497"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "1.2.7",
+        "summary": "Excessive memory allocation when decompressing crafted streams in github.com/andybalholm/brotli",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T00:27:31+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.65,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 97.0,
+      "signals": {
+        "stars": 4554,
+        "monthly_downloads": 1672,
+        "forks": 152,
+        "dependents": null,
+        "release_downloads": 89491,
+        "hn_top_score": 400,
+        "registries_count": 1
+      },
+      "age_days": 2167,
+      "packages": [
+        "homebrew:doggo"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 2.37
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:27:18.464511+08:00",
+      "sources_sha": "262007ef418495cb91016125a9d57fe5c257e0d0b973c54202ff475fbd3c8ae5",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "**doggo** is a modern command-line DNS client (like _dig_) written in Golang. It outputs information in a neat concise manner and supports protocols like DoH, DoT, DoQ, and DNSCrypt as well."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Command-line DNS client for humans"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "If you have Go installed on your system, you can use the `go install` command:"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "- Scoop (Windows): `scoop install doggo`"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "# Simple DNS lookup\ndoggo example.com"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Precedence (lowest to highest): flag defaults < config file < environment variables < command line flags. Use `--config=PATH` or `DOGGO_CONFIG` to load a file from a custom location."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "- Cross-platform support"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/mr-karan/doggo",
+      "fetched_at": "2026-11-16T00:25:41+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/mr-karan/doggo/blob/main/README.md",
+      "fetched_at": "2026-11-16T00:25:38+08:00"
+    },
+    {
+      "id": "release:v1.4.2",
+      "kind": "release",
+      "url": "https://github.com/mr-karan/doggo/releases/tag/v1.4.2",
+      "fetched_at": "2026-11-16T00:25:38+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Command-line DNS client for humans",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:51+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Command-line DNS client for humans",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:51+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Command-line DNS Client for Humans",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:51+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "**doggo** is a modern command-line DNS client (like _dig_) written in Golang. It outputs information in a neat concise manner and supports protocols like DoH, DoT, DoQ, and DNSCrypt as well.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:51+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "**doggo** is a modern command-line DNS client",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:51+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Scoop (Windows): `scoop install doggo`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:51+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Simple DNS lookup",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:51+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:25:41+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:25:41+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T00:25:41+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:25:41+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:25:41+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.4.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:25:38+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Query MX records using a specific nameserver",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:51+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Use DNS over HTTPS",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:51+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Reverse DNS lookup",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:51+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Follow the delegation chain iteratively",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:51+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "(like _dig_)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:51+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "It's totally inspired by [dog](https://github.com/ogham/dog/)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:51+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Human-readable output with color-coded and tabular format",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:51+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "JSON output support for easy scripting and parsing",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:51+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Iterative delegation tracing with `--trace`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:51+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Multiple transport protocols: DoH, DoT, DoQ, TCP, UDP, DNSCrypt",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:51+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install doggo",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:51+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/mr-karan/doggo/main/install.sh | sh",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:51+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/mr-karan/doggo/cmd/doggo@latest",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:25:51+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T00:25:38+08:00",
+  "updated_at": "2026-11-16T00:27:31+08:00"
+}

@@ -1,22 +1,24 @@
-"""Open-weight prescreen (P2.4): Muse Spark Open on Baseten decides which rule-passed
-candidates are usable software worth a muse-spark-1.3 extraction.
+"""Prescreen (P2.4): the bulk model decides which rule-passed candidates are usable software
+worth an extraction by the model product decisions are made with.
+
+Since 2026-11-15 the screen runs on Claude Haiku ("open") and the review on Claude Opus ("prod");
+during the hackathon they were Muse Spark Open on Baseten and muse-spark-1.3 on Meta's API, and
+the rows of that time keep those names.
 
 The model sees the description, topics, a cut README, root manifests, top-level
 files and release asset names, never star or download counts (architecture D.3:
 no popularity bias), and answers through a forced `record_prescreen` tool call
-(Baseten accepts json_schema but does not enforce it; a forced tool call does,
-measured 2026-10-29). Program checks decide what happens next:
+(call_meta sends it to Claude as a JSON schema and hands the answer back as that call).
+Program checks decide what happens next:
 
 - keep = usable_software and a runnable kind; the two must agree, so a
   contradiction is sent to review rather than guessed;
 - confidence below REVIEW_BELOW, a contradiction, kind "other" or a screen that
-  failed goes to a muse-spark-1.3 review on Meta (structured output), whose
-  answer overrides the screen;
+  failed goes to a review (structured output), whose answer overrides the screen;
 - a fixed 5% sample is reviewed whatever the screen said, which gives the
-  agreement rate between the open-weight and the standard model.
+  agreement rate between the bulk and the standard model.
 
-Baseten spend goes to its own budget in the shared ledger (`baseten_ledger`);
-reviews go to the pipeline budget like every other Meta call. Rows go to the
+Both calls are recorded in the pipeline budget of the shared ledger. Rows go to the
 `prescreens` table; extraction skips candidates the prescreen rejected.
 """
 
@@ -31,7 +33,7 @@ from collections.abc import Callable, Iterator
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 
 from pydantic import BaseModel, Field, ValidationError
 
@@ -41,27 +43,28 @@ from pickfit.extract import Source, _neutralize, render_sources
 from pickfit.ledger import (
     BudgetExceeded,
     Ledger,
-    baseten_ledger,
     default_ledger,
     taipei_now,
 )
-from pickfit.meta import call_meta
-from pickfit.schema import Kind, meta_strict_schema
+from pickfit.meta import BULK_MODEL, DEFAULT_PROVIDER, PROD_MODEL, call_meta
+from pickfit.schema import CATEGORY_DESCRIPTION, Category, Kind, meta_strict_schema
 
 STAGE = "prescreen"
-SCREEN_PROVIDER = "baseten"
-SCREEN_MODEL = "meta-models/muse-spark-open-1026"  # the hackathon key works with this id only
-REVIEW_PROVIDER = "meta"
-REVIEW_MODEL = "muse-spark-1.3"
+SCREEN_PROVIDER = DEFAULT_PROVIDER
+SCREEN_MODEL = BULK_MODEL
+REVIEW_PROVIDER = DEFAULT_PROVIDER
+REVIEW_MODEL = PROD_MODEL
 REASONING_EFFORT = "low"
-MAX_OUTPUT_TOKENS = 4_000  # reasoning shares this limit; a screen used about 200 tokens
+MAX_OUTPUT_TOKENS = 4_000  # thinking shares this limit; a screen's answer is about 200 tokens
 README_MAX_CHARS = 8_000  # enough for the pitch, install and usage sections
 MANIFEST_MAX_CHARS = 1_500
 TOP_LEVEL_MAX = 60
-SCOPE_CAP_USD = 0.05  # per candidate per run and role; a screen costs about $0.005
+# Per candidate per run and role. A call is reserved at its worst case before it is sent (every allowed
+# output token): about $0.10 for a review on Claude Opus, so the cap leaves room for one and a retry.
+SCOPE_CAP_USD = 0.30
 REVIEW_BELOW = 0.7
 SAMPLE_PERCENT = 5
-DEFAULT_CONCURRENCY = 2  # Baseten allows 100 requests a minute; a screen takes 1-2 s
+DEFAULT_CONCURRENCY = 2
 MAX_CONSECUTIVE_ERRORS = 3
 
 # Kinds a person installs and runs. Everything else is not a directory entry.
@@ -83,20 +86,18 @@ for libraries and SDKs that are only imported, frameworks, models or datasets, b
 research code, demos and prototypes with no install path, tutorials, homework, templates, lists, \
 and config or dotfiles.
 - kind: the single best label. Must agree with usable_software.
-- category: dev_cli for developer tools used from a terminal or editor; local_ai for software \
-that runs AI models on the user's own machine or wraps them in a local app or agent; mcp_server \
-for a Model Context Protocol server that AI clients (Claude Code, Cursor, IDEs) start or connect to; \
-other for anything else.
+- category: what the software is for. {category_guide}
 - confidence: 0 to 1, how sure you are about usable_software.
 - reason: one short sentence in English pointing at what in the sources decided it.
 
-Judge only what the sources show. Popularity is not a signal and is not given to you."""
+Judge only what the sources show. Popularity is not a signal and is not given to you.""".replace(
+    "{category_guide}", CATEGORY_DESCRIPTION)  # the same order and words extraction is given (schema.py)
 
 
 class PrescreenResult(BaseModel):
     usable_software: bool
     kind: Kind
-    category: Literal["dev_cli", "local_ai", "mcp_server", "other"]
+    category: Category
     confidence: float = Field(ge=0, le=1)
     reason: str = Field(max_length=300)
 
@@ -154,13 +155,13 @@ def _messages(sources: list[Source]) -> list[dict[str, Any]]:
 
 
 def screen_body(sources: list[Source]) -> dict[str, Any]:
-    """Baseten: forced tool call, the only way it enforces the schema."""
+    """The screen: a forced tool call (for Claude, call_meta turns it into the tool's schema as the output)."""
     return {"messages": _messages(sources), "tools": [PRESCREEN_TOOL],
             "tool_choice": {"type": "function", "function": {"name": "record_prescreen"}}}
 
 
 def review_body(sources: list[Source]) -> dict[str, Any]:
-    """Meta: tool_choice can only be "auto", so the review uses strict structured output."""
+    """The review: strict structured output."""
     messages = _messages(sources)
     messages[0] = {"role": "system",
                    "content": INSTRUCTIONS.replace("Answer only by calling record_prescreen.",
@@ -207,7 +208,8 @@ def _parse(meta: Any) -> tuple[PrescreenResult | None, str | None]:
 def call_one(candidate: dict[str, Any], *, role: str, run_id: str, client: Any = None,
              ledger: Ledger | None = None, runs_dir: Path | str | None = None,
              review_reason: str | None = None) -> dict[str, Any]:
-    """One screen (Baseten) or review (Meta) call; returns the row to store. BudgetExceeded propagates."""
+    """One screen (bulk model) or review (prod model) call; returns the row to store. BudgetExceeded
+    propagates."""
     sources = build_sources(candidate)
     screen = role == "screen"
     provider, model = (SCREEN_PROVIDER, SCREEN_MODEL) if screen else (REVIEW_PROVIDER, REVIEW_MODEL)
@@ -223,7 +225,7 @@ def call_one(candidate: dict[str, Any], *, role: str, run_id: str, client: Any =
                          scope=f"{STAGE}:{role}:{candidate['repo_id']}", scope_cap_usd=SCOPE_CAP_USD,
                          run_id=run_id, output_model=None if screen else PrescreenResult,
                          cache=False, client=client,
-                         ledger=ledger or (baseten_ledger() if screen else default_ledger()),
+                         ledger=ledger or default_ledger(),
                          runs_dir=runs_dir)
     except BudgetExceeded:
         raise
@@ -273,7 +275,7 @@ def screen_and_review(candidate: dict[str, Any], *, run_id: str, screen_client: 
                       review_client: Any = None, screen_ledger: Ledger | None = None,
                       review_ledger: Ledger | None = None, runs_dir: Path | str | None = None,
                       review: bool = True) -> list[dict[str, Any]]:
-    """Screen one candidate, then review it with muse-spark-1.3 when the screen asks for it."""
+    """Screen one candidate, then review it with the prod model when the screen asks for it."""
     screen = call_one(candidate, role="screen", run_id=run_id, client=screen_client,
                       ledger=screen_ledger, runs_dir=runs_dir)
     rows = [screen]
@@ -304,7 +306,7 @@ def run_prescreen(*, limit: int, repo_ids: list[str] | None = None, force: bool 
     db = PipelineDB(db_path or pipeline_db_path())
     run_id = f"{STAGE}-" + taipei_now().strftime("%Y%m%d-%H%M%S")
     todo = select_candidates(db, limit=limit, repo_ids=repo_ids, force=force, categories=categories)
-    log(f"prescreen {run_id}: {len(todo)} candidates with {SCREEN_MODEL} on Baseten "
+    log(f"prescreen {run_id}: {len(todo)} candidates with {SCREEN_MODEL} "
         f"(effort {REASONING_EFFORT}, {concurrency} at a time), review with {REVIEW_MODEL}"
         + ("" if review else " off"))
     stop = threading.Event()
@@ -367,7 +369,7 @@ def run_prescreen(*, limit: int, repo_ids: list[str] | None = None, force: bool 
         "reviewed": len(reviewed),
         "review_reasons": {k: sum(1 for r in reviewed if r["review_reason"] == k)
                            for k in sorted({r["review_reason"] for r in reviewed})},
-        "cost_usd": {"baseten": round(sum(r["cost_usd"] for r in rows if r["role"] == "screen"), 6),
-                     "meta": round(sum(r["cost_usd"] for r in reviewed), 6)},
+        "cost_usd": {"screen": round(sum(r["cost_usd"] for r in rows if r["role"] == "screen"), 6),
+                     "review": round(sum(r["cost_usd"] for r in reviewed), 6)},
         "stopped": stopped[0] if stopped else None,
     }

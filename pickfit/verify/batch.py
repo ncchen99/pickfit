@@ -2,7 +2,7 @@
 
 Candidates come from the pipeline database (runs/pipeline.db, or --db), opened
 read-only: a candidate that passed the rules and has a finished extraction
-(muse-spark-1.3 preferred over the contributor model), with the features of a
+(the prod model's preferred over a cheaper tier's, MODEL_PREFERENCE), with the features of a
 newer features-only extraction merged in. Before any box starts,
 the program sets aside what the box cannot verify (GUI apps unless the boxes
 have a display, browser extensions, GPU only, another OS only, Apple Silicon
@@ -38,15 +38,16 @@ from typing import Any
 from pydantic import ValidationError
 
 from pickfit.ledger import TAIPEI, taipei_now
-from pickfit.meta import OPEN_MODEL
+from pickfit.meta import BULK_MODEL, OPEN_MODEL, PROD_MODEL
 from pickfit.schema import TOOL_KINDS, ExtractedFeatures, ExtractionResult, is_passed
 from pickfit.verify.plan import plan_for
 from pickfit.verify.task import VerifyTask
 
 DONE_STATUSES = ("ok", "quotes_dropped")
 FEATURES_STATUS = "features"  # a features-only extraction (extract.py)
-# A muse-spark-1.3 extraction wins over a Muse Spark Open one of the same repo unless the batch asks for one.
-MODEL_PREFERENCE = ("muse-spark-1.3", "muse-spark-1.3-contributor", OPEN_MODEL)
+# Of one repo's extractions the prod model's wins (Claude Opus, then the hackathon's muse-spark-1.3), then the
+# cheaper tiers', unless the batch asks for a model.
+MODEL_PREFERENCE = (PROD_MODEL, "muse-spark-1.3", "muse-spark-1.3-contributor", BULK_MODEL, OPEN_MODEL)
 NOT_IN_BOX_KINDS = {"desktop_app": "GUI app", "browser_extension": "browser extension"}
 
 
@@ -196,6 +197,10 @@ def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
             "ORDER BY e.id", DONE_STATUSES).fetchall()
         feature_rows = conn.execute("SELECT repo_id, model, result, id FROM extractions WHERE status = ? "
                                     "ORDER BY id", (FEATURES_STATUS,)).fetchall()
+        # Install pages the README points to; a database from before pickfit.installdocs has no such table.
+        has_docs = conn.execute("SELECT 1 FROM sqlite_master WHERE name = 'install_docs'").fetchone()
+        guides = {r["repo_id"]: json.loads(r["pages"]) for r in
+                  (conn.execute("SELECT repo_id, pages FROM install_docs") if has_docs else [])}
     features: dict[str, sqlite3.Row] = {}
     for row in feature_rows:
         held = features.get(row["repo_id"])
@@ -248,7 +253,8 @@ def load_candidates(db: Path, *, limit: int, repos: list[str] | None = None,
             continue
         repo = json.loads(row["repo"] or "{}")
         url = repo.get("html_url") or f"https://github.com/{row['full_name']}"
-        task = VerifyTask(slug=slug, repo_url=url, readme=row["readme"], extraction=ex, category=category)
+        task = VerifyTask(slug=slug, repo_url=url, readme=row["readme"], extraction=ex, category=category,
+                          guides=guides.get(row["repo_id"], []))
         items.append(BatchItem(task, row["repo_id"], row["full_name"], category, ex.kind.value,
                                demo_priority(ex), row["model"]))
     items.sort(key=lambda i: (-i.priority, i.full_name.lower()))

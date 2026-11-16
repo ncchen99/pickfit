@@ -197,13 +197,14 @@ def test_a_gui_apps_operations_reach_the_index_with_pickfits_own_lines_only(data
                                       "target": "/home/sbx/", "expected": ["{nonce}"], "passed": False,
                                       "observed": "no file under /home/sbx/: not found",
                                       "smoke_test": len(run["smoke_tests"]) - 1, "actions": 2, "replay": "operated",
+                                      "operator_model": "claude-opus-5-5",
                                       "screenshots": ["runs/verify/x/replay-3-1-op-1.png"]}]}
 
     edit(data_dir / "fixture-chat-tui.json", operated)
     chat = {e["slug"]: e for e in build_index(data_dir).index["entries"]}["fixture-chat-tui"]
     assert chat["install"]["linux"]["run"]["gui"]["operations"] == [
         {"feature": "chat", "check": "file", "passed": False, "replay": "operated", "goal": "Type {nonce} and press Return.",
-         "observed": "no file under /home/sbx/: not found"}]
+         "observed": "no file under /home/sbx/: not found", "operator_model": "claude-opus-5-5"}]  # the page names it
     assert "replay-3-1-op-1.png" not in json.dumps(chat)  # evidence paths stay in the record
 
 

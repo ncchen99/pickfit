@@ -1,7 +1,7 @@
 /**
  * The product web page: GET / for browsers, POST /search over the MCP's own
  * findSoftware and installGuide, and the web-only limits (rate limit, web
- * Meta cap, cache). The MCP path and the JSON health check must not change.
+ * opt-in spend cap, cache). The MCP path and the JSON health check must not change.
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
@@ -10,25 +10,28 @@ import type { FindOutput, PickOut } from '../src/find.ts';
 import { runDay } from '../src/evidence.ts';
 import { catalogStats, EMPTY_FORM, esc, guiSentence, levelLabel, ranSentence, renderResults, safeUrl, yourSystem, type FormValues } from '../src/page.ts';
 import { withLang } from '../src/i18n.ts';
-import { BODY_MAX_BYTES, MAX_IN_FLIGHT, SEARCHES_PER_MINUTE, visitorKey } from '../src/web.ts';
+import { BODY_MAX_BYTES, MAX_IN_FLIGHT, SEARCHES_PER_MINUTE, visitorKey, WEB_RESERVE_USD } from '../src/web.ts';
 import { command } from '../src/ui/kit.ts';
 import { makeWorker } from '../src/worker.ts';
-import { answer, commandText, fixtureCatalog, fixtureIndex, makeD1, metaResponse } from './helpers.ts';
+import { costUsd } from '../src/meta.ts';
+import { answer, commandText, fixtureCatalog, fixtureIndex, makeD1, modelResponse, USAGE_READ } from './helpers.ts';
 
 const MAC_LLM = { need: 'run a language model offline on my laptop', os: 'macos', offline: '1' };
 const NOW = new Date('2026-10-30T12:00:00Z');
+/** What one fake answer (helpers USAGE) costs. */
+const ONE_CALL_USD = costUsd(USAGE_READ);
 
 type Fake = (body: any) => Response | Promise<Response>;
 
-function site(env: Partial<Env> = {}, fake: Fake = () => metaResponse(answer())) {
-  env = { MODEL_API_KEY: 'test-key', ...env };
+function site(env: Partial<Env> = {}, fake: Fake = () => modelResponse(answer())) {
+  env = { ANTHROPIC_API_KEY: 'test-key', ...env };
   const d1 = makeD1();
   const pending: Promise<unknown>[] = [];
-  const metaCalls: any[] = [];
+  const modelCalls: any[] = [];
   const worker = makeWorker(fixtureIndex(), {
     fetch: (async (_url: string, init: RequestInit) => {
       const body = JSON.parse(String(init.body));
-      metaCalls.push(body);
+      modelCalls.push(body);
       return fake(body);
     }) as unknown as typeof fetch,
     now: () => NOW,
@@ -62,7 +65,7 @@ function site(env: Partial<Env> = {}, fake: Fake = () => metaResponse(answer()))
     const data = text.startsWith('{') ? text : text.split('\n').find((l) => l.startsWith('data: '))!.slice(6);
     return JSON.parse(data).result.structuredContent as FindOutput;
   };
-  return { send, search, mcpFind, metaCalls, sqlite: d1.sqlite, settle: () => Promise.all(pending) };
+  return { send, search, mcpFind, modelCalls, sqlite: d1.sqlite, settle: () => Promise.all(pending) };
 }
 
 const events = (s: ReturnType<typeof site>, type: string) =>
@@ -88,7 +91,7 @@ test('GET / is the page for a browser; anything else still gets the JSON health 
     assert.match(res.headers.get('content-type')!, /application\/json/);
     assert.deepEqual(Object.keys(await res.json()).sort(), ['data_sha256', 'entries', 'index_built_at', 'match_mode', 'mcp', 'name', 'tools']);
   }
-  assert.equal(s.metaCalls.length, 0);
+  assert.equal(s.modelCalls.length, 0);
 });
 
 test('the page never echoes a query string: request URLs reach Workers logs', async () => {
@@ -96,7 +99,7 @@ test('the page never echoes a query string: request URLs reach Workers logs', as
   const html = await (await s.send(new Request('http://127.0.0.1:8787/?need=secret-words&os=linux', { headers: { accept: 'text/html' } }))).text();
   assert.ok(!html.includes('secret-words'));
   assert.ok(html.includes('<input type="radio" name="os" value="" checked>Any OS'));
-  assert.equal(s.metaCalls.length, 0);
+  assert.equal(s.modelCalls.length, 0);
 });
 
 test('WEB_SEARCH=off: / stays JSON and /search does not exist', async () => {
@@ -104,7 +107,7 @@ test('WEB_SEARCH=off: / stays JSON and /search does not exist', async () => {
   const res = await s.send(new Request('http://127.0.0.1:8787/', { headers: { accept: 'text/html' } }));
   assert.match(res.headers.get('content-type')!, /application\/json/);
   assert.equal((await s.search(MAC_LLM)).status, 404);
-  assert.equal(s.metaCalls.length, 0);
+  assert.equal(s.modelCalls.length, 0);
 });
 
 test('a search is find_software plus get_install_guide: reasons, verification, steps', async () => {
@@ -115,13 +118,13 @@ test('a search is find_software plus get_install_guide: reasons, verification, s
   const html = await res.text();
   await s.settle();
 
-  // One muse-spark-1.3 call, with the same request find_software sends.
-  assert.equal(s.metaCalls.length, 1);
-  assert.equal(s.metaCalls[0].model, 'muse-spark-1.3');
-  assert.match(JSON.stringify(s.metaCalls[0].input), /run a language model offline on my laptop/);
+  // One claude-opus-5-5 call, with the same request find_software sends.
+  assert.equal(s.modelCalls.length, 1);
+  assert.equal(s.modelCalls[0].model, 'claude-opus-5-5');
+  assert.match(JSON.stringify(s.modelCalls[0].messages), /run a language model offline on my laptop/);
   // The heading says what came back; how many met the conditions, which model picked and how reasons were checked
   // are pickfit's own process (on /how and in the MCP answer's how_we_know), not lines on the page.
-  assert.doesNotMatch(html, /verified tools meet your conditions|Code checked every reason|class="match-line"|muse-spark-1\.3 picked/);
+  assert.doesNotMatch(html, /verified tools meet your conditions|Code checked every reason|class="match-line"|claude-opus-5-5 picked/);
   assert.doesNotMatch(html, /<details class="how">|scored separately \(formula|passed pickfit's hard filters/);
 
   // Ranked picks with the fit, cited reasons, tradeoffs, best_free and the comparison.
@@ -158,7 +161,7 @@ test('a search is find_software plus get_install_guide: reasons, verification, s
   const finds = events(s, 'find');
   assert.equal(finds.length, 1);
   assert.equal(finds[0].client, 'web');
-  assert.equal(finds[0].matched_by, 'muse-spark-1.3');
+  assert.equal(finds[0].matched_by, 'claude-opus-5-5');
   assert.ok(!JSON.stringify(finds[0]).includes('on my laptop'));
   assert.equal(events(s, 'install_guide').length, 0);
 });
@@ -174,7 +177,7 @@ test('without an OS the steps shown are the ones pickfit ran, and the badge asks
 
 test('well_known_option is set apart, labelled not verified, and never looks like a pick', async () => {
   const why = 'Ollama is free, runs models offline on macOS and needs no API setup.';
-  const s = site({}, () => metaResponse(answer({ well_known_name: 'Ollama', well_known_why: why })));
+  const s = site({}, () => modelResponse(answer({ well_known_name: 'Ollama', well_known_why: why })));
   const html = await (await s.search({ ...MAC_LLM, free_only: '1' })).text();
   const [picks, outside] = html.split('<aside class="outside"');
   assert.ok(outside, 'the well-known option is rendered');
@@ -192,7 +195,7 @@ test('well_known_option is set apart, labelled not verified, and never looks lik
 });
 
 test('nothing fits: the coverage note, no picks', async () => {
-  const s = site({}, () => metaResponse(answer({ picks: [], best_free_slug: null })));
+  const s = site({}, () => modelResponse(answer({ picks: [], best_free_slug: null })));
   const html = await (await s.search(MAC_LLM)).text();
   assert.match(html, /<h2 class="results-title">Nothing fits yet<\/h2>/);
   assert.match(html, /None of the \d+ verified tools that meet the conditions fits this request\./);
@@ -210,11 +213,30 @@ test('a model failure says the results are ranked by rules', async () => {
   assert.ok(html.includes('<article class="pick"'));
 });
 
-test('web searches stop calling Meta at WEB_DAILY_CAP_USD; agents keep the rest of the daily cap', async () => {
-  const s = site({ WEB_DAILY_CAP_USD: '2' });
+test('with no cap set a web search goes straight to the model: nothing is reserved, the spend is only recorded', async () => {
+  const s = site({}, slow());
+  s.sqlite.prepare('INSERT INTO meta_budget (day, calls, cost_usd) VALUES (?, 900, 750)').run('2026-10-30');
+  const during: number[] = [];
+  const page = s.search(MAC_LLM);
+  await new Promise((r) => setTimeout(r, 5)); // the model call is in flight
+  during.push((s.sqlite.prepare('SELECT cost_usd FROM meta_budget WHERE day = ?').get('2026-10-30') as any).cost_usd);
+  const html = await (await page).text();
+  await s.settle();
+  assert.equal(s.modelCalls.length, 1);
+  assert.deepEqual(during, [750]); // no hold was written while it ran
+  assert.doesNotMatch(html, /Model matching (is )?paused/);
+  assert.ok(html.includes('<article class="pick"'));
+  assert.equal(events(s, 'find')[0].degraded_reason, null);
+  const today = s.sqlite.prepare('SELECT cost_usd, calls FROM meta_budget WHERE day = ?').get('2026-10-30') as any;
+  assert.ok(Math.abs(today.cost_usd - (750 + ONE_CALL_USD)) < 1e-9, String(today.cost_usd));
+  assert.equal(today.calls, 901);
+});
+
+test('web searches stop calling the model at an opt-in WEB_DAILY_CAP_USD; agents keep the rest of the daily cap', async () => {
+  const s = site({ WEB_DAILY_CAP_USD: '2', META_DAILY_CAP_USD: '3' });
   s.sqlite.prepare('INSERT INTO meta_budget (day, calls, cost_usd) VALUES (?, 1, 2.0)').run('2026-10-30');
   const html = await (await s.search(MAC_LLM)).text();
-  assert.equal(s.metaCalls.length, 0);
+  assert.equal(s.modelCalls.length, 0);
   assert.match(html, /<strong>Model matching paused until 00:00 UTC\.<\/strong>/);
   assert.ok(html.includes('<article class="pick"'), 'still shows rules results');
   await s.settle();
@@ -222,11 +244,11 @@ test('web searches stop calling Meta at WEB_DAILY_CAP_USD; agents keep the rest 
 
   // The MCP's own cap is untouched: $2 spent of $3, so an agent still gets the model.
   const out = await s.mcpFind({ need: 'run a language model offline on my laptop', os: 'macos' });
-  assert.equal(out.matched_by, 'muse-spark-1.3');
-  assert.equal(s.metaCalls.length, 1);
+  assert.equal(out.matched_by, 'claude-opus-5-5');
+  assert.equal(s.modelCalls.length, 1);
 });
 
-test('the rate limit answers busy before any Meta call', async () => {
+test('the rate limit answers busy before any model call', async () => {
   const keys: string[] = [];
   const limiter = { limit: async ({ key }: { key: string }) => (keys.push(key), { success: false }) };
   const s = site({ WEB_RATE_LIMITER: limiter as unknown as RateLimit });
@@ -234,7 +256,7 @@ test('the rate limit answers busy before any Meta call', async () => {
   assert.equal(res.status, 429);
   assert.equal(res.headers.get('retry-after'), '60');
   assert.match(await res.text(), /Busy: too many searches from here/);
-  assert.equal(s.metaCalls.length, 0);
+  assert.equal(s.modelCalls.length, 0);
   await s.settle();
   assert.equal(events(s, 'find').length, 0);
   // The limiter sees a hash, never the address.
@@ -250,35 +272,35 @@ test('without the binding, an in-memory count limits each visitor', async () => 
   assert.equal((await s.search({ ...MAC_LLM, need: 'one more search' })).status, 429);
   // Another visitor is counted apart.
   assert.equal((await s.search({ ...MAC_LLM, need: 'one more search' }, { 'cf-connecting-ip': '198.51.100.2' })).status, 200);
-  assert.equal(s.metaCalls.length, SEARCHES_PER_MINUTE + 1);
+  assert.equal(s.modelCalls.length, SEARCHES_PER_MINUTE + 1);
 });
 
 test('identical web searches share one model call; MCP calls are never cached', async () => {
   const s = site();
   await s.search(MAC_LLM);
   const again = await (await s.search({ ...MAC_LLM, need: '  Run a language model   OFFLINE on my laptop ' })).text();
-  assert.equal(s.metaCalls.length, 1);
+  assert.equal(s.modelCalls.length, 1);
   assert.match(again, /Shown from the same search made in the last few minutes/);
   // Different conditions are a different search.
   await s.search({ ...MAC_LLM, os: 'linux' });
-  assert.equal(s.metaCalls.length, 2);
+  assert.equal(s.modelCalls.length, 2);
 
   await s.mcpFind({ need: 'run a language model offline on my laptop', os: 'macos', must_run_locally: true });
   await s.mcpFind({ need: 'run a language model offline on my laptop', os: 'macos', must_run_locally: true });
-  assert.equal(s.metaCalls.length, 4);
+  assert.equal(s.modelCalls.length, 4);
 });
 
 test('a degraded answer is not cached, so the next identical search tries the model again', async () => {
   let status = 503;
-  const s = site({}, () => (status === 200 ? metaResponse(answer()) : Response.json({}, { status })));
+  const s = site({}, () => (status === 200 ? modelResponse(answer()) : Response.json({}, { status })));
   await s.search(MAC_LLM);
   status = 200;
   const html = await (await s.search(MAC_LLM)).text();
   assert.ok(!html.includes('Ranked without the model'));
-  assert.equal(s.metaCalls.length, 3); // 503, retried 503, then 200
+  assert.equal(s.modelCalls.length, 3); // 503, retried 503, then 200
 });
 
-test('another site cannot post to /search, and a bad need is refused before Meta', async () => {
+test('another site cannot post to /search, and a bad need is refused before the model', async () => {
   const s = site();
   assert.equal((await s.search(MAC_LLM, { origin: 'https://evil.example' })).status, 403);
   assert.equal((await s.search(MAC_LLM, { host: 'evil.example' })).status, 403);
@@ -298,7 +320,7 @@ test('another site cannot post to /search, and a bad need is refused before Meta
     }),
   );
   assert.equal(declared.status, 413, 'a declared length over the limit is refused before reading');
-  assert.equal(s.metaCalls.length, 0);
+  assert.equal(s.modelCalls.length, 0);
   // GET /search goes back to the page; other methods are refused.
   assert.equal((await s.send(new Request('http://127.0.0.1:8787/search'))).status, 303);
   assert.equal((await s.send(new Request('http://127.0.0.1:8787/search', { method: 'PUT' }))).status, 405);
@@ -339,11 +361,11 @@ test('before any search the page shows real catalog runs, never invented ones', 
   assert.match(html, /pickfit only suggests tools it has installed and tested itself\./);
   // The counts in the hero are the catalog's.
   assert.match(html, /<strong>7<\/strong> READMEs read/);
-  assert.equal(s.metaCalls.length, 0);
+  assert.equal(s.modelCalls.length, 0);
 });
 
 test('results: claim beside evidence, no rank numerals, and "built-in is enough" before the picks', async () => {
-  const s = site({}, () => metaResponse(answer({ no_install_option: 'Your OS already ships a tool that does this.' })));
+  const s = site({}, () => modelResponse(answer({ no_install_option: 'Your OS already ships a tool that does this.' })));
   const html = await (await s.search(MAC_LLM)).text();
   assert.ok(html.indexOf('You may not need to install anything') < html.indexOf('<article class="pick"'));
   assert.ok(!html.includes('class="rank"') && !html.includes('t-rank'));
@@ -356,7 +378,7 @@ test('results: claim beside evidence, no rank numerals, and "built-in is enough"
 test('the answer comes first: every step, "On X instead? Use Y." from a verified run, then "Also fits"', async () => {
   // fixture-transcribe ran on Linux only (2 steps, one with sudo); fixture-llm-runner also ran on macOS arm64.
   const transcribe = { slug: 'fixture-transcribe', fit: 'Transcribes recordings offline.', reasons: [{ claim: 'Free to use', field: 'pricing', value: 'free' }], tradeoffs: [], vs_well_known: null };
-  const s = site({}, () => metaResponse(answer({ picks: [transcribe, answer().picks[0]] })));
+  const s = site({}, () => modelResponse(answer({ picks: [transcribe, answer().picks[0]] })));
   const need = 'transcribe a recording offline';
   const [first, second] = commandText(await (await s.search({ need })).text()).split('<article class="pick"').slice(1);
   // A step with sudo gets a Copy of its own: pasted together, sudo's password prompt can swallow the next line.
@@ -392,27 +414,28 @@ test('a command of several lines: each line is its own block, and the text Copy 
   assert.ok(command('pipx install x').includes('<code>pipx install x</code>'));
 });
 
-/** A Meta answer that arrives after a tick, so searches overlap. */
-const slow = (body: () => Response = () => metaResponse(answer())) => () => new Promise<Response>((r) => setTimeout(() => r(body()), 20));
+/** A model answer that arrives after a tick, so searches overlap. */
+const slow = (body: () => Response = () => modelResponse(answer())) => () => new Promise<Response>((r) => setTimeout(() => r(body()), 20));
 
 test('concurrent searches cannot spend past the web cap: each reserves its worst case first', async () => {
   const s = site({ WEB_DAILY_CAP_USD: '2' }, slow());
-  s.sqlite.prepare('INSERT INTO meta_budget (day, calls, cost_usd) VALUES (?, 1, 1.85)').run('2026-10-30');
+  assert.ok(WEB_RESERVE_USD > 0.25 && WEB_RESERVE_USD < 0.5, String(WEB_RESERVE_USD));
+  s.sqlite.prepare('INSERT INTO meta_budget (day, calls, cost_usd) VALUES (?, 1, 1.5)').run('2026-10-30');
   const pages = await Promise.all([0, 1, 2, 3].map((i) => s.search({ ...MAC_LLM, need: `run a language model offline, try ${i}` })));
   await s.settle();
-  // Room for one reservation ($0.08) under $2: one Meta call, the rest ranked by rules and told why.
-  assert.equal(s.metaCalls.length, 1);
+  // Room for one reservation (about $0.41) under $2: one model call, the rest ranked by rules and told why.
+  assert.equal(s.modelCalls.length, 1);
   const texts = await Promise.all(pages.map((r) => r.text()));
   assert.equal(texts.filter((h) => h.includes('Model matching paused until 00:00 UTC')).length, 3);
   // Holds are released: what is left is the real cost of the one call.
   const today = s.sqlite.prepare('SELECT cost_usd, calls FROM meta_budget WHERE day = ?').get('2026-10-30') as any;
-  assert.ok(Math.abs(today.cost_usd - (1.85 + 0.00605)) < 1e-9, String(today.cost_usd));
+  assert.ok(Math.abs(today.cost_usd - (1.5 + ONE_CALL_USD)) < 1e-9, String(today.cost_usd));
   assert.equal(today.calls, 2);
 });
 
 test('two isolates sharing one D1 still cannot pass the web cap together', async () => {
   const d1 = makeD1();
-  d1.sqlite.prepare('INSERT INTO meta_budget (day, calls, cost_usd) VALUES (?, 1, 1.85)').run('2026-10-30');
+  d1.sqlite.prepare('INSERT INTO meta_budget (day, calls, cost_usd) VALUES (?, 1, 1.5)').run('2026-10-30');
   const pending: Promise<unknown>[] = [];
   let calls = 0;
   const isolate = () =>
@@ -421,7 +444,7 @@ test('two isolates sharing one D1 still cannot pass the web cap together', async
       now: () => NOW,
     });
   const ctx = { waitUntil: (p: Promise<unknown>) => void pending.push(p), passThroughOnException() {} } as unknown as ExecutionContext;
-  const env = { DB: d1.db, MODEL_API_KEY: 'test-key', WEB_DAILY_CAP_USD: '2' } as Env;
+  const env = { DB: d1.db, ANTHROPIC_API_KEY: 'test-key', WEB_DAILY_CAP_USD: '2' } as Env;
   const post = (w: ReturnType<typeof makeWorker>, i: number) =>
     w.fetch(
       new Request('http://127.0.0.1:8787/search', {
@@ -444,7 +467,7 @@ test('the total cap stops the page too, and the notice does not promise a reset'
   const s = site({ META_TOTAL_CAP_USD: '40' });
   s.sqlite.prepare('INSERT INTO meta_budget (day, calls, cost_usd) VALUES (?, 1, 39.99)').run('2026-10-20');
   const html = await (await s.search(MAC_LLM)).text();
-  assert.equal(s.metaCalls.length, 0);
+  assert.equal(s.modelCalls.length, 0);
   assert.match(html, /<strong>Model matching is paused\.<\/strong> These are matched on the words in your request only/);
   assert.ok(!html.includes('00:00 UTC'));
 });
@@ -453,7 +476,7 @@ test('identical searches in flight share one model call', async () => {
   const s = site({}, slow());
   const pages = await Promise.all([1, 2, 3].map(() => s.search(MAC_LLM)));
   assert.deepEqual(pages.map((r) => r.status), [200, 200, 200]);
-  assert.equal(s.metaCalls.length, 1);
+  assert.equal(s.modelCalls.length, 1);
   for (const r of pages) assert.match(await r.text(), /<article class="pick"/);
 });
 
@@ -466,7 +489,7 @@ test('at most MAX_IN_FLIGHT model searches run at once in an isolate', async () 
   const statuses = pages.map((r) => r.status);
   assert.equal(statuses.filter((x) => x === 200).length, MAX_IN_FLIGHT);
   assert.equal(statuses.filter((x) => x === 503).length, 2);
-  assert.equal(s.metaCalls.length, MAX_IN_FLIGHT);
+  assert.equal(s.modelCalls.length, MAX_IN_FLIGHT);
   const busy = pages.find((r) => r.status === 503)!;
   assert.equal(busy.headers.get('retry-after'), '10');
   assert.match(await busy.text(), /Busy: pickfit is answering other searches/);
@@ -490,15 +513,15 @@ test('the need is counted in characters: a long CJK need is accepted, 501 charac
   const s = site();
   const cjk = await s.search({ ...MAC_LLM, need: '我想在筆電上離線執行語言模型'.repeat(32) }); // 448 characters, about 4 KB encoded
   assert.equal(cjk.status, 200);
-  assert.equal(s.metaCalls.length, 1);
+  assert.equal(s.modelCalls.length, 1);
   const over = await s.search({ need: '離'.repeat(501) });
   assert.equal(over.status, 400);
   assert.match(await over.text(), /That is 501 characters\./);
-  assert.equal(s.metaCalls.length, 1);
+  assert.equal(s.modelCalls.length, 1);
 });
 
 test('a best free option outside the picks shows where it ran and whether that is your system', async () => {
-  const s = site({}, () => metaResponse(answer({ picks: [answer().picks[0]], best_free_slug: 'fixture-chat-tui', best_free_reason: 'Free and local.' })));
+  const s = site({}, () => modelResponse(answer({ picks: [answer().picks[0]], best_free_slug: 'fixture-chat-tui', best_free_reason: 'Free and local.' })));
   const html = await (await s.search(MAC_LLM)).text();
   const aside = html.slice(html.indexOf('<div class="aside best-free">'));
   assert.match(aside, /Best free option:<\/span> <a [^>]*>Fixture Chat TUI<\/a>\. Free and local\./);
@@ -508,7 +531,7 @@ test('a best free option outside the picks shows where it ran and whether that i
 });
 
 test('the unverified option says so in a filled line and uses plain text type, and no-JS posts land on the results', async () => {
-  const s = site({}, () => metaResponse(answer({ well_known_name: 'Ollama', well_known_why: 'Ollama is free and runs models offline on macOS.' })));
+  const s = site({}, () => modelResponse(answer({ well_known_name: 'Ollama', well_known_why: 'Ollama is free and runs models offline on macOS.' })));
   const html = await (await s.search({ ...MAC_LLM, free_only: '1' }, { 'x-pickfit-fragment': '' })).text();
   assert.match(html, /<p class="unchecked">pickfit has not installed or tested it\. There is no run record and no install guide\.<\/p>/);
   assert.match(html, /\.outside h3\{font:600 1\.1rem\/1\.35 var\(--sans\)/);
@@ -547,7 +570,7 @@ function pick(overrides: Partial<PickOut> = {}): PickOut {
 function output(picks: PickOut[]): FindOutput {
   return {
     rec_id: 'rec_0',
-    matched_by: 'muse-spark-1.3',
+    matched_by: 'claude-opus-5-5',
     degraded: false,
     degraded_reason: null,
     model_attempts: 1,
@@ -639,7 +662,7 @@ test('an MCP server pick shows its handshake and how to add it to an agent', asy
     ],
     best_free_slug: null,
   });
-  const s = site({}, () => metaResponse(mcpAnswer));
+  const s = site({}, () => modelResponse(mcpAnswer));
   const html = await (await s.search({ need: 'let my coding agent search my notes', os: 'linux' })).text();
   const pick = html.split('<article class="pick"')[1];
   assert.match(pick, /An MCP client called one of its tools<\/p>/);
@@ -684,7 +707,7 @@ test('render: a GUI app\'s launch is described as such, and only a real screen g
 
 test('render: a model timeout says so', () => {
   const out = { ...output([pick()]), matched_by: 'rules', degraded: true, degraded_reason: 'model_timeout' };
-  assert.match(renderResults({ out, guides: {} }, EMPTY_FORM, fixtureCatalog()), /Muse Spark didn’t answer in time, so these are matched on the words in your request only\. Search again to retry\./);
+  assert.match(renderResults({ out, guides: {} }, EMPTY_FORM, fixtureCatalog()), /The model didn’t answer in time, so these are matched on the words in your request only\. Search again to retry\./);
 });
 
 test('a run is dated by its UTC day everywhere, the day the page shows', () => {
@@ -724,7 +747,7 @@ test('pages say what a score or a mark means to the reader, not the rules behind
   // The loading panel: the wait, not the pipeline.
   const loading = home.slice(home.indexOf('<template id="loading">'), home.indexOf('</template>', home.indexOf('<template id="loading">')));
   assert.match(loading, /Usually 5 to 15 seconds\./);
-  assert.doesNotMatch(loading, /Muse Spark reads|Code checks each reason|<ol>/);
+  assert.doesNotMatch(loading, /Claude reads|Code checks each reason|<ol>/);
   assert.doesNotMatch(home, /Each reason is checked/);
 });
 
@@ -830,7 +853,7 @@ test('software already in the catalog goes to its page, and a bad link stays on 
       headers: { 'content-type': 'application/x-www-form-urlencoded', accept: 'text/html', origin: 'http://127.0.0.1:8787' },
       body: new URLSearchParams({ url: 'github.com/fixture/fixture-chat-tui' }).toString(),
     }),
-    { DB: makeD1().db, MODEL_API_KEY: 'test-key' } as unknown as Env,
+    { DB: makeD1().db, ANTHROPIC_API_KEY: 'test-key' } as unknown as Env,
     { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext,
   );
   assert.equal(listed.status, 200);

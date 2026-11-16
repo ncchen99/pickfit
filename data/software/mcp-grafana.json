@@ -1,0 +1,863 @@
+{
+  "schema_version": "software.v1",
+  "slug": "mcp-grafana",
+  "repo_id": "gh:907869862",
+  "name": "Grafana MCP server",
+  "summary": "A Model Context Protocol server that gives AI clients access to a Grafana instance's dashboards, datasources, alerting and incidents.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [
+    "search Grafana dashboards by title, folder or tag",
+    "run PromQL queries against Prometheus datasources",
+    "query Loki logs with LogQL",
+    "manage incidents in Grafana Incident",
+    "render a dashboard panel as a PNG image"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "search, read and update Grafana dashboards",
+    "query Prometheus and Loki datasources",
+    "list and manage alert rules",
+    "manage incidents and OnCall schedules"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:13:15.157098Z",
+    "run_id": null,
+    "open_hint": "Add `mcp-grafana` as an MCP server in your AI client, with your Grafana URL and credentials set, and the client will list its Grafana tools.",
+    "features": [
+      {
+        "feature": "search, read and update Grafana dashboards",
+        "title": "Search, read and update Grafana dashboards",
+        "steps": []
+      },
+      {
+        "feature": "query Prometheus and Loki datasources",
+        "title": "Query Prometheus and Loki datasources",
+        "steps": []
+      },
+      {
+        "feature": "list and manage alert rules",
+        "title": "List and manage alert rules",
+        "steps": []
+      },
+      {
+        "feature": "manage incidents and OnCall schedules",
+        "title": "Manage incidents and OnCall schedules",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/grafana/mcp-grafana",
+    "full_name": "grafana/mcp-grafana",
+    "created_at": "2024-12-24T15:44:23Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "uv"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": [
+      "Grafana service account token"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mcp-grafana-20261116-014702-3035",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install mcp-grafana",
+          "purpose": "uv tool install mcp-grafana"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "mcp-grafana --version",
+        "expected_signal": "v2.2.0"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v2.3.0",
+    "published_at": "2026-11-10T17:45:47Z",
+    "url": "https://github.com/grafana/mcp-grafana/releases/tag/v2.3.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T01:47:51.215459+08:00",
+    "runs": [
+      {
+        "id": "verify-mcp-grafana-20261116-014702-3035",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:47:51.215459+08:00",
+        "tool_version": "v2.2.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install mcp-grafana",
+            "purpose": "uv tool install mcp-grafana"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mcp-grafana --version",
+            "expected_signal": "v2.2.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "v2.2.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- mcp-grafana",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 --call suggest_loki_alloy_label_config --args '{\"approvedLabels\":[\"app\",\"env\"],\"requiredLabels\":[\"app\"]}' -- mcp-grafana",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=suggest_loki_alloy_label_config content=text text_chars=842",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Set GRAFANA_URL and GRAFANA_SERVICE_ACCOUNT_TOKEN in the MCP client config",
+            "actually_needed": "The server starts and lists its 80 tools without them; only the tools that talk to Grafana need a running Grafana instance and a token",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The MCP handshake succeeds and lists 80 tools, the suggest_loki_alloy_label_config call returns an Alloy config result, and --version prints v2.2.0, all with exit code 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mcp-grafana-20261116-014702-3035/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mcp-grafana-20261116-014702-3035/check-1-cmd3.judged.png",
+            "runs/verify/verify-mcp-grafana-20261116-014702-3035/check-2-cmd4.judged.png",
+            "runs/verify/verify-mcp-grafana-20261116-014702-3035/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.15278,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "mcp-grafana"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "mcp-grafana",
+          "server_version": "v2.2.0",
+          "tools": [
+            "add_activity_to_incident",
+            "alerting_manage_routing",
+            "alerting_routing_write",
+            "alerting_rules_read",
+            "alerting_rules_write",
+            "alerting_silences_read",
+            "alerting_silences_write",
+            "analyze_loki_labels",
+            "check_datasources_health",
+            "create_annotation",
+            "create_datasource",
+            "create_folder",
+            "create_incident",
+            "create_snapshot",
+            "delete_annotation",
+            "delete_snapshot",
+            "diff_tempo_traces",
+            "generate_deeplink",
+            "get_alert_group",
+            "get_annotation_tags",
+            "get_annotations",
+            "get_assertions",
+            "get_current_oncall_users",
+            "get_dashboard_by_uid",
+            "get_dashboard_panel_queries",
+            "get_dashboard_property",
+            "get_dashboard_summary",
+            "get_datasource",
+            "get_doc",
+            "get_incident",
+            "get_oncall_shift",
+            "get_panel_image",
+            "get_plugin",
+            "get_snapshot",
+            "get_tempo_trace",
+            "get_tempo_traceql_docs",
+            "grafana_api_request",
+            "install_plugin",
+            "list_alert_groups",
+            "list_dashboard_versions",
+            "list_datasources",
+            "list_incident_custom_fields",
+            "list_incidents",
+            "list_loki_label_names",
+            "list_loki_label_values",
+            "list_oncall_schedules",
+            "list_oncall_teams",
+            "list_oncall_users",
+            "list_prometheus_label_names",
+            "list_prometheus_label_values",
+            "list_prometheus_metric_metadata",
+            "list_prometheus_metric_names",
+            "list_provisioning_repositories",
+            "list_pyroscope_label_names",
+            "list_pyroscope_label_values",
+            "list_pyroscope_profile_types",
+            "list_snapshots",
+            "list_tempo_attribute_names",
+            "list_tempo_attribute_values",
+            "query_loki_logs",
+            "query_loki_patterns",
+            "query_loki_stats",
+            "query_prometheus",
+            "query_prometheus_histogram",
+            "query_pyroscope",
+            "query_tempo_metrics",
+            "render_grafana_app",
+            "search_dashboards",
+            "search_docs",
+            "search_folders",
+            "search_plugin_information",
+            "search_tempo_traces",
+            "suggest_loki_alloy_label_config",
+            "update_alert_group",
+            "update_annotation",
+            "update_dashboard",
+            "update_datasource",
+            "update_incident",
+            "user_info",
+            "validate_provisioning_file"
+          ],
+          "tool_count": 80,
+          "called_tool": "suggest_loki_alloy_label_config",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "search, read and update Grafana dashboards",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Dashboard tools (search_dashboards, update_dashboard) need a running Grafana and a service account token"
+          },
+          {
+            "feature": "query Prometheus and Loki datasources",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "query_prometheus and query_loki_logs need a Grafana with Prometheus/Loki datasources"
+          },
+          {
+            "feature": "list and manage alert rules",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "alerting_rules_read needs a Grafana instance"
+          },
+          {
+            "feature": "manage incidents and OnCall schedules",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Incident and OnCall tools need Grafana Cloud IRM/OnCall"
+          }
+        ]
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "sse",
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "uvx mcp-grafana",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"grafana\": {\n      \"command\": \"uvx\",\n      \"args\": [\"mcp-grafana\"],\n      \"env\": {\n        \"GRAFANA_URL\": \"http://localhost:3000\",\n        \"GRAFANA_SERVICE_ACCOUNT_TOKEN\": \"<your service account token>\"\n      }\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "GRAFANA_URL",
+        "required": null,
+        "purpose": "Grafana instance URL"
+      },
+      {
+        "name": "GRAFANA_SERVICE_ACCOUNT_TOKEN",
+        "required": null,
+        "purpose": "Grafana service account token"
+      }
+    ],
+    "tools": [
+      "get_dashboard_summary",
+      "get_dashboard_property",
+      "get_dashboard_by_uid",
+      "run_panel_query",
+      "query_elasticsearch",
+      "query_cloud_logging",
+      "render_grafana_app",
+      "list_teams",
+      "list_users_by_org",
+      "list_all_roles",
+      "get_role_details",
+      "get_role_assignments"
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:48:00+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "pypi:mcp-grafana (fresh install, 1 packages)",
+      "github.com/grafana/mcp-grafana@4f09d9f45d35",
+      "go.mod",
+      "ui/mcp-apps/package-lock.json",
+      "ui/panel-viewer/package-lock.json"
+    ],
+    "packages_checked": 284,
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "npm:zod",
+        "version": "4.6.5",
+        "advisory": "GHSA-mrhx-c7xc-m3w5",
+        "cves": [
+          "CVE-2023-54404"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.6.6",
+        "summary": "Zod can exhaust memory while validating oversized constrained collections",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:48:00+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.7,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 91.7,
+      "signals": {
+        "stars": 3669,
+        "monthly_downloads": 461889,
+        "forks": 497,
+        "dependents": null,
+        "release_downloads": 129142,
+        "hn_top_score": 0,
+        "registries_count": 2
+      },
+      "age_days": 691,
+      "packages": [
+        "pypi:mcp-grafana",
+        "homebrew:mcp-grafana"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.56
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:51.221466+08:00",
+      "sources_sha": "666dce6b0ce58d6bca4a0ba79132ee17c9547aa75912c793e9ff3eddc9d03f24",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A [Model Context Protocol][mcp] (MCP) server for Grafana."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Add the following to your MCP client configuration (e.g. Claude Desktop, Cursor):"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "- **Grafana version 9.0 or later** is required for full functionality."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "\"command\": \"uvx\","
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "\"GRAFANA_SERVICE_ACCOUNT_TOKEN\": \"<your service account token>\""
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 0,
+          "quote": null
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/grafana/mcp-grafana",
+      "fetched_at": "2026-11-16T01:46:49+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/grafana/mcp-grafana/blob/main/README.md",
+      "fetched_at": "2026-11-16T01:46:47+08:00"
+    },
+    {
+      "id": "release:v2.3.0",
+      "kind": "release",
+      "url": "https://github.com/grafana/mcp-grafana/releases/tag/v2.3.0",
+      "fetched_at": "2026-11-16T01:46:47+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A [Model Context Protocol][mcp] (MCP) server for Grafana.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Add the following to your MCP client configuration (e.g. Claude Desktop, Cursor):",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "MCP server for Grafana",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "This provides access to your Grafana instance and the surrounding ecosystem.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Grafana MCP server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requires [uv](https://docs.astral.sh/uv/getting-started/installation/).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "This provides access to your Grafana instance and the surrounding ecosystem.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "\"GRAFANA_SERVICE_ACCOUNT_TOKEN\": \"<your service account token>\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:46:49+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:46:49+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:46:49+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.3.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:46:47+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Find dashboards by title, folder UID, tag, or starred status",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Execute PromQL queries (supports both instant and range metric queries) against Prometheus datasources.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Run both log queries and metric queries using LogQL against Loki datasources.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Manage incidents in Grafana Incident, including searching, creating, adding activities, and reading or setting custom fields.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Render a Grafana dashboard panel or full dashboard as a PNG image.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Modify existing dashboards or create new ones.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Execute PromQL queries (supports both instant and range metric queries) against Prometheus datasources.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "View alert rules and their statuses (firing/normal/error/etc.) in Grafana.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "View and manage on-call schedules in Grafana OnCall.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "release:v2.3.0",
+      "quote": "the SSE and streamable HTTP transports bind a free port",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "\"command\": \"uvx\",\n      \"args\": [\"mcp-grafana\"],",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"grafana\": {\n      \"command\": \"uvx\",\n      \"args\": [\"mcp-grafana\"],\n      \"env\": {\n        \"GRAFANA_URL\": \"http://localhost:3000\",\n        \"GRAFANA_SERVICE_ACCOUNT_TOKEN\": \"<your service account token>\"\n      }\n    }\n  }\n}",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "GRAFANA_URL",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "GRAFANA_SERVICE_ACCOUNT_TOKEN",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "**Use `get_dashboard_summary`**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "**Use `get_dashboard_property`**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "**Avoid `get_dashboard_by_uid`**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "release:v2.3.0",
+      "quote": "`run_panel_query` runs Elasticsearch panels",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "release:v2.3.0",
+      "quote": "`query_elasticsearch` accepts `format: \"compact\"`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`query_cloud_logging` reports an error",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "release:v2.3.0",
+      "quote": "`render_grafana_app` can add up to five short notes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "| `list_teams`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "| `list_users_by_org`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "| `list_all_roles`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "| `get_role_details`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "| `get_role_assignments`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:47:02+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:46:47+08:00",
+  "updated_at": "2026-11-16T01:48:00+08:00"
+}

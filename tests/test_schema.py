@@ -403,6 +403,19 @@ def test_cited_value_without_quote_becomes_unknown():
     assert no_apple_only.value is False
 
 
+def test_a_cited_field_written_as_a_bare_null_reads_as_unknown():
+    """Claude gets the extraction schema in the prompt, unenforced, and wrote `"maturity": null` and
+    `"pricing": null` for tealdeer (11/16): three paid extractions failed validation on that alone."""
+    sample = copy.deepcopy(EXTRACTION_SAMPLE)
+    sample["maturity"] = sample["pricing"] = None
+    sample["prerequisites"]["gpu"] = None
+    result = ExtractionResult.model_validate(sample)
+    assert (result.maturity.value, result.maturity.quote) == (None, None)
+    assert result.pricing.value is None and result.prerequisites.gpu.value is None
+    assert result.kind.value == "cli_tool"  # the fields it did fill in are kept
+    assert Cited[str].model_validate(None).value is None
+
+
 def test_long_quote_is_clipped_not_rejected():
     cited = Cited[str].model_validate(_cited("MIT", "x" * 400))
     assert cited.value == "MIT" and cited.quote == "x" * 300

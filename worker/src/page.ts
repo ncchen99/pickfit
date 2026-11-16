@@ -667,8 +667,8 @@ const DEGRADED: Record<string, { title: string; text: string }> = {
     return {
       title: L('Ranked without the model this time', '這次沒用模型排序'),
       text: L(
-        'Muse Spark didn’t answer in time, so these are matched on the words in your request only. Search again to retry.',
-        'Muse Spark 沒有及時回應，這次只比對需求裡的字詞。再搜尋一次就會重試。',
+        'The model didn’t answer in time, so these are matched on the words in your request only. Search again to retry.',
+        '模型沒有及時回應，這次只比對需求裡的字詞。再搜尋一次就會重試。',
       ),
     };
   },
@@ -676,8 +676,8 @@ const DEGRADED: Record<string, { title: string; text: string }> = {
 const MODEL_FAILED = () => ({
   title: L('Ranked without the model this time', '這次沒用模型排序'),
   text: L(
-    'Muse Spark didn’t return a usable answer, so these are matched on the words in your request only. Search again to retry.',
-    'Muse Spark 的回答無法使用，這次只比對需求裡的字詞。再搜尋一次就會重試。',
+    'The model didn’t return a usable answer, so these are matched on the words in your request only. Search again to retry.',
+    '模型的回答無法使用，這次只比對需求裡的字詞。再搜尋一次就會重試。',
   ),
 });
 
@@ -841,8 +841,8 @@ export function renderResults(
       `<p class="match-line">${esc(
         (readerSaid ? coverageNote(readerSaid) : null) ??
           L(
-            'pickfit covers developer CLI tools, local AI tools, MCP servers and some web apps today.',
-            'pickfit 目前涵蓋開發者 CLI 工具、本機 AI 工具、MCP 伺服器和部分網頁應用。',
+            'pickfit covers developer CLI tools, local AI tools, MCP servers, DevOps, security, data, document and media tools, and some web apps today.',
+            'pickfit 目前涵蓋開發者 CLI 工具、本機 AI 工具、MCP 伺服器，維運、資安、資料、文件與影音類工具，以及部分網頁應用。',
           ),
       )}</p>`,
     );
@@ -1024,7 +1024,7 @@ export function searchForm(form: FormValues): string {
 /** "How Fitz picks": the four steps, one line each; Fitz's own state shows what happens. */
 function stagesSection(): string {
   const stages: { name: string; who: FitzName; text: string }[] = [
-    { name: L('Read', '閱讀'), who: 'thinking', text: L('Muse Spark reads the README and writes a profile.', 'Muse Spark 讀 README，整理成簡介。') },
+    { name: L('Read', '閱讀'), who: 'thinking', text: L('Claude reads the README and writes a profile.', 'Claude 讀 README，整理成簡介。') },
     { name: L('Install', '試裝'), who: 'testing', text: L('Installed in a fresh sandbox, then replayed from scratch.', '在全新沙盒裡安裝，再從頭重跑一次。') },
     {
       name: L('Match', '比對'),

@@ -11,7 +11,7 @@ import pytest
 import pickfit.env
 from pickfit import meta
 from pickfit.ledger import Caps, Ledger
-from pickfit.meta import OPEN_MODEL
+from pickfit.meta import BULK_MODEL, OPEN_MODEL, PROD_MODEL
 from pickfit.schema import SoftwareRecord, VerificationRun
 from pickfit.verify.pipeline import judge_model_for, verify_task
 from pickfit.verify.result import infer_install_method, write_back
@@ -95,7 +95,7 @@ def test_full_pass_is_replayed_offline_and_judged(tmp_path: Path):
     outcome, lines = verify(tmp_path, server, boxes)
     run = outcome.run
     assert outcome.passed and run.level == "function" and run.replayed
-    assert run.judge.verdict == "working" and run.judge.model == "muse-spark-1.3-contributor"
+    assert run.judge.verdict == "working" and run.judge.model == PROD_MODEL  # the agent ran on the dev model
     assert [s.command for s in run.steps] == ["uv tool install graphtty"]
     assert [(t.command, t.passed, t.exit_code, t.offline) for t in run.smoke_tests] == [
         ("graphtty --version", True, 0, True), ("graphtty graph.json", True, 0, True)]
@@ -121,22 +121,23 @@ def test_full_pass_is_replayed_offline_and_judged(tmp_path: Path):
                                 "offline True")
 
 
-def test_an_agent_on_muse_spark_open_keeps_the_judge_on_muse_spark(tmp_path: Path):
+def test_an_agent_on_a_cheaper_tier_keeps_the_judge_on_the_prod_model(tmp_path: Path):
     server = FakeServer(*agent_turns(), judge_answer("working"))
     outcome, _ = verify(tmp_path, server, Boxes({}), model="open")
     run = outcome.run
-    assert outcome.passed and run.actor_model == OPEN_MODEL and run.judge.model == "muse-spark-1.3"
-    assert [r["model"] for r in server.requests] == [OPEN_MODEL] * 5 + ["muse-spark-1.3"]
-    assert judge_model_for("open") == judge_model_for(OPEN_MODEL) == "prod"
-    assert judge_model_for("dev") == "dev" and judge_model_for(None) is None
+    assert outcome.passed and run.actor_model == BULK_MODEL and run.judge.model == PROD_MODEL
+    assert [r["model"] for r in server.requests] == [BULK_MODEL] * 5 + [PROD_MODEL]
+    # However the cheaper tier is named: the alias, the id, dev, dev by PICKFIT_MODE, or Muse Spark Open.
+    assert {judge_model_for(m) for m in ("open", "dev", None, BULK_MODEL, OPEN_MODEL, "open-modal")} == {"prod"}
+    assert judge_model_for("prod") == "prod" and judge_model_for("muse-spark-1.3") == "muse-spark-1.3"
 
 
-def test_watch_and_reverify_stay_on_meta_muse_spark():
+def test_watch_and_reverify_run_on_the_prod_model():
     from pickfit import reverify, watch
     from pickfit.meta import provider_for, resolve_model
 
-    assert watch.MODEL == reverify.MODEL == "muse-spark-1.3"
-    assert provider_for(resolve_model(watch.MODEL)) == "meta" and judge_model_for(watch.MODEL) == watch.MODEL
+    assert watch.MODEL == reverify.MODEL == PROD_MODEL == "claude-opus-5-5"
+    assert provider_for(resolve_model(watch.MODEL)) == "anthropic" and judge_model_for(watch.MODEL) == watch.MODEL
 
 
 def test_judge_that_sees_an_error_vetoes_the_pass(tmp_path: Path):

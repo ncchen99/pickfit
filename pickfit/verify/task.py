@@ -14,7 +14,7 @@ import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pickfit.schema import ExtractionResult
 
@@ -50,6 +50,13 @@ class VerifyTask:
     files: dict[str, str] = field(default_factory=dict)  # relative path -> content
     reported: ReportedFailure | None = None
     category: str | None = None  # the record's category when known; else the extraction's decides
+    # Install pages the README points to, as pickfit read them (pickfit.installdocs): {url, text, ...}.
+    guides: list[dict[str, Any]] = field(default_factory=list)
+
+
+def guide_name(n: int) -> str:
+    """The work-dir file that holds a task's n-th install page (1-based)."""
+    return f"INSTALL-GUIDE-{n}.md"
 
 
 def prepare_box(box: Box, task: VerifyTask) -> None:
@@ -57,6 +64,8 @@ def prepare_box(box: Box, task: VerifyTask) -> None:
     from pickfit.verify.mcp import is_mcp, write_probe
 
     box.write_file("README.md", task.readme)
+    for n, guide in enumerate(task.guides, start=1):
+        box.write_file(guide_name(n), guide["text"])
     for name, content in task.files.items():
         box.write_file(name, content)
     if is_mcp(task):

@@ -1,4 +1,4 @@
-"""Screen judge: a separate Muse Spark call reads the redrawn screenshots (P3.4).
+"""Screen judge: a separate model call reads the redrawn screenshots (P3.4).
 
 The judge does not see the agent's narrative, only what the replay ran: each
 check's command, exit code, expected signal and output, as text and as a
@@ -37,14 +37,15 @@ if TYPE_CHECKING:
     from pickfit.verify.replay import CheckResult
 
 STAGE = "verify-judge"
-# The agent and the GUI operator may run on Muse Spark Open (Baseten); the output, screenshot, screen-text and
-# feature judges stay on muse-spark-1.3.
+# The agent and the GUI operator may run on a cheaper tier ("open", "dev"; Muse Spark Open during the
+# hackathon); the output, screenshot, screen-text and feature judges stay on the prod model.
 OPEN_JUDGE_MODEL = "prod"
 
 
 def judge_model_for(model: str | None) -> str | None:
-    """The judges' model for an agent model: muse-spark-1.3 when the agent runs on Muse Spark Open."""
-    return OPEN_JUDGE_MODEL if is_open_model(model) else model
+    """The judges' model for an agent model: the prod model when the agent runs on a cheaper tier, however
+    it was named ("open", "dev", PICKFIT_MODE=dev with no model, or the model's id)."""
+    return OPEN_JUDGE_MODEL if is_open_model(resolve_model(model)) else model
 
 
 REASONING_EFFORT = "low"

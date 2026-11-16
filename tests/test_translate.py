@@ -29,12 +29,13 @@ def test_batches_keep_to_the_character_limit():
 
 
 def test_run_saves_answers_and_counts_failures(tmp_path, monkeypatch):
-    def fake(batch, run_id, max_usd, effort):
+    def fake(batch, run_id, max_usd, effort, model):
+        assert (model, effort) == ("claude", "low")  # the defaults: Claude Opus at the effort it was measured at
         if batch[0][0] == "b":
             raise RuntimeError("model down")
         return {i: f"中文{i}" for i in range(len(batch))}, 0.01
 
-    monkeypatch.setattr(translate, "translate_open", fake)
+    monkeypatch.setattr(translate, "translate_batch", fake)
     known, todo = translate.missing(ENTRIES, tmp_path)
     groups = [[p for p in todo if p[0] == "a"], [p for p in todo if p[0] == "b"]]
     totals = translate.run(groups, known, tmp_path, concurrency=1, out=lambda _: None)

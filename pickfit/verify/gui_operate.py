@@ -61,9 +61,11 @@ from pickfit.verify.box import BOX_HOME, ExecResult
 if TYPE_CHECKING:
     from pickfit.verify.box import Box
 
-# Muse Spark Open reads screenshots and points in 0-1000 coordinates: "open" (Baseten) unless PICKFIT_OPERATOR_MODEL
-# names another, e.g. "open-modal" (the same model on Modal's endpoint, paid from Modal credits).
-OPERATOR_MODEL = "open"
+# The operator reads screenshots and points in 0-1000 coordinates: "prod" (Claude Opus) unless
+# PICKFIT_OPERATOR_MODEL names another. To 11/4 it was Muse Spark Open ("open" on Baseten then, or "open-modal",
+# the same model on Modal's endpoint), which the prompts and step limits below were tuned on; Claude has not
+# operated a desktop app through this loop yet.
+OPERATOR_MODEL = "prod"
 
 
 def operator_model() -> str:

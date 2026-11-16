@@ -1,9 +1,10 @@
 /**
- * The matching call (architecture F.2 A+D+E in one muse-spark-1.3 call):
+ * The matching call (architecture F.2 A+D+E in one model call, meta.ts):
  * parse the request into conditions, choose among the candidate cards, and
  * decide whether one question would change the top pick.
  */
 import { CARD_FIELDS, type Card } from './cards.ts';
+import { CATEGORIES } from './catalog.ts';
 
 export const MATCH_INSTRUCTIONS = `You are pickfit's matcher, a neutral software advisor. You match one person's request to the candidate tools in <candidates>. Recommending is matching, not ranking: there is no best tool, only the best fit for this person's job, system, budget and privacy needs.
 
@@ -25,6 +26,11 @@ What usually matters per category:
 - dev_cli: does it do the exact job, install method and required runtimes, works on the person's OS, scriptable output.
 - local_ai: runs fully offline after setup, RAM and GPU needs (Apple Silicon on Macs), model download, API compatibility with other tools.
 - mcp_server: whether its tools (mcp_tools) do the job for the person's AI client, the environment variables or accounts it needs (mcp_env_vars, api_keys), and whether it runs locally.
+- infra_devops (containers, Kubernetes, CI/CD, infrastructure as code, monitoring, backup): what must already be running or installed (runtimes, system_packages), whether it is a command-line tool or a self-hosted panel (kind), works on the person's OS.
+- security_net (network diagnostics, packet analysis, TLS and certificates, encryption, secret scanning): runs locally with no account (processing, api_keys), the system packages or manual steps it needs, license.
+- data_db (SQL engines, database clients, JSON, CSV and log tools): the formats and databases it handles (tags, use_cases), required runtimes, scriptable output.
+- productivity_docs (notes, knowledge bases, whiteboards and diagrams, document conversion, slides): the formats it reads and writes, whether the person's data stays on their machine (processing), accounts it needs.
+- media_files (media download and conversion, image compression, PDF tools, file transfer): the formats it handles, extra programs it needs (system_packages, runtimes), whether files are processed on the person's machine (processing).
 - web app (no_install true): opens in a browser. It works offline only if works_offline is "verified", and keeps typed data on the device only if data_sent is "none"; also account_needed, ads_seen.
 
 Write every text field in plain, specific English without marketing words.`;
@@ -63,9 +69,11 @@ export function matchInput(request: Record<string, unknown>, cards: Card[]): str
   ].join('\n');
 }
 
-const nullableString = { type: ['string', 'null'] };
+/** A value or null, written as anyOf with a null type: both are on the Anthropic API's list of JSON-schema features its JSON outputs support. */
+const nullable = (schema: Record<string, unknown>) => ({ anyOf: [schema, { type: 'null' }] });
+const nullableString = nullable({ type: 'string' });
 
-/** Strict JSON schema for the answer; slugs are limited to this request's candidates. */
+/** JSON schema for the answer (output_config.format), every object closed; slugs are limited to this request's candidates. */
 export function matchSchema(slugs: string[], kind: MatchKind = 'find'): Record<string, unknown> {
   const object = (properties: Record<string, unknown>) => ({
     type: 'object',
@@ -77,10 +85,10 @@ export function matchSchema(slugs: string[], kind: MatchKind = 'find'): Record<s
   return object({
     need: object({
       task: { type: 'string', description: 'The job in at most 12 English words; no personal details.' },
-      category: { type: 'string', enum: ['dev_cli', 'local_ai', 'mcp_server', 'other'] },
-      os: { type: ['string', 'null'], enum: ['macos', 'linux', 'windows', null] },
+      category: { type: 'string', enum: [...CATEGORIES] },
+      os: nullable({ type: 'string', enum: ['macos', 'linux', 'windows'] }),
       budget: { type: 'string', enum: ['free_only', 'free_or_paid', 'unknown'] },
-      must_run_locally: { type: ['boolean', 'null'] },
+      must_run_locally: nullable({ type: 'boolean' }),
       must_have: { type: 'array', items: { type: 'string' } },
       search_terms: { type: 'array', items: { type: 'string' } },
       ...(alternatives
@@ -104,7 +112,7 @@ export function matchSchema(slugs: string[], kind: MatchKind = 'find'): Record<s
         vs_well_known: nullableString,
       }),
     },
-    best_free_slug: { type: ['string', 'null'], enum: [...slugs, null] },
+    best_free_slug: nullable({ type: 'string', enum: slugs }),
     best_free_reason: nullableString,
     no_install_option: nullableString,
     well_known_name: nullableString,

@@ -2,7 +2,7 @@
  * Facts in words: how a run, a level, an OS or a price reads on the page. Shared
  * by every page so the same fact is always said the same way.
  */
-import type { Arch, Entry, GuiEvidence, InstallGuide, OS, WebCheck } from '../catalog.ts';
+import type { Arch, Category, Entry, GuiEvidence, InstallGuide, NamedCategory, OS, WebCheck } from '../catalog.ts';
 import { operatedText } from '../evidence.ts';
 import { featuresOut, type FeaturesOut } from '../features.ts';
 import { L, isZh } from '../i18n.ts';
@@ -121,18 +121,30 @@ export function webRunWords(entry: Entry, check: WebCheck): string {
   );
 }
 
+/** A category in words, one label per entry of CATEGORIES (catalog.ts): the type check fails when one is missing. */
 export const KIND: Record<string, string> = {
   get dev_cli() { return L('Developer CLI', '開發者 CLI'); },
   get local_ai() { return L('Local AI', '本機 AI'); },
   get mcp_server() { return L('MCP server', 'MCP 伺服器'); },
+  get infra_devops() { return L('Infra & DevOps', '維運與容器'); },
+  get security_net() { return L('Security & networking', '資安與網路'); },
+  get data_db() { return L('Data & databases', '資料與資料庫'); },
+  get productivity_docs() { return L('Productivity & docs', '生產力與文件'); },
+  get media_files() { return L('Media & files', '影音與檔案工具'); },
   get other() { return L('Other', '其他'); },
-};
+} satisfies Record<Category, string>;
+/** The shelves of Browse: every named category, and web apps (a kind, across categories). */
 export const KIND_PLURAL: Record<string, string> = {
   get dev_cli() { return L('Developer CLIs', '開發者 CLI'); },
   get local_ai() { return L('Local AI tools', '本機 AI 工具'); },
   get mcp_server() { return L('MCP servers', 'MCP 伺服器'); },
+  get infra_devops() { return L('Infra & DevOps tools', '維運與容器工具'); },
+  get security_net() { return L('Security & networking tools', '資安與網路工具'); },
+  get data_db() { return L('Data & database tools', '資料與資料庫工具'); },
+  get productivity_docs() { return L('Productivity & docs tools', '生產力與文件工具'); },
+  get media_files() { return L('Media & file tools', '影音與檔案工具'); },
   get web_app() { return L('Web apps', '網頁應用'); },
-};
+} satisfies Record<NamedCategory | 'web_app', string>;
 
 /** The entry's own kind, in words (cli_tool, desktop_app, ...). */
 export const FORM: Record<string, string> = {
@@ -149,7 +161,7 @@ export const formOf = (entry: Pick<Entry, 'kind'>) => FORM[entry.kind] ?? entry.
 
 /** "Local AI · command-line tool"; just "MCP server" when the two say the same thing. */
 export function kindLine(entry: Pick<Entry, 'kind' | 'category'>): string {
-  // A web app outside the three categories is just a web app.
+  // A web app outside the named categories is just a web app.
   const kind = entry.kind === 'web_app' && entry.category === 'other' ? '' : (KIND[entry.category] ?? '');
   const form = formOf(entry);
   return kind.toLowerCase() === form.toLowerCase() || !kind ? form.charAt(0).toUpperCase() + form.slice(1) : `${kind} · ${form}`;

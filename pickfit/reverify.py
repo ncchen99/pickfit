@@ -61,7 +61,8 @@ from pickfit.verify.task import ReportedFailure, VerifyTask
 from pickfit.watch import DONE_EXTRACTIONS, MODEL, git, stop_reason
 
 MAX_ATTEMPTS = 3
-EXTRACTION_MODELS = (MODEL, "muse-spark-1.3-contributor")  # what the pipeline database may hold, best first
+# What the pipeline database may hold, best first: Claude Opus, then the hackathon's models.
+EXTRACTION_MODELS = (MODEL, "muse-spark-1.3", "muse-spark-1.3-contributor")
 LEVEL_ORDER = ("inference", "service", "function", "install")
 STAGES = ("install_failed", "first_run_failed")
 CLAIM_STALE_S = 2 * 3600  # a claim older than this lost its process (a run takes at most about 25 minutes)

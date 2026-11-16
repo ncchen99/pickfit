@@ -68,7 +68,7 @@ test('an operated GUI app says which feature passed pickfit\'s own check, and it
     ],
   };
   const out = installGuide(loadCatalog(withGui(operated)), { slug: 'fixture-chat-tui', os: 'linux' });
-  assert.match(out.how_we_know, /A model \(Muse Spark Open\) then operated it from screenshots, pickfit performing every click and keystroke/);
+  assert.match(out.how_we_know, /A model then operated it from screenshots, pickfit performing every click and keystroke/);
   assert.match(out.how_we_know, /save notes \(checked by a file the app saved, which pickfit read itself\)/);
   assert.doesNotMatch(out.how_we_know, /export PDF/);
   assert.doesNotMatch(out.how_we_know, /did not use any of its features/);

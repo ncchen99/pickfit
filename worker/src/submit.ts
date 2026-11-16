@@ -88,8 +88,8 @@ export function normalizeWebUrl(url: string | null): string | null {
 const WAIT_S: Partial<Record<SubmissionStatus, number>> = { queued: 120, reading: 120, verifying: 300 };
 
 const NEXT: Record<SubmissionStatus, string> = {
-  queued: 'Queued. pickfit will read the README with Muse Spark, then try the install in a sandbox. Call again with the same url to check.',
-  reading: 'Muse Spark is reading the repository. Call again with the same url to check.',
+  queued: 'Queued. pickfit will read the README with Claude, then try the install in a sandbox. Call again with the same url to check.',
+  reading: 'Claude is reading the repository. Call again with the same url to check.',
   verifying: 'pickfit is installing it in a sandbox. Call again with the same url to check.',
   listed: 'Listed: find_software can recommend it when it fits a request.',
   listed_unverified: 'Listed without a verified install: pickfit could not finish its install, so find_software does not recommend it yet.',
@@ -98,8 +98,8 @@ const NEXT: Record<SubmissionStatus, string> = {
 
 /** A web app is read and tried in a sandboxed browser, not installed. */
 const WEB_NEXT: Partial<Record<SubmissionStatus, string>> = {
-  queued: 'Queued. pickfit will read the site with Muse Spark, then try it in a sandboxed browser. Call again with the same url to check.',
-  reading: 'Muse Spark is reading the site. Call again with the same url to check.',
+  queued: 'Queued. pickfit will read the site with Claude, then try it in a sandboxed browser. Call again with the same url to check.',
+  reading: 'Claude is reading the site. Call again with the same url to check.',
   verifying: 'pickfit is trying it in a sandboxed browser. Call again with the same url to check.',
   listed_unverified: 'Listed without a verified check: pickfit could not finish trying it in its browser, so find_software does not recommend it yet.',
 };

@@ -27,6 +27,7 @@ import httpx2
 
 from pickfit.env import REPO_ROOT, get_env, read_env
 from pickfit.ledger import taipei_date, taipei_now
+from pickfit.schema import LISTED_CATEGORIES
 
 API = "https://api.github.com"
 USER_AGENT = "pickfit/0.1 (+https://github.com/ncchen99/pickfit)"
@@ -85,7 +86,26 @@ TOPICS: dict[str, tuple[str, ...]] = {
     # Model Context Protocol. Category-wide topics only, written from that definition; not
     # shaped around any particular need.
     "mcp_server": ("mcp-server", "model-context-protocol", "mcp", "mcp-servers", "mcp-tools", "fastmcp"),
+    # Added 2026-11-15 with the five subject categories (schema.CATEGORY_GUIDE), each written from its
+    # definition alone. A subject topic is paired with a tool topic (cli, tui, self-hosted) wherever the
+    # subject alone would mostly return libraries, charts and configuration.
+    # Containers, Kubernetes, CI/CD, infrastructure as code, system monitoring and backup.
+    "infra_devops": ("docker+cli", "docker+tui", "kubernetes+cli", "kubernetes+tui", "devops+cli", "ci-cd+cli",
+                     "infrastructure-as-code+cli", "monitoring+self-hosted", "backup+cli", "homelab+self-hosted"),
+    # Network diagnostics, packet analysis, TLS and certificates, encryption, secret and vulnerability scanning.
+    "security_net": ("security+cli", "networking+cli", "network-tools", "dns+cli", "tls+cli", "encryption+cli",
+                     "secret-scanning", "vulnerability-scanner", "packet-capture"),
+    # SQL engines, database clients, and tools that process JSON, CSV or logs.
+    "data_db": ("database+cli", "database+tui", "sql+cli", "sqlite+cli", "postgresql+cli", "csv+cli", "json+cli",
+                "log-viewer", "data-processing+cli"),
+    # Notes, knowledge bases, whiteboards and diagrams, document conversion, slides.
+    "productivity_docs": ("note-taking", "knowledge-base+self-hosted", "whiteboard", "diagrams+cli", "markdown+cli",
+                          "document-conversion", "presentation+cli", "productivity+cli"),
+    # Media download and conversion, image compression, PDF tools, file transfer.
+    "media_files": ("video+cli", "audio+cli", "ffmpeg+cli", "image-compression", "pdf+cli", "pdf-tools",
+                    "file-transfer", "file-sharing+self-hosted", "downloader+cli"),
 }
+assert set(TOPICS) == set(LISTED_CATEGORIES)  # every named category has discovery queries
 STARS = "5..300"
 # Rule github-well-known.v1 (registered 2026-11-02, docs/source-terms.md): the same topics and
 # recency filters with this star band, to add better-known tools in the same categories. It

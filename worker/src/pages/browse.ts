@@ -4,7 +4,7 @@
  * all), never free text: a typed filter runs in the page only, so what someone
  * types never reaches a request URL or a log.
  */
-import { bestGuide, isVerified, isWebApp, OSES, verifiedOn, webCheck, type Catalog, type Entry, type OS } from '../catalog.ts';
+import { bestGuide, isVerified, isWebApp, NAMED_CATEGORIES, OSES, verifiedOn, webCheck, type Catalog, type Entry, type OS } from '../catalog.ts';
 import { L } from '../i18n.ts';
 import { formOf, KIND, KIND_PLURAL, levelLabel, OS_NAME, osName, PRICE } from '../ui/facts.ts';
 import { esc, listOf } from '../ui/html.ts';
@@ -12,8 +12,8 @@ import { icon, osMark } from '../ui/icons.ts';
 import { badge, compareToggle, fitz, kindTag } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
 
-/** The three categories, and web apps (a kind, across categories). */
-const KINDS = ['dev_cli', 'local_ai', 'mcp_server', 'web_app'] as const;
+/** The shelves: every named category (catalog.ts), and web apps (a kind, across categories). */
+const KINDS = [...NAMED_CATEGORIES, 'web_app'] as const;
 type Kind = (typeof KINDS)[number];
 type Sort = 'gems' | 'newest' | 'name';
 
@@ -106,10 +106,13 @@ export function renderBrowse(catalog: Catalog, params: URLSearchParams, nonce: s
       return (b.scores?.treasure_value ?? -1) - (a.scores?.treasure_value ?? -1) || (b.scores?.quality ?? -1) - (a.scores?.quality ?? -1) || a.name.localeCompare(b.name);
     });
   const unverified = catalog.entries.length - catalog.entries.filter(isVerified).length;
+  // A shelf with nothing on it gets no chip (a category can be empty until its first tool is listed); its link still
+  // works and says nothing fits, and the chosen one always shows, so the page says which filter is on.
+  const shelves = KINDS.filter((k) => q.kind === k || pool.some((e) => ofKind(e, k)));
   const filters =
     `<form class="filters" method="get" action="/browse" role="search" aria-label="${L('Filter the catalog', '篩選目錄')}">` +
     `<label class="find-in">${icon('search')}<span class="sr">${L('Filter these tools', '篩選這些工具')}</span><input type="search" data-filter placeholder="${L('Filter by name or task', '依名稱或任務篩選')}" autocomplete="off"></label>` +
-    `<fieldset><legend>${L('Kind', '類型')}</legend><div class="chips">${chipLink(!q.kind, href(q, { kind: '' }), L('All', '全部'))}${KINDS.map((k) => chipLink(q.kind === k, href(q, { kind: k }), KIND_PLURAL[k])).join('')}</div></fieldset>` +
+    `<fieldset><legend>${L('Kind', '類型')}</legend><div class="chips">${chipLink(!q.kind, href(q, { kind: '' }), L('All', '全部'))}${shelves.map((k) => chipLink(q.kind === k, href(q, { kind: k }), KIND_PLURAL[k])).join('')}</div></fieldset>` +
     `<fieldset><legend>${L('Verified on', '已驗證於')}</legend><div class="chips">${chipLink(!q.os, href(q, { os: '' }), L('Any OS', '不限'))}${OSES.map((o) => chipLink(q.os === o, href(q, { os: o }), OS_NAME[o])).join('')}</div></fieldset>` +
     `<details class="more-filters"${q.gem || q.all || q.sort !== 'gems' ? ' open' : ''}><summary>${L('More filters', '更多篩選')}</summary>` +
     `<fieldset><legend>${L('Show', '顯示')}</legend><div class="chips">${chipLink(q.gem, href(q, { gem: !q.gem }), L('Hidden gems only', '只看寶藏'))}${chipLink(q.all, href(q, { all: !q.all }), L(`Include ${unverified} not yet verified`, `含 ${unverified} 款未驗證工具`))}</div></fieldset>` +
@@ -138,8 +141,8 @@ export function renderBrowse(catalog: Catalog, params: URLSearchParams, nonce: s
     nonce,
     title: L('Browse verified tools · pickfit', '瀏覽已驗證的工具 · pickfit'),
     description: L(
-      'Developer CLIs, local AI tools, MCP servers and web apps that pickfit tried itself: installed in a fresh sandbox, or used in a sandboxed browser.',
-      'pickfit 親自試過的開發者 CLI、本機 AI 工具、MCP 伺服器與網頁應用：在全新的沙盒中安裝，或在沙盒瀏覽器中實際使用。',
+      'Developer CLIs, local AI tools, MCP servers, DevOps, security, data, document and media tools, and web apps that pickfit tried itself: installed in a fresh sandbox, or used in a sandboxed browser.',
+      'pickfit 親自試過的開發者 CLI、本機 AI 工具、MCP 伺服器，維運、資安、資料、文件與影音類工具，以及網頁應用：在全新的沙盒中安裝，或在沙盒瀏覽器中實際使用。',
     ),
     active: 'browse',
     main,

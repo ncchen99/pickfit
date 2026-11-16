@@ -11,7 +11,8 @@ Two public APIs, no key:
 A post counts when its link, or failing that its text, names a GitHub repository, and
 its title or text has words of one of pickfit's categories (CATEGORY_WORDS, written
 from the category definitions: developer tools used from a terminal, software that
-runs AI models on the user's own machine, Model Context Protocol servers). The repo
+runs AI models on the user's own machine, Model Context Protocol servers, and since
+2026-11-15 the five subject categories of schema.CATEGORY_GUIDE). The repo
 is then read through the GitHub REST API, which follows renames, so the candidate key
 is `gh:<id>` and a repo already in the pool, under its current or an earlier name,
 is the same candidate. A repo above the GitHub queries' star bound (STAR_MAX) is
@@ -78,12 +79,41 @@ _RUNNER = re.compile(r"\b(ollama|llama\.?cpp|llama-server|llamafile|gguf|mlx|vll
 # Developer tools used from a terminal.
 _CLI = re.compile(r"\b(cli|clis|tui|command[- ]line|terminal|shell|repl|"
                   r"(brew|cargo|pipx|go|uv tool) install|npm (i|install) -g)\b", re.I)
+# The five subject categories (2026-11-15), each from its definition in schema.CATEGORY_GUIDE: words that
+# name the subject outright. A word too common to mean it alone (monitoring, network, logs, video, files)
+# counts only next to a word that says what it monitors, diagnoses or converts.
+_SUBJECTS: dict[str, re.Pattern[str]] = {
+    # Containers, Kubernetes, CI/CD, infrastructure as code, system monitoring and backup.
+    "infra_devops": re.compile(
+        r"\b(docker|podman|containers?|kubernetes|k8s|helm|kubectl|ci/?cd|github actions|terraform|opentofu|"
+        r"infrastructure[- ]as[- ]code|devops|homelab|uptime monitor(ing)?|(server|system|container|"
+        r"infrastructure) monitor(ing)?|backups?)\b", re.I),
+    # Network diagnostics, packet analysis, TLS and certificates, encryption, secret and vulnerability scanning.
+    "security_net": re.compile(
+        r"\b(dns|traceroute|packets?|pcap|wireshark|tls|ssl|certificates?|pki|encrypt(s|ed|ion)?|"
+        r"secrets? scann(er|ing)|vulnerabilit(y|ies)|(port|network) scann(er|ing)|network diagnos(e|is|tics?)|"
+        r"mitm|http proxy|firewall)\b", re.I),
+    # SQL engines, database clients, and tools that process JSON, CSV or logs.
+    "data_db": re.compile(
+        r"\b(sql|sqlite|postgres(ql)?|mysql|mariadb|duckdb|redis|mongodb|databases?|csv|tsv|parquet|"
+        r"json(l|[- ]lines)?|log (viewer|files?|analy[sz](er|is))|query (engine|tool))\b", re.I),
+    # Notes, knowledge bases, whiteboards and diagrams, document conversion, slides.
+    "productivity_docs": re.compile(
+        r"\b(notes?|note[- ]taking|knowledge[- ]bases?|wikis?|whiteboards?|diagrams?|flowcharts?|markdown (editor|"
+        r"notes|to \w+)|slides?|presentations?|(document|docs?) (convert(er|sion)|editor)|to-?do( list)?s?)\b", re.I),
+    # Media download and conversion, image compression, PDF tools, file transfer.
+    "media_files": re.compile(
+        r"\b(ffmpeg|pdfs?|(video|audio|image|photo|media|file) (download(er|s)?|convert(er|sion)|compress(or|ion)|"
+        r"editor|transcod(er|ing))|transcod(e|ing)|image (optimi[sz](er|ation))|screen record(er|ing)|gifs?|"
+        r"file (transfer|sharing)|airdrop)\b", re.I),
+}
+assert set(_SUBJECTS) | {"mcp_server", "local_ai", "dev_cli"} == set(CATEGORY_PRIORITY)
 
 
 def post_categories(title: str, text: str = "") -> list[str]:
     """The categories a post's own words put it in, most specific first (CATEGORY_PRIORITY)."""
     words = f"{title}\n{text}"
-    found = set()
+    found = {category for category, pattern in _SUBJECTS.items() if pattern.search(words)}
     if _MCP.search(words):
         found.add("mcp_server")
     if _RUNNER.search(words) or (_MODEL.search(words) and _LOCAL.search(words)):

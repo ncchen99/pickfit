@@ -1,0 +1,689 @@
+{
+  "schema_version": "software.v1",
+  "slug": "gh-dash",
+  "repo_id": "gh:417230885",
+  "name": "DASH",
+  "summary": "A terminal UI for GitHub that shows configurable sections of pull requests and issues and lets you act on them from the keyboard.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "bubbles",
+    "bubbletea",
+    "cli",
+    "cobra",
+    "gh-extension",
+    "github",
+    "glamour",
+    "go",
+    "golang",
+    "lipgloss"
+  ],
+  "use_cases": [
+    "review and manage GitHub pull requests and issues from the terminal",
+    "view PR diffs, comment and check out branches"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "user-defined per-repo PR and issue sections",
+    "overridable vim-style keyboard hotkeys",
+    "custom actions for your workflow",
+    "diff, comment, checkout and push PRs"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T19:19:06.812973Z",
+    "run_id": null,
+    "open_hint": "Run `gh dash` in a terminal after signing in to GitHub with the gh CLI; it opens a view of your pull request and issue sections.",
+    "features": [
+      {
+        "feature": "user-defined per-repo PR and issue sections",
+        "title": "Define your own PR and issue sections per repo",
+        "steps": []
+      },
+      {
+        "feature": "overridable vim-style keyboard hotkeys",
+        "title": "Use and change vim-style keyboard shortcuts",
+        "steps": []
+      },
+      {
+        "feature": "custom actions for your workflow",
+        "title": "Add custom actions for your workflow",
+        "steps": []
+      },
+      {
+        "feature": "diff, comment, checkout and push PRs",
+        "title": "View diffs, comment on, check out and push PRs",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": "https://gh-dash.dev",
+  "repo": {
+    "url": "https://github.com/dlvhdr/gh-dash",
+    "full_name": "dlvhdr/gh-dash",
+    "created_at": "2021-10-14T17:53:33Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "gh CLI",
+      "Nerd Font (for icons)"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-gh-dash-20261116-030547-721d",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/opt ~/.local/bin && curl -fsSL https://github.com/cli/cli/releases/download/v2.104.0/gh_2.104.0_linux_amd64.tar.gz -o /tmp/gh.tgz && tar -xzf /tmp/gh.tgz -C ~/.local/opt && ln -sf ~/.local/opt/gh_2.104.0_linux_amd64/bin/gh ~/.local/bin/gh && gh --version",
+          "purpose": "install gh CLI prerequisite from release tarball into ~/.local"
+        },
+        {
+          "command": "gh extension install dlvhdr/gh-dash",
+          "purpose": "gh extension install dlvhdr/gh-dash"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "gh dash --version",
+        "expected_signal": "module version: v4.26.3"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v4.26.3",
+    "published_at": "2026-11-13T16:45:21Z",
+    "url": "https://github.com/dlvhdr/gh-dash/releases/tag/v4.26.3"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T03:06:40.303089+08:00",
+    "runs": [
+      {
+        "id": "verify-gh-dash-20261116-030547-721d",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T03:06:40.303089+08:00",
+        "tool_version": "v4.26.3",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/opt ~/.local/bin && curl -fsSL https://github.com/cli/cli/releases/download/v2.104.0/gh_2.104.0_linux_amd64.tar.gz -o /tmp/gh.tgz && tar -xzf /tmp/gh.tgz -C ~/.local/opt && ln -sf ~/.local/opt/gh_2.104.0_linux_amd64/bin/gh ~/.local/bin/gh && gh --version",
+            "purpose": "install gh CLI prerequisite from release tarball into ~/.local"
+          },
+          {
+            "command": "gh extension install dlvhdr/gh-dash",
+            "purpose": "gh extension install dlvhdr/gh-dash"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "gh dash --version",
+            "expected_signal": "module version: v4.26.3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "module version: v4.26.3, checksum: h1:ZkmAp2YPhSQ3S5jfVbF6Nmpk1VJZ5HzuTaqPmzzsCe4=",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "brew install gh # e.g. if on macOS",
+            "actually_needed": "On Linux without root, download the gh release tarball (gh_2.104.0_linux_amd64.tar.gz), extract it and symlink bin/gh into ~/.local/bin",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Manual steps: git clone + gh extension install .",
+            "actually_needed": "Local install builds from source and needs a Go toolchain; skipped in favour of gh extension install dlvhdr/gh-dash, which fetches the prebuilt release binary",
+            "kind": "note"
+          },
+          {
+            "readme_said": "gh extension install dlvhdr/gh-dash",
+            "actually_needed": "Worked without gh auth login; using the dashboard itself needs an authenticated gh",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The command printed the DASH banner, gh-dash version dev, goos/goarch, and 'module version: v4.26.3' with a checksum, exiting 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-gh-dash-20261116-030547-721d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-gh-dash-20261116-030547-721d/check-1-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.137573,
+        "features": [
+          {
+            "feature": "user-defined per-repo PR and issue sections",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Sections fetch PRs/issues from GitHub API via authenticated gh"
+          },
+          {
+            "feature": "overridable vim-style keyboard hotkeys",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Hotkeys act inside the TUI dashboard, which needs GitHub data and an interactive terminal"
+          },
+          {
+            "feature": "custom actions for your workflow",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Custom actions run on GitHub PRs/issues"
+          },
+          {
+            "feature": "diff, comment, checkout and push PRs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Diff/comment/checkout/push need GitHub login and real PRs"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T03:11:48+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/dlvhdr/gh-dash@56de5201610e",
+      "go.mod"
+    ],
+    "packages_checked": 94,
+    "findings_total": 10,
+    "advisories_total": 10,
+    "findings": [
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.48.0",
+        "advisory": "GHSA-5cgq-3rg8-m6cv",
+        "cves": [
+          "CVE-2026-42508"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto vulnerable to auth bypass via unenforced @revoked status",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.48.0",
+        "advisory": "GHSA-89gr-r52h-f8rx",
+        "cves": [
+          "CVE-2026-39831"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: FIDO/U2F security key physical presence check can be bypassed",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.48.0",
+        "advisory": "GHSA-f5wc-c3c7-36mc",
+        "cves": [
+          "CVE-2026-39832"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto doesn't drop invoking agent constraints when forwarding keys",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.48.0",
+        "advisory": "GHSA-jppx-rxg9-jmrx",
+        "cves": [
+          "CVE-2026-39833"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto doesn't enforce invoking key constraints",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.48.0",
+        "advisory": "GHSA-rm3j-f69w-wqmq",
+        "cves": [
+          "CVE-2026-39834"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto vulnerable to infinite loop on large channel writes",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.48.0",
+        "advisory": "GHSA-vgwf-h737-ff37",
+        "cves": [
+          "CVE-2026-39830"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking client can cause server deadlock on unexpected responses",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.48.0",
+        "advisory": "GHSA-x527-x647-q7gg",
+        "cves": [
+          "CVE-2026-46595"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking VerifiedPublicKeyCallback permissions skip enforcement",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.48.0",
+        "advisory": "GHSA-q4h4-gmj2-qvw2",
+        "cves": [
+          "CVE-2026-46597"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking byte arithmetic causes underflow and panic",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.48.0",
+        "advisory": "GHSA-w879-237q-wc7r",
+        "cves": [
+          "CVE-2026-39829"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking pathological RSA/DSA parameters may cause DoS",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/oauth2",
+        "version": "v0.15.0",
+        "advisory": "GHSA-6v2p-p543-phr9",
+        "cves": [
+          "CVE-2025-22868"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.27.0",
+        "summary": "golang.org/x/oauth2 Improper Validation of Syntactic Correctness of Input vulnerability",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T03:11:03+08:00",
+    "quality": {
+      "total": 73.0,
+      "confidence": 0.7,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5059,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 12757,
+        "monthly_downloads": null,
+        "forks": 469,
+        "dependents": null,
+        "release_downloads": 71667,
+        "hn_top_score": 252,
+        "registries_count": 0
+      },
+      "age_days": 1857,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 7.3
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:11:03.852707+08:00",
+      "sources_sha": "bb0043ea781dc8558030a0ebaecbd6e500449429a46464321d3889c1dc955c13",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "- User-defined, per-repo, PRs & issues sections"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "If you like quickly navigating with your keyboard, seeing the PRs and issues you need and you <strong>love the terminal</strong> - <code>DASH</code> is for you!"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Install the gh CLI"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "gh extension install dlvhdr/gh-dash"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "- Control every setting with a YAML config file"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "gh extension upgrade dash"
+        },
+        "license_and_platforms": {
+          "score": 0,
+          "quote": null
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/dlvhdr/gh-dash",
+      "fetched_at": "2026-11-16T01:09:45+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/dlvhdr/gh-dash/blob/main/README.md",
+      "fetched_at": "2026-11-16T01:09:43+08:00"
+    },
+    {
+      "id": "release:v4.26.3",
+      "kind": "release",
+      "url": "https://github.com/dlvhdr/gh-dash/releases/tag/v4.26.3",
+      "fetched_at": "2026-11-16T01:09:43+08:00"
+    },
+    {
+      "id": "docs1",
+      "kind": "website",
+      "url": "https://www.gh-dash.dev/getting-started",
+      "fetched_at": "2026-11-16T03:01:04+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "A rich terminal UI for GitHub that doesn't break your flow.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:38+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "docs1",
+      "quote": "Get started using dash to review and manage your GitHub work items.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:38+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A rich terminal UI for GitHub",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:38+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A rich terminal UI for GitHub that doesn't break your flow.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:38+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "`DASH` has an extensive docs site",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:38+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "docs1",
+      "quote": "Install the gh CLI",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:38+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "docs1",
+      "quote": "To get the icons to render properly, you should download and install a Nerd font.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:38+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:09:45+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:09:45+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:09:45+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:09:45+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:09:45+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v4.26.3",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:09:43+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "docs1",
+      "quote": "Get started using dash to review and manage your GitHub work items.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:38+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Everything you can do on GitHub - diff, comment, checkout, push, update etc.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:38+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "User-defined, per-repo, PRs & issues sections",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:38+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Overridable vim-style keyboard hotkeys",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:38+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Custom actions to perform your specific workflow needs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:38+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Everything you can do on GitHub - diff, comment, checkout, push, update etc.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:38+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:09:43+08:00",
+  "updated_at": "2026-11-16T03:11:48+08:00"
+}

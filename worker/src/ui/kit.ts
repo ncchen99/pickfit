@@ -4,7 +4,7 @@
  * everywhere. Their CSS is in styles.ts. No helper invents a value: a meter
  * with no score says "not scored".
  */
-import type { Arch, Entry, GuiEvidence, OS } from '../catalog.ts';
+import type { Arch, Category, Entry, GuiEvidence, OS } from '../catalog.ts';
 import { operatedText } from '../evidence.ts';
 import type { FeaturesOut } from '../features.ts';
 import { L } from '../i18n.ts';
@@ -82,11 +82,21 @@ export function badge(tone: BadgeTone, text: string, opts: { icon?: IconName; po
 // ---------------------------------------------------------------- marks for facts every card repeats
 
 /** An icon per kind of tool, shown before its form ("Command-line tool"); the kind's name is the tooltip. */
-const KIND_ICON: Record<string, IconName> = { dev_cli: 'terminal', local_ai: 'cpu', mcp_server: 'plug', other: 'package' };
+const KIND_ICON: Record<string, IconName> = {
+  dev_cli: 'terminal',
+  local_ai: 'cpu',
+  mcp_server: 'plug',
+  infra_devops: 'server',
+  security_net: 'shield',
+  data_db: 'database',
+  productivity_docs: 'file-text',
+  media_files: 'film',
+  other: 'package',
+} satisfies Record<Category, IconName>;
 export const kindIcon = (category: string): IconName => KIND_ICON[category] ?? 'package';
 
 export function kindTag(entry: Pick<Entry, 'kind' | 'category'>): string {
-  // A web app gets the globe; outside the three categories it is just a web app.
+  // A web app gets the globe; outside the named categories it is just a web app.
   const web = entry.kind === 'web_app';
   const kind = web && entry.category === 'other' ? '' : (KIND[entry.category] ?? '');
   const form = formOf(entry);

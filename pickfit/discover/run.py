@@ -34,11 +34,11 @@ def pipeline_db_path() -> Path:
 
 def prescreen_status() -> dict[str, Any]:
     """Why the P2.4 prescreen has no rows yet; the funnel shows its rows once it has run."""
-    if get_env("BASETEN_API_KEY"):
+    if get_env("ANTHROPIC_API_KEY"):
         return {"status": "not_run", "model": None, "cost_usd": 0.0,
                 "note": "run `pickfit prescreen --limit N`"}
     return {"status": "skipped", "model": None, "cost_usd": 0.0,
-            "note": "BASETEN_API_KEY not set; rule-passed candidates go straight to extraction"}
+            "note": "ANTHROPIC_API_KEY not set; rule-passed candidates go straight to extraction"}
 
 
 def search(gh: GitHub, db: PipelineDB, *, today: date, per_query: int, pushed_days: int,

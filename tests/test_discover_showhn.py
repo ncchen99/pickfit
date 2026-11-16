@@ -44,7 +44,8 @@ def hit(item_id: int, title: str, url: str | None = None, text: str | None = Non
 
 
 @pytest.mark.parametrize(("title", "text", "expected"), [
-    ("Show HN: Ferret – an MCP server for your notes", "", ["mcp_server"]),
+    # What the software is comes before its subject: an MCP server about notes is an MCP server first.
+    ("Show HN: Ferret – an MCP server for your notes", "", ["mcp_server", "productivity_docs"]),
     ("Show HN: A Model Context Protocol bridge with a CLI", "", ["mcp_server", "dev_cli"]),
     ("Show HN: Wordmate – local speech-to-text for macOS", "", ["local_ai"]),
     ("Show HN: Run GGUF models from one binary", "", ["local_ai"]),
@@ -53,6 +54,16 @@ def hit(item_id: int, title: str, url: str | None = None, text: str | None = Non
     ("Show HN: A cozy home for your Goodreads books", "", []),
     # "AI" or "agent" with a local word is not enough: the definition is about running models.
     ("Show HN: A self-hosted contact manager with AI search", "", []),
+    # The five subject categories (2026-11-15), a subject before the general terminal tools.
+    ("Show HN: Dockhand, a TUI for Docker containers", "", ["infra_devops", "dev_cli"]),
+    ("Show HN: A traceroute that draws the route with DNS names", "", ["security_net"]),
+    ("Show HN: Query CSV and Parquet files with SQL from the command line", "", ["data_db", "dev_cli"]),
+    ("Show HN: A whiteboard that saves diagrams as plain text", "", ["productivity_docs"]),
+    ("Show HN: Shrink PDFs and convert video in the browser", "A video converter built on ffmpeg.",
+     ["media_files"]),
+    # A common word alone does not name a subject: monitoring what, files of what.
+    ("Show HN: Monitoring my sleep with a spreadsheet", "", []),
+    ("Show HN: A game about network effects and video stores", "", []),
 ])
 def test_post_categories_follow_the_category_definitions(title: str, text: str, expected: list[str]) -> None:
     assert post_categories(title, text) == expected
@@ -200,8 +211,9 @@ def test_run_discover_show_hn_end_to_end(tmp_path: Path) -> None:
     known = db.candidate("gh:10")
     assert "show_hn:dev_cli" in known["queries"] and known["aliases"] == ["old/known"]
     ferret = db.candidate("gh:1")
-    assert ferret["category"] == "mcp_server" and ferret["categories"] == ["mcp_server", "dev_cli"]
-    assert ferret["queries"] == ["show_hn:mcp_server", "show_hn:dev_cli"]
+    assert ferret["category"] == "mcp_server"  # "an MCP server for your notes", with a CLI: the most specific wins
+    assert ferret["categories"] == ["mcp_server", "productivity_docs", "dev_cli"]
+    assert ferret["queries"] == ["show_hn:mcp_server", "show_hn:productivity_docs", "show_hn:dev_cli"]
     assert db.candidate("gh:6") is None and db.candidate("gh:5") is None
 
     by_item = {h["item_id"]: h for h in db.channel_hits("show_hn")}

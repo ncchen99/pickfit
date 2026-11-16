@@ -1,4 +1,4 @@
-/** Test doubles: D1 on node:sqlite (with the real migrations), fake Meta responses, the fixture catalog. */
+/** Test doubles: D1 on node:sqlite (with the real migrations), fake Anthropic Messages responses, the fixture catalog. */
 import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
@@ -61,12 +61,12 @@ export function makeD1(): { db: D1Database; sqlite: DatabaseSync } {
   return { db: db as unknown as D1Database, sqlite };
 }
 
+/** The defaults of a deployment with a key: no spend cap (caps are opt-in). */
 export const SETTINGS: Settings = {
   modelEnabled: true,
-  via: 'meta',
   apiKey: 'test-key',
-  dailyCapUsd: 3,
-  totalCapUsd: 40,
+  dailyCapUsd: null,
+  totalCapUsd: null,
   timeoutMs: 2000,
   submitHourlyCap: 20,
   tools: 'all',
@@ -109,31 +109,42 @@ export function harness(fake: FakeFetch | null, settings: Partial<Settings> = {}
   };
 }
 
+/** The API's own counts: 2,000 uncached input tokens, 1,000 read from the prompt cache, none written to it. */
 export const USAGE = {
-  input_tokens: 3000,
-  input_tokens_details: { cached_tokens: 1000 },
+  input_tokens: 2000,
+  cache_creation_input_tokens: 0,
+  cache_read_input_tokens: 1000,
   output_tokens: 800,
-  output_tokens_details: { reasoning_tokens: 300 },
 };
 
-/** A Responses API body as Meta returns it, carrying `answer` as the output text. */
-export function metaResponse(answer: unknown, opts: { status?: string; usage?: unknown } = {}): Response {
+/** USAGE as the Worker counts it (src/meta.ts Usage): input_tokens is every input token. */
+export const USAGE_READ = { input_tokens: 3000, cached_tokens: 1000, cache_write_tokens: 0, output_tokens: 800 };
+
+/**
+ * A Messages API body as Anthropic returns it, carrying `answer` as the text block. A thinking block comes
+ * first, with its text omitted, as the model's responses do. `content` replaces the blocks.
+ */
+export function modelResponse(answer: unknown, opts: { stop_reason?: string | null; stop_details?: unknown; usage?: unknown; content?: unknown[] } = {}): Response {
   return Response.json({
-    id: 'resp_test',
-    object: 'response',
-    status: opts.status ?? 'completed',
-    model: 'muse-spark-1.3',
-    output: [
-      { type: 'reasoning', summary: [] },
-      {
-        type: 'message',
-        role: 'assistant',
-        content: [{ type: 'output_text', text: typeof answer === 'string' ? answer : JSON.stringify(answer) }],
-      },
+    id: 'msg_test',
+    type: 'message',
+    role: 'assistant',
+    model: 'claude-opus-5-5',
+    content: opts.content ?? [
+      { type: 'thinking', thinking: '', signature: 'sig_test' },
+      { type: 'text', text: typeof answer === 'string' ? answer : JSON.stringify(answer) },
     ],
-    usage: opts.usage ?? USAGE,
+    stop_reason: opts.stop_reason === undefined ? 'end_turn' : opts.stop_reason,
+    stop_sequence: null,
+    ...(opts.stop_details === undefined ? {} : { stop_details: opts.stop_details }),
+    usage: opts.usage === undefined ? USAGE : opts.usage,
   });
 }
+
+/** The answer's JSON schema in a request body (output_config.format). */
+export const schemaOf = (body: any): any => body.output_config.format.schema;
+/** Whether a request body is the keyword call (expand.ts) rather than the match call. */
+export const isKeywordsCall = (body: any): boolean => 'keywords' in schemaOf(body).properties;
 
 export function answer(overrides: Partial<ModelAnswer> = {}): ModelAnswer {
   return {

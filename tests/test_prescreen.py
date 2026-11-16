@@ -181,8 +181,8 @@ def test_confident_screen_is_stored_without_review(tmp_path: Path, ledgers: dict
     assert request["path"] == "/v1/chat/completions" and request["model"] == SCREEN_MODEL
     assert request["tool_choice"]["function"]["name"] == "record_prescreen"
     assert request["reasoning_effort"] == "low"
-    assert summary["cost_usd"]["baseten"] == pytest.approx((2000 * 1.25 + 200 * 4.25) / 1e6)
-    assert ledgers["screen_ledger"].spend_summary()["total_usd"] == pytest.approx(summary["cost_usd"]["baseten"])
+    assert summary["cost_usd"]["screen"] == pytest.approx((2000 * 0.10 + 200 * 0.50) / 1e6)  # Claude Haiku
+    assert ledgers["screen_ledger"].spend_summary()["total_usd"] == pytest.approx(summary["cost_usd"]["screen"])
     assert ledgers["review_ledger"].spend_summary()["total_usd"] == 0
     funnel = db.funnel()["prescreen"]
     assert funnel["status"] == "ran" and funnel["kept"] == 1 and funnel["decided_by"] == {"screen": 1}

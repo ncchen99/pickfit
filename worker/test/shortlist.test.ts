@@ -8,7 +8,7 @@ import { EMPTY_FORM, renderResults } from '../src/page.ts';
 import { withLang } from '../src/i18n.ts';
 import { queryTerms, relevance, terms } from '../src/relevance.ts';
 import { rankByRules } from '../src/rules.ts';
-import { answer, fixtureCatalog, harness, metaResponse } from './helpers.ts';
+import { answer, fixtureCatalog, harness, isKeywordsCall, modelResponse } from './helpers.ts';
 
 const fixtures = fixtureCatalog();
 const fixture = (slug: string) => fixtures.bySlug.get(slug)!;
@@ -125,11 +125,11 @@ const ZH_NEED = '我想把會議錄音轉成逐字稿 (secret-xyz)';
 
 function twoCalls(keywords: Response | (() => Response), pick = 'quiet-transcriber') {
   return (body: any) =>
-    body.text.format.name === 'pickfit_keywords'
+    isKeywordsCall(body)
       ? typeof keywords === 'function'
         ? keywords()
         : keywords
-      : metaResponse(
+      : modelResponse(
           answer({
             picks: [{ slug: pick, fit: 'Transcribes recordings offline.', reasons: [{ claim: 'Free', field: 'pricing', value: 'free' }], tradeoffs: [], vs_well_known: null }],
             best_free_slug: null,
@@ -137,8 +137,8 @@ function twoCalls(keywords: Response | (() => Response), pick = 'quiet-transcrib
         );
 }
 
-test('a request over MAX_CARDS gets English keywords from muse-spark-1.3 first (here a Chinese one)', async () => {
-  const h = harness(twoCalls(() => metaResponse({ keywords: ['transcribe audio', 'speech to text', 'recordings'] })));
+test('a request over MAX_CARDS gets English keywords from claude-opus-5-5 first (here a Chinese one)', async () => {
+  const h = harness(twoCalls(() => modelResponse({ keywords: ['transcribe audio', 'speech to text', 'recordings'] })));
   h.deps.catalog = asCatalog(bulk());
   const out = await findSoftware({ need: ZH_NEED }, h.deps);
   await h.settle();
@@ -146,11 +146,11 @@ test('a request over MAX_CARDS gets English keywords from muse-spark-1.3 first (
   assert.equal(h.requests.length, 2);
   const [kw, match] = h.requests.map((r) => r.body);
   assert.equal(kw.model, MATCH_MODEL);
-  assert.equal(kw.store, false);
-  assert.deepEqual(kw.reasoning, { effort: 'minimal' });
-  assert.equal(kw.text.format.strict, true);
-  assert.match(kw.input[1].content, /<request>\n.*secret-xyz.*\n<\/request>/);
-  assert.ok(match.text.format.schema.properties.picks.items.properties.slug.enum.includes('quiet-transcriber'));
+  assert.equal(kw.output_config.effort, 'low');
+  assert.equal(kw.output_config.format.type, 'json_schema');
+  assert.equal(kw.max_tokens, 2000); // room for thinking beside a 100-token answer
+  assert.match(kw.messages[0].content, /<request>\n.*secret-xyz.*\n<\/request>/);
+  assert.ok(match.output_config.format.schema.properties.picks.items.properties.slug.enum.includes('quiet-transcriber'));
   assert.equal(out.matched_by, MATCH_MODEL);
   assert.deepEqual(out.picks.map((p) => p.slug), ['quiet-transcriber']);
   assert.match(out.coverage_note ?? '', /72 tools met the conditions; the 60 compared were the 1 whose profiles best match/);
@@ -165,13 +165,13 @@ test('a request over MAX_CARDS gets English keywords from muse-spark-1.3 first (
 });
 
 test('when the keyword call fails the rules scorer chooses the cards (Chinese through the dictionary) and matching goes on', async () => {
-  for (const failure of [new Response('{}', { status: 500 }), metaResponse('not json')]) {
+  for (const failure of [new Response('{}', { status: 500 }), modelResponse('not json')]) {
     const h = harness(twoCalls(() => failure.clone()));
     h.deps.catalog = asCatalog(bulk());
     const out = await findSoftware({ need: ZH_NEED }, h.deps);
     await h.settle();
     assert.equal(h.requests.length, 2);
-    assert.ok(h.requests[1].body.text.format.schema.properties.picks.items.properties.slug.enum.includes('quiet-transcriber'));
+    assert.ok(h.requests[1].body.output_config.format.schema.properties.picks.items.properties.slug.enum.includes('quiet-transcriber'));
     assert.equal(out.matched_by, MATCH_MODEL);
     const row = h.sqlite.prepare('SELECT need FROM events WHERE type = ?').get('find') as any;
     assert.ok(JSON.parse(row.need).shortlist.by_relevance >= 1);
@@ -181,7 +181,7 @@ test('when the keyword call fails the rules scorer chooses the cards (Chinese th
   const h = harness(twoCalls(() => new Response('{}', { status: 500 }), 'sheet-69'));
   h.deps.catalog = asCatalog(bulk());
   const out = await findSoftware({ need: '我想要一個好用的東西 (secret-xyz)' }, h.deps);
-  assert.ok(!h.requests[1].body.text.format.schema.properties.picks.items.properties.slug.enum.includes('quiet-transcriber'));
+  assert.ok(!h.requests[1].body.output_config.format.schema.properties.picks.items.properties.slug.enum.includes('quiet-transcriber'));
   assert.match(out.coverage_note ?? '', /no profile matched the request's words/);
 });
 
@@ -189,7 +189,7 @@ test('the results page leaves out how find_software drew the shortlist, in both 
   // find_software's own output for a catalog over MAX_CARDS: the note for agents says how many met the conditions and
   // which were compared; the page shows neither (pickfit's process, on /how), in English or in Chinese.
   const catalog = asCatalog(bulk());
-  const byWords = harness(twoCalls(() => metaResponse({ keywords: ['transcribe audio', 'speech to text', 'recordings'] })));
+  const byWords = harness(twoCalls(() => modelResponse({ keywords: ['transcribe audio', 'speech to text', 'recordings'] })));
   byWords.deps.catalog = catalog;
   const noWords = harness(twoCalls(() => new Response('{}', { status: 500 }), 'sheet-69'));
   noWords.deps.catalog = catalog;
@@ -214,13 +214,13 @@ test('the results page leaves out how find_software drew the shortlist, in both 
 });
 
 test('English requests get keywords too (synonyms); none when at most MAX_CARDS tools meet the conditions', async () => {
-  const h = harness(twoCalls(() => metaResponse({ keywords: ['transcribe', 'speech to text'] })));
+  const h = harness(twoCalls(() => modelResponse({ keywords: ['transcribe', 'speech to text'] })));
   h.deps.catalog = asCatalog(bulk());
   const out = await findSoftware({ need: 'dictate my notes' }, h.deps);
   assert.equal(h.requests.length, 2);
-  assert.ok(h.requests[1].body.text.format.schema.properties.picks.items.properties.slug.enum.includes('quiet-transcriber'));
+  assert.ok(h.requests[1].body.output_config.format.schema.properties.picks.items.properties.slug.enum.includes('quiet-transcriber'));
   assert.deepEqual(out.picks.map((p) => p.slug), ['quiet-transcriber']);
-  const small = harness(twoCalls(() => metaResponse({ keywords: [] }), 'fixture-transcribe'));
+  const small = harness(twoCalls(() => modelResponse({ keywords: [] }), 'fixture-transcribe'));
   await findSoftware({ need: ZH_NEED }, small.deps);
   assert.equal(small.requests.length, 1);
   await small.settle();
@@ -228,7 +228,7 @@ test('English requests get keywords too (synonyms); none when at most MAX_CARDS 
   assert.equal(JSON.parse(row.need).shortlist, null);
 });
 
-test('rules only (MATCH_MODE off): no Meta call at all, picks ranked by relevance', async () => {
+test('rules only (MATCH_MODE off): no model call at all, picks ranked by relevance', async () => {
   const h = harness(null, { modelEnabled: false });
   h.deps.catalog = asCatalog(bulk());
   const en = await findSoftware({ need: 'transcribe my audio recordings to text' }, h.deps);
@@ -246,8 +246,8 @@ test('rules only (MATCH_MODE off): no Meta call at all, picks ranked by relevanc
 
 test('degraded after the keywords: the rules use them', async () => {
   const h = harness((body) =>
-    body.text.format.name === 'pickfit_keywords'
-      ? metaResponse({ keywords: ['transcribe audio', 'recordings'] })
+    isKeywordsCall(body)
+      ? modelResponse({ keywords: ['transcribe audio', 'recordings'] })
       : new Response('{}', { status: 400 }),
   );
   h.deps.catalog = asCatalog(bulk());

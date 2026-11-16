@@ -1,9 +1,9 @@
 /** Step B of find_software: hard conditions, applied by code before any model sees a card. */
-import { isWebApp, nameKey, verifiedOn, webCheck, type Arch, type Entry, type OS } from './catalog.ts';
+import { isWebApp, nameKey, verifiedOn, webCheck, type Arch, type Entry, type NamedCategory, type OS } from './catalog.ts';
 import { relevance, rulesRelevance } from './relevance.ts';
 
 export interface Conditions {
-  category?: 'dev_cli' | 'local_ai' | 'mcp_server' | 'any';
+  category?: NamedCategory | 'any';
   os?: OS;
   arch?: Arch;
   budget?: 'free_only' | 'free_or_paid';
@@ -63,7 +63,7 @@ export const TREASURE_SLOTS = 10;
 export interface Query {
   terms: string[];
   current?: string;
-  /** "bm25" (default): with Meta's keywords, for the model. "rules": no keywords (rules only, or the call failed). */
+  /** "bm25" (default): with the model's keywords, for the match call. "rules": no keywords (rules only, or the call failed). */
   scorer?: 'bm25' | 'rules';
 }
 

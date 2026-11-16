@@ -1,0 +1,765 @@
+{
+  "schema_version": "software.v1",
+  "slug": "trufflehog",
+  "repo_id": "gh:77726177",
+  "name": "TruffleHog",
+  "summary": "Command-line tool that finds leaked credentials in git repos, cloud storage, filesystems and other sources, and checks whether they are live.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "security_net",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "credentials",
+    "devsecops",
+    "dynamic-analysis",
+    "precommit",
+    "scanning",
+    "secret",
+    "secret-management",
+    "secrets",
+    "security",
+    "security-tools"
+  ],
+  "use_cases": [
+    "scan a git repository for verified secrets",
+    "scan an S3 bucket for leaked credentials",
+    "scan a Docker image for secrets",
+    "check pull request branches for secrets in CI",
+    "scan local files or directories for credentials"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "discover secrets in git, chats, wikis, buckets",
+    "classify over 800 secret types",
+    "verify whether found credentials are live",
+    "analyze permissions of leaked API keys"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T19:37:27.184291Z",
+    "run_id": "verify-trufflehog-20261116-033502-2eeb",
+    "open_hint": "Run `trufflehog filesystem <path> --no-verification --no-update` to scan local files or folders for secrets.",
+    "features": [
+      {
+        "feature": "discover secrets in git, chats, wikis, buckets",
+        "title": "Find secrets in git, chats, wikis and buckets",
+        "steps": [
+          "Scan files or folders with `trufflehog filesystem <file> <dir> --no-verification --no-update`.",
+          "Scan a local git repository with `trufflehog git file://<repo> --no-verification --no-update`.",
+          "Scan a remote repository with `trufflehog git <repo-url> --results=verified --no-update`."
+        ]
+      },
+      {
+        "feature": "classify over 800 secret types",
+        "title": "Identify over 800 types of secrets",
+        "steps": [
+          "Run `trufflehog filesystem <file> <dir> --no-verification --no-update`.",
+          "Read the `Detector Type` line in each result to see what kind of secret was found."
+        ]
+      },
+      {
+        "feature": "verify whether found credentials are live",
+        "title": "Check whether found credentials still work",
+        "steps": [
+          "Run `trufflehog git <repo-url> --results=verified --no-update` to show only credentials confirmed as live.",
+          "Look for \"Found verified result\" in the output."
+        ]
+      },
+      {
+        "feature": "analyze permissions of leaked API keys",
+        "title": "Analyze permissions of leaked API keys",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": "https://trufflesecurity.com",
+  "repo": {
+    "url": "https://github.com/trufflesecurity/trufflehog",
+    "full_name": "trufflesecurity/trufflehog",
+    "created_at": "2016-12-31T05:08:12Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install trufflehog",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "trufflehog git https://github.com/trufflesecurity/test_keys --results=verified",
+        "expected_signal": "Found verified result 🐷🔑"
+      },
+      "first_task": "trufflehog git https://github.com/trufflesecurity/test_keys --results=verified"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-trufflehog-20261116-033502-2eeb",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh -o /tmp/install.sh",
+          "purpose": "download the official install.sh (read before running)"
+        },
+        {
+          "command": "sh /tmp/install.sh -b /home/sbx/.local/bin",
+          "purpose": "run install.sh with -b ~/.local/bin, which installs trufflehog v3.99.9 after checking its sha256"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "trufflehog --version",
+        "expected_signal": "trufflehog 3.99.9"
+      },
+      "first_task": "trufflehog filesystem scan/file1.txt scan/dir --no-verification --no-update"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "docker",
+      "steps": [
+        {
+          "command": "docker run --rm -it -v \"$PWD:/pwd\" trufflesecurity/trufflehog:latest github --repo https://github.com/trufflesecurity/test_keys",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "trufflehog git https://github.com/trufflesecurity/test_keys --results=verified",
+        "expected_signal": "Found verified result 🐷🔑"
+      },
+      "first_task": "trufflehog git https://github.com/trufflesecurity/test_keys --results=verified"
+    }
+  },
+  "pricing": {
+    "model": "freemium",
+    "note": null
+  },
+  "open_source": true,
+  "license": "AGPL-3.0",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v3.99.9",
+    "published_at": "2026-11-12T21:05:01Z",
+    "url": "https://github.com/trufflesecurity/trufflehog/releases/tag/v3.99.9"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T03:36:42.078402+08:00",
+    "runs": [
+      {
+        "id": "verify-trufflehog-20261116-033502-2eeb",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T03:36:42.078402+08:00",
+        "tool_version": "3.99.9",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh -o /tmp/install.sh",
+            "purpose": "download the official install.sh (read before running)"
+          },
+          {
+            "command": "sh /tmp/install.sh -b /home/sbx/.local/bin",
+            "purpose": "run install.sh with -b ~/.local/bin, which installs trufflehog v3.99.9 after checking its sha256"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "trufflehog --version",
+            "expected_signal": "trufflehog 3.99.9",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "trufflehog 3.99.9",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "trufflehog filesystem scan/file1.txt scan/dir --no-verification --no-update",
+            "expected_signal": "Detector Type: Github",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Detector Type: Github",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/scan/dir && cat > /home/sbx/work/scan/file1.txt <<'EOF'\n[default]\naws_access_key_id = AKIAQX7RZ4MWT2LBNV6K\naws_secret_access_key = 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\nEOF\ncat > /home/sbx/work/scan/dir/config.env <<'EOF'\nGITHUB_TOKEN=ghp_R7tKq2LmX9vB4nWc8Zp1Hs6Jd3Fy5Ga0Ue7T\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "trufflehog git file://localrepo --no-verification --no-update",
+            "expected_signal": "Repository: file:///home/sbx/work/localrepo",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Repository: file:///home/sbx/work/localrepo",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/scan/dir && cat > /home/sbx/work/scan/file1.txt <<'EOF'\n[default]\naws_access_key_id = AKIAQX7RZ4MWT2LBNV6K\naws_secret_access_key = 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\nEOF\ncat > /home/sbx/work/scan/dir/config.env <<'EOF'\nGITHUB_TOKEN=ghp_R7tKq2LmX9vB4nWc8Zp1Hs6Jd3Fy5Ga0Ue7T\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p /home/sbx/work/localrepo && cd /home/sbx/work/localrepo && git init -q && cp ../scan/file1.txt creds && git add creds && git -c user.name=t -c user.email=t@example.com commit -qm add",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "trufflehog git https://github.com/trufflesecurity/test_keys --results=verified --no-update",
+            "expected_signal": "Found verified result 🐷🔑",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✅ Found verified result 🐷🔑",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl ... install.sh | sh -s -- -b /usr/local/bin",
+            "actually_needed": "-b /home/sbx/.local/bin, because /usr/local/bin cannot be written without root",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Expected output shows AWS key AKIAYVP4CIPPERUVIFXG in commit fbc14303, file keys, line 4",
+            "actually_needed": "Nothing. The current test_keys repo returns other verified results (an AWS canary key in new_key and a URI in keys)",
+            "kind": "note"
+          },
+          {
+            "readme_said": "trufflehog git https://github.com/trufflesecurity/test_keys --results=verified",
+            "actually_needed": "Network access to GitHub and AWS. Cloning and verifying both need it, so this check cannot pass on an offline rerun",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The filesystem scan found AWS and Github secrets, the git scan found an AWS key with Repository file:///home/sbx/work/localrepo, and --version printed trufflehog 3.99.9, all with exit 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-trufflehog-20261116-033502-2eeb/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-trufflehog-20261116-033502-2eeb/check-1-cmd5.judged.png",
+            "runs/verify/verify-trufflehog-20261116-033502-2eeb/check-2-cmd8.judged.png",
+            "runs/verify/verify-trufflehog-20261116-033502-2eeb/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.284928,
+        "features": [
+          {
+            "feature": "discover secrets in git, chats, wikis, buckets",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2,
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "classify over 800 secret types",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "verify whether found credentials are live",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "analyze permissions of leaked API keys",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "trufflehog analyze needs a real live API key, and this box has none"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T03:37:09+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/trufflesecurity/trufflehog@72cae0fbb6d5",
+      "go.mod"
+    ],
+    "packages_checked": 311,
+    "findings_total": 3,
+    "advisories_total": 3,
+    "findings": [
+      {
+        "package": "go:github.com/docker/docker",
+        "version": "v28.5.2+incompatible",
+        "advisory": "GHSA-rg2x-37c3-w2rh",
+        "cves": [
+          "CVE-2026-42306"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "Docker: Race condition in docker cp allows bind mount redirection to host path",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/docker/docker",
+        "version": "v28.5.2+incompatible",
+        "advisory": "GHSA-x86f-5xw2-fm2r",
+        "cves": [
+          "CVE-2026-41567"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "Docker: `PUT /containers/{id}/archive` executes container binary on the host",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/docker/docker",
+        "version": "v28.5.2+incompatible",
+        "advisory": "GO-2026-4887",
+        "cves": [
+          "CVE-2026-34040"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "Moby has AuthZ plugin bypass when provided oversized request bodies in github.com/docker/docker",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T00:52:33+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 99.1,
+      "signals": {
+        "stars": 29368,
+        "monthly_downloads": 8997,
+        "forks": 2754,
+        "dependents": null,
+        "release_downloads": 2726807,
+        "hn_top_score": 84,
+        "registries_count": 1
+      },
+      "age_days": 3606,
+      "packages": [
+        "homebrew:trufflehog"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.71
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:52:25.541783+08:00",
+      "sources_sha": "0965ec0ca1cc0809be9527bb459ecdb64d3ea6e493caa880f4b8588e1fde917d",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "TruffleHog is the most powerful secrets **Discovery, Classification, Validation,** and **Analysis** tool."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "topics: credentials, devsecops, dynamic-analysis, precommit, scanning, secret, secret-management, secrets, security, security-tools, trufflehog, verification"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Ensure Docker engine is running before executing the following commands:"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "trufflehog git https://github.com/trufflesecurity/test_keys --results=verified"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "TruffleHog supports defining [custom regex detectors](#custom-regex-detector-alpha)\nand multiple sources in a configuration file provided via the `--config` flag."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "- That means no secrets were detected"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "trufflehog_3.99.9_darwin_amd64.tar.gz, trufflehog_3.99.9_darwin_arm64.tar.gz, trufflehog_3.99.9_linux_amd64.tar.gz"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/trufflesecurity/trufflehog",
+      "fetched_at": "2026-11-16T00:50:45+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/trufflesecurity/trufflehog/blob/main/README.md",
+      "fetched_at": "2026-11-16T00:50:43+08:00"
+    },
+    {
+      "id": "release:v3.99.9",
+      "kind": "release",
+      "url": "https://github.com/trufflesecurity/trufflehog/releases/tag/v3.99.9",
+      "fetched_at": "2026-11-16T00:50:43+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "TruffleHog has a sub-command for each source of data that you may want to scan:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "trufflehog git https://github.com/trufflesecurity/test_keys --results=verified",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Find, verify, and analyze leaked credentials",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Find, verify, and analyze leaked credentials",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "TruffleHog is the most powerful secrets **Discovery, Classification, Validation,** and **Analysis** tool.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "release:v3.99.9",
+      "quote": "trufflehog_3.99.9_darwin_amd64.tar.gz, trufflehog_3.99.9_darwin_arm64.tar.gz, trufflehog_3.99.9_linux_amd64.tar.gz, trufflehog_3.99.9_linux_arm64.tar.gz, trufflehog_3.99.9_windows_amd64.tar.gz",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "--[no-]no-verification     Don't verify the results.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:45+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:45+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:45+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:45+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:45+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v3.99.9",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:43+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Scan a repo for only verified secrets",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Scan an S3 bucket for high-confidence results (verified + unknown)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Scan a Docker image for only verified secrets",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Scan in CI",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Scan individual files or directories",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "TruffleHog can look for secrets in many places including Git, chats, wikis, logs, API testing platforms, object stores, filesystems and more.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "TruffleHog classifies over 800 secret types",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "it can also log in to confirm if that secret is live or not",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Analyze API keys for fine-grained permissions information.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install trufflehog",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -sSfL https://raw.githubusercontent.com/trufflesecurity/trufflehog/main/scripts/install.sh | sh -s -- -b /usr/local/bin",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "docker run --rm -it -v \"$PWD:/pwd\" trufflesecurity/trufflehog:latest github --repo https://github.com/trufflesecurity/test_keys",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "We have an enterprise product that can help!",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "it can also log in to confirm if that secret is live or not",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T00:50:56+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T00:50:43+08:00",
+  "updated_at": "2026-11-16T03:37:09+08:00"
+}

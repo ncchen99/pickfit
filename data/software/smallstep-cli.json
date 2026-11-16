@@ -1,0 +1,701 @@
+{
+  "schema_version": "software.v1",
+  "slug": "smallstep-cli",
+  "repo_id": "gh:141352703",
+  "name": "Step CLI",
+  "summary": "Command-line tool for building, operating and automating PKI workflows, X.509 and crypto operations, and a client for the step-ca certificate authority.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "security_net",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "certificate",
+    "cryptography",
+    "encryption",
+    "jose",
+    "jwe",
+    "jws",
+    "jwt",
+    "mfa",
+    "oath",
+    "oauth"
+  ],
+  "use_cases": [
+    "inspect a remote server's TLS certificate",
+    "sign, verify and inspect JWTs",
+    "generate and verify TOTP tokens",
+    "get OAuth access tokens at the command line"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "create, revoke, validate and bundle X.509 certificates",
+    "administer and use a step-ca or ACME CA",
+    "work with JWTs and JOSE constructs",
+    "create and manage SSH certificates"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T19:19:18.434156Z",
+    "run_id": "verify-smallstep-cli-20261116-030509-40f7",
+    "open_hint": "Run `step version` to confirm it works, then `step help` to see the available commands.",
+    "features": [
+      {
+        "feature": "create, revoke, validate and bundle X.509 certificates",
+        "title": "Create, revoke, check and bundle X.509 certificates",
+        "steps": [
+          "Create a root CA with `step certificate create \"<root name>\" root.crt root.key --profile root-ca --no-password --insecure -f`, then a leaf with `step certificate create <hostname> leaf.crt leaf.key --",
+          "Check the leaf against the root with `step certificate verify leaf.crt --roots root.crt`.",
+          "Bundle the certificates with `step certificate bundle leaf.crt root.crt bundle.crt` and view one with `step certificate inspect leaf.crt --short`."
+        ]
+      },
+      {
+        "feature": "administer and use a step-ca or ACME CA",
+        "title": "Run and use a step-ca or ACME certificate authority",
+        "steps": [
+          "Set up a new CA with `step ca init --ssh --name <CA name> --dns <hostname> --address <ip:port> --provisioner <email> --password-file <file> --deployment-type standalone`.",
+          "Look for the message \"Your PKI is ready to go.\"",
+          "Run `step help ca` to see how to issue certificates for your services."
+        ]
+      },
+      {
+        "feature": "work with JWTs and JOSE constructs",
+        "title": "Work with JWTs and JOSE objects",
+        "steps": [
+          "Create a key pair with `step crypto jwk create pub.json priv.json --kty EC --no-password --insecure -f`.",
+          "Sign a token with `step crypto jwt sign --key priv.json --iss <issuer> --aud <audience> --sub <subject> --exp <unix time> < /dev/null > <file>`.",
+          "Verify it with `step crypto jwt verify --key pub.json --iss <issuer> --aud <audience> < <file>`."
+        ]
+      },
+      {
+        "feature": "create and manage SSH certificates",
+        "title": "Create and manage SSH certificates",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": "https://smallstep.com/cli",
+  "repo": {
+    "url": "https://github.com/smallstep/cli",
+    "full_name": "smallstep/cli",
+    "created_at": "2018-07-17T22:41:15Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install step",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "step certificate inspect https://smallstep.com"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-smallstep-cli-20261116-030509-40f7",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/step && curl -fsSL -o /tmp/step/step.tgz https://dl.smallstep.com/cli/docs-cli-install/latest/step_linux_amd64.tar.gz && tar -xzf /tmp/step/step.tgz -C /tmp/step",
+          "purpose": "download and extract official step_linux_amd64 tarball"
+        },
+        {
+          "command": "install -m 755 /tmp/step/step_linux_amd64/bin/step ~/.local/bin/step && step version",
+          "purpose": "install binary into ~/.local/bin and print version"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "install -m 755 /tmp/step/step_linux_amd64/bin/step ~/.local/bin/step && step version",
+        "expected_signal": "Smallstep CLI/0.31.0 (linux/amd64)"
+      },
+      "first_task": "install -m 755 /tmp/step/step_linux_amd64/bin/step ~/.local/bin/step && step version"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "winget install Smallstep.step",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "step certificate inspect https://smallstep.com"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.31.0",
+    "published_at": "2026-09-25T20:09:06Z",
+    "url": "https://github.com/smallstep/cli/releases/tag/v0.31.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T03:07:57.885736+08:00",
+    "runs": [
+      {
+        "id": "verify-smallstep-cli-20261116-030509-40f7",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T03:07:57.885736+08:00",
+        "tool_version": "Smallstep CLI/0.31.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/step && curl -fsSL -o /tmp/step/step.tgz https://dl.smallstep.com/cli/docs-cli-install/latest/step_linux_amd64.tar.gz && tar -xzf /tmp/step/step.tgz -C /tmp/step",
+            "purpose": "download and extract official step_linux_amd64 tarball"
+          },
+          {
+            "command": "install -m 755 /tmp/step/step_linux_amd64/bin/step ~/.local/bin/step && step version",
+            "purpose": "install binary into ~/.local/bin and print version"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "install -m 755 /tmp/step/step_linux_amd64/bin/step ~/.local/bin/step && step version",
+            "expected_signal": "Smallstep CLI/0.31.0 (linux/amd64)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Smallstep CLI/0.31.0 (linux/amd64)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/sw && step certificate create \"Test Root\" root.crt root.key --profile root-ca --no-password --insecure -f && step certificate create example.test leaf.crt leaf.key --profile leaf --ca root.crt --ca-key root.key --no-password --insecure -f && step certificate verify leaf.crt --roots root.crt && step certificate bundle leaf.crt root.crt bundle.crt && step certificate inspect leaf.crt --short",
+            "expected_signal": "Issuer: Test Root",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Issuer: Test Root",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sw && cd /tmp/sw && rm -rf * && printf 'testpass123\\n' > pw.txt && printf 'hello' > payload.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/sw && step crypto jwk create pub.json priv.json --kty EC --no-password --insecure -f && step crypto jwt sign --key priv.json --iss me --aud you --sub test --exp $(( $(date +%s) + 600 )) < /dev/null > tok.jwt && step crypto jwt verify --key pub.json --iss me --aud you < tok.jwt",
+            "expected_signal": "\"alg\": \"ES256\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"alg\": \"ES256\",",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sw && cd /tmp/sw && rm -rf * && printf 'testpass123\\n' > pw.txt && printf 'hello' > payload.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/sw && STEPPATH=/tmp/sw/ca step ca init --ssh --name TestCA --dns localhost --address 127.0.0.1:9443 --provisioner admin@test --password-file pw.txt --deployment-type standalone",
+            "expected_signal": "Your PKI is ready to go.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Your PKI is ready to go. To generate certificates for individual services see 'step help ca'.",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/sw && cd /tmp/sw && rm -rf * && printf 'testpass123\\n' > pw.txt && printf 'hello' > payload.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "apt-get / dnf / pacman / apk install step-cli (run as root)",
+            "actually_needed": "No root here; used the official Linux binary tarball from dl.smallstep.com/cli/docs-cli-install/latest/step_linux_amd64.tar.gz and copied bin/step to ~/.local/bin",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "step certificate inspect https://smallstep.com",
+            "actually_needed": "Works (cmd 3) but needs network access, so not cited as an offline smoke test",
+            "kind": "note"
+          },
+          {
+            "readme_said": "step crypto jwt sign (payload optional)",
+            "actually_needed": "Without a payload argument it waits on stdin; redirect < /dev/null when non-interactive",
+            "kind": "note"
+          },
+          {
+            "readme_said": "step ssh certificate with offline step-ca",
+            "actually_needed": "Offline mode prompts on /dev/tty for the CA key password; had to add \"password\" to $STEPPATH/config/ca.json for non-interactive use",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exit 0 and show their expected signals: the leaf certificate inspect output with Issuer Test Root, the verified JWT with alg ES256, and the version line Smallstep CLI/0.31.0 (linux/amd64).",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-smallstep-cli-20261116-030509-40f7/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-smallstep-cli-20261116-030509-40f7/check-1-cmd5.judged.png",
+            "runs/verify/verify-smallstep-cli-20261116-030509-40f7/check-2-cmd8.judged.png",
+            "runs/verify/verify-smallstep-cli-20261116-030509-40f7/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.285299,
+        "features": [
+          {
+            "feature": "create, revoke, validate and bundle X.509 certificates",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "administer and use a step-ca or ACME CA",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "work with JWTs and JOSE constructs",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "create and manage SSH certificates",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T03:11:48+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/smallstep/cli@eed88c745ce5",
+      "go.mod"
+    ],
+    "packages_checked": 331,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T03:11:03+08:00",
+    "quality": {
+      "total": 84.7,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.55,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 87.5,
+      "signals": {
+        "stars": 4369,
+        "monthly_downloads": 664,
+        "forks": 326,
+        "dependents": null,
+        "release_downloads": 665106,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 3042,
+      "packages": [
+        "homebrew:step"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 10.59
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:11:03.852707+08:00",
+      "sources_sha": "194385945d244755c2e798b5519940487a0470feb2d0c7aa9b1fdc5494d57af2",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "`step` is an easy-to-use CLI tool for building, operating, and automating Public Key Infrastructure (PKI) systems and workflows."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "You can use it for many common crypto and X.509 operations—either independently, or with an online CA."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "apt-get update && apt-get install -y --no-install-recommends curl gpg ca-certificates"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install step"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "$ step certificate inspect https://smallstep.com"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Plugins must be available in your `$PATH` or in the `$STEPPATH/plugins`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "To uninstall, run brew uninstall step and remove the $HOME/.step configuration directory."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/smallstep/cli",
+      "fetched_at": "2026-11-16T00:50:45+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/smallstep/cli/blob/master/README.md",
+      "fetched_at": "2026-11-16T00:50:43+08:00"
+    },
+    {
+      "id": "release:v0.31.0",
+      "kind": "release",
+      "url": "https://github.com/smallstep/cli/releases/tag/v0.31.0",
+      "fetched_at": "2026-11-16T00:50:43+08:00"
+    },
+    {
+      "id": "docs1",
+      "kind": "website",
+      "url": "https://smallstep.com/docs/step-cli/installation/",
+      "fetched_at": "2026-11-16T02:59:23+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "`step` is an easy-to-use CLI tool",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:36+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "docs1",
+      "quote": "It's trivial to install the step binary on your local machine.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:36+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Work with X.509 (TLS/HTTPS) certificates.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:36+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "`step` is an easy-to-use CLI tool for building, operating, and automating Public Key Infrastructure (PKI) systems and workflows.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:36+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Step CLI",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:36+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "docs1",
+      "quote": "Select your operating system or infrastructure:\nmacOS\nLinux Packages",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:36+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:45+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:45+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:45+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:45+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:45+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.31.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T00:50:43+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Inspect](https://smallstep.com/docs/step-cli/reference/certificate/inspect/) and [lint](https://smallstep.com/docs/step-cli/reference/certificate/lint/) certificates on disk or in use by a remote server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:36+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "JSON Web Tokens (JWTs)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:36+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "TOTP tokens for multi-factor authentication (MFA)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:36+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Get OAuth access tokens and OIDC identity tokens at the command line from any provider.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:36+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Create, revoke, validate, lint, and bundle X.509 certificates.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:36+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Administer and use a [`step-ca`](https://github.com/smallstep/certificates) server, or any ACMEv2",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:36+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "A general-purpose crypto toolkit",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:36+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Create and manage SSH certificates",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:36+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "docs1",
+      "quote": "brew install step",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:36+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "docs1",
+      "quote": "apt-get update && apt-get -y install step-cli",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:36+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "docs1",
+      "quote": "winget install Smallstep.step",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T03:02:36+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T00:50:43+08:00",
+  "updated_at": "2026-11-16T03:11:48+08:00"
+}

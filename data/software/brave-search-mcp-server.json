@@ -1,0 +1,835 @@
+{
+  "schema_version": "software.v1",
+  "slug": "brave-search-mcp-server",
+  "repo_id": "gh:1001041900",
+  "name": "Brave Search MCP Server",
+  "summary": "MCP server that exposes the Brave Search API for web, local, place, image, video and news search, LLM context and summarization.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [
+    "search the web from an AI assistant",
+    "find local businesses with ratings and hours",
+    "retrieve web content for LLM grounding and RAG"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "web search via Brave Search API",
+    "image, video and news search",
+    "AI summaries of search results",
+    "LLM context retrieval for RAG"
+  ],
+  "why_worth_it": null,
+  "usage_guide": {
+    "model": "claude-opus-5-5",
+    "generated_at": "2026-11-15T18:12:52.664543Z",
+    "run_id": null,
+    "open_hint": null,
+    "features": [
+      {
+        "feature": "web search via Brave Search API",
+        "title": "Search the web with the Brave Search API",
+        "steps": []
+      },
+      {
+        "feature": "image, video and news search",
+        "title": "Search for images, videos and news",
+        "steps": []
+      },
+      {
+        "feature": "AI summaries of search results",
+        "title": "Get AI summaries of search results",
+        "steps": []
+      },
+      {
+        "feature": "LLM context retrieval for RAG",
+        "title": "Retrieve web content as LLM context for RAG",
+        "steps": []
+      }
+    ]
+  },
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/brave/brave-search-mcp-server",
+    "full_name": "brave/brave-search-mcp-server",
+    "created_at": "2025-06-12T18:09:34Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "node>=22"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": [
+      "Brave Search API key"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v2.1.4",
+    "published_at": "2026-09-17T14:47:14Z",
+    "url": "https://github.com/brave/brave-search-mcp-server/releases/tag/v2.1.4"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "needs_account",
+    "checked_at": "2026-11-16T01:55:07.993929+08:00",
+    "runs": [
+      {
+        "id": "verify-brave-search-mcp-server-20261116-015439-0bc0",
+        "level": "unverified",
+        "unverified_reason": "needs_account",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-16T01:55:07.993929+08:00",
+        "tool_version": null,
+        "install_method": "npm",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "npm install -g @brave/brave-search-mcp-server",
+            "purpose": "npm install -g @brave/brave-search-mcp-server"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "brave-search-mcp-server --help",
+            "expected_signal": "Usage: brave-search-mcp-server [options]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: brave-search-mcp-server [options]",
+            "setup": [
+              {
+                "command": "npm install -g @brave/brave-search-mcp-server",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 60 -- brave-search-mcp-server --transport stdio",
+            "expected_signal": "handshake: ok",
+            "exit_code": 2,
+            "passed": false,
+            "observed_excerpt": "Invalid configuration",
+            "setup": [
+              {
+                "command": "npm install -g @brave/brave-search-mcp-server",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "BRAVE_API_KEY (required)",
+            "actually_needed": "The server exits before the MCP initialize handshake when no API key is set, so even listing its tools needs a Brave Search API account.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-brave-search-mcp-server-20261116-015439-0bc0/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.10276
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "npx -y @brave/brave-search-mcp-server --transport stdio",
+    "client_configs": [
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"brave-search\": {\n      \"command\": \"docker\",\n      \"args\": [\"run\", \"-i\", \"--rm\", \"-e\", \"BRAVE_API_KEY\", \"docker.io/mcp/brave-search\"],\n      \"env\": {\n        \"BRAVE_API_KEY\": \"YOUR_API_KEY_HERE\"\n      }\n    }\n  }\n}"
+      },
+      {
+        "client": "claude_desktop",
+        "snippet": "{\n  \"mcpServers\": {\n    \"brave-search\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@brave/brave-search-mcp-server\", \"--transport\", \"http\"],\n      \"env\": {\n        \"BRAVE_API_KEY\": \"YOUR_API_KEY_HERE\"\n      }\n    }\n  }\n}"
+      },
+      {
+        "client": "vscode",
+        "snippet": "{\n  \"inputs\": [\n    {\n      \"password\": true,\n      \"id\": \"brave-api-key\",\n      \"type\": \"promptString\",\n      \"description\": \"Brave Search API Key\",\n    }\n  ],\n  \"servers\": {\n    \"brave-search-mcp-server\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@brave/brave-search-mcp-server\", \"--transport\", \"stdio\"],\n      \"env\": {\n        \"BRAVE_API_KEY\": \"${input:brave-api-key}\"\n      }\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "BRAVE_API_KEY",
+        "required": true,
+        "purpose": "Brave Search API key"
+      },
+      {
+        "name": "BRAVE_API_KEY_FILE",
+        "required": null,
+        "purpose": "path to file with API key"
+      },
+      {
+        "name": "BRAVE_MCP_TRANSPORT",
+        "required": false,
+        "purpose": "transport mode"
+      },
+      {
+        "name": "BRAVE_MCP_PORT",
+        "required": false,
+        "purpose": "HTTP server port"
+      },
+      {
+        "name": "BRAVE_MCP_HOST",
+        "required": false,
+        "purpose": "HTTP server host"
+      },
+      {
+        "name": "BRAVE_MCP_ALLOWED_ORIGINS",
+        "required": false,
+        "purpose": "allowed Origin headers"
+      },
+      {
+        "name": "BRAVE_MCP_ALLOWED_HOSTS",
+        "required": false,
+        "purpose": "allowed Host headers"
+      },
+      {
+        "name": "BRAVE_MCP_LOG_LEVEL",
+        "required": false,
+        "purpose": "logging level"
+      },
+      {
+        "name": "BRAVE_MCP_ENABLED_TOOLS",
+        "required": false,
+        "purpose": "tool whitelist"
+      },
+      {
+        "name": "BRAVE_MCP_DISABLED_TOOLS",
+        "required": false,
+        "purpose": "tool blacklist"
+      }
+    ],
+    "tools": [
+      "brave_web_search",
+      "brave_local_search",
+      "brave_video_search",
+      "brave_image_search",
+      "brave_news_search",
+      "brave_summarizer",
+      "brave_place_search",
+      "brave_llm_context"
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-16T01:55:16+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "npm:@brave/brave-search-mcp-server (fresh install, 97 packages)"
+    ],
+    "packages_checked": 95,
+    "findings_total": 5,
+    "advisories_total": 5,
+    "findings": [
+      {
+        "package": "npm:@modelcontextprotocol/sdk",
+        "version": "1.30.0",
+        "advisory": "GHSA-22jm-h49p-29qw",
+        "cves": [
+          "CVE-2026-111767"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.32.0",
+        "summary": "MCP TypeScript SDK: Experimental tasks were not tied to the session that created them",
+        "malicious": false
+      },
+      {
+        "package": "npm:@modelcontextprotocol/sdk",
+        "version": "1.30.0",
+        "advisory": "GHSA-46jr-4wx8-v453",
+        "cves": [
+          "CVE-2026-111768"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.32.0",
+        "summary": "MCP TypeScript SDK: One HTTP request within the default size limit could exhaust server memory during validation",
+        "malicious": false
+      },
+      {
+        "package": "npm:@modelcontextprotocol/sdk",
+        "version": "1.30.0",
+        "advisory": "GHSA-6qxp-vccf-f47h",
+        "cves": [
+          "CVE-2026-104850"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.31.0",
+        "summary": "MCP TypeScript SDK: OAuth client could send credentials to an authorization server chosen by the MCP server",
+        "malicious": false
+      },
+      {
+        "package": "npm:@modelcontextprotocol/sdk",
+        "version": "1.30.0",
+        "advisory": "GHSA-f897-62hf-6gxq",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "1.30.1",
+        "summary": "MCP TypeScript SDK: HTTP server transports and handlers did not limit request body size or JSON-RPC batch length",
+        "malicious": false
+      },
+      {
+        "package": "npm:zod",
+        "version": "4.3.6",
+        "advisory": "GHSA-mrhx-c7xc-m3w5",
+        "cves": [
+          "CVE-2023-54404"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.6.6",
+        "summary": "Zod can exhaust memory while validating oversized constrained collections",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-16T01:55:07+08:00",
+    "quality": {
+      "total": 69.0,
+      "confidence": 0.5,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.4562,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.6,
+      "signals": {
+        "stars": 1583,
+        "monthly_downloads": 173152,
+        "forks": 229,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 520,
+      "packages": [
+        "npm:@brave/brave-search-mcp-server"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.49
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:55:07.999080+08:00",
+      "sources_sha": "8e5dc7c88088103266e02c58f13370619d8ced6f1f12a30be81d01a729a8aac6",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "An MCP server implementation that integrates the Brave Search API, providing comprehensive search capabilities including web search, local business search, place search, image search, video search"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Retrieves pre-extracted web content optimized for AI agents, LLM grounding, and RAG pipelines."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "- Node.js 22.x or higher\n- npm\n- Brave Search API key"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "\"args\": [\"-y\", \"@brave/brave-search-mcp-server\", \"--transport\", \"stdio\"],"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Start fx, or type `/mcp reload` if it is already running. To verify the connection, type `/mcp list`."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "- `BRAVE_API_KEY`: Your Brave Search API key (required unless `BRAVE_API_KEY_FILE` is set)"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "This MCP server is licensed under the MIT License."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/brave/brave-search-mcp-server",
+      "fetched_at": "2026-11-16T01:54:22+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/brave/brave-search-mcp-server/blob/main/README.md",
+      "fetched_at": "2026-11-16T01:54:17+08:00"
+    },
+    {
+      "id": "release:v2.1.4",
+      "kind": "release",
+      "url": "https://github.com/brave/brave-search-mcp-server/releases/tag/v2.1.4",
+      "fetched_at": "2026-11-16T01:54:17+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "An MCP server implementation that integrates the Brave Search API",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Add this to your `claude_desktop_config.json`:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "An MCP server implementation",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "An MCP server implementation that integrates the Brave Search API, providing comprehensive search capabilities including web search, local business search, place search, image search, video search",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Brave Search MCP Server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Node.js 22.x or higher",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "integrates the Brave Search API",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "Sign up for a [Brave Search API account](https://brave.com/search/api/)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:54:22+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:54:22+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-16T01:54:22+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.1.4",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-16T01:54:17+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Performs comprehensive web searches with rich result types and advanced filtering options.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Searches for local businesses and places with detailed information including ratings, hours, and AI-generated descriptions.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Retrieves pre-extracted web content optimized for AI agents, LLM grounding, and RAG pipelines.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Performs comprehensive web searches with rich result types and advanced filtering options.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "image search, video search, news search",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Generates AI-powered summaries from web search results using Brave's summarization API.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Retrieves pre-extracted web content optimized for AI agents, LLM grounding, and RAG pipelines.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "`BRAVE_API_KEY`: Your Brave Search API key (required unless `BRAVE_API_KEY_FILE` is set)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "This project supports both STDIO and HTTP transports, with STDIO as the default mode.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "\"args\": [\"-y\", \"@brave/brave-search-mcp-server\", \"--transport\", \"stdio\"],",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"brave-search\": {\n      \"command\": \"docker\",\n      \"args\": [\"run\", \"-i\", \"--rm\", \"-e\", \"BRAVE_API_KEY\", \"docker.io/mcp/brave-search\"],\n      \"env\": {\n        \"BRAVE_API_KEY\": \"YOUR_API_KEY_HERE\"\n      }\n    }\n  }\n}",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"brave-search\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@brave/brave-search-mcp-server\", \"--transport\", \"http\"],\n      \"env\": {\n        \"BRAVE_API_KEY\": \"YOUR_API_KEY_HERE\"\n      }\n    }\n  }\n}",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/2",
+      "source_id": "readme",
+      "quote": "{\n  \"inputs\": [\n    {\n      \"password\": true,\n      \"id\": \"brave-api-key\",\n      \"type\": \"promptString\",\n      \"description\": \"Brave Search API Key\",\n    }\n  ],\n  \"servers\": {\n    \"brave-search-mcp-server\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@brave/brave-search-mcp-server\", \"--transport",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "BRAVE_API_KEY",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "BRAVE_API_KEY_FILE",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "BRAVE_MCP_TRANSPORT",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "BRAVE_MCP_PORT",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/4",
+      "source_id": "readme",
+      "quote": "BRAVE_MCP_HOST",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/5",
+      "source_id": "readme",
+      "quote": "BRAVE_MCP_ALLOWED_ORIGINS",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/6",
+      "source_id": "readme",
+      "quote": "BRAVE_MCP_ALLOWED_HOSTS",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/7",
+      "source_id": "readme",
+      "quote": "BRAVE_MCP_LOG_LEVEL",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/8",
+      "source_id": "readme",
+      "quote": "BRAVE_MCP_ENABLED_TOOLS",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/9",
+      "source_id": "readme",
+      "quote": "BRAVE_MCP_DISABLED_TOOLS",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "### Web Search (`brave_web_search`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "### Local Search (`brave_local_search`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "### Video Search (`brave_video_search`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "### Image Search (`brave_image_search`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "### News Search (`brave_news_search`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "### Summarizer Search (`brave_summarizer`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "### Place Search (`brave_place_search`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "### LLM Context (`brave_llm_context`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-16T01:54:39+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-16T01:54:17+08:00",
+  "updated_at": "2026-11-16T01:55:16+08:00"
+}
