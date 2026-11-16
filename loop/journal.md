@@ -163,3 +163,10 @@
 - 做了什麼：只有 macOS 版。11/4 的筆記：安裝檔是 `.pkg`，要裝到 `/usr/local/outset` 並放 LaunchDaemons、LaunchAgents，要管理者密碼；那次把 pkg 拆開後 `--version` 印得出 4.2.0，但寫不了 `/usr/local` 底下的記錄檔。沒有重跑。
 - 結果：park，留在 H-003（macOS 這邊由 harness 代跑 `/usr/sbin/installer`）。花費 US$0。
 - harness：無。
+
+## 2026-11-16 14:20 reverify:hal0 → parked (H-003)
+
+- 做了什麼：本機有候選、沒有抽取，抽取後在一般的箱子重跑一次。
+- 結果：未驗證，`needs_root`，沒有寫回。安裝腳本一定要 root：preflight 先用 apt 裝 jq，在 `/var/lib/dpkg/lock-frontend` 被拒；後面還要 cosign、podman，而且要 systemd 當 PID 1。README 另一條路是給 Proxmox 主機的。run `runs/verify/verify-hal0-20261116-140702-36ad`，38 秒。花費：抽取 US$0.092、模型 US$0.007、沙盒 US$0.002。
+- park，留在 H-003。它要的不只是幾個具名套件，是「在一台開好機的系統上以 root 安裝」，H-003 的做法就算做了也不一定夠，多半要 `--runtime vm` 加 systemd，或照實記成 pickfit 的環境驗不了。
+- harness：無。
