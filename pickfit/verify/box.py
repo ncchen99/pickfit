@@ -34,6 +34,11 @@ SANDBOX_DOCKERFILE = Path(__file__).with_name("sandbox.Dockerfile")
 BOX_USER = "sbx"
 BOX_HOME = "/home/sbx"
 BOX_WORKDIR = f"{BOX_HOME}/work"
+# The build box (pickfit verify --toolchain): Rust and Go as modal_box.TOOLCHAIN_INSTALL pins them, and the room
+# a build from source needs. The user's own limits (pids, open files, file size) stay as in every box.
+RUST_VERSION = "1.100.0"
+GO_VERSION = "1.27.4"
+TOOLCHAIN_LIMITS = {"cpus": 4.0, "memory_mb": 6144, "max_command_s": 1800}
 # Where user-level installs land: uv tool, pipx, `pip --user`, npm (prefix below), cargo, go.
 BOX_PATH = f"{BOX_HOME}/.local/bin:{BOX_HOME}/.cargo/bin:{BOX_HOME}/go/bin:/usr/local/bin:/usr/bin:/bin"
 # Only non-secret settings; nothing from the host environment is passed through.
@@ -115,6 +120,7 @@ class Box(ABC):
     gpu_name: str | None = None  # the card as nvidia-smi names it in the started box, e.g. "Tesla T4"
     display: str | None = None  # e.g. ":99" when an X server runs for GUI apps (gui.py)
     audio: bool = False  # a simulated microphone (audio.py) the box user's apps can record from
+    toolchain: bool = False  # a build box: C and C++ compilers, make, cmake, Rust and Go are installed
     # How the agent's instructions name the box and the box user's limits.
     kind: str = "Linux sandbox"
     user_rule: str = "You are not root: no sudo, no apt-get, nothing written outside $HOME and /tmp."
@@ -136,10 +142,12 @@ class Box(ABC):
                   "apps: start one with launch_gui." if self.display else "No GUI.")
         mic = (" A simulated microphone (PulseAudio, the default source; ALSA's default device goes to it): use "
                "listen to check a feature that records speech." if self.audio else "")
+        build = (f" Build tools: gcc, g++, clang, make, cmake, ninja, pkg-config; Rust {RUST_VERSION} (rustc, cargo); "
+                 f"Go {GO_VERSION}." if self.toolchain else "")
         return (f"Box: Debian-based Linux {self.arch}, user sbx (uid 1000, not root, no sudo), HOME={self.home}, "
                 f"work dir {self.workdir}. PATH starts with ~/.local/bin. Installed: python3.12 with pip, uv, pipx; "
-                "node 22 with npm (global prefix ~/.local); git, curl, unzip, xz, zstd. Network: on. No API keys, "
-                f"no accounts. {screen}{mic}")
+                f"node 22 with npm (global prefix ~/.local); git, curl, unzip, xz, zstd.{build} Network: on. "
+                f"No API keys, no accounts. {screen}{mic}")
 
     @abstractmethod
     def start(self) -> None:

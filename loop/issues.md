@@ -13,7 +13,7 @@ pickfit 的驗證環境自己的問題。每一段的標題列由 `scripts/loop_
 - tried: 11/16 第一種做法，修好。加了 `pickfit discover --repo owner/name`（`pickfit/discover/run.py` 的 `add_repos`）：不搜尋、不呼叫模型，向 GitHub 拿這個 repo 的資料、README、檔案清單，套規則，存成本機的候選；有紀錄的沿用紀錄的 category。接著 `pickfit extract --repo <repo_id> --model prod --limit 1` 抽取（ferro 一筆 US$0.113），`verify --batch --repo` 就選得到。做法和 `pickfit reverify`、`pickfit watch` 接一筆 repo 的流程一樣，只是拆成指令。名字現在指到另一個 repo（原本的被刪、名字被佔走）時不存，回報 `another_repository`。測試在 `tests/test_discover_named.py`（5 個）。驗收：ferro 的 dry-run 從 `0 to verify` 變成只列 ferro；原本選得到的 dog 照樣只列 dog；沒有候選的 bamboo-agent 也存得進來。沒動到箱子和映像，所以沒跑 `--limits-test`。
 - 還留著的落差：重新抽取的功能清單，用字可能和紀錄裡 `features` 的不一樣（`pickfit reverify` 在 README 改過時也是這樣）。寫回後要對齊，跑 `uv run pickfit profiles --features-only --slug <slug>`，這一步 loop 沒有做。
 
-## H-002 [open] 沙盒映像沒有編譯器與 Rust、Go 工具鏈
+## H-002 [fixing] 沙盒映像沒有編譯器與 Rust、Go 工具鏈
 
 reason: needs_toolchain
 
@@ -21,7 +21,18 @@ reason: needs_toolchain
 - symptom: 15 筆紀錄停在 `needs_toolchain`。映像是 `python:3.12-slim` 加少量套件（`pickfit/verify/sandbox.Dockerfile`），沒有 gcc、cargo、go，只能從原始碼建置的工具裝不起來。
 - reproduce: 佇列裡 note 是 `needs_toolchain` 的任一筆。
 - 方向（還沒試）：`modal_box.image_layers` 已經會依箱子種類（vm、gui、audio）在基底映像上加 apt 套件，可以照樣加一種帶工具鏈的箱子，只在安裝方式需要建置時用。使用者照安裝指南做的時候也得自己有工具鏈，這要寫進紀錄的 `prerequisites`，不能讓人以為不用。
-- tried:
+- 11/16 重現：bamboo-agent 在一般的箱子重跑（run `verify-bamboo-agent-20261116-122612-b589`，30 秒，US$0.006）。安裝腳本要 `sudo`，剩下的兩條路都是 `cargo install`，README 要 Rust 1.95 以上，agent 照規則不裝工具鏈，回報 `needs_toolchain`。
+- tried: 11/16 第一種做法。加了建置用的箱子 `pickfit verify --toolchain`（只有 Modal）：
+  - 映像 `pickfit-sbx-build:<hash>`：在基底映像上加 Debian 的 build-essential、clang、cmake、ninja、pkg-config、autoconf、automake、libtool、perl、protobuf-compiler 和幾個常用標頭（libssl-dev、zlib1g-dev、libffi-dev、libsqlite3-dev、libclang-dev）；Rust 1.100.0 和 Go 1.27.4 用官方發行檔，下載後先核對釘住的 SHA-256 才解開，裝在 `/usr/local`（`modal_box.TOOLCHAIN_INSTALL`）。授權記在 `NOTICE`。
+  - 箱子 4 vCPU、6 GiB、單一指令上限 30 分鐘，agent 的時間上限 45 分鐘（`box.TOOLCHAIN_LIMITS`、`cli.TOOLCHAIN_AGENT_S`）。箱子使用者照樣不是 root，行程數、開檔數、單檔大小的上限都沒動。
+  - agent 的提示只在這種箱子換兩句：原本「不要裝語言工具鏈，換別的候選」改成「沒有套件或發行檔可裝時，照 README 的指令建置」，並要求把建置用到的工具鏈記成一則 `note` 的 pitfall，讓照著做的人知道要先裝。候選清單上 cargo、go、source 的附註也跟著換。
+  - 測試：`tests/test_verify_toolchain.py`（4 個，先寫、先失敗）。沒有改既有的測試。
+  - 驗收：`--limits-test --runner modal --toolchain` 22/22 通過（`runs/verify/limits-modal-gvisor-20261116-123329.json`）。全部測試 1,795 個通過。原本失敗的 bamboo-agent 在建置箱子裡通過：`cargo install bamboo-agent --locked`，level `service`，全新箱子重播通過，judge 判 working（run `verify-bamboo-agent-20261116-123422-6720`，31 分鐘，模型 US$0.044，沙盒 US$0.223）。原本就通過的 fd 在同一種箱子重跑沒有變差：`function`、4 項功能 checked，紀錄裡原本是 3 項（run `verify-fd-20261116-123422-5bf4`，沒有寫回，那只是對照）。
+- 修好之後還留著的事：
+  - 建置很慢也比較貴。bamboo-agent 的 `cargo install` 在 4 vCPU 上跑了 12 到 18 分鐘，agent 和重播各建一次，一筆的沙盒費約 US$0.22，是一般箱子的一百倍左右。
+  - 箱子的 PATH 沒有 `~/.cargo/bin` 和 `~/go/bin`，agent 每個指令前面都加了 `export PATH=...`，這會跟著進安裝指南。要不要在建置箱子的 PATH 裡先加好，還沒做。
+  - 映像只有通用的編譯工具。要特定 `-dev` 套件的（ferro、hw-smi 要 OpenCL 標頭，ducklab 的桌面版要 GTK、WebKit）還是會停在缺套件，那是 H-003 的範圍。
+  - 在建置箱子裡，agent 會挑 cargo 而不挑發行檔（fd 那次就是）。所以 `--toolchain` 只給確定要建置的紀錄用，不要整批都加。
 
 ## H-003 [open] 沙盒使用者沒有 root，裝不了系統套件
 

@@ -44,7 +44,7 @@ from pickfit.schema import (COMMAND_MAX, SETUP_MAX, InstallMethod, PitfallKind, 
 from pickfit.verify import gui
 from pickfit.verify import gui_operate
 from pickfit.verify.audio import ListenArgs, run_listen
-from pickfit.verify.box import Box, BoxError, ExecResult
+from pickfit.verify.box import TOOLCHAIN_LIMITS, Box, BoxError, ExecResult
 from pickfit.verify import features as feature_checks
 from pickfit.verify.features import FINISH_FEATURES, FinishFeature, resolve_features
 from pickfit.verify.gui_operate import OperateArgs, box_home, run_operation, spec_problems
@@ -259,15 +259,38 @@ LISTEN_TOOL = _fn(
     ["command", "timeout_s", "feature", "check"])
 
 
+# What the instructions say about building from source, and what a build box (box.toolchain) is told instead.
+NO_TOOLCHAIN_RULE = "Do not install language toolchains (Rust, Go); pick another candidate."
+TOOLCHAIN_RULE = ("This box has a C and C++ compiler, make, cmake, Rust (cargo) and Go, as a developer's machine "
+                  "does: when no package or release binary installs the tool here, build it with the README's own "
+                  "command (cargo install, go install, make, cmake) and give the build a long timeout_s. Do not "
+                  "install another toolchain or another version of one. Record the toolchain the build needed as a "
+                  "pitfall of kind note, so a user knows to install it first.")
+NO_TOOLCHAIN_LEVEL = "a language toolchain you must not install (Rust, Go: needs_toolchain)"
+TOOLCHAIN_LEVEL = "a language toolchain this box does not have (a JDK, .NET, Zig: needs_toolchain)"
+# A build box's notes on the candidates that compile, in place of plan.NEEDS ("the box does not have").
+BUILD_NOTES = {"cargo": "compiles with the box's Rust toolchain; it can take many minutes",
+               "go": "compiles with the box's Go toolchain",
+               "source": "build from source with the box's compilers: slowest path, last resort"}
+
+
 def tools_for(box: Box) -> list[dict[str, Any]]:
     """The box's tools: GUI tools with a display, listen with a simulated microphone, and run_command naming the
     box's shell (bash, or pwsh in the Windows box)."""
     if box.display or box.audio:
         tools = GUI_TOOLS if box.display else TOOLS
         return [*tools[:-1], *([LISTEN_TOOL] if box.audio else []), FINISH_TOOL]
-    if box.shell == "bash":
+    if box.shell == "bash" and not box.toolchain:
         return TOOLS
     tools = json.loads(json.dumps(TOOLS))
+    if box.toolchain:  # a build may run longer than the usual ten minutes
+        longest = getattr(getattr(box, "limits", None), "max_command_s", TOOLCHAIN_LIMITS["max_command_s"])
+        for tool in tools:
+            if tool.get("name") == "run_command":
+                timeout = tool["parameters"]["properties"]["timeout_s"]
+                timeout["description"] = timeout["description"].replace("max 600", f"max {longest}")
+        if box.shell == "bash":
+            return tools
     for tool in tools:
         if tool.get("name") == "run_command":
             tool["description"] = tool["description"].replace(
@@ -663,7 +686,8 @@ def render_report(report: ReportedFailure) -> list[str]:
 def big_box(box: Box) -> str:
     """For a box sized for model weights (--memory-mb, --file-mb): how large a model fits, replacing the 300 MB rule."""
     lim = getattr(box, "limits", None)
-    if lim is None or (lim.memory_mb <= 2048 and lim.home_mb <= 1536):
+    usual = TOOLCHAIN_LIMITS["memory_mb"] if box.toolchain else 2048  # a build box's memory is for the build
+    if lim is None or (lim.memory_mb <= usual and lim.home_mb <= 1536):
         return ""
     fits = min(lim.memory_mb, lim.home_mb) / 1024 * 0.8
     return (f" This box is sized for model weights ({lim.memory_mb // 1024} GiB of memory, files up to "
@@ -706,7 +730,8 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
         "Install candidates ranked by pickfit (try in order; say why if you leave the order):",
     ]
     for c in plan.candidates:
-        note = f" ({c.note})" if c.note else ""
+        said = BUILD_NOTES.get(c.method, c.note) if box.toolchain else c.note
+        note = f" ({said})" if said else ""
         lines.append(f"{c.rank}. [{c.method}, {c.origin}] {c.command}{note}")
     if not plan.candidates:
         lines.append("(none found; read the README)")
@@ -874,6 +899,9 @@ class VerifyAgent:
             (MAC_GUI_RULES if box.os == "macos" else GUI_RULES) if box.display else "")
         if box.display and getattr(box, "runtime", None) == "gvisor":  # flatpak's sandbox needs gVisor's userns
             self.instructions += FLATPAK_RULE
+        if box.toolchain:  # a build from source is an install path here
+            self.instructions = (self.instructions.replace(NO_TOOLCHAIN_RULE, TOOLCHAIN_RULE)
+                                 .replace(NO_TOOLCHAIN_LEVEL, TOOLCHAIN_LEVEL))
         if box.gpu:  # a GPU example is a check here
             self.instructions = (self.instructions.replace("needs no account, API key, GPU or GUI",
                                                            "needs no account, API key or GUI (a GPU is here)")

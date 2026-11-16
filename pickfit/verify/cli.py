@@ -11,6 +11,7 @@ TART_MAX_VMS = 2  # Apple's limit on macOS VMs running at once on one Mac
 # Display boxes: room for operate_gui (one per listed feature) after the install and the launch.
 GUI_LIMITS = {"max_turns": 32, "max_commands": 20, "max_seconds": 35 * 60, "scope_cap_usd": 5.00}
 VBOX_MAX_VMS = 1  # one Windows base, reset from its snapshot for every box
+TOOLCHAIN_AGENT_S = 45 * 60  # --toolchain: a build from source runs once for the agent and once in the replay
 
 
 def add_parser(sub: argparse._SubParsersAction) -> None:
@@ -57,6 +58,10 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--audio", action="store_true",
                    help="Modal: a simulated microphone (PulseAudio) and the listen tool: pickfit speaks fresh words "
                         "into it and checks them in what the tool produced")
+    v.add_argument("--toolchain", action="store_true",
+                   help="Modal: a build box, for a tool whose only install path here is a build from source: gcc, "
+                        "g++, clang, make, cmake, Rust and Go in the image, 4 vCPU, 6 GiB and 30 minutes per command "
+                        "(the agent gets 45 minutes). The box user is still not root")
     v.add_argument("--memory-mb", type=int, default=None,
                    help="Modal: the box's memory (default 2048), for a model that needs more")
     v.add_argument("--file-mb", type=int, default=None,
@@ -79,15 +84,17 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
 
 def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64", gpu: str | None = None,
                 runtime: str = "gvisor", display: bool = False, audio: bool = False, memory_mb: int | None = None,
-                file_mb: int | None = None):
+                file_mb: int | None = None, toolchain: bool = False):
     """(run_id, role) -> an unstarted box of the chosen runner."""
-    from pickfit.verify.box import BoxLimits, DockerBox
+    from pickfit.verify.box import TOOLCHAIN_LIMITS, BoxLimits, DockerBox
 
-    if runner != "modal" and (runtime != "gvisor" or audio or memory_mb or file_mb):
-        raise ValueError("--runtime, --audio, --memory-mb and --file-mb need --runner modal")
+    if runner != "modal" and (runtime != "gvisor" or audio or memory_mb or file_mb or toolchain):
+        raise ValueError("--runtime, --audio, --toolchain, --memory-mb and --file-mb need --runner modal")
     if display and runner not in ("modal", "tart"):
         raise ValueError("--display needs --runner modal or tart")
     sized = {k: v for k, v in (("memory_mb", memory_mb), ("home_mb", file_mb)) if v}
+    if toolchain:  # room for a build; a size that was asked for wins
+        sized = {**TOOLCHAIN_LIMITS, **sized}
     if runner == "tart":
         if gpu:
             raise ValueError("--gpu needs --runner modal")
@@ -106,7 +113,7 @@ def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64", 
 
         return lambda run_id, role: ModalBox(tags={"pickfit.run": run_id, "pickfit.role": role},
                                              limits=BoxLimits(lifetime_s=lifetime_s, **sized), gpu=gpu,
-                                             runtime=runtime, display=display, audio=audio)
+                                             runtime=runtime, display=display, audio=audio, toolchain=toolchain)
     if gpu:
         raise ValueError("--gpu needs --runner modal")
     return lambda run_id, role: DockerBox(platform=platform, labels={"pickfit.run": run_id, "pickfit.role": role},
@@ -139,8 +146,9 @@ def run(args: argparse.Namespace) -> int:
         return 0
     if args.rejudge_features:
         return _rejudge(args)
-    if (args.runtime != "gvisor" or args.audio or args.memory_mb or args.file_mb) and args.runner != "modal":
-        print("pickfit verify: --runtime, --audio, --memory-mb and --file-mb need --runner modal")
+    if (args.runtime != "gvisor" or args.audio or args.memory_mb or args.file_mb or args.toolchain) \
+            and args.runner != "modal":
+        print("pickfit verify: --runtime, --audio, --toolchain, --memory-mb and --file-mb need --runner modal")
         return 2
     if args.display and args.runner not in ("modal", "tart"):
         print("pickfit verify: --display needs --runner modal or tart")
@@ -154,7 +162,8 @@ def run(args: argparse.Namespace) -> int:
             return 2
         results, _ = limits_test(box_factory(args.runner, 900, platform=args.platform, gpu=args.gpu,
                                              runtime=args.runtime, display=args.display, audio=args.audio,
-                                             memory_mb=args.memory_mb, file_mb=args.file_mb), _runs_dir(None))
+                                             memory_mb=args.memory_mb, file_mb=args.file_mb,
+                                             toolchain=args.toolchain), _runs_dir(None))
         return 0 if all(r.ok for r in results) else 1
     if not args.fixture and not args.batch:
         print("pickfit verify: give --fixture or --batch N")
@@ -171,9 +180,11 @@ def run(args: argparse.Namespace) -> int:
         return 2
     if args.runner == "tart" and args.display:
         limits = replace(limits, max_seconds=max(limits.max_seconds, MAC_GUI_AGENT_S))
+    if args.toolchain:
+        limits = replace(limits, max_seconds=max(limits.max_seconds, TOOLCHAIN_AGENT_S))
     make_box = box_factory(args.runner, int(limits.max_seconds) + LIFETIME_MARGIN_S, platform=args.platform,
                            gpu=args.gpu, runtime=args.runtime, display=args.display, audio=args.audio,
-                           memory_mb=args.memory_mb, file_mb=args.file_mb)
+                           memory_mb=args.memory_mb, file_mb=args.file_mb, toolchain=args.toolchain)
     if args.batch:
         if args.runner == "tart" and args.concurrency > TART_MAX_VMS:
             print(f"pickfit verify: macOS allows {TART_MAX_VMS} VMs at once; concurrency {args.concurrency} -> "
@@ -253,7 +264,7 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
                                      display=args.display, extraction_model=extraction_model)
     print(f"batch · {len(items)} to verify · {len(skipped)} set aside · {args.runner}"
           f"{' ' + args.runtime if args.runner == 'modal' else ''}{' + display' if args.display else ''}"
-          f"{' + microphone' if args.audio else ''}"
+          f"{' + microphone' if args.audio else ''}{' + toolchain' if args.toolchain else ''}"
           f"{' + ' + args.gpu if args.gpu else ''} · "
           f"concurrency {args.concurrency} · agent {resolve_model(args.model)} · "
           f"judges {resolve_model(judge_model_for(args.model))}"
@@ -268,7 +279,8 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
     if args.runner == "modal":  # build or fetch the image once, not in every thread
         from pickfit.verify.modal_box import ensure_published_image
 
-        ensure_published_image(runtime=args.runtime, display=args.display, audio=args.audio)
+        ensure_published_image(runtime=args.runtime, display=args.display, audio=args.audio,
+                               toolchain=args.toolchain)
 
     def verify(task, log):
         return verify_task(task, make_box, model=args.model, mode=args.mode or DEFAULT_MODE, limits=limits,
@@ -276,7 +288,8 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
 
     summary = run_batch(items, verify, concurrency=args.concurrency, runs_dir=runs_dir,
                         meta={"db": str(db), "runner": args.runner, "runtime": args.runtime, "display": args.display,
-                              "gpu": args.gpu, "audio": args.audio, "model": resolve_model(args.model),
+                              "gpu": args.gpu, "audio": args.audio, "toolchain": args.toolchain,
+                              "model": resolve_model(args.model),
                               "judge_model": resolve_model(judge_model_for(args.model)),
                               "extraction_model": extraction_model,
                               "skipped": skipped})

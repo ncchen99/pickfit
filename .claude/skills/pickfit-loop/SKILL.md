@@ -27,8 +27,8 @@ description: 跑 pickfit 的收錄與修 harness 的 loop。從 loop/queue.jsonl
 2. **跑驗證**：
    - `reverify`（target 是 slug）：從 `data/software/<slug>.json` 讀 `repo.full_name`，先跑
      `uv run pickfit verify --batch 1 --repo <full_name> --force --runner modal --dry-run`。
-     清單上只有目標那一款，才拿掉 `--dry-run` 跑真的。不要加 `--records`，它和 `--repo` 是聯集，會選到別款（H-001）。箱子不夠用時加 `--runtime vm`、`--display`、`--memory-mb`、`--file-mb`。
-   - dry-run 印 `0 to verify`，下面也沒有 `skip` 那一行：本機的 `runs/pipeline.db` 沒有這款的抽取結果（紀錄是別台機器寫的）。先跑 `GH_TOKEN=$(gh auth token) uv run pickfit discover --repo <full_name>`，不花錢，它把 repo 的 README、檔案清單和規則標籤存進本機。`outcome` 是 `added` 或 `refreshed`、`rule_passed` 是 `true`，再跑 `uv run pickfit extract --repo <repo_id> --model prod --limit 1`（一筆約 US$0.1），然後重跑 dry-run。`outcome` 是別的（repo 不見了、名字被別的 repo 佔走）或 `rule_passed` 是 `false`，就照「分流」第一、二列處理，note 寫那個 outcome。
+     清單上只有目標那一款，才拿掉 `--dry-run` 跑真的。不要加 `--records`，它和 `--repo` 是聯集，會選到別款（H-001）。箱子不夠用時加 `--runtime vm`、`--display`、`--memory-mb`、`--file-mb`。只能從原始碼建置的（紀錄停在 `needs_toolchain`，或安裝候選只剩 `cargo`、`go`、`source`）加 `--toolchain`：映像裡有 gcc、g++、clang、make、cmake、Rust、Go，4 vCPU、6 GiB、單一指令 30 分鐘（H-002）。先用一般的箱子跑一次，確定真的要建置再加，建置的箱子比較貴也比較慢。
+   - dry-run 印 `0 to verify`，下面也沒有 `skip` 那一行：本機的 `runs/pipeline.db` 沒有這款的抽取結果（紀錄是別台機器寫的）。先跑 `uv run pickfit discover --repo <full_name>`，不花錢，它把 repo 的 README、檔案清單和規則標籤存進本機。`outcome` 是 `added` 或 `refreshed`、`rule_passed` 是 `true`，再跑 `uv run pickfit extract --repo <repo_id> --model prod --limit 1`（一筆約 US$0.1），然後重跑 dry-run。`outcome` 是別的（repo 不見了、名字被別的 repo 佔走）或 `rule_passed` 是 `false`，就照「分流」第一、二列處理，note 寫那個 outcome。
    - dry-run 有 `skip` 那一行：照它寫的原因處理。`platforms macos only`、`GUI app` 是 Linux 箱子驗不了，不是 harness 壞了。
    - `new`（target 是 `owner/name` 或網址）：照 `uv run pickfit --help` 的管線順序做，discover、prescreen、extract、profiles、verify。網頁應用走 `pickfit webapps`。
    - 會跑超過兩分鐘的指令放背景執行，等它結束的通知，不要輪詢。

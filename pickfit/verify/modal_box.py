@@ -83,9 +83,11 @@ from pickfit.verify.box import (
     BOX_ENV,
     BOX_HOME,
     BOX_WORKDIR,
+    GO_VERSION,
     HOST_GRACE_S,
     OUTPUT_HEAD_BYTES,
     OUTPUT_TAIL_BYTES,
+    RUST_VERSION,
     SANDBOX_DOCKERFILE,
     Box,
     BoxError,
@@ -219,6 +221,28 @@ if __name__ == "__main__":
 INSTALL_BWRAP_SHIM = (f"/usr/bin/install -d -m 0755 /usr/local/lib/pickfit && "
                       f"/usr/bin/install -m 0755 /dev/stdin {BWRAP_SHIM}")
 VM_PACKAGES = ("nftables",)  # root's offline DNS rule (VM only: gVisor has no netfilter)
+# A build box (--toolchain): what "build from source" assumes a developer's machine already has. The C and C++
+# compilers, make, cmake and the usual -dev headers are Debian's packages. Rust and Go are their projects' own
+# releases, each checked against a pinned SHA-256 before it is unpacked, because a project's minimum version is
+# often newer than a distribution's (box.RUST_VERSION, box.GO_VERSION).
+TOOLCHAIN_PACKAGES = ("build-essential", "clang", "cmake", "ninja-build", "pkg-config", "autoconf", "automake",
+                      "libtool", "perl", "libssl-dev", "zlib1g-dev", "libffi-dev", "libsqlite3-dev", "libclang-dev",
+                      "protobuf-compiler")
+RUST_URL = f"https://static.rust-lang.org/dist/2026-11-12/rust-{RUST_VERSION}-x86_64-unknown-linux-gnu.tar.xz"
+RUST_SHA256 = "98ee6bec240e1cfe944f17e7092412dc5ef6e008484bb668c6936d35a7d15acd"
+GO_URL = f"https://go.dev/dl/go{GO_VERSION}.linux-amd64.tar.gz"
+GO_SHA256 = "7226736c2339719cda28fbf3a54d71aa63bcefe376e98cef00034268dab24840"
+# Rust's standalone installer puts rustc, cargo and the standard library under /usr/local (no rustup, nothing in
+# the box user's home); Go unpacks to /usr/local/go. The last line fails the build when one of them does not run.
+TOOLCHAIN_INSTALL = (
+    f"curl -fsSL -o /tmp/rust.tar.xz {RUST_URL} && echo '{RUST_SHA256}  /tmp/rust.tar.xz' | sha256sum -c - "
+    "&& mkdir /tmp/rust && tar -xJf /tmp/rust.tar.xz -C /tmp/rust --strip-components=1 "
+    "&& /tmp/rust/install.sh --prefix=/usr/local --components=rustc,cargo,rust-std-x86_64-unknown-linux-gnu "
+    "&& rm -rf /tmp/rust /tmp/rust.tar.xz "
+    f"&& curl -fsSL -o /tmp/go.tgz {GO_URL} && echo '{GO_SHA256}  /tmp/go.tgz' | sha256sum -c - "
+    "&& tar -xzf /tmp/go.tgz -C /usr/local && rm /tmp/go.tgz "
+    "&& ln -s /usr/local/go/bin/go /usr/local/go/bin/gofmt /usr/local/bin/ "
+    "&& rustc --version && cargo --version && go version && cc --version && cmake --version")
 # Drops the box user's DNS (to Modal's resolver or anywhere) while the network is off; root sets it.
 DNS_TABLE = "pickfit_offline"
 DNS_BLOCK = (f"/usr/sbin/nft add table inet {DNS_TABLE} && /usr/sbin/nft add chain inet {DNS_TABLE} out "
@@ -252,18 +276,22 @@ os.execv(sys.argv[1], sys.argv[1:])
 """
 
 
-def image_layers(runtime: str = "gvisor", display: bool = False, audio: bool = False) -> tuple[str, tuple[str, ...]]:
+def image_layers(runtime: str = "gvisor", display: bool = False, audio: bool = False,
+                 toolchain: bool = False) -> tuple[str, tuple[str, ...]]:
     """(published image name, apt packages added on top of sandbox.Dockerfile) for a kind of box.
 
-    The plain box keeps `pickfit-sbx:<Dockerfile hash>`; a variant hashes the Dockerfile and its packages.
+    The plain box keeps `pickfit-sbx:<Dockerfile hash>`; a variant hashes the Dockerfile, its packages and the
+    commands that install what is not a package (VirtualGL, the build box's Rust and Go).
     """
     packages = (*(VM_PACKAGES if runtime == "vm" else ()), *(GUI_PACKAGES if display else ()),
-                *(FLATPAK_PACKAGES if display else ()), *(AUDIO_PACKAGES if audio else ()))
+                *(FLATPAK_PACKAGES if display else ()), *(AUDIO_PACKAGES if audio else ()),
+                *(TOOLCHAIN_PACKAGES if toolchain else ()))
     if not packages:
         return sandbox_image_tag(), ()
-    extra = "\n" + VGL_INSTALL if display else ""
+    extra = ("\n" + VGL_INSTALL if display else "") + ("\n" + TOOLCHAIN_INSTALL if toolchain else "")
     digest = hashlib.sha256(SANDBOX_DOCKERFILE.read_bytes() + ("\n".join(packages) + extra).encode()).hexdigest()[:12]
-    kinds = "-".join(k for k, on in (("vm", runtime == "vm"), ("gui", display), ("audio", audio)) if on)
+    kinds = "-".join(k for k, on in (("vm", runtime == "vm"), ("gui", display), ("audio", audio),
+                                     ("build", toolchain)) if on)
     return f"pickfit-sbx-{kinds}:{digest}", packages
 
 
@@ -293,14 +321,14 @@ def modal_client() -> Any:
 
 
 def publish_image(client: Any, app: Any, *, log: Callable[[str], None] = print, runtime: str = "gvisor",
-                  display: bool = False, audio: bool = False) -> str:
+                  display: bool = False, audio: bool = False, toolchain: bool = False) -> str:
     """Build the sandbox image from sandbox.Dockerfile (plus the variant's packages) and publish it.
 
     Modal caches the build, so an unchanged Dockerfile takes a few seconds.
     """
     import modal
 
-    name, packages = image_layers(runtime, display, audio)
+    name, packages = image_layers(runtime, display, audio, toolchain)
     began = time.monotonic()
     image = modal.Image.from_dockerfile(SANDBOX_DOCKERFILE, context_dir=SANDBOX_DOCKERFILE.parent,
                                         ignore=lambda path: True)
@@ -308,6 +336,8 @@ def publish_image(client: Any, app: Any, *, log: Callable[[str], None] = print, 
         image = image.apt_install(*packages)
     if display:
         image = image.run_commands(VGL_INSTALL)
+    if toolchain:
+        image = image.run_commands(TOOLCHAIN_INSTALL)
     image.build(app)
     image.publish(name, client=client)
     log(f"Modal image {name} built and published in {time.monotonic() - began:.0f}s")
@@ -315,13 +345,13 @@ def publish_image(client: Any, app: Any, *, log: Callable[[str], None] = print, 
 
 
 def ensure_published_image(log: Callable[[str], None] = print, *, runtime: str = "gvisor",
-                           display: bool = False, audio: bool = False) -> str:
+                           display: bool = False, audio: bool = False, toolchain: bool = False) -> str:
     """Publish the image for the current Dockerfile before parallel boxes start; returns its name."""
     import modal
 
     client = modal_client()
     app = modal.App.lookup(APP_NAME, create_if_missing=True, client=client)
-    return publish_image(client, app, log=log, runtime=runtime, display=display, audio=audio)
+    return publish_image(client, app, log=log, runtime=runtime, display=display, audio=audio, toolchain=toolchain)
 
 
 def _missing_image(err: Exception) -> bool:
@@ -429,7 +459,7 @@ class ModalBox(Box):
 
     def __init__(self, *, limits: BoxLimits = BoxLimits(), tags: dict[str, str] | None = None,
                  app_name: str = APP_NAME, client: Any = None, gpu: str | None = None,
-                 runtime: str = "gvisor", display: bool = False, audio: bool = False,
+                 runtime: str = "gvisor", display: bool = False, audio: bool = False, toolchain: bool = False,
                  log: Callable[[str], None] = print) -> None:
         self.xvfb_pid: int | None = None
         if gpu is not None and gpu not in GPU_USD_PER_S:
@@ -444,7 +474,8 @@ class ModalBox(Box):
         self.runner = f"modal-{runtime}"
         self.display = DISPLAY if display else None
         self.audio = audio
-        self.image = image_layers(runtime, display, audio)[0]
+        self.toolchain = toolchain
+        self.image = image_layers(runtime, display, audio, toolchain)[0]
         self.tags = {"pickfit": "verify", **(tags or {})}
         self.app_name = app_name
         self.client = client
@@ -481,7 +512,7 @@ class ModalBox(Box):
         began = time.monotonic()
         self.client = self.client or modal_client()
         app = modal.App.lookup(self.app_name, create_if_missing=True, client=self.client)
-        self.image = image_layers(self.runtime, self.display is not None, self.audio)[0]
+        self.image = image_layers(self.runtime, self.display is not None, self.audio, self.toolchain)[0]
 
         def create() -> Any:
             return modal.Sandbox.create("sleep", str(self.limits.lifetime_s), app=app, client=self.client,
@@ -494,7 +525,7 @@ class ModalBox(Box):
                 if not _missing_image(err):
                     raise
                 publish_image(self.client, app, log=self.log, runtime=self.runtime,  # first box after a change
-                              display=self.display is not None, audio=self.audio)
+                              display=self.display is not None, audio=self.audio, toolchain=self.toolchain)
                 self.sandbox = create()
         except Exception as err:
             raise BoxError(f"Modal sandbox create failed: {type(err).__name__}: {err}") from err

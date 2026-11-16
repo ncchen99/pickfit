@@ -43,3 +43,8 @@
 - 結果：park，等 H-003（由 harness 以 root 代跑安裝那一步，macOS 這邊是 `/usr/sbin/installer`）。花費 US$0。
 - harness：無。
 - 需要你：佇列裡有 6 筆只有 macOS 版（backgroundmusic、iglance、lulu、mac-performance-monitor、macos-enterprise-privileges、outset），另外 bindiff、cardinal 上次也是在 macOS VM 跑的。重驗它們要 `--runner tart --display`，在這台 Mac 上開 macOS VM（`tart list` 看得到 `pickfit-macos-26` 和 `pickfit-macos-26-gui` 兩個基底，不用另外下載）。skill 的指令只寫 `--runner modal`，賽後方針也說 macOS GUI 先不排，所以 loop 沒有在你的 Mac 上開 VM。要不要讓 loop 跑 tart，請你決定。在那之前這幾筆輪到時會 park，或在原因很明確時照實記成未驗證。
+
+## 2026-11-16 12:46 更正與結案
+
+- H-001 那一段「需要你」的第 1 點已經解決（念誠 11/16）：`.env` 裡有一把只讀公開 repo 的 `GH_TOKEN`，`pickfit discover --repo` 不用加前綴就能跑（剛用 ferro 試過，`refreshed`）。之後不再呼叫 `gh auth token`，skill 裡那一行也拿掉了前綴。
+- 前面四段標的時間是估的，寫晚了：H-001 那段到 backgroundmusic 那段實際都在 12:21 到 12:26 之間完成。從這一段起用 `date` 的時間。
