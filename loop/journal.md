@@ -24,3 +24,9 @@
   1. `pickfit discover` 要 `GH_TOKEN`，本機 `.env` 沒有，指令自己的錯誤訊息叫人用 `GH_TOKEN=$(gh auth token)`。這個 session 照做了（token 只當環境變數傳給 pickfit，沒印出來，也沒進沙盒）。這把 token 的權限很大（`repo`、`delete_repo`、`workflow`），pickfit 只用它讀公開 repo。要不要另外發一把只讀公開資料的 token 放進 `.env`，請你決定。在那之前 loop 照現在的做法。
   2. 重新抽取的功能清單，用字可能和紀錄裡 `features` 的不同。寫回之後要不要跑 `pickfit profiles --features-only --slug <slug>` 對齊，loop 沒有做，留給協調的 session。
   3. `verify` 預設的 agent 是 Claude Haiku（dry-run 印的是 `agent claude-haiku-5-5 · judges claude-opus-5-5`）。skill 的指令沒有指定 `--model`，所以 loop 用的就是這個組合。如果重驗要用 Opus 當 agent，要在 skill 裡寫明。
+
+## 2026-11-16 12:40 reverify:agentloom → parked (H-003)
+
+- 做了什麼：dry-run 印 `0 to verify`，用新的 `discover --repo` 存進本機（`refreshed`，規則通過）。看了紀錄裡 10/31 那次的筆記：README 在 Linux 上唯一的路是 `bash linux/scripts/bootstrap_toolchain.sh`，腳本第一步就停在 `required command not found: sudo`，它要用 apt 裝 cmake 和編譯器，再裝 rustup。箱子在這兩點上和 10/31 一樣，重跑只會得到同一個結果，所以沒有花錢重跑，也還沒抽取。
+- 結果：park，等 H-003（以 root 代裝具名套件），也用得到 H-002（工具鏈）。花費 US$0。
+- harness：無。
