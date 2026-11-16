@@ -144,3 +144,9 @@
 - 做了什麼：只有 macOS 版。11/4 在 macOS VM 停在 `needs_root`，那次的 run 沒有留下筆記，所以不知道卡在哪一步。要重驗得開 tart 的 VM，loop 沒有做。
 - 結果：park，留在 H-003。花費 US$0。
 - harness：無。
+
+## 2026-11-16 14:08 reverify:macos-enterprise-privileges → parked (H-003)
+
+- 做了什麼：只有 macOS 版。這個工具的用途就是替使用者取得管理者權限，安裝要裝一個有特權的 helper；11/4 在 macOS VM 停在 `needs_root`，沒有留下筆記。要重驗得開 tart 的 VM，loop 沒有做。
+- 結果：park，留在 H-003。花費 US$0。
+- harness：無。
