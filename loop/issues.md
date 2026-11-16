@@ -81,3 +81,12 @@ reason: needs_more_resources
 - reproduce: `uv run pickfit verify --batch 1 --repo DISTRHO/Cardinal --force --runner modal --display --audio`，run `verify-cardinal-20261116-131620-914e` 的 report 裡有 `gui check failed · file /home/sbx/pickfit-out/patch.vcv: missing`，agent 的 pitfall 寫「no zenity/kdialog here」。
 - 方向（還沒試）：在 `gui.GUI_PACKAGES` 加 `zenity`（Debian 套件，LGPL-2.1-or-later，當獨立程式執行，照 `NOTICE` 裡 GUI 套件的寫法記）。加了要重跑 `--limits-test --runner modal --display`，再拿 Cardinal 重跑看操作過不過。
 - tried:
+
+## H-008 [open] gVisor 箱子裡 /、/home、/tmp 的擁有者顯示成 nobody（65534）：檢查目錄擁有者的工具不肯啟動
+
+- opened: 2026-11-16T13:34:14+08:00
+- symptom: khive 在建置箱子裡編得過（約 11.5 分鐘），但伺服器一啟動就結束：它會檢查資料庫路徑每一層上層目錄的擁有者，箱子使用者看到 `/`、`/home`、`/tmp`、`/var` 的擁有者是 uid 65534，不是 root 也不是自己，於是報 `store-path ancestor ...` 或 `database volume changed after admission identity was captured`。原因多半是 gVisor 箱子把使用者放在自己的 user namespace 裡（`modal_box.NETNS_MAPS` 只對應了網路用的 uid 和箱子使用者），真正的 root 沒有對應，就顯示成 nobody。這是 pickfit 的箱子長得和一般機器不一樣，不是軟體壞了。
+- reproduce: `uv run pickfit verify --batch 1 --repo ohdearquant/khive --force --runner modal --toolchain`，run `verify-khive-20261116-131604-806d`（未驗證，`other`，沒重播；模型 US$0.009，沙盒 US$0.088）。最小的重現：在箱子裡以使用者身分跑 `stat -c '%u %n' / /home /tmp`。
+- 方向（還沒試）：(1) `--runtime vm` 的箱子不靠 user namespace 斷網（用 nftables），先看那裡的擁有者是不是正常；是的話這類工具改用 `--runtime vm --toolchain` 跑，那個組合要先過 `--limits-test`。(2) 在 gVisor 的對應表裡把 root 也對應進去只讀，這會動到隔離，要非常小心，`limits.py` 的 `netns_held` 等檢查必須照樣通過。
+- 可能同一類：tracedecay（`FilesystemLocalityUnverified { filesystem_type: "overlay" }`，它檢查的是檔案系統種類）。
+- tried:
