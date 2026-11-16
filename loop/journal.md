@@ -157,3 +157,9 @@
 - 結果：未驗證，`needs_more_resources`，沒有寫回（紀錄本來就是未驗證）。兩條路都沒走完：預設功能的 release 建置相依很大（matrix-sdk、candle、wasm），在 4 vCPU 上跑超過單一指令 30 分鐘的上限；`release-desktop` 那組功能要 ALSA 的 `-dev` 套件，得用 apt 裝。run `runs/verify/verify-neoth-20261116-131604-d576`，38 分鐘，模型 US$0.016，沙盒 US$0.273。
 - park，改掛 H-005：要比建置箱子更多的核心，或更長的單一指令上限。`verify` 現在沒有調這兩樣的參數（`--toolchain` 固定是 4 vCPU、30 分鐘），這是 H-005 可以做的一步。
 - harness：無。
+
+## 2026-11-16 14:08 reverify:outset → parked (H-003)
+
+- 做了什麼：只有 macOS 版。11/4 的筆記：安裝檔是 `.pkg`，要裝到 `/usr/local/outset` 並放 LaunchDaemons、LaunchAgents，要管理者密碼；那次把 pkg 拆開後 `--version` 印得出 4.2.0，但寫不了 `/usr/local` 底下的記錄檔。沒有重跑。
+- 結果：park，留在 H-003（macOS 這邊由 harness 代跑 `/usr/sbin/installer`）。花費 US$0。
+- harness：無。
