@@ -34,7 +34,7 @@ description: 跑 pickfit 的收錄與修 harness 的 loop。從 loop/queue.jsonl
    - 會跑超過兩分鐘的指令放背景執行，等它結束的通知，不要輪詢。
 3. **看結果**：`runs/verify/<run>/report.json` 和 `verification_run.json`。
 4. **分流**：照下一節。
-5. **寫回**：通過而且重播過的 run 用 `uv run python scripts/guarded_write_back.py <run 目錄>` 寫回，它會確認紀錄沒有因此變差。不手改 `data/software/`。
+5. **寫回**：通過而且重播過的 run 用 `uv run python scripts/guarded_write_back.py <run 目錄>` 寫回，它會確認紀錄沒有因此變差。不手改 `data/software/`。輸出有 `written` 那一行才算寫回了：寫回和後面的 `finish` 用 `&&` 接，不要只用換行，寫回失敗（例如紀錄的 `kind` 和新的抽取不一致，H-009）時後面才不會照樣跑。已經誤記成 done 的項目用 `loop_state.py reopen ID --note "原因"` 改回來。
 6. **記錄**：`loop_state.py finish` 或 `park`；在 `loop/journal.md` 最後加一段（格式在那個檔案開頭）；commit，一個項目一個 commit，訊息用英文。`docs/plan.md` 的狀態紀錄只有協調的 session 寫，這裡不碰。
 7. 印 `loop_state.py status` 和 `loop_budget.py status`，回到第 1 步。
 

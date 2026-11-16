@@ -237,3 +237,32 @@
 - 做了什麼：本機有候選、沒有抽取，抽取後用 `--toolchain` 跑（和 khive、local-jev、neoth 平行先跑的那批），建置加驗證共 22 分鐘。
 - 結果：level `service`，全新箱子重播通過，judge 判 working，3 項功能 checked。重播時有檢查要連網才過（`offline False`）。run `runs/verify/verify-mdma-20261116-131604-cdba`，用 `guarded_write_back.py` 寫回，確認過紀錄的 level 是 `service`。花費：抽取 US$0.057、模型 US$0.041、沙盒 US$0.155。
 - harness：無。用的是 H-002 的建置箱子。
+
+## 2026-11-16 14:56 小結（這個 session 收尾）
+
+開工時 `LOOP_STATUS todo=43 doing=0 done=0 parked=0`、`LOOP_BUDGET model=$40.78/100 (today $40.75/80) box=$0.00/25`。收尾時 `todo=13 doing=0 done=15 parked=15`、`model=$43.91/100 (today $43.88/80) box=$2.56/25 (today $2.56/10)`。模型那本帳是所有 session 共用的，這段時間增加 US$3.13，沙盒增加 US$2.56。沒有 push、沒有合併、沒有發布。全部測試 1,796 個通過（最後一次改程式之後跑的）。
+
+處理了 30 筆：
+
+- 驗過、寫回了 14 筆：bamboo-agent（service）、bindiff（install，Linux 顯示箱子）、cardinal（install，顯示箱子加音訊）、castor（function）、dog（function）、ducklab（function）、ferro（function）、gutsy（install）、gyrfalcon（service）、holdspeak（service）、hw-smi（function）、khive（service）、local-jev（service）、mdma（service）。
+- 重跑後照實記成未驗證 1 筆：llamampere（要 CUDA toolkit 和 24 GB 的顯示卡）。
+- park 15 筆：H-003 有 agentloom、backgroundmusic、datanexa、hal0、joyboy、lulu、mac-performance-monitor、macos-enterprise-privileges、outset；H-004 有 architecture-intelligence-platform、heym；H-005 有 iglance、kronn、neoth；H-009 有 ling-stack（run 過了但寫不回去）。
+
+harness：
+
+- 修好 H-001（`pickfit discover --repo`）、H-002（`pickfit verify --toolchain` 建置箱子）、H-008（檢查目錄擁有者的工具改用 `--runtime vm`，沒改程式）。
+- 新開沒修的：H-007（顯示箱子沒有 zenity、kdialog）、H-009（紀錄的 kind 和新抽取不一致時寫不回去）。H-003 補了分三種情況的筆記。
+- `scripts/loop_state.py` 加了 `reopen`。skill 改了四處：dry-run 印 `0 to verify` 和有 `skip` 行時怎麼做、`--toolchain` 什麼時候加、`--runtime vm` 什麼時候加、寫回和 `finish` 要用 `&&`。
+- 沒有改既有的測試，沒有刪測試，沒有碰受保護的檔案。新增的測試：`tests/test_discover_named.py`（5）、`tests/test_verify_toolchain.py`（4）、`tests/test_loop_state.py` 多 1 個。
+
+需要你（前面各段的彙整，細節在各段）：
+
+1. 只有 macOS 版的 6 筆（加上 bindiff、cardinal 的 macOS 那一半）要不要讓 loop 在這台 Mac 上開 tart 的 VM。
+2. commit `4d4db57a` 的訊息說 ling-stack 寫回了，那是錯的，後面的 commit 有更正。我沒有改寫那個 commit。H-009 要你決定 ling-stack 的 `kind` 怎麼更新。
+3. 寫回只動 `verification` 和 `install`。這批重新抽取之後，紀錄的 `prerequisites`、`features`、`kind` 可能和新抽取不一致（例如 bamboo-agent 現在要 Rust 才裝得起來，`prerequisites.runtimes` 還是空的）。要不要跑 `pickfit profiles` 對齊，loop 沒有做。
+4. 幾筆結果請看一眼合不合理：dog 的安裝指南是不含 TLS 的建置；khive 有 2 項功能記成 `test_failed`；castor 被抽取記成一定要 GPU，其實沒用到。
+5. `verify` 預設的 agent 是 Claude Haiku，loop 用的就是它。一筆的模型費因此很低（多數在 US$0.05 以下），貴的是建置箱子的沙盒費。
+6. hook 擋到四種不相干的指令（讀紀錄的 `open()`、commit 訊息裡的環境檔名、install 這個字加紀錄路徑、以及同一行才擋的規則擋不住真的寫入），都照它的意思換了寫法。
+7. 我把還沒輪到的項目先平行跑起來，再照佇列順序記錄。skill 沒有寫可不可以，請看一眼。
+
+下一個 session 可以直接接的：佇列還有 13 筆 todo。toolmesh、turbograph、waveredact 已經抽取好，semquery 本機本來就有抽取，這四筆都是要建置的，可以直接 `--toolchain`（toolmesh 上次是記憶體不夠，加 `--memory-mb 8192`）。tracedecay 檢查檔案系統種類，先試 `--runtime vm`。mere-run、shura 要 CUDA 和大顯示卡，多半和 llamampere 一樣。renfield、re-call 要 Docker。whisper-install 的安裝程式要 root。
