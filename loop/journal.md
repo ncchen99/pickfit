@@ -115,3 +115,8 @@
 - 做了什麼：`discover --repo`、抽取後選得到。README 是 `cargo build --release`，用 `--toolchain` 跑。
 - 結果：level `service`，全新箱子重播通過，judge 判 working（MCP 握手成功、列出 19 個工具，`--version` 有印）。功能 1 項 checked；「索引完整的 1C 設定」那一項 feature judge 沒認，因為回來的物件是空的。run `runs/verify/verify-gyrfalcon-20261116-130958-c3b4`，用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 service。花費：抽取 US$0.126、模型 US$0.042、沙盒 US$0.026。
 - harness：無。用的是 H-002 的建置箱子。
+
+## 2026-11-16 14:07 進度小記（目標條件已達成，繼續把跑完的結果記完）
+
+- 14:05 ducklab 寫回之後，done 加 parked 是 10，/goal 的條件達成。那時還有 7 筆已經付錢跑完、結果是通過的（ferro、gutsy、gyrfalcon、hw-smi、khive、local-jev、mdma），是等前面項目的時候先平行跑的。放著不記等於白花錢，所以照佇列的順序繼續做，中間夾著的項目也一併處理。
+- 平行先跑的做法：每一筆還是各自一個指令、各自先 dry-run 確認只列目標那一款，只是不等前一筆 `finish` 就先開始跑；`next`、`finish`、journal、commit 照佇列順序一筆一筆做。skill 沒有寫可不可以這樣，請看一眼。
