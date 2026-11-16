@@ -89,7 +89,7 @@ function nav(active: NavKey): string {
 /** The footer: one quiet row on the page ground. The links (Compare among them, for visitors without the script) and the name; the trust promises are in Fitz's rules on /how. */
 const FOOTER = () => `<footer class="foot">
 <div class="wrap foot-row">
-<nav class="foot-links" aria-label="${L('Footer', '頁尾')}"><a href="/">${L('Find software', '搜尋軟體')}</a><a href="/browse">${L('Browse verified tools', '瀏覽已驗證的工具')}</a><a href="/compare">${L('Compare tools', '比較工具')}</a><a href="/agents">${L('Connect your agent', '接上你的 agent')}</a><a href="/how">${L('How Fitz checks a tool', 'Fitz 如何檢查工具')}</a><a href="/how#labels">${L('What the labels mean', '標籤說明')}</a><a href="/how#rules">${L('Fitz’s rules', 'Fitz 的原則')}</a></nav>
+<nav class="foot-links" aria-label="${L('Footer', '頁尾')}"><a href="/">${L('Find software', '搜尋軟體')}</a><a href="/browse">${L('Browse verified tools', '瀏覽已驗證的工具')}</a><a href="/compare">${L('Compare tools', '比較工具')}</a><a href="/agents">${L('Connect your agent', '接上你的 agent')}</a><a href="/how">${L('How Fitz checks a tool', 'Fitz 如何檢查工具')}</a><a href="/how#labels">${L('What the labels mean', '標籤說明')}</a><a href="/how#rules">${L('Fitz’s rules', 'Fitz 的原則')}</a><a href="/about">${L('About pickfit', '關於 pickfit')}</a></nav>
 <p class="foot-brand" translate="no"><span>pickf<span class="i-dot">i</span>t</span> © 2026</p>
 </div>
 </footer>`;

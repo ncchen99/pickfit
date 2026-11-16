@@ -1228,6 +1228,12 @@ body.has-tray{padding-bottom:72px}
 .prose h2{margin:56px 0 14px}
 .prose h3{margin:28px 0 8px}
 .prose li{margin-bottom:6px}
+/* about: a team member is a row between hairlines, like the rest of the worksheet; the role in metadata ink, the links in one line */
+.person{padding:14px 0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.person h3{margin:0 0 2px}
+.person h3 span{font-weight:600;color:var(--ink-2)}
+.person-role{margin:0 0 8px;color:var(--ink-3);font-size:.92rem}
+.person-links{display:flex;gap:18px;margin:8px 0 0}
 .levels{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px 32px;list-style:none;padding:0;margin:20px 0}
 /* What "verified" means: one row per level between hairlines, the level with its mark, then what it proves */
 ul.levels{display:block;border-bottom:1px solid var(--rule)}

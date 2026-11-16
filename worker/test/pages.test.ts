@@ -33,7 +33,7 @@ function site(env: Partial<Env> = {}) {
 
 test('every page answers with HTML under a nonce CSP that allows only this Worker’s images and font', async () => {
   const s = site();
-  for (const path of ['/browse', '/compare', '/compare?tools=fixture-llm-runner,fixture-chat-tui', '/how', '/agents', '/tool/fixture-llm-runner']) {
+  for (const path of ['/browse', '/compare', '/compare?tools=fixture-llm-runner,fixture-chat-tui', '/how', '/agents', '/about', '/tool/fixture-llm-runner']) {
     const res = await s.get(path);
     assert.equal(res.status, 200, path);
     assert.match(res.headers.get('content-type')!, /^text\/html/);
@@ -234,6 +234,20 @@ test('the how page states the scoring as score.py computes it', async () => {
   assert.match(html, /not visually checked and keeps its score/);
   assert.doesNotMatch(html, /15%/);
   assert.match(html, /quality 80 or more and popularity 45 or less/);
+});
+
+test('the about page names the team and links it from every page footer, home included', async () => {
+  const s = site();
+  const about = await (await s.get('/about')).text();
+  assert.match(about, /<h1>About pickfit<\/h1>/);
+  assert.match(about, /Nian-Cheng Chen/);
+  assert.match(about, /href="https:\/\/www\.linkedin\.com\/in\/ncchen99\/"/);
+  assert.doesNotMatch(about, /Inc\.|Ltd\.|registered company/);
+  const home = await (await s.get('/')).text();
+  assert.match(home, /<a href="\/about">About pickfit<\/a>/);
+  const zh = await (await s.get('/about?lang=zh-TW')).text();
+  assert.match(zh, /關於 pickfit/);
+  assert.match(zh, /陳念誠/);
 });
 
 test('the Fitz files the Worker serves are the ones brand/mascot/build.py wrote', () => {
