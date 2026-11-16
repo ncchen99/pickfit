@@ -106,7 +106,23 @@
       "check": null,
       "first_task": null
     },
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-bindiff-20261116-131045-79c2",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "cd ~/work && curl -sSL -o bindiff_8_amd64.deb https://github.com/google/bindiff/releases/download/v8/bindiff_8_amd64.deb && mkdir -p ~/apps/bindiff && dpkg-deb -x bindiff_8_amd64.deb ~/apps/bindiff",
+          "purpose": "download the v8 bindiff_8_amd64.deb release and extract it with dpkg-deb -x into ~/apps/bindiff (no root)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "cd ~/work && mkdir -p out1 && ~/apps/bindiff/opt/bindiff/bin/bindiff --output_dir=$HOME/work/out1 --primary=bindiff-src/fixtures/libssl/libssl.0.9.8g.x86.gcc.3.4.6.a.BinExport --secondary=bindiff-src/fixtures/libssl/libssl.0.9.8g.x86.gcc.4.3.3.a.BinExport",
+        "expected_signal": "Similarity:"
+      },
+      "first_task": "cd ~/apps/bindiff/opt/bindiff/bin && PATH=$HOME/apps/bindiff/opt/bindiff/jre/bin:$PATH ./bindiff_ui --ui"
+    },
     "windows": null
   },
   "pricing": {
@@ -122,9 +138,9 @@
     "url": "https://github.com/google/bindiff/releases/tag/v8"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "needs_root",
-    "checked_at": "2026-11-02T06:00:44.948199+08:00",
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T13:13:17.654152+08:00",
     "runs": [
       {
         "id": "verify-bindiff-20261102-055740-2ca4",
@@ -158,32 +174,177 @@
         },
         "actor_model": "muse-spark-1.3",
         "cost_usd": 0.040308
+      },
+      {
+        "id": "verify-bindiff-20261116-131045-79c2",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-16T13:13:17.654152+08:00",
+        "tool_version": "BinDiff 8 (@568181968, Sep 25 2023)",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd ~/work && curl -sSL -o bindiff_8_amd64.deb https://github.com/google/bindiff/releases/download/v8/bindiff_8_amd64.deb && mkdir -p ~/apps/bindiff && dpkg-deb -x bindiff_8_amd64.deb ~/apps/bindiff",
+            "purpose": "download the v8 bindiff_8_amd64.deb release and extract it with dpkg-deb -x into ~/apps/bindiff (no root)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd ~/work && mkdir -p out1 && ~/apps/bindiff/opt/bindiff/bin/bindiff --output_dir=$HOME/work/out1 --primary=bindiff-src/fixtures/libssl/libssl.0.9.8g.x86.gcc.3.4.6.a.BinExport --secondary=bindiff-src/fixtures/libssl/libssl.0.9.8g.x86.gcc.4.3.3.a.BinExport",
+            "expected_signal": "Similarity:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Similarity: 66.7098% (Confidence: 89.4924%)",
+            "setup": [
+              {
+                "command": "cd ~/work && git clone --depth 1 https://github.com/google/bindiff.git bindiff-src && find bindiff-src/fixtures -maxdepth 2 | sort",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd ~/work && mkdir -p out2 && ~/apps/bindiff/opt/bindiff/bin/bindiff --output_dir=$HOME/work/out2 --primary=bindiff-src/fixtures/insider/insider_gcc.BinExport --secondary=bindiff-src/fixtures/insider/insider_lcc.BinExport",
+            "expected_signal": "matched:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "matched: 116 of 219/187 (primary/secondary, 117/114 non-library)",
+            "setup": [
+              {
+                "command": "cd ~/work && git clone --depth 1 https://github.com/google/bindiff.git bindiff-src && find bindiff-src/fixtures -maxdepth 2 | sort",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd ~/apps/bindiff/opt/bindiff/bin && PATH=$HOME/apps/bindiff/opt/bindiff/jre/bin:$PATH ./bindiff_ui --ui",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Quickstart: download prebuilt installation packages from the releases page (and the Building from Source section, cmake/ninja/Boost/Java 11/yFiles)",
+            "actually_needed": "The v8 release has a bindiff_8_amd64.deb; extracting it with dpkg-deb -x is enough for the CLI and the UI. Source build was not needed (it also needs BinExport, IDA SDK, Binary Ninja SDK and a commercial yFiles license for the GUI).",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Java 11 is a prerequisite for the Java GUI",
+            "actually_needed": "The .deb bundles its own JRE under opt/bindiff/jre, but bindiff_ui only starts if a java executable is on PATH: export PATH=<extract>/opt/bindiff/jre/bin:$PATH. Without it the UI fails with \"Error executing 'java': No such file or directory\".",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "(not stated) the packaged binary is run as bindiff --ui",
+            "actually_needed": "Run from the packaged location with the bundled JRE on PATH: cd <extract>/opt/bindiff/bin && ./bindiff_ui --ui. Running the absolute path bin/bindiff --ui from elsewhere failed with \"Missing jar file in prefix:\" (the prefix is the /opt/bindiff install path, not the extract dir).",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "BinDiff relies on a separate disassembler (IDA Pro, Binary Ninja or Ghidra)",
+            "actually_needed": "The CLI diffs existing .BinExport files without a disassembler; the libssl and insider fixtures from the repo were used as inputs.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "(fixtures directory is a test collection)",
+            "actually_needed": "fixtures/self-diff/insider.BinExport failed to parse (\"parsing failed for exported file\"); the insider_gcc vs insider_lcc pair worked.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Both BinDiff runs exit 0 and print the full diff summary, with match counts, a Similarity/Confidence line and 'Writing results', so the expected signals 'Similarity:' and 'matched:' are both present. / BinDiff main window with menu bar (File, Diffs, Settings, Help), a Workspace tab, an empty left t…",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "claude-haiku-5-5",
+        "cost_usd": 0.054041,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "cd ~/apps/bindiff/opt/bindiff/bin && PATH=$HOME/apps/bindiff/opt/bindiff/jre/bin:$PATH ./bindiff_ui --ui",
+          "window_title": "BinDiff",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "compare binaries across many architectures",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: The diff ran and matched 737 functions, but both inputs are x86 builds, so support for other architectures is not shown."
+          },
+          {
+            "feature": "identify identical and similar functions",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "port function names and comments between disassemblies",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Porting names and comments happens inside a disassembler plugin (IDA Pro, Binary Ninja or Ghidra), which this box does not have."
+          },
+          {
+            "feature": "highlight changes between function variants",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "The side-by-side highlight needs a diff opened in the GUI; the commands ran out before a GUI check was made."
+          }
+        ]
       }
     ]
   },
   "security": {
     "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_lockfile",
     "sources": [],
     "packages_checked": 0,
     "findings_total": 0,
     "advisories_total": 0,
-    "findings": []
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00"
   },
   "scores": {
     "formula_version": "b3.v6",
-    "computed_at": "2026-11-05T03:16:32+08:00",
+    "computed_at": "2026-11-16T13:13:58+08:00",
     "quality": {
-      "total": 49.7,
-      "confidence": 0.5,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 68.7,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.85,
           "weight": 20.0
         },
         "install_docs": {
@@ -207,7 +368,7 @@
           "weight": 10.0
         },
         "feature_results": {
-          "score": null,
+          "score": 1.0,
           "weight": 20.0
         }
       }
@@ -228,7 +389,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 5.91
+      "value": 8.18
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -541,5 +702,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:46:43+08:00",
-  "updated_at": "2026-11-05T03:16:32+08:00"
+  "updated_at": "2026-11-16T13:13:58.962661+08:00"
 }

@@ -64,3 +64,10 @@
 - 做了什麼：還沒輪到它就先處理了（`park` 可以直接對 todo 的項目做），因為前面的 bindiff、cardinal 正在跑。`discover --repo` 存進本機（`added`，規則通過），沒有抽取。10/31 的筆記寫得很清楚：它的 MCP 是包在 Tauri 桌面 App 裡的 HTTP 伺服器，沒有 Linux 的發行檔，只能從原始碼建置，要 Rust、pnpm 9、JDK 21、Maven 3.9，還要 apt 裝 `libwebkit2gtk-4.1-dev`、`libayatana-appindicator3-dev`、`librsvg2-dev`。新的建置箱子有 Rust，但沒有這些 `-dev` 套件和 JDK，重跑會停在同一個地方，所以沒有花錢重跑。
 - 結果：park，等 H-003（以 root 代裝具名套件）。原本掛在 H-002，改掛 H-003。花費 US$0。
 - harness：無。
+
+## 2026-11-16 13:14 reverify:bindiff → verified
+
+- 做了什麼：紀錄上次是在 macOS VM 跑的，`.pkg` 要管理者密碼，停在 `needs_root`。它也有 Linux 版，所以改在 Linux 的顯示箱子驗：`discover --repo`、抽取，`verify --batch 1 --repo google/bindiff --force --runner modal --display`。agent 下載發行的 `.deb`，用 `dpkg-deb -x` 解到家目錄（不用 root），啟動 Java 介面看到主視窗，再用 repo 裡的測試檔跑了兩組比對。
+- 結果：level `install`，全新箱子重播通過，judge 判 working，GUI judge 看到主視窗，功能 1 項 checked。沒有到 `function`，因為 GUI App 要有一個操作通過 pickfit 自己的檢查才算，這次沒有做操作。run `runs/verify/verify-bindiff-20261116-131045-79c2`。用 `guarded_write_back.py` 寫回：紀錄多一筆 Linux 的 run，整體從 unverified 變成 install；macOS 那筆 `needs_root` 原樣留著。花費：抽取 US$0.076、模型 US$0.054、沙盒 US$0.007。
+- harness：無。
+- 需要你：hook 又擋到一次不相干的東西（第四種）：指令裡有 install 這個英文字，而且同一段最後一個字是紀錄的路徑，就被當成用 `install` 指令覆蓋紀錄。我原本想在同一個指令裡用 `jq` 印寫回後的安裝步驟。改成寫回單獨跑一個指令，沒有印那一段。
