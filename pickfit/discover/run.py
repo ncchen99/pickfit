@@ -1,8 +1,10 @@
 """`pickfit discover`: find candidates (GitHub search, Show HN or a package store), store them, fetch
-details, apply rules."""
+details, apply rules. `--repo owner/name` skips the search and stores the repositories it names."""
 
 from __future__ import annotations
 
+import json
+import re
 import sys
 from collections import Counter
 from collections.abc import Callable
@@ -26,6 +28,9 @@ STORES = ("flathub", "homebrew_cask")
 DEFAULT_SEED = "p2.7"
 DEFAULT_PER_QUERY = 100
 DETAIL_WORKERS = 4  # REST calls in flight; GitHub asks clients not to hammer it concurrently
+# owner/name, or a github.com URL of the repository (a trailing slash or .git is fine).
+_NAMED_REPO = re.compile(r"(?:(?:https?://)?(?:www\.)?github\.com/)?([A-Za-z0-9][A-Za-z0-9-]{0,38})/"
+                         r"([A-Za-z0-9._-]{1,100}?)(?:\.git)?/?", re.I)
 
 
 def pipeline_db_path() -> Path:
@@ -131,6 +136,86 @@ def apply_rules(db: PipelineDB, only: set[str] | None = None) -> Counter[str]:
                       reasons=result.reasons, version=RULES_VERSION)
         labels[result.label] += 1
     return labels
+
+
+def _records(data_dir: Path | None) -> tuple[dict[str, dict[str, Any]], dict[str, str]]:
+    """repo_id -> {slug, category} of the records under data_dir, and their lowercased owner/name -> repo_id."""
+    by_id: dict[str, dict[str, Any]] = {}
+    by_name: dict[str, str] = {}
+    for path in sorted(data_dir.glob("*.json")) if data_dir else []:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+            by_id[data["repo_id"]] = {"slug": data["slug"], "category": data["category"]}
+            if data.get("repo"):
+                by_name[data["repo"]["full_name"].lower()] = data["repo_id"]
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+    return by_id, by_name
+
+
+def add_repos(gh: Any, db: PipelineDB, names: list[str], *, data_dir: Path | None = None,
+              log: Callable[[str], None] | None = None) -> list[dict[str, Any]]:
+    """Store named repositories (owner/name or a github.com URL) as candidates: GitHub's facts, the README,
+    releases and files, and the rule label. No search and no model call.
+
+    This is how a record written on another machine, whose candidate and extraction are in that machine's
+    database, becomes something `pickfit extract --repo` and `pickfit verify --batch --repo` can select here.
+    A repository that has a record under data_dir takes the record's category, as the batch does; any other
+    is "other" until the prescreen or the extraction says more.
+
+    One row per name, in order. outcome: added, refreshed (it was a candidate already), not_a_repository,
+    not_found (gone, or not visible to the token), private, details_failed, or another_repository: a record
+    has this name but GitHub now answers with a different repository id (the original was deleted and the name
+    taken), so nothing is stored.
+    """
+    log = log or (lambda line: None)
+    by_id, by_name = _records(data_dir)
+    rows: list[dict[str, Any]] = []
+    stored: dict[str, dict[str, Any]] = {}
+    for name in names:
+        row: dict[str, Any] = {"name": name, "outcome": "not_a_repository"}
+        rows.append(row)
+        match = _NAMED_REPO.fullmatch(name.strip())
+        if not match:
+            continue
+        asked = f"{match.group(1)}/{match.group(2)}"
+        item = gh.repo(asked)
+        if item is None:
+            row["outcome"] = "not_found"
+            continue
+        if item.get("private"):
+            row["outcome"] = "private"
+            continue
+        repo = normalize_repo(item)
+        key = repo_key(item["id"])
+        row.update(repo_id=key, full_name=repo["full_name"])
+        owner = by_name.get(asked.lower())  # the record that was written under this name
+        if owner and owner != key:
+            row.update(outcome="another_repository", record=by_id[owner]["slug"])
+            continue
+        record = by_id.get(key)
+        category = record["category"] if record else "other"
+        new = db.upsert_repo(repo, category=category, query_id=f"named:{repo['full_name']}")
+        row.update(outcome="added" if new else "refreshed", record=record["slug"] if record else None,
+                   category=category)
+        try:
+            db.save_details(key, gh.details(repo), pushed_at=repo.get("pushed_at"))
+        except GitHubError as err:
+            db.save_details(key, None, pushed_at=repo.get("pushed_at"), error=str(err))
+            row.update(outcome="details_failed", error=str(err))
+            continue
+        stored[key] = row
+    if stored:
+        apply_rules(db, only=set(stored))
+    for key, row in stored.items():
+        candidate = db.candidate(key) or {}
+        row.update(rule_label=candidate.get("rule_label"), rule_passed=candidate.get("rule_passed"))
+    for row in rows:
+        log(f"  {row['name']}: {row['outcome']}"
+            + (f" · {row['repo_id']} {row['full_name']}" if "repo_id" in row else "")
+            + (f" · record {row['record']}" if row.get("record") else "")
+            + (f" · rules {row['rule_label']}" if row.get("rule_label") else ""))
+    return rows
 
 
 def run_discover(*, token: str, db_path: Path | None = None, channel: str = "github",

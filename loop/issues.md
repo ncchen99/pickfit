@@ -2,14 +2,16 @@
 
 pickfit 的驗證環境自己的問題。每一段的標題列由 `scripts/loop_state.py` 管（`issue-new`、`issue-status`），不要手改。標題下面的內容是 loop session 的筆記，隨時補。狀態：`open` 還沒人動、`fixing` 正在修、`fixed` 修好了（等它的項目會自動排回佇列）、`parked` 試過幾種做法都不行、`review` 要改到受保護的檔案，等念誠看 `loop/proposals/`。
 
-## H-001 [open] 紀錄不能只靠自己重驗：verify --batch 要本機 pipeline.db 裡有抽取結果
+## H-001 [fixed] 紀錄不能只靠自己重驗：verify --batch 要本機 pipeline.db 裡有抽取結果
 
 - opened: 2026-11-15T23:33:07+08:00
 - symptom: `pickfit verify --batch` 的候選來自 `runs/pipeline.db` 的 `extractions` 表。1,058 筆紀錄裡只有 185 筆在本機的 pipeline.db 有可用的抽取結果（11/15 查），其餘是別台機器、別的 worktree 或 `pickfit watch` 寫進來的。佇列裡 43 筆卡在沙盒限制的紀錄，只有 7 筆選得到。
 - reproduce: `uv run pickfit verify --batch 1 --repo paragontasx/ferro --force --runner modal --dry-run` 印出 `0 to verify · 0 set aside`。
 - 陷阱：`--records` 和 `--repo` 是聯集，不是交集。`--records --repo paragontasx/ferro` 會選到別款（那次選到 patient-zero）。重驗單一筆時不要加 `--records`，而且一定先 `--dry-run`，確認清單上只有目標那一款。
 - 方向（還沒試）：讓 `verify` 能從 `data/software/<slug>.json` 自己組出 `VerifyTask`（紀錄裡有 repo、安裝方式、功能清單），或補一個只對單一 repo 重跑抽取的入口。`pickfit reverify` 與 `scripts/rereplay.py` 已經會從紀錄重播，先看能不能沿用。
-- tried:
+- 11/16 查到的：43 筆裡 7 筆本機有抽取結果，17 筆只有候選（有 README、沒抽取），19 筆連候選都沒有。紀錄本身組不出 `VerifyTask`：未驗證的紀錄 `install` 是空的，安裝指令和 smoke test 候選只存在抽取結果裡，所以第一個方向行不通，要重讀 repo。
+- tried: 11/16 第一種做法，修好。加了 `pickfit discover --repo owner/name`（`pickfit/discover/run.py` 的 `add_repos`）：不搜尋、不呼叫模型，向 GitHub 拿這個 repo 的資料、README、檔案清單，套規則，存成本機的候選；有紀錄的沿用紀錄的 category。接著 `pickfit extract --repo <repo_id> --model prod --limit 1` 抽取（ferro 一筆 US$0.113），`verify --batch --repo` 就選得到。做法和 `pickfit reverify`、`pickfit watch` 接一筆 repo 的流程一樣，只是拆成指令。名字現在指到另一個 repo（原本的被刪、名字被佔走）時不存，回報 `another_repository`。測試在 `tests/test_discover_named.py`（5 個）。驗收：ferro 的 dry-run 從 `0 to verify` 變成只列 ferro；原本選得到的 dog 照樣只列 dog；沒有候選的 bamboo-agent 也存得進來。沒動到箱子和映像，所以沒跑 `--limits-test`。
+- 還留著的落差：重新抽取的功能清單，用字可能和紀錄裡 `features` 的不一樣（`pickfit reverify` 在 README 改過時也是這樣）。寫回後要對齊，跑 `uv run pickfit profiles --features-only --slug <slug>`，這一步 loop 沒有做。
 
 ## H-002 [open] 沙盒映像沒有編譯器與 Rust、Go 工具鏈
 

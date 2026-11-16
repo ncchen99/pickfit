@@ -598,13 +598,13 @@ class PipelineDB:
         }
 
 
-_CHANNEL_PREFIXES = ("show_hn", "submission", "reverify", "flathub", "homebrew_cask")
+_CHANNEL_PREFIXES = ("show_hn", "submission", "reverify", "flathub", "homebrew_cask", "named")
 
 
 def _channels(query_ids: list[str]) -> set[str]:
     """Which channels found a candidate, from its query ids: `show_hn:<category>`,
-    `submission:<id>`, `reverify:<id>`, `flathub:<app id>`, `homebrew_cask:<token>`, or
-    GitHub search's `<category>:<topic>`."""
+    `submission:<id>`, `reverify:<id>`, `flathub:<app id>`, `homebrew_cask:<token>`, `named:<owner/name>`
+    (pickfit discover --repo), or GitHub search's `<category>:<topic>`."""
     return {q.split(":", 1)[0] if q.split(":", 1)[0] in _CHANNEL_PREFIXES else "github_search"
             for q in query_ids}
 

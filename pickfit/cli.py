@@ -43,6 +43,20 @@ def _discover(args: argparse.Namespace) -> int:
     except GitHubError as err:
         print(f"pickfit discover: {err}", file=sys.stderr)
         return 2
+    if args.repo:
+        from pickfit.discover.github import GitHub
+        from pickfit.discover.run import add_repos, pipeline_db_path
+        from pickfit.discover.store import PipelineDB
+        from pickfit.verify.result import DATA_DIR
+
+        gh = GitHub(token, rate_limit_max_wait_s=args.max_rate_wait)
+        try:
+            rows = add_repos(gh, PipelineDB(pipeline_db_path()), args.repo, data_dir=DATA_DIR,
+                             log=lambda line: print(line, file=sys.stderr))
+        finally:
+            gh.close()
+        print(json.dumps(rows, ensure_ascii=False, indent=2))
+        return 0 if all(row["outcome"] in ("added", "refreshed") for row in rows) else 1
     exclude = None
     if args.cap is not None:
         from pickfit.verify.result import DATA_DIR
@@ -195,6 +209,10 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
                    help="github: topic searches per category (default); show_hn: recent Show HN posts "
                         "that point to a GitHub repo; flathub, homebrew_cask: the store's catalog under "
                         "neutral rules (docs/source-terms.md)")
+    d.add_argument("--repo", action="append", metavar="OWNER/NAME",
+                   help="no search: store this repository (owner/name or its github.com URL; repeatable) with its "
+                        "README, files and rule label, so extract and verify can select it by --repo. For a record "
+                        "whose candidate is in another machine's database")
     d.add_argument("--pick", type=int, default=0,
                    help="flathub, homebrew_cask: list a batch of N candidates and fetch their details")
     d.add_argument("--seed", default=DEFAULT_SEED,
