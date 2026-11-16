@@ -182,3 +182,10 @@
 - 做了什麼：`discover --repo`、抽取後選得到。10/31 停在 `g++: command not found`。用 `--toolchain` 跑 `./make.sh`。抽取列了 `ocl-icd-opencl-dev`，映像裡沒有，但沒有它也編得過。
 - 結果：level `function`，全新箱子重播通過，judge 判 working（`--bars` 畫出 CPU、RAM、溫度的長條，`--log` 寫出 CSV），功能 2 項 checked。run `runs/verify/verify-hw-smi-20261116-131250-adae`，用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 function。花費：抽取 US$0.052、模型 US$0.052、沙盒 US$0.028。
 - harness：無。用的是 H-002 的建置箱子。
+
+## 2026-11-16 14:21 reverify:joyboy → parked (H-003)
+
+- 做了什麼：本機有候選、沒有抽取，抽取後照 H-005 的方向加大箱子重跑：`--memory-mb 8192 --file-mb 6144`。
+- 結果：未驗證，這次的原因是 `needs_root`，不是資源，沒有寫回。`./start_linux.sh --setup` 裝完套件後檢查 `cv2`，`opencv-python-headless` 找不到系統的 `libxcb.so.1` 就結束；它還會跑 Ollama 的安裝腳本，那個要 root。agent 繞過啟動器直接跑 `web/app.py` 伺服器是起得來的，但那不是 README 的路，不算。run `runs/verify/verify-joyboy-20261116-140702-72b9`。花費：抽取 US$0.086、模型 US$0.014、沙盒 US$0.026。
+- park，從 H-005 改掛 H-003。缺 `libxcb1` 這種常見的函式庫，加進基底映像就好，我把這個做法寫進 `loop/issues.md` 的 H-003，這個 session 沒有做（要重建所有映像、重跑 `--limits-test`）。
+- harness：只補了 H-003 的筆記。

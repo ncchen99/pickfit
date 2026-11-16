@@ -43,6 +43,11 @@ reason: needs_root
 - reproduce: 佇列裡 note 是 `needs_root` 的任一筆。
 - 限制：箱子裡 root 是 pickfit 自己蒐證用的身分，被測的軟體不能拿到 root（`limits.py` 的檢查要照樣通過）。
 - 方向（還沒試）：把「裝發行版套件庫裡的具名套件」做成 harness 代為執行的一步（由 pickfit 以 root 跑 `apt-get install <名稱>`，不是把 root 交給箱子使用者），並記進安裝步驟。要 systemd 或核心模組的另外分出來，那些多半要 `--runtime vm` 或真的做不到。
+- 11/16 這一批看到的，分成三種，做法不一樣：
+  - 缺常見的執行期函式庫。joyboy 的 `opencv-python-headless` 要 `libxcb.so.1`，箱子沒有（run `verify-joyboy-20261116-140702-72b9`）。`sandbox.Dockerfile` 本來就為同樣的理由預裝了 libgomp1、libicu。把 libxcb1、libgl1、libglib2.0-0 這幾個幾乎每台桌面 Linux 都有的函式庫加進基底映像，是最便宜的一步。會改到基底映像的雜湊，所有種類的箱子都要重建、重跑 `--limits-test`。這個 session 沒有做。
+  - 建置要特定的 `-dev` 套件：datanexa（webkit2gtk、appindicator、rsvg）、neoth 的桌面功能（ALSA）、ducklab 的桌面版（GTK、WebKit）。這才是「由 harness 以 root 代裝具名套件」要解的。
+  - 安裝程式本身要 root 加 systemd：hal0（apt、podman、systemd 當 PID 1）、whisper-install、agentloom 的 bootstrap 腳本。代裝套件不夠，要一台開好機的系統，多半是 `--runtime vm` 的事，或照實記成驗不了。
+  - 另外有 5 筆掛在這裡其實是缺編譯器，建置箱子（H-002）就解了：dog、gutsy、holdspeak 已經驗過。
 - tried:
 
 ## H-004 [open] 沙盒裡沒有 Docker 或 Podman
