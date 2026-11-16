@@ -103,3 +103,9 @@
 - 做了什麼：H-001 的驗收就是用它，抽取那時已經做了。README 只有 `make -j4` 一條路，用 `--toolchain` 跑。抽取列了 OpenCL 標頭當系統套件，映像裡沒有，但沒有它也編得過。
 - 結果：level `function`，全新箱子重播通過，judge 判 working（`make test` 的 kernel、decision、media 測試都印 ALL PASS）。列出的 4 項功能都沒 checked。run `runs/verify/verify-ferro-20261116-131250-25c2`，用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 function。花費：抽取 US$0.113、模型 US$0.037、沙盒 US$0.035。
 - harness：無。用的是 H-002 的建置箱子。
+
+## 2026-11-16 14:06 reverify:gutsy → verified
+
+- 做了什麼：`discover --repo`、抽取後選得到。10/31 停在 `needs_root`，實際原因是 `llama-cpp-python` 在 PyPI 只有原始碼，要 gcc 和 cmake 才編得起來。用 `--toolchain` 跑，在 venv 裡 `pip install -e`，約 2.5 分鐘編完。
+- 結果：level `install`，全新箱子重播通過，judge 判 working（`gutsy-inference --help` 印出用法）。沒有下載模型，所以 4 項功能都沒 checked，到不了 `inference`。run `runs/verify/verify-gutsy-20261116-130958-1f0b`，用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 install。花費：抽取 US$0.081、模型 US$0.013、沙盒 US$0.050。
+- harness：無。用的是 H-002 的建置箱子。原本掛在 H-003，其實缺的是編譯器。

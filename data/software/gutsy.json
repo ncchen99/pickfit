@@ -54,7 +54,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-gutsy-20261116-130958-1f0b",
+      "method": "pip",
+      "steps": [
+        {
+          "command": "cd /home/sbx/work && git clone --depth 1 https://github.com/kouhxp/gutsy",
+          "purpose": "git clone the gutsy repo (source for gutsy-inference)"
+        },
+        {
+          "command": "python3 -m venv ~/gutsy-venv && ~/gutsy-venv/bin/pip install -e /home/sbx/work/gutsy/gutsy-inference",
+          "purpose": "create venv in HOME and pip install -e gutsy-inference (builds llama-cpp-python 0.3.37 from source)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "~/gutsy-venv/bin/gutsy-inference --help",
+        "expected_signal": "usage: gutsy-inference"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -66,109 +86,130 @@
   "processing": "local",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "needs_root",
-    "checked_at": "2026-11-01T00:30:09.901100+08:00",
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T13:17:01.463910+08:00",
     "runs": [
       {
-        "id": "verify-gutsy-20261101-002901-e3a6",
-        "level": "unverified",
-        "unverified_reason": "needs_root",
+        "id": "verify-gutsy-20261116-130958-1f0b",
+        "level": "install",
+        "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:30:09.901100+08:00",
-        "tool_version": "0.4.0",
-        "install_method": "uv",
-        "replayed": false,
+        "image": "pickfit-sbx-build:23f212c715b1",
+        "checked_at": "2026-11-16T13:17:01.463910+08:00",
+        "tool_version": null,
+        "install_method": "pip",
+        "replayed": true,
         "steps": [
           {
-            "command": "uv tool install huggingface_hub 2>&1",
-            "purpose": "install huggingface_hub via uv tool (isolated)"
+            "command": "cd /home/sbx/work && git clone --depth 1 https://github.com/kouhxp/gutsy",
+            "purpose": "git clone the gutsy repo (source for gutsy-inference)"
           },
           {
-            "command": "pwd; ls -la\ngit clone https://github.com/kouhxp/gutsy ./gutsy 2>&1 | tail -5\nls -la gutsy/gutsy-inference/",
-            "purpose": "git clone gutsy into work dir"
-          },
-          {
-            "command": "pip install --no-deps -e gutsy/gutsy-inference --break-system-packages 2>&1 | tail -20\n~/.local/bin/gutsy-inference --help 2>&1; gutsy-inference --help 2>&1; python3 -m gutsy_inference --help 2>&1 | head -n 40\nhf --help 2>&1 | head -n 20",
-            "purpose": "pip install -e gutsy/gutsy-inference --no-deps (avoid llama-cpp build)"
-          },
-          {
-            "command": "pip install numpy --break-system-packages 2>&1 | tail -5\ngutsy-inference --help 2>&1 | head -n 80",
-            "purpose": "pip install numpy dependency"
+            "command": "python3 -m venv ~/gutsy-venv && ~/gutsy-venv/bin/pip install -e /home/sbx/work/gutsy/gutsy-inference",
+            "purpose": "create venv in HOME and pip install -e gutsy-inference (builds llama-cpp-python 0.3.37 from source)"
           }
         ],
         "smoke_tests": [
           {
-            "command": "hf --version 2>&1; huggingface-cli --version 2>&1; gutsy-inference check --help 2>&1 | head -n 20",
-            "expected_signal": "2.4.0",
-            "exit_code": 0,
-            "passed": false,
-            "observed_excerpt": "2.4.0",
-            "setup": [],
-            "offline": null
-          },
-          {
-            "command": "pip install numpy --break-system-packages 2>&1 | tail -5\ngutsy-inference --help 2>&1 | head -n 80",
+            "command": "~/gutsy-venv/bin/gutsy-inference --help",
             "expected_signal": "usage: gutsy-inference",
             "exit_code": 0,
-            "passed": false,
+            "passed": true,
             "observed_excerpt": "usage: gutsy-inference [-h] {serve,decide,bench,check} ...",
             "setup": [],
-            "offline": null
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "pip install -e gutsy/gutsy-inference pulls llama-cpp-python >=0.3.35",
-            "actually_needed": "PyPI only hosts sdist tar.gz for llama-cpp-python 0.3.35/0.3.36 (no wheels), so pip tries to build from source and fails with CMake Error: Could not find compiler CC: gcc. No gcc/clang available in box, needs apt install build-essential",
-            "kind": "sandbox"
+            "readme_said": "pip install -e gutsy/gutsy-inference # needs llama-cpp-python >= 0.3.35",
+            "actually_needed": "Installed into a venv under $HOME (python3 -m venv ~/gutsy-venv, then ~/gutsy-venv/bin/pip install -e). The plain pip command was not run here, so no claim is made about PEP 668 on this system Python. llama-cpp-python had no prebuilt wheel for this box and was compiled from source (about 3.5 minute…",
+            "kind": "note"
           },
           {
-            "readme_said": "pip install -e gutsy/gutsy-inference then gutsy-inference check",
-            "actually_needed": "Install required --break-system-packages on this Debian PEP 668 system and --no-deps plus separate numpy install to get CLI help without building llama-cpp-python",
-            "kind": "sandbox"
+            "readme_said": "hf download kouhxp/gutsy --include \"gutsy-0.8b-v04*\" --local-dir gutsy/gutsy-inference/models",
+            "actually_needed": "Not run. The model files are 505 MB (Q4_K_M) and 775 MB (Q8_0), above this box's ~300 MB download cap, so gutsy-inference check, serve and all README API examples were not run.",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
-        "judge": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The help command exited 0 and printed the usage line 'usage: gutsy-inference [-h] {serve,decide,bench,check} ...' followed by positional arguments and options.",
+          "model": "claude-opus-5-5"
+        },
         "evidence": {
-          "trace_path": "runs/verify/verify-gutsy-20261101-002901-e3a6/report.json",
+          "trace_path": null,
           "log_path": null,
           "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.076897
+        "actor_model": "claude-haiku-5-5",
+        "cost_usd": 0.012641,
+        "features": [
+          {
+            "feature": "get calibrated probabilities for every option",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "Needs the gutsy-0.8b GGUF and calibration file (505 MB Q4_K_M or 775 MB Q8_0), above this box's ~300 MB download cap. Not downloaded."
+          },
+          {
+            "feature": "ask yes/no, choice and score questions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "Same model requirement as F1; yes/no, choice and score questions go through the model."
+          },
+          {
+            "feature": "choose among up to 255 options with reject",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "Same model requirement as F1; the 255-option shortlist and reject probability need the model."
+          },
+          {
+            "feature": "ask cheap follow-up questions on one state",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "Same model requirement as F1; the state-caching follow-up behaviour is only checked by gutsy-inference check, which needs the model."
+          }
+        ]
       }
     ]
   },
   "security": {
     "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_lockfile",
     "sources": [],
     "packages_checked": 0,
     "findings_total": 0,
     "advisories_total": 0,
-    "findings": []
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00"
   },
   "scores": {
     "formula_version": "b3.v6",
-    "computed_at": "2026-11-05T03:16:32+08:00",
+    "computed_at": "2026-11-16T14:06:28+08:00",
     "quality": {
-      "total": 45.6,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 63.8,
+      "confidence": 0.6,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 1.0,
           "weight": 20.0
         },
         "install_docs": {
@@ -213,7 +254,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 14.96
+      "value": 20.93
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -464,5 +505,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:21:04+08:00",
-  "updated_at": "2026-11-05T03:16:32+08:00"
+  "updated_at": "2026-11-16T14:06:28.951826+08:00"
 }
