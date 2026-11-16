@@ -82,11 +82,12 @@ reason: needs_more_resources
 - 方向（還沒試）：在 `gui.GUI_PACKAGES` 加 `zenity`（Debian 套件，LGPL-2.1-or-later，當獨立程式執行，照 `NOTICE` 裡 GUI 套件的寫法記）。加了要重跑 `--limits-test --runner modal --display`，再拿 Cardinal 重跑看操作過不過。
 - tried:
 
-## H-008 [open] gVisor 箱子裡 /、/home、/tmp 的擁有者顯示成 nobody（65534）：檢查目錄擁有者的工具不肯啟動
+## H-008 [fixed] gVisor 箱子裡 /、/home、/tmp 的擁有者顯示成 nobody（65534）：檢查目錄擁有者的工具不肯啟動
 
 - opened: 2026-11-16T13:34:14+08:00
 - symptom: khive 在建置箱子裡編得過（約 11.5 分鐘），但伺服器一啟動就結束：它會檢查資料庫路徑每一層上層目錄的擁有者，箱子使用者看到 `/`、`/home`、`/tmp`、`/var` 的擁有者是 uid 65534，不是 root 也不是自己，於是報 `store-path ancestor ...` 或 `database volume changed after admission identity was captured`。原因多半是 gVisor 箱子把使用者放在自己的 user namespace 裡（`modal_box.NETNS_MAPS` 只對應了網路用的 uid 和箱子使用者），真正的 root 沒有對應，就顯示成 nobody。這是 pickfit 的箱子長得和一般機器不一樣，不是軟體壞了。
 - reproduce: `uv run pickfit verify --batch 1 --repo ohdearquant/khive --force --runner modal --toolchain`，run `verify-khive-20261116-131604-806d`（未驗證，`other`，沒重播；模型 US$0.009，沙盒 US$0.088）。最小的重現：在箱子裡以使用者身分跑 `stat -c '%u %n' / /home /tmp`。
 - 方向（還沒試）：(1) `--runtime vm` 的箱子不靠 user namespace 斷網（用 nftables），先看那裡的擁有者是不是正常；是的話這類工具改用 `--runtime vm --toolchain` 跑，那個組合要先過 `--limits-test`。(2) 在 gVisor 的對應表裡把 root 也對應進去只讀，這會動到隔離，要非常小心，`limits.py` 的 `netns_held` 等檢查必須照樣通過。
 - 可能同一類：tracedecay（`FilesystemLocalityUnverified { filesystem_type: "overlay" }`，它檢查的是檔案系統種類）。
-- tried:
+- tried: 11/16 量過了（各開一個 5 分鐘的箱子，以使用者身分跑 `stat -c '%u:%g %n' / /home /tmp /var` 和 `cat /proc/self/uid_map`）。gVisor 箱子：四個目錄都是 `65534:65534`，uid_map 是 `0 1002 1` 和 `1000 1000 1`。`--runtime vm` 的箱子：四個目錄都是 `0:0`，uid_map 是整段對應。所以方向 (1) 成立：這類工具改在 `--runtime vm` 跑就看得到正常的擁有者，不用動 gVisor 的對應表。
+- 11/16 驗收：沒有改程式，做法是換箱子。`--limits-test --runner modal --runtime vm --toolchain` 23/23 通過（`runs/verify/limits-modal-vm-20261116-133712.json`）。原本失敗的 khive 用 `--runtime vm --toolchain` 重跑通過：level `service`，全新箱子重播通過，judge 判 working（run `verify-khive-20261116-133734-9074`，模型 US$0.040，沙盒 US$0.161）。gVisor 箱子本身沒有變，擁有者照樣顯示成 nobody；遇到這種工具就改用 `--runtime vm`，skill 裡寫了。標成 fixed 的意思是「等它的項目有路可走」，不是 gVisor 的對應表改了。
