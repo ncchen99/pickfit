@@ -67,10 +67,16 @@ _WRITES = re.compile(
     r"|(?:^|\s)patch\s|\bgit\s+(?:checkout|restore|rm|mv|apply|stash)\b|\bopen\(|\.write_text\(|\.write_bytes\(|\.write\(")
 _FD_REDIRECT = re.compile(r"\d*>&\d+|\d*>\s*/dev/null")
 _REDIRECT_TARGET = re.compile(r">>?\s*([^\s;|&)]+)")
-# The pipeline commands that call a model or start a sandbox. --dry-run and --status spend nothing.
+# The pipeline commands that call a model or start a sandbox. --dry-run, --status and --help spend nothing.
+# A pipeline module run by itself (python -m pickfit.verify.web_verify) counts, and so does a script that is
+# run, unless it is one of the few known to spend nothing: a script nobody listed is taken to cost money.
+_FREE_SCRIPTS = "loop_state|loop_budget|loop_guard|guarded_write_back|copy_evidence|build_index|export_schema"
+_RUNS = r"(?:\bpython[\d.]*|\buv\s+run(?:\s+--?\S+)*?(?:\s+python[\d.]*)?)\s+(?:-\S+\s+)*"
 _PAID = re.compile(r"\bpickfit\s+(?:verify|extract|prescreen|score|usability|visual|reverify|watch|webapps|"
-                   r"translate|usage-guide|ping)\b")
-_FREE = re.compile(r"--dry-run\b|--status\b")
+                   r"translate|usage-guide|ping)\b"
+                   r"|-m\s+pickfit\.\w"
+                   rf"|(?:{_RUNS}|^\s*)(?:\S*/)?scripts/(?!(?:{_FREE_SCRIPTS})\.py\b)[\w-]+\.py\b")
+_FREE = re.compile(r"--dry-run\b|--status\b|--help\b")
 _DELETES = re.compile(r"\b(?:git\s+)?rm\b")
 _PARTS = re.compile(r"&&|\|\||[;|\n]")
 _COPY = re.compile(r"\b(?:cp|install|rsync)\b.*\s(\S+)\s*$")  # group 1: the destination, the last word

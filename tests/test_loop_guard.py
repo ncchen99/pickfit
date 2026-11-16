@@ -125,6 +125,18 @@ def test_a_reached_cap_stops_what_costs_money_and_nothing_else(monkeypatch):
     assert "box total ($25.10 of $25)" in refused and "需要你" in refused
     assert bash("cd . && uv run pickfit verify --limits-test --runner modal")
     assert bash("uv run pickfit extract --limit 5")
+    # A pipeline module run by itself costs money too, and so does a script nobody listed as free.
+    assert bash("uv run python -m pickfit.verify.web_verify --records data/software --write-back")
+    assert bash("uv run python scripts/ingest_candidates.py repos --section cli --limit 3")
+    assert bash("cd . && python3 scripts/translate_zh.py")
+    assert bash("uv run --quiet scripts/rereplay.py runs/verify/verify-x")
+    assert bash("./scripts/ingest_candidates.py web")
+    # Naming a script is not running it, and the loop's own scripts spend nothing.
+    assert bash("git add scripts/ingest_candidates.py && git diff --stat") is None
+    assert bash("uv run ruff check scripts/ingest_candidates.py") is None
+    assert bash("uv run python scripts/ingest_candidates.py repos --help") is None
+    assert bash("uv run python scripts/guarded_write_back.py runs/verify/verify-x") is None
+    assert bash("python3 scripts/loop_budget.py status") is None
     # What costs nothing still runs, so the session can write up where it stopped.
     assert bash("uv run pickfit verify --batch 1 --repo owner/name --force --runner modal --dry-run") is None
     assert bash("uv run pickfit spend") is None
