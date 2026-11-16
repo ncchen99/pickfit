@@ -14,6 +14,7 @@ is in two files under loop/, and this script is the only thing that changes thei
     uv run python scripts/loop_state.py next              # claim the next item (a `doing` item first)
     uv run python scripts/loop_state.py finish ID --result verified|unverified|rejected [--note ...]
     uv run python scripts/loop_state.py park ID --issue H-003 [--note ...]
+    uv run python scripts/loop_state.py reopen ID --note "why"   # a done item that was closed by mistake
     uv run python scripts/loop_state.py add --kind new --target owner/name [--issue H-003]
     uv run python scripts/loop_state.py seed-unverified   # records the box could not verify -> reverify items
     uv run python scripts/loop_state.py issue-new "title" [--reason needs_toolchain]
@@ -165,6 +166,16 @@ def park(items: list[dict[str, Any]], ident: str, issue: str, note: str | None,
     return item
 
 
+def reopen(items: list[dict[str, Any]], ident: str, note: str) -> dict[str, Any]:
+    """Put a closed item back in line when its result was recorded by mistake (a write-back that failed after
+    the item was finished, say). The claim that went wrong still counts toward MAX_TRIES."""
+    item = _find(items, ident)
+    if item["status"] != "done":
+        raise StateError(f"{ident} is {item['status']}; only a done item can be reopened")
+    item.update(status="todo", result=None, note=note, updated_at=now())
+    return item
+
+
 def requeue(items: list[dict[str, Any]], issue: str) -> list[str]:
     """Put the items parked on a fixed issue back in line, with their tries reset: the box changed."""
     back = []
@@ -290,6 +301,9 @@ def main(argv: list[str] | None = None) -> int:
     parked.add_argument("id")
     parked.add_argument("--issue", required=True)
     parked.add_argument("--note")
+    again = sub.add_parser("reopen", help="put a done item back in line: its result was recorded by mistake")
+    again.add_argument("id")
+    again.add_argument("--note", required=True, help="what went wrong")
     add = sub.add_parser("add", help="queue one item")
     add.add_argument("--kind", required=True, choices=KINDS)
     add.add_argument("--target", required=True)
@@ -327,6 +341,9 @@ def main(argv: list[str] | None = None) -> int:
                 write_queue(loop_dir, items)
             elif args.command == "park":
                 print(json.dumps(park(items, args.id, args.issue, args.note, issues), ensure_ascii=False))
+                write_queue(loop_dir, items)
+            elif args.command == "reopen":
+                print(json.dumps(reopen(items, args.id, args.note), ensure_ascii=False))
                 write_queue(loop_dir, items)
             elif args.command == "add":
                 if args.issue and args.issue not in issues:

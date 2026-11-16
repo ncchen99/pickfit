@@ -96,3 +96,15 @@ reason: needs_more_resources
 - 可能同一類：tracedecay（`FilesystemLocalityUnverified { filesystem_type: "overlay" }`，它檢查的是檔案系統種類）。
 - tried: 11/16 量過了（各開一個 5 分鐘的箱子，以使用者身分跑 `stat -c '%u:%g %n' / /home /tmp /var` 和 `cat /proc/self/uid_map`）。gVisor 箱子：四個目錄都是 `65534:65534`，uid_map 是 `0 1002 1` 和 `1000 1000 1`。`--runtime vm` 的箱子：四個目錄都是 `0:0`，uid_map 是整段對應。所以方向 (1) 成立：這類工具改在 `--runtime vm` 跑就看得到正常的擁有者，不用動 gVisor 的對應表。
 - 11/16 驗收：沒有改程式，做法是換箱子。`--limits-test --runner modal --runtime vm --toolchain` 23/23 通過（`runs/verify/limits-modal-vm-20261116-133712.json`）。原本失敗的 khive 用 `--runtime vm --toolchain` 重跑通過：level `service`，全新箱子重播通過，judge 判 working（run `verify-khive-20261116-133734-9074`，模型 US$0.040，沙盒 US$0.161）。gVisor 箱子本身沒有變，擁有者照樣顯示成 nobody；遇到這種工具就改用 `--runtime vm`，skill 裡寫了。標成 fixed 的意思是「等它的項目有路可走」，不是 gVisor 的對應表改了。
+
+## H-009 [open] 紀錄的 kind 和新的抽取不一致時，通過的 run 寫不回紀錄
+
+- opened: 2026-11-16T14:53:05+08:00
+- symptom: ling-stack 的紀錄 `kind` 是 `desktop_app`（別台機器上舊的抽取寫的）。這次重新抽取，README 預設的路已經是 Web、daemon、CLI，新的抽取讀成 `self_hosted_web_app`，batch 就照伺服器的方式驗（沒有顯示箱子、沒有 GUI 操作），run 通過，level `service`。寫回時 `SoftwareRecord` 的檢查擋下來：`a desktop app is not service`。`guarded_write_back.py` 直接丟出 traceback，紀錄沒有變。batch 只沿用紀錄的 category（`known_categories`），沒有比對 kind。
+- reproduce: `uv run python scripts/guarded_write_back.py runs/verify/verify-ling-stack-20261116-140801-b206`（pydantic 的 ValidationError）。
+- 影響：凡是從別台機器來、用新抽取重驗的紀錄都可能遇到。這個 session 寫回的 13 筆裡只有這一筆。
+- 方向（還沒試）：
+  1. dry-run 就講出來：`load_candidates` 手上同時有紀錄和抽取，kind 不一樣時在清單上標出來，loop 就不會花一次驗證在寫不回去的 run 上。這在 `pickfit/verify/batch.py`，loop 可以改。
+  2. 紀錄的 kind 要由管線更新。現在 `pickfit profiles` 沒有「只重寫一筆」的模式（`--slug` 只給 `--features-only` 用），整批重寫會動到所有本機有抽取的紀錄，loop 不敢跑。要念誠或協調的 session 決定：加一個單筆的模式，還是由人改這一筆。
+  3. `guarded_write_back.py` 應該印 `not written: <原因>` 而不是 traceback。那個檔受保護，要寫成提案。
+- tried:

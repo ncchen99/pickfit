@@ -210,3 +210,12 @@
 - 結果：level `service`，全新箱子重播通過，judge 判 working（daemon 起來、健康檢查回 `"ok":true`、CLI 的說明印得出來）。4 項功能都沒 checked。Electron 的桌面殼這次沒有驗。run `runs/verify/verify-ling-stack-20261116-140801-b206`，用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 service。花費：抽取 US$0.049、模型 US$0.037、沙盒 US$0.084。
 - harness：無。用的是 H-002 的建置箱子。
 - 需要你：紀錄的 `kind` 還是 `desktop_app`，但這次驗的是 Web、daemon、CLI 那條路。`kind` 要不要跟著新的抽取改，要跑 `pickfit profiles`，loop 沒有做。
+
+## 2026-11-16 14:53 更正：ling-stack 沒有寫回，上一段寫錯了
+
+- 上面「reverify:ling-stack → verified」那一段，還有 commit `4d4db57a` 的訊息，都說用 `guarded_write_back.py` 寫回了。那是錯的。寫回那一步丟出 ValidationError（`a desktop app is not service`），紀錄完全沒有變。我把寫回、`finish`、寫 journal、commit 串在同一個指令裡，中間沒有用 `&&`，寫回失敗後面照樣跑完，所以佇列和 journal 都記成了 verified。這是我的錯，不是管線的。
+- 怎麼更正的：`scripts/loop_state.py` 原本沒有辦法把 done 的項目改回來，所以加了 `reopen ID --note`（done → todo，領過的次數照算），測試在 `tests/test_loop_state.py`（先寫、先失敗）。用它把 ling-stack 改回 todo，再 park 到新開的 H-009。現在佇列裡 ling-stack 是 parked，results 的 verified 少一筆。
+- 實際狀況：run 是過的（`runs/verify/verify-ling-stack-20261116-140801-b206`，level `service`，重播通過，judge 判 working），但寫不進紀錄，因為紀錄的 `kind` 是 `desktop_app`，新的抽取讀成自架的網頁服務。紀錄現在還是 unverified。
+- 其他 12 筆寫回的都看過輸出，每一筆都有 `written` 那一行，level 也對：bamboo-agent、bindiff、cardinal、castor、dog、ducklab、ferro、gutsy、gyrfalcon、holdspeak、hw-smi、khive。
+- 之後寫回和 `finish` 之間一律用 `&&`。
+- 需要你：H-009。ling-stack 的 `kind` 要不要改成新抽取讀的那個，由誰改（`pickfit profiles` 沒有只重寫一筆的模式）。改了之後 `uv run python scripts/guarded_write_back.py runs/verify/verify-ling-stack-20261116-140801-b206` 就寫得進去，不用重跑。

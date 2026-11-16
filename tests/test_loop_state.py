@@ -140,3 +140,21 @@ def test_seed_takes_only_the_box_reasons_and_links_the_issue(tmp_path, capsys):
 def test_an_unknown_issue_is_refused(tmp_path, argv):
     assert run(tmp_path, *argv) == 2
     assert loop_state.read_queue(tmp_path) == []
+
+
+def test_a_done_item_recorded_by_mistake_can_be_reopened_with_a_reason(tmp_path, capsys):
+    run(tmp_path, "add", "--kind", "reverify", "--target", "tool")
+    run(tmp_path, "next")
+    run(tmp_path, "finish", "reverify:tool", "--result", "verified", "--note", "written back")
+    capsys.readouterr()
+
+    assert run(tmp_path, "reopen", "reverify:tool", "--note", "the write-back was refused") == 0
+    item = queue(tmp_path)["reverify:tool"]
+    assert (item["status"], item["result"], item["note"]) == ("todo", None, "the write-back was refused")
+    assert item["tries"] == 1  # the claim that went wrong still counts
+    capsys.readouterr()
+    # Only a closed item: a todo, doing or parked one is not reopened, and a reason is required.
+    assert run(tmp_path, "reopen", "reverify:tool", "--note", "again") == 2
+    assert "only a done item" in capsys.readouterr().err
+    with pytest.raises(SystemExit):
+        run(tmp_path, "reopen", "reverify:tool")
