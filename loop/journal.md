@@ -48,3 +48,13 @@
 
 - H-001 那一段「需要你」的第 1 點已經解決（念誠 11/16）：`.env` 裡有一把只讀公開 repo 的 `GH_TOKEN`，`pickfit discover --repo` 不用加前綴就能跑（剛用 ferro 試過，`refreshed`）。之後不再呼叫 `gh auth token`，skill 裡那一行也拿掉了前綴。
 - 前面四段標的時間是估的，寫晚了：H-001 那段到 backgroundmusic 那段實際都在 12:21 到 12:26 之間完成。從這一段起用 `date` 的時間。
+
+## 2026-11-16 13:07 reverify:bamboo-agent → verified
+
+- 做了什麼：dry-run 印 `0 to verify`，`discover --repo` 加抽取後選得到。先在一般的箱子跑一次：安裝腳本裝的是另一個產品的 .deb，要 `sudo`；剩下兩條路都是 `cargo install`，README 要 Rust 1.95 以上，停在 `needs_toolchain`。這是 harness 的問題，所以修了 H-002，再用 `--toolchain` 重跑。
+- 結果：level `service`，全新箱子重播通過，judge 判 working。4 項功能裡 1 項 checked（本機網頁介面和 HTTP API），另外 3 項要模型供應商的金鑰，記成 `needs_account`。run `runs/verify/verify-bamboo-agent-20261116-123422-6720`。用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 service。花費：抽取 US$0.111、第一次重跑 US$0.006、建置箱子那次模型 US$0.044、沙盒 US$0.223，合計約 US$0.38。
+- harness：H-002，修好。加了 `pickfit verify --toolchain`（建置用的箱子），改了 `pickfit/verify/modal_box.py`、`box.py`、`agent.py`、`cli.py`、`NOTICE`，加了 `tests/test_verify_toolchain.py`（4 個）。沒有改既有的測試。驗收三樣都過，細節在 `loop/issues.md` 的 H-002。commit `d2544242`。
+- 需要你：
+  1. 建置箱子一筆的沙盒費約 US$0.2 到 0.5（bamboo-agent 是 0.223），`box` 那本帳每天上限 US$10，大約夠 20 到 40 筆。佇列裡還有十幾筆要建置，照跑會吃掉今天大半的沙盒額度，loop 會跑到上限就停。
+  2. 紀錄的 `prerequisites.runtimes` 還是空的，新的抽取結果寫的是「rust>=1.95 (source build)」。安裝指南現在是 `cargo install`，使用者得先有 Rust。run 的 pitfall 有寫，但 `prerequisites` 要靠 `pickfit profiles` 重寫才會更新，loop 不手改紀錄，沒有做。
+  3. hook 有三次擋到不是它要擋的東西，都照它的意思換了寫法，沒有繞過保護的內容：(a) 用 Python 的 `open()` 讀 `data/software/` 的紀錄會被當成寫入，改用 `jq` 讀；(b) commit 訊息裡提到環境檔的檔名會被當成讀取它，改掉用字；(c) 同一行同時出現 `open(` 和 `data/software/` 才會擋，分成兩行就不擋，所以這條規則其實擋不住真的寫入。

@@ -13,7 +13,7 @@ pickfit 的驗證環境自己的問題。每一段的標題列由 `scripts/loop_
 - tried: 11/16 第一種做法，修好。加了 `pickfit discover --repo owner/name`（`pickfit/discover/run.py` 的 `add_repos`）：不搜尋、不呼叫模型，向 GitHub 拿這個 repo 的資料、README、檔案清單，套規則，存成本機的候選；有紀錄的沿用紀錄的 category。接著 `pickfit extract --repo <repo_id> --model prod --limit 1` 抽取（ferro 一筆 US$0.113），`verify --batch --repo` 就選得到。做法和 `pickfit reverify`、`pickfit watch` 接一筆 repo 的流程一樣，只是拆成指令。名字現在指到另一個 repo（原本的被刪、名字被佔走）時不存，回報 `another_repository`。測試在 `tests/test_discover_named.py`（5 個）。驗收：ferro 的 dry-run 從 `0 to verify` 變成只列 ferro；原本選得到的 dog 照樣只列 dog；沒有候選的 bamboo-agent 也存得進來。沒動到箱子和映像，所以沒跑 `--limits-test`。
 - 還留著的落差：重新抽取的功能清單，用字可能和紀錄裡 `features` 的不一樣（`pickfit reverify` 在 README 改過時也是這樣）。寫回後要對齊，跑 `uv run pickfit profiles --features-only --slug <slug>`，這一步 loop 沒有做。
 
-## H-002 [fixing] 沙盒映像沒有編譯器與 Rust、Go 工具鏈
+## H-002 [fixed] 沙盒映像沒有編譯器與 Rust、Go 工具鏈
 
 reason: needs_toolchain
 

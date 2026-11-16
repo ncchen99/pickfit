@@ -74,20 +74,21 @@
       "first_task": "bamboo --help"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
+      "basis": "replayed",
+      "run_id": "verify-bamboo-agent-20261116-123422-6720",
       "method": "cargo",
       "steps": [
         {
-          "command": "cargo install bamboo-agent --locked",
-          "purpose": null
+          "command": "cargo install bamboo-agent --locked 2>&1",
+          "purpose": "cargo install bamboo-agent --locked (built from crates.io, ~18 min, installed bamboo to ~/.cargo/bin)"
         }
       ],
-      "manual_steps": [
-        "Provider setup is still required"
-      ],
-      "check": null,
-      "first_task": "bamboo --help"
+      "manual_steps": [],
+      "check": {
+        "command": "export PATH=\"$HOME/.cargo/bin:$PATH\" && bamboo --help",
+        "expected_signal": "QUICK RUN (headless server):"
+      },
+      "first_task": "export PATH=\"$HOME/.cargo/bin:$PATH\" && cd /home/sbx/work && bamboo -p \"ping\" --echo"
     },
     "windows": {
       "basis": "readme_claim",
@@ -119,43 +120,157 @@
     "url": "https://github.com/bigduu/Bamboo-agent/releases/tag/v2026.10.21"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "needs_toolchain",
-    "checked_at": "2026-10-31T02:37:13.443360+08:00",
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T13:05:45.505419+08:00",
     "runs": [
       {
-        "id": "verify-bamboo-agent-20261031-023650-ec19",
-        "level": "unverified",
-        "unverified_reason": "needs_toolchain",
+        "id": "verify-bamboo-agent-20261116-123422-6720",
+        "level": "service",
+        "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:37:13.443360+08:00",
-        "tool_version": null,
-        "install_method": null,
-        "replayed": false,
-        "steps": [],
-        "smoke_tests": [],
-        "pitfalls": [],
+        "image": "pickfit-sbx-build:23f212c715b1",
+        "checked_at": "2026-11-16T13:05:45.505419+08:00",
+        "tool_version": "2026.11.23",
+        "install_method": "cargo",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cargo install bamboo-agent --locked 2>&1",
+            "purpose": "cargo install bamboo-agent --locked (built from crates.io, ~18 min, installed bamboo to ~/.cargo/bin)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "export PATH=\"$HOME/.cargo/bin:$PATH\" && bamboo --help",
+            "expected_signal": "QUICK RUN (headless server):",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "QUICK RUN (headless server):",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.cargo/bin:$PATH\" && cd /home/sbx/work && bamboo -p \"ping\" --echo",
+            "expected_signal": "✔ completed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✔ completed",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export PATH=\"$HOME/.cargo/bin:$PATH\" && bamboo health",
+            "expected_signal": "● healthy",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "● healthy http://127.0.0.1:9562/api/v1",
+            "setup": [
+              {
+                "command": "export PATH=\"$HOME/.cargo/bin:$PATH\" && bamboo serve --port 9562 --bind 127.0.0.1",
+                "background": true,
+                "port": 9562
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsS http://127.0.0.1:9562/api/v1/health && echo && curl -fsS http://127.0.0.1:9562/",
+            "expected_signal": "<!doctype html>",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "<!doctype html>",
+            "setup": [
+              {
+                "command": "export PATH=\"$HOME/.cargo/bin:$PATH\" && bamboo serve --port 9562 --bind 127.0.0.1",
+                "background": true,
+                "port": 9562
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Standalone Bamboo: cargo install bamboo-agent --locked; bamboo --help",
+            "actually_needed": "~/.cargo/bin must be on PATH (the box's PATH did not include it); the install itself worked with the box's Rust toolchain and took about 18 minutes.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Bodhi desktop app: curl ... install.sh | sh (terminal installer)",
+            "actually_needed": "The script installs a different product (Bodhi-AI desktop, a .deb) with sudo apt-get and needs a terminal for the sudo prompt. It cannot run without root, so it was not used; the Bamboo CLI came from cargo.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "bamboo init (interactive provider setup) then bamboo serve",
+            "actually_needed": "bamboo serve starts without init. Headless runs need a provider key, which was not available, so bamboo -p failed with HTTP 500 and doctor reported no config.json and no anthropic API key.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "bamboo -p \"Summarize the README in this workspace.\" --workspace /path/to/project",
+            "actually_needed": "Needs a configured model provider API key; without it the run fails with 'execute rejected: HTTP 500'.",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
-        "judge": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The echo smoke run printed '✔ completed', the health check reported '● healthy', and --help printed full usage ending with the QUICK RUN section, all exiting 0.",
+          "model": "claude-opus-5-5"
+        },
         "evidence": {
-          "trace_path": "runs/verify/verify-bamboo-agent-20261031-023650-ec19/report.json",
+          "trace_path": null,
           "log_path": null,
           "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.029065
+        "actor_model": "claude-haiku-5-5",
+        "cost_usd": 0.044033,
+        "features": [
+          {
+            "feature": "run agent prompts on a workspace from terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "bamboo -p with --workspace needs a provider API key; without it the run returned HTTP 500 and doctor reported no key."
+          },
+          {
+            "feature": "resume persistent agent sessions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Session resume needs a session created by a real model run; bamboo sessions listed none."
+          },
+          {
+            "feature": "serve local browser UI and HTTP API",
+            "status": "checked",
+            "smoke_tests": [
+              2,
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "connect MCP servers, skills and scheduled prompts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "MCP servers, skills and scheduled prompts need a configured provider and external services; not exercised."
+          }
+        ]
       }
     ]
   },
   "security": {
     "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -179,19 +294,21 @@
         "summary": "russh: Agent server never calls `Agent::confirm`, so keys added with the confirm constraint (`ssh-add -c`) sign without confirmation",
         "malicious": false
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-03T21:41:45+08:00"
   },
   "scores": {
     "formula_version": "b3.v6",
-    "computed_at": "2026-11-05T03:16:32+08:00",
+    "computed_at": "2026-11-16T13:06:59+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 79.0,
+      "confidence": 0.8,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 1.0,
           "weight": 20.0
         },
         "install_docs": {
@@ -215,7 +332,7 @@
           "weight": 10.0
         },
         "feature_results": {
-          "score": null,
+          "score": 1.0,
           "weight": 20.0
         }
       }
@@ -238,7 +355,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 33.05
+      "value": 37.84
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -521,5 +638,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:51:45+08:00",
-  "updated_at": "2026-11-05T03:16:32+08:00"
+  "updated_at": "2026-11-16T13:06:59.071493+08:00"
 }
