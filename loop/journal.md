@@ -120,3 +120,9 @@
 
 - 14:05 ducklab 寫回之後，done 加 parked 是 10，/goal 的條件達成。那時還有 7 筆已經付錢跑完、結果是通過的（ferro、gutsy、gyrfalcon、hw-smi、khive、local-jev、mdma），是等前面項目的時候先平行跑的。放著不記等於白花錢，所以照佇列的順序繼續做，中間夾著的項目也一併處理。
 - 平行先跑的做法：每一筆還是各自一個指令、各自先 dry-run 確認只列目標那一款，只是不等前一筆 `finish` 就先開始跑；`next`、`finish`、journal、commit 照佇列順序一筆一筆做。skill 沒有寫可不可以這樣，請看一眼。
+
+## 2026-11-16 14:08 reverify:heym → parked (H-004)
+
+- 做了什麼：還沒輪到就先處理（`park` 可以直接對 todo 的項目做）。`discover --repo` 存進本機，沒有抽取。10/31 的筆記：安裝只有 `run.sh`、`deploy.sh`（兩個都先檢查 docker、bun、uv，缺了就結束）或 Docker 映像，整個平台還要 PostgreSQL。箱子一樣沒有 Docker，沒有重跑。
+- 結果：park，等 H-004。花費 US$0。
+- harness：無。
