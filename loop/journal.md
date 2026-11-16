@@ -170,3 +170,9 @@
 - 結果：未驗證，`needs_root`，沒有寫回。安裝腳本一定要 root：preflight 先用 apt 裝 jq，在 `/var/lib/dpkg/lock-frontend` 被拒；後面還要 cosign、podman，而且要 systemd 當 PID 1。README 另一條路是給 Proxmox 主機的。run `runs/verify/verify-hal0-20261116-140702-36ad`，38 秒。花費：抽取 US$0.092、模型 US$0.007、沙盒 US$0.002。
 - park，留在 H-003。它要的不只是幾個具名套件，是「在一台開好機的系統上以 root 安裝」，H-003 的做法就算做了也不一定夠，多半要 `--runtime vm` 加 systemd，或照實記成 pickfit 的環境驗不了。
 - harness：無。
+
+## 2026-11-16 14:20 reverify:holdspeak → verified
+
+- 做了什麼：本機有抽取結果。10/31 停在 `needs_root`，那次的筆記是要 C/C++ 編譯器和 `linux-headers`。用 `--toolchain` 跑，編譯器有了就裝得起來，沒有用到核心標頭。
+- 結果：level `service`，全新箱子重播通過，judge 判 working。run `runs/verify/verify-holdspeak-20261116-140703-884d`，用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 service。花費：模型 US$0.041、沙盒 US$0.067。
+- harness：無。用的是 H-002 的建置箱子。原本掛在 H-003，其實缺的是編譯器。

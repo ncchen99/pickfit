@@ -96,7 +96,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-holdspeak-20261116-140703-884d",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "cd /home/sbx/work && rm -rf HoldSpeak && git clone --depth 1 https://github.com/karolswdev/HoldSpeak.git && cd HoldSpeak && uv venv && . .venv/bin/activate && uv pip install -e .",
+          "purpose": "git clone HoldSpeak and uv venv + uv pip install -e . (candidate 1); llama-cpp-python built from source in ~3 min"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "cd /home/sbx/work/HoldSpeak && . .venv/bin/activate && which holdspeak && holdspeak --help",
+        "expected_signal": "Examples:"
+      },
+      "first_task": "cd /home/sbx/work/HoldSpeak && . .venv/bin/activate && holdspeak doctor"
+    },
     "windows": null
   },
   "pricing": {
@@ -112,54 +128,110 @@
     "url": "https://github.com/karolswdev/HoldSpeak/releases/tag/v0.4.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "needs_root",
-    "checked_at": "2026-10-31T02:11:16.606271+08:00",
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T14:16:28.938788+08:00",
     "runs": [
       {
-        "id": "verify-holdspeak-20261031-020929-4e76",
-        "level": "unverified",
-        "unverified_reason": "needs_root",
+        "id": "verify-holdspeak-20261116-140703-884d",
+        "level": "service",
+        "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T02:11:16.606271+08:00",
-        "tool_version": null,
-        "install_method": null,
-        "replayed": false,
-        "steps": [],
-        "smoke_tests": [],
+        "image": "pickfit-sbx-build:23f212c715b1",
+        "checked_at": "2026-11-16T14:16:28.938788+08:00",
+        "tool_version": "0.4.0",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd /home/sbx/work && rm -rf HoldSpeak && git clone --depth 1 https://github.com/karolswdev/HoldSpeak.git && cd HoldSpeak && uv venv && . .venv/bin/activate && uv pip install -e .",
+            "purpose": "git clone HoldSpeak and uv venv + uv pip install -e . (candidate 1); llama-cpp-python built from source in ~3 min"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd /home/sbx/work/HoldSpeak && . .venv/bin/activate && which holdspeak && holdspeak --help",
+            "expected_signal": "Examples:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Examples:",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /home/sbx/work/HoldSpeak && . .venv/bin/activate && holdspeak doctor",
+            "expected_signal": "Summary:",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "[PASS] Runtime profiles: Meeting summary: unavailable (no assignment); Live analysis is off for Record.; dictation: hub default (no profile assigned)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -fsS -m 20 http://127.0.0.1:8765/health",
+            "expected_signal": "\"status\":\"ok\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\":\"ok\"}",
+            "setup": [
+              {
+                "command": "cd /home/sbx/work/HoldSpeak && . .venv/bin/activate && holdspeak web --no-open",
+                "background": true,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
         "pitfalls": [
           {
-            "readme_said": "Linux: uv pip install -e '.[linux]' after optionally installing portaudio19-dev, ffmpeg, xclip, pulseaudio-utils",
-            "actually_needed": "apt-get install linux-headers-$(uname -r) plus a C/C++ compiler, which needs root and is not available to user sbx",
+            "readme_said": "uv pip install -e . (Linux: uv pip install -e '.[linux]')",
+            "actually_needed": "The plain install succeeded; doctor then reports 'Transcription backend: Install Linux backend with pip install holdspeak[linux]', so the [linux] extra is needed for a working Linux transcription backend. Not tested with the extra.",
             "kind": "readme_wrong"
           },
           {
-            "readme_said": "git clone https://github.com/karolswdev/HoldSpeak.git",
-            "actually_needed": "shallow clone (git clone --depth 1) succeeded; full clone failed with fetch-pack invalid index-pack output",
+            "readme_said": "a C++ compiler (the local model runtime builds from source)",
+            "actually_needed": "llama-cpp-python 0.3.37 built from source during uv pip install (about 3 minutes); the box's gcc/g++/cmake was enough.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "holdspeak (launches web runtime)",
+            "actually_needed": "Headless, the runtime prints 'Voice typing hotkey unavailable' and doctor marks Global hotkey FAIL; the web server still runs with --no-open. The URL with a per-run token is printed in the log.",
             "kind": "sandbox"
+          },
+          {
+            "readme_said": "run holdspeak doctor if something does not work",
+            "actually_needed": "doctor exits 1 when it reports FAIL items; on this box those were the hotkey and microphone, which need a desktop. Exit 1 is the doctor's report, not an install failure.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Set up local AI downloads the speech model and a starter language model (in the browser UI)",
+            "actually_needed": "Not done: the default Dictation model is Qwen3.5-4B-Q4_K_M.gguf, too large for the inference check; the local model is set up through the Settings > Engines UI, and I did not find a headless generation command.",
+            "kind": "note"
           }
         ],
         "blocking_error": null,
-        "judge": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Doctor ran and printed a Summary with expected exit 1 and hub checks passing, the health endpoint returned {\"status\":\"ok\"}, and --help printed usage with an Examples section.",
+          "model": "claude-opus-5-5"
+        },
         "evidence": {
-          "trace_path": "runs/verify/verify-holdspeak-20261031-020929-4e76/report.json",
+          "trace_path": null,
           "log_path": null,
           "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.081229
+        "actor_model": "claude-haiku-5-5",
+        "cost_usd": 0.041389
       }
     ]
   },
   "security": {
     "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -409,19 +481,21 @@
         "summary": "urllib3: HTTPResponse.stream()/read_chunked() buffers an unbounded chunk-size line into memory",
         "malicious": false
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-03T21:41:45+08:00"
   },
   "scores": {
     "formula_version": "b3.v6",
-    "computed_at": "2026-11-05T03:16:32+08:00",
+    "computed_at": "2026-11-16T14:20:34+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 79.0,
+      "confidence": 0.6,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.7225,
           "weight": 20.0
         },
         "install_docs": {
@@ -468,7 +542,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 16.91
+      "value": 19.36
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -815,5 +889,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-11-05T03:16:32+08:00"
+  "updated_at": "2026-11-16T14:20:34.712340+08:00"
 }
