@@ -203,3 +203,10 @@
 - 結果：未驗證，`needs_more_resources`，沒有寫回。`.deb` 要 `sudo dpkg -i`，相依 webkit2gtk、gtk3、appindicator，是桌面 App 的裝法。原始碼那條路的 `cargo build` 在單一指令 30 分鐘的上限被砍，接著重跑到 769 秒又以 137 結束（多半是記憶體不夠），停在編 kronn 自己那個 crate。README 的開發模式還要比箱子裡的 Node 22 更新的版本，沒走到前端那一步。run `runs/verify/verify-kronn-20261116-140703-e00c`，44 分鐘。花費：抽取 US$0.119、模型 US$0.015、沙盒 US$0.312。
 - park，從 H-004 改掛 H-005：要比建置箱子（4 vCPU、6 GiB、30 分鐘）更大的箱子。可以先試 `--toolchain --memory-mb 16384`，這個 session 沒有再花一次 45 分鐘去試。
 - harness：無。
+
+## 2026-11-16 14:51 reverify:ling-stack → verified
+
+- 做了什麼：`discover --repo`、抽取後選得到。紀錄把它記成桌面 App，10/31 那次是因為沒有 Linux 的發行檔、只能從原始碼建。README 現在預設的上手路徑是 Web、daemon 和 CLI（Node 22、pnpm 10、Rust 1.89 以上），新的抽取把它讀成自架的網頁服務，所以不用顯示箱子，用 `--toolchain` 跑。
+- 結果：level `service`，全新箱子重播通過，judge 判 working（daemon 起來、健康檢查回 `"ok":true`、CLI 的說明印得出來）。4 項功能都沒 checked。Electron 的桌面殼這次沒有驗。run `runs/verify/verify-ling-stack-20261116-140801-b206`，用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 service。花費：抽取 US$0.049、模型 US$0.037、沙盒 US$0.084。
+- harness：無。用的是 H-002 的建置箱子。
+- 需要你：紀錄的 `kind` 還是 `desktop_app`，但這次驗的是 Web、daemon、CLI 那條路。`kind` 要不要跟著新的抽取改，要跑 `pickfit profiles`，loop 沒有做。
