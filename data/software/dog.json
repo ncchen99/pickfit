@@ -68,18 +68,21 @@
       "first_task": "dog example.net"
     },
     "linux": {
-      "basis": "readme_claim",
-      "run_id": null,
-      "method": "docker",
+      "basis": "replayed",
+      "run_id": "verify-dog-20261116-130958-e0c8",
+      "method": "source",
       "steps": [
         {
-          "command": "docker build -t dog .",
-          "purpose": null
+          "command": "cd /home/sbx/work && rm -rf dog && git clone --depth 1 https://github.com/ogham/dog.git && cd dog && cargo build --release --no-default-features --features=with_idna && mkdir -p ~/.local/bin && cp target/release/dog ~/.local/bin/",
+          "purpose": "git clone dog source and cargo build --release with --no-default-features --features=with_idna; copy binary to ~/.local/bin"
         }
       ],
       "manual_steps": [],
-      "check": null,
-      "first_task": "dog example.net"
+      "check": {
+        "command": "dog --version",
+        "expected_signal": "command-line DNS client"
+      },
+      "first_task": "dog example.net @127.0.0.1:5353 --color=always"
     },
     "windows": {
       "basis": "readme_claim",
@@ -109,83 +112,144 @@
     "url": "https://github.com/ogham/dog/releases/tag/v0.1.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "needs_root",
-    "checked_at": "2026-11-04T14:48:54.600098+08:00",
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T13:11:39.959609+08:00",
     "runs": [
       {
-        "id": "verify-dog-20261104-144757-180d",
-        "level": "unverified",
-        "unverified_reason": "needs_root",
+        "id": "verify-dog-20261116-130958-e0c8",
+        "level": "function",
+        "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:12c0a02edc50",
-        "checked_at": "2026-11-04T14:48:54.600098+08:00",
-        "tool_version": null,
-        "install_method": "binary",
-        "replayed": false,
+        "image": "pickfit-sbx-build:23f212c715b1",
+        "checked_at": "2026-11-16T13:11:39.959609+08:00",
+        "tool_version": "v0.2.0-pre [-tls, -https] [721440b]",
+        "install_method": "source",
+        "replayed": true,
         "steps": [
           {
-            "command": "curl -fL https://github.com/ogham/dog/releases/download/v0.1.0/dog-v0.1.0-x86_64-unknown-linux-gnu.zip -o /tmp/dog.zip && unzip -l /tmp/dog.zip 2>&1 && mkdir -p /tmp/dog-extract && unzip -o /tmp/dog.zip -d /tmp/dog-extract && ls -R /tmp/dog-extract",
-            "purpose": "download prebuilt dog v0.1.0 Linux binary from GitHub releases"
-          },
-          {
-            "command": "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs -o /tmp/rustup.sh && head -n 20 /tmp/rustup.sh\nls -l /tmp/rustup.sh",
-            "purpose": "download rustup install script"
-          },
-          {
-            "command": "sh /tmp/rustup.sh -y --no-modify-path 2>&1 | tail -n 50\nls ~/.cargo/bin/ 2>&1 | head -n 20\n~/.cargo/bin/cargo --version 2>&1; ~/.cargo/bin/rustc --version 2>&1",
-            "purpose": "install rust toolchain via rustup"
+            "command": "cd /home/sbx/work && rm -rf dog && git clone --depth 1 https://github.com/ogham/dog.git && cd dog && cargo build --release --no-default-features --features=with_idna && mkdir -p ~/.local/bin && cp target/release/dog ~/.local/bin/",
+            "purpose": "git clone dog source and cargo build --release with --no-default-features --features=with_idna; copy binary to ~/.local/bin"
           }
         ],
         "smoke_tests": [
           {
-            "command": "mkdir -p ~/.local/bin && cp /tmp/dog-extract/bin/dog ~/.local/bin/dog && chmod +x ~/.local/bin/dog && ~/.local/bin/dog --version 2>&1; echo \"exit:$?\"\n~/.local/bin/dog --help 2>&1",
-            "expected_signal": "dog 0.1.0",
-            "exit_code": 127,
-            "passed": false,
-            "observed_excerpt": "/home/sbx/.local/bin/dog: error while loading shared libraries: libssl.so.1.1: cannot open shared object file: No such file or directory",
+            "command": "dog --version",
+            "expected_signal": "command-line DNS client",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "dog ● command-line DNS client",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "dog example.net @127.0.0.1:5353 --color=always",
+            "expected_signal": "93.184.216.34",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[1;32mA\u001b[0m \u001b[1;34mexample.net.\u001b[0m 5m00s 93.184.216.34",
             "setup": [
               {
-                "command": "curl -fL https://github.com/ogham/dog/releases/download/v0.1.0/dog-v0.1.0-x86_64-unknown-linux-gnu.zip -o /tmp/dog.zip && unzip -l /tmp/dog.zip 2>&1 && mkdir -p /tmp/dog-extract && unzip -o /tmp/dog.zip -d /tmp/dog-extract && ls -R /tmp/dog-extract",
+                "command": "cat > /home/sbx/work/stub.py <<'EOF'\nimport socket, struct\ns = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)\ns.bind((\"127.0.0.1\", 5353))\nwhile True:\n    data, addr = s.recvfrom(512)\n    txid = data[:2]\n    i = 12\n    while data[i] != 0:\n        i += data[i] + 1\n    i += 1\n    qtype, qclass = struct.unpack('!HH', data[i:i+4])\n    q = data[12:i+4]\n    an = 1 if qtype == 1 else 0\n    resp = txid + struct.pack('!HHHHH', 0x8180, 1, an, 0, 0) + q\n    if an:\n        resp += b'\\xc0\\x0c' + struct.pack('!HHIH', 1, 1, 300, 4) + socket.inet_aton(\"93.184.216.34\")\n    s.sendto(resp, addr)\nEOF",
                 "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 /home/sbx/work/stub.py",
+                "background": true,
                 "port": null
               }
             ],
-            "offline": null
+            "offline": true
+          },
+          {
+            "command": "dog example.net @127.0.0.1:5353 -J",
+            "expected_signal": "\"responses\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"responses\":[{\"queries\":[{\"name\":\"example.net.\",\"class\":\"IN\",\"type\":\"A\"}],\"answers\":[{\"name\":\"example.net.\",\"class\":\"IN\",\"ttl\":300,\"type\":\"A\",\"data\":{\"address\":\"93.184.216.34\"}}],\"authorities\":[],\"additionals\":[]}]}",
+            "setup": [
+              {
+                "command": "cat > /home/sbx/work/stub.py <<'EOF'\nimport socket, struct\ns = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)\ns.bind((\"127.0.0.1\", 5353))\nwhile True:\n    data, addr = s.recvfrom(512)\n    txid = data[:2]\n    i = 12\n    while data[i] != 0:\n        i += data[i] + 1\n    i += 1\n    qtype, qclass = struct.unpack('!HH', data[i:i+4])\n    q = data[12:i+4]\n    an = 1 if qtype == 1 else 0\n    resp = txid + struct.pack('!HHHHH', 0x8180, 1, an, 0, 0) + q\n    if an:\n        resp += b'\\xc0\\x0c' + struct.pack('!HHIH', 1, 1, 300, 4) + socket.inet_aton(\"93.184.216.34\")\n    s.sendto(resp, addr)\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 /home/sbx/work/stub.py",
+                "background": true,
+                "port": null
+              }
+            ],
+            "offline": true
           }
         ],
         "pitfalls": [
           {
-            "readme_said": "Binary downloads available for Linux from GitHub releases",
-            "actually_needed": "Latest release binary links against libssl.so.1.1 which is not present on Debian 13 (has libssl.so.3); needs manual libssl1.1 or rebuild from source",
-            "kind": "readme_wrong"
+            "readme_said": "To build, download the source code and run: cargo build",
+            "actually_needed": "Default features (with_tls, with_https) need OpenSSL development headers (libssl-dev / openssl-devel). Without them the build fails in openssl-sys. Here no root was available, so the build used --no-default-features --features=with_idna, which the README documents under Feature toggles.",
+            "kind": "sandbox"
           },
           {
-            "readme_said": "cargo build compiles dog from source",
-            "actually_needed": "box has no C compiler (cc/gcc) so Rust build fails with 'failed to find tool cc' after installing rustup; also needs OpenSSL dev headers",
-            "kind": "sandbox"
+            "readme_said": "dog example.net (default settings query)",
+            "actually_needed": "Not run as a smoke test: it uses the system resolver and needs network, and smoke tests run with network off. Checks used a local stub DNS server on 127.0.0.1:5353 via the @ADDR:PORT nameserver syntax, which worked.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Build with cargo build; the release binary is target/release/dog",
+            "actually_needed": "Installed by copying target/release/dog to ~/.local/bin. The build also prints many unexpected_cfgs warnings; they are harmless.",
+            "kind": "note"
           }
         ],
-        "blocking_error": "libssl.so.1.1: cannot open shared object file: No such file or directory (Debian 13 provides libssl.so.3 only; no root to apt-get libssl1.1, no static/musl binary offered)",
-        "judge": null,
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks succeed: dog resolved example.net to 93.184.216.34 in colored output, returned JSON with \"responses\", and printed its version banner 'command-line DNS client'.",
+          "model": "claude-opus-5-5"
+        },
         "evidence": {
-          "trace_path": "runs/verify/verify-dog-20261104-144757-180d/report.json",
+          "trace_path": null,
           "log_path": null,
           "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/Muse-Spark-Open-816B-A42B",
-        "cost_usd": 0.045875
+        "actor_model": "claude-haiku-5-5",
+        "cost_usd": 0.030165,
+        "features": [
+          {
+            "feature": "display DNS results with colourful output",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: The output shows a resolved A record but no ANSI colour codes are visible, so colourful output cannot be confirmed."
+          },
+          {
+            "feature": "query using DNS-over-TLS and DNS-over-HTTPS",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "DNS-over-TLS and DNS-over-HTTPS are compiled out: the build lacks OpenSSL dev headers (needs root to install), and --version shows [-tls, -https]. They also need an outside resolver, and smoke tests run with network off."
+          },
+          {
+            "feature": "emit DNS results as JSON",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
       }
     ]
   },
   "security": {
     "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -383,19 +447,21 @@
         "summary": "webpki: CPU denial of service in certificate path building",
         "malicious": false
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00"
   },
   "scores": {
     "formula_version": "b3.v6",
-    "computed_at": "2026-11-05T03:16:32+08:00",
+    "computed_at": "2026-11-16T14:05:25+08:00",
     "quality": {
-      "total": 35.1,
-      "confidence": 0.5,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 60.6,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.85,
           "weight": 20.0
         },
         "install_docs": {
@@ -419,7 +485,7 @@
           "weight": 10.0
         },
         "feature_results": {
-          "score": null,
+          "score": 1.0,
           "weight": 20.0
         }
       }
@@ -440,7 +506,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 3.51
+      "value": 6.06
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -723,5 +789,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:57+08:00",
-  "updated_at": "2026-11-05T03:16:32+08:00"
+  "updated_at": "2026-11-16T14:05:25.269073+08:00"
 }

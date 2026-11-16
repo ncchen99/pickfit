@@ -84,3 +84,10 @@
 - 結果：level `function`，全新箱子重播通過，judge 判 working，功能 1 項 checked。run `runs/verify/verify-castor-20261116-133353-ea1f`，用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 function。花費：抽取 US$0.067、兩次模型共 US$0.089、兩次沙盒共 US$0.855（有 T4），合計約 US$1.01。
 - harness：無。用的是 H-002 的建置箱子。
 - 需要你：兩次都沒有真的用到 GPU（agent 的筆記寫沒有跑本機的模型引擎）。抽取把 GPU 記成必要，管線就只肯在有 GPU 的箱子驗它，沙盒費因此貴了幾倍。這是抽取的判讀問題，loop 沒有動。
+
+## 2026-11-16 14:05 reverify:dog → verified
+
+- 做了什麼：本機有抽取結果，直接選得到。10/31 那次的筆記：發行的執行檔要 `libssl.so.1.1`，Debian 13 只有 3；從原始碼建又沒有編譯器。所以用 `--toolchain` 跑。agent 先試預設的建置，`openssl-sys` 編不過（dog 是 2021 年的專案，鎖住的 `openssl-sys` 很舊；agent 的筆記寫成缺 OpenSSL 標頭，但映像裡有 `libssl-dev`，比較像是版本太新對不上），改用 README 自己寫的 `--no-default-features --features=with_idna`。
+- 結果：level `function`，全新箱子重播通過，judge 判 working。功能 1 項 checked（JSON 輸出）；DNS-over-TLS、DNS-over-HTTPS 這次的建置沒有包進去，記成 `needs_root`；彩色輸出 judge 在截圖裡看不到顏色碼，沒算。run `runs/verify/verify-dog-20261116-130958-e0c8`，用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 function。花費：模型 US$0.030、沙盒 US$0.011。
+- harness：無。用的是 H-002 的建置箱子。原本掛在 H-003，其實是工具鏈的問題。
+- 需要你：安裝指南現在是不含 TLS 的建置。使用者照著做會少 DoT、DoH 兩個功能，run 的 pitfall 有寫。要不要在工具頁上講得更明顯，請你看一眼。
