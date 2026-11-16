@@ -231,3 +231,9 @@
 - 做了什麼：本機有候選、沒有抽取，抽取後用 `--toolchain` 跑（和 khive、mdma、neoth 平行先跑的那批）。
 - 結果：level `service`，全新箱子重播通過，judge 判 working，4 項功能都 checked。run `runs/verify/verify-local-jev-20261116-131604-6a74`，用 `guarded_write_back.py` 寫回，確認過紀錄的 level 是 `service`。花費：抽取 US$0.054、模型 US$0.027、沙盒 US$0.016。
 - harness：無。用的是 H-002 的建置箱子。
+
+## 2026-11-16 14:56 reverify:mdma → verified
+
+- 做了什麼：本機有候選、沒有抽取，抽取後用 `--toolchain` 跑（和 khive、local-jev、neoth 平行先跑的那批），建置加驗證共 22 分鐘。
+- 結果：level `service`，全新箱子重播通過，judge 判 working，3 項功能 checked。重播時有檢查要連網才過（`offline False`）。run `runs/verify/verify-mdma-20261116-131604-cdba`，用 `guarded_write_back.py` 寫回，確認過紀錄的 level 是 `service`。花費：抽取 US$0.057、模型 US$0.041、沙盒 US$0.155。
+- harness：無。用的是 H-002 的建置箱子。
