@@ -196,3 +196,10 @@
 - 結果：level `service`，全新箱子重播通過，judge 判 working（MCP 握手成功，兩個工具呼叫都回 ok，`kkernel --version` 印 0.19.0）。4 項功能裡 2 項 `test_failed`、2 項沒查，checked 是 0。run `runs/verify/verify-khive-20261116-133734-9074`，用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 service。花費：抽取 US$0.069、兩次模型共 US$0.049、兩次沙盒共 US$0.249。
 - harness：H-008，標成 fixed（做法是換 `--runtime vm`，沒有改程式；skill 加了一句）。`--limits-test --runner modal --runtime vm --toolchain` 23/23 通過。commit `ab188d59`。
 - 需要你：有 2 項功能記成 `test_failed`（跑了、結果不對）。這是照實的結果，但會顯示在工具頁上，請看一眼 run 的內容是不是軟體真的有問題。
+
+## 2026-11-16 14:51 reverify:kronn → parked (H-005)
+
+- 做了什麼：本機有候選、沒有抽取，抽取後用 `--toolchain` 跑。10/31 記的是 `needs_container`，但 README 其實有不用 Docker 的路：發行的 `.deb`，或從原始碼建。
+- 結果：未驗證，`needs_more_resources`，沒有寫回。`.deb` 要 `sudo dpkg -i`，相依 webkit2gtk、gtk3、appindicator，是桌面 App 的裝法。原始碼那條路的 `cargo build` 在單一指令 30 分鐘的上限被砍，接著重跑到 769 秒又以 137 結束（多半是記憶體不夠），停在編 kronn 自己那個 crate。README 的開發模式還要比箱子裡的 Node 22 更新的版本，沒走到前端那一步。run `runs/verify/verify-kronn-20261116-140703-e00c`，44 分鐘。花費：抽取 US$0.119、模型 US$0.015、沙盒 US$0.312。
+- park，從 H-004 改掛 H-005：要比建置箱子（4 vCPU、6 GiB、30 分鐘）更大的箱子。可以先試 `--toolchain --memory-mb 16384`，這個 session 沒有再花一次 45 分鐘去試。
+- harness：無。
