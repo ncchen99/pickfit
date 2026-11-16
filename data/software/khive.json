@@ -54,7 +54,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-khive-20261116-133734-9074",
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install kkernel --locked 2>&1",
+          "purpose": "cargo install kkernel --locked from crates.io (about 9 minutes; exit 0, installed kkernel v0.19.0 to ~/.cargo/bin)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "kkernel --version",
+        "expected_signal": "kkernel 0.19.0"
+      },
+      "first_task": null
+    },
     "windows": null
   },
   "pricing": {
@@ -70,36 +86,168 @@
     "url": "https://github.com/ohdearquant/khive/releases/tag/v0.14.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "needs_toolchain",
-    "checked_at": "2026-11-01T00:15:11.422464+08:00",
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T14:00:13.992519+08:00",
     "runs": [
       {
-        "id": "verify-khive-20261101-001451-77cd",
-        "level": "unverified",
-        "unverified_reason": "needs_toolchain",
+        "id": "verify-khive-20261116-133734-9074",
+        "level": "service",
+        "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
-        "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-11-01T00:15:11.422464+08:00",
-        "tool_version": null,
-        "install_method": null,
-        "replayed": false,
-        "steps": [],
-        "smoke_tests": [],
-        "pitfalls": [],
+        "runner": "modal-vm",
+        "image": "pickfit-sbx-vm-build:d2af635f598f",
+        "checked_at": "2026-11-16T14:00:13.992519+08:00",
+        "tool_version": "0.19.0",
+        "install_method": "cargo",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cargo install kkernel --locked 2>&1",
+            "purpose": "cargo install kkernel --locked from crates.io (about 9 minutes; exit 0, installed kkernel v0.19.0 to ~/.cargo/bin)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "kkernel --version",
+            "expected_signal": "kkernel 0.19.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "kkernel 0.19.0 (revision unstamped, built 2026-11-16T05:51:08Z)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /home/sbx/work && KHIVE_DB=/home/sbx/work/handshake.db python3 ~/.pickfit/mcp_probe.py --timeout 120 -- kkernel mcp",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /home/sbx/work && export KHIVE_DB=/home/sbx/work/khive.db && python3 ~/.pickfit/mcp_probe.py --timeout 120 --call request --args '{\"ops\":\"create(kind=\\\"entity\\\", entity_kind=\\\"concept\\\", name=\\\"LoRA\\\")\"}' -- kkernel mcp && python3 ~/.pickfit/mcp_probe.py --timeout 120 --call request --args '{\"ops\":\"verbs()\"}' -- kkernel mcp",
+            "expected_signal": "tools/call: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tools/call: ok tool=request content=text text_chars=367",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "cd /home/sbx/work && KHIVE_DB=/home/sbx/work/f1.db python3 ~/.pickfit/mcp_probe.py --timeout 120 --call request --args '{\"ops\":\"[create(kind=\\\"entity\\\", entity_kind=\\\"concept\\\", name=\\\"FlashAttention\\\"), create(kind=\\\"entity\\\", entity_kind=\\\"concept\\\", name=\\\"FlashAttention-2\\\", description=\\\"Improved parallelism over FlashAttention\\\"), create(kind=\\\"note\\\", note_kind=\\\"observation\\\", content=\\\"FlashAttention gains scale with seq len\\\")]\"}' -- kkernel mcp",
+            "expected_signal": "",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"request\", \"count\": 1, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"kkernel\", \"mcp\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"protocol\": \"2025-11-25\", \"server\": \"khive-mcp\", \"tools\": [\"request\"], \"transport\": \"stdio\", \"url\": null, \"version\": \"0.19.0\"}",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 --call request --args '{\"ops\":\"traverse(roots=[\\\"FlashAttention\\\"], max_depth=2)\"}' -- kkernel mcp",
+            "expected_signal": "",
+            "exit_code": 5,
+            "passed": false,
+            "observed_excerpt": "pickfit-mcp: {\"call_error\": \"request\", \"count\": 1, \"era\": \"legacy\", \"exit\": 0, \"flags\": {}, \"launch\": [\"kkernel\", \"mcp\"], \"noise\": 0, \"ok\": false, \"probe\": 1, \"protocol\": \"2025-11-25\", \"server\": \"khive-mcp\", \"tools\": [\"request\"], \"transport\": \"stdio\", \"url\": null, \"version\": \"0.19.0\"}",
+            "setup": [
+              {
+                "command": "cd /home/sbx/work && export KHIVE_DB=/home/sbx/work/f3b.db && python3 ~/.pickfit/mcp_probe.py --timeout 120 --call request --args '{\"ops\":\"create(kind=\\\"entity\\\", entity_kind=\\\"concept\\\", name=\\\"FlashAttention\\\")\"}' -- kkernel mcp && python3 ~/.pickfit/mcp_probe.py --timeout 120 --call request --args '{\"ops\":\"create(kind=\\\"entity\\\", entity_kind=\\\"concept\\\", name=\\\"FlashAttention-2\\\")\"}' -- kkernel mcp && python3 ~/.pickfit/mcp_probe.py --timeout 120 --call request --args '{\"ops\":\"link(source_id=\\\"FlashAttention-2\\\", target_id=\\\"FlashAttention\\\", relation=\\\"extends\\\")\"}' -- kkernel mcp",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "KHIVE_NO_EMBED environment variable (listed as a config env var)",
+            "actually_needed": "The binary rejects KHIVE_NO_EMBED=1 with \"invalid value '1' for '--no-embed' (possible values: true, false)\"; it needs true or false.",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "cargo install kkernel --locked; first build compiles about 330 crates, expect several minutes",
+            "actually_needed": "It took about 9 minutes 5 seconds on this box with the box's Rust toolchain; no extra toolchain was needed.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Prerequisite rust>=1.95",
+            "actually_needed": "Box has Rust 1.100.0, so no toolchain change was needed.",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
-        "judge": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The MCP handshake succeeds, both tool calls return ok results (the LoRA entity is created and verbs are listed), and kkernel --version prints 0.19.0.",
+          "model": "claude-opus-5-5"
+        },
         "evidence": {
-          "trace_path": "runs/verify/verify-khive-20261101-001451-77cd/report.json",
+          "trace_path": null,
           "log_path": null,
           "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "meta-models/muse-spark-open-1026",
-        "cost_usd": 0.021125
+        "actor_model": "claude-haiku-5-5",
+        "cost_usd": 0.040142,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "kkernel",
+            "mcp"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "khive-mcp",
+          "server_version": "0.19.0",
+          "tools": [
+            "request"
+          ],
+          "tool_count": 1,
+          "called_tool": "request",
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "typed entities, edges and notes graph",
+            "status": "test_failed",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": "tool",
+            "note": "Batched create of two concept entities and a note returned a call error (exit 5); the error text was not shown, so the cause is unknown. A single create succeeded in command 4, so the batch or the note arguments are the likely cause."
+          },
+          {
+            "feature": "hybrid full-text and vector search",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "Command 10 set KHIVE_NO_EMBED=1, which the binary rejects (it needs true or false); the search check never ran. Stopped after repeated call errors."
+          },
+          {
+            "feature": "graph traversal and shortest path",
+            "status": "test_failed",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": "tool",
+            "note": "Fresh-DB create of FlashAttention failed with a call error (exit 5) before link and traverse ran; the error text was not shown, so the cause is unknown. Command 9 hit the same error, possibly from running in parallel with command 8."
+          },
+          {
+            "feature": "GQL and SPARQL queries",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "Stopped at the command budget; GQL and SPARQL query syntax was not determined."
+          }
+        ]
       }
     ]
   },
@@ -142,8 +290,6 @@
   },
   "security": {
     "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -177,19 +323,21 @@
         "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
         "malicious": false
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-03T21:41:45+08:00"
   },
   "scores": {
     "formula_version": "b3.v6",
-    "computed_at": "2026-11-05T03:16:32+08:00",
+    "computed_at": "2026-11-16T14:21:25+08:00",
     "quality": {
-      "total": 69.0,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 61.5,
+      "confidence": 0.8,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.85,
           "weight": 20.0
         },
         "install_docs": {
@@ -213,7 +361,7 @@
           "weight": 10.0
         },
         "feature_results": {
-          "score": null,
+          "score": 0.0,
           "weight": 20.0
         }
       }
@@ -234,7 +382,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 32.71
+      "value": 29.15
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -557,5 +705,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:38:42+08:00",
-  "updated_at": "2026-11-05T03:16:32+08:00"
+  "updated_at": "2026-11-16T14:21:25.566256+08:00"
 }

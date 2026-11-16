@@ -189,3 +189,10 @@
 - 結果：未驗證，這次的原因是 `needs_root`，不是資源，沒有寫回。`./start_linux.sh --setup` 裝完套件後檢查 `cv2`，`opencv-python-headless` 找不到系統的 `libxcb.so.1` 就結束；它還會跑 Ollama 的安裝腳本，那個要 root。agent 繞過啟動器直接跑 `web/app.py` 伺服器是起得來的，但那不是 README 的路，不算。run `runs/verify/verify-joyboy-20261116-140702-72b9`。花費：抽取 US$0.086、模型 US$0.014、沙盒 US$0.026。
 - park，從 H-005 改掛 H-003。缺 `libxcb1` 這種常見的函式庫，加進基底映像就好，我把這個做法寫進 `loop/issues.md` 的 H-003，這個 session 沒有做（要重建所有映像、重跑 `--limits-test`）。
 - harness：只補了 H-003 的筆記。
+
+## 2026-11-16 14:21 reverify:khive → verified
+
+- 做了什麼：`discover --repo`、抽取後選得到。第一次用 `--toolchain`（gVisor）：編得過，但伺服器一啟動就結束，因為它檢查資料庫路徑上層目錄的擁有者，在 gVisor 箱子裡 `/`、`/home`、`/tmp` 顯示成 uid 65534。這是 pickfit 的箱子和一般機器不一樣，開了 H-008，量過 `--runtime vm` 的箱子擁有者是正常的 root，改用 `--runtime vm --toolchain` 重跑。
+- 結果：level `service`，全新箱子重播通過，judge 判 working（MCP 握手成功，兩個工具呼叫都回 ok，`kkernel --version` 印 0.19.0）。4 項功能裡 2 項 `test_failed`、2 項沒查，checked 是 0。run `runs/verify/verify-khive-20261116-133734-9074`，用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 service。花費：抽取 US$0.069、兩次模型共 US$0.049、兩次沙盒共 US$0.249。
+- harness：H-008，標成 fixed（做法是換 `--runtime vm`，沒有改程式；skill 加了一句）。`--limits-test --runner modal --runtime vm --toolchain` 23/23 通過。commit `ab188d59`。
+- 需要你：有 2 項功能記成 `test_failed`（跑了、結果不對）。這是照實的結果，但會顯示在工具頁上，請看一眼 run 的內容是不是軟體真的有問題。
