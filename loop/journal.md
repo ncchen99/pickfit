@@ -219,3 +219,9 @@
 - 其他 12 筆寫回的都看過輸出，每一筆都有 `written` 那一行，level 也對：bamboo-agent、bindiff、cardinal、castor、dog、ducklab、ferro、gutsy、gyrfalcon、holdspeak、hw-smi、khive。
 - 之後寫回和 `finish` 之間一律用 `&&`。
 - 需要你：H-009。ling-stack 的 `kind` 要不要改成新抽取讀的那個，由誰改（`pickfit profiles` 沒有只重寫一筆的模式）。改了之後 `uv run python scripts/guarded_write_back.py runs/verify/verify-ling-stack-20261116-140801-b206` 就寫得進去，不用重跑。
+
+## 2026-11-16 14:55 reverify:llamampere → unverified
+
+- 做了什麼：本機有候選、沒有抽取，抽取後 dry-run 印 `skip llamampere  needs a GPU`，所以加 `--gpu T4`。第一次（一般箱子加 T4）停在沒有編譯器；第二次用 `--toolchain --gpu T4`，編譯器有了，CMake 的設定階段找不到 `nvcc`。
+- 結果：未驗證，沒有寫回。README 只有一條路：CMake 加 `-DGGML_CUDA=ON` 從原始碼建，一定要 NVIDIA 的 CUDA toolkit；範例模型（14.4 GB）還要 24 GB 的顯示卡，T4 是 15 GB。這是 pickfit 的環境沒有的東西，不是軟體壞了。紀錄上的原因碼還是 `needs_root`，意思一樣是環境的限制；這次實際缺的是 CUDA toolkit，`guarded_write_back.py` 只寫通過的 run，所以原因碼沒有更新。run `runs/verify/verify-llamampere-20261116-145343-ba45`。花費：抽取 US$0.076、兩次模型共 US$0.010、兩次沙盒共 US$0.043。
+- harness：無。CUDA toolkit 是 NVIDIA 自己的授權，不在可以直接加的範圍，沒有加進映像，也沒有寫提案（還要更大的顯示卡才有意義）。
