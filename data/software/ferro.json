@@ -51,7 +51,23 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-ferro-20261116-131250-25c2",
+      "method": "source",
+      "steps": [
+        {
+          "command": "cd /home/sbx/work && rm -rf ferro OpenCL-Headers && git clone --depth 1 https://github.com/paragontasx/ferro ferro && git clone --depth 1 https://github.com/KhronosGroup/OpenCL-Headers OpenCL-Headers && cd ferro && make -j4 CL_INC=/home/sbx/work/OpenCL-Headers",
+          "purpose": "fresh clone of paragontasx/ferro and KhronosGroup/OpenCL-Headers, then make -j4 CL_INC=<headers> builds ./ferro-embed"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "cd /home/sbx/work/ferro && make test CL_INC=/home/sbx/work/OpenCL-Headers",
+        "expected_signal": "ALL PASS"
+      },
+      "first_task": "cd /home/sbx/work/ferro && make test CL_INC=/home/sbx/work/OpenCL-Headers"
+    },
     "windows": null
   },
   "pricing": {
@@ -63,62 +79,155 @@
   "processing": "local",
   "last_release": null,
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "needs_toolchain",
-    "checked_at": "2026-10-31T00:39:57.012493+08:00",
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-16T13:17:49.217706+08:00",
     "runs": [
       {
-        "id": "verify-ferro-20261031-003845-f960",
-        "level": "unverified",
-        "unverified_reason": "needs_toolchain",
+        "id": "verify-ferro-20261116-131250-25c2",
+        "level": "function",
+        "unverified_reason": null,
         "os": "linux",
         "arch": "x86_64",
         "method": "sandbox",
         "runner": "modal-gvisor",
-        "image": "pickfit-sbx:2649442dfa6d",
-        "checked_at": "2026-10-31T00:39:57.012493+08:00",
+        "image": "pickfit-sbx-build:23f212c715b1",
+        "checked_at": "2026-11-16T13:17:49.217706+08:00",
         "tool_version": null,
-        "install_method": null,
-        "replayed": false,
-        "steps": [],
-        "smoke_tests": [],
-        "pitfalls": [],
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd /home/sbx/work && rm -rf ferro OpenCL-Headers && git clone --depth 1 https://github.com/paragontasx/ferro ferro && git clone --depth 1 https://github.com/KhronosGroup/OpenCL-Headers OpenCL-Headers && cd ferro && make -j4 CL_INC=/home/sbx/work/OpenCL-Headers",
+            "purpose": "fresh clone of paragontasx/ferro and KhronosGroup/OpenCL-Headers, then make -j4 CL_INC=<headers> builds ./ferro-embed"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd /home/sbx/work/ferro && make test CL_INC=/home/sbx/work/OpenCL-Headers",
+            "expected_signal": "ALL PASS",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ALL PASS",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /home/sbx/work/ferro && ./ferro-embed --help",
+            "expected_signal": "ferro-embed decide --model",
+            "exit_code": 2,
+            "passed": true,
+            "observed_excerpt": "ferro-embed decide --model D1.gguf --request req.json|- [--mmproj P.gguf] [--out f] [--threads N] [--reps R] [--cpu|--gpu]",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "make -j4 # needs OpenCL headers: CL_INC=../ferro-gpu/third_party/OpenCL-Headers (default)",
+            "actually_needed": "The default CL_INC path does not exist in the repo or next to it. Clone https://github.com/KhronosGroup/OpenCL-Headers and pass CL_INC=<that path> to make (the make test target also needs the same CL_INC).",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "make test # kernel + decision + serving tests",
+            "actually_needed": "Without CL_INC on the command line, make test fails with 'CL/cl.h: No such file or directory' in tests/test_kernels. With CL_INC passed it passes. Also the prompt tests are skipped without the d1 model, so the 'decision' coverage here is partial.",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "Mesa rusticl is enough (no Intel compute-runtime needed) / OpenCL headers prerequisite",
+            "actually_needed": "This box has no libOpenCL, so the tool printed '[gpu] libOpenCL not found -> CPU' and ran the CPU path. The GPU DP4A test was SKIPPED (no capable GPU).",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "./ferro-embed --help (implied by the usage text)",
+            "actually_needed": "There is no --version. '--help' prints the usage text to stderr and exits 2, the same code as a missing command.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Models are plain GGUFs (--model kind is auto-detected)",
+            "actually_needed": "The tiny llama-architecture test GGUF stories260K is rejected: 'init failed: not a causal LFM2 language model (arch lfm2 without a decision head expected)'. Only lfm2, gemma-embedding2 and gemma4 GGUFs load.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "make -j4 (Quick start: 2 minutes)",
+            "actually_needed": "The build worked with g++ 14 in about 26 s; it prints a -Wstringop-overflow warning in mm_preproc.cpp, which is harmless here.",
+            "kind": "note"
+          }
+        ],
         "blocking_error": null,
-        "judge": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The test suite prints ALL PASS for the kernel, decision and media tests and exits 0, with only a compiler warning and some skips; the --help check prints usage including 'ferro-embed decide --model' with the expected exit code 2.",
+          "model": "claude-opus-5-5"
+        },
         "evidence": {
-          "trace_path": "runs/verify/verify-ferro-20261031-003845-f960/report.json",
+          "trace_path": null,
           "log_path": null,
           "screenshot_paths": [],
           "evidence_url": null
         },
-        "actor_model": "muse-spark-1.3",
-        "cost_usd": 0.109867
+        "actor_model": "claude-haiku-5-5",
+        "cost_usd": 0.036477,
+        "features": [
+          {
+            "feature": "generate sentence and multimodal embeddings",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "embed needs EmbeddingGemma-2 GGUF (gemma-embedding2 arch), too big for the 300 MB guidance and not in the tiny list; no model was downloaded"
+          },
+          {
+            "feature": "run d1-omni typed decisions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "decide needs LiquidAI d1-omni-600M-Q8_0.gguf (about 600+ MB), above the 300 MB limit; make test skipped its prompt tests for the same reason"
+          },
+          {
+            "feature": "chat and text generation with LFM2.5",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "generate needs an LFM2/LFM2.5 GGUF; the tiny stories260K (llama arch) was rejected with 'init failed: not a causal LFM2 language model'; LFM2.5-350M Q8 is about 380 MB, over the limit"
+          },
+          {
+            "feature": "OpenAI-compatible HTTP server with prefix cache",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "serve --lm needs the same LFM2 GGUF; no server was started and no inference was run, so the prefix cache was not exercised"
+          }
+        ]
       }
     ]
   },
   "security": {
     "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
     "status": "unchecked",
     "unchecked_reason": "no_lockfile",
     "sources": [],
     "packages_checked": 0,
     "findings_total": 0,
     "advisories_total": 0,
-    "findings": []
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-04T17:17:43+08:00"
   },
   "scores": {
     "formula_version": "b3.v6",
-    "computed_at": "2026-11-05T03:16:32+08:00",
+    "computed_at": "2026-11-16T14:06:17+08:00",
     "quality": {
-      "total": 49.5,
-      "confidence": 0.4,
-      "cap": 69,
-      "cap_reason": "unverified",
+      "total": 57.1,
+      "confidence": 0.6,
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 0.7225,
           "weight": 20.0
         },
         "install_docs": {
@@ -163,7 +272,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 37.87
+      "value": 43.68
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -384,5 +493,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-11-05T03:16:32+08:00"
+  "updated_at": "2026-11-16T14:06:17.684794+08:00"
 }

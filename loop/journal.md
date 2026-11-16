@@ -97,3 +97,9 @@
 - 做了什麼：本機有候選、沒有抽取，抽取後選得到。README 的 CLI 是 `go build`，要 Go 1.25 以上，用 `--toolchain` 跑（映像裡是 Go 1.27.4）。桌面版另外要 apt 裝 GTK、WebKit 的 `-dev` 套件，這次沒有驗桌面版。
 - 結果：level `function`，全新箱子重播通過，judge 判 working（MCP 伺服器回了 initialize 和工具清單，`roster suggest` 印出排名表）。列出的 4 項功能 feature judge 一項都沒認（兩項跑了但看不出功能真的在動，兩項沒查），所以 checked 是 0。run `runs/verify/verify-ducklab-20261116-130958-039a`，用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 function。花費：抽取 US$0.097、模型 US$0.038、沙盒 US$0.018。
 - harness：無。用的是 H-002 的建置箱子。
+
+## 2026-11-16 14:06 reverify:ferro → verified
+
+- 做了什麼：H-001 的驗收就是用它，抽取那時已經做了。README 只有 `make -j4` 一條路，用 `--toolchain` 跑。抽取列了 OpenCL 標頭當系統套件，映像裡沒有，但沒有它也編得過。
+- 結果：level `function`，全新箱子重播通過，judge 判 working（`make test` 的 kernel、decision、media 測試都印 ALL PASS）。列出的 4 項功能都沒 checked。run `runs/verify/verify-ferro-20261116-131250-25c2`，用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 function。花費：抽取 US$0.113、模型 US$0.037、沙盒 US$0.035。
+- harness：無。用的是 H-002 的建置箱子。
