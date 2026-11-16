@@ -176,3 +176,9 @@
 - 做了什麼：本機有抽取結果。10/31 停在 `needs_root`，那次的筆記是要 C/C++ 編譯器和 `linux-headers`。用 `--toolchain` 跑，編譯器有了就裝得起來，沒有用到核心標頭。
 - 結果：level `service`，全新箱子重播通過，judge 判 working。run `runs/verify/verify-holdspeak-20261116-140703-884d`，用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 service。花費：模型 US$0.041、沙盒 US$0.067。
 - harness：無。用的是 H-002 的建置箱子。原本掛在 H-003，其實缺的是編譯器。
+
+## 2026-11-16 14:20 reverify:hw-smi → verified
+
+- 做了什麼：`discover --repo`、抽取後選得到。10/31 停在 `g++: command not found`。用 `--toolchain` 跑 `./make.sh`。抽取列了 `ocl-icd-opencl-dev`，映像裡沒有，但沒有它也編得過。
+- 結果：level `function`，全新箱子重播通過，judge 判 working（`--bars` 畫出 CPU、RAM、溫度的長條，`--log` 寫出 CSV），功能 2 項 checked。run `runs/verify/verify-hw-smi-20261116-131250-adae`，用 `guarded_write_back.py` 寫回，紀錄從 unverified 變成 function。花費：抽取 US$0.052、模型 US$0.052、沙盒 US$0.028。
+- harness：無。用的是 H-002 的建置箱子。
