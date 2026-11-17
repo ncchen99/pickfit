@@ -1,0 +1,932 @@
+{
+  "schema_version": "software.v1",
+  "slug": "parley",
+  "repo_id": "gh:1271225829",
+  "name": "Parley",
+  "summary": "Desktop app that records both sides of calls, transcribes and analyzes them with user-configured AI providers, and exposes the library via a local MCP server.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "desktop_app",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "ai-coach",
+    "gemini",
+    "live-translation",
+    "llm",
+    "local-first",
+    "meeting-assistant",
+    "negotiation",
+    "negotiation-coaching",
+    "react"
+  ],
+  "use_cases": [
+    "transcribe both sides of a sales call live",
+    "get a debrief with commitments and action items after a meeting",
+    "search all past meeting transcripts",
+    "dictate text into any app with push-to-talk"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "live diarized transcription of both call sides",
+    "post-meeting debrief with action items",
+    "full-text search across all recordings",
+    "local MCP server exposing meeting library"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://parley.tw",
+  "repo": {
+    "url": "https://github.com/pathorsAI/parley",
+    "full_name": "pathorsAI/parley",
+    "created_at": "2026-06-16T13:04:35Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Rust (stable), for building from source",
+      "Bun or Node.js, for building from source"
+    ],
+    "system_packages": [
+      "CMake",
+      "libclang"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": [
+      "STT provider API key",
+      "LLM provider API key"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "source",
+      "steps": [
+        {
+          "command": "cd parley",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Download and install the .dmg by dragging Parley into Applications",
+        "Bypass SmartScreen warning on Windows installer",
+        "Paste API keys in Settings or sign in"
+      ],
+      "check": null,
+      "first_task": null
+    },
+    "linux": null,
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "source",
+      "steps": [
+        {
+          "command": "cd parley",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Download and install the .dmg by dragging Parley into Applications",
+        "Bypass SmartScreen warning on Windows installer",
+        "Paste API keys in Settings or sign in"
+      ],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "android-v1.24",
+    "published_at": "2026-11-14T15:09:51Z",
+    "url": "https://github.com/pathorsAI/parley/releases/tag/android-v1.24"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "not_run",
+    "checked_at": null,
+    "runs": []
+  },
+  "mcp": {
+    "transports": [
+      "streamable_http"
+    ],
+    "launch_command": null,
+    "client_configs": [
+      {
+        "client": "claude_code",
+        "snippet": "claude mcp add --transport http parley http://127.0.0.1:3011/mcp"
+      }
+    ],
+    "env_vars": [],
+    "tools": [
+      "get_app_context",
+      "get_focused_content",
+      "get_transcript",
+      "list_todos",
+      "add_todo",
+      "check_todo",
+      "list_evaluations",
+      "search_meetings",
+      "list_recordings",
+      "get_recording",
+      "rename_recording",
+      "list_cloud_recordings",
+      "download_cloud_recording",
+      "list_folders",
+      "create_folder",
+      "rename_folder",
+      "delete_folder",
+      "move_recording_to_folder",
+      "import_transcript",
+      "delete_recording",
+      "list_orgs",
+      "list_org_recordings",
+      "share_recording_to_org",
+      "set_recording_analysis",
+      "update_recording_meta",
+      "list_findings",
+      "set_findings",
+      "update_finding",
+      "upsert_eval_template",
+      "list_dictionary_phrases"
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-17T15:41:12+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/pathorsAI/parley@c9525c6e7827",
+      "src-tauri/Cargo.lock"
+    ],
+    "packages_checked": 696,
+    "findings_total": 8,
+    "advisories_total": 8,
+    "findings": [
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "GHSA-m665-v7pm-7grj",
+        "cves": [
+          "CVE-2026-115905"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.5",
+        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "RUSTSEC-2026-0369",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.0",
+        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.39.4",
+        "advisory": "RUSTSEC-2026-0194",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.39.4",
+        "advisory": "RUSTSEC-2026-0195",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.14",
+        "advisory": "GHSA-4w2j-m93h-cj5j",
+        "cves": [
+          "CVE-2026-25800"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.11.15",
+        "summary": "Quinn: Remote memory exhaustion in quinn-proto from unbounded out-of-order stream reassembly",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.14",
+        "advisory": "RUSTSEC-2026-0340",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.18",
+        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "GHSA-q7v9-x93c-xqv3",
+        "cves": [
+          "CVE-2026-115909"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "RUSTSEC-2026-0367",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-17T15:41:00+08:00",
+    "quality": {
+      "total": 69.0,
+      "confidence": 0.5,
+      "cap": 69,
+      "cap_reason": "unverified",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.7368,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 50.6,
+      "signals": {
+        "stars": 28,
+        "monthly_downloads": null,
+        "forks": 8,
+        "dependents": null,
+        "release_downloads": 284,
+        "hn_top_score": 0,
+        "registries_count": 0
+      },
+      "age_days": 153,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 34.09
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:41:00.875322+08:00",
+      "sources_sha": "a8ce480d08a6aef623452a54dc338cdd4cdaf7f7e372eb6bc06588bdc3aa84a3",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Parley does four things: **record, transcribe, analyze, search**. It captures both sides of a call, gives you a speaker-labelled transcript live, writes a debrief when the meeting ends"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Real-time AI coaching for sales & negotiation calls"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Then paste your API keys in **Settings**: one STT provider for transcription, one LLM for analysis and Ask."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "**Windows** — download [`Parley-setup.exe`](https://api.parley.tw/download?platform=windows) and run it."
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "claude mcp add --transport http parley http://127.0.0.1:3011/mcp"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Then paste your API keys in **Settings**: one STT provider for transcription, one LLM for analysis and Ask. Or sign in and use the hosted providers with no key to manage."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "The installer is not code-signed, so SmartScreen shows an \"unknown publisher\" warning: click **More info**, then **Run anyway**."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "**macOS and Windows, from one codebase.**"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/pathorsAI/parley",
+      "fetched_at": "2026-11-17T15:40:40+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/pathorsAI/parley/blob/main/README.md",
+      "fetched_at": "2026-11-17T15:40:40+08:00"
+    },
+    {
+      "id": "release:android-v1.24",
+      "kind": "release",
+      "url": "https://github.com/pathorsAI/parley/releases/tag/android-v1.24",
+      "fetched_at": "2026-11-17T15:40:40+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Local-first macOS app, bring your own keys.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Starting a meeting is one button.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Then it opens all of it over a local **MCP server** — 54 tools",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Parley does four things: **record, transcribe, analyze, search**. It captures both sides of a call, gives you a speaker-labelled transcript live, writes a debrief when the meeting ends",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Parley",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "**macOS and Windows, from one codebase.**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requires **Rust** (stable), **Bun** (or Node.js)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/1",
+      "source_id": "readme",
+      "quote": "**Bun** (or Node.js)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "**CMake** plus **libclang**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "**CMake** plus **libclang**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "audio and transcripts go only to the providers you configure, under your own keys.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "one STT provider for transcription",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/1",
+      "source_id": "readme",
+      "quote": "one LLM for analysis and Ask",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-17T15:40:40+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-17T15:40:40+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-17T15:40:40+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-17T15:40:40+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-17T15:40:40+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:android-v1.24",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-17T15:40:40+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "your mic and the meeting's system audio, transcribed and diarized as you talk",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "commitments, action items, findings on a timeline, and a delivery scorecard",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "full-text across every transcript line and every conclusion the analysis drew",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "system-wide push-to-talk dictation in any app",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "🎙️ **Both sides, live**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "📼 **A debrief that stays**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "🔎 **Searchable forever**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "🔌 **Open by protocol**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "cd parley",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cd parley",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Audio and transcripts go directly to the STT and LLM providers *you* configure",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "claude mcp add --transport http parley http://127.0.0.1:3011/mcp",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "claude mcp add --transport http parley http://127.0.0.1:3011/mcp",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`get_app_context`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`get_focused_content`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`get_transcript`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`list_todos`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`add_todo`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`check_todo`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`list_evaluations`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`search_meetings`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`list_recordings`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "`get_recording`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "`rename_recording`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "`list_cloud_recordings`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "`download_cloud_recording`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/13",
+      "source_id": "readme",
+      "quote": "`list_folders`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/14",
+      "source_id": "readme",
+      "quote": "`create_folder`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/15",
+      "source_id": "readme",
+      "quote": "`rename_folder`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/16",
+      "source_id": "readme",
+      "quote": "`delete_folder`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/17",
+      "source_id": "readme",
+      "quote": "`move_recording_to_folder`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/18",
+      "source_id": "readme",
+      "quote": "`import_transcript`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/19",
+      "source_id": "readme",
+      "quote": "`delete_recording`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/20",
+      "source_id": "readme",
+      "quote": "`list_orgs`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/21",
+      "source_id": "readme",
+      "quote": "`list_org_recordings`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/22",
+      "source_id": "readme",
+      "quote": "`share_recording_to_org`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/23",
+      "source_id": "readme",
+      "quote": "`set_recording_analysis`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/24",
+      "source_id": "readme",
+      "quote": "`update_recording_meta`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/25",
+      "source_id": "readme",
+      "quote": "`list_findings`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/26",
+      "source_id": "readme",
+      "quote": "`set_findings`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/27",
+      "source_id": "readme",
+      "quote": "`update_finding`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/28",
+      "source_id": "readme",
+      "quote": "`upsert_eval_template`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    },
+    {
+      "field": "/mcp/tools/29",
+      "source_id": "readme",
+      "quote": "`list_dictionary_phrases`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:59+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-17T15:40:40+08:00",
+  "updated_at": "2026-11-17T15:41:12+08:00"
+}
