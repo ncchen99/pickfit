@@ -1,0 +1,649 @@
+{
+  "schema_version": "software.v1",
+  "slug": "gh-pull",
+  "repo_id": "gh:1411235729",
+  "name": "gh-pull",
+  "summary": "A GitHub CLI extension that runs a local browser dashboard for searching, grouping and managing pull requests, reviews and CI checks.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "code-review",
+    "code-reviews",
+    "dashboard",
+    "developer-tools",
+    "gh-extension",
+    "github-cli",
+    "github-cli-extension",
+    "pr-dashboard",
+    "pull-requests"
+  ],
+  "use_cases": [
+    "find pull requests awaiting your review across repositories",
+    "inspect failed CI checks and open the failing job",
+    "request or re-request reviewers on your own PRs"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "search PRs and save views with grouping",
+    "visualize stacked PR dependencies",
+    "see failed CI checks with job links",
+    "manage reviewers and review status"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/shiqicao/gh-pull",
+    "full_name": "shiqicao/gh-pull",
+    "created_at": "2026-10-09T03:33:14Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "node>=22 (source install only)"
+    ],
+    "system_packages": [
+      "GitHub CLI"
+    ],
+    "gpu": null,
+    "apple_silicon_only": false,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": [
+      "GitHub.com account (gh login or personal access token)"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "gh extension install shiqicao/gh-pull",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Sign in to GitHub CLI with a GitHub.com account"
+      ],
+      "check": null,
+      "first_task": "gh pull --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-gh-pull-20261117-154056-8a43",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone https://github.com/shiqicao/gh-pull.git && cd gh-pull && git log -1 --format=%H",
+          "purpose": "git clone the source"
+        },
+        {
+          "command": "cd gh-pull && npm ci",
+          "purpose": "npm ci (proper-lockfile is needed by the CLI launcher)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "cd gh-pull && node cli/main.js --version",
+        "expected_signal": "gh-pull development"
+      },
+      "first_task": "cd gh-pull && node cli/main.js --licenses"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "gh extension install shiqicao/gh-pull",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Sign in to GitHub CLI with a GitHub.com account"
+      ],
+      "check": null,
+      "first_task": "gh pull --version"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v1.16.0",
+    "published_at": "2026-11-13T07:39:52Z",
+    "url": "https://github.com/shiqicao/gh-pull/releases/tag/v1.16.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-17T15:43:26.612938+08:00",
+    "runs": [
+      {
+        "id": "verify-gh-pull-20261117-154056-8a43",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "ec2-vm",
+        "image": "pickfit-sbx-vm-fe527c5323a3-host-2217ad15",
+        "checked_at": "2026-11-17T15:43:26.612938+08:00",
+        "tool_version": null,
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone https://github.com/shiqicao/gh-pull.git && cd gh-pull && git log -1 --format=%H",
+            "purpose": "git clone the source"
+          },
+          {
+            "command": "cd gh-pull && npm ci",
+            "purpose": "npm ci (proper-lockfile is needed by the CLI launcher)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "cd gh-pull && node cli/main.js --version",
+            "expected_signal": "gh-pull development",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gh-pull development",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd gh-pull && node cli/main.js --licenses",
+            "expected_signal": "CodeMirror query editor and bundled dependencies",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "CodeMirror query editor and bundled dependencies",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -sS -w '\\nHTTP %{http_code}\\n' http://127.0.0.1:3000/ -o /tmp/index.html && grep -o '<title>[^<]*</title>' /tmp/index.html",
+            "expected_signal": "<title>gh-pull · Pull requests</title>",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "<title>gh-pull · Pull requests</title>",
+            "setup": [
+              {
+                "command": "cd /home/sbx/work/gh-pull && PORT=3000 node server.js",
+                "background": true,
+                "port": 3000
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Local app from source: \"No npm dependencies or build step are needed to run the app.\"",
+            "actually_needed": "That holds for server.js, but running the CLI from source (node cli/main.js --version / --licenses) fails with ERR_MODULE_NOT_FOUND 'proper-lockfile' until you run npm ci",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "gh pull --version / gh pull --licenses",
+            "actually_needed": "Without the gh extension, the source equivalent is node cli/main.js --version (it prints 'gh-pull development'). GitHub CLI is not installed in this box, so I used the source candidate, which was ranked first anyway",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The licenses command printed the bundled dependency notices, the server returned HTTP 200 with the title 'gh-pull · Pull requests', and --version printed 'gh-pull development', all with exit 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": null,
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.183352,
+        "features": [
+          {
+            "feature": "search PRs and save views with grouping",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "PR search runs against GitHub with a gh login or token"
+          },
+          {
+            "feature": "visualize stacked PR dependencies",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Stacked PR data comes from GitHub; it also needs a browser to see"
+          },
+          {
+            "feature": "see failed CI checks with job links",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "CI check data comes from GitHub"
+          },
+          {
+            "feature": "manage reviewers and review status",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Reviewer data and changes need GitHub credentials"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-17T15:43:35+08:00",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-17T15:43:26+08:00",
+    "quality": {
+      "total": 87.2,
+      "confidence": 0.6,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 35.5,
+      "signals": {
+        "stars": 5,
+        "monthly_downloads": null,
+        "forks": 2,
+        "dependents": null,
+        "release_downloads": 87,
+        "hn_top_score": 3,
+        "registries_count": 0
+      },
+      "age_days": 39,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": true,
+      "value": 56.24
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:43:26.621108+08:00",
+      "sources_sha": "c74a747a057b126b08b4feb43d82fdb7ebd7da3a13e309d873fa0d40ec9b2223",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "GitHub CLI extension for a local pull request dashboard. Group PRs by repository, monitor reviews and CI checks, and merge from your browser."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Find your next review, follow stacked PRs, and get straight to failing checks—all with your existing GitHub login."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "A **GitHub.com** account is required; GitHub Enterprise hosts are not supported."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "gh extension install shiqicao/gh-pull"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "`gh pull` starts the dashboard in the background and opens your browser."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| `GH_TOKEN` / `GITHUB_TOKEN` | Both | Optional token; takes precedence over your GitHub CLI login |"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Stop before uninstalling with `gh extension remove pull`."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Release builds target Linux and macOS (Intel/AMD and ARM64), and Windows x64."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/shiqicao/gh-pull",
+      "fetched_at": "2026-11-17T15:40:44+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/shiqicao/gh-pull/blob/main/README.md",
+      "fetched_at": "2026-11-17T15:40:39+08:00"
+    },
+    {
+      "id": "release:v1.16.0",
+      "kind": "release",
+      "url": "https://github.com/shiqicao/gh-pull/releases/tag/v1.16.0",
+      "fetched_at": "2026-11-17T15:40:39+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "GitHub CLI extension for a local pull request dashboard.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "**Run `gh pull`. Get back to your work.**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "A local dashboard for GitHub CLI.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "GitHub CLI extension for a local pull request dashboard. Group PRs by repository, monitor reviews and CI checks, and merge from your browser.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "github_api",
+      "quote": "gh-pull",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Release builds target Linux and macOS (Intel/AMD and ARM64), and Windows x64.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requires **Node.js 22+**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Install [GitHub CLI](https://cli.github.com/) if needed",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/prerequisites/apple_silicon_only",
+      "source_id": "readme",
+      "quote": "Linux and macOS (Intel/AMD and ARM64)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Searches run against GitHub",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "A **GitHub.com** account is required; GitHub Enterprise hosts are not supported.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-17T15:40:44+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-17T15:40:44+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-17T15:40:44+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-17T15:40:44+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.16.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-17T15:40:39+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Find your next review, follow stacked PRs, and get straight to failing checks",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Hover a failed CI badge to see which checks broke, then open the job directly.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Request or re-request reviews on your own PRs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Save your go-to searches as one-click views, then group PRs by repository, author, status, or checks.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Follow branch dependencies at a glance.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Hover a failed CI badge to see which checks broke, then open the job directly.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "See who approved, who requested changes, and who’s still to review.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "gh extension install shiqicao/gh-pull",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "gh extension install shiqicao/gh-pull",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "gh extension install shiqicao/gh-pull",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Searches run against GitHub; grouping applies to loaded pages.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-17T15:40:54+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-17T15:40:39+08:00",
+  "updated_at": "2026-11-17T15:43:35+08:00"
+}
