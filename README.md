@@ -18,7 +18,7 @@ A software advisor for people and their AI agents. pickfit installs and tests so
 <p align="center">
   <img alt="Runs on Claude" src="https://img.shields.io/badge/runs%20on-Claude-1A1D17?labelColor=F5C243">
   <img alt="MCP server" src="https://img.shields.io/badge/MCP-streamable%20HTTP-2E7A35">
-  <img alt="Cloudflare Workers" src="https://img.shields.io/badge/runs%20on-Cloudflare%20Workers-C4552D">
+  <img alt="Google Cloud Run" src="https://img.shields.io/badge/runs%20on-Google%20Cloud%20Run-4285F4">
   <img alt="License MIT" src="https://img.shields.io/badge/license-MIT-4F5149">
 </p>
 
@@ -91,7 +91,7 @@ During the hackathon (27 Oct – 4 Nov) the same jobs ran on Meta's models: **Mu
 | Path | What |
 |---|---|
 | [`pickfit/`](pickfit/) | Python pipeline: discovery, prescreen, extraction, sandbox verification, scoring, security, publish |
-| [`worker/`](worker/) | Cloudflare Worker: MCP server and the website |
+| [`worker/`](worker/) | MCP server and the website. pickfit.app runs on Google Cloud Run ([`worker/cloudrun/`](worker/cloudrun/)); data in Cloudflare D1 and R2 |
 | [`data/software/`](data/software/) | The catalogue, one JSON record per tool, each with its evidence |
 | [`eval/`](eval/) | Frozen evaluation questions, runner and results |
 | [`brand/`](brand/) | Fitz the mascot, share cards, screenshots |
