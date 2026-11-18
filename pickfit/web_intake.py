@@ -137,6 +137,8 @@ class SiteSteps:
     resolve(host) -> its addresses (resolve_host), to keep private networks out
     render(url) -> {text, links, error}: a page drawn by script, loaded once in a browser (webapps.render_page)
     clock: the time a record is stamped with
+    with_visits(path) -> the same steps, reading and claiming visits in `path` instead of runs/web/visits.jsonl
+      (pickfit's end-to-end test: its visits never count against a real submission of the site)
     """
 
     fetch: Any
@@ -147,6 +149,7 @@ class SiteSteps:
     resolve: Callable[[str], list[str]]
     render: Callable[[str], dict[str, Any]] | None = None
     clock: Callable[[], datetime] = taipei_now
+    with_visits: Callable[[Path], SiteSteps] | None = None
 
 
 def live_site_steps(*, runner: str = "modal") -> SiteSteps:
@@ -163,12 +166,16 @@ def live_site_steps(*, runner: str = "modal") -> SiteSteps:
     if runner == "ec2":
         from pickfit.verify.web_box import on_ec2 as box_factory
 
-    return SiteSteps(
-        fetch=Fetcher(), render=render_page,
-        screen=lambda row, page, readme, run_id: screen_site(row, page, readme, run_id=run_id),
-        extract=lambda c, run_id: extract_with_retries(c, model=MODEL, run_id=run_id, reasoning_effort=EXTRACT_EFFORT),
-        verify=lambda target, log: verify_site(target, log=log, box_factory=box_factory),
-        visited=past_visit, resolve=resolve_host)
+    def steps(visits: Path | None = None) -> SiteSteps:
+        return SiteSteps(
+            fetch=Fetcher(), render=render_page,
+            screen=lambda row, page, readme, run_id: screen_site(row, page, readme, run_id=run_id),
+            extract=lambda c, run_id: extract_with_retries(c, model=MODEL, run_id=run_id,
+                                                           reasoning_effort=EXTRACT_EFFORT),
+            verify=lambda target, log: verify_site(target, log=log, box_factory=box_factory, visits=visits),
+            visited=lambda site: past_visit(site, visits), resolve=resolve_host, with_visits=steps)
+
+    return steps()
 
 
 @dataclass

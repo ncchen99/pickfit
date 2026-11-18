@@ -225,6 +225,7 @@ class Job:
     seconds_to_ready: float | None = None  # from submitted_at
     seconds_to_listed: float | None = None
     notes: list[str] = field(default_factory=list)
+    e2e: str | None = None  # pickfit's end-to-end test run it belongs to (pickfit.e2e): every step, nothing published
 
     def spent(self, kind: str, usd: float) -> None:
         self.cost_usd[kind] = round(self.cost_usd.get(kind, 0.0) + (usd or 0.0), 6)
@@ -586,7 +587,11 @@ class Watcher:
         else:
             job = Job(submission_id=sid, url=sub["url"], submitted_at=sub["submitted_at"],
                       started_at=self.now().isoformat(), failures=earlier.failures if earlier else 0)
-        log(f"start · {job.url} · try {job.failures + 1}{' · resuming a landed record' if resume else ''}")
+            from pickfit import e2e
+
+            job.e2e = e2e.marked(self.s.runs_dir, job.url, self.now())
+        log(f"start · {job.url} · try {job.failures + 1}{' · resuming a landed record' if resume else ''}"
+            f"{f' · end-to-end test {job.e2e}: every step runs, nothing is published' if job.e2e else ''}")
         self._guard(job, log, (lambda: self._report_landed(job, log)) if resume else (lambda: self._run(job, log)))
         return job
 
@@ -769,11 +774,16 @@ class Watcher:
 
         with self._state_lock:
             taken = {p.stem for p in self.s.data_dir.glob("*.json")} | self._slugs_in_flight
+        site_steps = self.steps.site
+        if job.e2e and site_steps.with_visits is not None:  # its visit never counts against a real submission
+            from pickfit import e2e
+
+            site_steps = site_steps.with_visits(e2e.run_dir(self.s.runs_dir, job.e2e) / "visits.jsonl")
         try:
             with self._stage(job, "read"):
                 read = web_intake.read_site(job.url, submission_id=job.submission_id, run_id=run_id,
                                             record_dir=record_dir, data_dir=self.s.data_dir, db_path=self.s.db_path,
-                                            taken_slugs=taken, steps=self.steps.site, log=log,
+                                            taken_slugs=taken, steps=site_steps, log=log,
                                             claim_slug=claim_slug, spend=job.spent)
         except web_intake.AlreadyListed as err:
             job.slug = err.slug
@@ -801,7 +811,7 @@ class Watcher:
         self._status(job, "verifying")
         try:
             with self._stage(job, "verify"):
-                visit = web_intake.verify_site_record(record_dir, read.slug, steps=self.steps.site, log=log,
+                visit = web_intake.verify_site_record(record_dir, read.slug, steps=site_steps, log=log,
                                                       spend=job.spent)
         except web_intake.Refused as err:
             raise Rejected(str(err)) from None
@@ -924,6 +934,8 @@ class Watcher:
         """A repository another submission took (or is taking) is refused; one already in data/software
         takes that record's status."""
         for other in self.saved_jobs():
+            if other.e2e:  # a test submission never took the repository
+                continue
             if other.repo_id == job.repo_id and other.submission_id != job.submission_id and \
                     (other.landed or other.result not in (None, "retry", "waiting", "rejected")):
                 raise Rejected(f"Same repository as an earlier submission ({other.url}).")
@@ -1021,6 +1033,8 @@ class Watcher:
             raise Rejected("Test fixtures are never listed.")
         record = SoftwareRecord.model_validate_json((record_dir / f"{job.slug}.json").read_text(encoding="utf-8"))
         passed = record_passed(record)
+        if job.e2e:
+            return self._land_test(job, record_dir, record, passed, not_passed, log)
         target = self.s.data_dir / f"{job.slug}.json"
         with self._git_lock, self._stage(job, "commit"):
             for path in self.s.data_dir.glob("*.json"):  # one record per repository, or the index refuses them all
@@ -1053,6 +1067,45 @@ class Watcher:
             self._save(job)  # from here on a failed status write resumes instead of running again
             job.publish_check = plan(self.s.data_dir, self.s.worker_dir, allow_dirty=not self.s.commit).problems
         self._report_landed(job, log, not_passed)
+
+    def _land_test(self, job: Job, record_dir: Path, record: SoftwareRecord, passed: bool, not_passed: str | None,
+                   log: Callable[[str], None]) -> None:
+        """An end-to-end test's finished record (pickfit.e2e): the checks a landing makes, and the publish plan check
+        (`pickfit publish --dry-run`'s) on a copy of data/software with it added; then it is kept in the run's folder,
+        never in data/software, never committed or pushed. Its D1 row ends as rejected, with a reason that says what a
+        real submission would have got."""
+        import tempfile
+
+        from pickfit import e2e
+        from pickfit.publish import plan
+
+        with self._stage(job, "publish check"):
+            for path in self.s.data_dir.glob("*.json"):
+                try:
+                    if json.loads(path.read_text(encoding="utf-8")).get("repo_id") == job.repo_id:
+                        raise Rejected(f"Already in pickfit's directory as {path.stem}.")
+                except (OSError, ValueError):
+                    continue
+            with tempfile.TemporaryDirectory(prefix="pickfit-e2e-") as tmp:
+                copy = Path(tmp) / "software"
+                shutil.copytree(self.s.data_dir, copy, ignore=shutil.ignore_patterns(".*"))
+                if (copy / f"{job.slug}.json").exists():
+                    raise Retry(f"{job.slug}.json appeared in {self.s.data_dir.name} meanwhile")
+                shutil.copyfile(record_dir / f"{job.slug}.json", copy / f"{job.slug}.json")
+                job.publish_check = plan(copy, self.s.worker_dir, allow_dirty=True).problems
+        kept = e2e.run_dir(self.s.runs_dir, job.e2e or "") / "records"
+        kept.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(record_dir / f"{job.slug}.json", kept / f"{job.slug}.json")
+        job.level = record.verification.level
+        job.result = e2e.PASSED if passed else e2e.UNVERIFIED
+        if passed:
+            would = f"would be listed as verified ({job.level}) from the {job.lane or 'linux'} lane"
+        else:
+            why = not_passed or f"the sandbox run did not pass ({record.verification.unverified_reason or job.level})"
+            would = f"would be listed without a verified install: {why}"
+        problems = f"; publish check: {'; '.join(job.publish_check)}" if job.publish_check else ""
+        self._status(job, "rejected", reason=f"{e2e.REASON}{would}{problems}.")
+        log(f"end-to-end test: {would}{problems} · kept in {kept}")
 
     def _report_landed(self, job: Job, log: Callable[[str], None], not_passed: str | None = None) -> None:
         """Write the D1 status a landed record has: ready (or listed once deployed), or listed_unverified."""
@@ -1235,8 +1288,12 @@ class Watcher:
             if self._lane_hold.get(name) and now < self._lane_hold[name]:
                 continue
             free[name] = lane
+        due = due_lanes(parked, free, now)
+        for job in self.parked_jobs():  # an end-to-end test does not wait for a full batch
+            if job.e2e and job.lane in free and job.lane not in due and job.submission_id not in running:
+                due[job.lane] = "an end-to-end test is waiting"
         started = []
-        for name, why in due_lanes(parked, free, now).items():
+        for name, why in due.items():
             self.log(f"[{name}] batch of {len(parked[name])}: {why}")
             with self._state_lock:
                 self._lane_batches[name] = self._batch_pool.submit(self._lane_batch, name)

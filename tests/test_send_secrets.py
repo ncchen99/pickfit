@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import io
+import json
 import tarfile
 from pathlib import Path
 from types import SimpleNamespace
@@ -41,12 +42,15 @@ def files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> dict[str, Path]:
     (runs / "web").mkdir()
     (runs / "web" / "visits.jsonl").write_text('{"site": "example.com"}\n')
     (runs / "verify").mkdir()  # not sent
-    return {"env": env, "modal": modal, "scw": scw, "runs": runs}
+    hosts = tmp_path / "mac-hosts"  # none: no Mac hosts question
+    hosts.mkdir()
+    return {"env": env, "modal": modal, "scw": scw, "runs": runs, "hosts": hosts, "aws": tmp_path / "no-aws-cli"}
 
 
 def argv(files: dict[str, Path], *extra: str) -> list[str]:
     return ["root@203.0.113.5", "--env-file", str(files["env"]), "--modal-config", str(files["modal"]),
-            "--scw-config", str(files["scw"]), "--runs", str(files["runs"]), *extra]
+            "--scw-config", str(files["scw"]), "--runs", str(files["runs"]), "--mac-hosts", str(files["hosts"]),
+            "--aws", str(files["aws"]), *extra]
 
 
 class Remote:
@@ -121,3 +125,40 @@ def test_dry_run_names_but_never_shows_or_sends(files, capsys) -> None:
 def test_a_value_with_a_line_break_is_refused() -> None:
     with pytest.raises(SystemExit):
         ss.env_text({"X": "a\nB=evil"})
+
+
+def fake_aws(tmp_path: Path, payload: str, code: int = 0) -> Path:
+    cli = tmp_path / "aws"
+    cli.write_text(f"#!/bin/sh\ncat <<'EOF'\n{payload}\nEOF\nexit {code}\n")
+    cli.chmod(0o755)
+    return cli
+
+
+def test_this_macs_aws_sign_in_is_offered_when_no_key_is_typed(files, tmp_path) -> None:
+    files["aws"] = fake_aws(tmp_path, '{"Version": 1, "AccessKeyId": "ASIAFAKE", "SecretAccessKey": "aws-temp-secret", '
+                                      '"SessionToken": "aws-temp-token", "Expiration": "2026-11-19T06:00:00Z"}')
+    remote = Remote()
+    assert ss.main(argv(files, "--no-start"), ask=answers("cf-fake-token", "gh-fake-push"),
+                   confirm=answers("", "y", "n"), run=remote) == 0
+    [secrets, *_] = remote.calls
+    text = secrets[1].decode()
+    assert "AWS_ACCESS_KEY_ID=ASIAFAKE" in text and "AWS_SESSION_TOKEN=aws-temp-token" in text
+    assert all("aws-temp" not in part for cmd, _ in remote.calls for part in cmd)
+
+
+def test_the_mac_hosts_go_with_their_key_re_pointed(files, tmp_path) -> None:
+    key = tmp_path / "keys" / "scaleway-mac"
+    key.parent.mkdir()
+    key.write_text("PRIVATE KEY FAKE\n")
+    (files["hosts"] / "scw1.json").write_text(json.dumps({"name": "scw1", "provider": "scaleway", "key": str(key),
+                                                          "server_id": "srv-1"}))
+    remote = Remote()
+    assert ss.main(argv(files, "--no-start"), ask=answers("cf-fake-token", "gh-fake-push"),
+                   confirm=answers("", "n", "y"), run=remote) == 0
+    hosts = next(data for cmd, data in remote.calls if "mac-hosts" in cmd[-1])
+    with tarfile.open(fileobj=io.BytesIO(hosts), mode="r:gz") as tar:
+        assert sorted(tar.getnames()) == ["mac-hosts/scw1.json", "ssh/scaleway-mac"]
+        host = json.loads(tar.extractfile("mac-hosts/scw1.json").read())
+        assert tar.getmember("ssh/scaleway-mac").mode == 0o600
+    assert host["key"] == "/var/lib/pickfit/.pickfit/ssh/scaleway-mac" and host["server_id"] == "srv-1"
+    assert all("PRIVATE KEY" not in part for cmd, _ in remote.calls for part in cmd)

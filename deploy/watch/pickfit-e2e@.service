@@ -1,0 +1,24 @@
+# pickfit's end-to-end test on the watch machine (pickfit/e2e.py). The instance names the lanes: default
+# (reject, linux, web), all, or names joined by dashes, e.g. linux-web. It submits test URLs through the live website
+# and MCP, follows them through the running pickfit-watch, and publishes nothing.
+#
+#   systemctl start pickfit-e2e@default        # waits until the run ends; --no-block to return at once
+#   journalctl -u pickfit-e2e@default -n 60    # the run's lines; the report is in runs/e2e/<run>/report.json
+[Unit]
+Description=pickfit end-to-end test (%i lanes), never published
+After=network-online.target pickfit-watch.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=pickfit
+Group=pickfit
+WorkingDirectory=/var/lib/pickfit/pickfit
+EnvironmentFile=/etc/pickfit/watch.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/usr/local/bin/uv run pickfit e2e --lanes %i
+# The macOS lane may take hours on a Mac host.
+TimeoutStartSec=5h
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true

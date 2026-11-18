@@ -498,6 +498,39 @@ def _watch(args: argparse.Namespace) -> int:
     return 75 if watcher.restart_wanted else 0  # EX_TEMPFAIL: its service starts it again on the new code
 
 
+def _e2e(args: argparse.Namespace) -> int:
+    """pickfit's end-to-end test (pickfit.e2e): test submissions through the live site, never published."""
+    import shutil
+    import subprocess
+    from datetime import timedelta
+
+    from pickfit import e2e
+    from pickfit.discover.github import runs_dir
+
+    try:
+        lanes = e2e.lanes_from(args.lanes)
+    except ValueError as err:
+        print(f"pickfit e2e: {err}", file=sys.stderr)
+        return 2
+    if args.dry_run:
+        for name in lanes:
+            c = e2e.CANARIES[name]
+            print(f"{name}: expects {c.expect} via {c.via} within {c.timeout} · {', '.join(c.urls)}\n    {c.what}")
+        return 0
+    if not args.no_service_check and shutil.which("systemctl"):
+        state = subprocess.run(["systemctl", "is-active", "pickfit-watch"], capture_output=True, text=True).stdout
+        if state.strip() != "active":
+            print(f"pickfit e2e: pickfit-watch is {state.strip() or 'not running'}; the test follows submissions "
+                  "through the running watcher, so start it first (or pass --no-service-check)", file=sys.stderr)
+            return 2
+    timeouts = {name: timedelta(minutes=args.timeout_minutes) for name in lanes} if args.timeout_minutes else None
+    site = e2e.Site(args.site)
+    runner = e2e.Runner(_d1(args), site, runs_dir=runs_dir(), data_dir=args.data, lanes=lanes,
+                        hosts=[site, *(e2e.Site(h) for h in args.also_host)], keep=args.keep, timeouts=timeouts,
+                        log=lambda line: print(line, flush=True))
+    return 0 if runner.run().ok else 1
+
+
 def _watch_lanes(args: argparse.Namespace, lanes: tuple[str, ...]) -> dict[str, Any]:
     """The parked lanes `pickfit watch` takes (pickfit.lanes): Windows on EC2, macOS on a Mac host."""
     from datetime import timedelta
@@ -591,6 +624,25 @@ def _add_queue_commands(sub: argparse._SubParsersAction) -> None:
                    help="macOS: read a rented Mac's sudo password from the provider and pipe it into its root step "
                         "(never logged or saved); without it the lane waits for `pickfit mac-host root NAME`")
     w.set_defaults(func=_watch)
+
+    t = sub.add_parser("e2e", help="end-to-end test on the watch machine: test submissions through the live website "
+                                   "and MCP, followed through the running watcher, never published "
+                                   "(paid: a sandbox run per lane)")
+    t.add_argument("--local", action="store_true", help="the local D1 of `wrangler dev` instead of the remote one")
+    t.add_argument("--worker", type=Path, default=DEFAULT_WORKER_DIR, help="the Worker directory (wrangler runs there)")
+    t.add_argument("--data", type=Path, default=DEFAULT_OUT, help="records directory (default data/software)")
+    t.add_argument("--lanes", default="default",
+                   help="default (reject, linux, web), all, or names from reject,linux,web,windows,macos joined by "
+                        "commas or dashes")
+    t.add_argument("--site", default="https://pickfit.app", help="the public site to submit through")
+    t.add_argument("--also-host", action="append", default=["https://pickfit-mcp.ncchen99.workers.dev"],
+                   help="another host whose served data must match origin/main (repeatable)")
+    t.add_argument("--keep", action="store_true", help="leave the D1 rows and job files for a look")
+    t.add_argument("--timeout-minutes", type=float, default=None, help="one timeout for every lane")
+    t.add_argument("--no-service-check", action="store_true",
+                   help="do not require the pickfit-watch service (a watcher started some other way)")
+    t.add_argument("--dry-run", action="store_true", help="print the lanes and their test URLs; submit nothing")
+    t.set_defaults(func=_e2e)
 
     r = sub.add_parser("reverify", help="re-verify reported install failures in a fresh box; "
                                         "write back changed steps and show the record's git diff (paid)")

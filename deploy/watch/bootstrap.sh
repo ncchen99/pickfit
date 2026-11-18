@@ -85,10 +85,12 @@ as_pickfit "cd $REPO && uv sync --frozen -q && (cd worker && npm ci --silent)"
 (cd / && uvx --from playwright playwright install-deps chromium) >/dev/null
 as_pickfit "cd $REPO && uv run --with playwright playwright install chromium"
 
-# The unit sent along with this script wins (main may not have deploy/watch/ yet), else the repository's.
-unit="$(dirname "$0")/pickfit-watch.service"
-[[ -f $unit ]] || unit="$REPO/deploy/watch/pickfit-watch.service"
-install -m 644 "$unit" /etc/systemd/system/pickfit-watch.service
+# The units sent along with this script win (main may not have deploy/watch/ yet), else the repository's.
+for name in pickfit-watch.service pickfit-e2e@.service; do
+  unit="$(dirname "$0")/$name"
+  [[ -f $unit ]] || unit="$REPO/deploy/watch/$name"
+  if [[ -f $unit ]]; then install -m 644 "$unit" "/etc/systemd/system/$name"; fi
+done
 systemctl daemon-reload
 echo
 echo "Set up. Next:"

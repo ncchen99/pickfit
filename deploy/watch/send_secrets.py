@@ -11,12 +11,15 @@ so no value is printed, put in a command line or written to a local file:
   account; wrangler's own login on this Mac is not copied)
 - GH_PUSH_TOKEN, also used as GH_TOKEN: asked (a fine-grained token with Contents read and write on
   ncchen99/pickfit only; your `gh` login is not copied)
-- AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY: asked, optional (Enter skips; the Windows lane then waits)
+- AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY: asked, optional (Enter skips; the Windows lane then waits). Skipped,
+  it offers this Mac's current AWS sign-in instead (`aws configure export-credentials`: temporary, with
+  AWS_SESSION_TOKEN; the Windows lane works until it expires)
 - SCW_*: ~/.config/scw/config.yaml, only if you say yes (the macOS lane renting Macs)
 
-Then it copies runs/watch/jobs/ and runs/web/visits.jsonl (what was submitted and which sites were visited),
-checks that origin/main has the watch code the service runs, and starts the service. --dry-run shows which
-names were found and what would run, never a value.
+Then it copies runs/watch/jobs/ and runs/web/visits.jsonl (what was submitted and which sites were visited), and,
+if you say yes, the Mac hosts in ~/.pickfit/mac-hosts with the SSH keys they name (the macOS lane uses a known
+host before it rents one). It checks that origin/main has the watch code the service runs, and starts the service.
+--dry-run shows which names were found and what would run, never a value.
 """
 
 from __future__ import annotations
@@ -24,6 +27,7 @@ from __future__ import annotations
 import argparse
 import getpass
 import io
+import json
 import os
 import shlex
 import subprocess
@@ -112,12 +116,79 @@ def collect(args: argparse.Namespace, ask=getpass.getpass, confirm=input) -> dic
     take("AWS_ACCESS_KEY_ID", prompt="AWS access key id for the Windows lane", optional=True, hidden=False)
     if values.get("AWS_ACCESS_KEY_ID"):
         take("AWS_SECRET_ACCESS_KEY", prompt="AWS secret access key")
+    elif not args.dry_run:
+        signed_in = aws_sign_in(args.aws)
+        if signed_in and confirm(f"Send this Mac's AWS sign-in instead (temporary, expires {signed_in['until']}), so "
+                                 "the Windows lane works until then? [y/N] ").strip().lower() == "y":
+            values.update(signed_in["values"])
     scw = scw_profile(args.scw_config)
     if scw and not args.dry_run and confirm("Copy this Mac's Scaleway key so watch can rent Macs? [y/N] ").strip().lower() == "y":
         values.update(scw)
     elif scw and args.dry_run:
         values.update({k: "" for k in scw})  # named in the dry run, never sent
     return values
+
+
+def aws_sign_in(aws: str = "aws", run=subprocess.run) -> dict | None:
+    """This Mac's current AWS credentials (an `aws login` session): {values, until}, or None. Read from the CLI's
+    output into memory only."""
+    try:
+        done = run([aws, "configure", "export-credentials", "--format", "process"], capture_output=True, text=True,
+                   timeout=60)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if done.returncode != 0:
+        return None
+    try:
+        creds = json.loads(done.stdout)
+    except ValueError:
+        return None
+    if not creds.get("AccessKeyId") or not creds.get("SecretAccessKey"):
+        return None
+    values = {"AWS_ACCESS_KEY_ID": creds["AccessKeyId"], "AWS_SECRET_ACCESS_KEY": creds["SecretAccessKey"]}
+    if creds.get("SessionToken"):
+        values["AWS_SESSION_TOKEN"] = creds["SessionToken"]
+    return {"values": values, "until": creds.get("Expiration") or "when the session ends"}
+
+
+REMOTE_HOME = "/var/lib/pickfit"
+
+
+def mac_hosts_tar(hosts_dir: Path) -> tuple[bytes, list[str]]:
+    """~/.pickfit/mac-hosts/*.json (and rentals.jsonl) with each host's SSH key, re-pointed at the pickfit user's
+    ~/.pickfit/ssh/; paths relative to ~/.pickfit. Returns (the tar, the host names)."""
+    buf = io.BytesIO()
+    names: list[str] = []
+
+    def add(name: str, data: bytes, mode: int = 0o600) -> None:
+        info = tarfile.TarInfo(name)
+        info.size, info.mode = len(data), mode
+        tar.addfile(info, io.BytesIO(data))
+
+    with tarfile.open(fileobj=buf, mode="w:gz") as tar:
+        keys: dict[str, str] = {}
+        for path in sorted(hosts_dir.glob("*.json")):
+            try:
+                host = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, ValueError):
+                continue
+            key = host.get("key")
+            if key:
+                local = Path(key).expanduser()
+                if not local.is_file():
+                    raise SystemExit(f"{path.name} names the SSH key {local}, which is not on this Mac")
+                remote = keys.setdefault(str(local), f"ssh/{local.name}")
+                if remote not in [n for n in tar.getnames()]:
+                    add(remote, local.read_bytes())
+                    if local.with_suffix(".pub").is_file():
+                        add(remote + ".pub", local.with_suffix(".pub").read_bytes(), 0o644)
+                host["key"] = f"{REMOTE_HOME}/.pickfit/{remote}"
+            add(f"mac-hosts/{path.name}", (json.dumps(host, indent=2) + "\n").encode(), 0o644)
+            names.append(path.stem)
+        rentals = hosts_dir / "rentals.jsonl"
+        if rentals.is_file():
+            add("mac-hosts/rentals.jsonl", rentals.read_bytes(), 0o644)
+    return buf.getvalue(), names
 
 
 REQUIRED = ("ANTHROPIC_API_KEY", "MODAL_TOKEN_ID", "MODAL_TOKEN_SECRET", "CLOUDFLARE_API_TOKEN",
@@ -152,6 +223,9 @@ def main(argv: list[str] | None = None, *, ask=getpass.getpass, confirm=input,
     p.add_argument("--modal-config", type=Path, default=Path.home() / ".modal.toml")
     p.add_argument("--scw-config", type=Path, default=Path.home() / ".config" / "scw" / "config.yaml")
     p.add_argument("--runs", type=Path, default=REPO / "runs", help="where this Mac's watch kept its state")
+    p.add_argument("--mac-hosts", type=Path, default=Path.home() / ".pickfit" / "mac-hosts",
+                   help="this Mac's known Mac hosts (offered to the macOS lane)")
+    p.add_argument("--aws", default="aws", help="the AWS CLI, for this Mac's sign-in when no key is typed")
     p.add_argument("--no-start", action="store_true", help="send the secrets and state, do not start the service")
     p.add_argument("--dry-run", action="store_true", help="name what was found and what would run; send nothing")
     args = p.parse_args(argv)
@@ -165,10 +239,22 @@ def main(argv: list[str] | None = None, *, ask=getpass.getpass, confirm=input,
         if not args.dry_run:
             return 1
     state = state_tar(args.runs)
+    hosts, host_names = (b"", [])
+    if any(args.mac_hosts.glob("*.json")):
+        found = sorted(p.stem for p in args.mac_hosts.glob("*.json"))
+        if args.dry_run:
+            print(f"would offer the Mac hosts {', '.join(found)} and their SSH keys")
+        elif confirm(f"Copy the Mac hosts {', '.join(found)} and their SSH keys so the macOS lane can use them? "
+                     "[y/N] ").strip().lower() == "y":
+            hosts, host_names = mac_hosts_tar(args.mac_hosts)
     steps = [
         ("secrets", f"install -m 640 -o root -g pickfit /dev/stdin {ENV_PATH}", env_text(values).encode()),
         ("state", f"install -d -o pickfit -g pickfit {REMOTE_REPO}/runs && "
                   f"tar -xzf - -C {REMOTE_REPO}/runs && chown -R pickfit:pickfit {REMOTE_REPO}/runs", state),
+        *([("mac hosts", f"install -d -o pickfit -g pickfit -m 700 {REMOTE_HOME}/.pickfit && "
+                         f"tar -xzf - -C {REMOTE_HOME}/.pickfit && chown -R pickfit:pickfit {REMOTE_HOME}/.pickfit && "
+                         f"chmod 700 {REMOTE_HOME}/.pickfit/ssh {REMOTE_HOME}/.pickfit/mac-hosts", hosts)]
+          if host_names else []),
         ("main", f"sudo -u pickfit git -C {REMOTE_REPO} fetch -q origin main && "
                  f"sudo -u pickfit git -C {REMOTE_REPO} cat-file -e origin/main:{NEEDED_ON_MAIN}", b""),
     ]

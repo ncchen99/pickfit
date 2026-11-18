@@ -713,8 +713,10 @@ def _strip_images(message: dict[str, Any]) -> dict[str, Any]:
 
 def verify_site(target: WebTarget, *, max_steps: int = MAX_STEPS, revisit: str | None = None,
                 log: Callable[[str], None] = print, box_factory: Callable[..., Any] | None = None,
-                fetcher: Callable[[str], tuple[int | None, str, str]] = fetch) -> dict[str, Any]:
-    """One visit to one site; returns the result dict (also saved as web_result.json)."""
+                fetcher: Callable[[str], tuple[int | None, str, str]] = fetch,
+                visits: Path | None = None) -> dict[str, Any]:
+    """One visit to one site; returns the result dict (also saved as web_result.json). `visits`: the file the
+    one-visit rule reads and claims (default visits_path(); pickfit's end-to-end test keeps its own)."""
     run_id = new_run_id(target.slug)
     site = site_of(target.url)
     scope = f"web:{target.slug}"
@@ -733,7 +735,7 @@ def verify_site(target: WebTarget, *, max_steps: int = MAX_STEPS, revisit: str |
             f"costs {result['costs']}")
         return result
 
-    earlier = past_visit(site)
+    earlier = past_visit(site, visits)
     if earlier and not revisit:
         return finish("skipped", f"already visited by {earlier.get('run_id')}")
     pre = preflight(target, run_id=run_id, fetcher=fetcher)
@@ -761,7 +763,7 @@ def verify_site(target: WebTarget, *, max_steps: int = MAX_STEPS, revisit: str |
         result["box"] = {"sandbox_id": box.sandbox_id, "start_s": box.start_s}
         for name, data in samples.items():
             box.write(f"{SAMPLES}/{name}", data, mode="0644", owner=WEB_UID)
-        claim_visit(site, target.slug, run_id, revisit=revisit)
+        claim_visit(site, target.slug, run_id, revisit=revisit, path=visits)
         chrome_version = box.root(["/usr/bin/chromium", "--version"], 30)[1].split()
         version = next((w for w in chrome_version if re.match(r"^\d+\.\d+", w)), "")
         start = {"url": target.url, "site": site, "user_agent": user_agent(version), "max_steps": max_steps,
