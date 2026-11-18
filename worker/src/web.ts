@@ -33,7 +33,7 @@ import { installGuide, type InstallOutput } from './install.ts';
 import { catalogShowcase, EMPTY_FORM, renderNotice, renderPage, renderResults, type BudgetStop, type FormValues, type SearchResult } from './page.ts';
 import { renderBrowse } from './pages/browse.ts';
 import { renderCompare } from './pages/compare.ts';
-import { renderAgents, renderHow, renderNotFound } from './pages/info.ts';
+import { renderAbout, renderAgents, renderHow, renderNotFound } from './pages/info.ts';
 import { renderSubmissionLive, renderSubmissionPage, renderSubmitForm, type SubmissionView } from './pages/submit.ts';
 import { renderTool } from './pages/tool.ts';
 import { findInput } from './server.ts';
@@ -505,6 +505,7 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
         if (url.pathname === '/compare') return render((nonce) => renderCompare(shown, url.searchParams, nonce));
         if (url.pathname === '/how') return render((nonce) => renderHow(shown, nonce));
         if (url.pathname === '/agents') return render((nonce) => renderAgents(url.origin, nonce));
+        if (url.pathname === '/about') return render((nonce) => renderAbout(shown, nonce));
         if (url.pathname === '/submit') return render((nonce) => renderSubmitForm(nonce));
         // Anything else a browser asks for gets the not-found page; other clients keep the plain 404.
         return wantsHtml(request) ? render((nonce) => renderNotFound(nonce), 404) : null;

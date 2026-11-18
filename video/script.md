@@ -182,3 +182,37 @@ story.md 第 5 節的主張檢查照舊適用。這版另外要確認：
 - MangoDisk 的安全檢查：網頁寫「15 known vulnerabilities」（筆數），get_install_guide 用不重複公告數 9。兩個數字不一致是網站的問題，另外處理；旁白不講數字。
 - 片尾時鐘 7:05 PM：從 7:02 開始，實際流程約 3 分鐘（網頁 1 分鐘、安裝 1.5 分鐘、清除與回報 0.5 分鐘）。
 - report_outcome：demo 資料夾的 pickfit MCP 帶 `X-Pickfit-Reporter: demo`，回報不算進計分，不必事後排除。
+
+## 9. 產品介紹版（2026-11-18）
+
+黑客松結束後，pickfit 要拿這支片報名 Product Hunt 的「Build for Good with Cloud Run」。原片開頭是賽前揭露，中間幾處講到 Meta 的模型，現在的產品已經改用 Anthropic API，所以剪了一個不提比賽、不提 Meta 的版本。上面第 0–8 節是比賽期間的紀錄，照原樣留著。新版上傳在 https://www.youtube.com/watch?v=Ec66x0b5u7Y ，上傳文字見 [YOUTUBE.md](YOUTUBE.md)。
+
+**剪掉與改掉的地方**
+
+| 原片位置 | 原本 | 新版 |
+|---|---|---|
+| 0:00–0:07 | 揭露卡「Before this week / Built this week」與旁白 | 整段拿掉。`assemble.py` 從 7.0 秒開始，第一格停 0.6 秒、從黑淡入 |
+| 0:43 網頁搜尋 | 畫面小標「matching: Muse Spark 1.3」 | 拿掉 |
+| 0:44 網頁頁尾 | pickfit.app 當時頁尾寫「Your sentence goes to Meta's Muse Spark (served by Meta…)」 | `rec/clips/D_web` 第 133–191 格把右欄那段蓋成底色（只改本機複本，主 checkout 的 `rec/` 沒動） |
+| 0:55 VM 錄影 | 「fresh macOS VM · operated by Muse Spark Open」 | 「fresh macOS VM · operated by an AI agent」 |
+| 0:58 旁白 | The hands are Muse Spark Open, Meta's open-weight model. | An AI agent did the clicking. |
+| 1:30、1:41 | 「tested on macOS by Muse Spark 1.3／Open」「matched by Muse Spark 1.3」 | 「tested on macOS by pickfit」，matched 那段拿掉 |
+| 縫線段標籤 | prescreen by／read by／installed by／operated by Muse Spark… | an AI model／an AI model／pickfit／an AI agent |
+| 縫線段旁白 | Muse Spark Open made the first cut…、Muse Spark 1.3 read the README…、Muse Spark 1.3 installed it, Muse Spark Open clicked through… | An AI model made the first cut in two seconds. Another read the README and kept the quotes. … pickfit installed it, an AI agent clicked through all four features, and pickfit checked the results. |
+| 提交頁截圖 | 「Muse Spark reads the README and writes down…」 | 「It reads the README…」，用同一張圖裡「It joins」的字形搬像素拼成，`scenes/finale/submit-*.png` 七張 |
+| 2:38 旁白 | Next, what agents report back will sharpen every match. | Next, real outcomes from agents will sharpen every match.（原句念起來像問句） |
+| 片尾小字 | pickfit runs on Meta's Muse Spark 1.3 and Muse Spark Open | 拿掉，只留「Add pickfit to your agent over MCP」 |
+
+**旁白整段重錄。** 念誠的聲音（`2kaIk6v4SfGnZzWDde1Y`，Instant Voice Clone）在目前的 ElevenLabs 方案不能用，生成會被拒絕。只換幾句會一半念誠一半別人，把 Muse Spark 從句子中間剪掉也會留下接縫，所以全部旁白改用 ElevenLabs 內建的 Chris（`iP95p4xoKVk53GoZ742B`，`eleven_v4`）重錄，每段一檔放 `audio/vo/`，舊檔移到 `audio/vo-vincent/`。`edit/timeline.json` 的每句仍放在原本的拍點上，句子變長的地方往後挪了零點幾秒。配樂、音效、畫面時間都沒動，所以音樂沒有接點。
+
+**重做步驟**（在已有 `rec/`、`audio/`、`out/night.mp4`、`out/agents.mp4` 的情況下）：
+
+```bash
+node render.mjs screens-main && node render.mjs screens-agents
+node render.mjs thread && node render.mjs finale
+python3 edit/vo_phrases.py
+uv run --with numpy python edit/mix.py --music b
+python3 edit/assemble.py   # → out/pickfit-demo.mp4，2:52
+```
+
+**檢查過的項目：** 成片每 0.5 秒取一格做 OCR，找 meta、muse、spark、hackathon、this week、llama，沒有命中。整條音軌用 Whisper 轉寫，沒有 Meta 或比賽的字。看過開頭、每個段落接點與片尾的畫格。響度 −14.1 LUFS。

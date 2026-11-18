@@ -1,4 +1,4 @@
-/** The reading pages: how pickfit works (and what its labels mean), connecting an agent, and not found. */
+/** The reading pages: how pickfit works (and what its labels mean), connecting an agent, who makes pickfit, and not found. */
 import type { Catalog } from '../catalog.ts';
 import { L } from '../i18n.ts';
 import { catalogStats, rulesLabel } from '../page.ts';
@@ -82,6 +82,37 @@ export function renderAgents(origin: string, nonce: string): string {
     `<div class="tip">${fitz('peek', 52)}<h3>${L('No sign-up, no ads', '不用註冊，也沒有廣告')}</h3><p>${L('The MCP needs no account and returns no referral links. Answers carry a <code>how_we_know</code> line and the run’s <code>evidence_url</code>, so your agent can tell you where each claim came from.', '這個 MCP 不需要帳號，也不會回傳推薦連結。每個答案都附有 <code>how_we_know</code> 說明和測試的 <code>evidence_url</code>，讓你的 agent 能告訴你每項說法的出處。')}</p></div>` +
     `</article></div>`;
   return renderShell({ nonce, title: L('Connect your agent · pickfit', '接上你的 agent · pickfit'), description: L('Use pickfit from Claude Code, Claude Desktop, Cursor or any MCP client.', '在 Claude Code、Claude Desktop、Cursor 或任何 MCP 用戶端中使用 pickfit。'), active: 'agents', tray: false, main });
+}
+
+/** Who makes pickfit: the product in two paragraphs, the team, where it started and how to reach us. Facts only; no funding or company claims. */
+export function renderAbout(catalog: Catalog, nonce: string): string {
+  const s = catalogStats(catalog);
+  const repo = 'https://github.com/ncchen99/pickfit';
+  const linkedin = 'https://www.linkedin.com/in/ncchen99/';
+  const github = 'https://github.com/ncchen99';
+  // Cloudflare Email Routing forwards this address to the founder (rule on the pickfit.app zone).
+  const mail = 'founders@pickfit.app';
+  const main =
+    head(
+      L('About pickfit', '關於 pickfit'),
+      L('An independent guide to software that was tested first, made in Tainan, Taiwan', '推薦的軟體都先實測過，一個在台灣台南開發的獨立服務'),
+      'hello',
+    ) +
+    `<div class="wrap"><article class="prose about">` +
+    `<h2>${L('What pickfit does', 'pickfit 在做什麼')}</h2>` +
+    `<p>${L(`Describe what you need in your own words and pickfit suggests software that fits your system and conditions. Every tool it recommends was installed and tried first: an agent installs it in a fresh sandbox, checks the main features its README advertises, then replays the working steps from scratch. ${s.replayed} tools have passed that replay so far.`, `用自己的話說出需求，pickfit 就會推薦適合你的系統和條件的軟體。推薦的每一款都先裝過、用過：agent 在全新的沙盒裡安裝，逐項檢查 README 宣傳的主要功能，再從頭重跑一次可行的步驟。目前有 ${s.replayed} 款通過重跑。`)}</p>` +
+    `<p>${L(`The same answers work in coding agents through pickfit’s <a href="/agents">MCP server</a>. pickfit shows no ads and takes no money for placement: tools are ranked by fit. The code is open source under the MIT license on <a href="${repo}">GitHub</a>.`, `coding agent 也能透過 pickfit 的 <a href="/agents">MCP 伺服器</a>拿到同樣的答案。pickfit 沒有廣告，也不收上架費，排序只看合不合用。程式碼以 MIT 授權開源在 <a href="${repo}">GitHub</a>。`)}</p>` +
+    `<h2 id="team">${L('Team', '團隊')}</h2>` +
+    `<div class="person"><h3 translate="no">陳念誠 <span lang="en">Nian-Cheng Chen</span></h3>` +
+    `<p class="person-role">${L('Founder', '創辦人')}</p>` +
+    `<p>${L('Designs and builds pickfit end to end: the website, the MCP server and the sandbox verification pipeline. B.S. in Computer Science, National Cheng Kung University (2026).', '從頭到尾設計並開發 pickfit，包括網站、MCP 伺服器和沙盒驗證流程。國立成功大學資訊工程學系畢業（2026）。')}</p>` +
+    `<p class="person-links"><a href="${linkedin}">LinkedIn</a><a href="${github}">GitHub</a></p></div>` +
+    `<h2>${L('Where it started', '怎麼開始的')}</h2>` +
+    `<p>${L('pickfit began in October 2026 as an entry to the Meta Global AI Developer Hackathon and has kept growing since. It is run from Tainan, Taiwan.', 'pickfit 在 2026 年 10 月為了參加 Meta Global AI Developer Hackathon 開始開發，比賽結束後持續擴充，目前在台灣台南營運。')}</p>` +
+    `<h2 id="contact">${L('Contact', '聯絡我們')}</h2>` +
+    `<p>${L(`For questions or partnerships, email <a href="mailto:${mail}" translate="no">${mail}</a>, message Nian-Cheng on <a href="${linkedin}">LinkedIn</a>, or open an issue on <a href="${repo}/issues">GitHub</a>. To suggest software, use <a href="/submit">Recommend software</a>.`, `有問題或合作提案，請寄信到 <a href="mailto:${mail}" translate="no">${mail}</a>，也可以在 <a href="${linkedin}">LinkedIn</a> 上傳訊息給念誠，或到 <a href="${repo}/issues">GitHub</a> 開 issue。想推薦軟體，請用<a href="/submit">推薦軟體</a>頁面。`)}</p>` +
+    `</article></div>`;
+  return renderShell({ nonce, title: L('About pickfit · pickfit', '關於 pickfit · pickfit'), description: L('Who makes pickfit, what it does, and how to reach the team.', 'pickfit 是誰做的、在做什麼，以及怎麼聯絡團隊。'), active: null, tray: false, main });
 }
 
 export function renderNotFound(nonce: string): string {
