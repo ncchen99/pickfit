@@ -72,7 +72,7 @@ def answers(*replies: str):
 def test_everything_reaches_the_remote_on_stdin_and_nowhere_else(files, capsys) -> None:
     remote = Remote()
     ask = answers("cf-fake-token", "gh-fake-push", "aws-fake-secret")
-    confirm = answers("AKIAFAKE", "y")
+    confirm = answers("AKIAFAKE", "", "y")
     assert ss.main(argv(files), ask=ask, confirm=confirm, run=remote) == 0
     [secrets, state, main, start] = remote.calls
     text = secrets[1].decode()
@@ -94,7 +94,7 @@ def test_everything_reaches_the_remote_on_stdin_and_nowhere_else(files, capsys) 
 def test_skipping_the_optional_parts(files) -> None:
     remote = Remote()
     assert ss.main(argv(files, "--no-start"), ask=answers("cf-fake-token", "gh-fake-push"),
-                   confirm=answers("", "n"), run=remote) == 0
+                   confirm=answers("", "", "n"), run=remote) == 0
     text = remote.calls[0][1].decode()
     assert "AWS_" not in text and "SCW_ACCESS_KEY" not in text and "SCW_DEFAULT_ZONE=fr-par-1" in text
     assert len(remote.calls) == 3  # no start
@@ -103,13 +103,13 @@ def test_skipping_the_optional_parts(files) -> None:
 def test_a_missing_required_value_sends_nothing(files, capsys) -> None:
     files["env"].write_text("")
     remote = Remote()
-    assert ss.main(argv(files), ask=answers("", "", ""), confirm=answers("", "", "n"), run=remote) == 1
+    assert ss.main(argv(files), ask=answers("", "", ""), confirm=answers("", "", "", "n"), run=remote) == 1
     assert remote.calls == [] and "missing: ANTHROPIC_API_KEY" in capsys.readouterr().out
 
 
 def test_main_without_the_watch_code_does_not_start(files, capsys) -> None:
     remote = Remote(fail="cat-file")
-    assert ss.main(argv(files), ask=answers("cf-fake-token", "gh-fake-push"), confirm=answers("", "n"),
+    assert ss.main(argv(files), ask=answers("cf-fake-token", "gh-fake-push"), confirm=answers("", "", "n"),
                    run=remote) == 1
     assert len(remote.calls) == 3 and "Merge the watch work into main" in capsys.readouterr().out
 
@@ -139,7 +139,7 @@ def test_this_macs_aws_sign_in_is_offered_when_no_key_is_typed(files, tmp_path) 
                                       '"SessionToken": "aws-temp-token", "Expiration": "2026-11-19T06:00:00Z"}')
     remote = Remote()
     assert ss.main(argv(files, "--no-start"), ask=answers("cf-fake-token", "gh-fake-push"),
-                   confirm=answers("", "y", "n"), run=remote) == 0
+                   confirm=answers("", "y", "", "n"), run=remote) == 0
     [secrets, *_] = remote.calls
     text = secrets[1].decode()
     assert "AWS_ACCESS_KEY_ID=ASIAFAKE" in text and "AWS_SESSION_TOKEN=aws-temp-token" in text
@@ -154,7 +154,7 @@ def test_the_mac_hosts_go_with_their_key_re_pointed(files, tmp_path) -> None:
                                                           "server_id": "srv-1"}))
     remote = Remote()
     assert ss.main(argv(files, "--no-start"), ask=answers("cf-fake-token", "gh-fake-push"),
-                   confirm=answers("", "n", "y"), run=remote) == 0
+                   confirm=answers("", "", "n", "y"), run=remote) == 0
     hosts = next(data for cmd, data in remote.calls if "mac-hosts" in cmd[-1])
     with tarfile.open(fileobj=io.BytesIO(hosts), mode="r:gz") as tar:
         assert sorted(tar.getnames()) == ["mac-hosts/scw1.json", "ssh/scaleway-mac"]
@@ -162,3 +162,13 @@ def test_the_mac_hosts_go_with_their_key_re_pointed(files, tmp_path) -> None:
         assert tar.getmember("ssh/scaleway-mac").mode == 0o600
     assert host["key"] == "/var/lib/pickfit/.pickfit/ssh/scaleway-mac" and host["server_id"] == "srv-1"
     assert all("PRIVATE KEY" not in part for cmd, _ in remote.calls for part in cmd)
+
+
+def test_watchs_own_scaleway_key_is_taken_in_place_of_this_macs(files) -> None:
+    remote = Remote()
+    assert ss.main(argv(files, "--no-start"), ask=answers("cf-fake-token", "gh-fake-push", "scw-app-secret"),
+                   confirm=answers("", "SCWAPPKEY"), run=remote) == 0
+    text = remote.calls[0][1].decode()
+    assert "SCW_ACCESS_KEY=SCWAPPKEY" in text and "SCW_SECRET_KEY=scw-app-secret" in text
+    assert "SCWFAKE" not in text and "scw-fake-secret" not in text  # not this Mac's own key
+    assert "SCW_DEFAULT_PROJECT_ID=proj-1" in text and "SCW_DEFAULT_ORGANIZATION_ID=org-1" in text

@@ -14,7 +14,9 @@ so no value is printed, put in a command line or written to a local file:
 - AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY: asked, optional (Enter skips; the Windows lane then waits). Skipped,
   it offers this Mac's current AWS sign-in instead (`aws configure export-credentials`: temporary, with
   AWS_SESSION_TOKEN; the Windows lane works until it expires)
-- SCW_*: ~/.config/scw/config.yaml, only if you say yes (the macOS lane renting Macs)
+- SCW_ACCESS_KEY / SCW_SECRET_KEY: asked, optional: watch's own API key (an IAM application with Apple silicon rights
+  only; the project and zone come from ~/.config/scw/config.yaml). Skipped, it offers this Mac's own key from that
+  file instead, only if you say yes (the macOS lane renting Macs)
 
 Then it copies runs/watch/jobs/ and runs/web/visits.jsonl (what was submitted and which sites were visited), and,
 if you say yes, the Mac hosts in ~/.pickfit/mac-hosts with the SSH keys they name (the macOS lane uses a known
@@ -122,10 +124,19 @@ def collect(args: argparse.Namespace, ask=getpass.getpass, confirm=input) -> dic
                                  "the Windows lane works until then? [y/N] ").strip().lower() == "y":
             values.update(signed_in["values"])
     scw = scw_profile(args.scw_config)
-    if scw and not args.dry_run and confirm("Copy this Mac's Scaleway key so watch can rent Macs? [y/N] ").strip().lower() == "y":
-        values.update(scw)
-    elif scw and args.dry_run:
+    if args.dry_run:
         values.update({k: "" for k in scw})  # named in the dry run, never sent
+    else:
+        # Watch's own key (an IAM application with Apple silicon rights only) is better than this Mac's own login.
+        access = confirm("Scaleway access key of watch's own API key (Enter skips): ").strip()
+        if access:
+            secret = ask("Its Scaleway secret key: ").strip()
+            if secret:
+                values.update({k: v for k, v in scw.items() if k not in ("SCW_ACCESS_KEY", "SCW_SECRET_KEY")})
+                values.update({"SCW_ACCESS_KEY": access, "SCW_SECRET_KEY": secret})
+        elif scw and confirm("Copy this Mac's own Scaleway key instead, so watch can rent Macs? [y/N] "
+                             ).strip().lower() == "y":
+            values.update(scw)
     return values
 
 
