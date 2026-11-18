@@ -83,7 +83,9 @@ ssh root@機器的IP journalctl -u pickfit-e2e@default -n 60
 
 `pickfit e2e`（`pickfit/e2e.py`）照一般人的方式從官網表單和 MCP 的 `submit_software` 送出測試網址，再跟著正在跑的 watch 看它處理。測試網址在送出前先記在 `runs/e2e/canaries.json`，watch 認得它們，每一步照跑，沙盒也照跑。最後在 data/software 的複本上跑 publish 的計畫檢查，紀錄只留在 `runs/e2e/<run>/`，不寫進 data/software、不 commit、不推。D1 那一列最後是 rejected，理由寫真的送出會得到什麼，跑完刪掉，所以下次可以照樣再跑。網站的測試造訪記在那次 run 自己的 visits 檔，不影響真的送出。另外比對 pickfit.app 和 workers.dev 給的資料是不是 origin/main 的資料。
 
-報告在 `runs/e2e/<run>/report.json`。一次 default 大約 US$2 到 9，第二次起會重用初篩和抽取。
+報告在 `runs/e2e/<run>/report.json`。11/18 第一次跑的模型費：reject 幾乎是 0，linux 約 US$0.27，web 約 US$0.39，windows 約 US$0.31，macos 約 US$0.18。default 三條約 US$0.7，第二次起會重用初篩和抽取。
+
+發布那一段比對 pickfit.app 和 workers.dev 的資料是不是 origin/main 的。pickfit.app 由 Cloud Run 提供，CI 只部署 workers.dev，所以 Cloud Run 沒跟著部署時，這一段會失敗，整份報告也是 FAILED。
 
 ## 平常要知道的事
 
