@@ -9,7 +9,7 @@ A software advisor for people and their AI agents. pickfit installs and tests so
 
 <p align="center">
   <a href="https://pickfit.app"><b>pickfit.app</b></a> ·
-  <a href="https://www.youtube.com/watch?v=Rjuf3dHW0SE"><b>Demo video (2:59)</b></a> ·
+  <a href="https://www.youtube.com/watch?v=Ec66x0b5u7Y"><b>Demo video (2:52)</b></a> ·
   <a href="https://pickfit.app/agents">Connect your agent (MCP)</a> ·
   <a href="https://ncchen99.github.io/pickfit/"><b>Full report</b></a> ·
   <a href="docs/REPORT.md">Report (Markdown)</a>
@@ -40,7 +40,7 @@ Fitz, the mascot, is a tailorbird. Real tailorbirds pick leaves and stitch them 
 
 As of 16 Nov 2026: **1,154** projects read, **813** verified at least through install, **715** replayed in a fresh sandbox, **98** web apps tried in a browser, **159** hidden gems. CLI tools, local AI tools, MCP servers, desktop apps (Linux and macOS) and web apps, in nine categories.
 
-<p align="center"><a href="https://www.youtube.com/watch?v=Rjuf3dHW0SE"><img src="brand/screenshots/demo-video.jpg" alt="Watch the pickfit demo video on YouTube (2:59)" width="640"></a><br><sub>Watch the 3-minute demo: Claude Code finds and installs MangoDisk through pickfit, then the app's first use.</sub></p>
+<p align="center"><a href="https://www.youtube.com/watch?v=Ec66x0b5u7Y"><img src="brand/screenshots/demo-video.jpg" alt="Watch the pickfit demo video on YouTube (2:52)" width="640"></a><br><sub>Watch the 3-minute demo: Claude Code finds and installs MangoDisk through pickfit, then the app's first use.</sub></p>
 
 ## Try it
 
