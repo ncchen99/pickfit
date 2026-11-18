@@ -203,6 +203,7 @@ reason: needs_more_resources
   5. 重錄第二次是 `video-alacritty-20261118-122045-5f9f`（重播 US$0.017，剪輯加審片 US$0.135），沒有標記，成品 `alacritty-20261118-1222.mp4` 36 秒，3 段全部審過。這次連線更慢，460 秒只有 26 張新畫面，最久隔 79.85 秒。打字在 291.25 秒結束，整行到 303.25 秒才出現（晚 12 秒），段落剪到 306.25 秒。照舊的規則會停在 294.25 秒，又是看不到 0 的那種片子。三次合計約 US$0.56。
   6. 還沒做的是在主機上錄影。一張畫面 10 秒以上，最久等過 80 秒，片子裡的動作會一頓一頓的，但剪點現在對得上。測試在 `tests/test_verify_video_frames.py`、`tests/test_verify_vnc.py`。
 - 主機 `17afd9ad-…` 計費到 11/18 23:42（台北），之後 `pickfit mac-host down scw1 --yes` 才刪得掉。刪除前要念誠確認。
+- 11/19 00:10（台北）念誠確認後用 `pickfit mac-host down scw1 --yes` 刪掉了，Scaleway 上已經查不到這台。刪之前 watch 從 11/18 21:11 起就沒有工作。watch 機器和這台 Mac 上的 `mac-hosts/scw1.json`、`tart/hosts/62.210.194.156/` 的兩個 manifest 也一起刪了，免得之後租到同一個 IP 的主機被當成已經有 base。現在 watch 沒有 Mac 可用，renting 又沒開，macOS 的送出會停在「no Mac host is ready and renting is off」，等 `mac-host add`／`up` 加了主機，或服務加上 `--mac-rent`，才會開始跑。
 - 若要改回 Aqua 工作階段啟動：`SshHost.start_vm` 要改成在 Aqua 工作階段啟動 `tart run`（LaunchAgent + kickstart），softnet 的控制通道不能再靠繼承 fd 跨過 launchd，要改成 RELAY 在 Aqua 那邊開一個 UNIX socket、SSH 這邊連上去轉送。
 - 還沒在真的遠端 Mac 上跑過驗證。可以開 VM 之後要做的：
   1. 在 Scaleway 專案加一把 pickfit 專用的 SSH 公鑰（要念誠同意，這是新增存取用的金鑰），開 M4-S、macOS 26，`ssh m1@<ip>`。
