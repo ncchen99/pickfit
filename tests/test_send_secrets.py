@@ -44,13 +44,14 @@ def files(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> dict[str, Path]:
     (runs / "verify").mkdir()  # not sent
     hosts = tmp_path / "mac-hosts"  # none: no Mac hosts question
     hosts.mkdir()
-    return {"env": env, "modal": modal, "scw": scw, "runs": runs, "hosts": hosts, "aws": tmp_path / "no-aws-cli"}
+    return {"env": env, "modal": modal, "scw": scw, "runs": runs, "hosts": hosts, "aws": tmp_path / "no-aws-cli",
+            "tart": tmp_path / "tart"}
 
 
 def argv(files: dict[str, Path], *extra: str) -> list[str]:
     return ["root@203.0.113.5", "--env-file", str(files["env"]), "--modal-config", str(files["modal"]),
             "--scw-config", str(files["scw"]), "--runs", str(files["runs"]), "--mac-hosts", str(files["hosts"]),
-            "--aws", str(files["aws"]), *extra]
+            "--tart-state", str(files["tart"]), "--aws", str(files["aws"]), *extra]
 
 
 class Remote:
@@ -162,6 +163,27 @@ def test_the_mac_hosts_go_with_their_key_re_pointed(files, tmp_path) -> None:
         assert tar.getmember("ssh/scaleway-mac").mode == 0o600
     assert host["key"] == "/var/lib/pickfit/.pickfit/ssh/scaleway-mac" and host["server_id"] == "srv-1"
     assert all("PRIVATE KEY" not in part for cmd, _ in remote.calls for part in cmd)
+
+
+def test_a_hosts_base_manifests_go_with_it(files) -> None:
+    # Without them the macOS lane takes the host's bases for unbuilt and fails rebuilding them every half hour.
+    (files["hosts"] / "scw1.json").write_text(json.dumps({"name": "scw1", "target": "m1@198.51.100.7"}))
+    (files["hosts"] / "gone.json").write_text(json.dumps({"name": "gone", "target": "m1@198.51.100.9"}))
+    manifests = files["tart"] / "hosts" / "198.51.100.7"
+    manifests.mkdir(parents=True)
+    for base in ("pickfit-macos-15", "pickfit-macos-15-gui"):
+        (manifests / f"{base}.json").write_text(json.dumps({"base": base, "hardened": True}))
+    (files["tart"] / "hosts" / "203.0.113.99").mkdir()  # another host's folder: not this one's
+    (files["tart"] / "hosts" / "203.0.113.99" / "pickfit-macos-26.json").write_text("{}")
+    remote = Remote()
+    assert ss.main(argv(files, "--no-start"), ask=answers("cf-fake-token", "gh-fake-push"),
+                   confirm=answers("", "", "n", "y"), run=remote) == 0
+    hosts = next(data for cmd, data in remote.calls if "mac-hosts" in cmd[-1])
+    with tarfile.open(fileobj=io.BytesIO(hosts), mode="r:gz") as tar:
+        assert sorted(tar.getnames()) == ["mac-hosts/gone.json", "mac-hosts/scw1.json",
+                                          "tart/hosts/198.51.100.7/pickfit-macos-15-gui.json",
+                                          "tart/hosts/198.51.100.7/pickfit-macos-15.json"]
+        assert json.loads(tar.extractfile("tart/hosts/198.51.100.7/pickfit-macos-15.json").read())["hardened"]
 
 
 def test_watchs_own_scaleway_key_is_taken_in_place_of_this_macs(files) -> None:

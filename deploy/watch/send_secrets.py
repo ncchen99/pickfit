@@ -19,8 +19,8 @@ so no value is printed, put in a command line or written to a local file:
   file instead, only if you say yes (the macOS lane renting Macs)
 
 Then it copies runs/watch/jobs/ and runs/web/visits.jsonl (what was submitted and which sites were visited), and,
-if you say yes, the Mac hosts in ~/.pickfit/mac-hosts with the SSH keys they name (the macOS lane uses a known
-host before it rents one). It checks that origin/main has the watch code the service runs, and starts the service.
+if you say yes, the Mac hosts in ~/.pickfit/mac-hosts with the SSH keys they name and the base manifests in
+~/.pickfit/tart/hosts/ (the macOS lane uses a known host before it rents one). It checks that origin/main has the watch code the service runs, and starts the service.
 --dry-run shows which names were found and what would run, never a value.
 """
 
@@ -31,6 +31,7 @@ import getpass
 import io
 import json
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -165,9 +166,16 @@ def aws_sign_in(aws: str = "aws", run=subprocess.run) -> dict | None:
 REMOTE_HOME = "/var/lib/pickfit"
 
 
-def mac_hosts_tar(hosts_dir: Path) -> tuple[bytes, list[str]]:
+def tart_name(target: str) -> str:
+    """The folder pickfit.verify.tart_host.SshHost keeps a host's base manifests in."""
+    return re.sub(r"[^A-Za-z0-9_.-]", "_", target.split("@")[-1])
+
+
+def mac_hosts_tar(hosts_dir: Path, tart_state: Path | None = None) -> tuple[bytes, list[str]]:
     """~/.pickfit/mac-hosts/*.json (and rentals.jsonl) with each host's SSH key, re-pointed at the pickfit user's
-    ~/.pickfit/ssh/; paths relative to ~/.pickfit. Returns (the tar, the host names)."""
+    ~/.pickfit/ssh/, and the base manifests in ~/.pickfit/tart/hosts/<host>/ (without them the macOS lane takes
+    the host's bases for unbuilt and fails rebuilding them); paths relative to ~/.pickfit.
+    Returns (the tar, the host names)."""
     buf = io.BytesIO()
     names: list[str] = []
 
@@ -196,6 +204,10 @@ def mac_hosts_tar(hosts_dir: Path) -> tuple[bytes, list[str]]:
                 host["key"] = f"{REMOTE_HOME}/.pickfit/{remote}"
             add(f"mac-hosts/{path.name}", (json.dumps(host, indent=2) + "\n").encode(), 0o644)
             names.append(path.stem)
+            if host.get("target") and tart_state is not None:
+                folder = tart_state / "hosts" / tart_name(host["target"])
+                for manifest in sorted(folder.glob("*.json")) if folder.is_dir() else []:
+                    add(f"tart/hosts/{folder.name}/{manifest.name}", manifest.read_bytes(), 0o644)
         rentals = hosts_dir / "rentals.jsonl"
         if rentals.is_file():
             add("mac-hosts/rentals.jsonl", rentals.read_bytes(), 0o644)
@@ -236,6 +248,8 @@ def main(argv: list[str] | None = None, *, ask=getpass.getpass, confirm=input,
     p.add_argument("--runs", type=Path, default=REPO / "runs", help="where this Mac's watch kept its state")
     p.add_argument("--mac-hosts", type=Path, default=Path.home() / ".pickfit" / "mac-hosts",
                    help="this Mac's known Mac hosts (offered to the macOS lane)")
+    p.add_argument("--tart-state", type=Path, default=Path.home() / ".pickfit" / "tart",
+                   help="where this Mac keeps the hosts' base manifests (sent with the Mac hosts)")
     p.add_argument("--aws", default="aws", help="the AWS CLI, for this Mac's sign-in when no key is typed")
     p.add_argument("--no-start", action="store_true", help="send the secrets and state, do not start the service")
     p.add_argument("--dry-run", action="store_true", help="name what was found and what would run; send nothing")
@@ -257,7 +271,7 @@ def main(argv: list[str] | None = None, *, ask=getpass.getpass, confirm=input,
             print(f"would offer the Mac hosts {', '.join(found)} and their SSH keys")
         elif confirm(f"Copy the Mac hosts {', '.join(found)} and their SSH keys so the macOS lane can use them? "
                      "[y/N] ").strip().lower() == "y":
-            hosts, host_names = mac_hosts_tar(args.mac_hosts)
+            hosts, host_names = mac_hosts_tar(args.mac_hosts, args.tart_state)
     steps = [
         ("secrets", f"install -m 640 -o root -g pickfit /dev/stdin {ENV_PATH}", env_text(values).encode()),
         ("state", f"install -d -o pickfit -g pickfit {REMOTE_REPO}/runs && "

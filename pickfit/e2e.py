@@ -67,10 +67,12 @@ CANARIES: dict[str, Canary] = {
                     "passed", timedelta(minutes=75), "web",
                     "the website form, D1, read, prescreen, extraction, the Linux sandbox and its replay, scores, "
                     "the vulnerability check, the record and the publish plan check"),
-    "web": Canary("web", ("https://demo.playwright.dev/todomvc", "https://todomvc.com/examples/react/dist"),
+    # Real open-source web apps, no account, that pickfit does not list and whose robots.txt and terms allow
+    # automated visits (checked 11/18). Not a demo page: demo.playwright.dev/todomvc says it is "just a demo
+    # ... for testing", and pickfit's reading rightly refuses it as demo_prototype.
+    "web": Canary("web", ("https://regexr.com", "https://dillinger.io"),
                   "passed", timedelta(minutes=75), "web",
-                  "a website submission: robots.txt, terms, the screen, extraction and one visit in a microVM "
-                  "(a page that exists for automated testing)"),
+                  "a website submission: robots.txt, terms, the screen, extraction and one visit in a microVM"),
     "windows": Canary("windows", ("https://github.com/lptstr/winfetch",), "passed", timedelta(hours=2), "web",
                       "a Windows-only tool: parked for the Windows lane, verified on EC2"),
     "macos": Canary("macos", ("https://github.com/rgcr/m-cli",), "passed", timedelta(hours=3), "web",

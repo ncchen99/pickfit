@@ -284,3 +284,10 @@ reason: needs_more_resources
   - watch 自己租的 Mac 只有 watch 在跑時才會被刪。watch 停掉時，主機過了 24 小時會按小時繼續計費，要手動 `pickfit mac-host down NAME --yes`。
   - macOS GUI 箱子的 limits test 11/18 下午補上了（H-014，scw1 上 52/52），Mac 批次在用一台新主機前會跟著 `plan_steps` 的 gui-limits 一起跑。
   - 還沒用真的 D1、真的主機整條跑過。
+- 11/18 晚上第一次在 watch 機器上跑完整的端到端測試（`systemctl start pickfit-e2e@all`，run `e2e-20261118-185431-15b1`）。五個測試網址照一般人的方式從官網表單和 MCP 送進 D1：
+  - reject（sindresorhus/awesome，經 MCP）：約 1 分鐘退件，理由是 non_software，符合預期。
+  - linux（sharkdp/hexyl）：約 2 分鐘，Modal 箱子驗證加重播都通過，判成 verified (function)，紀錄只留在 `runs/e2e/<run>/records`。模型約 US$0.27。
+  - windows（lptstr/winfetch）：在 EC2 台北開箱子，約 5 分鐘通過。用的是 watch 自己的 IAM 使用者 `pickfit-watch`，所以 `aws-watch-policy.json` 的權限夠用。模型約 US$0.31。
+  - web（demo.playwright.dev/todomvc）：沒過，但錯的是測試網址。篩選判它是網頁應用，抽取卻讀成 `demo_prototype`，因為頁面自己寫著「This is just a demo of TodoMVC for testing」，pickfit 不收是對的。備用的 todomvc.com 範例頁也是示範用。兩個都換成真的開源網頁應用：regexr.com，備用 dillinger.io。兩個都不用帳號、pickfit 還沒收錄，pickfit 自己的 robots.txt 和使用條款檢查也都通過。同一批查過的還有 tldraw.com（robots.txt 不允許）和 jsoncrack.com（條款禁止自動存取），都不能用。
+  - macos（rgcr/m-cli）：卡住了。e2e 的工作讓這條馬上開始（「an end-to-end test is waiting」），但每 30 分鐘 scw1 的 base 步驟都以 exit 1 失敗：`base VM 'pickfit-macos-15' already exists`。原因是 `send_secrets.py` 只搬了 `~/.pickfit/mac-hosts` 和 SSH 金鑰，沒搬 `~/.pickfit/tart/hosts/<主機>/` 裡 base VM 的 manifest。`mac-host check` 要 VM 和 manifest 都在才算 base 建好，所以 watch 以為沒有 base，去重建，又因為 VM 已存在而失敗。已把 scw1 的兩個 manifest（裡面只有映像和工具的版本，沒有機密）搬到機器上，`send_secrets.py` 之後也會一起搬，測試在 `tests/test_send_secrets.py`。
+  - 發布那一段：workers.dev 的 data_sha256 和 origin/main 一致，CI 部署正常。pickfit.app 還是舊的資料，因為它從 11/18 起由 Cloud Run 提供，CI 只部署 workers.dev 的 Worker。watch 自動推上去的 jsonl-co、generator-budget 因此一直停在 ready，D1 要等 pickfit.app 也更新才會改成 listed。

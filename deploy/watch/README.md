@@ -51,7 +51,7 @@
    uv run python deploy/watch/send_secrets.py root@機器的IP
    ```
 
-   腳本從這台 Mac 已有的地方拿 Anthropic key（環境變數或 repo 的 `.env`）、Modal token（`~/.modal.toml`），其他的會問你。值只經 SSH 的 stdin 送過去，不會印在畫面、不會出現在指令列，也不會寫成本機檔案。腳本也會把 `runs/watch/jobs/`（每個送出做到哪）和 `runs/web/visits.jsonl`（造訪過的網站，同一個網站只造訪一次）搬過去，你答 y 的話再加上 `~/.pickfit/mac-hosts` 的 Mac 主機和它們的 SSH 金鑰。先跑一次 `--dry-run` 可以看找到哪些名稱、會執行什麼，不顯示任何值。
+   腳本從這台 Mac 已有的地方拿 Anthropic key（環境變數或 repo 的 `.env`）、Modal token（`~/.modal.toml`），其他的會問你。值只經 SSH 的 stdin 送過去，不會印在畫面、不會出現在指令列，也不會寫成本機檔案。腳本也會把 `runs/watch/jobs/`（每個送出做到哪）和 `runs/web/visits.jsonl`（造訪過的網站，同一個網站只造訪一次）搬過去，你答 y 的話再加上 `~/.pickfit/mac-hosts` 的 Mac 主機、它們的 SSH 金鑰，以及 `~/.pickfit/tart/hosts/` 裡 base VM 的 manifest。少了 manifest，watch 會以為主機上還沒有 base，每 30 分鐘重建一次，每次都因為 VM 已存在而失敗。先跑一次 `--dry-run` 可以看找到哪些名稱、會執行什麼，不顯示任何值。
 
    watch 用的金鑰都是給它自己的，各自只開必要的權限（11/18 建立）：
 
