@@ -1,4 +1,5 @@
-"""TartBox: the Box interface on a real macOS VM on this Mac (Tart, Apple Virtualization.framework).
+"""TartBox: the Box interface on a real macOS VM (Tart, Apple Virtualization.framework), on this Mac or on another
+Mac over SSH (tart_host: PICKFIT_TART_HOST; everything below said of "the host" is done there).
 
 - One box is one VM cloned from a prepared base (`pickfit verify --runner tart
   --prepare-base`): `tart clone` is an APFS copy-on-write clone, so it takes a
@@ -60,7 +61,9 @@
   The VM runs with Virtualization.framework's own VNC server on the host
   (vnc.py): pickfit takes screenshots and sends input from outside the guest,
   and softnet keeps the guest from reaching that port. gui_mac.py launches
-  apps in sbx's desktop session and judges whose windows they are.
+  apps in sbx's desktop session and judges whose windows they are. At start
+  the box drops the source image's TCC grants except osascript's for
+  pickfit's scroll (TCC_SCOPE); limits_mac.py is the GUI box's limits test.
 
 Licences (docs/research/notes/macos-windows-verify.md): macOS SLA 2B(iii) allows
 two extra macOS instances in VMs for software development and testing; Tart is
@@ -75,7 +78,6 @@ import re
 import secrets
 import shlex
 import shutil
-import signal
 import socket
 import stat
 import subprocess
@@ -85,12 +87,17 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
+from pickfit.env import get_env
 from pickfit.ledger import taipei_now
 from pickfit.verify.box import Box, BoxError, BoxLimits, ExecResult, HOST_GRACE_S, run_captured
+from pickfit.verify.tart_host import FD, LocalHost, host_from_env
 
 TART = "tart"
-SOURCE_IMAGE = "ghcr.io/cirruslabs/macos-tahoe-base:latest"  # macOS 26 with Homebrew and the guest agent
-BASE_VM = "pickfit-macos-26"
+# macOS 26 with Homebrew and the guest agent. A host on an older macOS cannot run a newer guest: 11/18 Scaleway's
+# macOS 26 hosts could start no macOS guest at all, their macOS 15 hosts run macOS 15 guests (loop/issues.md H-012),
+# so a host's boxes may use another source and base name (PICKFIT_TART_SOURCE, PICKFIT_TART_BASE).
+SOURCE_IMAGE = get_env("PICKFIT_TART_SOURCE") or "ghcr.io/cirruslabs/macos-tahoe-base:latest"
+BASE_VM = get_env("PICKFIT_TART_BASE") or "pickfit-macos-26"
 GUI_BASE_VM = f"{BASE_VM}-gui"
 GUI_DISPLAY = "1280x800px"  # pixels, so macOS runs it at 1x: framebuffer, window bounds and the judge's 1280x800 agree
 DESKTOP_WAIT_S = 120  # after the agent answers, until sbx's Dock and Finder run
@@ -103,7 +110,7 @@ VNC_URL_WAIT_S = 30
 DESKTOP_PIDS = 512
 HARNESS_OUTPUT_BYTES = 4_000_000  # pickfit's own output (process lists, reports) is never cut to a head and tail
 VM_PREFIX = "pf-verify-"
-STATE_DIR = Path.home() / ".pickfit" / "tart"  # base manifests and VM logs, outside the repo
+STATE_DIR = Path.home() / ".pickfit" / "tart"  # base manifests and VM logs, outside the repo (tart_host's too)
 MAC_USER = "sbx"
 MAC_UID = 1001
 MAC_HOME = f"/Users/{MAC_USER}"
@@ -167,20 +174,38 @@ AGENT_PLISTS = ("/Library/LaunchDaemons/org.cirruslabs.tart-guest-daemon.plist",
 # mDNS reachability probe: send a multicast mDNS query to 224.0.0.251:5353 and wait briefly for a reply.
 # Exit 0 means the host answered (multicast reached it); 1 means no answer; 2 means the send itself failed
 # (also "did not reach"). Run as root in the guest, it proves whether softnet's multicast block holds.
+# The guest must not answer itself: by default the query loops back to the guest's own mDNSResponder, and a
+# guest that advertises a service (the sequoia base advertises SSH) then answers from its own address, which
+# read as "the host answered" (11/18, Scaleway Mac mini). Loopback is off, and a reply from the guest's own
+# address is skipped anyway.
 HELPER_MDNS = """\
-import socket, struct, sys
+import socket, struct, sys, time
 pkt = (struct.pack(">HHHHHH", 0, 0, 1, 0, 0, 0)
        + b"".join(bytes([len(p)]) + p for p in (b"_services", b"_dns-sd", b"_udp", b"local")) + b"\\x00"
        + struct.pack(">HH", 12, 1))
+own = {"127.0.0.1"}
+try:
+    r = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    r.connect(("224.0.0.251", 5353))
+    own.add(r.getsockname()[0])
+    r.close()
+except OSError:
+    pass
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-s.settimeout(3)
+s.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_LOOP, 0)
+end = time.monotonic() + 3
 try:
     s.sendto(pkt, ("224.0.0.251", 5353))
-    data, addr = s.recvfrom(2048)
-    print(f"mdns=answered {addr[0]} {len(data)}"); sys.exit(0)
+    while True:
+        s.settimeout(max(0.05, end - time.monotonic()))
+        data, addr = s.recvfrom(2048)
+        if addr[0] not in own:
+            print(f"mdns=answered {addr[0]} {len(data)}"); sys.exit(0)
+        if time.monotonic() >= end:
+            raise socket.timeout
 except socket.timeout:
-    print("mdns=no-answer"); sys.exit(1)
+    print(f"mdns=no-answer (own {','.join(sorted(own))})"); sys.exit(1)
 except OSError as err:
     print(f"mdns=unreachable {err}"); sys.exit(2)
 """
@@ -219,12 +244,29 @@ PUBLIC_URL = "https://pypi.org/simple/pip/"
 # 5000/7000 AirPlay/ControlCenter), so if @host were NOT blocked an open one would answer (exit 0); with
 # it blocked every one drops (exit 28). Closed ports alone (22/80) could not tell blocked from refused.
 HOST_PORTS = (3000, 5000, 7000, 49152, 22, 80, 443, 88)
+HOST_REACHED = frozenset({0, 1, 7, 8, 52, 56})  # curl exits that need a reply from the host (validate_containment)
 # A private address reached via the default route: softnet drops it, so it must be a clean drop (28).
 PRIVATE_PROBE = {"private": "http://10.255.255.1/"}
 # Must be UNREACHABLE (any non-zero): cloud metadata is link-local (off the default route, so curl fails
 # fast with exit 7 where there is no such service) and the guest has no IPv6 route. 0 would mean egress.
 UNREACHABLE_PROBES = {"metadata": "http://169.254.169.254/", "ipv6": "http://[2606:4700:4700::1111]/"}
 IPV6_PROBE = UNREACHABLE_PROBES["ipv6"]
+# Where most installs come from: GitHub (releases, raw files) and ghcr.io (Homebrew's bottles). Checked once online;
+# 11/17 this Mac's full-tunnel VPN (Pulse Secure, utun4 the default route) let the host reach them but not the VMs
+# behind vmnet's NAT (TCP to 20.27.177.0/24 timed out, ping answered), and an agent spent 15 minutes on mirrors.
+SOURCE_PROBES = {"github": "https://github.com/", "ghcr": "https://ghcr.io/v2/"}
+# The source image's system TCC database grants Screen Recording, Accessibility, PostEvent and more to
+# sshd-keygen-wrapper, osascript, the bundle id org.python.python (no code requirement: any app that claims it) and
+# /opt/homebrew/Cellar/tart-guest-agent/..., a path sbx owns: 11/18 a program sbx put there and started as a launchd
+# job in its session got Screen Recording, Accessibility, Input Monitoring and PostEvent. A GUI box keeps only what
+# pickfit uses, osascript's Accessibility and PostEvent (gui_mac.post_scroll); its screenshots come over VNC from the
+# host and need no grant. SIP is off in the image, so root can edit the database; tccd reads the change at once.
+TCC_DB = "/Library/Application Support/com.apple.TCC/TCC.db"
+TCC_SERVICES = tuple(f"kTCCService{s}" for s in ("ScreenCapture", "Accessibility", "PostEvent", "ListenEvent",
+                                                  "SystemPolicyAllFiles", "AppleEvents", "Microphone", "Camera"))
+TCC_KEPT = (("kTCCServiceAccessibility", "/usr/bin/osascript"), ("kTCCServicePostEvent", "/usr/bin/osascript"))
+TCC_SCOPE = (f"sqlite3 '{TCC_DB}' \"DELETE FROM access WHERE service IN ({', '.join(repr(s) for s in TCC_SERVICES)}) "
+             f"AND NOT ({' OR '.join(f'(service = {s!r} AND client = {c!r})' for s, c in TCC_KEPT)})\"")
 
 
 def softnet_real_path(name: str = SOFTNET_BIN) -> str | None:
@@ -330,18 +372,20 @@ def image_label(manifest: dict[str, Any]) -> str:
     return f"{source}@sha256:{digest} macOS {manifest.get('macos', '?')} +{manifest.get('base', BASE_VM)}@{build}"[:120]
 
 
-def _tart_json(tart: str, *args: str) -> Any:
-    proc = subprocess.run([tart, *args, "--format", "json"], capture_output=True, text=True, timeout=60)
+def _tart_json(tart: str, *args: str, host: LocalHost | None = None) -> Any:
+    proc = (host or LocalHost()).run([tart, *args, "--format", "json"], timeout=60)
     if proc.returncode != 0:
         raise BoxError(f"tart {' '.join(args)} failed: {proc.stderr.strip()[-300:]}")
     return json.loads(proc.stdout or "[]")
 
 
-def prune_stale(tart: str = TART, *, now: float | None = None, log: Callable[[str], None] = print) -> list[str]:
+def prune_stale(tart: str = TART, *, now: float | None = None, log: Callable[[str], None] = print,
+                host: LocalHost | None = None) -> list[str]:
     """Delete pf-verify VMs a dead process left: stopped ones, and running ones older than STALE_S."""
+    host = host or LocalHost()
     now = time.time() if now is None else now
     removed = []
-    for vm in _tart_json(tart, "list", "--source", "local"):
+    for vm in _tart_json(tart, "list", "--source", "local", host=host):
         name = vm.get("Name", "")
         if not name.startswith(VM_PREFIX):
             continue
@@ -351,8 +395,8 @@ def prune_stale(tart: str = TART, *, now: float | None = None, log: Callable[[st
         if running and not old:
             continue
         if running:
-            subprocess.run([tart, "stop", name, "--timeout", "5"], capture_output=True, timeout=60)
-        subprocess.run([tart, "delete", name], capture_output=True, timeout=60)
+            host.run([tart, "stop", name, "--timeout", "5"], timeout=60)
+        host.run([tart, "delete", name], timeout=60)
         removed.append(name)
     if removed:
         log(f"tart: removed {len(removed)} stale VM(s): {', '.join(removed)}")
@@ -376,10 +420,12 @@ class TartBox(Box):
 
     def __init__(self, *, base: str | None = None, limits: BoxLimits = BoxLimits(), cpus: int = 4,
                  memory_mb: int = 8192, name: str | None = None, tart: str = TART,
-                 state_dir: Path | None = None, log: Callable[[str], None] = print, display: bool = False) -> None:
+                 state_dir: Path | None = None, log: Callable[[str], None] = print, display: bool = False,
+                 host: LocalHost | None = None) -> None:
         self.base = base or (GUI_BASE_VM if display else BASE_VM)
         self.display = "vnc" if display else None  # a desktop session, seen and driven over VNC from the host
         self.vnc_url: str | None = None  # holds the server's password: never logged or recorded
+        self.vnc_host_port: int | None = None  # the server's port on the host (a remote host's differs from vnc_url's)
         self.session: dict[str, Any] | None = None  # sbx's login-session processes (gui_mac.session_procs)
         self._screen: Any = None  # gui_mac.VncDisplay, made on first use
         self.limits = limits
@@ -387,7 +433,8 @@ class TartBox(Box):
         self.memory_mb = memory_mb
         self.name = name or f"{VM_PREFIX}{int(time.time())}-{secrets.token_hex(3)}"
         self.tart = tart
-        self.state_dir = state_dir or STATE_DIR
+        self.host = host or host_from_env(state_dir or STATE_DIR)  # this Mac, or PICKFIT_TART_HOST's over SSH (tart_host)
+        self.state_dir = self.host.state_dir
         self.log = log
         self.manifest: dict[str, Any] = {}
         self.image = base
@@ -396,10 +443,11 @@ class TartBox(Box):
         self.start_s: float | None = None
         self.network_enabled = True
         self.resolvers: list[str] = []
+        self.unreachable: list[str] = []  # SOURCE_PROBES that did not answer from the guest at start
         self.gateway: str | None = None  # the vmnet gateway (== @host); set in _setup, the host-probe target
         self.vm_proc: subprocess.Popen[bytes] | None = None
-        self.vm_log: Path | None = None
-        self.control: SoftnetControl | None = None  # host end of softnet's policy channel
+        self.vm_log: Any = None  # on the host
+        self.control: Any = None  # host end of softnet's policy channel (SoftnetControl, or tart_host.StreamControl)
         self._timer: threading.Timer | None = None
         self._reaper: subprocess.Popen[bytes] | None = None
         self._lock = threading.Lock()
@@ -409,27 +457,32 @@ class TartBox(Box):
         tools = ", ".join(f"{k} {m[k]}" for k in ("uv", "pipx", "node", "npm") if m.get(k))
         screen = (f"A desktop (1280x800) where {MAC_USER} is logged in: start GUI apps with launch_gui." if self.display
                   else "No display (the VM is headless).")
+        cut = ""
+        if self.unreachable:
+            cut = (f" From this box {' and '.join(self.unreachable)} do not answer (the host's network, not the tool): "
+                   "GitHub downloads and Homebrew bottles fail here; do not hunt for mirrors, report it as a pitfall.")
         return (f"Box: macOS {m.get('macos', '26')} {self.arch} virtual machine (Apple silicon), user {MAC_USER} "
                 f"(standard user, not an admin, no sudo), HOME={self.home}, work dir {self.workdir}. Commands run "
                 "in /bin/bash 3.2 (macOS's own bash: no mapfile, no ${var,,}). PATH starts with ~/.local/bin, "
                 f"then Homebrew (/opt/homebrew/bin; {MAC_USER} owns /opt/homebrew, so brew install works without "
                 f"sudo). Installed: Homebrew {m.get('brew', '')}, Xcode Command Line Tools (git, clang, make, "
                 f"python3 {m.get('python3', '')}), {tools}; curl, unzip, tar. npm -g installs under /opt/homebrew. "
-                f"Network: on. No API keys, no accounts. {screen}")
+                f"Network: on.{cut} No API keys, no accounts. {screen}")
 
     # -- lifecycle
 
     def _tart(self, *args: str, timeout_s: float = 120) -> subprocess.CompletedProcess[str]:
         try:
-            return subprocess.run([self.tart, *args], capture_output=True, text=True, timeout=timeout_s)
+            return self.host.run([self.tart, *args], timeout=timeout_s)
         except subprocess.TimeoutExpired as err:
             raise BoxError(f"tart {args[0]} timed out after {timeout_s:.0f}s") from err
 
     def start(self) -> None:
         if self.started:
             return
-        if shutil.which(self.tart) is None:
-            raise BoxError("tart not found; install it with `brew install openai/tools/tart`")
+        if not self.host.which(self.tart):
+            raise BoxError(f"tart not found{' on ' + self.host.name if self.host.remote else ''}; install it with "
+                           "`brew install cirruslabs/cli/tart`")
         self.manifest = load_manifest(self.base, self.state_dir)
         if not self.manifest.get("hardened"):
             raise BoxError(f"base VM {self.base!r} predates hardening; `tart delete {self.base}` and run "
@@ -437,7 +490,7 @@ class TartBox(Box):
         self.image = image_label(self.manifest)
         began = time.monotonic()
         try:
-            prune_stale(self.tart, log=self.log)
+            prune_stale(self.tart, log=self.log, host=self.host)
             clone = self._tart("clone", self.base, self.name, timeout_s=300)
             if clone.returncode != 0:
                 raise BoxError(f"tart clone {self.base} failed: {clone.stderr.strip()[-500:]}")
@@ -475,66 +528,54 @@ class TartBox(Box):
         self._timer.daemon = True
         self._timer.start()
 
-    def run_argv(self) -> tuple[list[str], int]:
-        """`tart run` with host-side softnet networking; also returns the control fd Tart must inherit."""
-        self.control = SoftnetControl()
-        fd = self.control.control_fd
+    def run_argv(self) -> list[str]:
+        """`tart run` with host-side softnet networking; the control fd Tart must inherit is tart_host.FD (each
+        host fills it in)."""
         argv = [self.tart, "run", "--no-graphics", "--no-audio", "--no-clipboard",
-                "--net-softnet", f"--net-softnet-control-fd={fd}", self.name]
+                "--net-softnet", f"--net-softnet-control-fd={FD}", self.name]
         if self.display:  # with --no-graphics, tart prints the server's address instead of opening a viewer
             argv.insert(2, "--vnc-experimental")
-        return argv, fd
+        return argv
 
     def _read_vnc_url(self) -> str:
-        """The VNC address tart printed in the run log (only this process and the user can read it)."""
+        """The VNC address tart printed in the run log (only this process and the user can read it), as reached
+        from here (a remote host's server through a forwarded port)."""
         assert self.vm_log is not None
         deadline = time.monotonic() + VNC_URL_WAIT_S
         while True:
-            m = re.search(r"vnc://\S+", self.vm_log.read_text(errors="replace"))
+            m = re.search(r"vnc://\S+", self.host.read_log(self.vm_log))
             if m:
-                return m.group(0)
+                from pickfit.verify.vnc import parse_url
+
+                self.vnc_host_port = parse_url(m.group(0))[1]
+                return self.host.vnc_url(m.group(0))
             if time.monotonic() > deadline or (self.vm_proc is not None and self.vm_proc.poll() is not None):
                 raise BoxError("tart did not print its VNC server's address")
             time.sleep(0.5)
 
     def _wait_bridge_down(self, timeout_s: float = 15.0) -> None:
         """Wait for macOS vmnet to finish tearing down bridge100 from a just-stopped VM before starting softnet."""
-        if self.tart != TART or not os.path.exists("/sbin/ifconfig"):
-            return
-        deadline = time.monotonic() + timeout_s
-        saw_up = False
-        while time.monotonic() < deadline:
-            res = subprocess.run(["/sbin/ifconfig", "bridge100"], capture_output=True, timeout=5)
-            if res.returncode != 0:
-                if saw_up:
-                    time.sleep(1.0)
-                return
-            saw_up = True
-            time.sleep(0.5)
+        self.host.wait_bridge_down(self.tart, timeout_s)
+
+    def _softnet_ready(self) -> str | None:
+        return softnet_ready() if not self.host.remote else self.host.softnet_ready()
 
     def _boot(self) -> None:
-        setup = softnet_ready()
+        setup = self._softnet_ready()
         if setup:
             raise BoxError(setup)
         self._wait_bridge_down()
         if self.control is not None:  # a second boot (prepare_base reboots the hardened base)
             self.control.close()
             self.control = None
-        self.state_dir.mkdir(parents=True, exist_ok=True)
-        self.vm_log = self.state_dir / f"{self.name}.log"
-        argv, control_fd = self.run_argv()
-        self.vm_log.unlink(missing_ok=True)  # created 0600: a GUI box's log holds the VNC password
-        with open(os.open(self.vm_log, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "wb") as out:
-            self.vm_proc = subprocess.Popen(argv, stdout=out, stderr=subprocess.STDOUT,
-                                            stdin=subprocess.DEVNULL, start_new_session=True,
-                                            pass_fds=(control_fd,))
-        self.control.close_child()  # Tart has inherited it; keep only the host end
+        self.vm_log = self.host.log_path(self.name)  # created 0600: a GUI box's log holds the VNC password
+        self.vm_proc, self.control = self.host.start_vm(self.run_argv(), self.vm_log)
         deadline = time.monotonic() + AGENT_WAIT_S
         while time.monotonic() < deadline:
             if self.vm_proc.poll() is not None:
-                text = self.vm_log.read_text(errors="replace")[-800:]
+                text = self.host.read_log(self.vm_log)[-800:]
                 if re.search(r"softnet|operation not permitted|setuid|permission", text, re.I):
-                    hint = f" {softnet_ready() or 'softnet failed to start'}"
+                    hint = f" {self._softnet_ready() or 'softnet failed to start'}"
                 elif re.search(r"LimitExceeded|maximum number|limit", text, re.I):
                     hint = f" {VM_LIMIT_HINT}"
                 else:
@@ -580,16 +621,10 @@ class TartBox(Box):
         tart, name = shlex.quote(self.tart), shlex.quote(self.name)
         script = (f"sleep {self.limits.lifetime_s + REAP_GRACE_S}; {tart} stop {name} --timeout 5 >/dev/null 2>&1; "
                   f"{tart} delete {name} >/dev/null 2>&1")
-        self._reaper = subprocess.Popen(["/bin/sh", "-c", script], stdin=subprocess.DEVNULL,
-                                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
+        self._reaper = self.host.start_reaper(script)
 
     def _stop_reaper(self) -> None:
-        if self._reaper is not None and self._reaper.poll() is None:
-            try:
-                os.killpg(self._reaper.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-            self._reaper.wait()
+        self.host.stop_reaper(self._reaper)
         self._reaper = None
 
     def _setup(self, *, hardened: bool = True) -> None:
@@ -608,16 +643,26 @@ class TartBox(Box):
                                f"rebuild it with `pickfit verify --runner tart{flags} --prepare-base`")
         # Wait for the default route, then pin DNS to PUBLIC resolvers. The gateway cannot be the resolver
         # any more: it is @host, which the online policy blocks, so a gateway resolver would make DNS fail.
-        # Public resolvers (1.1.1.1) are globally routable, which softnet allows.
+        # Public resolvers (1.1.1.1) are globally routable, which softnet allows. Pin them on EVERY network
+        # service: the sequoia base lists com.redhat.spice.0 and tart-version-* before Ethernet, so pinning the
+        # first one left DNS on the blocked gateway and every name timed out (11/18, Scaleway Mac mini). Then
+        # read the resolver back, so a pin that did not take is a clear error, not "internet unreachable".
         pin = (f"for i in $(seq 1 {NETWORK_WAIT_S}); do route -n get default >/dev/null 2>&1 && break; "
                "sleep 1; done; gw=$(route -n get default | awk '/gateway:/ {print $2}'); echo \"gw=$gw\"; "
-               "svc=$(networksetup -listallnetworkservices | sed -n 2p); "
-               f"networksetup -setdnsservers \"$svc\" {' '.join(PUBLIC_DNS)}")
-        net = self._root(pin, NETWORK_WAIT_S + 20)
+               "networksetup -listallnetworkservices | tail -n +2 | sed 's/^\\*//' | while IFS= read -r svc; do "
+               f"networksetup -setdnsservers \"$svc\" {' '.join(PUBLIC_DNS)} >/dev/null; done; "
+               "for i in 1 2 3 4 5 6 7 8 9 10; do ns=$(scutil --dns | awk '/nameserver\\[0\\]/ {print $3; exit}'); "
+               f"[ \"$ns\" = {PUBLIC_DNS[0]} ] && break; sleep 1; done; echo \"dns=$ns\"")
+        net = self._root(pin, NETWORK_WAIT_S + 30)
         gw = re.search(r"gw=(\d+\.\d+\.\d+\.\d+)", net.stdout)
         if net.returncode != 0 or gw is None:
             raise BoxError(f"guest network did not come up (no default gateway): "
                            f"{(net.stdout + net.stderr).strip()[-300:]}")
+        dns = re.search(r"dns=(\S*)", net.stdout)
+        if dns is None or dns.group(1) != PUBLIC_DNS[0]:
+            raise BoxError(f"the guest's DNS did not move to {PUBLIC_DNS[0]} (resolver "
+                           f"{dns.group(1) if dns and dns.group(1) else 'unknown'}); the gateway resolver is @host, "
+                           "which the online policy blocks")
         self.gateway = gw.group(1)
         self.resolvers = list(PUBLIC_DNS)
         files = {"timeout": HELPER_TIMEOUT, "detach": HELPER_DETACH, "mdns": HELPER_MDNS}
@@ -628,12 +673,17 @@ class TartBox(Box):
         script = [f"set -e; mkdir -p {HELPER_DIR}"]
         for name, text in files.items():
             script.append(f"cat > {HELPER_DIR}/{name} <<'PICKFIT_EOF'\n{text}PICKFIT_EOF")
-        # The guest stops itself a minute after the lifetime, whatever happens to the harness.
-        minutes = self.limits.lifetime_s // 60 + 2
+        # The guest stops itself a minute after the lifetime, whatever happens to the harness: a detached root sleep,
+        # then `shutdown -h now`. Not `shutdown -h +N`, which broadcasts "System going down at ..." to every tty at
+        # its warning marks (1 h, 30 min, ...) and so printed into a GUI terminal's window mid-recording (11/18,
+        # alacritty on the Scaleway Mac mini). The box user cannot signal root's sleep.
+        seconds = (self.limits.lifetime_s // 60 + 2) * 60
         script += [f"chown -R root:wheel {HELPER_DIR}; chmod 755 {HELPER_DIR}; chmod 644 {HELPER_DIR}/*",
                    f"mkdir -p {MAC_WORKDIR} {MAC_HOME}/.local/bin; chown -R {MAC_USER} {MAC_WORKDIR} {MAC_HOME}/.local",
                    "chmod 600 /tmp/tart-guest-agent.log /tmp/tart-guest-daemon.log 2>/dev/null || true",
-                   f"shutdown -h +{minutes} </dev/null >/dev/null 2>&1 &"]
+                   f"{DETACH_CMD} /bin/sh -c 'sleep {seconds}; /sbin/shutdown -h now' </dev/null >/dev/null 2>&1 &"]
+        if self.display:  # before any of sbx's code runs: no TCC grant a program of sbx's could use
+            script.append(TCC_SCOPE)
         proc = self._root("\n".join(script), 60)
         if proc.returncode != 0:
             raise BoxError(f"box setup failed (helpers): {(proc.stdout + proc.stderr).strip()[-500:]}")
@@ -642,6 +692,15 @@ class TartBox(Box):
         self.control.set_policy(True)
         self.network_enabled = True
         self._check_firewall(online=True)
+        codes, _ = self._curl_codes(SOURCE_PROBES, timeout=8)
+        missed = {name: url for name, url in SOURCE_PROBES.items() if codes.get(name) != 0}
+        if missed:  # once more: 11/17, VPN off, github.com missed the probe and the install then downloaded from it
+            time.sleep(2)
+            codes.update(self._curl_codes(missed, timeout=8)[0])
+        self.unreachable = [SOURCE_PROBES[name].split("/")[2] for name in SOURCE_PROBES if codes.get(name) != 0]
+        if self.unreachable:
+            self.log(f"tart: {', '.join(self.unreachable)} do not answer from {self.name}; the host's network (a VPN?) "
+                     "keeps the VM from them")
         if self.display and hardened:
             from pickfit.verify import gui_mac
 
@@ -666,6 +725,7 @@ class TartBox(Box):
             if self._screen is not None:
                 self._screen.close()
                 self._screen = None
+            self.host.close_forwards()
             if self.vm_proc is not None and self.vm_proc.poll() is None:
                 try:
                     self._tart("stop", self.name, "--timeout", "10", timeout_s=90)
@@ -710,8 +770,8 @@ class TartBox(Box):
         # On a GUI box tart exec runs as root outside any session; the box user's commands run in its desktop
         # session, as in a Terminal there (hdiutil fails outside one: "No child processes", measured 11/1).
         session = ["/bin/launchctl", "asuser", str(MAC_UID)] if self.display else []
-        return [self.tart, "exec", *(["-i"] if stdin else []), self.name, *session, "sudo", "-n", "-u", MAC_USER,
-                "-H", "/usr/bin/env", "-i", *env, "/bin/bash", "-c", guard]
+        return self.host.wrap([self.tart, "exec", *(["-i"] if stdin else []), self.name, *session, "sudo", "-n", "-u",
+                               MAC_USER, "-H", "/usr/bin/env", "-i", *env, "/bin/bash", "-c", guard])
 
     def _gone(self) -> str | None:
         """Why the VM or its guest agent is gone, from host-side state alone; None while both are alive.
@@ -774,7 +834,8 @@ class TartBox(Box):
         if self.vm_proc is None:  # setup uses it too, before the box counts as started
             raise BoxError("box is not running")
         who = ["-u", f"#{int(as_uid)}"] if as_uid is not None else []
-        full = [self.tart, "exec", *(["-i"] if stdin is not None else []), self.name, "sudo", "-n", *who, *argv]
+        full = self.host.wrap([self.tart, "exec", *(["-i"] if stdin is not None else []), self.name, "sudo", "-n", *who,
+                               *argv])
         began = time.monotonic()
         code, out, err, host_timeout, truncated = run_captured(full, timeout_s + HOST_GRACE_S, stdin=stdin,
                                                                head=HARNESS_OUTPUT_BYTES, tail=0)
@@ -845,7 +906,7 @@ class TartBox(Box):
         if self.vnc_url:  # the VM's own VNC server listens on every host interface; the guest must not reach it
             from pickfit.verify.vnc import parse_url
 
-            port = parse_url(self.vnc_url)[1]
+            port = self.vnc_host_port or parse_url(self.vnc_url)[1]
             targets[f"host{port}"] = f"http://$gw:{port}/"
         return targets
 
@@ -909,14 +970,19 @@ class TartBox(Box):
             rec("gateway_found", False, "a default gateway and control channel", str(self.gateway))
             return results
         rec("gateway_found", True, "a default gateway is set", self.gateway)
-        # Positive control: with the host allowed, find a host port that actually answers.
+        # Positive control: with the host allowed, find host ports the probe reaches. Any reply counts, since only
+        # the host's own stack sends one: an HTTP answer (0), another protocol's banner or an empty reply (1, 8, 52,
+        # 56: sshd on 22, the KDC on 88), or a refusal (7, a RST). Blocked, the same ports must time out (28). A
+        # desktop Mac answers on 5000/7000 (AirPlay); a headless rented Mac mini only refuses there (11/18,
+        # Scaleway), so an open HTTP port alone was too narrow a control.
         self.control.set_rules(allow=["@host"], block=[])
         host_targets = {f"host{p}": f"http://$gw:{p}/" for p in HOST_PORTS}
         codes, _ = self._curl_codes(host_targets, timeout)
-        open_ports = [int(n[4:]) for n, c in codes.items() if c == 0]
+        open_ports = [int(n[4:]) for n, c in codes.items() if c in HOST_REACHED]
         rec("probe_sees_open_host_port", bool(open_ports),
-            "an open host port answers when @host is allowed (proves the probe is not a no-op)",
-            f"reachable: {open_ports}" if open_ports else f"none of {list(HOST_PORTS)} answered")
+            "a host port answers or refuses when @host is allowed (proves the probe is not a no-op)",
+            ("reached: " + ", ".join(f"{p} (exit {codes[f'host{p}']})" for p in open_ports)) if open_ports
+            else f"none of {list(HOST_PORTS)} replied: {codes}")
         # Positive control for multicast: with the host allowed, the mDNS query should be answered.
         rec("mdns_answered_without_block", self._mdns_answered(),
             "the host answers mDNS when multicast is allowed (proves the mDNS probe works)", "")
@@ -1128,10 +1194,10 @@ VERSIONS = {
 }
 
 
-def source_digest(tart: str = TART, source: str = SOURCE_IMAGE) -> str | None:
+def source_digest(tart: str = TART, source: str = SOURCE_IMAGE, host: LocalHost | None = None) -> str | None:
     """The pulled image's digest: tart lists an OCI image under its tag and under repo@sha256:<digest>."""
     repo = source.rsplit(":", 1)[0]
-    for image in _tart_json(tart, "list", "--source", "oci"):
+    for image in _tart_json(tart, "list", "--source", "oci", host=host):
         name = image.get("Name", "")
         if name.startswith(f"{repo}@sha256:"):
             return name.split("@", 1)[1]
@@ -1149,24 +1215,26 @@ def _shutdown(box: TartBox, log: Callable[[str], None]) -> None:
 
 
 def prepare_base(*, source: str = SOURCE_IMAGE, base: str = BASE_VM, tart: str = TART,
-                 log: Callable[[str], None] = print) -> dict[str, Any]:
+                 log: Callable[[str], None] = print, host: LocalHost | None = None) -> dict[str, Any]:
     """Build and harden the base VM every box clones: the box user, Homebrew owned by it, uv, pipx, node.
 
     Needs `tart pull <source>` first (about 25 GB). The base is booted a second time after hardening,
     which proves auto-login (and so the guest agent) still works, and checked like every box will
     check it. Only then is ~/.pickfit/tart/<base>.json written; a failed build deletes the base VM.
     """
-    if subprocess.run([tart, "get", base], capture_output=True).returncode == 0:
+    host = host or host_from_env(STATE_DIR)
+    if host.run([tart, "get", base], timeout=120).returncode == 0:
         raise BoxError(f"base VM {base!r} already exists; `tart delete {base}` to rebuild it")
-    base_manifest_path(base).unlink(missing_ok=True)  # a manifest without its VM describes nothing
+    base_manifest_path(base, host.state_dir).unlink(missing_ok=True)  # a manifest without its VM describes nothing
     began = time.monotonic()
-    proc = subprocess.run([tart, "clone", source, base], capture_output=True, text=True, timeout=1800)
+    proc = host.run([tart, "clone", source, base], timeout=1800)
     if proc.returncode != 0:
         raise BoxError(f"tart clone {source} failed: {proc.stderr.strip()[-500:]}")
-    box = TartBox(base=base, name=base, tart=tart, limits=BoxLimits(lifetime_s=3600, max_command_s=1800), log=log)
+    box = TartBox(base=base, name=base, tart=tart, limits=BoxLimits(lifetime_s=3600, max_command_s=1800), log=log,
+                  host=host)
     box.cloned = False  # close() never deletes the base; a failure below does
     try:
-        box.manifest = {"macos": "26"}
+        box.manifest = {"macos": "15" if "sequoia" in source else "26"}
         box._boot()
         log(f"tart: {base} booted in {time.monotonic() - began:.0f}s; creating {MAC_USER}")
         root = box._root(PREPARE_ROOT, 300)
@@ -1178,7 +1246,7 @@ def prepare_base(*, source: str = SOURCE_IMAGE, base: str = BASE_VM, tart: str =
         user = box.exec(PREPARE_USER, 1800)
         if not user.ok:
             raise BoxError(f"brew install failed: {(user.stdout + user.stderr).strip()[-800:]}")
-        manifest: dict[str, Any] = {"base": base, "source": source, "source_digest": source_digest(tart, source),
+        manifest: dict[str, Any] = {"base": base, "source": source, "source_digest": source_digest(tart, source, host),
                                     "arch": "arm64", "user": MAC_USER, "build_id": secrets.token_hex(6),
                                     "prepared_at": taipei_now().isoformat(timespec="seconds")}
         for key, command in VERSIONS.items():
@@ -1202,36 +1270,39 @@ def prepare_base(*, source: str = SOURCE_IMAGE, base: str = BASE_VM, tart: str =
         _shutdown(box, log)
     except BaseException:
         box.close()
-        subprocess.run([tart, "delete", base], capture_output=True, timeout=120)
+        host.run([tart, "delete", base], timeout=120)
         log(f"tart: base build failed; deleted {base}")
         raise
     box.close()
-    STATE_DIR.mkdir(parents=True, exist_ok=True)
-    base_manifest_path(base).write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    host.state_dir.mkdir(parents=True, exist_ok=True)
+    base_manifest_path(base, host.state_dir).write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     log(f"tart: base {base} ready in {time.monotonic() - began:.0f}s · {image_label(manifest)}")
     return manifest
 
 
 def prepare_gui_base(*, base: str = BASE_VM, gui_base: str = GUI_BASE_VM, tart: str = TART,
-                     state_dir: Path | None = None, log: Callable[[str], None] = print) -> dict[str, Any]:
+                     state_dir: Path | None = None, log: Callable[[str], None] = print,
+                     host: LocalHost | None = None) -> dict[str, Any]:
     """Build the base GUI boxes clone: a copy of the hardened base where sbx logs in at a 1280x800 desktop.
 
     Boots the copy once to change it (GUI_ROOT), then again to prove sbx's auto-login and the root daemon's
     `tart exec` work and that it passes GUI_CHECK. Only then is <gui_base>.json written; a failure deletes it.
     """
+    host = host or host_from_env(state_dir or STATE_DIR)
+    state_dir = host.state_dir
     parent = load_manifest(base, state_dir)
     if not parent.get("hardened"):
         raise BoxError(f"base VM {base!r} is not hardened; rebuild it with `pickfit verify --runner tart --prepare-base`")
-    if subprocess.run([tart, "get", gui_base], capture_output=True).returncode == 0:
+    if host.run([tart, "get", gui_base], timeout=120).returncode == 0:
         raise BoxError(f"base VM {gui_base!r} already exists; `tart delete {gui_base}` to rebuild it")
     base_manifest_path(gui_base, state_dir).unlink(missing_ok=True)
     began = time.monotonic()
     for argv in ([tart, "clone", base, gui_base], [tart, "set", gui_base, "--display", GUI_DISPLAY]):
-        proc = subprocess.run(argv, capture_output=True, text=True, timeout=600)
+        proc = host.run(argv, timeout=600)
         if proc.returncode != 0:
-            subprocess.run([tart, "delete", gui_base], capture_output=True, timeout=120)
+            host.run([tart, "delete", gui_base], timeout=120)
             raise BoxError(f"tart {argv[1]} failed: {proc.stderr.strip()[-500:]}")
-    box = TartBox(base=gui_base, name=gui_base, tart=tart, state_dir=state_dir, display=True, log=log,
+    box = TartBox(base=gui_base, name=gui_base, tart=tart, display=True, log=log, host=host,
                   limits=BoxLimits(lifetime_s=3600, max_command_s=1800))
     box.cloned = False  # close() never deletes the base; a failure below does
     try:
@@ -1255,7 +1326,7 @@ def prepare_gui_base(*, base: str = BASE_VM, gui_base: str = GUI_BASE_VM, tart: 
         _shutdown(box, log)
     except BaseException:
         box.close()
-        subprocess.run([tart, "delete", gui_base], capture_output=True, timeout=120)
+        host.run([tart, "delete", gui_base], timeout=120)
         log(f"tart: GUI base build failed; deleted {gui_base}")
         raise
     box.close()

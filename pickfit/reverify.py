@@ -211,6 +211,11 @@ def live_steps(*, runner: str = "modal") -> Steps:
 
             ensure_published_image(display=gui)
             images.add(gui)
+        elif runner == "ec2" and gui not in images:
+            from pickfit.verify.ec2_machine import ensure_image
+
+            ensure_image()
+            images.add(gui)
         return verify_task(task, boxes[gui], model=MODEL, limits=limits, log=log, write=False)
 
     return Steps(github=GitHub(github_token()),

@@ -1,0 +1,196 @@
+"""One command from this Mac: give the watch machine its secrets and state, then start pickfit watch there.
+
+    uv run python deploy/watch/send_secrets.py root@HOST [--key ~/.ssh/KEY] [--dry-run]
+
+It builds /etc/pickfit/watch.env from what this Mac already has, asks for the rest, and sends it over SSH on stdin,
+so no value is printed, put in a command line or written to a local file:
+
+- ANTHROPIC_API_KEY: the environment or the repository's .env
+- MODAL_TOKEN_ID / MODAL_TOKEN_SECRET: the environment, or the active profile in ~/.modal.toml
+- CLOUDFLARE_API_TOKEN / CLOUDFLARE_ACCOUNT_ID: the environment or .env, else asked (a token with D1 edit on the
+  account; wrangler's own login on this Mac is not copied)
+- GH_PUSH_TOKEN, also used as GH_TOKEN: asked (a fine-grained token with Contents read and write on
+  ncchen99/pickfit only; your `gh` login is not copied)
+- AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY: asked, optional (Enter skips; the Windows lane then waits)
+- SCW_*: ~/.config/scw/config.yaml, only if you say yes (the macOS lane renting Macs)
+
+Then it copies runs/watch/jobs/ and runs/web/visits.jsonl (what was submitted and which sites were visited),
+checks that origin/main has the watch code the service runs, and starts the service. --dry-run shows which
+names were found and what would run, never a value.
+"""
+
+from __future__ import annotations
+
+import argparse
+import getpass
+import io
+import os
+import shlex
+import subprocess
+import sys
+import tarfile
+import tomllib
+from pathlib import Path
+
+REPO = Path(__file__).resolve().parents[2]
+ENV_PATH = "/etc/pickfit/watch.env"
+REMOTE_REPO = "/var/lib/pickfit/pickfit"
+NEEDED_ON_MAIN = "pickfit/lanes.py"  # the service's flags (lanes, --publish push) come with it
+DEFAULTS = {"PICKFIT_EC2_REGION": "ap-east-2", "SCW_DEFAULT_ZONE": "fr-par-1", "PICKFIT_PIPELINE_DAILY_CAP_USD": "80"}
+
+
+def dotenv(path: Path) -> dict[str, str]:
+    """KEY=VALUE lines (pickfit.env's rules: export, quotes, a trailing comment)."""
+    sys.path.insert(0, str(REPO))
+    from pickfit.env import _parse_line
+
+    out: dict[str, str] = {}
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except FileNotFoundError:
+        return out
+    for line in lines:
+        parsed = _parse_line(line)
+        if parsed:
+            out[parsed[0]] = parsed[1]
+    return out
+
+
+def modal_tokens(path: Path) -> dict[str, str]:
+    try:
+        config = tomllib.loads(path.read_text(encoding="utf-8"))
+    except (FileNotFoundError, tomllib.TOMLDecodeError):
+        return {}
+    profiles = [p for p in config.values() if isinstance(p, dict)]
+    active = next((p for p in profiles if p.get("active")), profiles[0] if len(profiles) == 1 else None)
+    if not active or not active.get("token_id"):
+        return {}
+    return {"MODAL_TOKEN_ID": active["token_id"], "MODAL_TOKEN_SECRET": active.get("token_secret", "")}
+
+
+def scw_profile(path: Path) -> dict[str, str]:
+    """The default profile's top-level keys of the scw CLI's config.yaml (flat `key: value` lines)."""
+    names = {"access_key": "SCW_ACCESS_KEY", "secret_key": "SCW_SECRET_KEY",
+             "default_organization_id": "SCW_DEFAULT_ORGANIZATION_ID", "default_project_id": "SCW_DEFAULT_PROJECT_ID",
+             "default_zone": "SCW_DEFAULT_ZONE"}
+    out: dict[str, str] = {}
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except FileNotFoundError:
+        return out
+    for line in lines:
+        if line.startswith((" ", "\t")):  # inside `profiles:`; only the top level is the default profile
+            continue
+        key, _, value = line.partition(":")
+        if key.strip() in names and value.strip():
+            out[names[key.strip()]] = value.strip().strip("'\"")
+    return out
+
+
+def collect(args: argparse.Namespace, ask=getpass.getpass, confirm=input) -> dict[str, str]:
+    found = {**dotenv(args.env_file), **{k: v for k, v in os.environ.items() if v}}
+    values: dict[str, str] = dict(DEFAULTS)
+
+    def take(name: str, *, prompt: str | None = None, optional: bool = False, hidden: bool = True) -> None:
+        if found.get(name):
+            values[name] = found[name]
+            return
+        if args.dry_run or prompt is None:
+            return
+        value = (ask if hidden else confirm)(f"{prompt}{' (Enter skips)' if optional else ''}: ").strip()
+        if value:
+            values[name] = value
+
+    take("ANTHROPIC_API_KEY", prompt="Anthropic API key")
+    modal = {k: v for k, v in found.items() if k.startswith("MODAL_TOKEN_")} or modal_tokens(args.modal_config)
+    values.update(modal)
+    take("CLOUDFLARE_API_TOKEN", prompt="Cloudflare API token with D1 edit")
+    take("CLOUDFLARE_ACCOUNT_ID", prompt="Cloudflare account id", hidden=False)
+    take("GH_PUSH_TOKEN", prompt="GitHub fine-grained token (Contents read/write on ncchen99/pickfit)")
+    if values.get("GH_PUSH_TOKEN"):
+        values.setdefault("GH_TOKEN", values["GH_PUSH_TOKEN"])
+    take("AWS_ACCESS_KEY_ID", prompt="AWS access key id for the Windows lane", optional=True, hidden=False)
+    if values.get("AWS_ACCESS_KEY_ID"):
+        take("AWS_SECRET_ACCESS_KEY", prompt="AWS secret access key")
+    scw = scw_profile(args.scw_config)
+    if scw and not args.dry_run and confirm("Copy this Mac's Scaleway key so watch can rent Macs? [y/N] ").strip().lower() == "y":
+        values.update(scw)
+    elif scw and args.dry_run:
+        values.update({k: "" for k in scw})  # named in the dry run, never sent
+    return values
+
+
+REQUIRED = ("ANTHROPIC_API_KEY", "MODAL_TOKEN_ID", "MODAL_TOKEN_SECRET", "CLOUDFLARE_API_TOKEN",
+            "CLOUDFLARE_ACCOUNT_ID", "GH_PUSH_TOKEN")
+
+
+def env_text(values: dict[str, str]) -> str:
+    for name, value in values.items():
+        if "\n" in value or "\r" in value:
+            raise SystemExit(f"{name} has a line break; fix it at its source")
+    lines = ["# written by deploy/watch/send_secrets.py; root:pickfit 0640"]
+    lines += [f"{k}={v}" for k, v in sorted(values.items()) if v]
+    return "\n".join(lines) + "\n"
+
+
+def state_tar(runs: Path) -> bytes:
+    """runs/watch/jobs/ and runs/web/visits.jsonl, paths relative to runs/."""
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w:gz") as tar:
+        for rel in ("watch/jobs", "web/visits.jsonl"):
+            if (runs / rel).exists():
+                tar.add(runs / rel, arcname=rel)
+    return buf.getvalue()
+
+
+def main(argv: list[str] | None = None, *, ask=getpass.getpass, confirm=input,
+         run=subprocess.run) -> int:
+    p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    p.add_argument("host", help="root@HOST of the watch machine")
+    p.add_argument("--key", help="SSH private key for it")
+    p.add_argument("--env-file", type=Path, default=REPO / ".env")
+    p.add_argument("--modal-config", type=Path, default=Path.home() / ".modal.toml")
+    p.add_argument("--scw-config", type=Path, default=Path.home() / ".config" / "scw" / "config.yaml")
+    p.add_argument("--runs", type=Path, default=REPO / "runs", help="where this Mac's watch kept its state")
+    p.add_argument("--no-start", action="store_true", help="send the secrets and state, do not start the service")
+    p.add_argument("--dry-run", action="store_true", help="name what was found and what would run; send nothing")
+    args = p.parse_args(argv)
+    ssh = ["ssh", "-o", "StrictHostKeyChecking=accept-new", *(["-i", args.key] if args.key else []), args.host]
+
+    values = collect(args, ask=ask, confirm=confirm)
+    missing = [n for n in REQUIRED if not values.get(n)]
+    print("found: " + ", ".join(sorted(n for n, v in values.items() if v or args.dry_run)))
+    if missing:
+        print("missing: " + ", ".join(missing) + ("" if args.dry_run else "; nothing was sent"))
+        if not args.dry_run:
+            return 1
+    state = state_tar(args.runs)
+    steps = [
+        ("secrets", f"install -m 640 -o root -g pickfit /dev/stdin {ENV_PATH}", env_text(values).encode()),
+        ("state", f"install -d -o pickfit -g pickfit {REMOTE_REPO}/runs && "
+                  f"tar -xzf - -C {REMOTE_REPO}/runs && chown -R pickfit:pickfit {REMOTE_REPO}/runs", state),
+        ("main", f"sudo -u pickfit git -C {REMOTE_REPO} fetch -q origin main && "
+                 f"sudo -u pickfit git -C {REMOTE_REPO} cat-file -e origin/main:{NEEDED_ON_MAIN}", b""),
+    ]
+    if not args.no_start:
+        steps.append(("start", "systemctl enable --now pickfit-watch && sleep 5 && "
+                               "systemctl --no-pager --lines 20 status pickfit-watch", b""))
+    for name, remote, data in steps:
+        if args.dry_run:
+            print(f"would run on {args.host}: {remote}" + (f"  (stdin: {len(data)} bytes)" if data else ""))
+            continue
+        done = run([*ssh, remote], input=data, capture_output=name != "start")
+        if done.returncode != 0:
+            if name == "main":
+                print(f"origin/main has no {NEEDED_ON_MAIN} yet: the secrets and state are in place, but the service "
+                      "was not started. Merge the watch work into main, then run this again with --no-start left off.")
+            else:  # what the remote command said; the secrets went in on stdin and are never echoed back
+                said = (done.stderr or b"").decode(errors="replace").strip().splitlines()[-3:]
+                print(f"{name} failed on {args.host} (exit {done.returncode}): {' / '.join(said)}")
+            return 1
+        print(f"{name}: done")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

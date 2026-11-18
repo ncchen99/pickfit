@@ -441,7 +441,8 @@ def test_desktop_apps_are_set_aside_only_without_a_display():
     assert not_in_box(ex) == "GUI app"
     assert not_in_box(ex, display=True) is None
     assert not_in_box(ex, display=True, os="macos") is None  # tart's GUI base (gui_mac.py)
-    assert not_in_box(ex, display=True, os="windows") == "GUI app"
+    assert not_in_box(ex, display=True, os="windows") is None  # the Windows display image (gui_win.py)
+    assert not_in_box(ex, os="windows") == "GUI app"
 
 
 def test_limits_test_on_a_display_box():

@@ -1082,7 +1082,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--spend", action="store_true", help="print what the web verifier spent and stop")
     parser.add_argument("--max-usd", type=float, default=None,
                         help="stop starting sites once this batch's model calls and VMs could pass this (default: no cap)")
+    parser.add_argument("--runner", choices=["modal", "ec2"], default="modal",
+                        help="where each site's VM comes from: Modal (default) or AWS EC2")
     args = parser.parse_args(argv)
+    box_factory = None
+    if args.runner == "ec2":
+        from pickfit.verify.web_box import on_ec2 as box_factory
     if args.spend:
         print(json.dumps(web_spend(), indent=1))
         return 0
@@ -1112,7 +1117,7 @@ def main(argv: list[str] | None = None) -> int:
             print(f"[{target.slug}] not started: {stop}", flush=True)
             return {"slug": target.slug, "level": "not_started", "reason": stop}
         try:
-            result = verify_site(target, max_steps=args.max_steps, revisit=args.revisit,
+            result = verify_site(target, max_steps=args.max_steps, revisit=args.revisit, box_factory=box_factory,
                                  log=lambda m, s=target.slug: print(f"[{s}] {m}", flush=True))
             if args.write_back and result.get("level") in ("install", "function"):
                 with _visits_lock:  # one record file write at a time

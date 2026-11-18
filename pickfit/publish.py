@@ -207,6 +207,83 @@ def translate_new(index: dict[str, Any], data_dir: Path, *, dry_run: bool, out=p
         out(f"publish: zh-TW: skipped ({type(err).__name__}: {str(err)[:200]}); those sentences show in English")
 
 
+CODE_PATHS = ("pickfit", "worker/src", "worker/package.json", "worker/package-lock.json", "pyproject.toml", "uv.lock")
+
+
+@dataclass
+class Pushed:
+    code: int  # 0: pushed (CI deploys it); otherwise nothing was pushed
+    code_changed: bool = False  # the branch brought new program code: the process should restart to run it
+    head: str | None = None
+
+
+def repo_of(path: Path) -> Path:
+    repo = path.resolve()
+    while not (repo / ".git").exists() and repo != repo.parent:
+        repo = repo.parent
+    return repo
+
+
+def upstream_code(data_dir: Path = DEFAULT_DATA_DIR, *, remote: str = "origin", branch: str = "main",
+                  git_run=subprocess.run) -> list[str] | None:
+    """The program files `remote`/`branch` changes against this checkout (after a fetch), or None when the fetch
+    failed. A watcher on its own machine restarts when this is not empty, and its service pulls first."""
+    repo = repo_of(data_dir)
+    if git_run(["git", "fetch", "-q", remote, branch], cwd=repo, capture_output=True, text=True).returncode != 0:
+        return None
+    done = git_run(["git", "diff", "--name-only", "HEAD", f"{remote}/{branch}", "--", *CODE_PATHS], cwd=repo,
+                   capture_output=True, text=True)
+    return done.stdout.split() if done.returncode == 0 else None
+
+
+def push_publish(data_dir: Path = DEFAULT_DATA_DIR, worker_dir: Path = DEFAULT_WORKER_DIR, *, remote: str = "origin",
+                 branch: str = "main", translate: bool = True, out=print,
+                 git_run=subprocess.run) -> Pushed:
+    """Publish by pushing: the local record commits go onto `remote`/`branch`, whose CI (.github/workflows/
+    worker.yml) deploys exactly as `pickfit publish` does. For a watcher on its own machine: deploying from there
+    as well would race the branch's own deploys and could serve data the branch does not have.
+
+    The same checks as a deploy run first, and again on the rebased branch; the new page sentences are
+    translated and committed here (CI deploys with --no-translate). Nothing is force-pushed: a rebase that
+    conflicts is aborted and the commits stay local for the next try."""
+    repo = repo_of(data_dir)
+
+    def git(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+        return git_run(["git", *args], cwd=repo, capture_output=True, text=True, check=check)
+
+    p = plan(data_dir, worker_dir)
+    if not p.ok:
+        out(f"publish: refusing to push, {len(p.problems)} problem(s): {'; '.join(p.problems)[:400]}")
+        return Pushed(1)
+    assert p.index is not None
+    if translate:
+        translate_new(p.index, data_dir, dry_run=False, out=out)
+    before = git("rev-parse", "HEAD").stdout.strip()
+    for attempt in (1, 2):  # a push that loses a race with another pusher fetches and rebases once more
+        if git("fetch", "-q", remote, branch, check=False).returncode != 0:
+            out(f"publish: could not fetch {remote}/{branch}; the commits stay local")
+            return Pushed(1)
+        upstream = f"{remote}/{branch}"
+        if git("rebase", "-q", upstream, check=False).returncode != 0:
+            git("rebase", "--abort", check=False)
+            out(f"publish: rebasing onto {upstream} conflicted; aborted, the commits stay local")
+            return Pushed(1)
+        again = plan(data_dir, worker_dir)
+        if not again.ok:
+            out(f"publish: after the rebase, {len(again.problems)} problem(s): {'; '.join(again.problems)[:400]}; "
+                "not pushed")
+            return Pushed(1)
+        if git("push", "-q", remote, f"HEAD:{branch}", check=False).returncode == 0:
+            head = git("rev-parse", "HEAD").stdout.strip()
+            # The local commits touch records and translations only, so code that differs came from the branch.
+            changed = git("diff", "--name-only", before, head, "--", *CODE_PATHS, check=False).stdout.split()
+            out(f"publish: pushed {head[:10]} to {remote}/{branch}; its CI deploys it"
+                + (f" (new program code: {', '.join(changed[:5])})" if changed else ""))
+            return Pushed(0, code_changed=bool(changed), head=head)
+        out(f"publish: push to {remote}/{branch} was refused (try {attempt})")
+    return Pushed(1)
+
+
 def publish(
     data_dir: Path = DEFAULT_DATA_DIR,
     worker_dir: Path = DEFAULT_WORKER_DIR,

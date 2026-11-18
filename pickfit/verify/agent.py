@@ -611,6 +611,35 @@ microphone or camera (needs_hardware). pickfit turns Spotlight indexing off in t
 scan built on Spotlight finds nothing here (this VM's limit, not the app's): use the app's full or complete scan \
 when it offers one, and record the limit as a pitfall of kind sandbox."""
 
+WIN_GUI_RULES = """\
+
+GUI apps: this Windows box shows a desktop (1280x800) where you (sbx) are logged in. Install a desktop (GUI) app \
+as a user would without admin rights: `winget install --id <id> --exact --scope user --source winget \
+--accept-package-agreements --accept-source-agreements --disable-interactivity` (a package whose installer needs \
+admin, or that has no per-user installer, cannot install here: finish unverified with the reason), the app's own \
+portable .zip in two cited steps (`curl.exe -fL -o $HOME\\Downloads\\<file>.zip <url>`, then `Expand-Archive \
+$HOME\\Downloads\\<file>.zip -DestinationPath $HOME\\Apps\\<name> -Force`), its per-user installer run silently as \
+its docs say, or pip, pipx, uv or npm as usual. Start it with launch_gui by its full path (`& \
+"$env:LOCALAPPDATA\\Programs\\<App>\\<App>.exe"`, `& "$HOME\\Apps\\<name>\\<App>.exe"`, or the command a pip or npm \
+install put on PATH), never with run_command or run_background (a copy left running takes the launch, or shows a \
+window pickfit does not count). Cite that launch_gui as a smoke test with expected_signal `gui tier: window` \
+(pickfit's own line; window titles, program and process names are the app's and do not count). The replay runs \
+only your cited steps, in a new VM: never cite a step that tests for (Test-Path, Get-ChildItem) or reuses a file \
+an earlier try left behind. A launch stops every process you started (servers too; Windows' own desktop stays), \
+so start servers again after it. A launch supports level install at most, whatever the window shows: pickfit's \
+judge reads the screenshot itself. Launch it even if it will ask for an account: the screenshot records the \
+sign-in screen. When a launch's note says the app keeps its window out of screenshots (a password manager's \
+screen-capture protection), find the app's own option that allows screen capture (its --help, or its settings) \
+and launch it with that, cite that launch, and record a pitfall of kind sandbox: pickfit has to see the window.
+""" + OPERATE_RULES.replace(
+    "(mkdir -p ~/pickfit-plant && dd if=/dev/urandom of=$HOME/pickfit-plant/big-video.mov bs=1048576 count=150;",
+    "(New-Item -ItemType Directory -Force $HOME\\pickfit-plant | Out-Null; $b = New-Object byte[] 157286400; "
+    "(New-Object Random).NextBytes($b); [IO.File]::WriteAllBytes(\"$HOME\\pickfit-plant\\big-video.mov\", $b);") + """ \
+On this Windows box, goals name Windows' shortcuts (ctrl+s to save, ctrl+c to copy), ~/ is C:\\Users\\sbx, and a \
+goal gives every path as Windows writes it (C:\\Users\\sbx\\pickfit-out\\note.txt): the operator types it into \
+Windows' file dialogs; a check's path may stay ~/pickfit-out/note.txt. This VM has no microphone or camera \
+(needs_hardware) and no GPU (needs_gpu)."""
+
 FLATPAK_RULE = """ A Flatpak app installs per user as two cited steps, \
 `flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo` and then \
 `flatpak install --user -y flathub <app id>`, and launches with `flatpak run <app id>`: a fresh box has no \
@@ -716,6 +745,11 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
                         "or the release .dmg or .zip), then start it with launch_gui and cite that launch, then "
                         "exercise its listed features with operate_gui. A test suite or a helper tool is not the "
                         "app.")
+    elif box.display and ex.kind.value == "desktop_app" and box.os == "windows":
+        lines.insert(3, "This is a desktop (GUI) app: install the app itself (its Windows build: winget with --scope "
+                        "user, the release's portable .zip, or its per-user installer), then start it with launch_gui "
+                        "and cite that launch, then exercise its listed features with operate_gui. A test suite or a "
+                        "helper tool is not the app.")
     elif box.display and ex.kind.value == "desktop_app":
         lines.insert(3, "This is a desktop (GUI) app: install the app itself (a release build if there is one for "
                         "Linux; an AppImage runs with --appimage-extract-and-run, no FUSE needed), then start it "
@@ -896,7 +930,7 @@ class VerifyAgent:
                                                 minutes=round(limits.max_seconds / 60),
                                                 stdout_chars=f"{STDOUT_CHARS:,}", box_kind=box.kind,
                                                 box_rule=box.user_rule) + (
-            (MAC_GUI_RULES if box.os == "macos" else GUI_RULES) if box.display else "")
+            {"macos": MAC_GUI_RULES, "windows": WIN_GUI_RULES}.get(box.os, GUI_RULES) if box.display else "")
         if box.display and getattr(box, "runtime", None) == "gvisor":  # flatpak's sandbox needs gVisor's userns
             self.instructions += FLATPAK_RULE
         if box.toolchain:  # a build from source is an install path here

@@ -11,7 +11,8 @@ root with size-limited tmpfs for HOME and /tmp (the disk cap), a per-command
 `timeout -s KILL` inside the container, and a container lifetime cap. Cloud
 metadata (169.254.0.0/16) is routed to `unreachable` inside the container by a
 one-off root exec before the agent runs; the box user cannot change routes.
-ModalBox (P3.6) implements the same interface on Modal gVisor.
+LinuxBox (linux_box.py) implements the same interface on a cloud provider's machine (machine.py); ModalBox
+(P3.6) is that box on Modal.
 """
 
 from __future__ import annotations

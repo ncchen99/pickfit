@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import socket
 import stat
 import subprocess
@@ -11,6 +12,7 @@ import threading
 import types
 from collections.abc import Callable, Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -90,7 +92,9 @@ def code_for(name, phase):
     if name == "resolver":
         return 28 if phase == "offline" else 0
     if name.startswith("host"):
-        return 0 if phase == "poscontrol" else int(env("FAKE_REACH_HOST", "28"))
+        return int(env("FAKE_POSCONTROL_HOST", "0")) if phase == "poscontrol" else int(env("FAKE_REACH_HOST", "28"))
+    if name in ("github", "ghcr"):  # where installs come from: reachable unless a test cuts them
+        return 28 if phase == "offline" else int(env("FAKE_REACH_" + name.upper(), "0"))
     return int(env("FAKE_REACH_" + name.upper(), "28"))
 
 if cmd == "run":
@@ -138,7 +142,7 @@ if cmd == "exec":
             print("admin still has the default password"); sys.exit(1)
         sys.exit(0)
     if "networksetup" in script:
-        print("gw=192.168.64.1"); sys.exit(0)
+        print("gw=192.168.64.1"); print("dns=" + env("FAKE_DNS", "1.1.1.1")); sys.exit(0)
     if script.rstrip().endswith("/mdns"):
         phase = open(phase_path).read().strip() if os.path.exists(phase_path) else "online"
         answered = phase == "poscontrol" or env("FAKE_MDNS_LEAK")
@@ -212,7 +216,9 @@ def test_start_clones_boots_with_softnet_blocks_host_and_close_deletes(make_box,
     assert any("dscl . -authonly admin admin" in r and "pam_deny.so" in r for r in root)  # hardened check first
     assert any("setdnsservers" in r and "1.1.1.1" in r for r in root)  # DNS pinned to a public resolver
     setup = next(r for r in root if "PICKFIT_EOF" in r)
-    assert "shutdown -h +22 " in setup and "pfctl" not in setup  # self-shutdown, no guest firewall
+    # self-shutdown with no wall broadcasts (11/18: `shutdown -h +N` printed into a GUI terminal), no guest firewall
+    assert "detach /bin/sh -c 'sleep 1320; /sbin/shutdown -h now'" in setup and "shutdown -h +" not in setup
+    assert "pfctl" not in setup
     assert _phases(fake_tart) == ["online"]  # the online policy (block @host) was set over the control channel
     assert box.gateway == "192.168.64.1" and box.network_enabled
     assert box.image.endswith("+pickfit-macos-26@abc123def456")  # the run names the base build id
@@ -223,6 +229,28 @@ def test_start_clones_boots_with_softnet_blocks_host_and_close_deletes(make_box,
 def test_online_policy_blocks_the_host():
     assert SOFTNET_POLICY[True]["block"] == ["@host", "224.0.0.0/4", "255.255.255.255/32"]  # host + multicast
     assert SOFTNET_POLICY[False] == {"allow": [], "block": ["0.0.0.0/0"]}
+
+
+@POSIX_ONLY
+def test_dns_is_pinned_on_every_service_not_the_first(make_box, fake_tart: Path):
+    # 11/18: the sequoia base lists com.redhat.spice.0 before Ethernet; pinning only the first service left DNS
+    # on the blocked gateway, so every name timed out and the firewall check read "internet unreachable".
+    make_box().start()
+    pin = next(c[-1] for c in _calls(fake_tart) if c and c[0] == "exec" and "setdnsservers" in c[-1])
+    assert "sed -n 2p" not in pin and "while IFS= read -r svc" in pin and "scutil --dns" in pin
+
+
+@POSIX_ONLY
+def test_dns_that_did_not_move_is_a_clear_error(make_box, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("FAKE_DNS", "192.168.64.1")
+    with pytest.raises(BoxError, match=r"DNS did not move to 1\.1\.1\.1 \(resolver 192\.168\.64\.1\)"):
+        make_box().start()
+
+
+def test_mdns_probe_does_not_hear_the_guest_answer_itself():
+    # 11/18: the sequoia base advertises SSH, so its own mDNSResponder answered the looped-back query.
+    assert "IP_MULTICAST_LOOP, 0" in tb.HELPER_MDNS and "addr[0] not in own" in tb.HELPER_MDNS
+    compile(tb.HELPER_MDNS, "mdns", "exec")
 
 
 @POSIX_ONLY
@@ -399,6 +427,22 @@ def test_validate_containment_runs_the_positive_and_negative_controls(make_box):
     assert results["metadata_unreachable_online"][0] and results["ipv6_unreachable_online"][0]
     assert results["public_blocked_offline"][0] and results["resolver_blocked_offline"][0]
     assert box.network_enabled  # restored online
+
+
+@POSIX_ONLY
+@pytest.mark.parametrize(("code", "ok"), [("7", True), ("1", True), ("52", True), ("28", False), ("6", False)])
+def test_positive_control_counts_any_reply_from_the_host(make_box, monkeypatch: pytest.MonkeyPatch, code: str,
+                                                         ok: bool):
+    # 11/18: a headless Mac mini has nothing on 5000/7000; its ports refuse (7), sshd sends a banner (1) and the KDC
+    # closes (52). Each needs a reply from the host; a timeout (28) or a name failure (6) does not.
+    monkeypatch.setenv("FAKE_POSCONTROL_HOST", code)
+    box = make_box()
+    box.start()
+    results = {name: (passed, detail) for name, passed, _, detail in box.validate_containment()}
+    assert results["probe_sees_open_host_port"][0] is ok
+    if ok:
+        assert f"(exit {code})" in results["probe_sees_open_host_port"][1]
+        assert results["host_3000_blocked_online"][0]  # the ports that replied must drop once @host is blocked
 
 
 @POSIX_ONLY
@@ -705,3 +749,387 @@ def test_read_result_reads_as_the_box_user_and_decodes(make_box, fake_tart: Path
     call = _calls(fake_tart)[-1]
     assert call[2:6] == ["sudo", "-n", "-u", "#1001"] and call[-1] == "/Users/sbx/Documents/x.txt"
     assert "set -o pipefail" in call[8]
+
+
+@POSIX_ONLY
+def test_a_box_that_cannot_reach_github_says_so_from_the_start(make_box, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("FAKE_REACH_GITHUB", "28")
+    monkeypatch.setenv("FAKE_REACH_GHCR", "28")
+    box = make_box()
+    box.start()
+    assert box.unreachable == ["github.com", "ghcr.io"] and box.network_enabled
+    assert "github.com and ghcr.io do not answer" in box.describe() and "do not hunt for mirrors" in box.describe()
+
+
+@POSIX_ONLY
+def test_a_box_that_reaches_github_says_nothing_about_it(make_box):
+    box = make_box()
+    box.start()
+    assert box.unreachable == [] and "do not answer" not in box.describe()
+
+
+# ---------------------------------------------------------------- the macOS GUI box's limits test (limits_mac, H-014)
+
+
+@POSIX_ONLY
+def test_display_box_scopes_tcc_before_any_box_user_code(
+        make_box, fake_tart: Path, state_dir: Path):
+    (state_dir / "pickfit-macos-26-gui.json").write_text(json.dumps(GUI_MANIFEST))
+    make_box(display=True).start()
+    scripts = [c[-1] for c in _calls(fake_tart) if c[0] == "exec"]
+    setup = next(s for s in scripts if f"mkdir -p {tb.HELPER_DIR}" in s)
+    assert tb.TCC_SCOPE in setup  # in the root setup, before start() returns and any model command runs
+
+
+@POSIX_ONLY
+def test_headless_box_leaves_tcc_alone(make_box, fake_tart: Path):
+    make_box().start()
+    assert not any(tb.TCC_SCOPE in c[-1] for c in _calls(fake_tart) if c[0] == "exec")
+
+
+# The source image's grants (measured 11/18 in pickfit-macos-15-gui) and what TCC_SCOPE leaves of them.
+IMAGE_TCC = [("kTCCServicePostEvent", "com.apple.screensharing.agent", 0),
+             ("kTCCServiceScreenCapture", "com.apple.screensharing.agent", 0),
+             ("kTCCServiceSystemPolicyAllFiles", "/usr/libexec/sshd-keygen-wrapper", 1),
+             ("kTCCServiceDeveloperTool", "com.apple.Terminal", 0)] + [
+    (f"kTCCService{s}", client, kind) for client, kind, services in (
+        ("/usr/libexec/sshd-keygen-wrapper", 1, ("Accessibility", "ScreenCapture", "PostEvent", "AppleEvents")),
+        ("/usr/bin/osascript", 1, ("Accessibility", "ScreenCapture", "PostEvent", "AppleEvents")),
+        ("org.python.python", 0, ("Accessibility", "ScreenCapture", "Microphone", "PostEvent")),
+        ("/opt/homebrew/Cellar/tart-guest-agent/0.15.0/bin/tart-guest-agent", 1,
+         ("Accessibility", "ScreenCapture", "Microphone", "PostEvent"))) for s in services]
+
+
+def _tcc_db(path: Path, rows) -> Path:
+    import sqlite3
+
+    db = sqlite3.connect(path)
+    db.execute("CREATE TABLE access (service TEXT NOT NULL, client TEXT NOT NULL, client_type INTEGER NOT NULL, "
+               "auth_value INTEGER NOT NULL, auth_reason INTEGER NOT NULL, auth_version INTEGER NOT NULL, csreq BLOB, "
+               "indirect_object_identifier TEXT NOT NULL DEFAULT 'UNUSED')")
+    db.executemany("INSERT INTO access (service, client, client_type, auth_value, auth_reason, auth_version) "
+                   "VALUES (?, ?, ?, ?, 0, 1)", [(s, c, k, v) for s, c, k, v in rows])
+    db.commit()
+    db.close()
+    return path
+
+
+def test_tcc_scope_keeps_only_osascripts_grants_for_pickfits_scroll(tmp_path: Path):
+    import sqlite3
+
+    path = _tcc_db(tmp_path / "TCC.db", [(s, c, k, 0 if "DeveloperTool" in s else 2) for s, c, k in IMAGE_TCC])
+    sql = tb.TCC_SCOPE.split('"', 1)[1].rsplit('"', 1)[0]
+    with sqlite3.connect(path) as db:
+        db.execute(sql)
+        left = sorted(db.execute("SELECT service, client FROM access").fetchall())
+    assert left == [("kTCCServiceAccessibility", "/usr/bin/osascript"),
+                    ("kTCCServiceDeveloperTool", "com.apple.Terminal"),  # denied, and not a service it covers
+                    ("kTCCServicePostEvent", "/usr/bin/osascript")]
+    assert ("kTCCServiceScreenCapture", "/usr/bin/osascript") not in left  # pickfit's screenshots are VNC's
+
+
+@POSIX_ONLY
+def test_tcc_check_flags_grants_a_program_of_sbxs_could_use(tmp_path: Path):
+    from pickfit.verify import limits_mac as lm
+
+    mine = tmp_path / "planted"
+    mine.write_text("x")
+    path = _tcc_db(tmp_path / "TCC.db", [("kTCCServicePostEvent", "/bin/sh", 1, 2),  # root's, nothing writable above
+                                         ("kTCCServiceScreenCapture", str(mine), 1, 2),  # a path the user owns
+                                         ("kTCCServiceAccessibility", "org.example.app", 0, 2),  # no code requirement
+                                         ("kTCCServiceMicrophone", str(mine), 1, 0),  # denied: not a grant
+                                         ("kTCCServiceLiverpool", str(mine), 1, 2)])  # not a service the check covers
+    done = subprocess.run([sys.executable, "-I", "-c", lm.TCC_PY, str(path)], capture_output=True, text=True,
+                          input=json.dumps({"services": list(tb.TCC_SERVICES)}), timeout=60, check=True)
+    data = json.loads(done.stdout)
+    assert data[str(path)]["kept"] == ["PostEvent /bin/sh"]
+    assert lm.tcc_bad(data, str(path)) == [f"ScreenCapture {mine}", "Accessibility org.example.app"]
+    assert lm.tcc_bad({str(path): {"rows": 0, "bad": []}}, str(path)) is None  # an empty read is no pass
+
+
+@POSIX_ONLY
+def test_secret_scan_returns_hashes_of_the_shape_and_never_the_strings(tmp_path: Path):
+    from pickfit.verify import limits_mac as lm
+
+    planted = lm.decoy()
+    (tmp_path / "a").mkdir()
+    (tmp_path / "a" / "note.txt").write_text(f"x {planted} y\nnot-four-words here\n")
+    cfg = {"shape": lm.SECRET_SHAPE.decode(), "roots": [str(tmp_path)], "budget_s": 30, "ps": False}  # not this Mac's
+    done = subprocess.run([sys.executable, "-I", "-c", lm.SCAN_PY], capture_output=True, text=True,
+                          input=json.dumps(cfg), timeout=60, check=True)
+    data = json.loads(done.stdout.strip().splitlines()[-1])
+    assert data["files"] == 1 and not data["timed_out"] and lm._short(planted) in data["hashes"]
+    assert planted not in done.stdout and len(data["hashes"]) == 1
+    assert re.fullmatch(lm.SECRET_SHAPE, b"wxyz-abcd-efgh-ijkl") and not re.fullmatch(lm.SECRET_SHAPE, b"ab-cd-ef")
+
+
+def test_limits_mac_parsers():
+    from PIL import Image
+
+    from pickfit.verify import limits_mac as lm
+
+    sbx = "user is not a member of the group\nuser is not a member of the group\nGroupMembership: root admin\n"
+    assert lm.standard_user(sbx, "sbx") and not lm.standard_user(sbx.replace("admin\n", "admin sbx\n"), "sbx")
+    assert not lm.standard_user("user is a member of the group\n" + sbx.split("\n", 1)[1], "admin")
+    assert not lm.standard_user("", "sbx")  # nothing read is no pass
+    assert lm.owner_only("m1 600\nm1\n1\n") and not lm.owner_only("root 644\nm1\n0\n")
+    assert not lm.owner_only("m1 640\nm1\n") and not lm.owner_only("other 600\nm1\n") and not lm.owner_only("")
+    seen = lm.window_server("88 159 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer\n"
+                            "1001 152 /System/Library/CoreServices/loginwindow.app/Contents/MacOS/loginwindow\n"
+                            "1001 774 /System/Library/CoreServices/Dock.app/Contents/MacOS/Dock\n")
+    assert seen == {"WindowServer": ("88", "159"), "loginwindow": ("1001", "152"), "Dock": ("1001", "774")}
+    row = [1124, 0, 118, 54, 601, 491, lm.TEXTEDIT, True]
+    assert lm.app_window({"windows": [[1, 25, 0, 0, 30, 24, lm.TEXTEDIT, True], row]}) == row
+    assert lm.app_window({"windows": [[*row[:7], False]]}) is None  # not an sbx process
+    assert lm.app_window({"windows": [[*row[:4], 100, 50, *row[6:]]]}) is None  # too small to count
+    assert lm.app_window(None) is None
+    before = Image.new("L", (100, 80), 40)
+    after = before.copy()
+    after.paste(255, (10, 10, 60, 50))
+    assert lm.changed_share(before, after, (10, 10, 50, 40)) == 1.0
+    assert lm.changed_share(before, before, (10, 10, 50, 40)) == 0.0
+    assert lm.changed_share(before, after, (200, 200, 10, 10)) == 0.0  # off screen
+    assert lm.preflight('noise\n{"screen":false,"ax":true,"post":true,"listen":false}') == \
+        {"screen": False, "ax": True, "post": True, "listen": False}
+    assert lm.preflight("execution error") is None
+    assert lm.screen_size() == (1280, 800)
+
+
+class FakeGuiHost:
+    name = "scw1"
+
+    def __init__(self, box):
+        self.box = box
+
+    def run(self, argv, *, timeout, **kw):
+        if self.box.host_error:
+            raise OSError("ssh: connection refused")
+        script = " ".join(argv)
+        if "netstat" in script:
+            out = "tcp46 0 0 *.5999 *.* LISTEN\n"
+        elif argv[-1] == "/etc/hosts":
+            out = "root 644\nm1\n0\n"
+        else:
+            out = f"m1 {self.box.log_mode}\nm1\n1\n"
+        return subprocess.CompletedProcess(argv, 0, out, "")
+
+
+class FakeGuiScreen:
+    size = (1280, 800)
+
+    def __init__(self, box):
+        self.box = box
+
+    def screenshot(self) -> bytes:
+        import io
+
+        from PIL import Image
+
+        img = Image.linear_gradient("L").resize(self.size)
+        if self.box.textedit:
+            img.paste(255, (118, 54, 719, 545))
+        out = io.BytesIO()
+        img.save(out, format="PNG")
+        return out.getvalue()
+
+    def click(self, *a):
+        pass
+
+    def key(self, *a):
+        pass
+
+
+class FakeControl:
+    def __init__(self):
+        self.allowed = False
+
+    def set_rules(self, *, allow, block):
+        self.allowed = "@host" in allow
+
+    def set_policy(self, online):
+        self.allowed = False
+
+
+class FakeGuiBox:
+    """What limits_mac's GUI checks ask of a TartBox with display=True, answered as the real one answered (11/18)."""
+
+    os, runner, image, display, workdir = "macos", "tart-vz", "fake-gui", "vnc", "/Users/sbx/work"
+    vnc_url = "vnc://:abcde-fghi-jklmn-opqrst@127.0.0.1:5999"
+    vnc_host_port = 5999
+    vm_log = ".pickfit/tart/pf-verify-1-abc.log"
+
+    def __init__(self, **kw):
+        self.session = {"774": ["Wed Nov 18 05:08:00 2026", "/System/Library/CoreServices/Dock.app/Contents/MacOS/Dock"]}
+        self.textedit = False
+        self.network_enabled = True
+        self.control = FakeControl()
+        self.files: dict[str, str] = {}
+        self.jobs: dict[str, str] = {}
+        self.log_mode, self.leak, self.bad_tcc, self.admin, self.host_error = "600", False, [], False, False
+        self.__dict__.update(kw)
+        self.host = FakeGuiHost(self)
+        self._screen = FakeGuiScreen(self)
+        self.calls: list[str] = []
+
+    def screen(self):
+        return self._screen
+
+    def write_file(self, path, content):
+        self.files[path] = content
+
+    def _r(self, out="", code=0):
+        return tb.ExecResult("x", code, out, "", 0.1)
+
+    def exec(self, command, timeout_s, *, cwd=None):
+        self.calls.append(f"sbx: {command}")
+        if "test -w" in command:
+            return self._r("own /Users/sbx/.pickfit-gui\n")
+        if "cp /usr/bin/osascript" in command:
+            return self._r("planted\n")
+        if command.startswith("/usr/bin/osascript"):
+            return self._r('{"screen":false,"ax":false,"post":false,"listen":false}\n')
+        if "kill -0" in command:
+            return self._r("bash: kill: (159) - Operation not permitted\nws=1\ndock=0\n")
+        if "tail -c 3000" in command:
+            return self._r('PICKFIT_GUI_0 {"windows": [{"title": "forged"}]}\n')
+        return self._r()
+
+    def harness_exec(self, argv, timeout_s, *, as_uid=None, stdin=None):
+        from pickfit.verify import gui_mac
+        from pickfit.verify import limits_mac as lm
+
+        script = " ".join(argv)
+        self.calls.append(f"root: {script[:200]}")
+        if argv[-1] in ("stop", "approve", "sparkle", "procs", "items", "watch") and gui_mac.HELPER_PATH in argv:
+            cmd = argv[-1]
+            if cmd == "stop":
+                return self._r("PICKFIT_KILLED 0 found 1\n")
+            if cmd == "procs":
+                return self._r(json.dumps(self.session) + "\n")
+            if cmd == "watch":
+                cfg = json.loads(stdin)
+                report = {"alive": 1, "processes": ["pf-sleeper"], "windows": [], "screen": [1280, 800], "problems": []}
+                return self._r(f"{cfg['mark']}{cfg['nonce']} {json.dumps(report)}\n")
+            return self._r("[]\n")
+        if lm.WINDOWS_PY in argv:
+            rows = [[1124, 0, 118, 54, 601, 491, lm.TEXTEDIT, True]] if self.textedit else []
+            return self._r(json.dumps({"screen": [1280, 800], "windows": rows}) + "\n")
+        if lm.SCAN_PY in argv:
+            found = [lm._short(m.group(0).decode()) for text in self.files.values()
+                     for m in re.finditer(lm.SECRET_SHAPE, text.encode())]
+            if self.leak:
+                found.append(lm._short("abcde-fghi-jklmn-opqrst"))
+            return self._r(json.dumps({"files": 70000, "too_big": 80, "timed_out": False, "hashes": found,
+                                       "processes": 500, "vnc_urls": 0}) + "\n")
+        if lm.TCC_PY in argv:
+            db = argv[-1]
+            bad = list(self.bad_tcc) + (["ScreenCapture /opt/homebrew/bin/pf-planted",
+                                         "Accessibility org.example.pf-planted"] if db.startswith("/var/root") else [])
+            return self._r(json.dumps({db: {"rows": 3, "kept": ["PostEvent /usr/bin/osascript"], "bad": bad}}) + "\n")
+        if "submit" in argv:
+            out, program = argv[argv.index("-o") + 1], argv[argv.index("--") + 1]
+            self.jobs[out] = '{"screen":false,"ax":true,"post":true,"listen":true}' if program == "/usr/bin/osascript" \
+                else '{"screen":false,"ax":false,"post":false,"listen":false}'
+            return self._r()
+        if argv[0] == "/bin/cat":
+            return self._r(self.jobs.get(argv[1], "") + "\n")
+        if "open -a TextEdit" in script:
+            self.textedit = True
+            return self._r("started\n")
+        if "PICKFIT_GUI_0" in script:
+            return self._r("started\n")
+        if "pgrep -u 1001 -x TextEdit" in script:
+            self.textedit = False
+            return self._r("stopped\n")
+        if "dsmemberutil" in script:
+            member = "admin" in script.split("-U ")[1].split()[0] or self.admin
+            return self._r(("user is a member of the group\n" if member else "user is not a member of the group\n")
+                           + "user is not a member of the group\nGroupMembership: root admin\n")
+        if "ps -axo uid=,pid=,comm=" in script:
+            return self._r("88 159 /System/Library/PrivateFrameworks/SkyLight.framework/Resources/WindowServer\n"
+                           "1001 152 /System/Library/CoreServices/loginwindow.app/Contents/MacOS/loginwindow\n"
+                           "1001 774 /System/Library/CoreServices/Dock.app/Contents/MacOS/Dock\n")
+        return self._r()
+
+    def _curl_codes(self, targets, timeout=4):
+        return {name: 1 if self.control.allowed else 28 for name in targets}, ""
+
+    def _check_firewall(self, *, online):
+        pass
+
+    def set_network(self, enabled):
+        self.network_enabled = enabled
+
+
+@pytest.fixture
+def no_wait(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The fake answers at once: no polling sleeps (limits_mac and gui_mac wait for real windows and jobs)."""
+    import time
+
+    monkeypatch.setattr(time, "sleep", lambda s: None)
+
+
+def _gui_results(box) -> dict[str, Any]:
+    from pickfit.verify import limits_mac
+
+    results: list = []
+    limits_mac.gui_probes(box, results.append)
+    return {r.name: r for r in results}
+
+
+GUI_CHECKS = ["desktop_screenshot", "app_window_seen", "report_unforgeable", "sbx_standard_user",
+              "sbx_standard_user_control", "helper_locked", "helper_locked_control", "vnc_log_owner_only",
+              "vnc_log_owner_only_control", "vnc_password_not_in_guest", "vnc_password_not_in_guest_control",
+              "tcc_grants_scoped", "tcc_grants_scoped_control", "tcc_box_user_none", "tcc_box_user_none_control",
+              "window_server_not_box_user", "window_server_not_box_user_control", "vnc_port_unreachable",
+              "vnc_port_unreachable_control"]
+
+
+def test_gui_checks_hold_on_a_box_set_up_as_the_harness_expects(no_wait):
+    box = FakeGuiBox()
+    results = _gui_results(box)
+    assert list(results) == GUI_CHECKS
+    assert all(r.ok for r in results.values()), [(r.name, r.detail) for r in results.values() if not r.ok]
+    assert "abcde-fghi-jklmn-opqrst" not in json.dumps([r.detail for r in results.values()])  # the password stays out
+    assert not any("abcde-fghi" in c for c in box.calls)  # and never goes into the guest
+    assert box.network_enabled and not box.control.allowed
+
+
+@pytest.mark.parametrize("setting, failed", [
+    ({"leak": True}, "vnc_password_not_in_guest"),
+    ({"log_mode": "644"}, "vnc_log_owner_only"),
+    ({"bad_tcc": ["PostEvent /opt/homebrew/Cellar/tart-guest-agent/0.15.0/bin/tart-guest-agent"]}, "tcc_grants_scoped"),
+    ({"admin": True}, "sbx_standard_user"),
+])
+def test_each_gui_check_fails_when_its_setting_is_different(setting, failed, no_wait):
+    results = _gui_results(FakeGuiBox(**setting))
+    assert [n for n, r in results.items() if not r.ok] == [failed]
+
+
+def test_a_gui_check_that_cannot_run_fails_and_the_rest_still_run(no_wait):
+    results = _gui_results(FakeGuiBox(host_error=True))
+    assert not results["vnc_log_owner_only"].ok and "connection refused" in results["vnc_log_owner_only"].detail
+    assert results["vnc_port_unreachable"].ok and results["tcc_grants_scoped"].ok
+
+
+def test_gui_limits_test_runs_limits_py_without_its_xvfb_checks_then_the_gui_ones(monkeypatch: pytest.MonkeyPatch,
+                                                                                  no_wait):
+    from pickfit.verify import limits_mac
+
+    seen = []
+
+    def fake_limits(box, log=print):
+        seen.append(box.display)
+        assert box.os == "macos" and box.vnc_host_port == 5999  # everything else is the box's own
+        return []
+
+    monkeypatch.setattr(limits_mac, "run_limits_test", fake_limits)
+    results = limits_mac.run_gui_limits_test(FakeGuiBox(), log=lambda s: None)
+    assert seen == [None] and [r.name for r in results] == GUI_CHECKS
+
+
+def test_the_gui_limits_test_needs_a_gui_tartbox(tmp_path: Path):
+    from pickfit.verify import limits_mac
+
+    with pytest.raises(ValueError, match="display=True"):
+        limits_mac.gui_limits_test(lambda run_id, role: MacFakeBox(), tmp_path)

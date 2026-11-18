@@ -1,4 +1,5 @@
-"""`pickfit verify`: agent, replay and judge for a fixture or a batch, in Docker, on Modal, or in a macOS or Windows VM."""
+"""`pickfit verify`: agent, replay and judge for a fixture or a batch, in Docker, on Modal or EC2, or in a macOS or
+Windows VM."""
 
 from __future__ import annotations
 
@@ -11,6 +12,7 @@ TART_MAX_VMS = 2  # Apple's limit on macOS VMs running at once on one Mac
 # Display boxes: room for operate_gui (one per listed feature) after the install and the launch.
 GUI_LIMITS = {"max_turns": 32, "max_commands": 20, "max_seconds": 35 * 60, "scope_cap_usd": 5.00}
 VBOX_MAX_VMS = 1  # one Windows base, reset from its snapshot for every box
+EC2_CONCURRENCY = 2  # a batch on EC2 by default: two boxes, and room in a new account's quota for a pool member
 TOOLCHAIN_AGENT_S = 45 * 60  # --toolchain: a build from source runs once for the agent and once in the replay
 
 
@@ -20,7 +22,9 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v = sub.add_parser("verify", help="install, smoke-test, replay and judge one tool in a sandbox with Claude")
     v.add_argument("--fixture", help="JSON with slug, repo_url, readme_url and an ExtractionResult")
     v.add_argument("--batch", type=int, metavar="N", help="verify N extracted candidates from the pipeline database")
-    v.add_argument("--concurrency", type=int, default=5, help="batch: tools verified at once (default 5)")
+    v.add_argument("--concurrency", type=int, default=None,
+                   help=f"batch: tools verified at once (default 5; {EC2_CONCURRENCY} on EC2, where a new account's "
+                        "quota holds about three boxes)")
     v.add_argument("--db", default=None, help="batch: pipeline database (default runs/pipeline.db), read-only")
     v.add_argument("--repo", action="append", help="batch: only this repo id (gh:<id>) or owner/name")
     v.add_argument("--records", action="store_true",
@@ -33,9 +37,10 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--data-dir", default=None,
                    help="records to take slugs from and write back to (default data/software)")
     v.add_argument("--dry-run", action="store_true", help="batch: list what would run and why others are skipped")
-    v.add_argument("--runner", choices=["docker", "modal", "tart", "vbox"], default="docker",
-                   help="local DockerBox (development), ModalBox (gVisor on Modal), TartBox (macOS VM on this Mac) "
-                        "or VBoxBox (Windows 11 VM in VirtualBox on this PC)")
+    v.add_argument("--runner", choices=["docker", "modal", "ec2", "ec2-windows", "tart", "vbox"], default="docker",
+                   help="local DockerBox (development), ModalBox (gVisor on Modal), Ec2Box (a Linux VM on AWS EC2), "
+                        "Ec2WindowsBox (Windows Server 2025 on AWS EC2), TartBox (macOS VM on this Mac) or VBoxBox "
+                        "(Windows 11 VM in VirtualBox on this PC)")
     v.add_argument("--model", default=None,
                    help='agent model: "prod" (Claude Opus), "dev" or "open" (Claude Haiku) or a model id '
                         '(default: PICKFIT_MODE); the judges stay on the prod model when it is a cheaper tier')
@@ -52,7 +57,8 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
     v.add_argument("--runtime", choices=["gvisor", "vm"], default="gvisor",
                    help="Modal: gVisor (default) or a microVM; a VM also drops DNS while the network is off")
     v.add_argument("--display", action="store_true",
-                   help="Modal: a virtual display (Xvfb); tart: a desktop seen over VNC (the GUI base). Adds "
+                   help="Modal and ec2: a virtual display (Xvfb); tart: a desktop seen over VNC (the GUI base); "
+                        "ec2-windows: the desktop seen over VNC (the display image). Adds "
                         "launch_gui and operate_gui, so GUI apps can be launched, operated and checked (with more "
                         "time and commands per app)")
     v.add_argument("--audio", action="store_true",
@@ -77,7 +83,9 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
                    help="no model: check the box's limits (user, metadata, network cut, memory, disk, pids)")
     v.add_argument("--prepare-base", action="store_true",
                    help="tart: build the base macOS VM the boxes clone (needs `tart pull` of the source image); "
-                        "vbox: build the router VM and the Windows base (needs the ISOs in ~/.pickfit/vbox/iso)")
+                        "vbox: build the router VM and the Windows base (needs the ISOs in ~/.pickfit/vbox/iso); "
+                        "ec2, ec2-windows: bake the image if the account lacks it and fill the pool of started-once "
+                        "instances (PICKFIT_EC2_POOL, 0 for none)")
     v.add_argument("--iso", default=None, help="vbox --prepare-base: the Windows 11 Enterprise evaluation ISO")
     v.set_defaults(func=run)
 
@@ -88,10 +96,10 @@ def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64", 
     """(run_id, role) -> an unstarted box of the chosen runner."""
     from pickfit.verify.box import TOOLCHAIN_LIMITS, BoxLimits, DockerBox
 
-    if runner != "modal" and (runtime != "gvisor" or audio or memory_mb or file_mb or toolchain):
-        raise ValueError("--runtime, --audio, --toolchain, --memory-mb and --file-mb need --runner modal")
-    if display and runner not in ("modal", "tart"):
-        raise ValueError("--display needs --runner modal or tart")
+    if runner not in ("modal", "ec2") and (runtime != "gvisor" or audio or memory_mb or file_mb or toolchain):
+        raise ValueError("--runtime, --audio, --toolchain, --memory-mb and --file-mb need --runner modal or ec2")
+    if display and runner not in ("modal", "ec2", "tart", "ec2-windows"):
+        raise ValueError("--display needs --runner modal, ec2, ec2-windows or tart")
     sized = {k: v for k, v in (("memory_mb", memory_mb), ("home_mb", file_mb)) if v}
     if toolchain:  # room for a build; a size that was asked for wins
         sized = {**TOOLCHAIN_LIMITS, **sized}
@@ -108,6 +116,21 @@ def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64", 
         from pickfit.verify.vbox_box import VBoxBox
 
         return lambda run_id, role: VBoxBox(limits=BoxLimits(lifetime_s=lifetime_s))
+    if runner == "ec2-windows":
+        if gpu:
+            raise ValueError("--gpu needs --runner modal")
+        from pickfit.verify.ec2_windows import Ec2WindowsBox
+
+        return lambda run_id, role: Ec2WindowsBox(tags={"pickfit.run": run_id, "pickfit.role": role},
+                                                  limits=BoxLimits(lifetime_s=lifetime_s), display=display)
+    if runner == "ec2":  # always a VM, whatever --runtime says; no GPU types are listed yet
+        if gpu:
+            raise ValueError("--gpu needs --runner modal")
+        from pickfit.verify.ec2_machine import Ec2Box
+
+        return lambda run_id, role: Ec2Box(tags={"pickfit.run": run_id, "pickfit.role": role},
+                                           limits=BoxLimits(lifetime_s=lifetime_s, **sized), display=display,
+                                           audio=audio, toolchain=toolchain)
     if runner == "modal":
         from pickfit.verify.modal_box import ModalBox
 
@@ -137,8 +160,15 @@ def run(args: argparse.Namespace) -> int:
                 prepare_router()
             prepare_base(iso=Path(args.iso) if args.iso else None)
             return 0
+        if args.runner in ("ec2", "ec2-windows"):
+            box = box_factory(args.runner, 900, display=args.display,
+                              audio=args.audio and args.runner == "ec2",
+                              toolchain=args.toolchain and args.runner == "ec2")("prepare", "prepare")
+            image = box.machine.prepare()
+            print(f"pickfit verify: {args.runner} image {image.get('Name')} ({image['ImageId']}) is ready")
+            return 0
         if args.runner != "tart":
-            print("pickfit verify: --prepare-base needs --runner tart or vbox")
+            print("pickfit verify: --prepare-base needs --runner tart, vbox, ec2 or ec2-windows")
             return 2
         from pickfit.verify.tart_box import prepare_base, prepare_gui_base
 
@@ -147,11 +177,11 @@ def run(args: argparse.Namespace) -> int:
     if args.rejudge_features:
         return _rejudge(args)
     if (args.runtime != "gvisor" or args.audio or args.memory_mb or args.file_mb or args.toolchain) \
-            and args.runner != "modal":
-        print("pickfit verify: --runtime, --audio, --toolchain, --memory-mb and --file-mb need --runner modal")
+            and args.runner not in ("modal", "ec2"):
+        print("pickfit verify: --runtime, --audio, --toolchain, --memory-mb and --file-mb need --runner modal or ec2")
         return 2
-    if args.display and args.runner not in ("modal", "tart"):
-        print("pickfit verify: --display needs --runner modal or tart")
+    if args.display and args.runner not in ("modal", "ec2", "tart", "ec2-windows"):
+        print("pickfit verify: --display needs --runner modal, ec2, ec2-windows or tart")
         return 2
     if args.limits_test:
         from pickfit.verify.agent import _runs_dir
@@ -160,6 +190,13 @@ def run(args: argparse.Namespace) -> int:
         if args.gpu and args.runner != "modal":
             print("pickfit verify: --gpu needs --runner modal")
             return 2
+        if args.display and args.runner == "tart":
+            # limits.py's display probes are Xvfb's (xdpyinfo, pgrep Xvfb) and can only fail in a macOS guest (11/18,
+            # loop/issues.md H-014): limits_mac runs limits.py's other checks unchanged, then the macOS GUI box's own.
+            from pickfit.verify.limits_mac import gui_limits_test
+
+            results, _ = gui_limits_test(box_factory(args.runner, 900, display=True), _runs_dir(None))
+            return 0 if all(r.ok for r in results) else 1
         results, _ = limits_test(box_factory(args.runner, 900, platform=args.platform, gpu=args.gpu,
                                              runtime=args.runtime, display=args.display, audio=args.audio,
                                              memory_mb=args.memory_mb, file_mb=args.file_mb,
@@ -186,6 +223,8 @@ def run(args: argparse.Namespace) -> int:
                            gpu=args.gpu, runtime=args.runtime, display=args.display, audio=args.audio,
                            memory_mb=args.memory_mb, file_mb=args.file_mb, toolchain=args.toolchain)
     if args.batch:
+        if args.concurrency is None:
+            args.concurrency = EC2_CONCURRENCY if args.runner in ("ec2", "ec2-windows") else 5
         if args.runner == "tart" and args.concurrency > TART_MAX_VMS:
             print(f"pickfit verify: macOS allows {TART_MAX_VMS} VMs at once; concurrency {args.concurrency} -> "
                   f"{TART_MAX_VMS}")
@@ -247,7 +286,8 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
         print(f"pickfit verify: no pipeline database at {db} (use --db)")
         return 2
     data_dir = Path(args.data_dir) if args.data_dir else DATA_DIR
-    runner = {"tart": "tart-vz", "vbox": "vbox"}.get(args.runner)  # macOS/Windows runs do not count Linux ones
+    # macOS and Windows runs do not count Linux ones, nor one Windows box another's
+    runner = {"tart": "tart-vz", "vbox": "vbox", "ec2-windows": "ec2-windows"}.get(args.runner)
     skip = verified_slugs(runs_dir, since=args.since, runner=runner) if args.since else \
         set() if args.force else verified_slugs(runs_dir, runner=runner)
     skip -= recheck_slugs(data_dir, runs_dir)  # a new release since the last attempt, which did not pass
@@ -260,7 +300,8 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
     items, skipped = load_candidates(db, limit=args.batch, repos=repos, categories=args.category,
                                      skip_slugs=skip, known_slugs=known,
                                      known_categories=record_categories(data_dir), gpu=bool(args.gpu),
-                                     os={"tart": "macos", "vbox": "windows"}.get(args.runner, "linux"),
+                                     os={"tart": "macos", "vbox": "windows", "ec2-windows": "windows"}.get(
+                                         args.runner, "linux"),
                                      display=args.display, extraction_model=extraction_model)
     print(f"batch · {len(items)} to verify · {len(skipped)} set aside · {args.runner}"
           f"{' ' + args.runtime if args.runner == 'modal' else ''}{' + display' if args.display else ''}"
@@ -281,6 +322,15 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
 
         ensure_published_image(runtime=args.runtime, display=args.display, audio=args.audio,
                                toolchain=args.toolchain)
+    if args.runner == "ec2":  # bake or find the AMI once, not in every thread
+        from pickfit.verify.ec2_machine import ensure_image
+        from pickfit.verify.linux_box import image_recipe
+
+        ensure_image(recipe=image_recipe("vm", args.display, args.audio, args.toolchain))
+    if args.runner == "ec2-windows":
+        from pickfit.verify.ec2_windows import ensure_win_image
+
+        ensure_win_image(display=args.display)
 
     def verify(task, log):
         return verify_task(task, make_box, model=args.model, mode=args.mode or DEFAULT_MODE, limits=limits,

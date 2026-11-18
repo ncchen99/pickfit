@@ -704,3 +704,19 @@ def test_a_visual_check_runs_and_is_paid_for_on_a_desktop_app_and_cannot_lose_th
     assert job.cost_usd["model"] >= 0.02
     assert (env["data"] / "tinyq.json").exists()
     assert any("visual check did not finish" in line for line in lines)
+
+
+def test_the_live_steps_give_desktop_apps_a_display_box_on_ec2_too(monkeypatch: pytest.MonkeyPatch) -> None:
+    from pickfit import watch
+    from pickfit.discover import github as gh
+    from pickfit.verify import cli as verify_cli
+
+    monkeypatch.setattr(gh, "github_token", lambda: "t")
+    made: list[dict[str, Any]] = []
+    monkeypatch.setattr(verify_cli, "box_factory", lambda runner, lifetime, **kw: made.append({"runner": runner, **kw})
+                        or (lambda run_id, role: None))
+    for runner, shown in (("modal", True), ("ec2", True), ("docker", False)):
+        made.clear()
+        steps = watch.live_steps(runner=runner)
+        assert steps.display is shown and made[0] == {"runner": runner}
+        assert (made[1:] == [{"runner": runner, "display": True}]) is shown

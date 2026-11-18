@@ -10,7 +10,9 @@ operation (gui_operate.run_operation). It is pickfit's, never the app's: the app
 - macOS (VncRecorder): a host thread takes a frame of the VM's display at a fixed rate, each the first frame
   of a new VNC connection (vnc.VncClient.capture: a held connection gets stale frames), draws the pointer
   where pickfit last put it (VNC frames carry none), and pipes it to the host's ffmpeg. The operating loop
-  stamps each action in the host's clock, which is the recording's.
+  stamps each action in the host's clock, which is the recording's. A capture takes as long as the link needs
+  (a remote Mac across the world: 10 s and more); each shows from when its answer began to arrive, and the
+  recording keeps how many there were and the longest gap between two (Recording.frame_gap_s).
 
 Recordings are made at RECORD_FPS: Muse Spark Open samples at most 2 frames a second and placed changes
 within 0.5 s at 2 fps or more (probe, 11/2). Which operations are recorded: PICKFIT_RECORD=all (every one),
@@ -76,6 +78,10 @@ class Recording:
     clock: str = ""  # box: the Linux box's clock; host: this machine's
     recorder: str = ""  # x11grab, vnc
     error: str | None = None
+    # vnc: how many fresh captures of the screen the frames hold, and the longest stretch of the recording between
+    # two of them (a frame repeats the last capture until the next arrives: across a slow link, seconds of it).
+    captures: int | None = None
+    frame_gap_s: float | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -116,6 +122,8 @@ def for_box(box: Box, tag: str | int, evidence_dir: Path | None) -> Recorder | N
         return None
     if box.os == "macos":
         return VncRecorder(box, evidence_dir / f"{tag}.mp4")
+    if box.os == "windows" and box.display:
+        return WinVncRecorder(box, evidence_dir / f"{tag}.mp4")
     if box.display and getattr(box, "xvfb_pid", None):
         return XvfbRecorder(box, tag, evidence_dir / f"{tag}.mp4")
     return None
@@ -278,26 +286,41 @@ class VncRecorder:
         self._proc: subprocess.Popen[bytes] | None = None
         self.frames = 0
         self.captures = 0
+        self.shown: list[float] = []  # when each capture began to show, in the recording's seconds
+        self._drawn: tuple[int, int] | None = None  # where the last frame written drew the pointer
 
     @property
     def recording(self) -> bool:
         return self._proc is not None and self._proc.returncode is None and not self._stop.is_set()
 
-    def _pointer(self) -> tuple[int, int] | None:
+    def _pointer(self, at: float | None = None) -> tuple[int, int] | None:
+        """Where to draw pickfit's pointer on the frame due at `at` (wall clock): where pickfit had put it by then.
+        Frames are written in a batch when a capture arrives, seconds later across a slow link; a move made after
+        a frame's time is not drawn on it."""
         screen = getattr(self.box, "_screen", None)
         client = getattr(screen, "_client", None)
         pointer = getattr(client, "pointer", None) if client is not None and client.sock is not None else None
-        return pointer if pointer and pointer != (0, 0) else None  # (0, 0): pickfit has not moved it yet
+        pointer = pointer if pointer and pointer != (0, 0) else None  # (0, 0): pickfit has not moved it yet
+        if pointer is not None and at is not None and float(getattr(client, "pointer_at", 0.0) or 0.0) > at:
+            return self._drawn
+        self._drawn = pointer
+        return pointer
 
-    def start(self) -> None:
+    def _open(self) -> Any:
+        """A client whose capture() is the screen now: Apple's server answers a new connection's first request."""
         from pickfit.verify.vnc import VncClient
 
+        url = getattr(self.box, "vnc_url", None)
+        if not url:
+            raise RuntimeError("the box has no VNC display")
+        return VncClient.from_url(url)
+
+    def start(self) -> None:
         try:
+            if not shutil.which("ffmpeg"):
+                raise RuntimeError("no ffmpeg on the host")
             ffmpeg = shutil.which("ffmpeg")
-            url = getattr(self.box, "vnc_url", None)
-            if not ffmpeg or not url:
-                raise RuntimeError("no ffmpeg on the host" if not ffmpeg else "the box has no VNC display")
-            client = VncClient.from_url(url)
+            client = self._open()
             # The recording takes the display's size as pickfit drives it (VncDisplay): a new connection's first
             # frame has come back at another size, black (1280x720 on the 1280x800 desktop, 11/2).
             screen = self.box.screen() if hasattr(self.box, "screen") else None
@@ -320,12 +343,13 @@ class VncRecorder:
         except Exception as err:
             self.rec.error = f"recording did not start: {type(err).__name__}: {err}"[:400]
 
-    def _emit(self, frame: bytes) -> None:
-        """Every frame due by now: frame k shows the screen at started_at + k / fps (the latest capture by then)."""
+    def _emit(self, frame: bytes, until: float | None = None) -> None:
+        """Every frame due by `until` (default now): frame k shows the screen at started_at + k / fps (the latest
+        capture by then), with the pointer where pickfit had put it by then."""
         assert self._proc is not None and self._proc.stdin is not None and self.rec.started_at is not None
-        due = min((time.time() - self.rec.started_at) * self.fps, MAX_SECONDS * self.fps)
+        due = min(((time.time() if until is None else until) - self.rec.started_at) * self.fps, MAX_SECONDS * self.fps)
         while self.frames <= due:
-            pointer = self._pointer()
+            pointer = self._pointer(self.rec.started_at + self.frames / self.fps)
             self._proc.stdin.write(draw_pointer(frame, self.rec.width, self.rec.height, *pointer) if pointer else frame)
             self.frames += 1
 
@@ -336,8 +360,17 @@ class VncRecorder:
             while not self._stop.is_set():
                 self._emit(latest)
                 self._stop.wait(max(0.0, self.rec.started_at + self.frames / self.fps - time.time()))
-                latest = fit(*client.capture(), self.rec.width, self.rec.height)  # a new connection's first frame
+                asked = time.time()
+                got = fit(*client.capture(), self.rec.width, self.rec.height)  # a new connection's first frame
+                # A capture shows the screen as of when the server's answer began to arrive, not when it was asked
+                # for nor when the last byte came: across a slow link (a remote Mac, 11/18) the frame takes 10 s
+                # and more. The frames due before then keep the last capture, so nothing shows before it happened.
+                answered = float(getattr(client, "answered_at", 0.0) or 0.0)
+                answered = answered if asked <= answered <= time.time() else time.time()
+                self._emit(latest, until=answered)
+                latest = got
                 self.captures += 1
+                self.shown.append(round(answered - self.rec.started_at, 2))
             self._emit(latest)
         except Exception as err:  # the VM went away, or ffmpeg did
             self.rec.error = f"recording cut short: {type(err).__name__}: {err}"[:400]
@@ -347,7 +380,10 @@ class VncRecorder:
             return self.rec
         self._stop.set()
         if self._thread is not None:
-            self._thread.join(timeout=10)
+            self._thread.join(timeout=30)  # a capture in flight across a slow link takes 10 s and more (vnc.py)
+        marks = [0.0, *self.shown, self.frames / self.fps]
+        self.rec.captures = self.captures
+        self.rec.frame_gap_s = round(max(b - a for a, b in zip(marks, marks[1:])), 2)
         try:
             _, err = self._proc.communicate(timeout=60)  # closes ffmpeg's stdin: the end of the video
             if self._proc.returncode != 0:
@@ -359,6 +395,37 @@ class VncRecorder:
             self._proc.kill()
             self.rec.error = "; ".join(filter(None, [self.rec.error, f"recording not kept: {type(err).__name__}: {err}"]))[:400]
         return self.rec
+
+
+class _Kept:
+    """capture() on one connection that stays open: TightVNC answers every full-frame request on it, and a new
+    connection's first frame is black."""
+
+    def __init__(self, client: Any) -> None:
+        self.client = client
+
+    def capture(self) -> tuple[int, int, bytes]:
+        return self.client.frame_now()
+
+    @property
+    def answered_at(self) -> float:
+        return float(getattr(self.client, "answered_at", 0.0) or 0.0)
+
+
+class WinVncRecorder(VncRecorder):
+    """A Windows box's display (gui_win), on a VNC connection of the recorder's own through the port the box's
+    screen forwarded, compressed and kept open (the server lets the operating loop's connection stay)."""
+
+    def _open(self) -> Any:
+        from pickfit.verify.vnc import VncClient
+
+        screen = self.box.screen()
+        screen.size  # connects the screen, which makes the forward
+        client = VncClient("127.0.0.1", screen._port, self.box.vnc_password or "", compress=True).connect()
+        deadline = time.monotonic() + 3
+        while time.monotonic() < deadline and not any(client.frame_now()[2][::4097]):
+            time.sleep(0.1)  # its first answer is the screen's size alone
+        return _Kept(client)
 
 
 def png_frame(path: Path, at_s: float) -> bytes:

@@ -6,6 +6,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 from pickfit import __version__
 
@@ -426,9 +427,23 @@ def _watch(args: argparse.Namespace) -> int:
     from pickfit.ledger import default_ledger
     from pickfit.watch import Settings, Watcher, hourly_cap, live_data_sha, live_steps
 
+    from pickfit.lanes import ALL_LANES
+
+    lanes = tuple(dict.fromkeys(n.strip() for n in args.lanes.split(",") if n.strip()))
+    unknown = [n for n in lanes if n not in ALL_LANES]
+    if unknown or "linux" not in lanes:
+        print(f"pickfit watch: --lanes takes {','.join(ALL_LANES)} and always has linux "
+              f"(got {args.lanes})", file=sys.stderr)
+        return 2
     d1 = _d1(args)
     if args.status:
-        return _queue_status(d1)
+        code = _queue_status(d1)
+        if code == 0:
+            from pickfit.watch import lane_status
+
+            print(json.dumps({"lanes": lane_status(runs_dir() / "watch" / "jobs", _watch_lanes(args, lanes),
+                                                   now=None)}, ensure_ascii=False, indent=2))
+        return code
     if args.publish and args.no_commit:
         print("pickfit watch: --publish deploys committed data only; drop --no-commit", file=sys.stderr)
         return 2
@@ -437,13 +452,24 @@ def _watch(args: argparse.Namespace) -> int:
               "so not with --publish", file=sys.stderr)
         return 2
     settings = Settings(data_dir=args.data, runs_dir=runs_dir(), db_path=pipeline_db_path(), worker_dir=args.worker,
-                        commit=not args.no_commit, publish=args.publish, hourly_cap=hourly_cap(args.worker),
-                        max_usd=args.max_usd, concurrency=args.concurrency, interval_s=args.interval)
+                        commit=not args.no_commit, publish=bool(args.publish), hourly_cap=hourly_cap(args.worker),
+                        max_usd=args.max_usd, concurrency=args.concurrency, interval_s=args.interval, lanes=lanes,
+                        publish_mode=args.publish or "deploy", update_check_s=args.update_check_hours * 3600)
     try:
         steps = live_steps(runner=args.runner)
     except GitHubError as err:
         print(f"pickfit watch: {err}", file=sys.stderr)
         return 2
+    steps.lanes = _watch_lanes(args, lanes)
+    if "web" in lanes:
+        import importlib.util
+
+        from pickfit.web_intake import live_site_steps
+
+        steps.site = live_site_steps(runner=args.runner if args.runner in ("modal", "ec2") else "modal")
+        if importlib.util.find_spec("playwright") is None:
+            print("pickfit watch: playwright is missing, so sites drawn by script are tried again later instead of "
+                  "read; run `uv run --with playwright pickfit watch ...`", file=sys.stderr)
     reverifier = None
     if args.reverify:
         from pickfit.reverify import Reverifier
@@ -455,10 +481,13 @@ def _watch(args: argparse.Namespace) -> int:
     watcher = Watcher(d1, steps, settings, meta_ledger=default_ledger(),
                       reverifier=reverifier, log=lambda line: print(line, flush=True),
                       live_sha=None if args.local else live_data_sha(args.worker))
+    mac = steps.lanes.get("macos")
     print(f"watch · {d1.where} · every {args.interval:.0f}s · {args.concurrency} at a time · "
           f"hourly cap {settings.hourly_cap} · --max-usd {args.max_usd} · {args.runner} · "
-          f"{'commit + publish' if args.publish else 'commit, no deploy' if settings.commit else 'no commit'}"
-          f"{' · reverify queue too' if reverifier else ''}")
+          f"{'commit + push (CI deploys)' if args.publish == 'push' else 'commit + publish' if args.publish else 'commit, no deploy' if settings.commit else 'no commit'}"
+          f"{' · reverify queue too' if reverifier else ''} · lanes {','.join(lanes)}"
+          + (f" · macOS batch {mac.policy.describe()}, "
+             f"{'rents up to ' + str(mac.max_rentals) + ' a week' if mac.rent else 'no renting'}" if mac else ""))
     try:
         jobs = watcher.run(once=args.once)
     except KeyboardInterrupt:
@@ -466,7 +495,27 @@ def _watch(args: argparse.Namespace) -> int:
         return 0
     for job in jobs:
         print(job.summary())
-    return 0
+    return 75 if watcher.restart_wanted else 0  # EX_TEMPFAIL: its service starts it again on the new code
+
+
+def _watch_lanes(args: argparse.Namespace, lanes: tuple[str, ...]) -> dict[str, Any]:
+    """The parked lanes `pickfit watch` takes (pickfit.lanes): Windows on EC2, macOS on a Mac host."""
+    from datetime import timedelta
+
+    from pickfit.lanes import Policy, windows_lane
+    from pickfit.watch import MODEL
+
+    out: dict[str, Any] = {}
+    if "windows" in lanes:
+        out["windows"] = windows_lane(model=MODEL)
+    if "macos" in lanes:
+        from pickfit.verify.mac_batch import MacLane
+
+        out["macos"] = MacLane(model=MODEL, policy=Policy(min_batch=args.mac_batch,
+                                                          max_wait=timedelta(hours=args.mac_max_wait_hours)),
+                               rent=args.mac_rent, provider=args.mac_provider, zone=args.mac_zone,
+                               root_from_provider=args.mac_root_from_provider, max_rentals=args.mac_max_rentals)
+    return out
 
 
 def _reverify(args: argparse.Namespace) -> int:
@@ -504,16 +553,21 @@ def _add_queue_commands(sub: argparse._SubParsersAction) -> None:
         p.add_argument("--worker", type=Path, default=DEFAULT_WORKER_DIR,
                        help="the Worker directory (wrangler runs there)")
         p.add_argument("--data", type=Path, default=DEFAULT_OUT, help="records directory (default data/software)")
-        p.add_argument("--runner", choices=["modal", "docker"], default="modal", help="sandbox for verification")
+        p.add_argument("--runner", choices=["modal", "ec2", "docker"], default="modal",
+                       help="sandbox for verification")
         p.add_argument("--no-commit", action="store_true", help="write records but do not commit them")
 
     w = sub.add_parser("watch", help="every 60 s, turn queued submit_software rows into records "
                                      "(paid: prescreen, extraction, verification; deploys only with --publish)")
     common(w)
     w.add_argument("--once", action="store_true", help="take what is queued now, finish it, and stop")
-    w.add_argument("--publish", action="store_true",
-                   help="deploy the Worker (pickfit publish) after each record that passes every check "
-                        "(not with --reverify)")
+    w.add_argument("--publish", nargs="?", const="deploy", choices=["deploy", "push"], default=None,
+                   help="publish each record that passes every check (not with --reverify). deploy (the default) "
+                        "deploys the Worker from here; push pushes the commits to origin/main, whose CI deploys "
+                        "them (for a watcher on its own machine)")
+    w.add_argument("--update-check-hours", type=float, default=0,
+                   help="when idle, this often look for new program code on origin/main and stop with exit 75 so "
+                        "the service pulls it and starts again (default 0: never)")
     w.add_argument("--reverify", action="store_true", help="also take reported failures from reverify_queue")
     w.add_argument("--status", action="store_true", help="read-only: list submissions and the reverify queue")
     w.add_argument("--interval", type=float, default=DEFAULT_INTERVAL_S, help="seconds between polls (default 60)")
@@ -522,6 +576,20 @@ def _add_queue_commands(sub: argparse._SubParsersAction) -> None:
     w.add_argument("--max-usd", type=float, default=DEFAULT_MAX_USD,
                    help="stop starting submissions after this much model spend "
                         f"(default {DEFAULT_MAX_USD})")
+    w.add_argument("--lanes", default="linux,windows,macos,web",
+                   help="where submissions are verified (default all): linux at once; windows (EC2) as soon as AWS "
+                        "answers; macos in batches on a Mac host; web: website submissions, visited once")
+    w.add_argument("--mac-batch", type=int, default=10, help="macOS: start a batch once this many wait (default 10)")
+    w.add_argument("--mac-max-wait-hours", type=float, default=24.0,
+                   help="macOS: or once the oldest has waited this long (default 24)")
+    w.add_argument("--mac-rent", action="store_true",
+                   help="macOS: rent a Mac when no known host is ready (Scaleway: billed 24 h at least, about EUR 6)")
+    w.add_argument("--mac-max-rentals", type=int, default=1, help="macOS: at most this many rentals a week (default 1)")
+    w.add_argument("--mac-provider", default="scaleway", help="macOS: who rents the Mac (default scaleway)")
+    w.add_argument("--mac-zone", default=None, help="macOS: the provider's zone (Scaleway default fr-par-1)")
+    w.add_argument("--mac-root-from-provider", action="store_true",
+                   help="macOS: read a rented Mac's sudo password from the provider and pipe it into its root step "
+                        "(never logged or saved); without it the lane waits for `pickfit mac-host root NAME`")
     w.set_defaults(func=_watch)
 
     r = sub.add_parser("reverify", help="re-verify reported install failures in a fresh box; "
@@ -618,6 +686,8 @@ def main(argv: list[str] | None = None) -> int:
 
     from pickfit.verify.cli import add_parser as add_verify_parser
     add_verify_parser(sub)
+    from pickfit.verify.mac_host import add_parser as add_mac_host_parser
+    add_mac_host_parser(sub)
 
     args = parser.parse_args(argv)
     if args.command is None:

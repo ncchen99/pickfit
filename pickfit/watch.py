@@ -62,6 +62,7 @@ from pickfit.discover.github import normalize_repo
 from pickfit.discover.rules import RULES_VERSION, classify
 from pickfit.discover.store import PipelineDB, repo_key
 from pickfit.installdocs import needs_install_docs
+from pickfit.lanes import PARKED_PREFIX, due_lanes, parked_reason
 from pickfit.ledger import TAIPEI, BudgetExceeded, Ledger, taipei_now
 from pickfit.meta import PROD_MODEL
 from pickfit.schema import LISTED_CATEGORIES, TOOL_KINDS, ExtractionResult, SoftwareRecord, is_passed
@@ -80,6 +81,7 @@ DEFAULT_MAX_USD = 30.0  # five submissions at their worst case (WORST_CASE_META_
 DEFAULT_HOURLY_CAP = 20  # the Worker's default when wrangler.jsonc has none
 MAX_ATTEMPTS = 3
 STALE_AFTER = timedelta(hours=1)  # a row left in reading/verifying this long lost its watcher
+LANE_HOLD = timedelta(minutes=30)  # a lane whose box never started rests this long before its next try
 # Room a submission needs before it starts: prescreen $0.30 + review $0.30 + extraction $1.50 +
 # verification $3.00 + rubric $0.60 (each stage's own cap on Claude's prices), rounded up. A usual one costs
 # far less; this is what --max-usd and a user-set cap are checked against. The names are the hackathon's.
@@ -145,11 +147,21 @@ def budget_blocked(needs: list[tuple[str, Ledger | None, float]]) -> str | None:
 # --- D1 ---------------------------------------------------------------------------
 
 
-def queued(d1: Database, limit: int) -> list[dict[str, Any]]:
-    """Queued repository submissions, oldest first. Website rows (a hosted web app) stay queued for the web
-    pipeline. The submitter's note is never read."""
-    return d1.query(sql("SELECT id, url, submitted_at FROM submissions WHERE status = 'queued' "
-                        "AND url LIKE 'https://github.com/%' ORDER BY submitted_at, id LIMIT ?1", limit))
+def queued(d1: Database, limit: int, *, sites: bool = False) -> list[dict[str, Any]]:
+    """Queued submissions, oldest first: repositories, and with `sites` website rows too (a hosted web app, the web
+    lane); without it they stay queued. The submitter's note is never read."""
+    where = "url LIKE 'https://%'" if sites else "url LIKE 'https://github.com/%'"
+    return d1.query(sql(f"SELECT id, url, submitted_at FROM submissions WHERE status = 'queued' AND {where} "
+                        "ORDER BY submitted_at, id LIMIT ?1", limit))
+
+
+def record_passed(record: SoftwareRecord) -> bool:
+    """A passed install the record can be recommended on: a replayed guide; a web app is visited once, never
+    replayed, so its passed visit is enough."""
+    if record.kind == "web_app":
+        return is_passed(record.verification.level)
+    return is_passed(record.verification.level) and any(
+        guide.basis == "replayed" for _, guide in record.install.guides())
 
 
 def claim(d1: Database, submission_id: str, now: datetime) -> bool:
@@ -163,11 +175,18 @@ def set_status(d1: Database, submission_id: str, status: str, now: datetime, *, 
                    submission_id, status, slug, _clip(reason) if reason else None, timestamp(now)))
 
 
+def claim_parked(d1: Database, submission_id: str, now: datetime) -> bool:
+    """A parked row (verifying, waiting for its lane) is taken by one watcher only."""
+    return len(d1.query(sql("UPDATE submissions SET reason = NULL, updated_at = ?2 WHERE id = ?1 AND "
+                            "status = 'verifying' AND reason LIKE ?3 RETURNING id", submission_id, timestamp(now),
+                            PARKED_PREFIX + "%"))) == 1
+
+
 def requeue_stale(d1: Database, now: datetime, running: set[str]) -> list[str]:
-    """Rows a crashed watcher left in reading or verifying go back to queued (not ready ones)."""
+    """Rows a crashed watcher left in reading or verifying go back to queued (not ready or parked ones)."""
     rows = d1.query(sql("SELECT id FROM submissions WHERE status IN ('reading', 'verifying') "
-                        "AND updated_at < ?1 AND (reason IS NULL OR reason <> ?2)",
-                        timestamp(now - STALE_AFTER), READY_REASON))
+                        "AND updated_at < ?1 AND (reason IS NULL OR (reason <> ?2 AND reason NOT LIKE ?3))",
+                        timestamp(now - STALE_AFTER), READY_REASON, PARKED_PREFIX + "%"))
     back = [r["id"] for r in rows if r["id"] not in running]
     for sid in back:
         d1.execute(sql("UPDATE submissions SET status = 'queued', reason = NULL, updated_at = ?2 "
@@ -190,7 +209,10 @@ class Job:
     slug: str | None = None
     status: str = "reading"  # the D1 status last written
     reason: str | None = None
-    result: str | None = None  # ready | listed | listed_unverified | rejected | retry | waiting
+    result: str | None = None  # ready | listed | listed_unverified | rejected | retry | waiting | parked
+    lane: str | None = None  # where it was verified or waits: linux, windows, macos, web (pickfit.lanes)
+    parked_at: str | None = None  # when it first waited for its lane
+    lane_tries: int = 0  # lane boxes that never started for it
     level: str | None = None
     run_id: str | None = None
     landed: bool = False  # the record is in data/software (and committed, unless --no-commit)
@@ -230,6 +252,14 @@ class _AlreadyListed(Exception):
     """The repository is already a record: its status is written and nothing else happens."""
 
 
+class _Parked(Exception):
+    """The record is read and waits for its lane (Windows, macOS): its status is written, the job is saved."""
+
+
+class _LaneDown(Exception):
+    """A lane's box never started: the job parks again and the lane rests (LANE_HOLD)."""
+
+
 @dataclass
 class Steps:
     """The networked and paid parts of the pipeline; tests replace them with fakes.
@@ -244,6 +274,8 @@ class Steps:
     visual(data_dir, slug, log) -> (cost, why it did not finish or None) for a desktop app; the record stays unchecked
     docs(candidate) -> pickfit.installdocs.read_docs' result: the install pages a README points to, read only
         when the README itself holds no install path the sandbox can run
+    lanes: name -> pickfit.lanes.Lane for records the Linux box cannot run (windows, macos); their jobs park
+    site: pickfit.web_intake's steps for website submissions (the web lane), or None
     """
 
     github: Any
@@ -255,10 +287,14 @@ class Steps:
     security: Callable[[Path, str], str | None] | None = None
     visual: Callable[[Path, str, Callable[[str], None]], tuple[float, str | None]] | None = None
     docs: Callable[[dict[str, Any]], dict[str, Any]] | None = None
+    lanes: dict[str, Any] = field(default_factory=dict)
+    site: Any = None
 
 
 def live_steps(*, runner: str = "modal") -> Steps:
-    """The real pipeline: GitHub, Claude through the ledger, Modal boxes."""
+    """The real pipeline: GitHub, Claude through the ledger, and boxes of `runner` (desktop apps get a display
+    box on Modal and on EC2, whose display image passes the same limits test; with docker they are verified as
+    far as a box without one goes)."""
     from pickfit.discover.github import GitHub, github_token
     from pickfit.extract import extract_with_retries
     from pickfit.prescreen import screen_and_review
@@ -269,7 +305,7 @@ def live_steps(*, runner: str = "modal") -> Steps:
 
     limits = AgentLimits()
     lifetime = int(limits.max_seconds) + LIFETIME_MARGIN_S
-    display = runner == "modal"
+    display = runner in ("modal", "ec2")
     boxes = {False: box_factory(runner, lifetime),
              True: box_factory(runner, lifetime, display=True) if display else None}
     image_lock = threading.Lock()
@@ -283,6 +319,14 @@ def live_steps(*, runner: str = "modal") -> Steps:
                     from pickfit.verify.modal_box import ensure_published_image
 
                     ensure_published_image(display=gui)
+                    images.add(gui)
+        elif runner == "ec2":
+            with image_lock:  # bake or find the AMI once
+                if gui not in images:
+                    from pickfit.verify.ec2_machine import ensure_image
+                    from pickfit.verify.linux_box import image_recipe
+
+                    ensure_image(recipe=image_recipe("vm", gui))
                     images.add(gui)
         return verify_task(task, boxes[gui], model=MODEL, limits=limits, log=log, write=True, data_dir=data_dir)
 
@@ -325,6 +369,32 @@ def live_steps(*, runner: str = "modal") -> Steps:
                  extract=lambda c, run_id: extract_with_retries(c, model=MODEL, run_id=run_id,
                                                                 reasoning_effort=EXTRACT_EFFORT),
                  verify=verify, score=score, display=display, security=security, visual=visual, docs=docs)
+
+
+def lane_status(jobs_dir: Path, lanes: dict[str, Any], *, now: datetime | None = None) -> dict[str, Any]:
+    """Read-only, for `pickfit watch --status`: each lane's parked jobs, their oldest wait, whether a batch is due,
+    and the lane's own view (a Mac lane's hosts and rentals)."""
+    now = now or taipei_now()
+    parked: dict[str, list[Job]] = {}
+    for path in sorted(jobs_dir.glob("*.json")):
+        try:
+            job = Job(**json.loads(path.read_text(encoding="utf-8")))
+        except (OSError, ValueError, TypeError):
+            continue
+        if job.result == "parked" and job.lane:
+            parked.setdefault(job.lane, []).append(job)
+    out: dict[str, Any] = {}
+    for name in sorted(set(parked) | set(lanes)):
+        jobs, lane = parked.get(name, []), lanes.get(name)
+        when = [_parse_time(j.parked_at or j.started_at) for j in jobs]
+        entry: dict[str, Any] = {
+            "parked": [{"id": j.submission_id, "url": j.url, "slug": j.slug, "parked_at": j.parked_at} for j in jobs],
+            "oldest_wait_hours": round((now - min(when)).total_seconds() / 3600, 1) if when else None}
+        if lane is not None:
+            entry["due"] = lane.policy.due(when, now)
+            entry.update(lane.status())
+        out[name] = entry
+    return out
 
 
 def hourly_cap(worker_dir: Path) -> int:
@@ -374,13 +444,17 @@ class Settings:
     max_usd: float = DEFAULT_MAX_USD
     concurrency: int = DEFAULT_CONCURRENCY
     interval_s: float = DEFAULT_INTERVAL_S
+    lanes: tuple[str, ...] = ("linux",)  # pickfit.lanes.ALL_LANES to take Windows, macOS and website submissions
+    publish_mode: str = "deploy"  # deploy: run the deploy here; push: push the commits, the branch's CI deploys
+    update_check_s: float = 0  # >0: when idle, this often see whether origin/main has new program code (restart)
 
 
 class Watcher:
     def __init__(self, d1: Database, steps: Steps, settings: Settings, *, meta_ledger: Ledger | None = None,
                  baseten_ledger: Ledger | None = None, clock: Callable[[], datetime] | None = None,
                  log: Callable[[str], None] = print, publish_fn: Callable[..., int] | None = None,
-                 reverifier: Any = None, live_sha: Callable[[], str | None] | None = None) -> None:
+                 reverifier: Any = None, live_sha: Callable[[], str | None] | None = None,
+                 push_fn: Callable[..., Any] | None = None) -> None:
         if settings.publish and not settings.commit:
             raise ValueError("--publish needs commits: pickfit publish deploys committed data only")
         if settings.publish and reverifier is not None:
@@ -394,6 +468,12 @@ class Watcher:
         self.clock = clock or (lambda: taipei_now())
         self.log = log
         self._publish_fn = publish_fn
+        self._push_fn = push_fn
+        self.restart_wanted = False  # a push brought new code: finish what runs, start nothing, return from run()
+        from pickfit.publish import upstream_code
+
+        self._checked_code = time.monotonic()  # the last look at origin/main's program code (update_check_s)
+        self._upstream_code: Callable[[Path], list[str] | None] = upstream_code
         self.db = PipelineDB(settings.db_path)
         self.jobs_dir = settings.runs_dir / "watch" / "jobs"
         self.jobs_dir.mkdir(parents=True, exist_ok=True)
@@ -409,6 +489,19 @@ class Watcher:
         self._reverify: Future[Any] | None = None
         if reverifier is not None:
             reverifier.git_lock = self._git_lock
+        self.lanes = {name: lane for name, lane in steps.lanes.items() if name in settings.lanes}
+        self._lane_batches: dict[str, Future[list[Job]]] = {}  # one batch thread per lane
+        self._lane_running: set[str] = set()  # parked submissions a lane is verifying now
+        self._lane_hold: dict[str, datetime] = {}  # lane -> no batch before this (its box never started)
+        self._lane_pools = {name: ThreadPoolExecutor(max_workers=max(1, lane.concurrency))
+                            for name, lane in self.lanes.items()}
+        self._batch_pool = ThreadPoolExecutor(max_workers=max(1, len(self.lanes)))  # each lane's batch loop
+        for job in self.saved_jobs():  # a parked record keeps its slug and its repository across restarts
+            if job.result == "parked":
+                if job.slug:
+                    self._slugs_in_flight.add(job.slug)
+                if job.repo_id:
+                    self._repos_in_flight[job.repo_id] = job.url
 
     # -- bookkeeping
 
@@ -463,20 +556,25 @@ class Watcher:
         hour_ago = self.now() - timedelta(hours=1)
         with self._state_lock:
             running = set(self._running)
+            lane_running = set(self._lane_running)
         started = {j.submission_id for j in self.saved_jobs() if _parse_time(j.started_at) >= hour_ago} | running
         if len(started) >= self.s.hourly_cap:
             return (f"hourly cap: {len(started)} submissions started in the last hour "
                     f"(SUBMIT_HOURLY_CAP {self.s.hourly_cap})")
-        if self.spent_usd + (len(running) + 1) * WORST_CASE_META_USD > self.s.max_usd:
+        return self._money_blocked(len(running) + len(lane_running))
+
+    def _money_blocked(self, busy: int) -> str | None:
+        """Why one more job may not start while `busy` others may still spend their worst case, or None."""
+        if self.spent_usd + (busy + 1) * WORST_CASE_META_USD > self.s.max_usd:
             return f"this run's cap: ${self.spent_usd:.2f} spent of --max-usd {self.s.max_usd:.2f}"
-        jobs = len(running) + 1  # the ones in flight may still spend their worst case
+        jobs = busy + 1  # the ones in flight may still spend their worst case
         return budget_blocked([("Model pipeline", self.meta_ledger, WORST_CASE_META_USD * jobs),
                                ("Baseten", self.baseten_ledger, WORST_CASE_BASETEN_USD * jobs)])
 
     # -- the pipeline for one submission
 
     def process(self, sub: dict[str, Any]) -> Job:
-        """Run one claimed submission to its end; never raises."""
+        """Run one claimed submission to its end (or until it parks for its lane); never raises."""
         sid = sub["id"]
         log = self._say(sid)
         earlier = self._saved(sid)
@@ -489,41 +587,146 @@ class Watcher:
             job = Job(submission_id=sid, url=sub["url"], submitted_at=sub["submitted_at"],
                       started_at=self.now().isoformat(), failures=earlier.failures if earlier else 0)
         log(f"start · {job.url} · try {job.failures + 1}{' · resuming a landed record' if resume else ''}")
+        self._guard(job, log, (lambda: self._report_landed(job, log)) if resume else (lambda: self._run(job, log)))
+        return job
+
+    def _guard(self, job: Job, log: Callable[[str], None], work: Callable[[], None], *, parked: bool = False) -> None:
+        """Run `work` for `job`; whatever happens the D1 row ends in a known state and the job is saved.
+        `parked`: the job came out of its lane's queue, so a wait sends it back there, not to the D1 queue."""
+        before = sum(job.cost_usd.get(k, 0.0) for k in ("model", "meta", "baseten"))
         try:
-            if resume:
-                self._report_landed(job, log)
-            else:
-                self._run(job, log)
-        except _AlreadyListed:
+            work()
+        except (_AlreadyListed, _Parked):
             pass
+        except _LaneDown as err:  # the machine's problem, not the software's: wait for the lane again
+            log(f"{err}; parked again, the {job.lane} lane rests {LANE_HOLD}")
+            self._park_quietly(job, log)
+            if job.lane:
+                self._lane_hold[job.lane] = self.now() + LANE_HOLD
         except Rejected as err:
             self._finish(job, "rejected", "rejected", str(err), log)
         except BudgetExceeded as err:
             log(f"budget: {err}")
             if err.cap.startswith("scope"):  # one stage used up its own cap: that try failed
                 self._fail(job, f"budget: {err}", log)
+            elif parked and job.lane:
+                self._park_quietly(job, log)
             else:
                 self._finish(job, "waiting", "queued", "Waiting for pickfit's model budget; it continues later.", log)
         except Exception as err:  # noqa: BLE001 - Retry, IndexBuildError, a bug: the row must not stay in reading
             self._fail(job, f"{type(err).__name__}: {str(err)[:300]}", log)
         finally:
             with self._state_lock:
-                if job.slug:
-                    self._slugs_in_flight.discard(job.slug)
-                if job.repo_id and self._repos_in_flight.get(job.repo_id) == job.url:
-                    self._repos_in_flight.pop(job.repo_id)
-                self.spent_usd += sum(job.cost_usd.get(k, 0.0) for k in ("model", "meta", "baseten"))
+                if job.result != "parked":  # a parked record keeps its slug and repository until its lane runs it
+                    if job.slug:
+                        self._slugs_in_flight.discard(job.slug)
+                    if job.repo_id and self._repos_in_flight.get(job.repo_id) == job.url:
+                        self._repos_in_flight.pop(job.repo_id)
+                self.spent_usd += sum(job.cost_usd.get(k, 0.0) for k in ("model", "meta", "baseten")) - before
             self._save(job)
-        log(f"done · {job.summary()}")
+        log(f"{'parked' if job.result == 'parked' else 'done'} · {job.summary()}")
+
+    # -- lanes: Windows and macOS records wait for their machines (pickfit.lanes)
+
+    def _lane_for(self, ex: ExtractionResult) -> tuple[str | None, str | None]:
+        """(lane, None) for the first lane whose box can run it, else (None, why the Linux box cannot)."""
+        why = not_in_box(ex, display=self.steps.display)
+        if why is None:
+            return "linux", None
+        for name in ("windows", "macos"):
+            lane = self.lanes.get(name)
+            if lane is not None and not_in_box(ex, os=lane.os, display=lane.display) is None:
+                return name, None
+        return None, why
+
+    def _park(self, job: Job, lane: str, log: Callable[[str], None]) -> None:
+        """The record waits in runs/watch/<submission>/software/ for its lane; raises _Parked."""
+        job.lane = lane
+        job.parked_at = job.parked_at or self.now().isoformat()
+        self._park_quietly(job, log)
+        log(f"parked for the {lane} lane ({self.lanes[lane].policy.describe()})")
+        raise _Parked()
+
+    def _park_quietly(self, job: Job, log: Callable[[str], None]) -> None:
+        job.result = "parked"
+        try:
+            self._status(job, "verifying", reason=parked_reason(job.lane or "", self.lanes[job.lane].policy))
+        except D1Error as err:
+            job.notes.append(f"D1 status not written: {err}")
+            log(f"D1 status not written: {err}")
+
+    def parked_jobs(self, lane: str | None = None) -> list[Job]:
+        return [j for j in self.saved_jobs() if j.result == "parked" and (lane is None or j.lane == lane)]
+
+    def resume(self, job: Job, lane: Any) -> Job:
+        """Verify a parked job in its lane and finish it; never raises."""
+        log = self._say(job.submission_id)
+        log(f"resume · {lane.name} lane · parked {job.parked_at}")
+
+        def work() -> None:
+            if not claim_parked(self.d1, job.submission_id, self.now()):
+                job.result = "elsewhere"
+                job.notes.append("its D1 row was no longer parked when the lane came to it: left alone")
+                return
+            record_dir = self.s.runs_dir / "watch" / job.submission_id / "software"
+            candidate = self.db.candidate(job.repo_id) if job.repo_id else None
+            extraction = self.db.last_extraction(job.repo_id, MODEL) if job.repo_id else None
+            path = record_dir / f"{job.slug}.json"
+            if candidate is None or extraction is None or not path.exists():
+                raise Retry("the parked record or its extraction is gone")
+            record = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8"))
+            ex = ExtractionResult.model_validate(extraction["result"])
+            job.status = "verifying"
+            self._verify_and_land(job, self._task(job, candidate, ex, record), record_dir, lane.verify, log,
+                                  lane=lane.name)
+
+        self._guard(job, log, work, parked=True)
         return job
+
+    def _task(self, job: Job, candidate: dict[str, Any], ex: ExtractionResult, record: SoftwareRecord) -> VerifyTask:
+        return VerifyTask(slug=job.slug, repo_url=record.repo.url, readme=candidate["readme"], extraction=ex,
+                          category=record.category, guides=candidate.get("docs") or [])
+
+    def _verify_and_land(self, job: Job, task: VerifyTask, record_dir: Path, verify: Callable[..., Any],
+                         log: Callable[[str], None], *, lane: str = "linux") -> None:
+        with self._stage(job, "verify"):
+            outcome = verify(task, record_dir, log)
+        job.lane = lane
+        job.run_id, job.level = outcome.run_id, outcome.run.level
+        job.spent("model", outcome.cost_usd)
+        job.spent("box", getattr(outcome, "box_usd", 0.0))
+        stop = stop_reason(outcome)
+        if stop in NEVER_RAN:
+            if lane == "linux":
+                raise Retry(f"verification never got going ({stop})")
+            job.lane_tries += 1
+            job.notes.append(f"the {lane} box never got going ({stop})")
+            if job.lane_tries < MAX_ATTEMPTS:
+                raise _LaneDown(f"the {lane} box never got going ({stop})")
+            self._tail(job, record_dir, f"pickfit's {lane} sandbox did not start for it ({stop}, "
+                                        f"{job.lane_tries} tries)", log)
+            return
+        run = outcome.run
+        self._tail(job, record_dir, f"the sandbox run did not pass ({run.unverified_reason or run.level})", log)
+
+    def _tail(self, job: Job, record_dir: Path, not_passed: str | None, log: Callable[[str], None]) -> None:
+        """Scores, the vulnerability check, the visual check, then the record lands."""
+        with self._stage(job, "score"):
+            error = self.steps.score(record_dir, job.slug)
+        if error:
+            raise Retry(f"scores: {error}")
+        self._security(job, record_dir, log)
+        self._visual(job, record_dir, log)
+        self._land(job, record_dir, not_passed, log)
 
     def _fail(self, job: Job, what: str, log: Callable[[str], None]) -> None:
         job.failures += 1
         job.notes.append(what)
         log(f"problem: {what}")
         if job.failures >= MAX_ATTEMPTS and not job.landed:  # a landed record is there: keep reporting it
+            what = "site" if job.lane == "web" else "repository"
             self._finish(job, "rejected", "rejected",
-                         f"pickfit could not finish reading this repository after {job.failures} tries.", log)
+                         f"pickfit could not finish reading this {what} after {job.failures} tries.", log)
         else:
             self._finish(job, "retry", "queued", "A temporary problem; pickfit will try again.", log)
 
@@ -535,8 +738,84 @@ class Watcher:
             job.notes.append(f"D1 status not written: {err}")
             log(f"D1 status not written: {err}")
 
+    def _sites(self) -> bool:
+        return "web" in self.s.lanes and self.steps.site is not None
+
+    def _run_site(self, job: Job, log: Callable[[str], None]) -> None:
+        """A website submission (the web lane, pickfit.web_intake): read the site into a web_app record, visit it
+        once, land it. Costs are counted as they are paid (`spend`), so a refusal after a paid step loses none."""
+        from pickfit import web_intake
+
+        job.lane = "web"
+        job.full_name = job.full_name or job.url
+        rid = web_intake.site_record_id(job.url)
+        if rid:
+            with self._state_lock:
+                taking = self._repos_in_flight.get(rid)
+                if taking and taking != job.url:
+                    raise Rejected(f"Same site as another submission pickfit is reading now ({taking}).")
+                self._repos_in_flight[rid] = job.url
+            job.repo_id = rid
+        run_id = f"watch-{job.submission_id.removeprefix('sub_')[:12]}-{self.now().strftime('%Y%m%d-%H%M%S')}"
+        record_dir = self.s.runs_dir / "watch" / job.submission_id / "software"
+
+        def claim_slug(slug: str) -> bool:
+            with self._state_lock:
+                if slug in self._slugs_in_flight or (self.s.data_dir / f"{slug}.json").exists():
+                    return False
+                self._slugs_in_flight.add(slug)
+            job.slug = slug
+            return True
+
+        with self._state_lock:
+            taken = {p.stem for p in self.s.data_dir.glob("*.json")} | self._slugs_in_flight
+        try:
+            with self._stage(job, "read"):
+                read = web_intake.read_site(job.url, submission_id=job.submission_id, run_id=run_id,
+                                            record_dir=record_dir, data_dir=self.s.data_dir, db_path=self.s.db_path,
+                                            taken_slugs=taken, steps=self.steps.site, log=log,
+                                            claim_slug=claim_slug, spend=job.spent)
+        except web_intake.AlreadyListed as err:
+            job.slug = err.slug
+            if err.status != "listed":
+                raise Rejected("Reviewed before and not listed.") from None
+            job.result = "listed" if is_passed(err.level or "") else "listed_unverified"
+            self._status(job, job.result, reason="Already in pickfit's directory.")
+            raise _AlreadyListed() from None
+        except web_intake.Refused as err:
+            raise Rejected(str(err)) from None
+        except web_intake.TryLater as err:
+            raise Retry(str(err)) from None
+        job.notes += read.notes
+        if read.record_id != job.repo_id:  # the site redirected to another address
+            with self._state_lock:
+                taking = self._repos_in_flight.get(read.record_id)
+                if taking and taking != job.url:
+                    raise Rejected(f"Same site as another submission pickfit is reading now ({taking}).")
+                if job.repo_id and self._repos_in_flight.get(job.repo_id) == job.url:
+                    self._repos_in_flight.pop(job.repo_id)
+                self._repos_in_flight[read.record_id] = job.url
+            job.repo_id = read.record_id
+        job.slug = read.slug
+        log(f"record {job.slug} [web_app] {read.url}")
+        self._status(job, "verifying")
+        try:
+            with self._stage(job, "verify"):
+                visit = web_intake.verify_site_record(record_dir, read.slug, steps=self.steps.site, log=log,
+                                                      spend=job.spent)
+        except web_intake.Refused as err:
+            raise Rejected(str(err)) from None
+        except web_intake.TryLater as err:
+            raise Retry(str(err)) from None
+        job.level, job.run_id = visit.level, visit.run_id
+        if visit.detail:
+            job.notes.append(f"visit: {visit.detail}"[:500])
+        self._tail(job, record_dir, f"the site visit did not pass ({visit.why})" if visit.why else None, log)
+
     def _run(self, job: Job, log: Callable[[str], None]) -> None:
         url = normalize_repo_url(job.url)
+        if url is None and self._sites() and not re.match(r"(?:https?://)?(?:www\.)?github\.com/", job.url, re.I):
+            return self._run_site(job, log)
         if url is None:
             raise Rejected("pickfit accepts only GitHub repository URLs, like https://github.com/owner/repo.")
         owner, name = url.removeprefix("https://github.com/").split("/")
@@ -599,31 +878,17 @@ class Watcher:
         self._status(job, "verifying")
 
         ex = ExtractionResult.model_validate(extraction["result"])
-        why = not_in_box(ex, display=self.steps.display)
-        not_passed = f"pickfit's Linux sandbox cannot run it ({why})" if why else None
-        if why:
+        lane, why = self._lane_for(ex)
+        if lane is None:
+            others = [n for n in ("windows", "macos") if n in self.lanes]
+            where = "pickfit's Linux sandbox" if not others else f"pickfit's Linux, {' and '.join(others)} sandboxes"
             job.notes.append(f"not verified: {why}")
             log(f"no sandbox run: {why}")
+            self._tail(job, record_dir, f"{where} cannot run it ({why})", log)
+        elif lane == "linux":
+            self._verify_and_land(job, self._task(job, candidate, ex, record), record_dir, self.steps.verify, log)
         else:
-            task = VerifyTask(slug=job.slug, repo_url=record.repo.url, readme=candidate["readme"], extraction=ex,
-                              category=record.category, guides=candidate.get("docs") or [])
-            with self._stage(job, "verify"):
-                outcome = self.steps.verify(task, record_dir, log)
-            job.run_id, job.level = outcome.run_id, outcome.run.level
-            job.spent("model",outcome.cost_usd)
-            job.spent("box", getattr(outcome, "box_usd", 0.0))
-            stop = stop_reason(outcome)
-            if stop in NEVER_RAN:
-                raise Retry(f"verification never got going ({stop})")
-            run = outcome.run
-            not_passed = f"the sandbox run did not pass ({run.unverified_reason or run.level})"
-        with self._stage(job, "score"):
-            error = self.steps.score(record_dir, job.slug)
-        if error:
-            raise Retry(f"scores: {error}")
-        self._security(job, record_dir, log)
-        self._visual(job, record_dir, log)
-        self._land(job, record_dir, not_passed, log)
+            self._park(job, lane, log)
 
     def _security(self, job: Job, record_dir: Path, log: Callable[[str], None]) -> None:
         """The known-vulnerability check, as `pickfit security --write` does it: a finding caps quality, a malicious
@@ -755,8 +1020,7 @@ class Watcher:
         if fixture_entries(built.index):
             raise Rejected("Test fixtures are never listed.")
         record = SoftwareRecord.model_validate_json((record_dir / f"{job.slug}.json").read_text(encoding="utf-8"))
-        passed = is_passed(record.verification.level) and any(
-            guide.basis == "replayed" for _, guide in record.install.guides())
+        passed = record_passed(record)
         target = self.s.data_dir / f"{job.slug}.json"
         with self._git_lock, self._stage(job, "commit"):
             for path in self.s.data_dir.glob("*.json"):  # one record per repository, or the index refuses them all
@@ -765,14 +1029,18 @@ class Watcher:
                         raise Rejected(f"Already in pickfit's directory as {path.stem}.")
                 except (OSError, ValueError):
                     continue
+            if target.exists():  # another record took the slug meanwhile: never overwrite it
+                raise Retry(f"{target.name} appeared in {self.s.data_dir.name} meanwhile")
             shutil.copyfile(record_dir / f"{job.slug}.json", target)
             try:
                 if self.s.commit:
                     took = (self.now() - _parse_time(job.submitted_at)).total_seconds()
                     git(self.s.data_dir, "add", "--", target.name)
                     git(self.s.data_dir, "commit", "-q", "-m",
+                        # No submission id: it is the submitter's key to their status page, and the repository
+                        # is public.
                         f"Add {job.slug} from a submission (pickfit watch)\n\n{job.url}\n"
-                        f"Submission {job.submission_id}; verification {record.verification.level}"
+                        f"Verification {record.verification.level}"
                         f"{', replayed' if passed else ''}; {took:.0f}s after submission.", "--", target.name)
                     job.commit = git(self.s.data_dir, "rev-parse", "--short", "HEAD").strip()
             except Exception:  # nothing half-done stays behind: the next try starts from a clean data/software
@@ -790,8 +1058,7 @@ class Watcher:
         """Write the D1 status a landed record has: ready (or listed once deployed), or listed_unverified."""
         record = SoftwareRecord.model_validate_json((self.s.data_dir / f"{job.slug}.json").read_text(encoding="utf-8"))
         job.level = record.verification.level
-        passed = is_passed(record.verification.level) and any(
-            guide.basis == "replayed" for _, guide in record.install.guides())
+        passed = record_passed(record)
         if not passed:
             job.result = "listed_unverified"
             why = not_passed or f"the sandbox run did not pass ({record.verification.unverified_reason or job.level})"
@@ -816,6 +1083,8 @@ class Watcher:
     def _publish(self, jobs: list[Job], log: Callable[[str], None]) -> None:
         from pickfit.publish import publish
 
+        if self.s.publish_mode == "push":
+            return self._push(jobs, log)
         deploy = self._publish_fn or publish
         with self._git_lock:
             began = time.monotonic()
@@ -832,6 +1101,35 @@ class Watcher:
             job.stages["publish"] = took
         self._mark_listed(jobs)
         self._mark_deployed()  # earlier ready records went out with this deploy too
+
+    def _push(self, jobs: list[Job], log: Callable[[str], None]) -> None:
+        """Push the record commits; the branch's CI deploys them, and _mark_deployed lists them once the live
+        Worker serves this data. New program code from the branch asks the watcher to restart (restart_wanted)."""
+        from pickfit.publish import push_publish
+
+        push = self._push_fn or push_publish
+        with self._git_lock:
+            began = time.monotonic()
+            pushed = push(self.s.data_dir, self.s.worker_dir, out=log)
+            took = round(time.monotonic() - began, 1)
+        if pushed.code != 0:
+            for job in jobs:
+                job.notes.append("push failed; the record stays committed and ready")
+            return
+        for job in jobs:
+            job.stages["publish"] = took
+            job.notes.append(f"pushed {(pushed.head or '')[:10]}; CI deploys it")
+        if pushed.code_changed:
+            self.restart_wanted = True
+            log("the branch brought new program code: no new work starts, and watch stops once what runs is done")
+
+    def _check_code(self) -> None:
+        self._checked_code = time.monotonic()
+        with self._git_lock:
+            changed = self._upstream_code(self.s.data_dir)
+        if changed:
+            self.restart_wanted = True
+            self.log(f"[watch] origin/main has new program code ({', '.join(changed[:5])}): restarting for it")
 
     def _mark_listed(self, jobs: list[Job]) -> None:
         for job in jobs:
@@ -876,10 +1174,11 @@ class Watcher:
             for sid in [s for s, f in self._running.items() if f.done()]:
                 self._running.pop(sid)
             running = set(self._running)
-        free = self.s.concurrency - len(running)
+            lane_running = set(self._lane_running)
+        free = 0 if self.restart_wanted else self.s.concurrency - len(running)
         try:
-            back = requeue_stale(self.d1, now, running)
-            todo = queued(self.d1, free) if free > 0 else []
+            back = requeue_stale(self.d1, now, running | lane_running)
+            todo = queued(self.d1, free, sites=self._sites()) if free > 0 else []
         except D1Error as err:
             self.log(f"[watch] D1 unreachable: {err}")
             return []
@@ -903,7 +1202,87 @@ class Watcher:
             started.append(sub["id"])
         if self.reverifier is not None and self._start_reverify(pool):
             started.append("reverify")
+        if not self.restart_wanted:
+            started += [f"lane:{name}" for name in self._tick_lanes()]
         return started
+
+    def _tick_lanes(self) -> list[str]:
+        """Start a batch in each lane that is due (or holds a machine) and has parked jobs; let idle lanes go."""
+        if not self.lanes:
+            return []
+        now = self.now()
+        with self._state_lock:
+            for name in [n for n, f in self._lane_batches.items() if f.done()]:
+                finished = self._lane_batches.pop(name)
+                if finished.exception() is not None:
+                    self.log(f"[{name}] batch failed: {type(finished.exception()).__name__}: {finished.exception()}")
+            busy = set(self._lane_batches)
+            running = set(self._lane_running)
+        parked: dict[str, list[datetime]] = {}
+        for job in self.parked_jobs():
+            if job.lane in self.lanes and job.submission_id not in running:
+                parked.setdefault(job.lane, []).append(_parse_time(job.parked_at or job.started_at))
+        free: dict[str, Any] = {}
+        for name, lane in self.lanes.items():
+            if name in busy:
+                continue
+            if name not in parked:
+                try:
+                    lane.idle(self._say(name))
+                except Exception as err:  # noqa: BLE001 - a provider being down must not stop the watcher
+                    self.log(f"[{name}] could not let its machines go: {type(err).__name__}: {str(err)[:200]}")
+                continue
+            if self._lane_hold.get(name) and now < self._lane_hold[name]:
+                continue
+            free[name] = lane
+        started = []
+        for name, why in due_lanes(parked, free, now).items():
+            self.log(f"[{name}] batch of {len(parked[name])}: {why}")
+            with self._state_lock:
+                self._lane_batches[name] = self._batch_pool.submit(self._lane_batch, name)
+            started.append(name)
+        return started
+
+    def _lane_batch(self, name: str) -> list[Job]:
+        """Make the lane ready (a Mac may be rented and set up first), then run its parked jobs, newly parked
+        ones too, until none is left, the money says stop or the lane goes down."""
+        lane, log = self.lanes[name], self._say(name)
+        try:
+            why = lane.available(log)
+        except Exception as err:  # noqa: BLE001 - a provider or host problem must not stop the watcher
+            why = f"{type(err).__name__}: {str(err)[:300]}"
+        if why:
+            log(f"not ready: {why}; next try in {LANE_HOLD}")
+            self._lane_hold[name] = self.now() + LANE_HOLD
+            return []
+        done: list[Job] = []
+        while True:
+            with self._state_lock:
+                running = set(self._lane_running)
+            todo = [j for j in self.parked_jobs(name) if j.submission_id not in running]
+            if not todo or (self._lane_hold.get(name) and self.now() < self._lane_hold[name]):
+                return done
+            futures = []
+            for job in sorted(todo, key=lambda j: j.parked_at or ""):
+                with self._state_lock:
+                    busy = len(self._running) + len(self._lane_running)
+                stop = self._money_blocked(busy)
+                if stop:
+                    log(f"not starting {job.submission_id}: {stop}")
+                    break
+                with self._state_lock:
+                    self._lane_running.add(job.submission_id)
+                futures.append(self._lane_pools[name].submit(self._lane_job, job, lane))
+            if not futures:
+                return done
+            done += [f.result() for f in futures]
+
+    def _lane_job(self, job: Job, lane: Any) -> Job:
+        try:
+            return self.resume(job, lane)
+        finally:
+            with self._state_lock:
+                self._lane_running.discard(job.submission_id)
 
     def _start_reverify(self, pool: ThreadPoolExecutor) -> bool:
         """One reported failure at a time, in a free slot, when the budget allows."""
@@ -953,10 +1332,23 @@ class Watcher:
                     with self._state_lock:
                         futures = list(self._running.values())
                         reverify = self._reverify
+                        batches = list(self._lane_batches.values())
                     done += [f.result() for f in futures]
                     if reverify is not None:
                         reverify.result()
-                    if not [sid for sid in started if sid != "reverify"]:
-                        return done  # a report that stays pending (busy, retry) waits for the next run
+                    for batch in batches:
+                        done += batch.result()
+                    # A report that stays pending (busy, retry) waits for the next run; so does a lane's leftover.
+                    if not [sid for sid in started if sid != "reverify" and not sid.startswith("lane:")]:
+                        return done
                     continue
+                with self._state_lock:
+                    busy = [f for f in [*self._running.values(), *self._lane_batches.values()] if not f.done()]
+                if not busy and not self.restart_wanted and self.s.update_check_s > 0 and \
+                        time.monotonic() - self._checked_code >= self.s.update_check_s:
+                    self._check_code()
+                if self.restart_wanted:
+                    if not busy:
+                        self.log("[watch] stopping so the new code runs (exit 75 asks the service to restart)")
+                        return done
                 sleep(max(0.0, self.s.interval_s - (time.monotonic() - began)))

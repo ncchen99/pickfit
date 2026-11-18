@@ -1,4 +1,4 @@
-"""A small RFB (VNC) client: screenshots and input for a tart VM's display, from the host.
+"""A small RFB (VNC) client: screenshots and input for a tart VM's display, and a Windows box's, from the host.
 
 `tart run --vnc-experimental` serves the VM's framebuffer with Virtualization.framework's own VNC server on
 the host (measured 2026-11-01: RFB 3.8, VNC authentication only, a random password printed once in the run
@@ -7,7 +7,16 @@ and an app in the guest cannot hand pickfit a different picture than the one on 
 cannot reach the port either: softnet blocks the host (tart_box.HOST_BLOCK).
 
 Written from RFC 6143 (RFB 3.8) and FIPS 46-3 (DES, which VNC authentication uses); no third-party code.
-Only the Raw encoding is asked for: the server is on this Mac, so a 1280x800 frame (4 MB) costs nothing.
+Only the Raw encoding is asked for by default: the server is on this Mac, so a 1280x800 frame (4 MB) costs
+nothing. A Windows box's server (TightVNC) is across an ssh tunnel to another country, where the same frame
+took 1.5 to 3 s; with compress=True the client asks for ZRLE (RFC 6143 7.7.6: 64x64 tiles, solid, palette and
+run-length, in one zlib stream per connection) first. TightVNC does not offer the plain Zlib encoding (measured
+2026-11-17: asked for it alone, it answered in Raw).
+
+A tart VM on a remote Mac (tart_host.SshHost) is reached through an ssh forward too. Measured 2026-11-18, Taipei to a
+Mac mini in Paris: connecting takes 1.3 s and a Raw frame 9 to 12 s more (4 MB at about 400 KB/s); Apple's server
+does answer in ZRLE, but a photo wallpaper keeps 2.4 MB of it and the pure-Python decoder adds its own time (6.6 to
+14 s a frame), so Raw stays the default there. Two frames at once (a recording and a screenshot) share the link.
 """
 
 from __future__ import annotations
@@ -16,11 +25,12 @@ import io
 import socket
 import struct
 import time
+import zlib as _zlib
 from typing import Any
 
 PROTOCOL = b"RFB 003.008\n"
 SEC_NONE, SEC_VNC = 1, 2
-ENC_RAW, ENC_DESKTOP_SIZE = 0, -223
+ENC_RAW, ENC_ZRLE, ENC_DESKTOP_SIZE = 0, 16, -223
 BUTTON_LEFT, BUTTON_RIGHT = 1, 4
 MAX_SIDE = 8192  # a frame bigger than this is not a display pickfit configured
 
@@ -34,7 +44,7 @@ KEYSYMS: dict[str, int] = {
     # Punctuation by X keysym name (ctrl+slash), as the operating loop names keys.
     "slash": ord("/"), "backslash": ord("\\"), "comma": ord(","), "period": ord("."), "minus": ord("-"),
     "equal": ord("="), "semicolon": ord(";"), "apostrophe": ord("'"), "grave": ord("`"),
-    "bracketleft": ord("["), "bracketright": ord("]"),
+    "bracketleft": ord("["), "bracketright": ord("]"), "plus": ord("+"), "menu": 0xFF67,
 }
 # Virtualization.framework's server maps Alt to the Mac's Command key and Meta to Option; Super and Hyper do
 # nothing (measured 2026-11-01 with modifier+Backspace in TextEdit). Names are the Mac's keys.
@@ -43,7 +53,16 @@ MODIFIERS: dict[str, int] = {
     "shift": 0xFFE1, "ctrl": 0xFFE3, "control": 0xFFE3, "alt": OPTION, "option": OPTION, "opt": OPTION,
     "cmd": COMMAND, "command": COMMAND, "meta": COMMAND, "super": COMMAND, "win": COMMAND,
 }
+# A Windows server (TightVNC) passes X keysyms on as Windows' own keys: Alt is Alt, Super is the Windows key. The
+# Mac's names mean the nearest key there (cmd and command: Ctrl, which does on Windows what Command does on a Mac).
+WINDOWS_MODIFIERS: dict[str, int] = {
+    "shift": 0xFFE1, "ctrl": 0xFFE3, "control": 0xFFE3, "alt": 0xFFE9, "option": 0xFFE9, "opt": 0xFFE9,
+    "win": 0xFFEB, "super": 0xFFEB, "meta": 0xFFEB, "cmd": 0xFFE3, "command": 0xFFE3,
+}
 SHIFTED = set('~!@#$%^&*()_+{}|:"<>?') | {chr(c) for c in range(ord("A"), ord("Z") + 1)}
+# The fixed DES key VNC servers keep their password under (RealVNC's and TightVNC's d3des key, bit-reversed for
+# standard DES as vnc_response reverses the password).
+STORED_KEY = bytes.fromhex("e84ad660c4721ae0")
 
 
 class VncError(Exception):
@@ -123,6 +142,11 @@ def des_encrypt(key: bytes, block: bytes) -> bytes:
     return _permute((right << 32) | left, _FP, 64).to_bytes(8, "big")
 
 
+def vnc_stored_password(password: str) -> bytes:
+    """The 8 bytes a VNC server stores for a password (TightVNC's HKLM\\SOFTWARE\\TightVNC\\Server Password)."""
+    return des_encrypt(STORED_KEY, password.encode("latin-1", "replace")[:8].ljust(8, b"\0"))
+
+
 def vnc_response(password: str, challenge: bytes) -> bytes:
     """VNC authentication: the challenge DES-encrypted with the password's first 8 bytes, each bit-reversed."""
     key = bytes(int(f"{b:08b}"[::-1], 2) for b in password.encode("latin-1", "replace")[:8].ljust(8, b"\0"))
@@ -146,13 +170,22 @@ def parse_url(url: str) -> tuple[str, int, str]:
 class VncClient:
     """One RFB connection: full-frame screenshots, pointer clicks and key events."""
 
-    def __init__(self, host: str, port: int, password: str, *, timeout_s: float = 20) -> None:
+    def __init__(self, host: str, port: int, password: str, *, timeout_s: float = 20, compress: bool = False,
+                 modifiers: dict[str, int] | None = None) -> None:
         self.host, self.port, self.password, self.timeout_s = host, port, password, timeout_s
+        self.compress = compress
+        self.modifiers = modifiers or MODIFIERS
+        self._inflate: Any = None
         self.sock: socket.socket | None = None
         self.width = self.height = 0
         self.name = ""
         self.frame = bytearray()
         self.pointer = (0, 0)
+        # Wall-clock times (time.time()) for a recording made from these frames (record.VncRecorder): when the
+        # server's last framebuffer update began to arrive (the screen as of then, or a little before; across a slow
+        # link the rest of a 4 MB frame takes seconds more), and when pickfit last moved the pointer.
+        self.answered_at = 0.0
+        self.pointer_at = 0.0
 
     @classmethod
     def from_url(cls, url: str, **kwargs: Any) -> VncClient:
@@ -217,7 +250,9 @@ class VncClient:
         self.name = self._recv(struct.unpack(">I", self._recv(4))[0]).decode(errors="replace")
         # 32 bpp, depth 24, little endian, true colour, 8 bits per channel: bytes arrive as B, G, R, X.
         self._send(struct.pack(">B3xBBBBHHHBBB3x", 0, 32, 24, 0, 1, 255, 255, 255, 16, 8, 0))
-        self._send(struct.pack(">BxHii", 2, 2, ENC_RAW, ENC_DESKTOP_SIZE))
+        encodings = (ENC_ZRLE, ENC_RAW, ENC_DESKTOP_SIZE) if self.compress else (ENC_RAW, ENC_DESKTOP_SIZE)
+        self._send(struct.pack(f">BxH{len(encodings)}i", 2, len(encodings), *encodings))
+        self._inflate = _zlib.decompressobj()  # the server's zlib stream is one per connection
         self._check_size(self.width, self.height)
         self.frame = bytearray(self.width * self.height * 4)
 
@@ -246,11 +281,14 @@ class VncClient:
         while True:
             kind = self._recv(1)[0]
             if kind == 0:
+                self.answered_at = time.time()
                 self._recv(1)
                 for _ in range(struct.unpack(">H", self._recv(2))[0]):
                     x, y, w, h, enc = struct.unpack(">HHHHi", self._recv(12))
                     if enc == ENC_RAW:
                         self._blit(x, y, w, h, self._recv(w * h * 4))
+                    elif enc == ENC_ZRLE and self.compress:
+                        self._zrle(x, y, w, h, self._inflate.decompress(self._recv(struct.unpack(">I", self._recv(4))[0])))
                     elif enc == ENC_DESKTOP_SIZE:
                         self._check_size(w, h)
                         self.width, self.height = w, h
@@ -268,6 +306,67 @@ class VncClient:
                 self._recv(struct.unpack(">I", self._recv(4))[0])
             else:
                 raise VncError(f"unknown server message type {kind}")
+
+    def _zrle(self, x: int, y: int, w: int, h: int, data: bytes) -> None:
+        """One ZRLE rectangle, already inflated: 64x64 tiles left to right, top to bottom. A pixel is a CPIXEL of 3
+        bytes (B, G, R) in the 32-bit format pickfit asks for."""
+        at = 0
+
+        def take(n: int) -> bytes:
+            nonlocal at
+            if at + n > len(data):
+                raise VncError("a ZRLE rectangle ended early")
+            at += n
+            return data[at - n:at]
+
+        def run() -> int:
+            n = 1
+            while True:
+                b = take(1)[0]
+                n += b
+                if b != 255:
+                    return n
+
+        for ty in range(y, y + h, 64):
+            th = min(64, y + h - ty)
+            for tx in range(x, x + w, 64):
+                tw = min(64, x + w - tx)
+                kind = take(1)[0]
+                if kind == 0:
+                    raw = take(tw * th * 3)
+                    tile = bytearray(tw * th * 4)
+                    tile[0::4], tile[1::4], tile[2::4] = raw[0::3], raw[1::3], raw[2::3]
+                elif kind == 1:
+                    tile = (take(3) + b"\0") * (tw * th)
+                elif 2 <= kind <= 16:
+                    palette = [take(3) + b"\0" for _ in range(kind)]
+                    bits = 1 if kind == 2 else 2 if kind <= 4 else 4
+                    row_bytes = (tw * bits + 7) // 8
+                    out = bytearray()
+                    for _ in range(th):
+                        packed = take(row_bytes)
+                        for i in range(tw):
+                            bit = i * bits
+                            out += palette[(packed[bit // 8] >> (8 - bits - bit % 8)) & ((1 << bits) - 1)]
+                    tile = out
+                elif kind == 128:
+                    out = bytearray()
+                    while len(out) < tw * th * 4:
+                        px = take(3) + b"\0"
+                        out += px * run()
+                    tile = out
+                elif kind >= 130:
+                    palette = [take(3) + b"\0" for _ in range(kind - 128)]
+                    out = bytearray()
+                    while len(out) < tw * th * 4:
+                        index = take(1)[0]
+                        out += palette[index & 127] * (run() if index & 128 else 1)
+                    tile = out
+                else:
+                    raise VncError(f"a ZRLE tile with subencoding {kind}")
+                if len(tile) != tw * th * 4:
+                    raise VncError(f"a ZRLE tile {tw}x{th} held {len(tile)} bytes")
+                self._blit(tx, ty, tw, th, bytes(tile))
 
     def _blit(self, x: int, y: int, w: int, h: int, data: bytes) -> None:
         if x + w > self.width or y + h > self.height:
@@ -315,6 +414,8 @@ class VncClient:
     def _pointer(self, x: int, y: int, mask: int) -> None:
         x, y = max(0, min(int(x), self.width - 1)), max(0, min(int(y), self.height - 1))
         self._send(struct.pack(">BBHH", 5, mask, x, y))
+        if (x, y) != self.pointer:
+            self.pointer_at = time.time()
         self.pointer = (x, y)
 
     def move(self, x: int, y: int) -> None:
@@ -368,25 +469,47 @@ class VncClient:
 
     def key(self, name: str) -> None:
         """A key or chord by name: `Return`, `Tab`, `cmd+s`, `ctrl+shift+t`, `a`."""
-        keysym, mods = parse_key(name)
+        keysym, mods = parse_key(name, self.modifiers)
         self.tap(keysym, mods=mods)
 
+    def frame_now(self) -> tuple[int, int, bytes]:
+        """The whole display now, on this connection (made if there is none): (width, height, BGRX bytes). For a
+        server that answers every full-frame request, as TightVNC does; capture() is for Apple's."""
+        if self.sock is None:
+            self.connect()
+        try:
+            self._frame()
+        except (OSError, struct.error) as err:
+            self.close()
+            raise VncError(f"VNC screenshot failed: {err}") from err
+        return self.width, self.height, bytes(self.frame)
 
-def parse_key(name: str) -> tuple[int, tuple[int, ...]]:
+
+def png(width: int, height: int, data: bytes) -> bytes:
+    """BGRX bytes as PNG."""
+    from PIL import Image
+
+    out = io.BytesIO()
+    Image.frombytes("RGB", (width, height), data, "raw", "BGRX").save(out, "PNG")
+    return out.getvalue()
+
+
+def parse_key(name: str, modifiers: dict[str, int] | None = None) -> tuple[int, tuple[int, ...]]:
     """`cmd+shift+s` -> (keysym of s, (Meta, Shift)); raises ValueError for a name it does not know."""
+    modifiers = modifiers or MODIFIERS
     parts = [p for p in name.strip().split("+") if p] or ([name] if name else [])
     if not parts:
         raise ValueError("an empty key name")
     *mods, last = parts
     try:
-        mod_syms = tuple(MODIFIERS[m.strip().lower()] for m in mods)
+        mod_syms = tuple(modifiers[m.strip().lower()] for m in mods)
     except KeyError as err:
         raise ValueError(f"unknown modifier {err.args[0]!r} in {name!r}") from None
     low = last.strip().lower()
     if low in KEYSYMS:
         return KEYSYMS[low], mod_syms
-    if low in MODIFIERS:
-        return MODIFIERS[low], mod_syms
+    if low in modifiers:
+        return modifiers[low], mod_syms
     if len(last) == 1 and 0x20 <= ord(last) <= 0x7E:
         return ord(last.lower()) if mod_syms else ord(last), mod_syms
     raise ValueError(f"unknown key {last!r} in {name!r}")

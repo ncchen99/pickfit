@@ -1,0 +1,33 @@
+# pickfit watch as a service (deploy/watch/bootstrap.sh installs it). It takes submissions from the Worker's D1,
+# verifies them in their lanes, commits each finished record and pushes it to origin/main, whose CI deploys it.
+# Exit 75 means "new program code on main": the service pulls it and starts again.
+[Unit]
+Description=pickfit watch (submissions -> verified records -> push)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pickfit
+Group=pickfit
+WorkingDirectory=/var/lib/pickfit/pickfit
+EnvironmentFile=/etc/pickfit/watch.env
+Environment=PYTHONUNBUFFERED=1
+# Bring in main (the watcher's own record commits rebase on top), then the locked dependencies. A pull that fails
+# (the network, a conflict) does not keep the watcher down: it runs the code it has, and its push says why.
+ExecStartPre=-/bin/sh -c 'git pull -q --rebase origin main || git rebase --abort'
+ExecStartPre=/usr/local/bin/uv sync --frozen -q
+ExecStartPre=/bin/sh -c 'cd worker && npm ci --silent'
+ExecStart=/usr/local/bin/uv run --with playwright pickfit watch --publish push --update-check-hours 6 \
+    --lanes linux,windows,macos,web --mac-batch 10 --mac-max-wait-hours 24
+Restart=always
+RestartSec=30
+# A batch on a rented Mac or a verification may take a while to finish when the service stops.
+TimeoutStopSec=1800
+KillSignal=SIGINT
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

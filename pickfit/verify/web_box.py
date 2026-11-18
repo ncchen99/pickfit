@@ -1,6 +1,7 @@
-"""WebBox: a Modal microVM where Chromium visits one website through pickfit's guard (P3.12).
+"""WebBox: a microVM where Chromium visits one website through pickfit's guard (P3.12).
 
-Inside the VM (runtime "vm": a real kernel, so nftables and Chromium's own sandbox work):
+The VM comes from a provider's machine.Machine (Modal's unless another is handed in) and is driven through that
+interface only. Inside the VM (runtime "vm": a real kernel, so nftables and Chromium's own sandbox work):
 
 - uid 1000 (`web`) runs the harness (web_harness.py: browser-use and Chromium). nftables lets it reach
   loopback only, so every byte the browser sends goes through the guard; it holds no key.
@@ -29,13 +30,12 @@ from pathlib import Path
 from typing import Any
 
 from pickfit.verify.box import BoxError
-from pickfit.verify.modal_box import (
+from pickfit.verify.linux_box import NO_VSOCK, NO_VSOCK_SOURCE, _drop_to
+from pickfit.verify.machine import ONLINE_CIDRS, Machine  # noqa: F401
+from pickfit.verify.modal_box import (  # noqa: F401
     CORE_USD_PER_S,
     GIB_USD_PER_S,
-    NO_VSOCK,
-    NO_VSOCK_SOURCE,
-    ONLINE_CIDRS,
-    _drop_to,
+    ModalMachine,
     _missing_image,
     modal_client,
 )
@@ -117,51 +117,89 @@ def publish_image(client: Any, app: Any, log: Callable[[str], None] = print) -> 
     return name
 
 
+WEB_DISK_GB = 20  # an EC2 volume for the host, Chromium, the two virtual environments and a visit's files
+# Read before a visit starts on EC2 (SshMachine.preread): the browser, its libraries and fonts, the two environments.
+EC2_PREREAD = ("/usr/lib/chromium", "/usr/lib/x86_64-linux-gnu", "/usr/share/fonts", "/opt/agent", "/opt/guard",
+               "/usr/local/lib/python3.12")
+
+
+def dockerfile() -> str:
+    """The web image as a Dockerfile, for a provider that builds from one (EC2): what publish_image() tells Modal's
+    builder, line for line. python:3.12-slim is the base sandbox.Dockerfile builds on."""
+    guard = " ".join(f"'{p}'" for p in GUARD_PACKAGES)
+    return "\n".join((
+        "FROM python:3.12-slim",
+        f"RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y {' '.join(APT_PACKAGES)} "
+        "&& rm -rf /var/lib/apt/lists/*",
+        f"RUN useradd -u {WEB_UID} -m -s /usr/sbin/nologin web && useradd -u {GUARD_UID} -m -s /usr/sbin/nologin guard",
+        f"RUN python -m venv /opt/agent && /opt/agent/bin/pip install --no-cache-dir '{BROWSER_USE}'",
+        f"RUN python -m venv /opt/guard && /opt/guard/bin/pip install --no-cache-dir {guard}", ""))
+
+
+def ec2_container() -> Any:
+    """The web image for an Ec2Machine. Its tag hashes the Dockerfile too, so the AMI follows a change to either."""
+    from pickfit.verify.ec2_machine import ContainerImage
+
+    text = dockerfile()
+    digest = hashlib.sha256((image_name() + text).encode()).hexdigest()[:12]
+    return ContainerImage(f"pickfit-web:{digest}", text, WEB_DISK_GB)
+
+
+def on_ec2(**kw: Any) -> "WebBox":
+    """A WebBox on an EC2 instance instead of a Modal VM (`web_verify --runner ec2`): the same box, the same
+    image contents, another provider's machine under it."""
+    from pickfit.verify.ec2_machine import Ec2Machine
+
+    box = WebBox(**kw, machine=Ec2Machine(cores=CPUS, memory_mb=MEMORY_MB, lifetime_s=LIFETIME_S,
+                                          container=ec2_container(), role="web"))
+    box.machine.tags = {"pickfit.kind" if k == "pickfit" else f"pickfit.{k}": v for k, v in box.tags.items()}
+    box.machine.log = lambda line: box.log(line)
+    box.machine.preread = EC2_PREREAD
+    return box
+
+
 class WebBox:
     """One VM, one site, one visit."""
 
     def __init__(self, *, site: str, log: Callable[[str], None] = print, client: Any = None,
-                 tags: dict[str, str] | None = None) -> None:
+                 tags: dict[str, str] | None = None, machine: Machine | None = None) -> None:
         self.site = site
         self.log = log
-        self.client = client
         self.tags = {"pickfit": "web-verify", "site": site[:60], **(tags or {})}
-        self.sandbox: Any = None
-        self.sandbox_id: str | None = None
+        # Any provider's VM (a real kernel, for nftables and Chromium's own sandbox) started from the web image;
+        # Modal's unless one is handed in. Everything below goes through machine.Machine.
+        self.machine: Machine = machine or ModalMachine(
+            runtime="vm", cores=CPUS, memory_mb=MEMORY_MB, lifetime_s=LIFETIME_S, tags=self.tags,
+            app_name=APP_NAME, client=client, log=lambda line: self.log(line), image_name=lambda: image_name(),
+            publish=lambda client, app: publish_image(client, app, self.log))
+        self._open = False
         self.started_at: float | None = None
         self.start_s: float | None = None
+
+    @property
+    def sandbox(self) -> Any:
+        """The provider's own handle while the machine is up (Modal's sandbox), else None."""
+        return getattr(self.machine, "sandbox", None) if self._open else None
+
+    @property
+    def client(self) -> Any:
+        return getattr(self.machine, "client", None)
+
+    @property
+    def sandbox_id(self) -> str | None:
+        return self.machine.machine_id
 
     # -- lifecycle
 
     def create_kwargs(self) -> dict[str, Any]:
-        cores = CPUS
-        return {"runtime": "vm", "timeout": LIFETIME_S, "cpu": (cores, cores), "memory": (MEMORY_MB, MEMORY_MB),
-                "workdir": "/", "outbound_cidr_allowlist": ONLINE_CIDRS, "outbound_domain_allowlist": [],
-                "tags": self.tags}
+        """Modal's Sandbox.create arguments (a ModalMachine only)."""
+        return self.machine.create_kwargs()  # type: ignore[attr-defined]
 
     def start(self, guard_config: dict[str, Any]) -> None:
-        import modal
-
         began = time.monotonic()
-        self.client = self.client or modal_client()
-        app = modal.App.lookup(APP_NAME, create_if_missing=True, client=self.client)
-
-        def create() -> Any:
-            return modal.Sandbox.create("sleep", str(LIFETIME_S), app=app, client=self.client,
-                                        image=modal.Image.from_name(image_name()), **self.create_kwargs())
-
-        try:
-            try:
-                self.sandbox = create()
-            except Exception as err:
-                if not _missing_image(err):
-                    raise
-                publish_image(self.client, app, self.log)
-                self.sandbox = create()
-        except Exception as err:
-            raise BoxError(f"Modal sandbox create failed: {type(err).__name__}: {err}") from err
+        self.machine.start()
+        self._open = True
         self.started_at = time.monotonic()
-        self.sandbox_id = getattr(self.sandbox, "object_id", None)
         try:
             rules = self.root(["/usr/bin/bash", "-c", RULES], 60)
             if rules[0] != 0 or rules[1].strip() in ("", "0"):
@@ -194,25 +232,24 @@ class WebBox:
             raise BoxError(f"the guard proxy did not start: {log}")
 
     def close(self) -> None:
-        if self.sandbox is None:
+        if not self._open:
             return
         try:
-            self.sandbox.terminate()
-        except Exception as err:
-            self.log(f"modal terminate: {type(err).__name__}: {err}")
-        self.sandbox = None
+            self.machine.close()
+        except Exception as err:  # the provider's lifetime cap reaps it anyway
+            self.log(f"{self.machine.provider} close: {type(err).__name__}: {err}")
+        self._open = False
 
     def seconds_alive(self) -> float:
         return 0.0 if self.started_at is None else time.monotonic() - self.started_at
 
-    @staticmethod
-    def usd_per_second() -> float:
-        return CPUS * CORE_USD_PER_S + MEMORY_MB / 1024 * GIB_USD_PER_S
+    def usd_per_second(self) -> float:
+        return self.machine.usd_per_second()
 
     # -- root commands and files
 
     def root(self, argv: list[str], timeout_s: int, stdin: bytes | None = None) -> tuple[int, str, str]:
-        proc = self.sandbox.exec(*argv, timeout=timeout_s + 15, text=False)
+        proc = self.machine.spawn(argv, timeout_s + 15)
         if stdin is not None:
             proc.stdin.write(stdin)
             proc.stdin.write_eof()
@@ -229,7 +266,7 @@ class WebBox:
             raise BoxError(f"write {path} failed: {err[-300:]}")
 
     def read(self, path: str, max_bytes: int = 50_000_000) -> bytes:
-        proc = self.sandbox.exec("/usr/bin/head", "-c", str(max_bytes), path, timeout=120, text=False)
+        proc = self.machine.spawn(["/usr/bin/head", "-c", str(max_bytes), path], 120)
         data = b"".join(c if isinstance(c, bytes) else str(c).encode() for c in proc.stdout)
         if proc.wait() != 0:
             return b""
@@ -254,7 +291,7 @@ class WebBox:
         """
         argv = [*_drop_to(WEB_UID), PYTHON, NO_VSOCK, "/usr/bin/env", "-i", *AGENT_ENV, "/opt/agent/bin/python", "-u",
                 "/opt/pickfit/web_harness.py"]
-        proc = self.sandbox.exec(*argv, timeout=timeout_s, text=False, workdir="/home/web")
+        proc = self.machine.spawn(argv, timeout_s, workdir="/home/web")
         lines: queue.Queue[bytes | None] = queue.Queue()
 
         def pump_out() -> None:

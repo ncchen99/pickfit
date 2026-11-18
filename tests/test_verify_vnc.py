@@ -11,8 +11,10 @@ from collections.abc import Iterator
 import pytest
 from PIL import Image
 
-from pickfit.verify.vnc import COMMAND, MODIFIERS, OPTION, VncClient, VncError, des_encrypt, parse_key, parse_url, \
-    vnc_response
+import zlib
+
+from pickfit.verify.vnc import COMMAND, MODIFIERS, OPTION, WINDOWS_MODIFIERS, VncClient, VncError, des_encrypt, \
+    parse_key, parse_url, vnc_response, vnc_stored_password
 
 PASSWORD = "cross-net-super-network"
 CHALLENGE = bytes(range(16))
@@ -52,8 +54,9 @@ class FakeServer:
     """One RFB 3.8 client at a time: VNC auth, then frames on request; records key and pointer events."""
 
     def __init__(self, *, password: str = PASSWORD, extra_before_frame: bytes = b"\x02",
-                 encoding: int = 0) -> None:
+                 encoding: int = 0, zrle: bool = False) -> None:
         self.password, self.extra, self.encoding = password, extra_before_frame, encoding
+        self.zrle = zrle  # answer in ZRLE when the client asks for it, as TightVNC does
         self.sock = socket.socket()
         self.sock.bind(("127.0.0.1", 0))
         self.sock.listen(4)
@@ -84,6 +87,8 @@ class FakeServer:
             self.serve_one(conn)
 
     def serve_one(self, conn: socket.socket) -> None:
+        self.connections_frames = 0
+        deflate = None
         try:
             conn.sendall(b"RFB 003.008\n")
             self._recv(conn, 12)
@@ -108,6 +113,14 @@ class FakeServer:
                     self._recv(conn, 9)
                     pixels = b"".join(bytes([0, 0, 255, 0]) if i % 2 == 0 else bytes([255, 0, 0, 0])
                                       for i in range(W * H))  # BGRX: red, blue, red, blue, ...
+                    if self.zrle and 16 in self.encodings:  # one raw tile of CPIXELs, in the connection's zlib stream
+                        deflate = deflate if self.connections_frames else zlib.compressobj()
+                        self.connections_frames += 1
+                        tile = b"\x00" + b"".join(pixels[i:i + 3] for i in range(0, len(pixels), 4))
+                        data = deflate.compress(tile) + deflate.flush(zlib.Z_SYNC_FLUSH)
+                        conn.sendall(self.extra + struct.pack(">BxH", 0, 1) + struct.pack(">HHHHi", 0, 0, W, H, 16)
+                                     + struct.pack(">I", len(data)) + data)
+                        continue
                     conn.sendall(self.extra + struct.pack(">BxH", 0, 1)
                                  + struct.pack(">HHHHi", 0, 0, W, H, self.encoding) + pixels)
                 elif kind == 4:
@@ -217,3 +230,77 @@ def test_the_displays_right_click_presses_the_right_button(server: FakeServer):
     assert [e for e in server.events if e[0] == "pointer"] == [
         ("pointer", 0, 2, 1), ("pointer", BUTTON_RIGHT, 2, 1), ("pointer", 0, 2, 1)]
     display.close()
+
+
+def test_stored_password_is_the_well_known_one():
+    # What a VNC server keeps for "password" (RealVNC's and TightVNC's registry value, quoted by every decoder).
+    assert vnc_stored_password("password").hex() == "dbd83cfd727a1458"
+    assert vnc_stored_password("passwordX") == vnc_stored_password("password")  # eight characters count
+
+
+def test_windows_keys_name_windows_modifiers():
+    assert parse_key("alt+F4", WINDOWS_MODIFIERS) == (0xFFC1, (0xFFE9,))  # Alt_L, not the Mac's Option (Meta_L)
+    assert parse_key("win+r", WINDOWS_MODIFIERS) == (ord("r"), (0xFFEB,))
+    assert parse_key("cmd+s", WINDOWS_MODIFIERS) == (ord("s"), (0xFFE3,))  # the Mac's name: Ctrl here
+    assert parse_key("ctrl+plus", WINDOWS_MODIFIERS) == (ord("+"), (0xFFE3,)) and parse_key("Menu")[0] == 0xFF67
+
+
+def _zrle_client(w: int, h: int) -> VncClient:
+    client = VncClient("127.0.0.1", 1, "x", compress=True)
+    client.width, client.height, client.frame = w, h, bytearray(w * h * 4)
+    return client
+
+
+def test_zrle_tiles_of_every_kind_decode():
+    red, green, blue = b"\x00\x00\xff", b"\x00\xff\x00", b"\xff\x00\x00"  # CPIXELs: B, G, R
+    px = {red: b"\x00\x00\xff\x00", green: b"\x00\xff\x00\x00", blue: b"\xff\x00\x00\x00"}
+    cases = {
+        "raw": (b"\x00" + red + green + blue + red, [red, green, blue, red]),
+        "solid": (b"\x01" + green, [green] * 4),
+        "palette": (b"\x02" + red + blue + bytes([0b01000000, 0b10000000]), [red, blue, blue, red]),
+        "rle": (b"\x80" + red + b"\x02" + blue + b"\x00", [red, red, red, blue]),
+        "palette rle": (bytes([130]) + green + red + bytes([0x80, 0x01, 0x01, 0x00]), [green, green, red, green]),
+    }
+    for name, (data, want) in cases.items():
+        client = _zrle_client(2, 2)
+        client._zrle(0, 0, 2, 2, data)
+        assert bytes(client.frame) == b"".join(px[c] for c in want), name
+    long_run = _zrle_client(70, 1)  # two tiles across; a run longer than 255 is 255s and the rest
+    long_run.width = 70
+    long_run._zrle(0, 0, 70, 1, b"\x80" + red + bytes([63]) + b"\x80" + green + bytes([5]))
+    assert bytes(long_run.frame) == px[red] * 64 + px[green] * 6
+    with pytest.raises(VncError, match="ended early"):
+        _zrle_client(2, 2)._zrle(0, 0, 2, 2, b"\x00" + red)
+    with pytest.raises(VncError, match="subencoding 17"):
+        _zrle_client(2, 2)._zrle(0, 0, 2, 2, b"\x11")
+
+
+def test_a_compressed_connection_asks_for_zrle_and_keeps_one_zlib_stream():
+    srv = FakeServer(zrle=True)
+    client = VncClient("127.0.0.1", srv.port, PASSWORD, compress=True).connect()
+    first = client.frame_now()
+    assert srv.encodings[0] == 16 and first[:2] == (W, H)
+    assert client.frame_now() == first  # the second frame inflates in the same stream
+    assert first[2][:4] == bytes([0, 0, 255, 0]) and srv.connections == 1  # one connection, kept
+    client.close()
+    plain = VncClient("127.0.0.1", srv.port, PASSWORD).connect()
+    plain.frame_now()
+    assert 16 not in srv.encodings  # not asked for, never sent
+    plain.close()
+    srv.sock.close()
+
+
+def test_a_frame_and_a_pointer_move_carry_when_they_happened(server: FakeServer):
+    import time
+
+    client = VncClient("127.0.0.1", server.port, PASSWORD)
+    assert client.answered_at == 0.0 and client.pointer_at == 0.0
+    before = time.time()
+    client.capture()  # the server rings the bell first; the frame's answer is what is stamped
+    assert before <= client.answered_at <= time.time()
+    client.click(3, 1)  # a recording draws the pointer there only on frames due after this (record.VncRecorder)
+    moved = client.pointer_at
+    assert client.answered_at <= moved <= time.time()
+    client.click(3, 1)
+    assert client.pointer_at == moved  # the same place again is not a move
+    client.close()

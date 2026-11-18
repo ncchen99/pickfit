@@ -3,7 +3,10 @@
 A site pickfit.discover.webapps selected becomes an extraction candidate whose sources are
 its home page as fetched and, for an open-source app, the repository's description and
 README (extract.web_sources). A Show HN post is listed as a source of kind `hn`, where
-pickfit found the app; the address it links is cited to it, nothing else. Its extraction rows are keyed
+pickfit found the app; the address it links is cited to it, nothing else. A site someone submitted
+(pickfit.web_intake, source "submission") is listed the same way, as the source `submission` of kind
+`submission` with no URL, and its address is cited to it. The submission's id stays out of the record: only the
+submitter, who has it, looks their submission up by it. Its extraction rows are keyed
 by the site (`web:<host>[/path]`), never by a GitHub id, so the repository pipeline never
 mistakes them for a repository's extraction.
 
@@ -103,6 +106,11 @@ def build_web_record(site: dict[str, Any], extraction: dict[str, Any], *, slug: 
     if hn_id:  # where pickfit found the app; no field cites the post
         record_sources.append({"id": hn_id, "kind": "hn", "url": site["item_url"],
                                "fetched_at": checked_at})
+    # Someone asked pickfit to list it (pickfit.web_intake): the submission gave the address, nothing else. Its id is
+    # the submitter's key to their status page, so it is not published.
+    submission_id = "submission" if site["source"] == "submission" else None
+    if submission_id:
+        record_sources.append({"id": submission_id, "kind": "submission", "url": None, "fetched_at": checked_at})
     if repo:
         source_ids["description"] = "github_api"
         record_sources.append({"id": "github_api", "kind": "github_api",
@@ -112,8 +120,9 @@ def build_web_record(site: dict[str, Any], extraction: dict[str, Any], *, slug: 
             source_ids["readme"] = "readme"
             record_sources.append({"id": "readme", "kind": "readme", "url": readme.url, "fetched_at": checked_at})
     ev = _Evidence(sources, source_ids, extraction["model"], extraction["created_at"])
-    # The address came from the repository's homepage field, or else from the Show HN post's link.
-    link_source = "github_api" if repo and site["site_url"] == repo.get("homepage") else hn_id or "site"
+    # The address came from the repository's homepage field, or else from the Show HN post's link or the submission.
+    link_source = ("github_api" if repo and site["site_url"] == repo.get("homepage")
+                   else hn_id or submission_id or "site")
 
     def cited(name: str, value: Any, quote: str | None) -> Any:
         if value is None or value == [] or quote is None:

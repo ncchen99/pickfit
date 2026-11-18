@@ -183,8 +183,8 @@ def read_file(box: Any, path: str) -> bytes:
     size, digest = int(out.split()[0]), out.split()[1]
     data = b""
     while len(data) < size:
-        proc = box.sandbox.exec("/usr/bin/bash", "-c", f"/usr/bin/tail -c +{len(data) + 1} {path} | "
-                                f"/usr/bin/head -c {PART_BYTES}", timeout=180, text=False)
+        proc = box.machine.spawn(["/usr/bin/bash", "-c", f"/usr/bin/tail -c +{len(data) + 1} {path} | "
+                                  f"/usr/bin/head -c {PART_BYTES}"], 180)
         part = b"".join(c if isinstance(c, bytes) else str(c).encode() for c in proc.stdout)
         proc.wait()
         if not part:
