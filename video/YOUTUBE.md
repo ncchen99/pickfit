@@ -4,7 +4,7 @@
 
 - 連結：https://www.youtube.com/watch?v=Ec66x0b5u7Y （不公開清單，有連結的人都能看）
 - 影片：`video/out/pickfit-demo.mp4`（2:52，1920×1080，30 fps），由 11/5 的剪輯改成，做法見 [script.md](script.md) 第 9 節。
-- 縮圖：`worker/public/assets/og/pickfit-en.png` 縮到 1280 寬，上下補紙色到 1280×720。
+- 縮圖：成片 0:22.6 那一格（Fitz 落在書桌上、面向鏡頭），1280×720。用 `ffmpeg -ss 22.6 -i out/pickfit-demo.mp4 -frames:v 1 -vf scale=1280:720 out/thumbnail-frame.jpg` 取出。
 - Product Hunt 草稿的 Media 影片連結已換成這支。11/5 那支（Rjuf3dHW0SE）留在頻道上，沒有改動。
 
 ### 標題
