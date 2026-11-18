@@ -51,7 +51,18 @@
    uv run python deploy/watch/send_secrets.py root@機器的IP
    ```
 
-   腳本從這台 Mac 已有的地方拿 Anthropic key（環境變數或 repo 的 `.env`）、Modal token（`~/.modal.toml`），問你要 Cloudflare 的 D1 token 和 GitHub 的 fine-grained token（只給 ncchen99/pickfit 的 Contents 讀寫），AWS key 和 Scaleway key 可以跳過。值只經 SSH 的 stdin 送過去，不會印在畫面、不會出現在指令列，也不會寫成本機檔案。腳本也會把 `runs/watch/jobs/`（每個送出做到哪）和 `runs/web/visits.jsonl`（造訪過的網站，同一個網站只造訪一次）搬過去。先跑一次 `--dry-run` 可以看找到哪些名稱、會執行什麼，不顯示任何值。
+   腳本從這台 Mac 已有的地方拿 Anthropic key（環境變數或 repo 的 `.env`）、Modal token（`~/.modal.toml`），其他的會問你。值只經 SSH 的 stdin 送過去，不會印在畫面、不會出現在指令列，也不會寫成本機檔案。腳本也會把 `runs/watch/jobs/`（每個送出做到哪）和 `runs/web/visits.jsonl`（造訪過的網站，同一個網站只造訪一次）搬過去，你答 y 的話再加上 `~/.pickfit/mac-hosts` 的 Mac 主機和它們的 SSH 金鑰。先跑一次 `--dry-run` 可以看找到哪些名稱、會執行什麼，不顯示任何值。
+
+   watch 用的金鑰都是給它自己的，各自只開必要的權限（11/18 建立）：
+
+   | 金鑰 | 範圍 | 到期 |
+   |---|---|---|
+   | Cloudflare user token `pickfit watch (D1 edit, from 51.15.56.181)` | pickfit 帳號的 D1 Edit，只接受機器的 IP | 不過期 |
+   | GitHub fine-grained token `pickfit watch (51.15.56.181)` | ncchen99/pickfit 的 Contents 讀寫 | 2027-11-18 |
+   | AWS IAM 使用者 `pickfit-watch` 的存取金鑰 | 內嵌政策 [aws-watch-policy.json](aws-watch-policy.json)：只在 ap-east-2，只建、只動帶 `pickfit=verify` 標籤的 EC2 資源 | 不過期 |
+   | Scaleway IAM 應用程式 `pickfit-watch` 的 API key | Pickfit 專案的 AppleSiliconFullAccess | 2027-11-18 |
+
+   換機器時，Cloudflare token 的 IP 限制要跟著改。
 
    main 如果設了分支保護、不讓直接推，push 會失敗，紀錄留在機器上等下次。
 
@@ -60,6 +71,19 @@
    ```bash
    ssh root@機器的IP journalctl -u pickfit-watch -f
    ```
+
+## 端到端測試
+
+在機器上跑，一次測完整條路，而且不會新增軟體：
+
+```bash
+ssh root@機器的IP systemctl start pickfit-e2e@default   # reject、linux、web；@all 再加 windows、macos
+ssh root@機器的IP journalctl -u pickfit-e2e@default -n 60
+```
+
+`pickfit e2e`（`pickfit/e2e.py`）照一般人的方式從官網表單和 MCP 的 `submit_software` 送出測試網址，再跟著正在跑的 watch 看它處理。測試網址在送出前先記在 `runs/e2e/canaries.json`，watch 認得它們，每一步照跑，沙盒也照跑。最後在 data/software 的複本上跑 publish 的計畫檢查，紀錄只留在 `runs/e2e/<run>/`，不寫進 data/software、不 commit、不推。D1 那一列最後是 rejected，理由寫真的送出會得到什麼，跑完刪掉，所以下次可以照樣再跑。網站的測試造訪記在那次 run 自己的 visits 檔，不影響真的送出。另外比對 pickfit.app 和 workers.dev 給的資料是不是 origin/main 的資料。
+
+報告在 `runs/e2e/<run>/report.json`。一次 default 大約 US$2 到 9，第二次起會重用初篩和抽取。
 
 ## 平常要知道的事
 
