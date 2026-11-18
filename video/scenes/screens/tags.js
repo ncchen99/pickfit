@@ -170,7 +170,7 @@ export function badgeTag(str, wPx) {
   } });
 }
 
-// Fitz's note (what pickfit or Meta's model is doing): olive voice paper, cut corner, ink.
+// Fitz's note (what pickfit or its model is doing): olive voice paper, cut corner, ink.
 // Long notes go on two lines (maxW is the widest a line may be, in px).
 export function noteTag(str, maxW = Infinity) {
   const padX = 18, cut = 12;

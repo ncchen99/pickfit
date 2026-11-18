@@ -2,6 +2,8 @@
 
 The 3-minute demo for the Meta Global AI Developer Hackathon. Script and decisions: [script.md](script.md). Upload text: [YOUTUBE.md](YOUTUBE.md).
 
+Since 18 Nov 2026 the build makes the product-intro cut (2:52): no disclosure card, no Meta or hackathon mentions, narration re-voiced with ElevenLabs' premade voice Chris. What changed and why: [script.md](script.md) section 9.
+
 ## Rebuild
 
 ```bash
@@ -27,4 +29,4 @@ python3 edit/assemble.py   # → out/pickfit-demo.mp4
 | 3D scenes | `scenes/*.html` on the kit in `kit/` (clay Fitz, paper cards, stitch) |
 | pickfit.app | `capture/web.mjs`: live site, headless Chrome, requests tagged `X-Pickfit-Reporter: demo` |
 | Claude Code, MangoDisk | `screencapture` of 念誠's Mac; cut by the sessions' own timestamps (`edit/session_times.py`) into `edit/edl.json` |
-| Narration, music, effects | ElevenLabs (念誠's voice, `eleven_v4`; `eleven_music_v2_5`; `eleven_text_to_sound_v2`) |
+| Narration, music, effects | ElevenLabs (念誠's voice, `eleven_v4`, until 5 Nov; the premade voice Chris since 18 Nov; `eleven_music_v2_5`; `eleven_text_to_sound_v2`) |
