@@ -1,0 +1,656 @@
+{
+  "schema_version": "software.v1",
+  "slug": "jaq",
+  "repo_id": "gh:318753449",
+  "name": "jaq",
+  "summary": "A clone of the jq JSON processor, usable as a command-line program and as a Rust library, with support for YAML, CBOR, TOML and XML.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "data_db",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "jq",
+    "json",
+    "query",
+    "rust"
+  ],
+  "use_cases": [
+    "process JSON data with jq filters",
+    "query YAML, CBOR, TOML and XML data",
+    "run jq programs inside Rust programs"
+  ],
+  "alternatives_to": [
+    "jq",
+    "gojq"
+  ],
+  "features": [
+    "run jq filters on JSON from the command line",
+    "process YAML, CBOR, TOML and XML",
+    "embed jq in Rust via jaq-core library",
+    "write output to a file with -o"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/01mf02/jaq",
+    "full_name": "01mf02/jaq",
+    "created_at": "2020-12-05T09:53:21Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Rust toolchain (to build from source)",
+      "rust>=1.89 (CLI)"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install jaq",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-jaq-20261119-180543-32c2",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL https://github.com/01mf02/jaq/releases/latest/download/jaq-$(uname -m)-unknown-linux-musl -o jaq && chmod +x jaq && mkdir -p ~/.local/bin && mv jaq ~/.local/bin/jaq",
+          "purpose": "Download the musl release binary as the README says, make it executable and move it to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "jaq --version",
+        "expected_signal": "jaq 3.2.0"
+      },
+      "first_task": "jaq -c '{name, up: (.tags | map(ascii_upcase))}' in.json"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install --locked jaq",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v3.2.0",
+    "published_at": "2026-11-19T09:12:28Z",
+    "url": "https://github.com/01mf02/jaq/releases/tag/v3.2.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T18:06:18.018169+08:00",
+    "runs": [
+      {
+        "id": "verify-jaq-20261119-180543-32c2",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T18:06:18.018169+08:00",
+        "tool_version": "jaq 3.2.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://github.com/01mf02/jaq/releases/latest/download/jaq-$(uname -m)-unknown-linux-musl -o jaq && chmod +x jaq && mkdir -p ~/.local/bin && mv jaq ~/.local/bin/jaq",
+            "purpose": "Download the musl release binary as the README says, make it executable and move it to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "jaq --version",
+            "expected_signal": "jaq 3.2.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "jaq 3.2.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "jaq -c '{name, up: (.tags | map(ascii_upcase))}' in.json",
+            "expected_signal": "{\"name\":\"jaq\",\"up\":[\"A\",\"B\"]}",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"name\":\"jaq\",\"up\":[\"A\",\"B\"]}",
+            "setup": [
+              {
+                "command": "cat > in.json <<'EOF'\n{\"name\":\"jaq\",\"tags\":[\"a\",\"b\"],\"n\":3}\nEOF\ncat > in.yaml <<'EOF'\nname: jaq\nitems:\n  - 1\n  - 2\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "jaq --from yaml -c '{name, total: (.items | add)}' in.yaml",
+            "expected_signal": "{\"name\":\"jaq\",\"total\":3}",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"name\":\"jaq\",\"total\":3}",
+            "setup": [
+              {
+                "command": "cat > in.json <<'EOF'\n{\"name\":\"jaq\",\"tags\":[\"a\",\"b\"],\"n\":3}\nEOF\ncat > in.yaml <<'EOF'\nname: jaq\nitems:\n  - 1\n  - 2\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "jaq -o out.json '.n * 2' in.json && cat out.json",
+            "expected_signal": "6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "6",
+            "setup": [
+              {
+                "command": "cat > in.json <<'EOF'\n{\"name\":\"jaq\",\"tags\":[\"a\",\"b\"],\"n\":3}\nEOF\ncat > in.yaml <<'EOF'\nname: jaq\nitems:\n  - 1\n  - 2\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl ... -o jaq && chmod +x jaq (saves the binary in the current directory)",
+            "actually_needed": "Moved the binary to ~/.local/bin so jaq is on PATH; the README command alone does not put it on PATH",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exited 0 and printed exactly the expected outputs: the upcased tags object, the YAML-derived total of 3, and the version 'jaq 3.2.0'.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-jaq-20261119-180543-32c2/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-jaq-20261119-180543-32c2/check-1-cmd7.judged.png",
+            "runs/verify/verify-jaq-20261119-180543-32c2/check-2-cmd5.judged.png",
+            "runs/verify/verify-jaq-20261119-180543-32c2/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.130097,
+        "features": [
+          {
+            "feature": "run jq filters on JSON from the command line",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "process YAML, CBOR, TOML and XML",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "embed jq in Rust via jaq-core library",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_toolchain",
+            "failure": null,
+            "note": "The jaq-core library needs a Rust toolchain to build a program that uses it"
+          },
+          {
+            "feature": "write output to a file with -o",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T18:06:23+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/01mf02/jaq@126f17a7f313",
+      "Cargo.lock"
+    ],
+    "packages_checked": 98,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T18:06:18+08:00",
+    "quality": {
+      "total": 79.2,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.675,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 97.5,
+      "signals": {
+        "stars": 3843,
+        "monthly_downloads": 2419,
+        "forks": 127,
+        "dependents": null,
+        "release_downloads": 423623,
+        "hn_top_score": 440,
+        "registries_count": 2
+      },
+      "age_days": 2175,
+      "packages": [
+        "crates:jaq",
+        "homebrew:jaq"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 1.98
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:06:18.065527+08:00",
+      "sources_sha": "b939e8197701941023d2087e2cd98f6df1ef408317c59bb7012a9bc0dd7bc189",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A command-line program, `jaq`, that can be used as drop-in replacement for `jq`."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "that can be used to compile and run jq programs inside of Rust programs."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "To compile jaq, you need a Rust toolchain."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "$ brew install jaq"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "`jaq -n 'def f: 1+f; f'`"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "You can download binaries for Linux, Mac, and Windows"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/01mf02/jaq",
+      "fetched_at": "2026-11-19T18:05:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/01mf02/jaq/blob/main/README.md",
+      "fetched_at": "2026-11-19T18:05:27+08:00"
+    },
+    {
+      "id": "release:v3.2.0",
+      "kind": "release",
+      "url": "https://github.com/01mf02/jaq/releases/tag/v3.2.0",
+      "fetched_at": "2026-11-19T18:05:27+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A command-line program, `jaq`, that can be used as drop-in replacement for `jq`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "A command-line program, `jaq`, that can be used as drop-in replacement for `jq`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "the JSON data processing tool",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "jaq (pronounced /ʒaːk/, like *Jacques*[^jacques]) is a clone of\nthe JSON data processing tool [`jq`](https://jqlang.github.io/jq/).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# jaq",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "You can download binaries for Linux, Mac, and Windows on the [releases page]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "To compile jaq, you need a Rust toolchain.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/1",
+      "source_id": "release:v3.2.0",
+      "quote": "bumping the MSRV (minimal supported Rust version) of jaq's CLI to 1.89",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T18:05:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T18:05:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T18:05:29+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T18:05:29+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v3.2.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T18:05:27+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "the JSON data processing tool",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "support for the data formats YAML, CBOR, TOML, and XML",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "that can be used to compile and run jq programs inside of Rust programs.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "can be used as drop-in replacement for `jq`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "allow comparing the performance of jaq, jq, and [gojq].",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "A command-line program, `jaq`, that can be used as drop-in replacement for `jq`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "support for the data formats YAML, CBOR, TOML, and XML",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "that can be used to compile and run jq programs inside of Rust programs.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "release:v3.2.0",
+      "quote": "This release adds support for the `-o` / `--output` flag, allowing to write output to a file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install jaq",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://github.com/01mf02/jaq/releases/latest/download/jaq-$(uname -m)-unknown-linux-musl -o jaq && chmod +x jaq",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install --locked jaq",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "It does not allow input data and jq filters to initiate I/O operations",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:05:39+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T18:05:27+08:00",
+  "updated_at": "2026-11-19T18:06:23+08:00"
+}
