@@ -74,13 +74,17 @@ test('capabilities and features count in relevance, a capability half as much as
   assert.ok(score(asFeature) > score(asCapability));
 });
 
-test('the rules fit counts a job its docs name as covered', () => {
-  const plain = withCapabilities({});
+test('the rules fit label reads the features but not the documented capabilities', () => {
+  const job = 'convert a TOML config to YAML';
   const documented = withCapabilities({ 'fixture-json-query': [FORMATS] });
-  const without = fitOf(entryOf(plain, 'fixture-json-query'), jobOf(plain.entries, 'convert a TOML config to YAML'));
-  const withCaps = fitOf(entryOf(documented, 'fixture-json-query'), jobOf(documented.entries, 'convert a TOML config to YAML'));
-  assert.ok(withCaps.covers.length > without.covers.length);
-  assert.ok(withCaps.covers.includes('yaml') && !without.covers.includes('yaml'));
+  const asFeature = withCapabilities({}, (entries) => {
+    entries.find((e) => e.slug === 'fixture-json-query').features = ['convert JSON to YAML or TOML'];
+  });
+  // A job only the docs name is not "covered": the label stays as cautious as without them (BM25 still shortlists it).
+  const withCaps = fitOf(entryOf(documented, 'fixture-json-query'), jobOf(documented.entries, job));
+  assert.ok(!withCaps.covers.includes('yaml') && withCaps.missing.includes('yaml'));
+  const withFeature = fitOf(entryOf(asFeature, 'fixture-json-query'), jobOf(asFeature.entries, job));
+  assert.ok(withFeature.covers.includes('yaml'));
 });
 
 test('rules only: the pick says its docs claim the job and that pickfit did not test it', async () => {

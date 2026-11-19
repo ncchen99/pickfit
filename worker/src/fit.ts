@@ -25,7 +25,7 @@
  * "natural" outweigh the job. Each pick can say which of the request's words
  * its profile covers and which it does not. No model call.
  */
-import { capabilityTexts, OSES, type Entry } from './catalog.ts';
+import { OSES, type Entry } from './catalog.ts';
 import { L, isZh } from './i18n.ts';
 import { EN_PHRASES, GENERIC_WORDS, NOT_THE_JOB_WORDS, ZH_PHRASES } from './lexicon.ts';
 import { dropNegated, relevanceIndex, terms, zhWords } from './relevance.ts';
@@ -156,8 +156,11 @@ function profileOf(entry: Entry): Profile {
   let profile = profiles.get(entry);
   if (!profile) {
     const mcpTools = OSES.flatMap((os) => entry.install[os]?.mcp?.tools ?? []);
+    // Not the documented capabilities: BM25 already brings a tool whose docs name the job onto the shortlist, and
+    // counting them here too labeled 20-30-capability tools "good" for jobs they do not do (worker/bench/capability,
+    // 11/20: good labels held up 34.8% with them, 40.0% without, recall the same).
     const texts = [entry.name, entry.slug, entry.summary, ...entry.use_cases, ...entry.tags, ...mcpTools,
-      ...(entry.features ?? []), ...capabilityTexts(entry)];
+      ...(entry.features ?? [])];
     const replaced = texts.flatMap((t) => [...t.matchAll(ALTERNATIVE)].map((m) => m[1] ?? m[2]));
     profile = {
       does: new Set(texts.flatMap(terms)),

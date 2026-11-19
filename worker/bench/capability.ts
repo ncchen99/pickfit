@@ -4,7 +4,8 @@
  * Never reads eval/.
  *
  * Per query and language, without a model:
- *   card     the target's card (what the matcher may cite) has one of the key terms
+ *   card     the target's card for this request (what the matcher may cite, capabilities_matched included)
+ *            has one of the key terms
  *   short    the target is among the MAX_CARDS cards the rules scorer sends (no keywords)
  *   short+q  the same with the BM25 scorer on the request's own English words, standing
  *            in for the model's keywords (English only)
@@ -27,12 +28,17 @@ import { harness, makeD1, SETTINGS } from '../test/helpers.ts';
 
 interface Query {
   id: string;
-  slug: string;
+  /** The tool the request is about; null for a request no catalog tool answers (a dev query of class none). */
+  slug: string | null;
   category: string;
   capability: string;
   key_terms: string[];
   en: string;
   zh: string;
+  /** Only this language (a dev query is asked in the one it was written in); default: those --lang asks for. */
+  lang?: 'en' | 'zh';
+  /** The request's own conditions (a dev query's category and OS), used instead of --category. */
+  conditions?: Conditions;
 }
 
 const args = process.argv.slice(2);
@@ -46,19 +52,21 @@ const capUsd = Number(opt('--cap') ?? 15);
 
 const catalog = loadCatalog(JSON.parse(readFileSync(indexPath, 'utf8')));
 const all: Query[] = JSON.parse(readFileSync(queriesPath, 'utf8')).queries;
-const queries = all.filter((q) => catalog.bySlug.has(q.slug)).slice(0, opt('--limit') ? Number(opt('--limit')) : undefined);
+const queries = all.filter((q) => q.slug === null || catalog.bySlug.has(q.slug)).slice(0, opt('--limit') ? Number(opt('--limit')) : undefined);
 if (queries.length < all.length) console.error(`${all.length - queries.length} queries name tools not in this index; skipped`);
 
 /** The card text the matcher reads about what the tool does. */
-function cardTerms(entry: Entry): Set<string> {
-  const card = toCard(entry);
-  const texts = [card.summary, card.why_worth_it, card.tags, card.use_cases, card.features_checked, card.features_not_checked, card.alternatives_to, card.mcp_tools]
+function cardTerms(entry: Entry, query: string[]): Set<string> {
+  // The card as the matcher gets it for this request: capabilities_matched holds the documented capabilities its words name.
+  const card = toCard(entry, undefined, undefined, query);
+  const texts = [card.summary, card.why_worth_it, card.tags, card.use_cases, card.features_checked, card.features_not_checked, card.alternatives_to, card.mcp_tools, card.capabilities_matched]
     .flat()
     .filter((v): v is string => typeof v === 'string');
   return new Set(texts.flatMap(terms));
 }
 
-const conditionsFor = (q: Query): Conditions => (flag('--category') && q.category !== 'other' ? { category: q.category as Conditions['category'] } : {});
+const conditionsFor = (q: Query): Conditions =>
+  q.conditions ?? (flag('--category') && q.category !== 'other' ? { category: q.category as Conditions['category'] } : {});
 
 const apiKey = process.env.ANTHROPIC_API_KEY;
 if (useModel && !apiKey) throw new Error('ANTHROPIC_API_KEY is not set');
@@ -71,38 +79,52 @@ const modelDeps = paid && {
   waitUntil: () => {},
 };
 
-type Row = { id: string; lang: string; slug: string; card: boolean; short: boolean; shortQ: boolean | null; rules: boolean; model: boolean | null; modelPicks?: string[]; matchedBy?: string };
+type Row = {
+  id: string;
+  lang: string;
+  slug: string | null;
+  card: boolean | null;
+  short: boolean | null;
+  shortQ: boolean | null;
+  rules: boolean | null;
+  rulesPicks: string[];
+  model: boolean | null;
+  modelPicks?: string[];
+  matchedBy?: string;
+};
 const rows: Row[] = [];
 
 async function one(q: Query, lang: string): Promise<Row> {
-  const entry = catalog.bySlug.get(q.slug)!;
+  const entry = q.slug === null ? null : catalog.bySlug.get(q.slug)!;
   const text = lang === 'en' ? q.en : q.zh;
   const cond = conditionsFor(q);
-  const have = cardTerms(entry);
-  const card = q.key_terms.some((t) => terms(t).length > 0 && terms(t).every((w) => have.has(w)));
-  const short = hardFilter(catalog.entries, cond, { terms: rulesTerms(text), scorer: 'rules' }).candidates.includes(entry);
-  const shortQ = lang === 'en' ? hardFilter(catalog.entries, cond, { terms: queryTerms(text) }).candidates.includes(entry) : null;
+  const have = entry && cardTerms(entry, rulesTerms(text));
+  const card = have && q.key_terms.length ? q.key_terms.some((t) => terms(t).length > 0 && terms(t).every((w) => have.has(w))) : null;
+  const short = entry ? hardFilter(catalog.entries, cond, { terms: rulesTerms(text), scorer: 'rules' }).candidates.includes(entry) : null;
+  const shortQ = entry && lang === 'en' ? hardFilter(catalog.entries, cond, { terms: queryTerms(text) }).candidates.includes(entry) : null;
   const h = harness(null, { modelEnabled: false });
   h.deps.catalog = catalog;
   const rulesOut: any = await findSoftware({ need: text, ...cond }, h.deps);
-  const row: Row = { id: q.id, lang, slug: q.slug, card, short, shortQ, rules: rulesOut.picks.some((p: any) => p.slug === q.slug), model: null };
+  const rulesPicks: string[] = rulesOut.picks.map((p: any) => p.slug);
+  const row: Row = { id: q.id, lang, slug: q.slug, card, short, shortQ, rules: entry ? rulesPicks.includes(q.slug!) : null, rulesPicks, model: null };
   if (modelDeps) {
     const out: any = await findSoftware({ need: text, ...cond }, modelDeps as any);
     row.modelPicks = out.picks.map((p: any) => p.slug);
-    row.model = row.modelPicks!.includes(q.slug);
+    row.model = entry ? row.modelPicks!.includes(q.slug!) : null;
     row.matchedBy = out.matched_by;
   }
   return row;
 }
 
-const jobs = queries.flatMap((q) => langs.map((lang) => [q, lang] as const));
+const jobs = queries.flatMap((q) => (q.lang ? [q.lang] : langs).map((lang) => [q, lang] as const));
 let next = 0;
 async function worker() {
   while (next < jobs.length) {
     const [q, lang] = jobs[next++];
     const row = await one(q, lang);
     rows.push(row);
-    if (show) console.log(`${row.id} ${lang} ${q.slug} card=${+row.card} short=${+row.short} short+q=${row.shortQ === null ? '-' : +row.shortQ} rules=${+row.rules}${row.model === null ? '' : ` model=${+row.model} [${row.modelPicks!.join(',')}] ${row.matchedBy}`} | ${lang === 'en' ? q.en : q.zh}`);
+    const mark = (x: boolean | null) => (x === null ? '-' : +x);
+    if (show) console.log(`${row.id} ${lang} ${q.slug ?? '(none)'} card=${mark(row.card)} short=${mark(row.short)} short+q=${mark(row.shortQ)} rules=${mark(row.rules)}${row.model === null ? '' : ` model=${+row.model} [${row.modelPicks!.join(',')}] ${row.matchedBy}`} | ${lang === 'en' ? q.en : q.zh}`);
   }
 }
 await Promise.all(Array.from({ length: useModel ? 4 : 1 }, worker));
