@@ -1022,8 +1022,8 @@ body.has-tray .showcase video{max-height:max(400px,calc(100svh - 356px - var(--t
 .player-btn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border:0;border-radius:var(--r-ctl);background:none;color:inherit;cursor:pointer;flex:none}
 .player-btn:hover{background:rgb(235 234 226/.12)}
 .player-btn .i{width:20px;height:20px}
-.player-btn .i+.i,.player-btn.is-playing .i:first-child,.player-btn.is-muted .i:first-child{display:none}
-.player-btn.is-playing .i+.i,.player-btn.is-muted .i+.i{display:inline}
+.player-btn .i+.i,.player-btn.is-playing .i:first-child,.player-btn.is-off .i:first-child{display:none}
+.player-btn.is-playing .i+.i,.player-btn.is-off .i+.i{display:inline}
 .chap-track{position:relative;flex:1;min-width:0;display:flex;gap:3px;align-items:center;height:28px;cursor:pointer;touch-action:none}
 /* the track is 4.58:1 on the bar (non-text 3:1) */
 .chap-seg{position:relative;flex:1 1 0;min-width:4px;height:6px;border-radius:2px;background:rgb(235 234 226/.5);overflow:hidden;transition:height .12s}
@@ -1033,8 +1033,10 @@ body.has-tray .showcase video{max-height:max(400px,calc(100svh - 356px - var(--t
 .player-time{font-size:.85rem;font-variant-numeric:tabular-nums;white-space:nowrap}
 .chap-head{font:600 .85rem/1.2 var(--sans);letter-spacing:0;color:var(--ink-3);margin:0 0 8px}
 .chapters{list-style:none;padding:0;margin:0;display:grid;gap:0;border-bottom:1px solid var(--rule)}
-.chapters li{border-top:1px solid var(--rule)}
-.chapters a{display:flex;gap:14px;align-items:baseline;padding:11px 10px;color:var(--ink-2);text-decoration:none}
+.chapters li{border-top:1px solid var(--rule);display:flex;align-items:baseline}
+.chapters a{display:flex;flex:1;gap:14px;align-items:baseline;padding:11px 10px;color:var(--ink-2);text-decoration:none}
+/* a chapter's moment in the unedited recording: quiet, after its title */
+.chapters a.chap-raw{flex:none;padding:11px 10px;font-size:var(--t-small);color:var(--ink-3);text-decoration:underline;text-decoration-color:var(--rule)}
 .chapters a:hover{color:var(--ink);background:color-mix(in srgb,var(--ink) 5%,transparent)}
 .chapters a[aria-current]{color:var(--ink);font-weight:600;background:color-mix(in srgb,var(--ink) 7%,transparent)}
 .chap-time{min-width:3em;color:var(--ink-3);font-weight:500;font-variant-numeric:tabular-nums}
@@ -1112,6 +1114,7 @@ body.has-tray .showcase video{max-height:max(400px,calc(100svh - 356px - var(--t
 .tested-run{padding:16px 0;border-top:1px solid var(--rule)}
 .tested-run h3{display:flex;align-items:center;gap:8px;margin:0 0 8px}
 .raw-list{list-style:none;padding:0;display:grid;gap:6px}
+.raw-list .hash{font-size:.75rem;overflow-wrap:anywhere}
 .run-head{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;align-items:center}
 .run-head h3{display:flex;align-items:center;gap:10px;font-size:1.25rem}
 .run-head .arch{font:500 .9rem/1 var(--sans);color:var(--ink-2)}

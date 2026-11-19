@@ -147,10 +147,13 @@ test('the tool page plays the clip first with its poster, and links the raw reco
   assert.match(html, new RegExp(`<source src="/video/${SLUG}/${CLIP}" type="video/mp4">`));
   assert.match(html, /Fixture Chat TUI running, recorded by pickfit on 2 Nov 2026 · 20 s/);
   assert.ok(html.indexOf('<figure class="showcase">') < html.indexOf('id="progress-title"'), 'the clip comes before everything else');
-  // Each unedited recording is a download named for what it shows (here no feature: its number), with its length.
-  assert.match(html, new RegExp(`<li><a href="/video/${SLUG}/${RAW}" download>Recording 1</a> <span class="quiet">\\(33 s\\)</span></li>`));
-  // The hashes are the run record's, not the page's.
-  assert.ok(!html.includes('b'.repeat(64)) && !html.includes('a'.repeat(64)));
+  // Each unedited recording is a download named for what it shows (here no feature: its number), with its length and,
+  // folded away in "How pickfit tested it", its sha256 (the clip's last card said it before 11/19).
+  assert.match(html, new RegExp(`<li><a href="/video/${SLUG}/${RAW}" download>Recording 1</a> <span class="quiet">\\(33 s\\)</span><br><span class="quiet">sha256</span> <code class="hash">${'b'.repeat(64)}</code></li>`));
+  assert.ok(html.indexOf('b'.repeat(64)) > html.indexOf('<details class="block tested">'));
+  assert.ok(!html.includes('a'.repeat(64)), 'the clip\'s own hash is the record\'s');
+  // A clip has no sound: no mute button anywhere; without captions, no track.
+  assert.ok(!html.includes('data-mute') && !html.includes('<track'));
   // Other tools have no video element.
   const other = await (await site(undefined)('/tool/fixture-json-query', { headers: { accept: 'text/html' } })).text();
   assert.ok(!other.includes('<video'));
@@ -185,24 +188,63 @@ test('a clip with chapters gets a seek bar cut into them and a chapter list, nam
   assert.match(html, /<video controls preload="metadata"/);
   assert.match(html, /<div class="player-bar" data-bar hidden>/);
   assert.match(html, /role="slider" tabindex="0" aria-label="Seek by chapter" aria-valuemin="0" aria-valuemax="20"/);
+  // A clip cut before 11/19 opens and closes on a card: those are not chapters; the feature runs to the end.
   const segs = [...html.matchAll(/<span class="chap-seg" data-start="([\d.]+)" data-end="([\d.]+)" data-title="([^"]+)">/g)].map((m) => m.slice(1));
-  assert.deepEqual(segs, [
-    ['0', '3.5', 'Recorded by pickfit'],
-    ['3.5', '17', 'Chat with a model on your machine'],
-    ['17', '20.25', 'Unedited recordings'],
-  ]);
+  assert.deepEqual(segs, [['3.5', '20.25', 'Chat with a model on your machine']]);
+  assert.ok(!html.includes('Recorded by pickfit</span>') && !html.includes('Unedited recordings</span>'));
   // Each chapter is a link to the clip at its time, so it works without the page script too.
   // A visible heading names the list (beside the clip on a wide screen, under it on a narrow one).
-  assert.ok(html.includes(`<h2 class="chap-head" id="chapters-title">Chapters</h2><ol class="chapters" aria-labelledby="chapters-title"><li><a href="/video/${SLUG}/${CLIP}#t=0" data-seek="0" aria-current="true"><span class="chap-time">0:00</span><span class="chap-title">Recorded by pickfit</span></a>`));
-  assert.ok(html.includes(`<a href="/video/${SLUG}/${CLIP}#t=3.5" data-seek="3.5"><span class="chap-time">0:03</span><span class="chap-title">Chat with a model on your machine</span></a>`));
+  assert.ok(html.includes(`<h2 class="chap-head" id="chapters-title">Chapters</h2><ol class="chapters" aria-labelledby="chapters-title"><li><a href="/video/${SLUG}/${CLIP}#t=3.5" data-seek="3.5" aria-current="true"><span class="chap-time">0:03</span><span class="chap-title">Chat with a model on your machine</span></a></li>`));
   assert.ok(!html.includes('<button type="button" data-seek'), 'no control that needs the script to do anything');
+  assert.ok(!html.includes('data-mute') && !html.includes('class="player-btn" data-cc'), 'no sound, and no captions on this clip');
   // The feature's "how to use it" jumps to its chapter.
   assert.match(html, new RegExp(`<a class="watch" href="/video/${SLUG}/${CLIP}#t=3.5" data-seek="3.5">.*?Watch it at 0:03</a>`));
-  // In Chinese the two cards use fixed words.
+  // In Chinese neither card is a chapter either.
   const zh = await (await site(undefined, chaptered())(`/tool/${SLUG}?lang=zh-TW`, { headers: { accept: 'text/html' } })).text();
-  assert.match(zh, /data-title="pickfit 錄製"/);
-  assert.match(zh, /data-title="原始錄影"/);
+  assert.ok(!zh.includes('data-title="pickfit 錄製"') && !zh.includes('data-title="原始錄影"'));
   assert.match(zh, /<h2 class="chap-head" id="chapters-title">段落<\/h2>/);
+});
+
+/** The index with a clip cut since 11/19: no cards, one chapter per feature naming its raw recording, captions. */
+function captioned(): unknown {
+  const data = chaptered() as any;
+  const entry = data.entries.find((e: any) => e.slug === SLUG);
+  const video = {
+    ...VIDEO,
+    chapters: [{ start_s: 0, title: 'Chat with a local model', feature: 'chat with a local model', raw: 0, raw_s: 4.5 }],
+    captions: [
+      { start_s: 0, end_s: 3.2, text: 'Start Fixture Chat TUI' },
+      { start_s: 3.2, end_s: 20.25, text: 'Type "hi <there>", then press Enter' },
+    ],
+  };
+  entry.install.linux.run.video = video;
+  for (const run of entry.verification.passed_runs) if (run.id === entry.install.linux.run.id) run.video = video;
+  return data;
+}
+
+test('a clip since 11/19 has its captions as a track in the page language, a CC button, and links into its raw recording', async () => {
+  const translations = { [SLUG]: { 'Start Fixture Chat TUI': '啟動 Fixture Chat TUI' } };
+  const worker = makeWorker(captioned() as any, { now: () => new Date('2026-11-02T12:00:00Z'), translations });
+  const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
+  const get = (path: string, init: RequestInit = {}) =>
+    worker.fetch(new Request(`http://127.0.0.1:8787${path}`, init), { DB: makeD1().db } as Env, ctx);
+  const html = await (await get(`/tool/${SLUG}`, { headers: { accept: 'text/html' } })).text();
+  const vtt = CLIP.replace('.mp4', '.en.vtt');
+  assert.ok(html.includes(`<track kind="captions" default srclang="en" label="English" src="/video/${SLUG}/${vtt}">`));
+  assert.match(html, /<button type="button" class="player-btn" data-cc aria-pressed="true" aria-label="Captions">/);
+  assert.ok(html.includes(`<a class="chap-raw" href="/video/${SLUG}/${RAW}#t=4.5" aria-label="Chat with a model on your machine: the unedited recording">Unedited</a>`));
+  const zh = await (await get(`/tool/${SLUG}?lang=zh-TW`, { headers: { accept: 'text/html' } })).text();
+  assert.ok(zh.includes(`srclang="zh-Hant-TW" label="中文" src="/video/${SLUG}/${CLIP.replace('.mp4', '.zh-TW.vtt')}"`));
+  // The tracks come from the record (no bucket needed), plain text, the zh-TW one translated where the page has it.
+  const en = await get(`/video/${SLUG}/${vtt}`);
+  assert.deepEqual([en.status, en.headers.get('content-type'), en.headers.get('cache-control')], [200, 'text/vtt; charset=utf-8', 'public, max-age=3600']);
+  assert.equal(await en.text(), 'WEBVTT\n\n1\n00:00:00.000 --> 00:00:03.200\nStart Fixture Chat TUI\n\n2\n00:00:03.200 --> 00:00:20.250\nType "hi &lt;there&gt;", then press Enter\n');
+  const zhTrack = await (await get(`/video/${SLUG}/${CLIP.replace('.mp4', '.zh-TW.vtt')}`)).text();
+  assert.ok(zhTrack.includes('\n啟動 Fixture Chat TUI\n') && zhTrack.includes('then press Enter'));
+  assert.equal((await get(`/video/${SLUG}/${CLIP.replace('.mp4', '.fr.vtt')}`)).status, 404);
+  assert.equal((await get(`/video/${SLUG}/${vtt}`, { method: 'HEAD' })).status, 200);
+  // A clip without captions has no track to serve.
+  assert.equal((await site(undefined)(`/video/${SLUG}/${vtt}`)).status, 404);
 });
 
 test('a clip without chapters keeps the browser’s own player and no chapter list', async () => {

@@ -190,10 +190,12 @@ def _video(run: VerificationRun) -> dict[str, Any] | None:
            "features": list(v.features),
            "raw": [{"file": r.file, "sha256": r.sha256, "seconds": r.seconds,
                     "feature_index": _raw_feature_index(run, list(v.features), r.smoke_test)} for r in v.raw]}
-    # Chapters (start_s, title, feature) come from the video step; passed through as they are.
-    chapters = getattr(v, "chapters", None)
-    if chapters:
-        out["chapters"] = [c if isinstance(c, dict) else c.model_dump(mode="json") for c in chapters]
+    # Chapters (start_s, title, feature; raw and raw_s since 11/19) and captions (start_s, end_s, text: the Worker
+    # serves them as WebVTT, their text translated like the page's other sentences) come from the video step.
+    for key in ("chapters", "captions"):
+        items = getattr(v, key, None)
+        if items:
+            out[key] = [c if isinstance(c, dict) else c.model_dump(mode="json") for c in items]
     return out
 
 

@@ -28,6 +28,16 @@ def test_prose_takes_sentences_and_skips_commands_names_and_codes():
     ]
 
 
+def test_a_video_s_captions_and_chapter_titles_are_translated_like_the_page_s_sentences():
+    video = {"clip": "x-20261119-1000.mp4", "raw": [{"file": "x-20261119-1000-raw-1.mp4", "sha256": "a" * 64}],
+             "features": ["write a note"],
+             "chapters": [{"start_s": 0.0, "title": "Write a note", "feature": "write a note", "raw": 0, "raw_s": 1.5}],
+             "captions": [{"start_s": 0.0, "end_s": 2.0, "text": "Start Notes"},
+                          {"start_s": 2.0, "end_s": 5.5, "text": 'Click “New”, then type "hello"'}]}
+    entry = {"slug": "x", "install": {"linux": {"run": {"video": video}}}}
+    assert prose(entry) == ["write a note", "Write a note", "Start Notes", 'Click “New”, then type "hello"']
+
+
 def test_worker_translations_keep_only_sentences_the_index_still_has(tmp_path):
     save(tmp_path, "x", {"Converts files offline.": "離線轉換檔案。", "An old summary.": "舊的摘要。"})
     index = {"entries": [{"slug": "x", "summary": "Converts files offline."}, {"slug": "y", "summary": "Other."}]}

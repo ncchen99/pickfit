@@ -9,7 +9,7 @@
 import { bestGuide, isVerified, isWebApp, OSES, securityOf, verifiedOn, webCheck, type Catalog, type Entry, type InstallGuide, type OS, type RunVideo, type SecurityFinding } from '../catalog.ts';
 import { featuresOut, type FeaturesOut, type NotCheckedReason } from '../features.ts';
 import { advisoriesOf } from '../security.ts';
-import { L } from '../i18n.ts';
+import { L, lang } from '../i18n.ts';
 import { installGuide, type InstallOutput } from '../install.ts';
 import { EMPTY_FORM, installSection, levelLine, stepText, webFactList } from '../page.ts';
 import { day, guideTitle, guiSentence, KIND, KIND_PLURAL, levelLabel, OS_NAME, PRICE, PROCESSING, passed, webLevelLabel, webRunWords } from '../ui/facts.ts';
@@ -17,7 +17,7 @@ import { esc, link, listOf, safeUrl } from '../ui/html.ts';
 import { icon, osMark, type IconName } from '../ui/icons.ts';
 import { age, badge, compareToggle, confidenceRow, coverage, fitz, kindTag, levelIcon, measure, osList, popover, runFacts, tape, type FitzName, type MeasureRow } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
-import { posterOf, videoPath } from '../video.ts';
+import { captionsOf, posterOf, videoPath } from '../video.ts';
 import { NO_INSTALL_LABEL, noInstallLabel } from '../webapp.ts';
 
 const MATURITY: Record<string, string> = {
@@ -123,6 +123,8 @@ export interface Chapter {
   start: number;
   end: number;
   title: string;
+  /** Where the chapter's first segment is in its unedited recording (a clip cut since 11/19): the file, seconds. */
+  raw?: { file: string; at: number };
 }
 
 // ---------------------------------------------------------------- the checks, as marks
@@ -284,24 +286,32 @@ export function securityNotice(entry: Entry): string {
   );
 }
 
-/** The clip's chapters for the page: a feature's plain title when there is one, fixed words for the two cards. */
+/**
+ * The clip's chapters for the page: its features, each by its plain title when there is one. A clip cut before 11/19
+ * opens and closes on a card; those are not chapters (what they said is in "How pickfit tested it"): the last
+ * feature's chapter runs to the clip's end.
+ */
 export function chaptersOf(entry: Entry, video: RunVideo): Chapter[] {
-  const list = [...(video.chapters ?? [])].filter((c) => c.start_s >= 0 && c.start_s < video.seconds).sort((a, b) => a.start_s - b.start_s);
-  return list.map((c, i) => ({
-    start: c.start_s,
-    end: i + 1 < list.length ? list[i + 1].start_s : video.seconds,
-    title: c.feature
-      ? (guideTitle(entry, c.feature) ?? c.title)
-      : i === 0
-        ? L('Recorded by pickfit', 'pickfit 錄製')
-        : L('Unedited recordings', '原始錄影'),
-  }));
+  const list = [...(video.chapters ?? [])]
+    .filter((c) => c.feature && c.start_s >= 0 && c.start_s < video.seconds)
+    .sort((a, b) => a.start_s - b.start_s);
+  return list.map((c, i) => {
+    const raw = c.raw != null ? video.raw[c.raw] : undefined;
+    return {
+      start: c.start_s,
+      end: i + 1 < list.length ? list[i + 1].start_s : video.seconds,
+      title: guideTitle(entry, c.feature!) ?? c.title,
+      ...(raw && c.raw_s != null ? { raw: { file: raw.file, at: c.raw_s } } : {}),
+    };
+  });
 }
 
 /**
  * The app itself, first: pickfit's own clip of it running. With chapters, the page script swaps the native
  * controls for a seek bar cut into the chapters (data-player), and the list under the clip jumps to each one.
- * Without the script, or without chapters, it is the browser's own player.
+ * Without the script, or without chapters, it is the browser's own player. A clip has no sound (no mute button)
+ * and, since 11/19, no words on its picture: its captions are a WebVTT track in the page's language, on by default,
+ * with a CC button on the bar. Each chapter of such a clip also links to the moment in its unedited recording.
  */
 function showcase(entry: Entry): string {
   const video = firstVideo(entry);
@@ -309,6 +319,7 @@ function showcase(entry: Entry): string {
   const slug = entry.slug;
   const chapters = chaptersOf(entry, video);
   const seconds = Math.round(video.seconds);
+  const captioned = !!video.captions?.length;
   const player = chapters.length
     ? `<div class="player-bar" data-bar hidden>` +
       `<button type="button" class="player-btn" data-play aria-label="${L('Play', '播放')}" data-label-play="${L('Play', '播放')}" data-label-pause="${L('Pause', '暫停')}">${icon('play')}${icon('pause')}</button>` +
@@ -318,7 +329,7 @@ function showcase(entry: Entry): string {
         .join('') +
       `<span class="chap-tip" data-tip-box hidden></span></div>` +
       `<span class="player-time" data-time>0:00 / ${clock(video.seconds)}</span>` +
-      `<button type="button" class="player-btn" data-mute aria-label="${L('Mute', '靜音')}">${icon('volume-2')}${icon('volume-x')}</button>` +
+      (captioned ? `<button type="button" class="player-btn" data-cc aria-pressed="true" aria-label="${L('Captions', '字幕')}">${icon('captions')}${icon('captions-off')}</button>` : '') +
       `<button type="button" class="player-btn" data-full aria-label="${L('Full screen', '全螢幕')}">${icon('maximize')}</button>` +
       `</div>`
     : '';
@@ -327,15 +338,26 @@ function showcase(entry: Entry): string {
     ? `<div class="chap-list"><h2 class="chap-head" id="chapters-title">${L('Chapters', '段落')}</h2>` +
       `<ol class="chapters" aria-labelledby="chapters-title">` +
       chapters
-        .map((c, i) => `<li><a href="${esc(atTime(slug, video, c.start))}" data-seek="${c.start}"${i === 0 ? ' aria-current="true"' : ''}><span class="chap-time">${clock(c.start)}</span><span class="chap-title">${esc(c.title)}</span></a></li>`)
+        .map(
+          (c, i) =>
+            `<li><a href="${esc(atTime(slug, video, c.start))}" data-seek="${c.start}"${i === 0 ? ' aria-current="true"' : ''}><span class="chap-time">${clock(c.start)}</span><span class="chap-title">${esc(c.title)}</span></a>` +
+            (c.raw
+              ? `<a class="chap-raw" href="${esc(`${videoPath(slug, c.raw.file)}#t=${c.raw.at}`)}" aria-label="${esc(L(`${c.title}: the unedited recording`, `${c.title}：原始錄影`))}">${L('Unedited', '原始錄影')}</a>`
+              : '') +
+            `</li>`,
+        )
         .join('') +
       `</ol></div>`
+    : '';
+  const track = captioned
+    ? `<track kind="captions" default srclang="${lang() === 'zh-TW' ? 'zh-Hant-TW' : 'en'}" label="${L('English', '中文')}" src="${esc(videoPath(slug, captionsOf(video.clip, lang())))}">`
     : '';
   return (
     `<figure class="showcase"${chapters.length ? ' data-player' : ''}>` +
     `<div class="player">` +
     `<video controls preload="metadata" playsinline poster="${esc(videoPath(slug, posterOf(video.clip)))}" aria-describedby="showcase-cap">` +
     `<source src="${esc(videoPath(slug, video.clip))}" type="video/mp4">` +
+    track +
     `<a href="${esc(videoPath(slug, video.clip))}">${L('Download the clip', '下載影片')}</a></video>` +
     player +
     `</div>` +
@@ -665,16 +687,28 @@ function webRun(entry: Entry): string {
 
 // ---------------------------------------------------------------- how pickfit tested it
 
-/** The unedited recordings the clip was cut from, each named by the feature it shows, to download. */
+/**
+ * The unedited recordings the clip was cut from, each named by the feature it shows, to download, with its sha256 (the
+ * clip's own mp4 names them too): a clip cut since 11/19 has no last card for these, and its marks are explained here.
+ */
 function rawList(entry: Entry, video: RunVideo): string {
   const raw = video.raw
     .map((r, i) => {
       const shows = r.feature_index != null ? video.features[r.feature_index] : null;
       const name = shows ? (guideTitle(entry, shows) ?? shows.charAt(0).toUpperCase() + shows.slice(1)) : L(`Recording ${i + 1}`, `錄影 ${i + 1}`);
-      return `<li><a href="${esc(videoPath(entry.slug, r.file))}" download>${esc(name)}</a> <span class="quiet">${L(`(${Math.round(r.seconds)} s)`, `（${Math.round(r.seconds)} 秒）`)}</span></li>`;
+      return (
+        `<li><a href="${esc(videoPath(entry.slug, r.file))}" download>${esc(name)}</a> <span class="quiet">${L(`(${Math.round(r.seconds)} s)`, `（${Math.round(r.seconds)} 秒）`)}</span>` +
+        `<br><span class="quiet">sha256</span> <code class="hash">${esc(r.sha256)}</code></li>`
+      );
     })
     .join('');
-  return raw ? `<p class="small">${L('The clip was cut from these unedited recordings:', '影片剪輯自以下原始錄影：')}</p><ul class="small raw-list">${raw}</ul>` : '';
+  const picked = video.captions?.length
+    ? `<p class="small quiet">${L(
+        'In the clip, sped-up parts are marked 2×, and where unchanged screen was cut out, the seconds removed are marked.',
+        '影片中加速的部分標著 2×；剪掉畫面沒變化的片段時，會標出剪去的秒數。',
+      )}</p>`
+    : '';
+  return raw ? `<p class="small">${L('The clip was cut from these unedited recordings:', '影片剪輯自以下原始錄影：')}</p><ul class="small raw-list">${raw}</ul>${picked}` : '';
 }
 
 /** Everything a skeptic wants and a user doesn't: where each run ran, who looked, the raw recordings, the sandbox-only differences. */

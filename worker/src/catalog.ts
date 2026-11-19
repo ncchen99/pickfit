@@ -30,8 +30,11 @@ export interface RunVideo {
   features: string[];
   /** The unedited recordings the clip was cut from; feature_index: which of `features` each one shows (older indexes lack it). */
   raw: { file: string; sha256: string; seconds: number; feature_index?: number | null }[];
-  /** The clip's segments in time order, covering it from 0 s: an opening card, one per feature, a closing card (feature null on both cards). */
+  /** The clip's segments in time order, covering it from 0 s: one per feature (a clip cut before 11/19 also opens
+   * and closes on a card, feature null). */
   chapters?: VideoChapter[] | null;
+  /** The clip's captions (it has no words on its picture since 11/19), served as WebVTT at captionsPath(). */
+  captions?: VideoCaption[] | null;
 }
 
 export interface VideoChapter {
@@ -39,6 +42,16 @@ export interface VideoChapter {
   title: string;
   /** Exactly one of the clip's `features`; null for the opening and closing cards. */
   feature: string | null;
+  /** Index into `raw`: the unedited recording the chapter's first segment comes from, and where in it (seconds). */
+  raw?: number | null;
+  raw_s?: number | null;
+}
+
+export interface VideoCaption {
+  start_s: number;
+  end_s: number;
+  /** English in the index; the zh-TW page's catalog has it translated. */
+  text: string;
 }
 
 export interface RunSummary {
