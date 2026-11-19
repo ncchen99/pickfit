@@ -96,10 +96,13 @@ def test_a_passed_agent_replays_in_the_fresh_box_that_booted_while_it_worked(tmp
     assert replay is not agent and replay.agent_was_working  # made and started before the agent's box closed
     assert lane.events.index(("make", "replay")) < lane.events.index(("close", "agent"))
     assert lane.events.index(("start", "agent")) < lane.events.index(("reserve", "replay"))  # the agent's place first
-    # A fresh box: none of the agent's commands ran in it, only the replay's.
-    assert [c for c, _ in replay.ran] == ["uv tool install graphtty", "cat > graph.json <<'EOF'\n{\"nodes\": "
-                                          "[\"a\", \"b\"], \"edges\": [[\"a\", \"b\"]]}\nEOF",
-                                          "graphtty --version", "graphtty graph.json"]
+    # A fresh box: none of the agent's commands ran in it, only the replay's, then the SBOM of what it installed
+    # (pickfit/sbom.py), read before the box closes.
+    ran = [c for c, _ in replay.ran]
+    assert ran[:4] == ["uv tool install graphtty", "cat > graph.json <<'EOF'\n{\"nodes\": "
+                       "[\"a\", \"b\"], \"edges\": [[\"a\", \"b\"]]}\nEOF",
+                       "graphtty --version", "graphtty graph.json"]
+    assert len(ran) == 5 and ran[4].startswith("mkdir -p /tmp/pickfit-sbom")
     assert agent.closed and replay.closed
     assert "replay box starting while the agent works" in lines
     # It is billed from its start: before the agent finished.
