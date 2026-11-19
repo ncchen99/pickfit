@@ -28,7 +28,7 @@ Observation, per record:
    is the package's only user), a Go package the project never imports, govulncheck's symbol results on the
    installed Go binaries, a Next.js app built as a static export (no server).
 
-Assessment (policy sec.v2): a finding is blocked (a malicious package, or a KEV entry not shown unreachable), exposed
+Assessment (policy sec.v2): a finding is blocked (a malicious package, or a KEV entry the code is shown to reach), exposed
 (reachable by evidence and over the network), conditional (anything not settled: the default), present_unreachable
 (shipped, vulnerable code not used) or not_shipped (not in what the person gets). Only high and critical findings,
 malicious packages and KEV entries count; the rest are observed. The record takes the worst counted finding's level
@@ -615,7 +615,7 @@ class Graph:
             for kid, _ in kids:
                 parents.setdefault(kid, set()).add(nid)
 
-        def walk(starts: list[tuple[str, str]], *, build: bool, peer: bool,
+        def walk(starts: list[tuple[str, str]], *, build: bool, peer: bool, off: bool = False,
                  cut: frozenset[tuple[str, str]] = frozenset()) -> dict[str, tuple[tuple[str, ...], str]]:
             seen: dict[str, tuple[tuple[str, ...], str]] = {}
             queue: deque[tuple[str, tuple[str, ...], str]] = deque()
@@ -632,7 +632,7 @@ class Graph:
                     if kid not in self.nodes or kid in seen:
                         continue
                     kname = self.nodes[kid][0]
-                    if kind == "peer" and not peer:
+                    if (kind == "peer" and not peer) or (kind == "off" and not off):
                         continue
                     if not build and (kname in self.build_tools or (name, kname) in BUILD_EDGES):
                         continue
@@ -644,13 +644,16 @@ class Graph:
         def roots(*scopes: str) -> list[tuple[str, str]]:
             return [(label, kid) for label, kid, s in self.roots if s in scopes]
 
-        passes = [("runtime", roots("runtime"), False, False), ("build", roots("runtime", "build"), True, False),
-                  ("peer", roots("runtime", "build", "peer"), True, True), ("optional", roots("optional"), True, True),
-                  ("platform", roots("platform"), True, True), ("test", roots("test"), True, True),
-                  ("dev", roots("dev"), True, True), ("workspace", roots("workspace"), True, True)]
+        # (scope, starts, through build tools, through peer edges, through optional dependencies left off)
+        passes = [("runtime", roots("runtime"), False, False, False),
+                  ("build", roots("runtime", "build"), True, False, False),
+                  ("peer", roots("runtime", "build", "peer"), True, True, False),
+                  ("optional", roots("runtime", "build", "peer", "optional"), True, True, True),
+                  ("platform", roots("platform"), True, True, True), ("test", roots("test"), True, True, True),
+                  ("dev", roots("dev"), True, True, True), ("workspace", roots("workspace"), True, True, True)]
         runtime_seen: dict[str, tuple[tuple[str, ...], str]] = {}
-        for scope, starts, build, peer in passes:
-            seen = walk(starts, build=build, peer=peer)
+        for scope, starts, build, peer, off in passes:
+            seen = walk(starts, build=build, peer=peer, off=off)
             if scope == "runtime":
                 runtime_seen = seen
             for nid, (path, label) in seen.items():
@@ -974,33 +977,55 @@ def cfg_matches(expr: str, os_name: str) -> bool:
         return True
 
 
-def _default_optional(manifest: dict[str, Any], optional: set[str]) -> set[str]:
-    """The optional dependencies the default features turn on."""
-    features = manifest.get("features") or {}
+def _features_on(features: dict[str, Any], optional: set[str], start: Iterable[str]
+                 ) -> tuple[set[str], dict[str, set[str]]]:
+    """(the optional dependencies turned on, the features asked of each dependency) when `start` features are on."""
     on: set[str] = set()
+    asked: dict[str, set[str]] = {}
     seen: set[str] = set()
-    stack = list(features.get("default") or [])
+    stack = [str(s) for s in start]
     while stack:
-        f = str(stack.pop())
+        f = stack.pop()
         if f in seen:
             continue
         seen.add(f)
         if f.startswith("dep:"):
             on.add(f[4:])
         elif "/" in f:
-            dep = f.split("/", 1)[0]
-            if not dep.endswith("?") and dep in optional:
+            dep, feat = f.split("/", 1)
+            weak = dep.endswith("?")
+            dep = dep.rstrip("?")
+            asked.setdefault(dep, set()).add(feat)
+            if not weak and dep in optional:
                 on.add(dep)
         elif f in features:
-            stack.extend(features[f] or [])
+            stack.extend(str(x) for x in features[f] or [])
         elif f in optional:
             on.add(f)
-    return on
+    return on, asked
+
+
+def _default_optional(manifest: dict[str, Any], optional: set[str]) -> set[str]:
+    """The optional dependencies the default features turn on."""
+    features = manifest.get("features") or {}
+    return _features_on(features, optional, features.get("default") or [])[0]
+
+
+@dataclass(frozen=True)
+class CargoDep:
+    """One dependency a member's Cargo.toml declares, with the features it asks of it."""
+
+    name: str
+    scope: str
+    path: bool
+    features: frozenset[str] = frozenset()
+    default_features: bool = True
 
 
 def _cargo_member_deps(manifest: dict[str, Any], workspace: dict[str, Any], supported: frozenset[str]
-                       ) -> list[tuple[str, str, bool]]:
-    """(crate name, scope, is a path dependency) for each dependency a member's Cargo.toml declares."""
+                       ) -> list[CargoDep]:
+    """Each dependency a member's Cargo.toml declares: crate name, scope, whether it is a path dependency, and the
+    features asked of it (its own `features`, and those the member's default features turn on)."""
     sections: list[tuple[str, str | None, dict[str, Any]]] = []
     for key, scope in (("dependencies", "runtime"), ("dev-dependencies", "dev"), ("build-dependencies", "build")):
         sections.append((scope, None, manifest.get(key) or {}))
@@ -1008,21 +1033,88 @@ def _cargo_member_deps(manifest: dict[str, Any], workspace: dict[str, Any], supp
             if isinstance(body, dict):
                 sections.append((scope, target, body.get(key) or {}))
     optional = {k for _, _, deps in sections for k, spec in deps.items() if isinstance(spec, dict) and spec.get("optional")}
-    enabled = _default_optional(manifest, optional)
+    features = manifest.get("features") or {}
+    enabled, asked = _features_on(features, optional, features.get("default") or [])
     out = []
     for scope, target, deps in sections:
         for key, spec in deps.items():
             spec = spec if isinstance(spec, dict) else {"version": spec}
             if spec.get("workspace"):
-                spec = {**((workspace.get(key) if isinstance(workspace.get(key), dict) else {})), **spec}
+                base = workspace.get(key) if isinstance(workspace.get(key), dict) else {}
+                spec = {**base, **spec, "features": [*(base.get("features") or []), *(spec.get("features") or [])]}
             real = str(spec.get("package") or key)
             s = scope
             if s == "runtime" and spec.get("optional") and key not in enabled:
                 s = "optional"
             if s == "runtime" and target is not None and not any(cfg_matches(target, o) for o in supported):
                 s = "platform"
-            out.append((real, s, "path" in spec))
+            out.append(CargoDep(real, s, "path" in spec, frozenset([*(spec.get("features") or []),
+                                                                     *asked.get(key, ())]),
+                                spec.get("default-features", spec.get("default_features", True)) is not False))
     return out
+
+
+class CrateIndex:
+    """crates.io's sparse index (index.crates.io): each version of a crate with its dependencies (optional or not,
+    by target) and its features. One request per crate, kept on disk; None when it cannot be read."""
+
+    def __init__(self, cache: Path | None = CACHE / "crates-index", *, fetch: bool = True) -> None:
+        self.cache = cache
+        self.fetch = fetch
+        self._mem: dict[str, list[dict[str, Any]] | None] = {}
+        self._lock = threading.Lock()
+
+    @staticmethod
+    def path_of(name: str) -> str:
+        n = name.lower()
+        return f"{len(n)}/{n}" if len(n) <= 2 else f"3/{n[0]}/{n}" if len(n) == 3 else f"{n[:2]}/{n[2:4]}/{n}"
+
+    def versions(self, name: str) -> list[dict[str, Any]] | None:
+        with self._lock:
+            if name in self._mem:
+                return self._mem[name]
+        disk = self.cache / f"{name.lower()}.jsonl" if self.cache else None
+        text = disk.read_text(encoding="utf-8") if disk is not None and disk.exists() else None
+        if text is None and self.fetch:
+            try:
+                req = urllib.request.Request(f"https://index.crates.io/{self.path_of(name)}",
+                                             headers={"User-Agent": "pickfit-security"})
+                with urllib.request.urlopen(req, timeout=30) as resp:
+                    text = resp.read().decode("utf-8")
+            except (urllib.error.URLError, TimeoutError, ValueError):
+                text = None
+            if text is not None and disk is not None:
+                disk.parent.mkdir(parents=True, exist_ok=True)
+                disk.write_text(text, encoding="utf-8")
+        rows = None
+        if text is not None:
+            rows = []
+            for line in text.splitlines():
+                try:
+                    rows.append(json.loads(line))
+                except ValueError:
+                    continue
+        with self._lock:
+            self._mem[name] = rows
+        return rows
+
+    def entry(self, name: str, version: str) -> dict[str, Any] | None:
+        return next((v for v in self.versions(name) or [] if v.get("vers") == version), None)
+
+
+SHARED_CRATE_INDEX = CrateIndex()
+
+
+def crate_optional_off(entry: dict[str, Any], features: Iterable[str], default: bool) -> set[str]:
+    """The crates a crate version depends on only optionally and that the asked features leave off."""
+    feats = {**(entry.get("features") or {}), **(entry.get("features2") or {})}
+    deps = [d for d in entry.get("deps") or [] if (d.get("kind") or "normal") == "normal"]
+    optional = {d["name"] for d in deps if d.get("optional")}
+    start = [*features, *(["default"] if default and "default" in feats else [])]
+    on, _ = _features_on(feats, optional, start)
+    real = lambda d: str(d.get("package") or d["name"])  # noqa: E731
+    always = {real(d) for d in deps if not d.get("optional") or d["name"] in on}
+    return {real(d) for d in deps if d.get("optional") and d["name"] not in on} - always
 
 
 def _has_binary(folder: Path, manifest: dict[str, Any]) -> bool:
@@ -1030,10 +1122,15 @@ def _has_binary(folder: Path, manifest: dict[str, Any]) -> bool:
 
 
 def cargo_graph(text: str, *, found_in: str = "Cargo.lock", repo: Path | None = None, base: str = "",
-                supported: Iterable[str] = ALL_OS) -> Graph:
+                supported: Iterable[str] = ALL_OS, index: CrateIndex | None = None) -> Graph:
     """Cargo.lock as a graph, its roots the workspace members' dependencies as their Cargo.toml declare them. The
     members with a binary ship (with the members they depend on); a member whose Cargo.toml is not found keeps every
-    dependency Cargo.lock gives it, as runtime."""
+    dependency Cargo.lock gives it, as runtime.
+
+    With `index` (crates.io's), a crate only the members depend on has its optional dependencies that the asked
+    features leave off marked so (edge `off`): what is reached only through them is optional, not shipped. 11/19:
+    quinn-proto sits in Cargo.lock under reqwest > quinn, which only reqwest's http3 feature turns on. A crate other
+    crates also depend on is left as it is, since one of them may turn the feature on."""
     supported = frozenset(supported) or ALL_OS
     packages = [p for p in tomllib.loads(text).get("package", []) if "name" in p and "version" in p]
     versions: dict[str, list[str]] = {}
@@ -1080,7 +1177,7 @@ def cargo_graph(text: str, *, found_in: str = "Cargo.lock", repo: Path | None = 
             if name in members and name not in manifests:
                 manifests[name] = (path.parent, manifest)
             workspace_deps.update(((manifest.get("workspace") or {}).get("dependencies")) or {})
-    member_deps: dict[str, list[tuple[str, str, bool]]] = {}
+    member_deps: dict[str, list[CargoDep]] = {}
     for name in members:
         if name in manifests:
             member_deps[name] = _cargo_member_deps(manifests[name][1], workspace_deps, supported)
@@ -1088,21 +1185,37 @@ def cargo_graph(text: str, *, found_in: str = "Cargo.lock", repo: Path | None = 
     shipped = set(with_bin) if with_bin else set(members)
     stack = list(shipped)
     while stack:
-        for dep, scope, is_path in member_deps.get(stack.pop(), []):
-            if is_path and scope == "runtime" and dep in members and dep not in shipped:
-                shipped.add(dep)
-                stack.append(dep)
+        for dep in member_deps.get(stack.pop(), []):
+            if dep.path and dep.scope == "runtime" and dep.name in members and dep.name not in shipped:
+                shipped.add(dep.name)
+                stack.append(dep.name)
+    asked: dict[str, tuple[set[str], bool]] = {}  # node id -> features the shipped members ask of it, default on
     for name, p in members.items():
         lock_refs = {str(d).split(" ")[0]: ref(str(d)) for d in p.get("dependencies") or []}
         if name in member_deps:
-            kids = [(lock_refs.get(dep), scope) for dep, scope, _ in member_deps[name]]
+            kids = [(lock_refs.get(dep.name), dep.scope, dep) for dep in member_deps[name]]
         else:
-            kids = [(kid, "runtime") for kid in lock_refs.values()]
+            kids = [(kid, "runtime", None) for kid in lock_refs.values()]
         label = (manifests[name][0].relative_to(repo).as_posix() if repo is not None and name in manifests else name) or "."
         graph.workspace_of[name] = label
-        for kid, scope in kids:
+        for kid, scope, dep in kids:
             if kid and kid in graph.nodes:
                 graph.roots.append((name, kid, scope if name in shipped else "workspace"))
+                if name in shipped and scope == "runtime":
+                    feats, default = asked.get(kid, (set(), False))
+                    asked[kid] = (feats | set(dep.features if dep else ()), default or (dep.default_features if dep
+                                                                                       else True))
+    if index is not None:
+        has_parent = {kid for kids in graph.edges.values() for kid, _ in kids}
+        for nid, (feats, default) in asked.items():
+            if nid in has_parent:
+                continue  # another crate depends on it too and may turn the feature on
+            entry = index.entry(*graph.nodes[nid])
+            if entry is None:
+                continue
+            off = crate_optional_off(entry, feats, default)
+            graph.edges[nid] = [(kid, "off" if graph.nodes[kid][0] in off else kind)
+                                for kid, kind in graph.edges.get(nid, [])]
     return graph
 
 
@@ -1139,11 +1252,13 @@ class RepoDeps:
 
 @dataclass(frozen=True)
 class ReadContext:
-    """What a lockfile read needs to know about the software: its own package names, its kind, its OSes."""
+    """What a lockfile read needs to know about the software: its own package names, its kind, its OSes; and
+    crates.io's index for which optional dependencies a crate's features turn on (None: Cargo.lock as it is)."""
 
     own: frozenset[str] = frozenset()
     kind: str | None = None
     supported: frozenset[str] = ALL_OS
+    crate_index: CrateIndex | None = None
 
 
 def _main(rel: str) -> bool:
@@ -1185,7 +1300,7 @@ def repo_deps(root: Path, ctx: ReadContext = ReadContext(), *, resolve_python: b
                                      own=set(ctx.own), kind=ctx.kind).deps(ctx.supported))
             elif name == "Cargo.lock":
                 took(rel, cargo_graph(f.read_text(encoding="utf-8"), found_in=rel, repo=root, base=folder,
-                                      supported=ctx.supported).deps(ctx.supported))
+                                      supported=ctx.supported, index=ctx.crate_index).deps(ctx.supported))
             elif name == "go.mod":
                 took(rel, go_deps(f.read_text(encoding="utf-8"), found_in=rel))
             elif name == "pyproject.toml" and _main(rel):
@@ -1548,10 +1663,13 @@ def finding_level(f: dict[str, Any]) -> str:
         return "not_shipped"
     if r.get("result") == "not_reachable":
         return "present_unreachable"
-    if f.get("kev"):
+    if r.get("result") == "reachable" and f.get("kev"):
         return "blocked"
     if r.get("result") == "reachable" and f.get("attack_vector") in (None, "network", "adjacent"):
         return "exposed"
+    # A KEV entry with nothing to show the code reaches it stays conditional, kev true and named first in the
+    # assessment's reasons (11/19 dry-run: one KEV CVE on Google's Brotli, aliased by OSV onto the Go port
+    # andybalholm/brotli, would otherwise have hidden gitleaks, glance, doggo and usql).
     return "conditional"
 
 
@@ -1645,10 +1763,10 @@ def packages_of(raw: dict[str, Any]) -> list[str]:
     return list(dict.fromkeys(linked + found))
 
 
-def read_context(raw: dict[str, Any]) -> ReadContext:
+def read_context(raw: dict[str, Any], crate_index: CrateIndex | None = None) -> ReadContext:
     own = own_names(raw) | {_norm(p.split(":", 1)[1]) for p in packages_of(raw) if p.startswith("npm:")}
     platforms = frozenset(p for p in raw.get("platforms") or [] if p in ALL_OS)
-    return ReadContext(frozenset(own), raw.get("kind"), platforms or ALL_OS)
+    return ReadContext(frozenset(own), raw.get("kind"), platforms or ALL_OS, crate_index)
 
 
 def _repo_url(raw: dict[str, Any]) -> str | None:
@@ -1954,14 +2072,16 @@ def _full(f: dict[str, Any]) -> dict[str, Any]:
 
 def check(raw: dict[str, Any], advisories: Advisories, *, now: datetime, clones: Path = CLONES,
           unrated: list[str] | None = None, sbom: Any = "auto", intel: Intel | None = None,
-          fix_dates: FixDates | None = None, details_dir: Path | None = None) -> CheckResult:
+          fix_dates: FixDates | None = None, details_dir: Path | None = None,
+          crate_index: CrateIndex | None | str = "shared") -> CheckResult:
     """The security check (sec.v2 SecurityCheck as JSON) for one record; `.details` is data/security/<slug>.json.
 
     A complete read is the software's own dependency set in full: every one of its registry packages resolved with real
     dependencies (not a wrapper around a compiled binary), or its repository's main lockfiles yielded packages with
     nothing at the root left unread, or the installed artifact's SBOM covers it. intel None reads CISA KEV and FIRST
-    EPSS once a day (shared_intel); fix_dates None asks deps.dev when a fix came out."""
-    ctx = read_context(raw)
+    EPSS once a day (shared_intel); fix_dates None asks deps.dev when a fix came out; crate_index "shared" reads
+    crates.io's index (cached on disk), None leaves Cargo.lock's optional edges as they are."""
+    ctx = read_context(raw, SHARED_CRATE_INDEX if crate_index == "shared" else crate_index)  # type: ignore[arg-type]
     deps: list[Dep] = []
     sources: list[str] = []
     own = packages_of(raw)
@@ -2114,7 +2234,8 @@ def write_security(path: Path, result: dict[str, Any], now: datetime) -> dict[st
 
 
 def reassess(raw: dict[str, Any], advisories: Advisories, *, now: datetime, clones: Path = CLONES,
-             intel: Intel | None = None, details_dir: Path | None = None) -> dict[str, Any]:
+             intel: Intel | None = None, details_dir: Path | None = None,
+             crate_index: CrateIndex | None = None) -> dict[str, Any]:
     """The level a record's stored check gets under sec.v2, without resolving or looking up packages again.
 
     A sec.v2 record is re-judged from data/security/<slug>.json. A sec.v1 record is estimated from the findings it
@@ -2134,7 +2255,7 @@ def reassess(raw: dict[str, Any], advisories: Advisories, *, now: datetime, clon
                    now=now, reason=sec.get("unchecked_reason"))
         return {"level": a["level"], "assessment": a, "matched": len(findings), "truncated": False, "findings": findings}
     stored = sec.get("findings") or []
-    ctx = read_context(raw)
+    ctx = read_context(raw, crate_index)
     root: Path | None = clones / raw["slug"]
     from_repo = any(str(s).startswith("github.com/") for s in sec.get("sources") or [])
     deps: dict[Node, Dep] = {}
@@ -2266,7 +2387,8 @@ def _main_reassess(args: Any, paths: list[Path], now: datetime, details_dir: Pat
     def one(path: Path) -> None:
         raw = json.loads(path.read_text(encoding="utf-8"))
         try:
-            got = reassess(raw, advisories, now=now, intel=intel, details_dir=details_dir)
+            got = reassess(raw, advisories, now=now, intel=intel, details_dir=details_dir,
+                           crate_index=SHARED_CRATE_INDEX)
         except Exception as err:  # noqa: BLE001
             with lock:
                 rows[path.stem] = {"error": f"{type(err).__name__}: {str(err)[:200]}"}

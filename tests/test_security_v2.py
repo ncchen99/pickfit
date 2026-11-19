@@ -56,12 +56,12 @@ def fake_osv(monkeypatch: pytest.MonkeyPatch, hits: dict[tuple[str, str], list[s
 
 
 def run_check(monkeypatch: pytest.MonkeyPatch, repo: Path, raw: dict[str, Any], *, kev: dict[str, str] | None = None,
-              sbom_doc: Any = None) -> security.CheckResult:
+              sbom_doc: Any = None, crate_index: security.CrateIndex | None = None) -> security.CheckResult:
     monkeypatch.setattr(security, "clone", lambda url, slug, clones=None: (repo, "a" * 40))
     intel = security.Intel(kev if kev is not None else {}, kev_catalog="2026.11.19", epss={}, epss_date="2026-11-19",
                            day="2026-11-19")
     return security.check(raw, security.Advisories(), now=NOW, intel=intel, fix_dates=security.FixDates(False),
-                          sbom=sbom_doc)
+                          sbom=sbom_doc, crate_index=crate_index)
 
 
 def record(slug: str, kind: str = "cli_tool", **over: Any) -> dict[str, Any]:
@@ -302,16 +302,21 @@ def test_openpets_with_an_http_transport_the_sdk_side_is_reached(monkeypatch: py
     assert result["assessment"]["level"] == "exposed"
 
 
-def test_a_kev_entry_that_may_run_blocks_and_hides_the_record(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+def test_a_kev_entry_blocks_only_where_the_code_reaches_it(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     fake_osv(monkeypatch, OPENPETS_HITS, OPENPETS_ADVISORIES)
-    result = run_check(monkeypatch, openpets(tmp_path / "repo"), record("openpets", "desktop_app"),
-                       kev={"CVE-2026-3001": "2026-11-01", "CVE-2026-1001": "2026-11-01"})
+    kev = {"CVE-2026-3001": "2026-11-01", "CVE-2026-1001": "2026-11-01"}
+    result = run_check(monkeypatch, openpets(tmp_path / "repo"), record("openpets", "desktop_app"), kev=kev)
     got = by_package(result)
-    assert got["npm:undici@7.29.0"][0]["kev"] is True and got["npm:undici@7.29.0"][0]["level"] == "blocked"
-    # KEV on code shown unreachable does not block.
+    # On KEV, but nothing shows undici's affected code runs: conditional, named first for review (S6's queue).
+    assert got["npm:undici@7.29.0"][0]["kev"] is True and got["npm:undici@7.29.0"][0]["level"] == "conditional"
+    # KEV on code shown unreachable does not block either.
     assert got["npm:proxy-addr@2.0.7"][0]["kev"] is True and got["npm:proxy-addr@2.0.7"][0]["level"] == "present_unreachable"
-    assert result["assessment"]["level"] == "blocked" and result["findings"][0]["advisory"] == "GHSA-un01"
+    assert result["assessment"]["level"] == "conditional" and result["findings"][0]["advisory"] == "GHSA-un01"
     assert result["assessment"]["reasons"][0].startswith("kev:GHSA-un01")
+    # The HTTP transport imported: the code reaches proxy-addr, which is on KEV.
+    result = run_check(monkeypatch, openpets(tmp_path / "http", http=True), record("openpets", "desktop_app"), kev=kev)
+    assert by_package(result)["npm:proxy-addr@2.0.7"][0]["level"] == "blocked"
+    assert result["assessment"]["level"] == "blocked" and result["assessment"]["reasons"][0].startswith("kev:GHSA-pa01")
 
 
 # --- Cargo: an optional dependency, dev, build and another platform ------------------------------------------------------
@@ -428,6 +433,40 @@ def test_cargo_optional_dev_build_and_other_platform_dependencies_are_not_shippe
     # A zip advisory that names nothing to look for stays conditional.
     zp = next(f for f in result.details["findings"] if f["advisory"] == "GHSA-zp01")
     assert zp["level"] == "conditional" and result["assessment"]["level"] == "conditional"
+
+
+def test_crates_io_index_settles_an_optional_dependency_of_a_dependency(monkeypatch: pytest.MonkeyPatch,
+                                                                         tmp_path: Path) -> None:
+    # 11/19: quinn-proto under reqwest > quinn. reqwest's http3 feature turns quinn on; the project asks for json.
+    lock = ('version = 4\n\n[[package]]\nname = "tool"\nversion = "0.1.0"\ndependencies = ["reqwest"]\n\n'
+            '[[package]]\nname = "reqwest"\nversion = "0.12.9"\nsource = "registry+x"\n'
+            'dependencies = ["quinn", "serde_json"]\n\n'
+            '[[package]]\nname = "quinn"\nversion = "0.11.9"\nsource = "registry+x"\ndependencies = ["quinn-proto"]\n\n'
+            '[[package]]\nname = "quinn-proto"\nversion = "0.11.17"\nsource = "registry+x"\n\n'
+            '[[package]]\nname = "serde_json"\nversion = "1.0.0"\nsource = "registry+x"\n')
+    repo = tmp_path / "repo"
+    write(repo, "Cargo.lock", lock)
+    write(repo, "Cargo.toml", '[package]\nname = "tool"\nversion = "0.1.0"\n\n[dependencies]\n'
+                              'reqwest = { version = "0.12", features = ["json"] }\n')
+    write(repo, "src/main.rs", "fn main() {}\n")
+    index = tmp_path / "index"
+    write(index, "reqwest.jsonl", json.dumps({
+        "name": "reqwest", "vers": "0.12.9",
+        "deps": [{"name": "quinn", "req": "^0.11", "optional": True, "kind": "normal"},
+                 {"name": "serde_json", "req": "^1", "optional": True, "kind": "normal"},
+                 {"name": "tokio-test", "req": "^0.4", "optional": False, "kind": "dev"}],
+        "features": {"default": [], "json": ["dep:serde_json"], "http3": ["dep:quinn"]}}) + "\n")
+    fake_osv(monkeypatch, {("quinn-proto", "0.11.17"): ["RUSTSEC-2026-0340"]}, CARGO_ADVISORIES)
+    result = run_check(monkeypatch, repo, record("tool"), crate_index=security.CrateIndex(index, fetch=False))
+    f = result.details["findings"][0]
+    assert (f["scope"], f["level"]) == ("optional", "not_shipped")
+    assert f["paths"] == ["tool > reqwest > quinn > quinn-proto"]
+    # Without the index, Cargo.lock's edge stands; asking for http3 turns it on.
+    assert run_check(monkeypatch, repo, record("tool")).details["findings"][0]["scope"] == "runtime"
+    write(repo, "Cargo.toml", '[package]\nname = "tool"\nversion = "0.1.0"\n\n[dependencies]\n'
+                              'reqwest = { version = "0.12", features = ["json", "http3"] }\n')
+    result = run_check(monkeypatch, repo, record("tool"), crate_index=security.CrateIndex(index, fetch=False))
+    assert result.details["findings"][0]["scope"] == "runtime"
 
 
 def test_cargo_calls_found_in_the_source_are_evidence(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
@@ -623,7 +662,8 @@ def test_the_sbom_decides_what_is_in_the_artifact(monkeypatch: pytest.MonkeyPatc
     ({"scope": "runtime", "in_artifact": False}, "not_shipped"),
     ({"reachability": {"method": "next_static_export", "result": "not_reachable"}}, "not_shipped"),
     ({"reachability": {"method": "symbol_grep", "result": "not_reachable"}, "kev": True}, "present_unreachable"),
-    ({"kev": True}, "blocked"),
+    ({"reachability": {"method": "import_grep", "result": "reachable"}, "kev": True, "attack_vector": "local"}, "blocked"),
+    ({"kev": True}, "conditional"),
     ({"reachability": {"method": "symbol_grep", "result": "reachable"}, "attack_vector": "network"}, "exposed"),
     ({"reachability": {"method": "symbol_grep", "result": "reachable"}, "attack_vector": "local"}, "conditional"),
     ({"reachability": {"method": "symbol_grep", "result": "unknown"}}, "conditional"),
@@ -745,8 +785,8 @@ def test_write_security_stores_the_details_beside_the_record(monkeypatch: pytest
 @needs_v2_schema
 def test_a_blocked_kev_entry_hides_the_record(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     fake_osv(monkeypatch, OPENPETS_HITS, OPENPETS_ADVISORIES)
-    result = run_check(monkeypatch, openpets(tmp_path / "repo"), record("fixture-web-sketch", "desktop_app"),
-                       kev={"CVE-2026-3001": "2026-11-01"})
+    result = run_check(monkeypatch, openpets(tmp_path / "repo", http=True), record("fixture-web-sketch", "desktop_app"),
+                       kev={"CVE-2026-1001": "2026-11-01"})
     path = tmp_path / "software" / "fixture-web-sketch.json"
     path.parent.mkdir()
     path.write_text(json.dumps(scored_web()), encoding="utf-8")
