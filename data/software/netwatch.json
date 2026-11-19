@@ -1,0 +1,634 @@
+{
+  "schema_version": "software.v1",
+  "slug": "netwatch",
+  "repo_id": "gh:1158138526",
+  "name": "netwatch",
+  "summary": "Terminal tool that shows network connections with their processes, per-hop latency, decoded packets, and diagnoses network issues.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "security_net",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "diagnostics",
+    "network-analysis",
+    "network-monitoring",
+    "packet-capture",
+    "ratatui",
+    "rust",
+    "terminal",
+    "tui"
+  ],
+  "use_cases": [
+    "see which process owns each network connection",
+    "track internet outages and which hop failed",
+    "export network metrics to Prometheus"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "list connections with owning process",
+    "diagnose network issues with ranked causes",
+    "decode captured packets with TLS decryption",
+    "show per-hop latency"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://netwatchlabs.com",
+  "repo": {
+    "url": "https://github.com/matthart1983/netwatch",
+    "full_name": "matthart1983/netwatch",
+    "created_at": "2026-02-14T21:24:32Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "Npcap (Windows)"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install netwatch",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Grant elevated capture permissions (capabilities or sudo) for packet capture"
+      ],
+      "check": null,
+      "first_task": "netwatch doctor"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-netwatch-20261119-170443-626e",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/nw && cd /tmp/nw && curl -fsSLO https://github.com/matthart1983/netwatch/releases/download/v0.40.1/netwatch-linux-x86_64-static.tar.gz && tar xzf netwatch-linux-x86_64-static.tar.gz && install -m755 netwatch-linux-x86_64-static ~/.local/bin/netwatch",
+          "purpose": "Download the v0.40.1 static Linux x86_64 release tarball, extract it, and install it as ~/.local/bin/netwatch"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "netwatch --version",
+        "expected_signal": "netwatch 0.40.1"
+      },
+      "first_task": "netwatch doctor"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo binstall netwatch-tui",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Grant elevated capture permissions (capabilities or sudo) for packet capture"
+      ],
+      "check": null,
+      "first_task": "netwatch doctor"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.40.1",
+    "published_at": "2026-11-14T22:21:02Z",
+    "url": "https://github.com/matthart1983/netwatch/releases/tag/v0.40.1"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T17:07:10.531327+08:00",
+    "runs": [
+      {
+        "id": "verify-netwatch-20261119-170443-626e",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T17:07:10.531327+08:00",
+        "tool_version": "0.40.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/nw && cd /tmp/nw && curl -fsSLO https://github.com/matthart1983/netwatch/releases/download/v0.40.1/netwatch-linux-x86_64-static.tar.gz && tar xzf netwatch-linux-x86_64-static.tar.gz && install -m755 netwatch-linux-x86_64-static ~/.local/bin/netwatch",
+            "purpose": "Download the v0.40.1 static Linux x86_64 release tarball, extract it, and install it as ~/.local/bin/netwatch"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "netwatch --version",
+            "expected_signal": "netwatch 0.40.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "netwatch 0.40.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "netwatch doctor",
+            "expected_signal": "Netwatch doctor · linux · static",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Netwatch doctor · linux · static",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "netwatch diagnose run --format json",
+            "expected_signal": "\"schema\": \"netwatch.diagnose-run.v2\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"schema\": \"netwatch.diagnose-run.v2\",",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sleep 15 && curl -fsS http://127.0.0.1:9464/metrics",
+            "expected_signal": "# HELP netwatch_gateway_rtt_seconds Round-trip time to the default gateway.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "# HELP netwatch_gateway_rtt_seconds Round-trip time to the default gateway.",
+            "setup": [
+              {
+                "command": "netwatch daemon --metrics",
+                "background": true,
+                "port": 9464
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Install via cargo binstall/cargo install netwatch-tui, paru, nix-shell or conda",
+            "actually_needed": "None of these package managers or a Rust toolchain are available in the box, so I used the static release binary netwatch-linux-x86_64-static.tar.gz from GitHub releases instead. The tarball contains one file named netwatch-linux-x86_64-static, not netwatch.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Packet capture needs elevated access (capabilities or sudo)",
+            "actually_needed": "I could not grant capabilities without root, so packet capture and decode were not exercised. doctor also reported that Landlock is unavailable in this kernel.",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Doctor printed its static report header and capability statuses, diagnose run emitted JSON with schema netwatch.diagnose-run.v2 (a DNS-failing issue is expected with network off), and --version printed netwatch 0.40.1, all exiting 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-netwatch-20261119-170443-626e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-netwatch-20261119-170443-626e/check-1-cmd5.judged.png",
+            "runs/verify/verify-netwatch-20261119-170443-626e/check-2-cmd6.judged.png",
+            "runs/verify/verify-netwatch-20261119-170443-626e/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.233477,
+        "features": [
+          {
+            "feature": "list connections with owning process",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "The per-connection list with the owning process is only in the TUI's Connections tab. Headless, the daemon gave only a total connection count (netwatch_connections 11), and doctor only confirmed that ss was found."
+          },
+          {
+            "feature": "diagnose network issues with ranked causes",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "decode captured packets with TLS decryption",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "Packet capture and decode need cap_net_raw/cap_bpf or sudo, which this box does not allow."
+          },
+          {
+            "feature": "show per-hop latency",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: The metrics output has no per-hop latency values, only a gateway RTT metric header with no value and a DNS loss ratio."
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T17:07:16+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/matthart1983/netwatch@5c56deb0597c",
+      "Cargo.lock"
+    ],
+    "packages_checked": 362,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T17:07:10+08:00",
+    "quality": {
+      "total": 88.0,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 93.1,
+      "signals": {
+        "stars": 3604,
+        "monthly_downloads": 1613,
+        "forks": 167,
+        "dependents": null,
+        "release_downloads": 4492,
+        "hn_top_score": 3,
+        "registries_count": 2
+      },
+      "age_days": 277,
+      "packages": [
+        "crates:netwatch-tui",
+        "homebrew:netwatch"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.07
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:07:10.547803+08:00",
+      "sources_sha": "696914ca79112e58933a657bc6a3608638de91c8c5b6557c7c3481487b4eab9b",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "netwatch shows what your machine is doing on the network: every connection and the process behind it where the OS exposes that, the latency of each hop on the way out"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "An SSH session to a Pi, or a tmux split"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "The Linux builds are static and need nothing installed; Windows needs [Npcap](https://npcap.com/#download)."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install netwatch                 # macOS / Linux\nscoop install netwatch                # Windows (needs Npcap)"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "netwatch              # interfaces, connections, config. No privileges."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "It is one binary and needs no configuration."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Linux, macOS, Windows and FreeBSD."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/matthart1983/netwatch",
+      "fetched_at": "2026-11-19T17:04:30+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/matthart1983/netwatch/blob/main/README.md",
+      "fetched_at": "2026-11-19T17:04:28+08:00"
+    },
+    {
+      "id": "release:v0.40.1",
+      "kind": "release",
+      "url": "https://github.com/matthart1983/netwatch/releases/tag/v0.40.1",
+      "fetched_at": "2026-11-19T17:04:28+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Network diagnostics in your terminal.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:39+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "It is one binary and needs no configuration.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:39+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Network diagnostics in your terminal. Inspect traffic, connections and network behaviour.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:39+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "netwatch shows what your machine is doing on the network: every connection and the process behind it where the OS exposes that, the latency of each hop on the way out",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:39+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1 align=\"center\">netwatch</h1>",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:39+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Linux, macOS, Windows and FreeBSD.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:39+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Windows needs [Npcap](https://npcap.com/#download).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:39+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:04:30+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:04:30+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T17:04:30+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:04:30+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:04:30+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.40.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:04:28+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Every socket with process, PID, state, GeoIP, RTT, retransmits",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:39+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "netwatch uptime --since 7d               # outages this week: when, how long, and which hop failed",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:39+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "netwatch daemon --metrics                # headless; Prometheus /metrics on 127.0.0.1:9464",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:39+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "every connection and the process behind it where the OS exposes that",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:39+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "opens an issue when that breaks, ranks the likely causes by the checks each one passed",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:39+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Live decode, TLS 1.3 and 1.2 decryption, JA4, stream tracking, display filters, PCAPNG and PCAP export",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:39+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "the latency of each hop on the way out",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:39+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install netwatch",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:39+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo binstall netwatch-tui",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:39+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cargo binstall netwatch-tui",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:39+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "It is one binary and needs no configuration.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:39+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T17:04:28+08:00",
+  "updated_at": "2026-11-19T17:07:16+08:00"
+}
