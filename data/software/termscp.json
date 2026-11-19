@@ -1,0 +1,639 @@
+{
+  "schema_version": "software.v1",
+  "slug": "termscp",
+  "repo_id": "gh:310881039",
+  "name": "termscp",
+  "summary": "Terminal UI file transfer client and file explorer supporting SCP, SFTP, FTP, S3, SMB, WebDAV, Kube and GCS.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "media_files",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "aws-s3",
+    "command-line-tool",
+    "command-line-utility",
+    "ftp-client",
+    "ratatui",
+    "rust",
+    "rust-crate",
+    "rust-lang",
+    "scp",
+    "sftp"
+  ],
+  "use_cases": [
+    "browse and transfer files on a remote host over SFTP or SCP",
+    "keep local file changes synchronized with a remote host"
+  ],
+  "alternatives_to": [
+    "WinSCP"
+  ],
+  "features": [
+    "transfer files over SFTP, SCP, FTP, S3, SMB, WebDAV",
+    "create, remove, rename, search, view and edit files",
+    "save hosts as bookmarks and recent connections",
+    "sync file changes with the remote host"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://termscp.rs",
+  "repo": {
+    "url": "https://github.com/veeso/termscp",
+    "full_name": "veeso/termscp",
+    "created_at": "2020-11-07T16:03:06Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl --proto '=https' --tlsv1.2 -sSLf https://termscp.rs/install.sh | sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-termscp-20261119-201051-fc99",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/termscp.deb https://github.com/veeso/termscp/releases/download/v1.2.2/termscp_1.2.2-1_amd64.deb && dpkg-deb -x /tmp/termscp.deb /tmp/termscp-deb",
+          "purpose": "Download the v1.2.2 amd64 .deb the install script uses and extract it with dpkg-deb -x (no root)"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && cp /tmp/termscp-deb/usr/bin/termscp ~/.local/bin/termscp && chmod +x ~/.local/bin/termscp",
+          "purpose": "Copy the static musl termscp binary into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "termscp --version",
+        "expected_signal": "termscp v1.2.2"
+      },
+      "first_task": "rm -f ~/.cache/termscp/termscp.log && (sleep 6; printf 'q'; sleep 1; printf 'y'; sleep 1) | TERM=xterm timeout 15 script -qfec \"termscp -P anonymous ftp://anonymous@127.0.0.1:2121\" /dev/null && cat ~/.cache/termscp/termscp.log && cat ~/.config/termscp/bookmarks.toml"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "irm https://termscp.rs/install.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v1.2.2",
+    "published_at": "2026-11-02T13:25:16Z",
+    "url": "https://github.com/veeso/termscp/releases/tag/v1.2.2"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T20:13:25.456628+08:00",
+    "runs": [
+      {
+        "id": "verify-termscp-20261119-201051-fc99",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T20:13:25.456628+08:00",
+        "tool_version": "termscp v1.2.2",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/termscp.deb https://github.com/veeso/termscp/releases/download/v1.2.2/termscp_1.2.2-1_amd64.deb && dpkg-deb -x /tmp/termscp.deb /tmp/termscp-deb",
+            "purpose": "Download the v1.2.2 amd64 .deb the install script uses and extract it with dpkg-deb -x (no root)"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && cp /tmp/termscp-deb/usr/bin/termscp ~/.local/bin/termscp && chmod +x ~/.local/bin/termscp",
+            "purpose": "Copy the static musl termscp binary into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "termscp --version",
+            "expected_signal": "termscp v1.2.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "termscp v1.2.2 - Developed by Christian Visintin <christian.visintin@veeso.dev>",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rm -f ~/.cache/termscp/termscp.log && (sleep 6; printf 'q'; sleep 1; printf 'y'; sleep 1) | TERM=xterm timeout 15 script -qfec \"termscp -P anonymous ftp://anonymous@127.0.0.1:2121\" /dev/null && cat ~/.cache/termscp/termscp.log && cat ~/.config/termscp/bookmarks.toml",
+            "expected_signal": "Connection established!",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2026-11-19T12:12:57.871917689Z [INFO] Connection established!",
+            "setup": [
+              {
+                "command": "pip install --user --break-system-packages pyftpdlib && mkdir -p /tmp/ftproot && echo hello > /tmp/ftproot/remote_file.txt",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 -m pyftpdlib -p 2121 -d /tmp/ftproot",
+                "background": true,
+                "port": 2121
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "(sleep 5; printf 'n'; sleep 1; printf 'created_f2.txt'; sleep 1; printf '\\r'; sleep 2; printf 'q'; sleep 1; printf 'y'; sleep 1) | TERM=xterm timeout 20 script -qfec \"termscp -P anonymous ftp://anonymous@127.0.0.1:2121\" /dev/null && ls -l /home/sbx/work/created_f2.txt",
+            "expected_signal": "/home/sbx/work/created_f2.txt",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[?1049h\u001b[?1006l\u001b[?1015l\u001b[?1003l\u001b[?1002l\u001b[?1000l\u001b[6n\u001b[39m\u001b[49m\u001b[59m\u001b[0m\u001b[?25l\u001b[39m\u001b[49m\u001b[59m\u001b[0m\u001b[?25l\u001b[39m\u001b[49m\u001b[59m\u001b[0m\u001b[?25l\u001b[39m\u001b[49m\u001b[59m\u001b[0m\u001b[?25l\u001b[39m\u001b[49m\u001b[59m\u001b[0m\u001b[?25l\u001b[39m\u001b[49m\u001b[59m\u001b[0m\u001b[?25l\u001b[39m\u001b[49m\u001b[59m\u001b[0m\u001b[?25l\u001b[39m\u001b[49m\u001b[59m\u001b[0m\u001b[?25l\u001b[39m\u001b[49m\u001b[59m\u001b[0m\u001b[?25l\u001b[39m\u001b[49m\u001b[59m\u001b[0m\u001b[?…",
+            "setup": [
+              {
+                "command": "pip install --user --break-system-packages pyftpdlib && mkdir -p /tmp/ftproot && echo hello > /tmp/ftproot/remote_file.txt",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 -m pyftpdlib -p 2121 -d /tmp/ftproot",
+                "background": true,
+                "port": 2121
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl --proto '=https' --tlsv1.2 -sSLf https://termscp.rs/install.sh | sh",
+            "actually_needed": "On Debian the script downloads the .deb and installs it with sudo apt/dpkg, which needs root. Without root, download termscp_1.2.2-1_amd64.deb from the GitHub release, extract it with dpkg-deb -x and copy usr/bin/termscp onto PATH. The binary is static, so it runs as is.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "(nothing about headless use)",
+            "actually_needed": "termscp is TUI-only. To test it without an interactive terminal, run it under `script -qfec` and feed keystrokes through a pipe. In this box the screen output was not captured, so results came from ~/.cache/termscp/termscp.log and from files on disk.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Connect through built-in bookmarks and recent connections",
+            "actually_needed": "Connecting with an address on the CLI (termscp ftp://user@host:port) did not add an entry under [recents] in ~/.config/termscp/bookmarks.toml.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Linux users: a keyring manager (optional)",
+            "actually_needed": "With no keyring available, termscp logs 'could not instantiate keyring' and falls back to file storage. It keeps working.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exit 0 with expected signals: the log shows 'Connection established!' to the local FTP server, created_f2.txt exists after the TUI session, and --version prints termscp v1.2.2.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-termscp-20261119-201051-fc99/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-termscp-20261119-201051-fc99/check-1-cmd9.judged.png",
+            "runs/verify/verify-termscp-20261119-201051-fc99/check-2-cmd11.judged.png",
+            "runs/verify/verify-termscp-20261119-201051-fc99/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.299395,
+        "features": [
+          {
+            "feature": "transfer files over SFTP, SCP, FTP, S3, SMB, WebDAV",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: The log shows only a connection to the FTP server and a disconnect; no file was transferred."
+          },
+          {
+            "feature": "create, remove, rename, search, view and edit files",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "save hosts as bookmarks and recent connections",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "Bookmarks are saved from the interactive auth form, which was not driven through piped keystrokes. The CLI-address connection left [recents] empty."
+          },
+          {
+            "feature": "sync file changes with the remote host",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "Turning on sync needs an interactive TUI toggle, which was not attempted within the budget."
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T20:13:32+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/veeso/termscp@9b7d321029df",
+      "Cargo.lock"
+    ],
+    "packages_checked": 667,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T20:13:25+08:00",
+    "quality": {
+      "total": 83.5,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.75,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.7205,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.9,
+      "signals": {
+        "stars": 3162,
+        "monthly_downloads": 480,
+        "forks": 90,
+        "dependents": null,
+        "release_downloads": 32895,
+        "hn_top_score": 2,
+        "registries_count": 2
+      },
+      "age_days": 2202,
+      "packages": [
+        "crates:termscp",
+        "homebrew:termscp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 7.6
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:13:25.465616+08:00",
+      "sources_sha": "98429e670e697a547711289c7e1fd7608b107257e72245a17a71ebfa5f5d7f47",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "So basically is a terminal utility with an TUI to connect to a remote server to retrieve and upload files and to interact with the local file system."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "winscp-equivalent-for-linux"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "The official Linux binaries and `.deb` packages are statically linked against\nmusl and have **no runtime requirements**: they run on any distribution and\nany glibc version."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl --proto '=https' --tlsv1.2 -sSLf https://termscp.rs/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "A keyring manager: read more in the [User manual]"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "⚠️ If you're looking on how to update termscp just run termscp from CLI with: `(sudo) termscp update` ⚠️"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "It is **Linux**, **MacOS**, **FreeBSD**, **NetBSD** and **Windows** compatible."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/veeso/termscp",
+      "fetched_at": "2026-11-19T20:10:31+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/veeso/termscp/blob/main/README.md",
+      "fetched_at": "2026-11-19T20:10:29+08:00"
+    },
+    {
+      "id": "release:v1.2.2",
+      "kind": "release",
+      "url": "https://github.com/veeso/termscp/releases/tag/v1.2.2",
+      "fetched_at": "2026-11-19T20:10:29+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "a terminal utility with an TUI to connect to a remote server to retrieve and upload files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:10:48+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "If you're considering to install termscp I want to thank you",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:10:48+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A feature rich terminal UI file transfer and explorer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:10:48+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Termscp is a feature rich terminal file transfer and explorer, with support for SCP/SFTP/FTP/Kube/S3/Google Cloud Storage (GCS)/WebDAV.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:10:48+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# termscp",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:10:48+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "It is **Linux**, **MacOS**, **FreeBSD**, **NetBSD** and **Windows** compatible.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:10:48+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T20:10:31+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T20:10:31+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T20:10:31+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T20:10:31+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T20:10:31+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.2.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T20:10:29+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "connect to a remote server to retrieve and upload files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:10:48+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Keep file changes synchronized with the remote host",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:10:48+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "github_api",
+      "quote": "winscp-equivalent-for-linux",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:10:48+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Different communication protocols",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:10:48+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Create, remove, rename, search, view and edit files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:10:48+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Connect to your favourite hosts through built-in bookmarks and recent connections",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:10:48+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Keep file changes synchronized with the remote host",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:10:48+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl --proto '=https' --tlsv1.2 -sSLf https://termscp.rs/install.sh | sh",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:10:48+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl --proto '=https' --tlsv1.2 -sSLf https://termscp.rs/install.sh | sh",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:10:48+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "irm https://termscp.rs/install.ps1 | iex",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:10:48+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T20:10:29+08:00",
+  "updated_at": "2026-11-19T20:13:32+08:00"
+}
