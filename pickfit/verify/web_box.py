@@ -172,6 +172,7 @@ class WebBox:
             runtime="vm", cores=CPUS, memory_mb=MEMORY_MB, lifetime_s=LIFETIME_S, tags=self.tags,
             app_name=APP_NAME, client=client, log=lambda line: self.log(line), image_name=lambda: image_name(),
             publish=lambda client, app: publish_image(client, app, self.log))
+        self.machine.lane = self.machine.purpose = "web"  # the ledger's row for the machine (meter.BoxMeter)
         self._open = False
         self.started_at: float | None = None
         self.start_s: float | None = None

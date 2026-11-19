@@ -457,7 +457,9 @@ class Ec2WinMachine(Ec2Instance, WinSshMachine):
     """An EC2 instance from pickfit's Windows AMI, behind pickfit's security groups."""
 
     platform = "windows"
+    lane = "windows"
     warm_boot_wait_s = 240
+    warm_lifetime_s = WIN_WARM_LIFETIME_S
 
     def __init__(self, *, cores: float = 2, memory_mb: int = WIN_MEMORY_MB, lifetime_s: int,
                  tags: dict[str, str] | None = None, region: str | None = None, ec2: Any = None,
@@ -646,7 +648,13 @@ def ensure_win_image(ec2: Any | None = None, *, log: Callable[[str], None] = pri
 
 
 class Ec2WindowsBox(WindowsBox):
-    """A Windows Server instance on EC2 driven like the other boxes: WindowsBox on an Ec2WinMachine."""
+    """A Windows Server instance on EC2 driven like the other boxes: WindowsBox on an Ec2WinMachine.
+
+    A box takes 125 to 140 s to start as a new instance (40 to 51 s from the pool), a third of a run's time: the
+    pipeline starts the replay's fresh box while the agent works (early_replay, early_box.EarlyBox), when one of the
+    region's two EC2 slots is free."""
+
+    early_replay = True
 
     def __init__(self, *, limits: BoxLimits = BoxLimits(), tags: dict[str, str] | None = None,
                  region: str | None = None, ec2: Any = None, control: str | None = None,

@@ -3,8 +3,11 @@
 ModalMachine is the provider half (machine.Machine): it creates the sandbox, carries root's commands, sets the
 outbound allowlist and terminates it. What happens inside the sandbox is LinuxBox's, and is documented there.
 
-- Runtime gVisor, or "vm" (a microVM with its own kernel). CPU and memory as request = limit (1 physical core
-  is 2 vCPU under gVisor; a VM gives 1 vCPU per requested core), and a lifetime timeout.
+- Runtime gVisor, or "vm" (a microVM with its own kernel). Memory as request = limit; CPU with the box's limit
+  (1 physical core is 2 vCPU under gVisor; a VM gives 1 vCPU per requested core) and a lower request
+  (cpu_request(): Modal bills max(request, use), and the agent spends half its time waiting for the model), except a
+  build box, whose request is its limit. A lifetime timeout.
+- Each sandbox has a row in the ledger's boxes table (meter.BoxMeter), opened at create and closed at terminate.
 - Network: created with an allowlist of public IPv4 ranges (machine.ONLINE_CIDRS), so it can be tightened
   later. set_egress(False) replaces it with an empty allowlist (`_experimental_set_outbound_network_policy`,
   Alpha). A running sandbox cannot be switched to Modal's blocked mode, and Modal's resolver 172.21.0.1 still
@@ -27,6 +30,7 @@ from __future__ import annotations
 
 import hashlib  # noqa: F401
 import ipaddress  # noqa: F401
+import os
 import shlex  # noqa: F401
 import threading  # noqa: F401
 import time
@@ -114,16 +118,40 @@ from pickfit.verify.linux_box import (  # noqa: F401
     uplink_script,
 )
 from pickfit.verify.machine import BLOCKED_NETS, ONLINE_CIDRS, RUNTIMES, Machine, Process, public_cidrs  # noqa: F401
+from pickfit.verify.meter import BoxMeter, identity
 
 APP_NAME = "pickfit-verify"
 # Sandbox prices (3x the function rates), docs/research/notes/sandbox-compare.md, read 2026-10-28.
-# Billed on max(request, use); request = limit here, so this is the cost per second alive.
+# Billed on max(request, use). These rates times the limit are the most a second alive can cost; the ledger records
+# that (an upper bound) and scripts/box_reconcile.py compares it with Modal's own report.
 CORE_USD_PER_S = 0.00003942
 GIB_USD_PER_S = 0.00000667
+RATE_SOURCE = ("Modal sandbox rates (3x the function rates) read 2026-10-28, docs/research/notes/sandbox-compare.md; "
+               "CPU and memory at their limits, billed on max(request, use): an upper bound")
 # GPU sandboxes run only under gVisor, can be preempted, and bill GPUs at the
 # plain rate (same note, read 2026-10-28). Only the small cards: a local AI
 # tool's smoke test runs the smallest model it supports.
 GPU_USD_PER_S = {"T4": 0.59 / 3600, "L4": 0.80 / 3600, "A10": 1.10 / 3600}
+# CPU request (physical cores) of a box that is not a build box: the agent waits for the model about half of its
+# time (54% in the 11/19 audit), and Modal bills max(request, use), so a low request makes that wait cheap. The limit
+# stays the box's own: an install that needs the CPU still gets up to its limit when the host has it to give. A build
+# box (toolchain) keeps request = limit, so a compile is never short of the cores it was sized for.
+CPU_REQUEST_ENV = "PICKFIT_MODAL_CPU_REQUEST"
+CPU_REQUEST_CORES = 0.5
+MIN_CPU_REQUEST_CORES = 0.125  # Modal's smallest request
+
+
+def cpu_request(cores: float, *, toolchain: bool = False) -> float:
+    """The CPU request (cores) of a box with `cores` as its limit: CPU_REQUEST_CORES (or CPU_REQUEST_ENV), never
+    above the limit; a build box's request is its limit."""
+    if toolchain:
+        return cores
+    given = os.environ.get(CPU_REQUEST_ENV, "").strip()
+    try:
+        wanted = float(given) if given else CPU_REQUEST_CORES
+    except ValueError:
+        wanted = CPU_REQUEST_CORES
+    return min(cores, max(MIN_CPU_REQUEST_CORES, wanted))
 
 
 def image_layers(runtime: str = "gvisor", display: bool = False, audio: bool = False,
@@ -193,8 +221,9 @@ class ModalMachine(Machine):
     def __init__(self, *, cores: float, memory_mb: int, lifetime_s: int, image_name: Callable[[], str],
                  publish: Callable[[Any, Any], Any], runtime: str = "gvisor", gpu: str | None = None,
                  tags: dict[str, str] | None = None, app_name: str = APP_NAME, client: Any = None,
-                 log: Callable[[str], None] = print) -> None:
+                 log: Callable[[str], None] = print, cpu_request: float | None = None) -> None:
         self.cores = cores  # Modal counts physical cores: two vCPU under gVisor, one in a VM
+        self.cpu_request = cpu_request  # cores asked for (billed at least); None: the limit, `cores`
         self.memory_mb = memory_mb
         self.lifetime_s = lifetime_s
         self.image_name = image_name
@@ -219,7 +248,8 @@ class ModalMachine(Machine):
 
     def create_kwargs(self) -> dict[str, Any]:
         """Sandbox.create arguments other than app, image and client (separate so tests can check them)."""
-        kwargs = {"runtime": self.runtime, "timeout": self.lifetime_s, "cpu": (self.cores, self.cores),
+        request = self.cores if self.cpu_request is None else min(self.cpu_request, self.cores)
+        kwargs = {"runtime": self.runtime, "timeout": self.lifetime_s, "cpu": (request, self.cores),
                   "memory": (self.memory_mb, self.memory_mb), "workdir": "/",
                   "outbound_cidr_allowlist": ONLINE_CIDRS, "outbound_domain_allowlist": [],
                   "tags": self.tags}
@@ -249,6 +279,13 @@ class ModalMachine(Machine):
         except Exception as err:
             raise BoxError(f"Modal sandbox create failed: {type(err).__name__}: {err}") from err
         self.machine_id = getattr(self.sandbox, "object_id", None)
+        run_id, role = identity(self.tags)
+        gpu = f" + {self.gpu} at Modal's GPU rate" if self.gpu else ""
+        self.meter = BoxMeter("modal", lane=self.lane, purpose=self.purpose or role or "box", run_id=run_id,
+                              vcpu=self.cores * (2 if self.runtime == "gvisor" else 1),
+                              memory_gb=round(self.memory_mb / 1024, 3), usd_per_hour=self.usd_per_second() * 3600,
+                              rate_source=RATE_SOURCE + gpu, lifetime_s=self.lifetime_s, log=self.log)
+        self.meter.start(self.machine_id)
 
     def spawn(self, argv: list[str], timeout_s: int, *, workdir: str | None = None) -> Any:
         kwargs: dict[str, Any] = {"timeout": timeout_s, "text": False}
@@ -270,6 +307,8 @@ class ModalMachine(Machine):
             self.sandbox.terminate()
         except Exception as err:  # already gone; the lifetime timeout reaps it anyway
             self.log(f"modal terminate: {type(err).__name__}: {err}")
+        if self.meter is not None:
+            self.meter.end()
 
     def usd_per_second(self) -> float:
         gpu = GPU_USD_PER_S[self.gpu] if self.gpu else 0.0
@@ -289,6 +328,7 @@ class ModalBox(LinuxBox):
 
     runner = "modal-gvisor"
     image = sandbox_image_tag()
+    build_cpus = 8.0  # box.sized_for_build: Modal bills by the core-second, so a compile on twice the cores costs the same
 
     def __init__(self, *, limits: BoxLimits = BoxLimits(), tags: dict[str, str] | None = None,
                  app_name: str = APP_NAME, client: Any = None, gpu: str | None = None,
@@ -350,6 +390,7 @@ class ModalBox(LinuxBox):
         lim = self.limits
         cores = lim.cpus / 2  # Modal counts physical cores; one core is two vCPU
         self.machine.cores, self.machine.memory_mb, self.machine.lifetime_s = cores, lim.memory_mb, lim.lifetime_s
+        self.machine.cpu_request = cpu_request(cores, toolchain=self.toolchain)
 
     def create_kwargs(self) -> dict[str, Any]:
         """Sandbox.create arguments other than app, image and client (separate so tests can check them)."""

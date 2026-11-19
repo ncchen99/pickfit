@@ -512,6 +512,16 @@ class LinuxBox(Box):
     def usd_per_second(self) -> float:
         return self.machine.usd_per_second()
 
+    def reserve(self) -> bool:
+        """The machine's place among its provider's, taken now or not at all (EC2's lane limit; most have none)."""
+        reserve = getattr(self.machine, "reserve", None)
+        return reserve(wait=False) if reserve is not None else True
+
+    def unreserve(self) -> None:
+        release = getattr(self.machine, "release_slot", None)
+        if release is not None and not self.started:
+            release()
+
     # -- commands and files
 
     def _require_started(self) -> None:
