@@ -1,28 +1,50 @@
-"""Known vulnerabilities in what a fresh install brings (record field security, sec.v1; 念誠 11/3).
+"""Known vulnerabilities in what the software brings (record field security; sec.v1 念誠 11/3, sec.v2 11/19).
 
-No model call and no paid API. Per record:
+No model call and no paid API. sec.v2 (docs/proposals/security.md) keeps what was seen apart from how it was judged.
 
-1. Resolve the dependencies the way a person installing it today gets them:
-   - a registry package (npm, PyPI, crates: from pickfit's own install steps, else the packages that link back to the
-     repository): `npm install --package-lock-only --ignore-scripts` and `uv pip compile --no-build` (neither runs
-     package code), crates through deps.dev's dependency graph;
-   - otherwise the repository (a shallow clone, only read as data): package-lock.json without dev entries,
-     pnpm-lock.yaml (v6 to v9) without devDependencies except electron (its runtime ships in the app), Cargo.lock,
-     go.mod, and Python re-resolved from pyproject.toml (pip and uv do not read uv.lock), else uv.lock's non-dev
-     closure, poetry.lock or pinned requirements. Lockfiles of parts the person does not install (docs sites, editor
-     extensions, CI actions, examples, tests) are skipped.
-2. Look every resolved version up on OSV.dev. Any high or critical advisory counts, fixed or not, denial of service
-   included (念誠: rather drop a treasure by mistake than recommend a known hole); so does a malicious-package report.
-   Severity is GHSA's; an advisory without one (RUSTSEC, GO, PYSEC) takes its GHSA alias's, else its CVSS v3 base
-   score. RUSTSEC's informational notes (unmaintained, unsound) are not vulnerabilities.
+Observation, per record:
 
-The check bounds quality (QUALITY_CAPS["known_vulnerability"], 79): a vulnerable record cannot be a treasure. A record
-pickfit cannot check keeps its score and says so (status unchecked). `pickfit security --write` stores the check,
-hides a record with a malicious package, and refreshes scores.
+1. What it brings, the way a person gets it:
+   - the installed artifact, when the verification's replay box left an SBOM (pickfit/sbom.py; target
+     installed_artifact). A lockfile package the SBOM does not have is marked not in the artifact;
+   - else its own registry packages (npm, PyPI, crates: from pickfit's own install steps, else the packages that link
+     back to the repository) resolved as a fresh install: `npm install --package-lock-only --ignore-scripts` and
+     `uv pip compile --no-build` (neither runs package code), crates through deps.dev (target registry_resolve);
+   - else the repository (a shallow clone, only read as data; target repo_lockfile): package-lock.json and
+     pnpm-lock.yaml (v6 to v9) as graphs, Cargo.lock with the members' Cargo.toml, go.mod, and Python re-resolved
+     from pyproject.toml (pip and uv do not read uv.lock), else uv.lock's non-dev closure, poetry.lock or pinned
+     requirements. Lockfiles of parts the person does not install (docs sites, editor extensions, CI actions,
+     examples, tests) are skipped.
+   Every package keeps where it sits (S4): runtime; dev; build (native-build tooling such as node-gyp, and bundlers
+   in web and desktop apps); peer; optional (a Cargo optional dependency no default feature turns on); platform (only
+   on an OS the software does not support); workspace (a member of the repository the software does not ship: pnpm
+   and npm importers, Cargo members, chosen by the software's own package names, its Electron app or its binaries).
+2. Every version is looked up on OSV.dev and every advisory is kept, any severity (sec.v1 kept high and critical),
+   with what it says (aliases, dates, CVSS vectors, CWE), CISA KEV, FIRST EPSS and when the fix came out (deps.dev).
+   RUSTSEC's informational notes (unmaintained, unsound) are not vulnerabilities. Severity is GHSA's; an advisory
+   without one takes its GHSA alias's, else its CVSS v3 base score's band.
+3. Whether the vulnerable code runs, by program only: an MCP SDK whose HTTP transports the project never imports, an
+   option or function the advisory names that the project's source never uses (grep, conclusive only when the project
+   is the package's only user), a Go package the project never imports, govulncheck's symbol results on the
+   installed Go binaries, a Next.js app built as a static export (no server).
+
+Assessment (policy sec.v2): a finding is blocked (a malicious package, or a KEV entry not shown unreachable), exposed
+(reachable by evidence and over the network), conditional (anything not settled: the default), present_unreachable
+(shipped, vulnerable code not used) or not_shipped (not in what the person gets). Only high and critical findings,
+malicious packages and KEV entries count; the rest are observed. The record takes the worst counted finding's level
+when it warns (blocked, exposed, conditional); else partial when the read was incomplete; else the worst of the rest,
+or clean; unchecked when nothing could be read. `status` follows the level, so sec.v1 readers keep working:
+vulnerable (blocked, exposed, conditional), clean (present_unreachable, not_shipped, clean), unchecked (partial,
+unchecked). Scoring reads security.assessment.level (level_of() below); a record still on sec.v1 keeps the 79 cap.
+
+The record keeps a summary and the findings that matter; data/security/<slug>.json keeps the full observation (every
+finding, the SBOM's packages) so a new policy can be applied offline. `pickfit security --write` stores the check,
+hides a blocked record, and refreshes scores.
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
 import math
 import os
@@ -36,30 +58,81 @@ import tomllib
 import urllib.error
 import urllib.parse
 import urllib.request
+from collections import Counter, deque
+from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor
-from dataclasses import dataclass
-from datetime import datetime
+from dataclasses import dataclass, field, replace
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any
 
 from pickfit.ledger import taipei_now
 
-VERSION = "sec.v1"
+VERSION = "sec.v2"
+POLICY = "sec.v2"
 OSV = "https://api.osv.dev/v1"
 DEPS_DEV = "https://api.deps.dev/v3"
+KEV_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+EPSS_URL = "https://api.first.org/data/v1/epss"
 CLONES = Path.home() / ".pickfit" / "security-clones"
+CACHE = Path.home() / ".pickfit" / "cache" / "security"
+REPO_ROOT = Path(__file__).resolve().parent.parent
 ECOSYSTEM = {"npm": "npm", "pypi": "PyPI", "crates": "crates.io", "go": "Go"}
+DEPS_DEV_SYSTEM = {"npm": "npm", "pypi": "pypi", "crates": "cargo", "go": "go"}
 COUNTED = ("CRITICAL", "HIGH")
+SEVERITY_RANK = {"CRITICAL": 0, "HIGH": 1, "MODERATE": 2, "LOW": 3, "NONE": 4, "UNKNOWN": 5}
 # Parts of a repository a person installing the software does not get.
 PERIPHERAL = re.compile(r"(^|/)(website|site|docs?|landing|www|demo|examples?|bench(mark)?s?|playground|e2e|tests?|"
                         r"__tests__|fixtures?|scripts|editors?|action|vscode|node_modules|vendor|tools|external|"
                         r"third_party|reference|mockups|spikes?|eval|fuzz|testdata|experiments?|skill_assets|skills|qa|"
                         r"labs?|probes?|\.[^/]+)/", re.I)
 UNSUPPORTED_LOCKS = ("yarn.lock", "bun.lock", "bun.lockb")
-MAX_FINDINGS = 60
+MAX_FINDINGS = 60  # sec.v1's record list
+RECORD_WARN = 20  # sec.v2: findings that warn kept in the record (all are in data/security/<slug>.json)
+RECORD_UNREACHABLE = 10  # and the ones present but unreachable
 TIMEOUT = 300
+ALL_OS = frozenset({"macos", "linux", "windows"})
+OS_NAMES = {"darwin": "macos", "macos": "macos", "linux": "linux", "win32": "windows", "windows": "windows"}
+
+# The levels, worst first (pickfit/schema.py's SECURITY_* in loop/proposals/security-schema.patch mirror these).
+LEVELS = ("blocked", "exposed", "conditional", "partial", "present_unreachable", "not_shipped", "clean", "unchecked")
+FINDING_LEVELS = ("blocked", "exposed", "conditional", "present_unreachable", "not_shipped")
+WARN_LEVELS = frozenset({"blocked", "exposed", "conditional"})
+STATUS_OF_LEVEL = {"blocked": "vulnerable", "exposed": "vulnerable", "conditional": "vulnerable",
+                   "present_unreachable": "clean", "not_shipped": "clean", "clean": "clean",
+                   "partial": "unchecked", "unchecked": "unchecked"}
+# Where a dependency sits, most shipped first; only runtime reaches the person.
+SCOPES = ("runtime", "optional", "platform", "peer", "build", "test", "dev", "workspace")
 
 type Node = tuple[str, str, str]  # ecosystem key, name, version
+
+
+def status_for(level: str) -> str:
+    """The sec.v1 status a level reads as."""
+    return STATUS_OF_LEVEL[level]
+
+
+def legacy_level(check: dict[str, Any] | None) -> str:
+    """A sec.v1 check in sec.v2's words, read the way sec.v1 judged it: a malicious package blocked, any other finding
+    conditional (sec.v1 could not tell more), clean clean, the rest unchecked."""
+    if not check:
+        return "unchecked"
+    status = check.get("status")
+    if status == "vulnerable":
+        return "blocked" if any(f.get("malicious") for f in check.get("findings") or []) else "conditional"
+    return "clean" if status == "clean" else "unchecked"
+
+
+def level_of(record: Any) -> str | None:
+    """security.assessment.level of a record (a dict or a SoftwareRecord), or None when the record has no sec.v2
+    assessment: a caller then keeps sec.v1's rule (status vulnerable caps quality at 79). Pure: no I/O."""
+    security = record.get("security") if isinstance(record, dict) else getattr(record, "security", None)
+    if security is None:
+        return None
+    assessment = security.get("assessment") if isinstance(security, dict) else getattr(security, "assessment", None)
+    if assessment is None:
+        return None
+    return assessment.get("level") if isinstance(assessment, dict) else getattr(assessment, "level", None)
 
 
 # --- HTTP -------------------------------------------------------------------------------------------------------------
@@ -86,19 +159,27 @@ def _http(url: str, body: Any = None, tries: int = 4) -> Any:
 
 
 class Advisories:
-    """OSV advisory details, fetched once per id (thread-safe enough: a duplicate fetch only costs a request)."""
+    """OSV advisory details, fetched once per id (thread-safe enough: a duplicate fetch only costs a request).
+    cache_dir keeps them on disk too (offline re-assessment); a scan leaves it None so advisories are fresh."""
 
-    def __init__(self) -> None:
+    def __init__(self, cache_dir: Path | None = None) -> None:
         self._cache: dict[str, dict[str, Any]] = {}
         self._lock = threading.Lock()
+        self._dir = cache_dir
 
     def get(self, vid: str) -> dict[str, Any]:
         with self._lock:
             hit = self._cache.get(vid)
+        disk = self._dir / f"{re.sub(r'[^A-Za-z0-9._-]', '_', vid)}.json" if self._dir else None
+        if hit is None and disk is not None and disk.exists():
+            hit = json.loads(disk.read_text(encoding="utf-8"))
         if hit is None:
             hit = _http(f"{OSV}/vulns/{urllib.parse.quote(vid)}")
-            with self._lock:
-                self._cache[vid] = hit
+            if disk is not None:
+                disk.parent.mkdir(parents=True, exist_ok=True)
+                disk.write_text(json.dumps(hit), encoding="utf-8")
+        with self._lock:
+            self._cache[vid] = hit
         return hit
 
     def severity(self, v: dict[str, Any]) -> str:
@@ -145,11 +226,230 @@ def cvss3_base(vector: str) -> float | None:
     return whole / 100000 if whole % 10000 == 0 else (math.floor(whole / 10000) + 1) / 10
 
 
+def cvss_metrics(vector: str | None) -> dict[str, str]:
+    """A CVSS v3 or v4 vector's metrics, e.g. {'AV': 'N', 'UI': 'R', 'C': 'H'}."""
+    return dict(p.split(":", 1) for p in (vector or "").split("/")[1:] if ":" in p)
+
+
+_AV = {"N": "network", "A": "adjacent", "L": "local", "P": "physical"}
+_DOS_CWES = frozenset({"CWE-400", "CWE-401", "CWE-404", "CWE-407", "CWE-674", "CWE-770", "CWE-772", "CWE-789",
+                       "CWE-834", "CWE-835", "CWE-1050", "CWE-1325", "CWE-1333", "CWE-606", "CWE-776"})
+_DOS_WORDS = re.compile(r"denial[- ]of[- ]service|\bDoS\b|exhaust|infinite loop|\bReDoS\b|unbounded|quadratic|"
+                        r"exponential|uncontrolled recursion|stack overflow|\bpanic|\bhang|\bcrash|\bOOM\b|"
+                        r"out[- ]of[- ]memory|can loop", re.I)
+_NOT_DOS_WORDS = re.compile(r"code execution|\bRCE\b|arbitrary|bypass|disclos|injection|traversal|overwrite|"
+                            r"spoof|leak|forg|XSS|cross-site|privilege|escalat|credential|undefined behavior|"
+                            r"out[- ]of[- ]bounds write|use[- ]after[- ]free", re.I)
+
+
+def advisory_facts(v: dict[str, Any]) -> dict[str, Any]:
+    """What an OSV advisory says, for a finding: aliases, dates, CVSS vectors, attack vector, CWE, DoS only."""
+    vectors: dict[str, str] = {}
+    for s in v.get("severity") or []:
+        if isinstance(s, dict) and s.get("type") in ("CVSS_V3", "CVSS_V4") and s.get("score"):
+            vectors.setdefault(s["type"], str(s["score"]))
+    v3, v4 = vectors.get("CVSS_V3"), vectors.get("CVSS_V4")
+    metrics = cvss_metrics(v3 or v4)
+    cwes = sorted({str(c) for c in (v.get("database_specific") or {}).get("cwe_ids") or []})[:10]
+    text = f"{v.get('summary') or ''} {(v.get('details') or '')[:600]}"
+    if v3 and {"C", "I", "A"} <= set(metrics):
+        dos: bool | None = metrics["C"] == "N" and metrics["I"] == "N" and metrics["A"] != "N"
+    elif v4 and {"VC", "VI", "VA"} <= set(metrics):
+        dos = metrics["VC"] == "N" and metrics["VI"] == "N" and metrics.get("SC", "N") == "N" \
+            and metrics.get("SI", "N") == "N" and metrics["VA"] != "N"
+    elif cwes:
+        dos = set(cwes) <= _DOS_CWES
+    elif _DOS_WORDS.search(text):
+        dos = not _NOT_DOS_WORDS.search(text)
+    else:
+        dos = None
+    return {"aliases": sorted(set(v.get("aliases") or []))[:20], "published": v.get("published"),
+            "modified": v.get("modified"), "cvss_v3": v3, "cvss_v4": v4, "attack_vector": _AV.get(metrics.get("AV")),
+            "cwes": cwes, "dos_only": dos}
+
+
+def purl(eco: str, name: str, version: str) -> str:
+    """The package URL (purl) of a package version."""
+    q = lambda s: urllib.parse.quote(s, safe="")  # noqa: E731
+    if eco == "npm":
+        return f"pkg:npm/{'/'.join(q(p) for p in name.split('/'))}@{q(version)}"
+    if eco == "pypi":
+        return f"pkg:pypi/{_norm(name)}@{q(version)}"
+    if eco == "crates":
+        return f"pkg:cargo/{q(name)}@{q(version)}"
+    return f"pkg:golang/{name}@{q(version)}"
+
+
+# --- threat intelligence: CISA KEV, FIRST EPSS, fix dates ---------------------------------------------------------------
+
+
+class Intel:
+    """CISA's Known Exploited Vulnerabilities catalog and FIRST's EPSS scores, read once a day (cached on disk under
+    ~/.pickfit/cache/security). Intel.offline() knows nothing: a finding's kev and epss then stay null."""
+
+    def __init__(self, kev: dict[str, str] | None = None, *, kev_catalog: str | None = None,
+                 epss: dict[str, tuple[float, float]] | None = None, epss_date: str | None = None,
+                 day: str | None = None, fetch_epss: bool = False, cache: Path | None = None) -> None:
+        self.kev = kev  # CVE -> dateAdded; None: not read
+        self.kev_catalog = kev_catalog
+        self.epss = epss  # CVE -> (score, percentile); None: not read
+        self.epss_date = epss_date
+        self.day = day
+        self._fetch_epss = fetch_epss
+        self._cache = cache
+        self._lock = threading.Lock()
+
+    @classmethod
+    def offline(cls) -> Intel:
+        return cls()
+
+    @classmethod
+    def fetch(cls, cache: Path = CACHE, *, today: str | None = None) -> Intel:
+        """Today's KEV catalog (one download a day) and EPSS scores looked up as findings need them."""
+        day = today or taipei_now().date().isoformat()
+        cache.mkdir(parents=True, exist_ok=True)
+        path = cache / f"kev-{day}.json"
+        if path.exists():
+            catalog = json.loads(path.read_text(encoding="utf-8"))
+        else:
+            catalog = _http(KEV_URL)
+            path.write_text(json.dumps(catalog), encoding="utf-8")
+        kev = {str(v.get("cveID")): str(v.get("dateAdded")) for v in catalog.get("vulnerabilities") or []}
+        epss_path = cache / f"epss-{day}.json"
+        epss = {k: tuple(v) for k, v in json.loads(epss_path.read_text(encoding="utf-8")).items()} \
+            if epss_path.exists() else {}
+        return cls(kev, kev_catalog=str(catalog.get("catalogVersion") or catalog.get("dateReleased") or "")[:40] or None,
+                   epss=epss, epss_date=day, day=day, fetch_epss=True, cache=cache)  # type: ignore[arg-type]
+
+    def kev_of(self, cves: Iterable[str]) -> bool | None:
+        return None if self.kev is None else any(c in self.kev for c in cves)
+
+    def prefetch(self, cves: Iterable[str]) -> None:
+        """Look up the EPSS scores not known yet, 100 CVEs a request."""
+        if not self._fetch_epss or self.epss is None:
+            return
+        with self._lock:
+            todo = sorted({c for c in cves if c.startswith("CVE-") and c not in self.epss})
+        for i in range(0, len(todo), 100):
+            chunk = todo[i:i + 100]
+            try:
+                got = _http(f"{EPSS_URL}?cve={','.join(chunk)}")
+            except (urllib.error.URLError, TimeoutError, ValueError):
+                return
+            with self._lock:
+                for row in got.get("data") or []:
+                    self.epss[str(row.get("cve"))] = (float(row.get("epss") or 0), float(row.get("percentile") or 0))
+                for c in chunk:
+                    self.epss.setdefault(c, (-1.0, -1.0))  # asked, none published
+                if self._cache is not None and self.day:
+                    (self._cache / f"epss-{self.day}.json").write_text(json.dumps(self.epss), encoding="utf-8")
+
+    def epss_of(self, cves: Iterable[str]) -> tuple[float, float] | None:
+        if self.epss is None:
+            return None
+        known = [self.epss[c] for c in cves if c in self.epss and self.epss[c][0] >= 0]
+        return max(known) if known else None
+
+
+_SHARED: dict[str, Intel] = {}
+_SHARED_LOCK = threading.Lock()
+
+
+def shared_intel() -> Intel:
+    """One Intel per process and day (the watch's checks); offline when CISA or FIRST cannot be reached."""
+    day = taipei_now().date().isoformat()
+    with _SHARED_LOCK:
+        if day not in _SHARED:
+            try:
+                _SHARED[day] = Intel.fetch(today=day)
+            except (urllib.error.URLError, TimeoutError, OSError, ValueError):
+                _SHARED[day] = Intel.offline()
+        return _SHARED[day]
+
+
+class FixDates:
+    """When a fixed version came out (deps.dev publishedAt), looked up once per package version."""
+
+    def __init__(self, enabled: bool = True) -> None:
+        self.enabled = enabled
+        self._cache: dict[tuple[str, str, str], str | None] = {}
+        self._lock = threading.Lock()
+
+    def published(self, eco: str, name: str, version: str) -> str | None:
+        if not self.enabled or eco not in DEPS_DEV_SYSTEM:
+            return None
+        key = (eco, name, version)
+        with self._lock:
+            if key in self._cache:
+                return self._cache[key]
+        ver = version if eco != "go" or version.startswith("v") else f"v{version}"
+        url = (f"{DEPS_DEV}/systems/{DEPS_DEV_SYSTEM[eco]}/packages/{urllib.parse.quote(name, safe='')}"
+               f"/versions/{urllib.parse.quote(ver, safe='')}")
+        try:
+            got = _http(url, tries=2).get("publishedAt")
+        except (urllib.error.URLError, TimeoutError, ValueError):
+            got = None
+        with self._lock:
+            self._cache[key] = got
+        return got
+
+
 # --- resolving what a fresh install brings ----------------------------------------------------------------------------
 
 
 def _run(cmd: list[str], cwd: Path | None = None, stdin: str | None = None) -> subprocess.CompletedProcess[str]:
     return subprocess.run(cmd, cwd=cwd, input=stdin, capture_output=True, text=True, timeout=TIMEOUT)
+
+
+@dataclass(frozen=True)
+class Dep:
+    """One package version the software may bring, and where it sits.
+
+    direct: only the project's own members depend on it, so a grep of the project's source is conclusive about how it
+    is called; gate: it is reached only through an optional entry point of that package (ENTRY_GATES)."""
+
+    eco: str
+    name: str
+    version: str
+    scope: str = "runtime"
+    path: tuple[str, ...] = ()
+    workspace: str | None = None
+    platform: tuple[str, ...] = ()
+    found_in: str | None = None
+    direct: bool | None = None
+    gate: str | None = None
+    in_artifact: bool | None = None
+
+    @property
+    def node(self) -> Node:
+        return (self.eco, self.name, self.version)
+
+
+def as_dep(n: Node | Dep, **over: Any) -> Dep:
+    if isinstance(n, Dep):
+        return replace(n, **{k: v for k, v in over.items() if getattr(n, k) in (None, ())}) if over else n
+    return Dep(n[0], n[1], n[2], **over)
+
+
+def merge_deps(deps: Iterable[Dep]) -> list[Dep]:
+    """One entry per package version: the most shipped scope wins (and its path); in_artifact true wins. Two reads
+    in the same scope must agree for it to stay gated or depended on by the project only."""
+    best: dict[Node, Dep] = {}
+    for d in deps:
+        have = best.get(d.node)
+        if have is None:
+            best[d.node] = d
+            continue
+        keep = d if SCOPES.index(d.scope) < SCOPES.index(have.scope) else have
+        other = have if keep is d else d
+        same = keep.scope == other.scope
+        best[d.node] = replace(
+            keep, path=keep.path or other.path, found_in=keep.found_in or other.found_in,
+            in_artifact=True if True in (keep.in_artifact, other.in_artifact) else keep.in_artifact,
+            direct=(bool(keep.direct and other.direct) if same and None not in (keep.direct, other.direct)
+                    else keep.direct if keep.direct is not None or not same else other.direct),
+            gate=(keep.gate if keep.gate == other.gate else None) if same else keep.gate)
+    return list(best.values())
 
 
 def npm_lock_nodes(lock: dict[str, Any], *, platform: bool = True) -> list[Node]:
@@ -166,9 +466,9 @@ def npm_lock_nodes(lock: dict[str, Any], *, platform: bool = True) -> list[Node]
     return out
 
 
-# A resolver returns every package a fresh install brings and how many of them are real dependencies: neither the
-# package itself nor a per-platform build of it. None means a wrapper whose dependencies are compiled in.
-type Resolved = tuple[list[Node], int]
+# A resolver returns every package a fresh install brings (nodes or Deps) and how many of them are real dependencies:
+# neither the package itself nor a per-platform build of it. 0 means a wrapper whose dependencies are compiled in.
+type Resolved = tuple[list[Any], int]
 
 
 def resolve_npm(name: str) -> Resolved:
@@ -179,7 +479,8 @@ def resolve_npm(name: str) -> Resolved:
             raise RuntimeError(f"npm resolve failed: {r.stderr.strip()[-200:]}")
         lock = json.loads(Path(tmp, "package-lock.json").read_text())
     deps = [n for n in npm_lock_nodes(lock, platform=False) if n[1] != name]
-    return npm_lock_nodes(lock), len(deps)
+    graph = npm_graph(lock, found_in=f"registry:npm:{name}", root_label=f"npm:{name}")
+    return graph.deps(ALL_OS), len(deps)
 
 
 def _pins(text: str) -> list[Node]:
@@ -243,6 +544,260 @@ def _uv_lock_nodes(lock: dict[str, Any]) -> list[Node]:
     return [("pypi", n, by_name[n]["version"]) for n in sorted(keep) if "version" in by_name[n]]
 
 
+# --- dependency graphs: where each package sits (S4) -------------------------------------------------------------------
+
+# Native-addon build tooling: what it pulls in builds the software, it does not run in it (OpenPets: tar under
+# node-gyp). Packaging tools for Electron apps likewise.
+NATIVE_BUILD_TOOLS = frozenset({
+    "node-gyp", "@mapbox/node-pre-gyp", "node-pre-gyp", "prebuild-install", "prebuild", "cmake-js",
+    "@electron/rebuild", "electron-rebuild", "@electron/get", "electron-builder", "electron-packager",
+    "@electron/packager", "electron-winstaller", "app-builder-lib", "dmg-builder", "@electron/notarize",
+    "@electron/osx-sign", "@electron/universal", "@electron-forge/cli", "@electron-forge/core"})
+# Bundlers and CSS tools: build-only in a web app or a desktop app (what they emit ships, not they). A CLI may run one
+# at run time, so there they stay runtime.
+BUNDLERS = frozenset({
+    "vite", "webpack", "rollup", "esbuild", "postcss", "autoprefixer", "tailwindcss", "@tailwindcss/postcss",
+    "@tailwindcss/vite", "@tailwindcss/node", "@tailwindcss/oxide", "typescript", "terser", "@babel/core", "sass",
+    "less", "parcel", "@vitejs/plugin-react", "@vitejs/plugin-vue", "lightningcss", "@swc/core", "turbo",
+    "@sveltejs/kit", "@sveltejs/vite-plugin-svelte", "svelte-check", "@angular/cli", "@angular-devkit/build-angular",
+    "@nuxt/kit", "electron-vite", "tsup", "unbuild"})
+BUNDLER_KINDS = frozenset({"web_app", "self_hosted_web_app", "desktop_app", "browser_extension"})
+# Edges into build-time code of a runtime package: Next.js processes CSS with postcss at build time.
+BUILD_EDGES = frozenset({("next", "postcss")})
+
+
+@dataclass(frozen=True)
+class Gate:
+    """A package whose code behind some entry points pulls in more than its core: what only those entries load is not
+    reached when the project never imports them."""
+
+    package: str
+    label: str
+    entries: re.Pattern[str]
+    deps: frozenset[str]
+    advisory: re.Pattern[str]
+
+
+# 11/19 (OpenPets): an MCP server on stdio never loads the MCP SDK's HTTP transports, so express, hono and the rest
+# (proxy-addr, body-parser...) and the SDK's own HTTP, session and OAuth advisories are present but unreachable.
+ENTRY_GATES = (
+    Gate(package="@modelcontextprotocol/sdk", label="the MCP SDK's HTTP transports and OAuth",
+         entries=re.compile(r"""["']@modelcontextprotocol/sdk(?:["']|/(?:server/(?:streamableHttp|sse|express|auth|"""
+                            r"""webStandardStreamableHttp)|client/(?:streamableHttp|sse|auth|websocket))\b)"""),
+         deps=frozenset({"express", "cors", "express-rate-limit", "raw-body", "content-type", "hono",
+                         "@hono/node-server", "body-parser", "jose", "pkce-challenge", "eventsource",
+                         "eventsource-parser"}),
+         advisory=re.compile(r"\b(HTTP|transports?|OAuth|authori[sz]ation|DNS rebinding|SSE|Streamable|sessions?|"
+                             r"request body|CORS)\b", re.I)),
+)
+
+
+@dataclass
+class Graph:
+    """A lockfile's packages and edges. roots are (label, child id, scope); edges are (child id, normal | peer)."""
+
+    found_in: str
+    eco: str
+    nodes: dict[str, tuple[str, str]] = field(default_factory=dict)  # id -> (name, version)
+    edges: dict[str, list[tuple[str, str]]] = field(default_factory=dict)
+    roots: list[tuple[str, str, str]] = field(default_factory=list)
+    platform: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    build_tools: frozenset[str] = NATIVE_BUILD_TOOLS
+    workspace_of: dict[str, str] = field(default_factory=dict)  # root label -> the folder it lives in
+
+    def deps(self, supported: Iterable[str] = ALL_OS) -> list[Dep]:
+        """Every node with its scope and shortest path. Passes run from the most shipped to the least; a node keeps
+        the first one that reaches it. Never reached: runtime (an orphan entry is not proof it does not ship)."""
+        supported = frozenset(supported) or ALL_OS
+        best: dict[str, tuple[str, tuple[str, ...], str | None]] = {}
+        parents: dict[str, set[str]] = {}
+        for nid, kids in self.edges.items():
+            for kid, _ in kids:
+                parents.setdefault(kid, set()).add(nid)
+
+        def walk(starts: list[tuple[str, str]], *, build: bool, peer: bool,
+                 cut: frozenset[tuple[str, str]] = frozenset()) -> dict[str, tuple[tuple[str, ...], str]]:
+            seen: dict[str, tuple[tuple[str, ...], str]] = {}
+            queue: deque[tuple[str, tuple[str, ...], str]] = deque()
+            for label, kid in starts:
+                if kid in self.nodes and (build or self.nodes[kid][0] not in self.build_tools):
+                    queue.append((kid, (label, self.nodes[kid][0]), label))
+            while queue:
+                nid, path, label = queue.popleft()
+                if nid in seen:
+                    continue
+                seen[nid] = (path, label)
+                name = self.nodes[nid][0]
+                for kid, kind in self.edges.get(nid, []):
+                    if kid not in self.nodes or kid in seen:
+                        continue
+                    kname = self.nodes[kid][0]
+                    if kind == "peer" and not peer:
+                        continue
+                    if not build and (kname in self.build_tools or (name, kname) in BUILD_EDGES):
+                        continue
+                    if (name, kname) in cut:
+                        continue
+                    queue.append((kid, (*path, kname), label))
+            return seen
+
+        def roots(*scopes: str) -> list[tuple[str, str]]:
+            return [(label, kid) for label, kid, s in self.roots if s in scopes]
+
+        passes = [("runtime", roots("runtime"), False, False), ("build", roots("runtime", "build"), True, False),
+                  ("peer", roots("runtime", "build", "peer"), True, True), ("optional", roots("optional"), True, True),
+                  ("platform", roots("platform"), True, True), ("test", roots("test"), True, True),
+                  ("dev", roots("dev"), True, True), ("workspace", roots("workspace"), True, True)]
+        runtime_seen: dict[str, tuple[tuple[str, ...], str]] = {}
+        for scope, starts, build, peer in passes:
+            seen = walk(starts, build=build, peer=peer)
+            if scope == "runtime":
+                runtime_seen = seen
+            for nid, (path, label) in seen.items():
+                best.setdefault(nid, (scope, path, label))
+        gated: dict[str, str] = {}
+        for gate in ENTRY_GATES:
+            if not any(name == gate.package for name, _ in self.nodes.values()):
+                continue
+            cut = frozenset((gate.package, d) for d in gate.deps)
+            without = walk(roots("runtime"), build=False, peer=False, cut=cut)
+            for nid in runtime_seen:
+                if nid not in without:
+                    gated[nid] = gate.package
+        out = []
+        for nid, (name, version) in self.nodes.items():
+            scope, path, label = best.get(nid, ("runtime", (), None))
+            plat = self.platform.get(nid, ())
+            if scope == "runtime" and plat and not (set(plat) & supported):
+                scope = "platform"
+            direct = not (parents.get(nid, set()) - {nid}) if nid in parents or path else None
+            out.append(Dep(self.eco, name, version, scope, path, self.workspace_of.get(label or "", label), plat,
+                           self.found_in, direct, gated.get(nid)))
+        return out
+
+
+def _os_list(raw: Any) -> tuple[str, ...]:
+    """An os field (npm's list, pnpm's '[darwin, linux]') as pickfit's OS names; negations ('!win32') invert."""
+    items = raw if isinstance(raw, list) else re.findall(r"[!\w-]+", str(raw or ""))
+    plus = {OS_NAMES[i] for i in items if i in OS_NAMES}
+    minus = {OS_NAMES[i[1:]] for i in items if i.startswith("!") and i[1:] in OS_NAMES}
+    if plus:
+        return tuple(sorted(plus))
+    if minus:
+        return tuple(sorted(ALL_OS - minus))
+    return ()
+
+
+@dataclass
+class Importer:
+    """A workspace member of an npm or pnpm lockfile: what it is called, whether it has a binary, its links."""
+
+    path: str
+    name: str | None = None
+    bin: bool = False
+    electron: bool = False
+    links: list[str] = field(default_factory=list)  # other importers it depends on at run time
+    runtime: bool = False  # it has dependencies of its own (not only dev ones)
+    peers: frozenset[str] = frozenset()
+
+
+def shipped_importers(importers: dict[str, Importer], own: set[str], kind: str | None) -> set[str]:
+    """The members the software ships: those published under its own package names, and in a desktop app those with
+    Electron; else the ones with a binary, or the root with dependencies; then what they link to. If none can be
+    told apart, every member ships (as sec.v1 read it)."""
+    picked = {p for p, i in importers.items() if i.name and _norm(i.name) in own}
+    if kind == "desktop_app":
+        picked |= {p for p, i in importers.items() if i.electron}
+    if not picked:
+        picked = {p for p, i in importers.items() if i.bin} | ({"."} if "." in importers and importers["."].runtime
+                                                               else set())
+    if not picked:
+        return set(importers)
+    stack = list(picked)
+    while stack:
+        for link in importers[stack.pop()].links:
+            if link in importers and link not in picked:
+                picked.add(link)
+                stack.append(link)
+    return picked
+
+
+def _package_json(path: Path) -> dict[str, Any]:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, UnicodeDecodeError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def npm_graph(lock: dict[str, Any], *, found_in: str, root_label: str = ".", own: set[str] | None = None,
+              kind: str | None = None) -> Graph:
+    """A package-lock.json (v2/v3) as a graph: the root project and its workspace members are the importers."""
+    packages = lock.get("packages") or {}
+    graph = Graph(found_in, "npm", build_tools=NATIVE_BUILD_TOOLS | (BUNDLERS if kind in BUNDLER_KINDS else frozenset()))
+    links = {path: p.get("resolved") for path, p in packages.items() if p.get("link")}
+
+    def resolve(frm: str, name: str) -> tuple[str | None, str | None]:
+        """(node id, linked importer) of `name` as Node resolves it from the folder `frm`."""
+        base = frm
+        while True:
+            cand = f"{base}/node_modules/{name}" if base else f"node_modules/{name}"
+            if cand in links:
+                return None, links[cand]
+            if cand in packages:
+                return cand, None
+            if not base:
+                return None, None
+            cut = base.rfind("/node_modules/")
+            base = base[:cut] if cut >= 0 else ""
+
+    for path, p in packages.items():
+        if "node_modules/" in path and "version" in p and not p.get("link"):
+            graph.nodes[path] = (p.get("name") or path.rsplit("node_modules/", 1)[-1], p["version"])
+            if p.get("os"):
+                graph.platform[path] = _os_list(p["os"])
+    for path in graph.nodes:
+        p = packages[path]
+        for group, kind_ in (("dependencies", "normal"), ("optionalDependencies", "normal"), ("peerDependencies", "peer")):
+            for name in p.get(group) or {}:
+                kid, _ = resolve(path, name)
+                if kid:
+                    graph.edges.setdefault(path, []).append((kid, kind_))
+    importers: dict[str, Importer] = {}
+    roots: dict[str, list[tuple[str, str]]] = {}
+    for path, p in packages.items():
+        if "node_modules/" in path or p.get("link"):
+            continue
+        label = path or "."
+        imp = Importer(label, p.get("name"), bool(p.get("bin")), False, [], bool(p.get("dependencies")),
+                       frozenset(p.get("peerDependencies") or {}))
+        for group, scope in (("dependencies", "runtime"), ("optionalDependencies", "runtime"),
+                             ("devDependencies", "dev"), ("peerDependencies", "peer")):
+            for name in p.get(group) or {}:
+                if name in ("electron", "electron-nightly"):
+                    imp.electron = True
+                kid, linked = resolve(path, name)
+                if linked is not None and scope == "runtime":
+                    imp.links.append(linked)
+                if kid:
+                    real = "runtime" if scope == "dev" and name in ("electron", "electron-nightly") else scope
+                    roots.setdefault(label, []).append((kid, real))
+        importers[label] = imp
+    shipped = shipped_importers(importers, own or set(), kind)
+    for label, kids in roots.items():
+        name = root_label if label == "." else label
+        graph.workspace_of[name] = label
+        for kid, scope in kids:
+            graph.roots.append((name, kid, scope if label in shipped else "workspace"))
+    return graph
+
+
+def _pnpm_version(raw: str) -> str | None:
+    """'1.3.1(peer@2)' -> '1.3.1'; workspace links, local files and git sources are not registry versions."""
+    v = raw.split("(", 1)[0].strip()
+    return None if not v or v.startswith(("link:", "file:", "workspace:", "git", "http")) else v
+
+
 def _yaml_maps(text: str) -> dict[str, Any]:
     """The nested maps of a pnpm-lock.yaml: `key: value` and `key:` lines nested by indentation. List items and the
     body of flow values ({...}) are kept as plain strings; that is all pnpm-lock needs here. Not a YAML parser."""
@@ -272,55 +827,293 @@ def _yaml_maps(text: str) -> dict[str, Any]:
     return root
 
 
-def _pnpm_version(raw: str) -> str | None:
-    """'1.3.1(peer@2)' -> '1.3.1'; workspace links, local files and git sources are not registry versions."""
-    v = raw.split("(", 1)[0].strip()
-    return None if not v or v.startswith(("link:", "file:", "workspace:", "git", "http")) else v
-
-
-def pnpm_lock_nodes(text: str, *, skip: re.Pattern[str] = PERIPHERAL) -> list[Node]:
-    """What a pnpm-lock.yaml (lockfile v6 or v9) installs at run time: the dependencies and optionalDependencies of
-    every workspace importer outside the parts a user does not install, and everything those pull in (v9 snapshots, v6
-    packages). devDependencies are left out, except `electron`, whose runtime is packaged into the app it builds."""
+def pnpm_graph(text: str, *, found_in: str = "pnpm-lock.yaml", repo: Path | None = None, base: str = "",
+               own: set[str] | None = None, kind: str | None = None, skip: re.Pattern[str] = PERIPHERAL) -> Graph:
+    """A pnpm-lock.yaml (lockfile v6 to v9) as a graph. Importers outside the parts a user does not install are the
+    roots; a dependency an importer's package.json lists as a peer, and a package's declared peers, are peer edges;
+    devDependencies are dev, except `electron`, whose runtime is packaged into the app it builds. `repo` and `base`
+    (the lockfile's folder in it) let the importers' package.json files be read."""
     lock = _yaml_maps(text)
     version = str(lock.get("lockfileVersion", "")).strip("'\"")
     if not re.match(r"^(6|7|8|9)(\.|$)", version):
         raise ValueError(f"pnpm lockfile version {version or 'unknown'} is not supported")
-    graph: dict[str, dict[str, Any]] = {}
+    entries: dict[str, dict[str, Any]] = {}
     for section in ("packages", "snapshots"):  # v6 keeps edges in packages, v9 in snapshots
         for key, entry in (lock.get(section) or {}).items():
             if isinstance(entry, dict):
-                graph.setdefault(key.lstrip("/"), {}).update(entry)
-    importers = lock.get("importers") or {".": lock}  # a lockfile without workspaces lists them at the top
-    nodes: list[Node] = []
-    seen: set[str] = set()
-    stack: list[tuple[str, str]] = []
-    for path, importer in importers.items():
+                entries.setdefault(key.lstrip("/"), {}).update(entry)
+    graph = Graph(found_in, "npm", build_tools=NATIVE_BUILD_TOOLS | (BUNDLERS if kind in BUNDLER_KINDS else frozenset()))
+
+    def add(name: str, ver: str) -> str | None:
+        plain = _pnpm_version(ver)
+        if plain is None:
+            return None
+        start = f"{name}@{ver}"
+        if start in graph.nodes:
+            return start
+        work = [(start, name, ver, plain)]
+        graph.nodes[start] = (name, plain)
+        while work:
+            nid, n, v, pl = work.pop()
+            entry = entries.get(nid) or entries.get(f"{n}@{pl}") or {}
+            decl = entries.get(f"{n}@{pl}") or entry
+            peers = set(decl.get("peerDependencies") or {}) if isinstance(decl.get("peerDependencies"), dict) else set()
+            if decl.get("os"):
+                graph.platform[nid] = _os_list(decl["os"])
+            for group in ("dependencies", "optionalDependencies"):
+                deps = entry.get(group)
+                for dep, dep_ver in (deps.items() if isinstance(deps, dict) else []):
+                    dplain = _pnpm_version(str(dep_ver))
+                    if dplain is None:
+                        continue
+                    kid = f"{dep}@{dep_ver}"
+                    if kid not in graph.nodes:
+                        graph.nodes[kid] = (dep, dplain)
+                        work.append((kid, dep, str(dep_ver), dplain))
+                    graph.edges.setdefault(nid, []).append((kid, "peer" if dep in peers else "normal"))
+        return start
+
+    importers_raw = lock.get("importers") or {".": lock}  # a lockfile without workspaces lists them at the top
+    importers: dict[str, Importer] = {}
+    roots: dict[str, list[tuple[str, str]]] = {}
+    for path, importer in importers_raw.items():
         if not isinstance(importer, dict) or (path != "." and skip.search(path.strip("./") + "/")):
             continue
+        pkg = _package_json(repo / base / path / "package.json") if repo is not None else {}
+        peers = frozenset(pkg.get("peerDependencies") or {})
+        imp = Importer(path, pkg.get("name"), bool(pkg.get("bin")), False, [],
+                       bool(importer.get("dependencies") or importer.get("optionalDependencies")), peers)
         for group in ("dependencies", "optionalDependencies", "devDependencies"):
             for name, spec in (importer.get(group) or {}).items():
                 ver = spec.get("version", "") if isinstance(spec, dict) else str(spec)
-                if group == "devDependencies":
-                    if name == "electron" and _pnpm_version(ver):
-                        nodes.append(("npm", name, _pnpm_version(ver) or ""))
+                if name in ("electron", "electron-nightly"):
+                    imp.electron = True
+                if ver.startswith("link:"):
+                    if group != "devDependencies":
+                        imp.links.append(os.path.normpath(os.path.join(path, ver[5:])).replace("\\", "/"))
                     continue
-                stack.append((name, ver))
+                kid = add(name, ver)
+                if kid is None:
+                    continue
+                if group == "devDependencies":
+                    scope = "runtime" if name in ("electron", "electron-nightly") else "dev"
+                else:
+                    scope = "peer" if name in peers else "runtime"
+                roots.setdefault(path, []).append((kid, scope))
+        importers[path] = imp
+    shipped = shipped_importers(importers, own or set(), kind)
+    for path, kids in roots.items():
+        label = path if not base else f"{base}/{path}".rstrip("/.") or "."
+        graph.workspace_of[label] = path
+        for kid, scope in kids:
+            graph.roots.append((label, kid, scope if path in shipped else "workspace"))
+    return graph
+
+
+def pnpm_lock_nodes(text: str, *, skip: re.Pattern[str] = PERIPHERAL) -> list[Node]:
+    """What a pnpm-lock.yaml (lockfile v6 or v9) installs, as sec.v1 counted it: everything but development
+    dependencies (electron excepted), of every importer outside the parts a user does not install."""
+    return list(dict.fromkeys(d.node for d in pnpm_graph(text, skip=skip).deps() if d.scope != "dev"))
+
+
+# Cargo: the members' Cargo.toml say which dependencies are normal, dev or build, optional (and whether a default
+# feature turns them on) and target-specific; Cargo.lock gives the rest of the graph (over-approximated: every edge
+# counts, since Cargo.lock does not say which features of a registry crate are on).
+
+
+def cfg_matches(expr: str, os_name: str) -> bool:
+    """Whether a Cargo target (`cfg(...)` or a triple) can hold on an OS; predicates it cannot tell hold."""
+    expr = expr.strip().strip("'\"")
+    if not expr.startswith("cfg("):
+        t = expr.lower()
+        return (("windows" in t and os_name == "windows") or (("apple" in t or "darwin" in t) and os_name == "macos")
+                or ("linux" in t and os_name == "linux"))
+    tokens = re.findall(r'[A-Za-z_][\w]*|"[^"]*"|[(),=]', expr[4:-1] if expr.endswith(")") else expr[4:])
+    pos = 0
+
+    def peek() -> str | None:
+        return tokens[pos] if pos < len(tokens) else None
+
+    def take() -> str:
+        nonlocal pos
+        pos += 1
+        return tokens[pos - 1]
+
+    def pred() -> bool:
+        word = take()
+        if word in ("all", "any", "not") and peek() == "(":
+            take()
+            items = []
+            while peek() not in (")", None):
+                items.append(pred())
+                if peek() == ",":
+                    take()
+            take() if peek() == ")" else None
+            return all(items) if word == "all" else any(items) if word == "any" else not (items[0] if items else True)
+        if peek() == "=":
+            take()
+            value = take().strip('"') if peek() else ""
+            if word == "target_os":
+                return {"macos": "macos", "linux": "linux", "windows": "windows"}.get(value) == os_name
+            if word == "target_family":
+                return (value == "windows") == (os_name == "windows") if value in ("windows", "unix") else False
+            if word == "target_vendor":
+                return os_name == "macos" if value == "apple" else True
+            if word == "target_arch":
+                return not value.startswith("wasm")
+            return True
+        if word == "windows":
+            return os_name == "windows"
+        if word == "unix":
+            return os_name != "windows"
+        return True
+
+    try:
+        return pred()
+    except IndexError:
+        return True
+
+
+def _default_optional(manifest: dict[str, Any], optional: set[str]) -> set[str]:
+    """The optional dependencies the default features turn on."""
+    features = manifest.get("features") or {}
+    on: set[str] = set()
+    seen: set[str] = set()
+    stack = list(features.get("default") or [])
     while stack:
-        name, ver = stack.pop()
-        plain = _pnpm_version(ver)
-        if plain is None:
+        f = str(stack.pop())
+        if f in seen:
             continue
-        key = f"{name}@{ver}"
-        if key in seen:
+        seen.add(f)
+        if f.startswith("dep:"):
+            on.add(f[4:])
+        elif "/" in f:
+            dep = f.split("/", 1)[0]
+            if not dep.endswith("?") and dep in optional:
+                on.add(dep)
+        elif f in features:
+            stack.extend(features[f] or [])
+        elif f in optional:
+            on.add(f)
+    return on
+
+
+def _cargo_member_deps(manifest: dict[str, Any], workspace: dict[str, Any], supported: frozenset[str]
+                       ) -> list[tuple[str, str, bool]]:
+    """(crate name, scope, is a path dependency) for each dependency a member's Cargo.toml declares."""
+    sections: list[tuple[str, str | None, dict[str, Any]]] = []
+    for key, scope in (("dependencies", "runtime"), ("dev-dependencies", "dev"), ("build-dependencies", "build")):
+        sections.append((scope, None, manifest.get(key) or {}))
+        for target, body in (manifest.get("target") or {}).items():
+            if isinstance(body, dict):
+                sections.append((scope, target, body.get(key) or {}))
+    optional = {k for _, _, deps in sections for k, spec in deps.items() if isinstance(spec, dict) and spec.get("optional")}
+    enabled = _default_optional(manifest, optional)
+    out = []
+    for scope, target, deps in sections:
+        for key, spec in deps.items():
+            spec = spec if isinstance(spec, dict) else {"version": spec}
+            if spec.get("workspace"):
+                spec = {**((workspace.get(key) if isinstance(workspace.get(key), dict) else {})), **spec}
+            real = str(spec.get("package") or key)
+            s = scope
+            if s == "runtime" and spec.get("optional") and key not in enabled:
+                s = "optional"
+            if s == "runtime" and target is not None and not any(cfg_matches(target, o) for o in supported):
+                s = "platform"
+            out.append((real, s, "path" in spec))
+    return out
+
+
+def _has_binary(folder: Path, manifest: dict[str, Any]) -> bool:
+    return bool(manifest.get("bin")) or (folder / "src" / "main.rs").exists() or (folder / "src" / "bin").is_dir()
+
+
+def cargo_graph(text: str, *, found_in: str = "Cargo.lock", repo: Path | None = None, base: str = "",
+                supported: Iterable[str] = ALL_OS) -> Graph:
+    """Cargo.lock as a graph, its roots the workspace members' dependencies as their Cargo.toml declare them. The
+    members with a binary ship (with the members they depend on); a member whose Cargo.toml is not found keeps every
+    dependency Cargo.lock gives it, as runtime."""
+    supported = frozenset(supported) or ALL_OS
+    packages = [p for p in tomllib.loads(text).get("package", []) if "name" in p and "version" in p]
+    versions: dict[str, list[str]] = {}
+    for p in packages:
+        versions.setdefault(p["name"], []).append(p["version"])
+    graph = Graph(found_in, "crates")
+
+    def ref(dep: str) -> str | None:
+        parts = dep.split(" ")
+        name = parts[0]
+        if len(parts) > 1:
+            return f"{name}@{parts[1]}"
+        found = versions.get(name) or []
+        return f"{name}@{found[0]}" if len(found) == 1 else None
+
+    members = {}
+    for p in packages:
+        nid = f"{p['name']}@{p['version']}"
+        if "source" in p:
+            graph.nodes[nid] = (p["name"], p["version"])
+        else:
+            members[p["name"]] = p
+    for p in packages:
+        if "source" not in p:
             continue
-        seen.add(key)
-        nodes.append(("npm", name, plain))
-        entry = graph.get(key) or graph.get(f"{name}@{plain}") or {}
-        for group in ("dependencies", "optionalDependencies"):
-            for dep, dep_ver in (entry.get(group) or {}).items():
-                stack.append((dep, str(dep_ver)))
-    return list(dict.fromkeys(nodes))
+        nid = f"{p['name']}@{p['version']}"
+        for dep in p.get("dependencies") or []:
+            kid = ref(str(dep))
+            if kid and kid in graph.nodes:
+                graph.edges.setdefault(nid, []).append((kid, "normal"))
+    manifests: dict[str, tuple[Path, dict[str, Any]]] = {}
+    workspace_deps: dict[str, Any] = {}
+    if repo is not None:
+        folder = repo / base if base else repo
+        for path in sorted(folder.rglob("Cargo.toml")):
+            rel = path.relative_to(folder).as_posix()
+            if rel.count("/") > 3 or "/target/" in f"/{rel}" or PERIPHERAL.search(rel):
+                continue
+            try:
+                manifest = tomllib.loads(path.read_text(encoding="utf-8"))
+            except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError):
+                continue
+            name = (manifest.get("package") or {}).get("name")
+            if name in members and name not in manifests:
+                manifests[name] = (path.parent, manifest)
+            workspace_deps.update(((manifest.get("workspace") or {}).get("dependencies")) or {})
+    member_deps: dict[str, list[tuple[str, str, bool]]] = {}
+    for name in members:
+        if name in manifests:
+            member_deps[name] = _cargo_member_deps(manifests[name][1], workspace_deps, supported)
+    with_bin = {n for n, (folder, m) in manifests.items() if _has_binary(folder, m)}
+    shipped = set(with_bin) if with_bin else set(members)
+    stack = list(shipped)
+    while stack:
+        for dep, scope, is_path in member_deps.get(stack.pop(), []):
+            if is_path and scope == "runtime" and dep in members and dep not in shipped:
+                shipped.add(dep)
+                stack.append(dep)
+    for name, p in members.items():
+        lock_refs = {str(d).split(" ")[0]: ref(str(d)) for d in p.get("dependencies") or []}
+        if name in member_deps:
+            kids = [(lock_refs.get(dep), scope) for dep, scope, _ in member_deps[name]]
+        else:
+            kids = [(kid, "runtime") for kid in lock_refs.values()]
+        label = (manifests[name][0].relative_to(repo).as_posix() if repo is not None and name in manifests else name) or "."
+        graph.workspace_of[name] = label
+        for kid, scope in kids:
+            if kid and kid in graph.nodes:
+                graph.roots.append((name, kid, scope if name in shipped else "workspace"))
+    return graph
+
+
+def go_deps(text: str, *, found_in: str = "go.mod") -> list[Dep]:
+    """go.mod's requirements; `// indirect` ones are not imported by the module's own code."""
+    out = []
+    for m in re.finditer(r"(?m)^\s*(?:require\s+)?([\w.\-]+\.[\w./\-]+)\s+(v[\w.\-+]+)([^\n]*)", text):
+        indirect = "// indirect" in m.group(3)
+        out.append(Dep("go", m.group(1), m.group(2), "runtime", (found_in, m.group(1)), found_in.rsplit("/", 1)[0]
+                       if "/" in found_in else ".", (), found_in, not indirect))
+    return out
 
 
 @dataclass
@@ -334,43 +1127,67 @@ class RepoRead:
     reason: str | None
 
 
+@dataclass
+class RepoDeps:
+    """repo_deps(): every package with where it sits, what was read, and whether that is the whole software."""
+
+    deps: list[Dep]
+    read: list[str]
+    complete: bool
+    reason: str | None
+
+
+@dataclass(frozen=True)
+class ReadContext:
+    """What a lockfile read needs to know about the software: its own package names, its kind, its OSes."""
+
+    own: frozenset[str] = frozenset()
+    kind: str | None = None
+    supported: frozenset[str] = ALL_OS
+
+
 def _main(rel: str) -> bool:
     return rel.count("/") <= 1
 
 
-def repo_nodes(root: Path) -> RepoRead:
+def repo_deps(root: Path, ctx: ReadContext = ReadContext(), *, resolve_python: bool = True) -> RepoDeps:
     """Read a cloned repository's lockfiles. A lockfile counts as read only when it yields packages. Python projects are
-    resolved from pyproject.toml as pip and uv do (each on its own), a lockfile beside it standing in when that fails."""
-    nodes: list[Node] = []
+    resolved from pyproject.toml as pip and uv do (each on its own), a lockfile beside it standing in when that fails;
+    resolve_python=False reads only the lockfiles (re-assessing needs where packages sit, not a new resolve)."""
+    deps: list[Dep] = []
     read: list[str] = []
     main_read = unsupported = root_unreadable = root_unresolved = False
     pyprojects: list[Path] = []
     py_locks: dict[Path, list[Path]] = {}
 
-    def took(rel: str, got: list[Node]) -> None:
+    def took(rel: str, got: list[Dep]) -> None:
         nonlocal main_read
         if got:
-            nodes.extend(got)
+            deps.extend(got)
             read.append(rel)
             main_read |= _main(rel.split(" (", 1)[0])
+
+    def flat(nodes: list[Node], found_in: str) -> list[Dep]:
+        return [Dep(*n, path=(found_in, n[1]), found_in=found_in) for n in nodes]
 
     for f in sorted(root.rglob("*")):
         rel = f.relative_to(root).as_posix()
         if not f.is_file() or ".git/" in rel or PERIPHERAL.search(rel) or rel.count("/") > 3:
             continue
         name = f.name
+        folder = rel.rsplit("/", 1)[0] if "/" in rel else ""
         try:
             if name == "package-lock.json":
-                took(rel, npm_lock_nodes(json.loads(f.read_text(encoding="utf-8"))))
+                lock = json.loads(f.read_text(encoding="utf-8"))
+                took(rel, npm_graph(lock, found_in=rel, own=set(ctx.own), kind=ctx.kind).deps(ctx.supported))
             elif name == "pnpm-lock.yaml":
-                took(rel, pnpm_lock_nodes(f.read_text(encoding="utf-8")))
+                took(rel, pnpm_graph(f.read_text(encoding="utf-8"), found_in=rel, repo=root, base=folder,
+                                     own=set(ctx.own), kind=ctx.kind).deps(ctx.supported))
             elif name == "Cargo.lock":
-                took(rel, [("crates", p["name"], p["version"]) for p in tomllib.loads(f.read_text(encoding="utf-8"))
-                           .get("package", []) if "source" in p])
+                took(rel, cargo_graph(f.read_text(encoding="utf-8"), found_in=rel, repo=root, base=folder,
+                                      supported=ctx.supported).deps(ctx.supported))
             elif name == "go.mod":
-                body = f.read_text(encoding="utf-8")
-                took(rel, [("go", m.group(1), m.group(2)) for m in
-                           re.finditer(r"(?m)^\s*(?:require\s+)?([\w.\-]+\.[\w./\-]+)\s+(v[\w.\-+]+)", body)])
+                took(rel, go_deps(f.read_text(encoding="utf-8"), found_in=rel))
             elif name == "pyproject.toml" and _main(rel):
                 pyprojects.append(f)
             elif name in ("uv.lock", "poetry.lock") or re.fullmatch(r"requirements(-lock)?\.txt", name):
@@ -384,11 +1201,11 @@ def repo_nodes(root: Path) -> RepoRead:
     for p in pyprojects:
         rel = p.relative_to(root).as_posix()
         try:
-            got = resolve_pyproject(p)
+            got = resolve_pyproject(p) if resolve_python else []
         except (RuntimeError, subprocess.TimeoutExpired):
             got = []
         if got:
-            took(f"{rel} (resolved today)", got)
+            took(f"{rel} (resolved today)", flat(got, rel))
             continue
         fallback: list[Node] = []
         for f in py_locks.get(p.parent, []):
@@ -398,7 +1215,8 @@ def repo_nodes(root: Path) -> RepoRead:
             except (ValueError, UnicodeDecodeError, tomllib.TOMLDecodeError):
                 continue
         if fallback:
-            took(" + ".join(f.relative_to(root).as_posix() for f in py_locks[p.parent]), fallback)
+            label = " + ".join(f.relative_to(root).as_posix() for f in py_locks[p.parent])
+            took(label, flat(fallback, label))
         elif "/" not in rel:
             root_unresolved = True  # the Python project at the root: its dependencies could not be read
     for folder, files in py_locks.items():  # Python lockfiles with no pyproject.toml beside them
@@ -408,12 +1226,18 @@ def repo_nodes(root: Path) -> RepoRead:
             rel = f.relative_to(root).as_posix()
             try:
                 text = f.read_text(encoding="utf-8")
-                took(rel, _uv_lock_nodes(tomllib.loads(text)) if f.suffix == ".lock" else _pins(text))
+                took(rel, flat(_uv_lock_nodes(tomllib.loads(text)) if f.suffix == ".lock" else _pins(text), rel))
             except (ValueError, UnicodeDecodeError, tomllib.TOMLDecodeError):
                 root_unreadable |= "/" not in rel
     reason = ("lockfile_not_supported" if root_unreadable else "resolve_failed" if root_unresolved
               else None if main_read else "lockfile_not_supported" if unsupported and not read else "no_lockfile")
-    return RepoRead(list(dict.fromkeys(nodes)), read, reason is None, reason)
+    return RepoDeps(merge_deps(deps), read, reason is None, reason)
+
+
+def repo_nodes(root: Path) -> RepoRead:
+    """repo_deps() as sec.v1 read it: every package but development dependencies."""
+    got = repo_deps(root)
+    return RepoRead([d.node for d in got.deps if d.scope != "dev"], got.read, got.complete, got.reason)
 
 
 def _git(*args: str, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
@@ -436,6 +1260,345 @@ def clone(url: str, slug: str, clones: Path = CLONES) -> tuple[Path, str]:
             subprocess.run(["rm", "-rf", str(dest)])
             raise RuntimeError(f"clone failed: {r.stderr.strip()[-200:]}")
     return dest, _git("rev-parse", "HEAD", cwd=dest).stdout.strip()
+
+
+# --- what the project's source does (S4) -------------------------------------------------------------------------------
+
+LANG_EXT = {"npm": (".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx", ".mts", ".cts", ".vue", ".svelte", ".astro"),
+            "crates": (".rs",), "go": (".go",), "pypi": (".py",)}
+_SKIP_DIRS = re.compile(r"(^|/)(node_modules|target|dist|build|out|\.next|coverage|vendor)/")
+
+
+class Sources:
+    """The repository's own source files outside the parts a user does not install, read as data, for the greps.
+    Capped (files, bytes per file, bytes in all) so a huge repository cannot hold the check up; past a cap a search
+    that finds nothing says unknown, never unreachable (`truncated`)."""
+
+    def __init__(self, root: Path | None, *, max_files: int = 5000, max_bytes: int = 400_000,
+                 max_total: int = 80_000_000) -> None:
+        self.root = root
+        self.max_files = max_files
+        self.max_bytes = max_bytes
+        self.max_total = max_total
+        self.truncated: set[str] = set()
+        self._files: dict[str, list[tuple[str, str]]] = {}
+        self._lock = threading.Lock()
+
+    def files(self, eco: str) -> list[tuple[str, str]]:
+        """(relative path, text) of the source files of one ecosystem's language."""
+        with self._lock:
+            if eco in self._files:
+                return self._files[eco]
+            out: list[tuple[str, str]] = []
+            total = 0
+            ext = LANG_EXT.get(eco, ())
+            if self.root is not None and ext:
+                for f in sorted(self.root.rglob("*")):
+                    rel = f.relative_to(self.root).as_posix()
+                    if (not rel.endswith(ext) or rel.endswith((".d.ts", ".min.js", "_test.go")) or ".git/" in rel
+                            or PERIPHERAL.search(rel) or _SKIP_DIRS.search(rel) or not f.is_file()):
+                        continue
+                    try:
+                        size = f.stat().st_size
+                        if size > self.max_bytes or len(out) >= self.max_files or total + size > self.max_total:
+                            self.truncated.add(eco)
+                            continue
+                        out.append((rel, f.read_text(encoding="utf-8", errors="replace")))
+                        total += size
+                    except OSError:
+                        self.truncated.add(eco)
+            self._files[eco] = out
+            return out
+
+    def complete(self, eco: str) -> bool:
+        """Every source file of that language was read, so finding nothing means nothing is there."""
+        self.files(eco)
+        return eco not in self.truncated
+
+    def find(self, pattern: re.Pattern[str], eco: str, *, also: re.Pattern[str] | None = None) -> str | None:
+        """'path:line: text' of the first line matching `pattern` (in a file that also matches `also`), or None."""
+        for rel, text in self.files(eco):
+            if also is not None and not also.search(text):
+                continue
+            m = pattern.search(text)
+            if m:
+                line = text.count("\n", 0, m.start()) + 1
+                body = text.splitlines()[line - 1].strip() if text else ""
+                return f"{rel}:{line}: {body[:200]}"
+        return None
+
+    @property
+    def available(self) -> bool:
+        return self.root is not None
+
+
+NEXT_CONFIGS = ("next.config.js", "next.config.mjs", "next.config.ts", "next.config.cjs", "next.config.mts")
+NEXT_SERVER = frozenset({"next", "react-server-dom-webpack", "react-server-dom-turbopack", "react-server-dom-parcel"})
+_CLIENT_SIDE = re.compile(r"\b(XSS|cross[- ]site scripting|client[- ]side|in the browser|open redirect|"
+                          r"prototype pollution)\b", re.I)
+
+
+def next_static_export(root: Path | None) -> str | None:
+    """The config that makes every Next.js app in the repository a static export (`output: 'export'`: HTML and
+    assets, no Next.js server), or None when there is none or one app keeps a server."""
+    if root is None:
+        return None
+    configs = [p for p in sorted(root.rglob("next.config.*")) if p.name in NEXT_CONFIGS
+               and not PERIPHERAL.search(p.relative_to(root).as_posix()) and "node_modules" not in p.parts]
+    if not configs:
+        return None
+    for p in configs:
+        try:
+            text = p.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            return None
+        if not re.search(r"""\boutput\s*:\s*["']export["']""", text):
+            return None
+    return configs[0].relative_to(root).as_posix()
+
+
+# Advisories whose precondition the summary does not name: what to grep for (S6 will extract these with a model,
+# cached per advisory; until then, a few by hand). Symbols are Type::method, a plain identifier or a module path.
+PRECONDITIONS: dict[str, dict[str, list[str]]] = {
+    "GHSA-2v37-7h3g-55p8": {"symbols": ["customAlphabet", "customRandom"]},  # nanoid: custom generators, size 0
+    "GHSA-28wg-ghj8-5hjv": {"symbols": ["nanoid/non-secure"]},  # nanoid: non-secure generators, negative size
+}
+_OPTION = re.compile(r"\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b")
+# ALL_CAPS words that are not options a caller turns on: environment variables (the person sets them, not the code),
+# ids and protocol names.
+_NOT_OPTION = re.compile(r"^(?:\w*_PROXY|\w*_ENV|PATH|HOME|TMPDIR|NODE_\w+|NPM_\w+|RUST_\w+|CARGO_\w+|PYTHON\w*|GO\w*|"
+                         r"LD_\w+|DYLD_\w+|CVE_\w+|CVSS_\w+|GHSA_\w+|HTTP_\d\w*|TLS_\w+|SSL_\w+|X509_\w+)$")
+_BACKTICK = re.compile(r"`([^`\s]{3,80})`")
+_PATHSYM = re.compile(r"\b([A-Z][A-Za-z0-9]+)::([a-z_][a-z0-9_]+)\b")
+
+
+def advisory_tokens(v: dict[str, Any]) -> tuple[list[str], list[str]]:
+    """(options, symbols) an advisory names: ALL_CAPS options a caller turns on (ENABLE_WIKILINKS, SAFE_FOR_TEMPLATES),
+    and code it names in backticks or as Type::method, or in RustSec's affected functions."""
+    text = v.get("summary") or ""
+    options = [t for t in _OPTION.findall(text) if not _NOT_OPTION.match(t)]
+    symbols: list[str] = []
+    for token in _BACKTICK.findall(text):
+        token = token.rstrip("()").rstrip(":")
+        if _OPTION.fullmatch(token):
+            if not _NOT_OPTION.match(token):
+                options.append(token)
+        elif re.fullmatch(r"[A-Za-z_][\w:]*", token) and ("::" in token or "_" in token
+                                                          or re.search(r"[a-z][A-Z]", token) or token[0].isupper()):
+            symbols.append(token)
+    symbols += [f"{m.group(1)}::{m.group(2)}" for m in _PATHSYM.finditer(text)]
+    for a in v.get("affected") or []:
+        for fn in ((a.get("ecosystem_specific") or {}).get("affects") or {}).get("functions") or []:
+            parts = str(fn).split("::")
+            symbols.append("::".join(parts[-2:]) if len(parts) > 1 else parts[0])
+    for vid in (v.get("id"), *(v.get("aliases") or [])):
+        extra = PRECONDITIONS.get(str(vid)) or {}
+        options += extra.get("options", [])
+        symbols += extra.get("symbols", [])
+    return list(dict.fromkeys(options)), list(dict.fromkeys(symbols))
+
+
+def _symbol_search(symbol: str) -> tuple[re.Pattern[str], re.Pattern[str] | None]:
+    """(line pattern, file pattern) for a symbol: Type::method looks for `.method(` in a file naming Type."""
+    if "::" in symbol:
+        owner, method = symbol.rsplit("::", 1)
+        owner = owner.rsplit("::", 1)[-1]
+        if method[:1].islower():
+            return re.compile(rf"(?:\.|::){re.escape(method)}\s*[(<]"), re.compile(rf"\b{re.escape(owner)}\b")
+        return re.compile(rf"\b{re.escape(method)}\b"), None
+    if "/" in symbol:
+        return re.compile(re.escape(symbol)), None
+    return re.compile(rf"\b{re.escape(symbol)}\b"), None
+
+
+def go_import_paths(v: dict[str, Any], advisories: Advisories | None) -> list[str]:
+    """The Go packages a Go advisory names (ecosystem_specific.imports), read from its GO- record when it is a GHSA."""
+    records = [v]
+    if advisories is not None:
+        for alias in v.get("aliases") or []:
+            if str(alias).startswith("GO-"):
+                try:
+                    records.append(advisories.get(alias))
+                except (urllib.error.URLError, TimeoutError, ValueError):
+                    continue
+    paths = []
+    for record in records:
+        for a in record.get("affected") or []:
+            for imp in (a.get("ecosystem_specific") or {}).get("imports") or []:
+                if imp.get("path"):
+                    paths.append(str(imp["path"]))
+    return list(dict.fromkeys(paths))
+
+
+@dataclass
+class Reach:
+    """What the program knows about the shipped code, for the reachability of each finding."""
+
+    sources: Sources = field(default_factory=lambda: Sources(None))
+    static_export: str | None = None
+    govuln: dict[str, tuple[str, str]] = field(default_factory=dict)  # OSV id -> (symbol | package | module, evidence)
+    govuln_ran: bool = False
+    vendor: frozenset[str] | None = None  # Go packages in vendor/modules.txt
+
+
+def _go_vendor(root: Path | None) -> frozenset[str] | None:
+    if root is None or not (root / "vendor" / "modules.txt").exists():
+        return None
+    lines = (root / "vendor" / "modules.txt").read_text(encoding="utf-8", errors="replace").splitlines()
+    return frozenset(line.strip() for line in lines if line.strip() and not line.startswith("#"))
+
+
+def reachability(f: dict[str, Any], dep: Dep, v: dict[str, Any], reach: Reach,
+                 advisories: Advisories | None) -> tuple[dict[str, Any] | None, list[str]]:
+    """(reachability, extra preconditions) of one finding, by program. None: nothing to go on."""
+    eco = dep.eco
+    pre: list[str] = []
+    text = f"{v.get('summary') or ''}"
+    if dep.name in NEXT_SERVER and reach.static_export and not _CLIENT_SIDE.search(text):
+        return ({"method": "next_static_export", "result": "not_reachable",
+                 "evidence": [f"{reach.static_export}: output 'export' (static HTML, no Next.js server)"]}, ["server_side"])
+    gate = next((g for g in ENTRY_GATES if g.package in (dep.gate, dep.name)), None)
+    if gate is not None and (dep.gate == gate.package or gate.advisory.search(text)) and reach.sources.available:
+        pre.append(f"entry:{gate.label}")
+        hit = reach.sources.find(gate.entries, "npm")
+        if hit:
+            return {"method": "entry_point_grep", "result": "reachable", "evidence": [hit]}, pre
+        if reach.sources.complete("npm") and reach.sources.files("npm"):
+            return ({"method": "entry_point_grep", "result": "not_reachable",
+                     "evidence": [f"no source file imports {gate.label} ({gate.package} entry points)"]}, pre)
+    if eco == "go":
+        ids = [f["advisory"], *f.get("aliases", [])]
+        known = [reach.govuln[i] for i in ids if i in reach.govuln]
+        if known:
+            level, evidence = min(known, key=lambda k: ("symbol", "package", "module").index(k[0]))
+            return ({"method": "govulncheck_binary", "result": "reachable" if level == "symbol" else "not_reachable",
+                     "evidence": [evidence]}, pre)
+        paths = go_import_paths(v, advisories)
+        if paths:
+            pre += [f"symbol:{p}" for p in paths[:3]]
+            if reach.vendor is not None:
+                used = [p for p in paths if p in reach.vendor]
+                return ({"method": "import_grep", "result": "unknown" if used else "not_reachable",
+                         "evidence": [f"vendor/modules.txt {'lists' if used else 'does not list'} "
+                                      f"{', '.join((used or paths)[:3])}"]}, pre)
+            if reach.sources.available:
+                pattern = re.compile("\"(" + "|".join(re.escape(p) for p in paths) + ")\"")
+                hit = reach.sources.find(pattern, "go")
+                if hit:
+                    return {"method": "import_grep", "result": "reachable", "evidence": [hit]}, pre
+                if dep.direct and reach.sources.complete("go") and reach.sources.files("go"):
+                    return ({"method": "import_grep", "result": "not_reachable",
+                             "evidence": [f"no .go file imports {', '.join(paths[:3])}; go.mod requires "
+                                          f"{dep.name} directly"]}, pre)
+        return None, pre
+    options, symbols = advisory_tokens(v)
+    pre += [f"option:{o}" for o in options[:3]] + [f"symbol:{s}" for s in symbols[:3]]
+    if not (options or symbols) or not reach.sources.available or not reach.sources.files(eco):
+        return None, pre
+    for option in options:
+        hit = reach.sources.find(re.compile(rf"(?i)\b{re.escape(option)}"), eco)
+        if hit:
+            return {"method": "option_grep", "result": "reachable", "evidence": [hit]}, pre
+    for symbol in symbols:
+        line, also = _symbol_search(symbol)
+        hit = reach.sources.find(line, eco, also=also)
+        if hit:
+            return {"method": "symbol_grep", "result": "reachable", "evidence": [hit]}, pre
+    if dep.direct and reach.sources.complete(eco):
+        what = ", ".join([*options, *symbols][:4])
+        return ({"method": "option_grep" if options else "symbol_grep", "result": "not_reachable",
+                 "evidence": [f"no source file uses {what}; only the project depends on {dep.name}"]}, pre)
+    return ({"method": "option_grep" if options else "symbol_grep", "result": "unknown",
+             "evidence": [f"the project's source does not use {', '.join([*options, *symbols][:4])}, but other "
+                          f"packages depend on {dep.name}"]}, pre)
+
+
+def cvss_preconditions(f: dict[str, Any]) -> list[str]:
+    """What the CVSS vector says must hold: local access, user interaction, high privileges, high complexity."""
+    m = cvss_metrics(f.get("cvss_v3") or f.get("cvss_v4"))
+    out = []
+    if m.get("AV") == "L":
+        out.append("local_access")
+    if m.get("AV") == "A":
+        out.append("adjacent_network")
+    if m.get("AV") == "P":
+        out.append("physical_access")
+    if m.get("UI") in ("R", "P", "A"):
+        out.append("user_interaction")
+    if m.get("PR") == "H":
+        out.append("high_privileges")
+    if m.get("AC") == "H" or m.get("AT") == "P":
+        out.append("high_complexity")
+    if f.get("dos_only"):
+        out.append("denial_of_service")
+    return out
+
+
+# --- the policy (S5) ---------------------------------------------------------------------------------------------------
+
+
+def finding_level(f: dict[str, Any]) -> str:
+    """A finding's level under sec.v2. Pure."""
+    if f.get("malicious"):
+        return "blocked"
+    if f.get("scope") not in (None, "runtime") or f.get("in_artifact") is False:
+        return "not_shipped"
+    r = f.get("reachability") or {}
+    if r.get("method") == "next_static_export" and r.get("result") == "not_reachable":
+        return "not_shipped"
+    if r.get("result") == "not_reachable":
+        return "present_unreachable"
+    if f.get("kev"):
+        return "blocked"
+    if r.get("result") == "reachable" and f.get("attack_vector") in (None, "network", "adjacent"):
+        return "exposed"
+    return "conditional"
+
+
+def counted(f: dict[str, Any]) -> bool:
+    """Whether a finding counts toward the record's level: high or critical, malicious, or on KEV."""
+    return bool(f.get("malicious") or f.get("kev") or f.get("severity") in COUNTED)
+
+
+def vex_of(f: dict[str, Any]) -> dict[str, Any]:
+    level = f["level"]
+    if level in ("blocked", "exposed"):
+        return {"status": "affected"}
+    if level == "conditional":
+        return {"status": "under_investigation"}
+    if level == "present_unreachable":
+        return {"status": "not_affected", "justification": "vulnerable_code_not_in_execute_path"}
+    return {"status": "not_affected", "justification": "component_not_present"}
+
+
+def _rank(f: dict[str, Any]) -> tuple[Any, ...]:
+    return (FINDING_LEVELS.index(f["level"]), not f.get("malicious"), not f.get("kev"),
+            SEVERITY_RANK.get(f.get("severity", "UNKNOWN"), 5), f["package"], f["version"], f["advisory"])
+
+
+def assess(findings: list[dict[str, Any]], *, complete: bool, packages: int, now: datetime,
+           reason: str | None = None) -> dict[str, Any]:
+    """The record's assessment: its level, why, and the counted findings per level. Pure."""
+    kept = sorted((f for f in findings if f.get("counted")), key=_rank)
+    counts = Counter(f["level"] for f in kept)
+    present = [lvl for lvl in FINDING_LEVELS if counts[lvl]]
+    worst = present[0] if present else None
+    if worst in WARN_LEVELS:
+        level = worst
+    elif not complete:
+        level = "unchecked" if packages == 0 and not present else "partial"
+    else:
+        level = worst or "clean"
+    reasons = []
+    for f in kept[:3]:
+        reasons.append(f"{'malicious' if f.get('malicious') else 'kev' if f.get('kev') else 'worst'}:{f['advisory']} "
+                       f"{f['package']}@{f['version']} ({f['level']})"[:200])
+    if not complete:
+        reasons.append(f"incomplete:{reason or 'resolve_failed'}")
+    return {"level": level, "policy_version": POLICY, "reasons": reasons[:10],
+            "counts": {lvl: counts[lvl] for lvl in FINDING_LEVELS if counts[lvl]},
+            "uncounted": len(findings) - len(kept), "complete": complete,
+            "assessed_at": now.isoformat(timespec="seconds")}
 
 
 # --- what to check for a record ---------------------------------------------------------------------------------------
@@ -482,6 +1645,12 @@ def packages_of(raw: dict[str, Any]) -> list[str]:
     return list(dict.fromkeys(linked + found))
 
 
+def read_context(raw: dict[str, Any]) -> ReadContext:
+    own = own_names(raw) | {_norm(p.split(":", 1)[1]) for p in packages_of(raw) if p.startswith("npm:")}
+    platforms = frozenset(p for p in raw.get("platforms") or [] if p in ALL_OS)
+    return ReadContext(frozenset(own), raw.get("kind"), platforms or ALL_OS)
+
+
 def _repo_url(raw: dict[str, Any]) -> str | None:
     repo = raw.get("repo")
     url = repo.get("url") if isinstance(repo, dict) else repo
@@ -512,44 +1681,52 @@ def informational(v: dict[str, Any]) -> bool:
     return any(b.get("informational") for b in blocks)
 
 
-def findings_for(nodes: list[Node], advisories: Advisories, unrated: list[str] | None = None,
-                 aliases: list[set[str]] | None = None) -> list[dict[str, Any]]:
-    """High and critical advisories (and malicious-package reports) on the given versions, one per vulnerability on
-    each package version: two versions of one package hit by the same advisory are two findings, each with its own
-    fixed_in (11/3: zip 4.6.1 and 8.6.0 in one app). Advisories with no severity anywhere (no GHSA rating, no CVSS
-    v3) are not counted; `unrated` collects them. `aliases` collects each counted finding's IDs (its own and its
-    aliases), for advisory_count."""
-    out: list[dict[str, Any]] = []
-    seen: set[str] = set()
+def _osv_query(nodes: list[Node]) -> list[list[str]]:
+    """OSV ids that hit each node, in order."""
+    out: list[list[str]] = []
     for i in range(0, len(nodes), 500):
         chunk = nodes[i:i + 500]
         queries = [{"package": {"name": n, "ecosystem": ECOSYSTEM[e]}, "version": v} for e, n, v in chunk]
         results = _http(f"{OSV}/querybatch", {"queries": queries}).get("results", [])
-        for (eco, name, version), res in zip(chunk, results):
-            node = f"{eco}:{name}@{version}"
-            for hit in res.get("vulns") or []:
-                v = advisories.get(hit["id"])
-                if v.get("withdrawn"):
-                    continue
-                ids = {v["id"], *v.get("aliases", [])}
-                if any(f"{node}|{a}" in seen for a in ids):
-                    continue
-                malicious = v["id"].startswith("MAL-")
-                if not malicious and informational(v):
-                    continue  # RUSTSEC notes: unmaintained, unsound, notice
-                severity = "CRITICAL" if malicious else advisories.severity(v)
-                if severity == "UNKNOWN" and unrated is not None:
-                    unrated.append(f"{eco}:{name}@{version} {v['id']}")
-                if severity not in COUNTED:
-                    continue
-                seen |= {f"{node}|{a}" for a in ids}
-                if aliases is not None:
-                    aliases.append(ids)
-                out.append({"package": f"{eco}:{name}", "version": version, "advisory": v["id"],
-                            "cves": sorted(a for a in v.get("aliases", []) if a.startswith("CVE-"))[:10],
-                            "severity": severity, "fixed_in": _fixed_above(v, eco, name, version),
-                            "summary": (v.get("summary") or v.get("details") or "")[:200].strip() or v["id"],
-                            "malicious": malicious})
+        out += [[hit["id"] for hit in (res.get("vulns") or [])] for res in results]
+        out += [[] for _ in range(len(chunk) - len(results))]
+    return out
+
+
+def findings_for(nodes: list[Node], advisories: Advisories, unrated: list[str] | None = None,
+                 aliases: list[set[str]] | None = None) -> list[dict[str, Any]]:
+    """sec.v1's findings: high and critical advisories (and malicious-package reports) on the given versions, one per
+    vulnerability on each package version: two versions of one package hit by the same advisory are two findings,
+    each with its own fixed_in (11/3: zip 4.6.1 and 8.6.0 in one app). Advisories with no severity anywhere (no GHSA
+    rating, no CVSS v3) are not counted; `unrated` collects them. `aliases` collects each counted finding's IDs (its
+    own and its aliases), for advisory_count."""
+    out: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for (eco, name, version), ids_hit in zip(nodes, _osv_query(nodes)):
+        node = f"{eco}:{name}@{version}"
+        for vid in ids_hit:
+            v = advisories.get(vid)
+            if v.get("withdrawn"):
+                continue
+            ids = {v["id"], *v.get("aliases", [])}
+            if any(f"{node}|{a}" in seen for a in ids):
+                continue
+            malicious = v["id"].startswith("MAL-")
+            if not malicious and informational(v):
+                continue  # RUSTSEC notes: unmaintained, unsound, notice
+            severity = "CRITICAL" if malicious else advisories.severity(v)
+            if severity == "UNKNOWN" and unrated is not None:
+                unrated.append(f"{eco}:{name}@{version} {v['id']}")
+            if severity not in COUNTED:
+                continue
+            seen |= {f"{node}|{a}" for a in ids}
+            if aliases is not None:
+                aliases.append(ids)
+            out.append({"package": f"{eco}:{name}", "version": version, "advisory": v["id"],
+                        "cves": sorted(a for a in v.get("aliases", []) if a.startswith("CVE-"))[:10],
+                        "severity": severity, "fixed_in": _fixed_above(v, eco, name, version),
+                        "summary": (v.get("summary") or v.get("details") or "")[:200].strip() or v["id"],
+                        "malicious": malicious})
     out.sort(key=lambda f: (not f["malicious"], f["severity"] != "CRITICAL", f["package"], f["advisory"]))
     return out
 
@@ -567,38 +1744,245 @@ def advisory_count(aliases: list[set[str]]) -> int:
     return len(groups)
 
 
+def finding(dep: Dep, v: dict[str, Any], severity: str) -> dict[str, Any]:
+    """The sec.v2 observation of one advisory on one package version (no judgement yet)."""
+    malicious = v["id"].startswith("MAL-")
+    facts = advisory_facts(v)
+    return {"package": f"{dep.eco}:{dep.name}", "version": dep.version, "advisory": v["id"],
+            "cves": sorted(a for a in v.get("aliases", []) if a.startswith("CVE-"))[:10],
+            "severity": "CRITICAL" if malicious else severity,
+            "fixed_in": _fixed_above(v, dep.eco, dep.name, dep.version),
+            "summary": (v.get("summary") or v.get("details") or "")[:200].strip() or v["id"], "malicious": malicious,
+            **facts, "purl": purl(dep.eco, dep.name, dep.version), "fix_published_at": None, "scope": dep.scope,
+            "paths": [" > ".join(dep.path)[:400]] if dep.path else [], "workspace": dep.workspace,
+            "platform": list(dep.platform), "found_in": dep.found_in, "in_artifact": dep.in_artifact,
+            "kev": None, "epss": None, "epss_percentile": None, "intel_checked_at": None, "preconditions": [],
+            "reachability": None, "vex": None, "triage": None, "counted": None, "level": None,
+            "policy_version": None}
+
+
+def observe(deps: list[Dep], advisories: Advisories, unrated: list[str] | None = None
+            ) -> list[tuple[Dep, dict[str, Any], dict[str, Any]]]:
+    """Every advisory of any severity on the given packages: (dep, OSV record, finding). An advisory and its aliases on
+    one package version are one finding; malicious-package reports included, RustSec's informational notes not."""
+    out: list[tuple[Dep, dict[str, Any], dict[str, Any]]] = []
+    by_node: dict[str, dict[str, Any]] = {}
+    for dep, ids_hit in zip(deps, _osv_query([d.node for d in deps])):
+        node = f"{dep.eco}:{dep.name}@{dep.version}"
+        for vid in ids_hit:
+            v = advisories.get(vid)
+            if v.get("withdrawn"):
+                continue
+            ids = {v["id"], *v.get("aliases", [])}
+            malicious = v["id"].startswith("MAL-")
+            if not malicious and informational(v):
+                continue
+            severity = "CRITICAL" if malicious else advisories.severity(v)
+            have = next((by_node[f"{node}|{a}"] for a in ids if f"{node}|{a}" in by_node), None)
+            if have is not None:
+                if SEVERITY_RANK.get(severity, 5) < SEVERITY_RANK.get(have["severity"], 5):
+                    have["severity"] = severity  # an alias rated where the first record was not
+                continue
+            if severity == "UNKNOWN" and unrated is not None:
+                unrated.append(f"{node} {v['id']}")
+            f = finding(dep, v, severity)
+            for a in ids:
+                by_node[f"{node}|{a}"] = f
+            out.append((dep, v, f))
+    return out
+
+
+def judge(observed: list[tuple[Dep, dict[str, Any], dict[str, Any]]], reach: Reach, *, intel: Intel,
+          fix_dates: FixDates | None, advisories: Advisories | None) -> list[dict[str, Any]]:
+    """Fill each finding's intel, preconditions, reachability, level and VEX under policy sec.v2."""
+    intel.prefetch(c for _, _, f in observed for c in f["cves"])
+    out = []
+    for dep, v, f in observed:
+        cves = [*f["cves"], *[a for a in f.get("aliases", []) if a.startswith("CVE-")]]
+        f["kev"] = intel.kev_of(cves)
+        score = intel.epss_of(cves)
+        f["epss"], f["epss_percentile"] = (round(score[0], 5), round(score[1], 5)) if score else (None, None)
+        f["intel_checked_at"] = intel.day
+        r, pre = reachability(f, dep, v, reach, advisories)
+        f["reachability"] = r
+        f["preconditions"] = list(dict.fromkeys(cvss_preconditions(f) + pre))[:8]
+        f["counted"] = counted(f)
+        f["level"] = finding_level(f)
+        f["policy_version"] = POLICY
+        f["vex"] = vex_of(f)
+        if f["counted"] and f["fixed_in"] and fix_dates is not None and f["level"] in WARN_LEVELS:
+            f["fix_published_at"] = fix_dates.published(dep.eco, dep.name, f["fixed_in"])
+        out.append(f)
+    return sorted(out, key=_rank)
+
+
+# --- the installed artifact (pickfit/sbom.py) --------------------------------------------------------------------------
+
+
+@dataclass
+class Installed:
+    """An SBOM's packages, and which ecosystems it covers: a lockfile package it does not have is not installed."""
+
+    run_id: str | None
+    tool_version: str | None
+    packages: list[dict[str, Any]]
+    covered: frozenset[str]
+    artifacts: list[str]
+    govuln: dict[str, tuple[str, str]]
+    govuln_ran: bool
+
+
+def latest_passed_run(raw: dict[str, Any]) -> dict[str, Any] | None:
+    """The record's latest passed run (its replay box is the one an SBOM comes from)."""
+    from pickfit.schema import is_passed
+
+    passed = [r for r in (raw.get("verification") or {}).get("runs") or []
+              if r.get("id") and is_passed(str(r.get("level")))]
+    return max(passed, key=lambda r: str(r.get("checked_at") or ""), default=None)
+
+
+def _sbom_paths(run_id: str) -> list[Path]:
+    dirs = [Path(d) for d in (os.environ.get("PICKFIT_RUNS_DIR"),) if d] + [REPO_ROOT / "runs"]
+    return [d / "verify" / run_id / "sbom.json" for d in dirs] + \
+        [Path.home() / ".pickfit" / "evidence" / run_id / "sbom.json"]
+
+
+def installed_of(raw: dict[str, Any], sbom: Any = "auto", details_dir: Path | None = None) -> Installed | None:
+    """The installed artifact of the record's latest passed run: its sbom.json beside the run's report, else the
+    packages a previous scan of the same run kept in data/security/<slug>.json."""
+    run = latest_passed_run(raw)
+    doc: dict[str, Any] | None = sbom if isinstance(sbom, dict) else None
+    if sbom == "auto" and run is not None:
+        for path in _sbom_paths(str(run["id"])):
+            if path.exists():
+                try:
+                    doc = json.loads(path.read_text(encoding="utf-8"))
+                except (OSError, ValueError):
+                    doc = None
+                break
+        if doc is None and details_dir is not None:
+            prev = details_dir / f"{raw.get('slug')}.json"
+            if prev.exists():
+                try:
+                    old = json.loads(prev.read_text(encoding="utf-8"))
+                except (OSError, ValueError):
+                    old = {}
+                if (old.get("observation") or {}).get("run_id") == run["id"] and old.get("installed"):
+                    doc = {"run_id": run["id"], "tool_version": old["observation"].get("tool_version"),
+                           "packages": old["installed"],
+                           "artifacts": [{"sha256": s} for s in old["observation"].get("artifact_sha256") or []]}
+    if not doc or not doc.get("packages"):
+        return None
+    own = {_norm(n) for n in read_context(raw).own}
+    packages = [p for p in doc.get("packages") or [] if p.get("ecosystem") in ECOSYSTEM and p.get("name")
+                and p.get("version")]
+    covered = set()
+    for eco in ECOSYSTEM:
+        mine = [p for p in packages if p["ecosystem"] == eco]
+        if not mine:
+            continue
+        if eco in ("go", "crates") and any("binary" in str(p.get("found_by") or "") for p in mine):
+            covered.add(eco)  # a binary's own build data lists every module or crate compiled in
+        elif any(_norm(p["name"].rsplit("/", 1)[-1]) in own or _norm(p["name"]) in own for p in mine):
+            covered.add(eco)  # the software's own package, with what installed beside it
+    govuln: dict[str, tuple[str, str]] = {}
+    for g in doc.get("govulncheck") or []:
+        osv, lvl = g.get("osv"), g.get("level")
+        if osv and lvl in ("symbol", "package", "module"):
+            where = f"{g.get('binary', '?')}: {g.get('function') or g.get('package') or g.get('module')}"
+            if osv not in govuln or ("symbol", "package", "module").index(lvl) < \
+                    ("symbol", "package", "module").index(govuln[osv][0]):
+                govuln[osv] = (lvl, f"govulncheck -mode=binary {lvl} level, {where}"[:300])
+    return Installed(doc.get("run_id") or (run or {}).get("id"), doc.get("tool_version"), packages, frozenset(covered),
+                     [a["sha256"] for a in doc.get("artifacts") or [] if re.fullmatch(r"[0-9a-f]{64}", str(a.get("sha256")))],
+                     govuln, bool(doc.get("govulncheck_ran")))
+
+
+def with_installed(deps: list[Dep], inv: Installed) -> list[Dep]:
+    """Lockfile packages marked in or out of the artifact (for the ecosystems its SBOM covers); the SBOM's own
+    packages added as runtime. A registry resolve is today's install, so its packages stay unmarked."""
+    have = {(p["ecosystem"], _norm(p["name"]) if p["ecosystem"] == "pypi" else p["name"], str(p["version"]))
+            for p in inv.packages}
+    out = []
+    for d in deps:
+        key = (d.eco, _norm(d.name) if d.eco == "pypi" else d.name, d.version)
+        if d.eco in inv.covered and not str(d.found_in or "").startswith("registry:"):
+            out.append(replace(d, in_artifact=key in have))
+        else:
+            out.append(d)
+    known = {(d.eco, _norm(d.name) if d.eco == "pypi" else d.name, d.version) for d in deps}
+    for p in inv.packages:
+        key = (p["ecosystem"], _norm(p["name"]) if p["ecosystem"] == "pypi" else p["name"], str(p["version"]))
+        if key not in known:
+            known.add(key)
+            where = (p.get("locations") or [None])[0]
+            out.append(Dep(p["ecosystem"], p["name"], str(p["version"]), "runtime",
+                           ("installed", *([where] if where else []), p["name"]), None, (), f"sbom:{inv.run_id}",
+                           None, None, True))
+    return out
+
+
+# --- the check -----------------------------------------------------------------------------------------------------------
+
+
+class CheckResult(dict):  # type: ignore[type-arg]
+    """The record's `security` (a plain dict), carrying the full observation for data/security/<slug>.json."""
+
+    details: dict[str, Any] | None = None
+
+
+def _compact(f: dict[str, Any]) -> dict[str, Any]:
+    """A finding as the record keeps it: sec.v1's fields, the level and what explains it; the rest stays in details."""
+    keep = ("package", "version", "advisory", "cves", "severity", "fixed_in", "summary", "malicious")
+    out = {k: f[k] for k in keep}
+    for k in ("level", "policy_version", "counted", "scope", "workspace", "found_in", "in_artifact", "kev", "epss",
+              "fix_published_at", "attack_vector", "dos_only", "preconditions"):
+        if f.get(k) not in (None, [], ""):
+            out[k] = f[k]
+    if f.get("paths"):
+        out["paths"] = f["paths"][:1]
+    if f.get("reachability"):
+        r = f["reachability"]
+        out["reachability"] = {"method": r["method"], "result": r["result"], "evidence": r.get("evidence", [])[:2]}
+    return out
+
+
+def _full(f: dict[str, Any]) -> dict[str, Any]:
+    """A finding as data/security/<slug>.json keeps it: every field, nulls and empty lists left out."""
+    return {k: v for k, v in f.items() if v not in (None, [], "")} | {k: f[k] for k in ("fixed_in", "malicious")}
+
+
 def check(raw: dict[str, Any], advisories: Advisories, *, now: datetime, clones: Path = CLONES,
-          unrated: list[str] | None = None) -> dict[str, Any]:
-    """The security check (SecurityCheck as JSON) for one record.
+          unrated: list[str] | None = None, sbom: Any = "auto", intel: Intel | None = None,
+          fix_dates: FixDates | None = None, details_dir: Path | None = None) -> CheckResult:
+    """The security check (sec.v2 SecurityCheck as JSON) for one record; `.details` is data/security/<slug>.json.
 
-    Clean only when the software's own dependency set was read in full: every one of its registry packages resolved
-    with real dependencies (not a wrapper around a compiled binary), or else its repository's main lockfiles yielded
-    packages with nothing at the root left unread. Anything less is unchecked with the reason, and keeps its score.
-    Findings make it vulnerable whatever else could not be read."""
-    base = {"version": VERSION, "database": "OSV.dev", "checked_at": now.isoformat(timespec="seconds")}
-
-    def unchecked(reason: str) -> dict[str, Any]:
-        return base | {"status": "unchecked", "unchecked_reason": reason, "sources": [], "packages_checked": 0,
-                       "findings_total": 0, "advisories_total": 0, "findings": []}
-
-    nodes: list[Node] = []
+    A complete read is the software's own dependency set in full: every one of its registry packages resolved with real
+    dependencies (not a wrapper around a compiled binary), or its repository's main lockfiles yielded packages with
+    nothing at the root left unread, or the installed artifact's SBOM covers it. intel None reads CISA KEV and FIRST
+    EPSS once a day (shared_intel); fix_dates None asks deps.dev when a fix came out."""
+    ctx = read_context(raw)
+    deps: list[Dep] = []
     sources: list[str] = []
     own = packages_of(raw)
     all_resolved, wrapper = True, False
+    commit: str | None = None
+    repo_root: Path | None = None
     for pkg in own:
         eco, name = pkg.split(":", 1)
         try:
-            got, deps = RESOLVERS[eco](name)
+            got, n = RESOLVERS[eco](name)
         except (RuntimeError, subprocess.TimeoutExpired, urllib.error.URLError):
             all_resolved = False
             continue
         if not got:
             all_resolved = False
             continue
-        wrapper |= deps == 0
-        nodes += got
+        wrapper |= n == 0
+        deps += [as_dep(x, found_in=f"registry:{pkg}") for x in got]
         sources.append(f"{pkg} (fresh install, {len(got)} packages)")
     complete = bool(own) and all_resolved and not wrapper
+    target = "registry_resolve" if complete else None
     reason: str | None = None
     if not complete:
         # A package that did not resolve, or a wrapper: what installs is in the repository's lockfiles.
@@ -607,53 +1991,198 @@ def check(raw: dict[str, Any], advisories: Advisories, *, now: datetime, clones:
             reason = "resolve_failed" if own else "no_source"
         else:
             try:
-                root, commit = clone(url, raw["slug"], clones)
+                repo_root, commit = clone(url, raw["slug"], clones)
             except (RuntimeError, subprocess.TimeoutExpired):
                 reason = "resolve_failed"
             else:
-                repo = repo_nodes(root)
-                nodes += repo.nodes
+                repo = repo_deps(repo_root, ctx)
+                deps += repo.deps
                 sources += ([f"{url.removeprefix('https://')}@{commit[:12]}"] + repo.read) if repo.read else []
                 complete, reason = repo.complete, repo.reason
+                target = "repo_lockfile" if repo.read else target
                 if not complete and own and reason == "no_lockfile":
                     reason = "resolve_failed"  # its own package did not resolve to its dependencies either
-    nodes = list(dict.fromkeys(nodes))
-    aliases: list[set[str]] = []
-    findings = findings_for(nodes, advisories, unrated, aliases) if nodes else []
-    if not findings and not complete:
-        return unchecked(reason or "resolve_failed")
-    return base | {"status": "vulnerable" if findings else "clean", "unchecked_reason": None, "sources": sources[:20],
-                   "packages_checked": len(nodes), "findings_total": len(findings),
-                   "advisories_total": advisory_count(aliases), "findings": findings[:MAX_FINDINGS]}
+    if target is None and deps:
+        target = "registry_resolve"
+    inv = installed_of(raw, sbom, details_dir)
+    if inv is not None and inv.covered:
+        deps = with_installed(deps, inv)
+        sources.append(f"sbom:{inv.run_id} ({len(inv.packages)} packages installed)")
+        target = "installed_artifact"
+        complete, reason = True, None
+    deps = merge_deps(deps)
+    observed = observe(deps, advisories, unrated) if deps else []
+    if intel is None:
+        intel = shared_intel() if observed else Intel.offline()
+    reach = Reach(Sources(repo_root), next_static_export(repo_root), inv.govuln if inv else {},
+                  bool(inv and inv.govuln_ran), _go_vendor(repo_root))
+    findings = judge(observed, reach, intel=intel, fix_dates=fix_dates if fix_dates is not None else FixDates(),
+                     advisories=advisories)
+    assessment = assess(findings, complete=complete, packages=len(deps), now=now, reason=reason)
+    return compose(raw, deps, findings, assessment, sources=sources, target=target or "repo_lockfile", commit=commit,
+                   inv=inv, intel=intel, now=now, reason=reason)
+
+
+def compose(raw: dict[str, Any], deps: list[Dep], findings: list[dict[str, Any]], assessment: dict[str, Any], *,
+            sources: list[str], target: str, commit: str | None, inv: Installed | None, intel: Intel | None,
+            now: datetime, reason: str | None) -> CheckResult:
+    """The record's sec.v2 check and its details from judged findings."""
+    level = assessment["level"]
+    status = status_for(level)
+    warn = [f for f in findings if f["counted"] and f["level"] in WARN_LEVELS]
+    unreachable = [f for f in findings if f["counted"] and f["level"] == "present_unreachable"]
+    if level == "unchecked":
+        deps, sources = [], []
+    observation = {
+        "scanner": "pickfit-security", "scanner_version": VERSION, "target": target,
+        "commit": commit if commit and re.fullmatch(r"[0-9a-f]{7,40}", commit) else None,
+        "run_id": inv.run_id if inv else None, "tool_version": (inv.tool_version or None) if inv else None,
+        "artifact_sha256": (inv.artifacts if inv else [])[:20],
+        "packages": dict(sorted(Counter(d.eco for d in deps).items())),
+        "scopes": dict(sorted(Counter(d.scope for d in deps).items(), key=lambda kv: SCOPES.index(kv[0]))),
+        "advisories_fetched_at": now.isoformat(timespec="seconds"),
+        "kev_catalog": intel.kev_catalog if intel else None,
+        "epss_date": intel.epss_date if intel and intel.epss is not None else None,
+        "findings_total": len(findings)}
+    if observation["tool_version"]:
+        observation["tool_version"] = str(observation["tool_version"])[:60]
+    security = CheckResult({
+        "version": VERSION, "status": status, "unchecked_reason": (reason or "resolve_failed") if status == "unchecked"
+        else None, "sources": sources[:20], "packages_checked": len(deps), "findings_total": len(warn),
+        "advisories_total": advisory_count([{f["advisory"], *f.get("aliases", [])} for f in warn]),
+        "findings": [_compact(f) for f in warn[:RECORD_WARN] + unreachable[:RECORD_UNREACHABLE]],
+        "database": "OSV.dev", "checked_at": now.isoformat(timespec="seconds"),
+        "observation": observation, "assessment": assessment})
+    security.details = {"slug": raw["slug"], "version": VERSION, "observation": observation, "assessment": assessment,
+                        "sources": sources[:200], "installed": inv.packages if inv else [],
+                        "findings": [_full(f) for f in findings]}
+    return security
 
 
 # --- writing ----------------------------------------------------------------------------------------------------------
 
 
+def details_dir_for(record_path: Path) -> Path:
+    """data/software/<slug>.json -> data/security/ (a fixtures directory gets its own sibling)."""
+    return record_path.parent.parent / "security"
+
+
 def write_security(path: Path, result: dict[str, Any], now: datetime) -> dict[str, Any]:
-    """Store the check just before scores, hide a record with a malicious package, refresh scores (the cap follows),
-    validate, and replace the file atomically. Returns the record as written."""
+    """Store the check just before scores, hide a blocked record (a malicious package, or a KEV entry it may run),
+    refresh scores (the cap follows), validate, and replace the file atomically; a sec.v2 check's full observation goes
+    to data/security/<slug>.json first. Returns the record as written."""
     from pickfit.schema import SoftwareRecord
     from pickfit.score import refresh_scores
 
     raw = json.loads(path.read_text(encoding="utf-8"))
     raw.pop("security", None)
+    security = dict(result)
+    details = getattr(result, "details", None)
+    details_text = None
+    if details is not None and security.get("version") == VERSION:
+        details_text = json.dumps(details, ensure_ascii=False, indent=1) + "\n"
+        security["observation"] = {**security["observation"], "details": f"security/{raw['slug']}.json",
+                                   "details_sha256": hashlib.sha256(details_text.encode()).hexdigest()}
     anchor = next((k for k in ("scores", "outcomes", "sources", "evidence", "first_seen_at", "updated_at") if k in raw),
                   None)
     keys = list(raw)
     at = keys.index(anchor) if anchor else len(keys)
-    raw = {k: raw[k] for k in keys[:at]} | {"security": result} | {k: raw[k] for k in keys[at:]}
-    bad = [f["advisory"] for f in result["findings"] if f["malicious"]]
-    if bad and raw.get("status") == "listed":
+    raw = {k: raw[k] for k in keys[:at]} | {"security": security} | {k: raw[k] for k in keys[at:]}
+    bad = [f["advisory"] for f in security["findings"] if f.get("malicious")]
+    exploited = [f["advisory"] for f in security["findings"] if f.get("kev") and f.get("level") == "blocked"]
+    if (bad or exploited) and raw.get("status") == "listed":
         raw["status"] = "hidden"
-        raw["status_reason"] = f"malicious package reported on OSV.dev: {', '.join(bad[:3])}"[:200]
+        raw["status_reason"] = (f"malicious package reported on OSV.dev: {', '.join(bad[:3])}" if bad else
+                                f"known exploited vulnerability (CISA KEV) in what it runs: {', '.join(exploited[:3])}"
+                                )[:200]
     refresh_scores(raw, now)
     raw["updated_at"] = now.isoformat(timespec="seconds")
     SoftwareRecord.model_validate(raw)
+    if details_text is not None:
+        target = details_dir_for(path) / f"{raw['slug']}.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        tmp_details = target.with_suffix(".json.tmp")
+        tmp_details.write_text(details_text, encoding="utf-8")
+        tmp_details.replace(target)
     tmp = path.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(raw, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     tmp.replace(path)
     return raw
+
+
+# --- offline re-assessment (no new package lookups) ---------------------------------------------------------------------
+
+
+def reassess(raw: dict[str, Any], advisories: Advisories, *, now: datetime, clones: Path = CLONES,
+             intel: Intel | None = None, details_dir: Path | None = None) -> dict[str, Any]:
+    """The level a record's stored check gets under sec.v2, without resolving or looking up packages again.
+
+    A sec.v2 record is re-judged from data/security/<slug>.json. A sec.v1 record is estimated from the findings it
+    kept (at most 60, high and critical only), each advisory read again from OSV.dev (advisories may cache them), the
+    graph of a cached clone (read as it is, never fetched) and the record's own SBOM if one is on this machine.
+    Returns {"level", "assessment", "matched", "truncated", "findings"}; writes nothing."""
+    sec = raw.get("security") or {}
+    if sec.get("version") == VERSION and details_dir is not None and (details_dir / f"{raw['slug']}.json").exists():
+        details = json.loads((details_dir / f"{raw['slug']}.json").read_text(encoding="utf-8"))
+        findings = []
+        for f in details.get("findings") or []:
+            f = dict(f)
+            f["counted"] = counted(f)
+            f["level"] = finding_level(f)
+            findings.append(f)
+        a = assess(findings, complete=details["assessment"]["complete"], packages=sec.get("packages_checked", 0),
+                   now=now, reason=sec.get("unchecked_reason"))
+        return {"level": a["level"], "assessment": a, "matched": len(findings), "truncated": False, "findings": findings}
+    stored = sec.get("findings") or []
+    ctx = read_context(raw)
+    root: Path | None = clones / raw["slug"]
+    from_repo = any(str(s).startswith("github.com/") for s in sec.get("sources") or [])
+    deps: dict[Node, Dep] = {}
+    complete = sec.get("status") != "unchecked"
+    if stored and from_repo and root is not None and (root / ".git").is_dir():
+        repo = repo_deps(root, ctx, resolve_python=False)
+        deps = {d.node: d for d in repo.deps}
+        # Read without resolving Python: when sec.v1 resolved a pyproject.toml, that part was read in full then.
+        resolved_then = any(str(s).endswith("(resolved today)") for s in sec.get("sources") or [])
+        complete = repo.complete or (complete and resolved_then and repo.reason in ("no_lockfile", "resolve_failed"))
+    else:
+        root = None
+    inv = installed_of(raw, "auto", details_dir)
+    reach = Reach(Sources(root), next_static_export(root), inv.govuln if inv else {}, bool(inv and inv.govuln_ran),
+                  _go_vendor(root))
+    observed = []
+    matched = 0
+    for s in stored:
+        eco, name = s["package"].split(":", 1)
+        dep = deps.get((eco, name, s["version"]))
+        matched += dep is not None
+        dep = dep or Dep(eco, name, s["version"], "runtime", (), None, (), "stored", None)
+        try:
+            v = advisories.get(s["advisory"])
+        except (urllib.error.URLError, TimeoutError, ValueError):
+            v = {"id": s["advisory"], "summary": s.get("summary"), "aliases": s.get("cves") or []}
+        f = finding(dep, v, s["severity"])
+        f["malicious"] = bool(s.get("malicious"))
+        observed.append((dep, v, f))
+    findings = judge(observed, reach, intel=intel or Intel.offline(), fix_dates=None, advisories=advisories)
+    a = assess(findings, complete=complete, packages=sec.get("packages_checked", 0), now=now,
+               reason=sec.get("unchecked_reason"))
+    return {"level": a["level"], "assessment": a, "matched": matched,
+            "truncated": (sec.get("findings_total") or 0) > len(stored), "findings": findings}
+
+
+# --- the command ----------------------------------------------------------------------------------------------------------
+
+
+def stale(raw: dict[str, Any], days: int, now: datetime) -> bool:
+    """No check yet, or one older than `days`."""
+    at = (raw.get("security") or {}).get("checked_at")
+    if not at:
+        return True
+    try:
+        return datetime.fromisoformat(at) < now - timedelta(days=days)
+    except ValueError:
+        return True
 
 
 def main_security(args: Any) -> int:
@@ -661,18 +2190,25 @@ def main_security(args: Any) -> int:
     from pickfit.profiles import DEFAULT_OUT
 
     data_dir = Path(args.data_dir) if args.data_dir else DEFAULT_OUT
+    details_dir = data_dir.parent / "security"
     paths = sorted(data_dir.glob("*.json"))
+    now = taipei_now()
+    stale_days = getattr(args, "stale_days", None)
     if args.slug:
         paths = [p for p in paths if p.stem in set(args.slug)]
-    elif args.all or args.unchecked:
+    elif args.all or args.unchecked or stale_days is not None:
         records = {p: json.loads(p.read_text(encoding="utf-8")) for p in paths}
         paths = [p for p, d in records.items() if d.get("status") == "listed"
-                 and (args.all or (d.get("security") or {}).get("status", "unchecked") == "unchecked")]
+                 and (args.all or (args.unchecked and (d.get("security") or {}).get("status", "unchecked") == "unchecked")
+                      or (stale_days is not None and stale(d, stale_days, now)))]
     else:
-        print("pickfit security: name --slug, --all or --unchecked", file=sys.stderr)
+        print("pickfit security: name --slug, --all, --unchecked or --stale-days", file=sys.stderr)
         return 2
-    now = taipei_now()
+    if getattr(args, "reassess", False):
+        return _main_reassess(args, paths, now, details_dir)
     advisories = Advisories()
+    intel = Intel.offline() if getattr(args, "offline_intel", False) else shared_intel()
+    fix_dates = FixDates()
     rows: dict[str, Any] = {}
     lock = threading.Lock()
 
@@ -680,16 +2216,21 @@ def main_security(args: Any) -> int:
         raw = json.loads(path.read_text(encoding="utf-8"))
         before = (raw.get("scores") or {}).get("quality", {}).get("total"), \
             ((raw.get("scores") or {}).get("treasure") or {}).get("is_treasure")
+        level_before = level_of(raw) or legacy_level(raw.get("security"))
         unrated: list[str] = []
         try:
-            result = check(raw, advisories, now=now, unrated=unrated)
+            result = check(raw, advisories, now=now, unrated=unrated, intel=intel, fix_dates=fix_dates,
+                           details_dir=details_dir)
         except Exception as err:  # noqa: BLE001 - one record's trouble must not stop the run
             with lock:
                 rows[path.stem] = {"error": f"{type(err).__name__}: {str(err)[:200]}"}
             return
         written = write_security(path, result, now) if args.write else raw
         scores = written.get("scores") or {}
-        row = {"status": result["status"], "reason": result["unchecked_reason"], "findings": len(result["findings"]),
+        level = result["assessment"]["level"]
+        row = {"status": result["status"], "level": level, "level_before": level_before,
+               "reason": result["unchecked_reason"], "findings": result["findings_total"],
+               "counts": result["assessment"]["counts"], "target": result["observation"]["target"],
                "malicious": any(f["malicious"] for f in result["findings"]), "quality_before": before[0],
                "treasure_before": before[1], "quality": (scores.get("quality") or {}).get("total"),
                "treasure": (scores.get("treasure") or {}).get("is_treasure"), "kind": raw.get("kind"),
@@ -697,13 +2238,50 @@ def main_security(args: Any) -> int:
         with lock:
             rows[path.stem] = row
             if args.verbose:
-                print(f"  {path.stem:<28} {result['status']:<10} {row['findings']:>3} findings", file=sys.stderr)
+                print(f"  {path.stem:<28} {level:<20} {row['findings']:>3} findings", file=sys.stderr)
 
     with ThreadPoolExecutor(args.workers) as pool:
         list(pool.map(one, paths))
     summary = {"checked_at": now.isoformat(timespec="seconds"), "records": len(paths), "written": bool(args.write),
                "status": {s: sum(1 for r in rows.values() if r.get("status") == s)
                           for s in ("vulnerable", "clean", "unchecked")},
+               "level": {lvl: sum(1 for r in rows.values() if r.get("level") == lvl) for lvl in LEVELS},
+               "errors": {k: r["error"] for k, r in rows.items() if "error" in r}, "rows": rows}
+    if args.report:
+        Path(args.report).write_text(json.dumps(summary, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    print(json.dumps({k: v for k, v in summary.items() if k != "rows"}, ensure_ascii=False, indent=1))
+    return 0
+
+
+def _main_reassess(args: Any, paths: list[Path], now: datetime, details_dir: Path) -> int:
+    """--reassess: each record's level under sec.v2 from what it stores; never writes."""
+    if args.write:
+        print("pickfit security: --reassess never writes; run without it to scan and --write", file=sys.stderr)
+        return 2
+    advisories = Advisories(CACHE / "advisories")
+    intel = Intel.offline() if getattr(args, "offline_intel", False) else shared_intel()
+    rows: dict[str, Any] = {}
+    lock = threading.Lock()
+
+    def one(path: Path) -> None:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        try:
+            got = reassess(raw, advisories, now=now, intel=intel, details_dir=details_dir)
+        except Exception as err:  # noqa: BLE001
+            with lock:
+                rows[path.stem] = {"error": f"{type(err).__name__}: {str(err)[:200]}"}
+            return
+        with lock:
+            rows[path.stem] = {"before": level_of(raw) or legacy_level(raw.get("security")), "level": got["level"],
+                               "counts": got["assessment"]["counts"], "matched": got["matched"],
+                               "stored": len((raw.get("security") or {}).get("findings") or []),
+                               "truncated": got["truncated"]}
+
+    with ThreadPoolExecutor(args.workers) as pool:
+        list(pool.map(one, paths))
+    summary = {"reassessed_at": now.isoformat(timespec="seconds"), "records": len(paths), "written": False,
+               "level": {lvl: sum(1 for r in rows.values() if r.get("level") == lvl) for lvl in LEVELS},
+               "truncated": sum(1 for r in rows.values() if r.get("truncated")),
                "errors": {k: r["error"] for k, r in rows.items() if "error" in r}, "rows": rows}
     if args.report:
         Path(args.report).write_text(json.dumps(summary, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
