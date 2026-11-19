@@ -1,0 +1,708 @@
+{
+  "schema_version": "software.v1",
+  "slug": "jscpd",
+  "repo_id": "gh:10353211",
+  "name": "jscpd",
+  "summary": "Detects duplicated source code across 220+ languages, with dead code, complexity and health score reports, plus an MCP server and language server.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "cli",
+    "clones-detection",
+    "code-duplication",
+    "code-quality",
+    "coding-agents",
+    "copy-paste",
+    "copy-paste-detection",
+    "cpd",
+    "developer-tools"
+  ],
+  "use_cases": [
+    "gate CI on new code duplication only",
+    "find unused files, exports and imports in JavaScript, TypeScript and Python",
+    "track port progress between two codebases",
+    "track duplication trend over git history"
+  ],
+  "alternatives_to": [
+    "PMD CPD",
+    "Simian",
+    "Duplo"
+  ],
+  "features": [
+    "detect duplicated code across 224 languages",
+    "find renamed and near-miss clones",
+    "detect dead code",
+    "compute a codebase health score"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://jscpd.dev",
+  "repo": {
+    "url": "https://github.com/kucherenko/jscpd",
+    "full_name": "kucherenko/jscpd",
+    "created_at": "2013-05-29T06:19:20Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": "none",
+    "apple_silicon_only": false,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install jscpd",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "npx jscpd ."
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-jscpd-20261119-170944-b8cc",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install jscpd",
+          "purpose": "uv tool install jscpd (PyPI wheel 5.4.3, installs jscpd and cpd)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "jscpd --version",
+        "expected_signal": "jscpd 5.4.3"
+      },
+      "first_task": "jscpd /home/sbx/work/demo --min-tokens 20"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g jscpd",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "npx jscpd ."
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v5.4.3",
+    "published_at": "2026-11-08T06:54:08Z",
+    "url": "https://github.com/kucherenko/jscpd/releases/tag/v5.4.3"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T17:10:27.053022+08:00",
+    "runs": [
+      {
+        "id": "verify-jscpd-20261119-170944-b8cc",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T17:10:27.053022+08:00",
+        "tool_version": "jscpd 5.4.3",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install jscpd",
+            "purpose": "uv tool install jscpd (PyPI wheel 5.4.3, installs jscpd and cpd)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "jscpd --version",
+            "expected_signal": "jscpd 5.4.3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "jscpd 5.4.3",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "jscpd /home/sbx/work/demo --min-tokens 20",
+            "expected_signal": "Clone found (javascript)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[1mClone found (javascript)\u001b[22m",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/demo && cd /home/sbx/work/demo && cat > a.js <<'EOF'\nexport function computeTotal(items) {\n  let total = 0;\n  for (const item of items) {\n    if (item.price > 0 && item.quantity > 0) {\n      total += item.price * item.quantity;\n    }\n  }\n  const tax = total * 0.2;\n  const shipping = total > 100 ? 0 : 10;\n  return total + tax + shipping;\n}\nEOF\ncat > b.js <<'EOF'\nexport function computeTotal(items) {\n  let total = 0;\n  for (const item of items) {\n    if (item.price > 0 && item.quantity > 0) {\n      total += item.price * item.quantity;\n    }\n  }\n  const tax = total * 0.2;\n  const shipping = total > 100 ? 0 : 10;\n  return total + tax + shipping;\n}\nEOF\ncat > c.js <<'EOF'\nexport function sumOrder(lines) {\n  let acc = 0;\n  for (const line of lines) {\n    if (line.price > 0 && line.quantity > 0) {\n      acc += line.price * line.quantity;\n    }\n  }\n  const vat = acc * 0.2;\n  const delivery = acc > 100 ? 0 : 10;\n  return acc + vat + delivery;\n}\nEOF\ncat > package.json <<'EOF'\n{\"name\":\"demo\",\"version\":\"1.0.0\",\"main\":\"index.js\"}\nEOF\ncat > index.js <<'EOF'\nimport { computeTotal } from './a.js';\nconsole.log(computeTotal([]));\nEOF\ncat > unused.js <<'EOF'\nexport function neverCalled() { return 42; }\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "jscpd /home/sbx/work/demo --min-tokens 20 --ignore-identifiers --max-gap-lines 2",
+            "expected_signal": "Clone found (javascript, renamed)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[1mClone found (javascript, renamed)\u001b[22m",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/demo && cd /home/sbx/work/demo && cat > a.js <<'EOF'\nexport function computeTotal(items) {\n  let total = 0;\n  for (const item of items) {\n    if (item.price > 0 && item.quantity > 0) {\n      total += item.price * item.quantity;\n    }\n  }\n  const tax = total * 0.2;\n  const shipping = total > 100 ? 0 : 10;\n  return total + tax + shipping;\n}\nEOF\ncat > b.js <<'EOF'\nexport function computeTotal(items) {\n  let total = 0;\n  for (const item of items) {\n    if (item.price > 0 && item.quantity > 0) {\n      total += item.price * item.quantity;\n    }\n  }\n  const tax = total * 0.2;\n  const shipping = total > 100 ? 0 : 10;\n  return total + tax + shipping;\n}\nEOF\ncat > c.js <<'EOF'\nexport function sumOrder(lines) {\n  let acc = 0;\n  for (const line of lines) {\n    if (line.price > 0 && line.quantity > 0) {\n      acc += line.price * line.quantity;\n    }\n  }\n  const vat = acc * 0.2;\n  const delivery = acc > 100 ? 0 : 10;\n  return acc + vat + delivery;\n}\nEOF\ncat > package.json <<'EOF'\n{\"name\":\"demo\",\"version\":\"1.0.0\",\"main\":\"index.js\"}\nEOF\ncat > index.js <<'EOF'\nimport { computeTotal } from './a.js';\nconsole.log(computeTotal([]));\nEOF\ncat > unused.js <<'EOF'\nexport function neverCalled() { return 42; }\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "jscpd /home/sbx/work/demo --dead-code",
+            "expected_signal": "unused.js",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "- \u001b[1m\u001b[32munused.js\u001b[39m\u001b[22m \u001b[31mcertain 95%\u001b[39m \u001b[90m1 lines\u001b[39m",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/demo && cd /home/sbx/work/demo && cat > a.js <<'EOF'\nexport function computeTotal(items) {\n  let total = 0;\n  for (const item of items) {\n    if (item.price > 0 && item.quantity > 0) {\n      total += item.price * item.quantity;\n    }\n  }\n  const tax = total * 0.2;\n  const shipping = total > 100 ? 0 : 10;\n  return total + tax + shipping;\n}\nEOF\ncat > b.js <<'EOF'\nexport function computeTotal(items) {\n  let total = 0;\n  for (const item of items) {\n    if (item.price > 0 && item.quantity > 0) {\n      total += item.price * item.quantity;\n    }\n  }\n  const tax = total * 0.2;\n  const shipping = total > 100 ? 0 : 10;\n  return total + tax + shipping;\n}\nEOF\ncat > c.js <<'EOF'\nexport function sumOrder(lines) {\n  let acc = 0;\n  for (const line of lines) {\n    if (line.price > 0 && line.quantity > 0) {\n      acc += line.price * line.quantity;\n    }\n  }\n  const vat = acc * 0.2;\n  const delivery = acc > 100 ? 0 : 10;\n  return acc + vat + delivery;\n}\nEOF\ncat > package.json <<'EOF'\n{\"name\":\"demo\",\"version\":\"1.0.0\",\"main\":\"index.js\"}\nEOF\ncat > index.js <<'EOF'\nimport { computeTotal } from './a.js';\nconsole.log(computeTotal([]));\nEOF\ncat > unused.js <<'EOF'\nexport function neverCalled() { return 42; }\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "jscpd /home/sbx/work/demo --health",
+            "expected_signal": "dead code",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "dead code \u001b[33m 68\u001b[39m \u001b[33m████████\u001b[39m\u001b[33m▏\u001b[39m\u001b[90m░░░\u001b[39m \u001b[90m63.9%\u001b[39m",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/demo && cd /home/sbx/work/demo && cat > a.js <<'EOF'\nexport function computeTotal(items) {\n  let total = 0;\n  for (const item of items) {\n    if (item.price > 0 && item.quantity > 0) {\n      total += item.price * item.quantity;\n    }\n  }\n  const tax = total * 0.2;\n  const shipping = total > 100 ? 0 : 10;\n  return total + tax + shipping;\n}\nEOF\ncat > b.js <<'EOF'\nexport function computeTotal(items) {\n  let total = 0;\n  for (const item of items) {\n    if (item.price > 0 && item.quantity > 0) {\n      total += item.price * item.quantity;\n    }\n  }\n  const tax = total * 0.2;\n  const shipping = total > 100 ? 0 : 10;\n  return total + tax + shipping;\n}\nEOF\ncat > c.js <<'EOF'\nexport function sumOrder(lines) {\n  let acc = 0;\n  for (const line of lines) {\n    if (line.price > 0 && line.quantity > 0) {\n      acc += line.price * line.quantity;\n    }\n  }\n  const vat = acc * 0.2;\n  const delivery = acc > 100 ? 0 : 10;\n  return acc + vat + delivery;\n}\nEOF\ncat > package.json <<'EOF'\n{\"name\":\"demo\",\"version\":\"1.0.0\",\"main\":\"index.js\"}\nEOF\ncat > index.js <<'EOF'\nimport { computeTotal } from './a.js';\nconsole.log(computeTotal([]));\nEOF\ncat > unused.js <<'EOF'\nexport function neverCalled() { return 42; }\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "jscpd /path/to/code",
+            "actually_needed": "On tiny sample files the default minimum token count is high; --min-tokens 20 was passed to make the small demo files register as clones",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Check 1 reports one exact clone between a.js and b.js, check 2 also reports a renamed clone between a.js and c.js (2 clones total), and check 3 prints jscpd 5.4.3, all with exit code 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-jscpd-20261119-170944-b8cc/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-jscpd-20261119-170944-b8cc/check-1-cmd4.judged.png",
+            "runs/verify/verify-jscpd-20261119-170944-b8cc/check-2-cmd5.judged.png",
+            "runs/verify/verify-jscpd-20261119-170944-b8cc/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.194061,
+        "features": [
+          {
+            "feature": "detect duplicated code across 224 languages",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "find renamed and near-miss clones",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "detect dead code",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "compute a codebase health score",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T17:10:36+08:00",
+    "status": "unchecked",
+    "unchecked_reason": "resolve_failed",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T17:10:27+08:00",
+    "quality": {
+      "total": 93.1,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 97.9,
+      "signals": {
+        "stars": 6581,
+        "monthly_downloads": 20696397,
+        "forks": 276,
+        "dependents": null,
+        "release_downloads": 139945,
+        "hn_top_score": 5,
+        "registries_count": 3
+      },
+      "age_days": 4922,
+      "packages": [
+        "npm:jscpd",
+        "pypi:jscpd",
+        "homebrew:jscpd"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 1.96
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:10:27.070528+08:00",
+      "sources_sha": "320248b04b38caf85bd5f24d3ce85f6013ff3f8aba28ba4b2e6478e335ba3647",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Duplicate code detector for 220+ languages — plus dead code, complexity hotspots, duplication and health trends over git history, and one health score for the whole codebase."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "**Clone baseline** — gate CI on *new* duplication only."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "jscpd v5 is a Rust engine that ships as a self-contained binary — no runtime required"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "# macOS / Linux\ncurl -fsSL https://jscpd.dev/install.sh | bash\n\n# Windows (PowerShell)\nirm https://jscpd.dev/install.ps1 | iex"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "jscpd /path/to/code"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "**Config discovery** — `.jscpd.json`, `.config/jscpd.json`, or the `jscpd` key in `package.json`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "That is the most common reason projects end up setting\n`VALIDATE_JSCPD: false`."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "**Prebuilt for 8 platforms** — macOS arm64/x64, Linux arm64/x64 (glibc and musl), Windows arm64/x64"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/kucherenko/jscpd",
+      "fetched_at": "2026-11-19T17:09:30+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/kucherenko/jscpd/blob/master/README.md",
+      "fetched_at": "2026-11-19T17:09:28+08:00"
+    },
+    {
+      "id": "release:v5.4.3",
+      "kind": "release",
+      "url": "https://github.com/kucherenko/jscpd/releases/tag/v5.4.3",
+      "fetched_at": "2026-11-19T17:09:28+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Rust engine, self-contained binary",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Then scan a project:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Copy/paste detector for source code.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Duplicate code detector for 220+ languages — plus dead code, complexity hotspots, duplication and health trends over git history, and one health score for the whole codebase.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# jscpd",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Prebuilt for 8 platforms** — macOS arm64/x64, Linux arm64/x64 (glibc and musl), Windows arm64/x64",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "readme",
+      "quote": "The model runs inside jscpd on the CPU, so a scan makes no network call.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/prerequisites/apple_silicon_only",
+      "source_id": "readme",
+      "quote": "macOS arm64/x64",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "The model runs inside jscpd on the CPU, so a scan makes no network call.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:09:30+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:09:30+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T17:09:30+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:09:30+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:09:30+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v5.4.3",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:09:28+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "gate CI on *new* duplication only",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "unused files, exports, declarations and imports across JavaScript, TypeScript and Python",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "`jscpd --compare python/ typescript/` pairs the functions of two folders",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "duplication and health trend over git history",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "PMD CPD",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "Simian",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "Duplo",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "224 language formats**, with cross-format detection",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Type-3 near-miss clones",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "`--dead-code` — find code nothing runs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "`--health` — one 0-100 score with a grade",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install jscpd",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g jscpd",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g jscpd",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "either one jscpd runs itself (after `jscpd --semantic-download` once) or any OpenAI-compatible API",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:40+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T17:09:28+08:00",
+  "updated_at": "2026-11-19T17:10:36+08:00"
+}
