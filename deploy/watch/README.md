@@ -93,3 +93,16 @@ ssh root@機器的IP journalctl -u pickfit-e2e@default -n 60
 - watch 自己租的 Mac，付費的第一天過完又沒事做時會自己刪。服務停掉時就不會刪，Scaleway 過了 24 小時按小時計費，要 `pickfit mac-host down 名稱 --yes`。
 - `systemctl stop pickfit-watch` 會等跑到一半的工作做完，最多 30 分鐘。
 - `pickfit watch --status`（在機器上以 pickfit 使用者執行）列出 D1 的送出、每條分流停著的工作和 Mac 主機。
+
+## 吞吐量的設定（11/19）
+
+watch 原本最多同時跑 2 筆，每筆先保留 US$6，花到約 US$24 就不再開新工作，要等重啟才會動。11/19 起改成這樣（[docs/proposals/throughput.md](../../docs/proposals/throughput.md)）：
+
+- 錢看帳本最近 24 小時花了多少，上限是 `loop/budget.json` 的 `model_usd.daily`（現在 US$80），不再從程式啟動起累計。每個在跑的工作保留所在分流最近 50 筆的 p95 花費，一條分流還不到 5 筆紀錄時才用 US$6。
+- 每條分流自己算同時幾筆：linux 6、web 2、windows 最多 2（EC2 的 8 vCPU 配額）、macos 看主機開得了幾台 VM。不再限制每小時開始幾筆。
+- id 以 `sub_harvest` 開頭的送出（`pickfit harvest feed` 要用 `pickfit.watch.harvest_submission_id()` 產生）排在一般人的送出後面，所有分流加起來最多占 4 格，每條分流留 1 格給人，而且要留 US$10 的當日額度給人。
+- 工作做完就馬上拿下一筆，新送出還是每 60 秒查一次。
+
+數字都能在 `/etc/pickfit/watch.env` 用 `PICKFIT_WATCH_*` 改，名稱和預設值寫在 `watch.env.example` 的最後一段。`send_secrets.py` 不會送這些變數，要改就在機器上直接加那幾行，再 `systemctl restart pickfit-watch`。之後重跑 `send_secrets.py` 會整份覆寫 `watch.env`，手加的行要再加一次。
+
+watch 每一輪把狀態寫到 `runs/watch/status.json`：每條分流在跑幾筆、上限幾筆、排隊或停著幾筆，以及沒開新工作的原因（錢、格子滿了、harvest 的額度、分流在休息、等 Mac 的那一批）。卡在錢的時候，原因會寫出是哪幾個數字加起來超過上限。`pickfit watch --status` 會一起印出來，journal 裡也看得到同樣的摘要。

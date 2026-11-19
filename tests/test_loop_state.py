@@ -158,3 +158,81 @@ def test_a_done_item_recorded_by_mistake_can_be_reopened_with_a_reason(tmp_path,
     assert "only a done item" in capsys.readouterr().err
     with pytest.raises(SystemExit):
         run(tmp_path, "reopen", "reverify:tool")
+
+
+# --- reading less: one line per open issue, one issue's notes, a verify run in a few lines (11/19) ------------
+
+
+def test_open_issues_lists_headings_only_and_one_issue_prints_its_notes(tmp_path, capsys):
+    run(tmp_path, "issue-new", "no root in the box", "--reason", "needs_root")
+    run(tmp_path, "issue-new", "scroll does not reach the VM")
+    run(tmp_path, "issue-new", "an old one")
+    issues = tmp_path / "issues.md"
+    issues.write_text(issues.read_text().replace("- symptom:", "- symptom: apt-get needs root " + "x" * 2000, 1))
+    run(tmp_path, "issue-status", "H-002", "fixing")
+    run(tmp_path, "issue-status", "H-003", "fixed")
+    run(tmp_path, "add", "--kind", "reverify", "--target", "dog", "--issue", "H-001")
+    capsys.readouterr()
+
+    assert run(tmp_path, "open-issues") == 0
+    out = capsys.readouterr().out
+    assert out.splitlines() == [
+        "H-001 [open] no root in the box (reason needs_root, 1 items waiting)",
+        "H-002 [fixing] scroll does not reach the VM",
+        "not listed: fixed=1 (--all lists them; `issue H-00X` prints one)",
+    ]
+    assert "apt-get" not in out  # the notes stay in the file
+    run(tmp_path, "open-issues", "--all")
+    assert "H-003 [fixed] an old one" in capsys.readouterr().out
+
+    assert run(tmp_path, "issue", "H-001") == 0
+    section = capsys.readouterr().out
+    assert section.startswith("## H-001 [open] no root in the box\n") and "apt-get needs root" in section
+    assert "H-002" not in section
+    assert run(tmp_path, "issue", "H-009") == 2
+    assert issues.read_text().count("## H-") == 3  # reading changes nothing
+
+
+def write_run(runs: Path, run_id: str, *, outcome: dict | None, report: dict) -> Path:
+    evidence = runs / "verify" / run_id
+    evidence.mkdir(parents=True)
+    if outcome is not None:
+        (evidence / "outcome.json").write_text(json.dumps(outcome))
+    (evidence / "report.json").write_text(json.dumps(report))
+    return evidence
+
+
+def test_run_summary_keeps_the_verdict_and_the_failing_command_not_the_thinking(tmp_path, capsys):
+    runs = tmp_path / "runs"
+    thinking = "I should try pipx first because " * 200
+    commands = [{"command_id": i, "command": f"step {i}", "exit_code": 0, "stdout": "ok", "stderr": "",
+                 "timed_out": False} for i in range(1, 6)]
+    commands[2].update(exit_code=1, stderr="E: " + "noise " * 300 + "permission denied")
+    write_run(runs, "verify-dog-20261119-101010-ab12",
+              outcome={"run_id": "verify-dog-20261119-101010-ab12", "slug": "dog", "level": "unverified",
+                       "replayed": False, "unverified_reason": "needs_root", "seconds": 80.0, "cost_usd": 0.31,
+                       "box_usd": 0.004, "written": False, "notes": ["apt-get needs root"]},
+              report={"stop_reason": "finished", "turns": [{"reasoning_summary": thinking, "text": thinking}],
+                      "commands": commands, "finish": {"summary": "could not install", "failing_command_id": 3},
+                      "verdict": {"level": "unverified", "agrees": True, "problems": []},
+                      "features": [{"number": 1, "feature": "list files", "status": "not_checked"}]})
+    write_run(runs, "verify-dogfood-20261119-111111-cd34", outcome={"slug": "dogfood", "level": "function"},
+              report={})  # newer, but another slug that starts the same
+    assert run(tmp_path, "run-summary", "--slug", "dog", "--runs-dir", str(runs)) == 0
+    text = capsys.readouterr().out
+    summary = json.loads(text)
+    assert (summary["run"], summary["level"], summary["unverified_reason"], summary["cost_usd"]) == (
+        "verify-dog-20261119-101010-ab12", "unverified", "needs_root", 0.31)
+    [failing] = summary["commands"]
+    assert (failing["id"], failing["command"], failing["exit_code"]) == (3, "step 3", 1)
+    assert failing["stderr_tail"].endswith("permission denied") and len(failing["stderr_tail"]) <= 400
+    assert summary["features"] == ["1. list files: not_checked"]
+    assert "pipx first" not in text and len(text) < 2000
+
+    assert run(tmp_path, "run-summary", "verify-dogfood-20261119-111111-cd34", "--runs-dir", str(runs)) == 0
+    assert json.loads(capsys.readouterr().out)["level"] == "function"
+    write_run(runs, "verify-cat-20261119-121212-ef56", outcome=None, report={"stop_reason": "box_error"})
+    assert run(tmp_path, "run-summary", "--slug", "cat", "--runs-dir", str(runs)) == 0
+    crashed = json.loads(capsys.readouterr().out)
+    assert crashed["stop_reason"] == "box_error" and crashed["missing"].startswith("outcome.json")
+    assert run(tmp_path, "run-summary", "--slug", "bird", "--runs-dir", str(runs)) == 2

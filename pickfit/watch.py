@@ -32,11 +32,24 @@ data/software (they get the existing record's status) or taken by another
 submission (also one still in flight), and whatever the rules reject. Any star
 count is taken: pickfit lists any software, not only lesser-known tools.
 
-Limits: at most SUBMIT_HOURLY_CAP submissions start per rolling hour (the cap
-the Worker applies to intake, from wrangler.jsonc); `max_usd` caps the whole
-watch run; and where the user set a daily or total cap on the pipeline budget
-(pickfit.ledger), a submission starts only while it has room for its worst case. Every job's timings, counted from submitted_at, land in
-runs/watch/jobs/<submission>.json.
+Limits (11/19, docs/proposals/throughput.md):
+
+- money: what the shared ledger recorded over the last 24 hours (every budget: it is one account), plus what the
+  jobs in flight may still spend, plus the next job's share, stays under `daily_usd` (by default the account's
+  daily cap, loop/budget.json's model_usd.daily). A job's share is the 95th percentile of what that lane's last
+  jobs cost (their job files), or WORST_CASE_META_USD until a lane has RESERVE_MIN_SAMPLES of them. Where the user
+  set a daily or total cap on the pipeline budget (pickfit.ledger) it holds too; `max_usd` optionally caps one run.
+- slots: each lane runs its own number at once: linux (repositories, on Modal) `concurrency`, web
+  `web_concurrency`, windows at most WINDOWS_MAX_BOXES (the EC2 quota), macos what its host runs (the lane's own).
+  No hourly cap on starts unless `hourly_cap` is set: the Worker caps intake (SUBMIT_HOURLY_CAP) already.
+- harvest: rows `pickfit harvest feed` queues (their id starts with HARVEST_ID_PREFIX) come after people's in every
+  lane, use at most `harvest_slots` slots in all, leave one slot of each lane to people, and start only while
+  `user_reserve_usd` of the money stays free for people's submissions.
+
+A finished job wakes the loop at once, so a free slot takes the next row without waiting for the next poll; new
+rows are still looked for every `interval_s`. Each tick writes runs/watch/status.json: each lane's running, queued
+and limit, and why it starts nothing new (money, slots, a lane hold, waiting for a batch). Every job's timings,
+counted from submitted_at, land in runs/watch/jobs/<submission>.json.
 """
 
 from __future__ import annotations
@@ -44,13 +57,15 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import sqlite3
 import subprocess
 import threading
 import time
 import urllib.request
+import uuid
 from collections.abc import Callable, Iterator
-from concurrent.futures import Future, ThreadPoolExecutor
-from contextlib import contextmanager
+from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, wait
+from contextlib import closing, contextmanager
 import math
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta
@@ -76,9 +91,27 @@ COVERED = LISTED_CATEGORIES  # every named category (schema.Category without "ot
 # and the like, as the directory already lists them); libraries and non-software stay out (11/3).
 OTHER_KINDS = TOOL_KINDS
 DEFAULT_INTERVAL_S = 60
-DEFAULT_CONCURRENCY = 2
-DEFAULT_MAX_USD = 30.0  # five submissions at their worst case (WORST_CASE_META_USD)
-DEFAULT_HOURLY_CAP = 20  # the Worker's default when wrangler.jsonc has none
+# Slots per lane (11/19). Modal held 8 verifications at once (verify --batch: 43 in 664 s); the watch machine is a
+# small VM (2 vCPU, 2 GB), so linux starts at 6 and web, whose read may start a local Chromium, at 2.
+DEFAULT_CONCURRENCY = 6  # linux: repository submissions read and verified at once
+DEFAULT_WEB_CONCURRENCY = 2  # web: website submissions read and visited at once
+DEFAULT_WINDOWS_CONCURRENCY = 2
+WINDOWS_MAX_BOXES = 2  # the EC2 vCPU quota (8) holds two Windows boxes at a time; never more
+DEFAULT_HARVEST_SLOTS = 4  # slots harvest rows may hold in all lanes together
+DEFAULT_USER_RESERVE_USD = 10.0  # of the daily money, kept free for people's submissions when a harvest row starts
+DEFAULT_MAX_USD: float | None = None  # no cap on one run: the rolling 24 h cap is what holds (until 11/19: 30)
+DEFAULT_DAILY_USD = 80.0  # the rolling 24 h cap when loop/budget.json does not say (its model_usd.daily, 11/15)
+DEFAULT_HOURLY_CAP = 20  # the Worker's default when wrangler.jsonc has none (hourly_cap(); harvest feed reads it)
+# A job's share of the money: the 95th percentile of what the lane's last RESERVE_SAMPLES finished jobs cost.
+RESERVE_SAMPLES = 50
+RESERVE_MIN_SAMPLES = 5  # fewer than this: WORST_CASE_META_USD
+RESERVE_FLOOR_USD = 0.05
+RESERVE_REFRESH_S = 300  # the job files are read again this often for it
+WAKE_SETTLE_S = 1.0  # after a job finishes, wait this long so jobs that end together start the next in one tick
+STATUS_LOG_S = 600  # the status line is logged when a lane's reason changes, else at most this often
+# The rows `pickfit harvest feed` queues. The Worker's ids are sub_ and 32 hex digits, so no row a person submits
+# can start with this (the status page takes sub_[a-z0-9]{1,64}). harvest_submission_id() makes one.
+HARVEST_ID_PREFIX = "sub_harvest"
 MAX_ATTEMPTS = 3
 STALE_AFTER = timedelta(hours=1)  # a row left in reading/verifying this long lost its watcher
 LANE_HOLD = timedelta(minutes=30)  # a lane whose box never started rests this long before its next try
@@ -98,6 +131,41 @@ _NOT_OWNERS = frozenset(
     "settings site sponsors topics trending users".split())
 _GITHUB_REPO = re.compile(r"(?:https?://)?(?:www\.)?github\.com/([A-Za-z0-9](?:[A-Za-z0-9-]{0,38}))/"
                           r"([A-Za-z0-9._-]{1,100})(?:[/?#].*)?", re.I)
+
+
+# The throughput settings the service reads from /etc/pickfit/watch.env (deploy/watch/watch.env.example): Settings
+# field -> (variable, type, default). A flag of `pickfit watch` wins; unset or empty is the default.
+WATCH_ENV: dict[str, tuple[str, type, Any]] = {
+    "concurrency": ("PICKFIT_WATCH_LINUX_CONCURRENCY", int, DEFAULT_CONCURRENCY),
+    "web_concurrency": ("PICKFIT_WATCH_WEB_CONCURRENCY", int, DEFAULT_WEB_CONCURRENCY),
+    "windows_concurrency": ("PICKFIT_WATCH_WINDOWS_CONCURRENCY", int, DEFAULT_WINDOWS_CONCURRENCY),
+    "harvest_slots": ("PICKFIT_WATCH_HARVEST_SLOTS", int, DEFAULT_HARVEST_SLOTS),
+    "user_reserve_usd": ("PICKFIT_WATCH_USER_RESERVE_USD", float, DEFAULT_USER_RESERVE_USD),
+    "daily_usd": ("PICKFIT_WATCH_DAILY_USD", float, None),
+    "hourly_cap": ("PICKFIT_WATCH_HOURLY_CAP", int, 0),
+}
+
+
+def env_defaults(environ: dict[str, str] | None = None) -> dict[str, Any]:
+    """WATCH_ENV's settings from the process environment (the service's EnvironmentFile; .env is not read for
+    them). A value that is not a number, or is below 0, raises ValueError naming the variable."""
+    import os
+
+    environ = os.environ if environ is None else environ
+    out: dict[str, Any] = {}
+    for key, (name, kind, default) in WATCH_ENV.items():
+        raw = (environ.get(name) or "").strip()
+        if not raw:
+            out[key] = default
+            continue
+        try:
+            value = kind(raw)
+        except ValueError:
+            raise ValueError(f"{name} must be a{'n integer' if kind is int else ' number'}, got {raw!r}") from None
+        if value < 0:
+            raise ValueError(f"{name} must be 0 or more, got {raw!r}")
+        out[key] = value
+    return out
 
 
 def normalize_repo_url(url: str) -> str | None:
@@ -144,15 +212,107 @@ def budget_blocked(needs: list[tuple[str, Ledger | None, float]]) -> str | None:
     return None
 
 
+# What counts in the ledger: the reservation while a call is open, the actual cost after (pickfit.ledger's _SPEND).
+_LEDGER_SPEND = "COALESCE(SUM(CASE WHEN status = 'reserved' THEN reserved_usd ELSE cost_usd END), 0)"
+
+
+def rolling_spend(ledger_path: Path, now: datetime, hours: float = 24.0) -> float:
+    """Model spend the shared ledger recorded over the last `hours`, every budget together (one account), open
+    reservations at what they hold. Read only; 0 when there is no ledger yet."""
+    if not ledger_path.exists():
+        return 0.0
+    start = (now - timedelta(hours=hours)).astimezone(TAIPEI).isoformat()  # ts is Taipei time: text order is time order
+    with closing(sqlite3.connect(str(ledger_path), timeout=10)) as conn:
+        return float(conn.execute(f"SELECT {_LEDGER_SPEND} FROM calls WHERE ts >= ?", (start,)).fetchone()[0])
+
+
+def account_daily_usd(budget_path: Path) -> float | None:
+    """The account's daily model cap, loop/budget.json's model_usd.daily, or None when the file does not say."""
+    try:
+        value = float(json.loads(budget_path.read_text(encoding="utf-8"))["model_usd"]["daily"])
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    return value if value >= 0 else None
+
+
+def p95(values: list[float]) -> float:
+    """The 95th percentile by nearest rank (one of the values, never an interpolation)."""
+    ordered = sorted(values)
+    return ordered[max(0, math.ceil(0.95 * len(ordered)) - 1)]
+
+
+def reserve_lane(job: Job) -> str:
+    """The lane a finished job's cost counts toward: where it was verified; a repository that never reached a lane
+    was read in a linux slot."""
+    return job.lane if job.lane in ("web", "windows", "macos") else "linux"
+
+
+def lane_reserves(jobs: list[Job]) -> dict[str, tuple[float, str]]:
+    """lane -> (a job's share of the money, how it was found), from finished jobs' model cost (what the ledger
+    charged them), the newest RESERVE_SAMPLES of each lane. Too few: WORST_CASE_META_USD."""
+    costs: dict[str, list[tuple[str, float]]] = {}
+    for job in jobs:
+        if job.result in (None, "parked", "elsewhere"):
+            continue
+        usd = sum(job.cost_usd.get(k, 0.0) for k in ("model", "meta", "baseten"))
+        costs.setdefault(reserve_lane(job), []).append((job.started_at, usd))
+    out: dict[str, tuple[float, str]] = {}
+    for lane in ("linux", "web", "windows", "macos"):
+        recent = [usd for _, usd in sorted(costs.get(lane, []), reverse=True)[:RESERVE_SAMPLES]]
+        if len(recent) < RESERVE_MIN_SAMPLES:
+            out[lane] = (WORST_CASE_META_USD, f"worst case ({len(recent)} of {RESERVE_MIN_SAMPLES} jobs to go by)")
+        else:
+            out[lane] = (max(RESERVE_FLOOR_USD, round(p95(recent), 4)), f"p95 of the last {len(recent)} jobs")
+    return out
+
+
+def submission_source(row: dict[str, Any]) -> str:
+    """'harvest' for a row `pickfit harvest feed` queued (HARVEST_ID_PREFIX), else 'user'."""
+    return "harvest" if str(row.get("id") or "").startswith(HARVEST_ID_PREFIX) else "user"
+
+
+def harvest_submission_id() -> str:
+    """A submissions.id for a harvest row: the watch takes it after people's rows and within harvest's own slots.
+    The hook for pickfit harvest feed: it inserts its rows with this id instead of the Worker's sub_<hex>."""
+    return f"{HARVEST_ID_PREFIX}{uuid.uuid4().hex}"
+
+
+def _short_id(submission_id: str) -> str:
+    """Twelve characters that tell submissions apart in a run id (a harvest row's prefix says nothing)."""
+    return submission_id.removeprefix(HARVEST_ID_PREFIX).removeprefix("sub_")[:12]
+
+
 # --- D1 ---------------------------------------------------------------------------
 
 
-def queued(d1: Database, limit: int, *, sites: bool = False) -> list[dict[str, Any]]:
-    """Queued submissions, oldest first: repositories, and with `sites` website rows too (a hosted web app, the web
-    lane); without it they stay queued. The submitter's note is never read."""
-    where = "url LIKE 'https://%'" if sites else "url LIKE 'https://github.com/%'"
+_REPOSITORY = "url LIKE 'https://github.com/%'"
+_WEBSITE = "url LIKE 'https://%' AND url NOT LIKE 'https://github.com/%'"
+_IS_HARVEST = f"substr(id, 1, {len(HARVEST_ID_PREFIX)}) = '{HARVEST_ID_PREFIX}'"
+
+
+def queued(d1: Database, limit: int, *, sites: bool = False, lane: str | None = None) -> list[dict[str, Any]]:
+    """Queued submissions, people's before harvest's, each oldest first. `lane` linux: repositories; web: website
+    rows (a hosted web app). Without a lane: repositories, and with `sites` website rows too; without it they stay
+    queued. The submitter's note is never read."""
+    if lane == "linux":
+        where = _REPOSITORY
+    elif lane == "web":
+        where = _WEBSITE
+    else:
+        where = "url LIKE 'https://%'" if sites else _REPOSITORY
     return d1.query(sql(f"SELECT id, url, submitted_at FROM submissions WHERE status = 'queued' AND {where} "
-                        "ORDER BY submitted_at, id LIMIT ?1", limit))
+                        f"ORDER BY {_IS_HARVEST}, submitted_at, id LIMIT ?1", limit))
+
+
+def queue_counts(d1: Database) -> dict[str, dict[str, int]]:
+    """Queued rows by lane (linux, web) and source (user, harvest), for the status."""
+    rows = d1.query(f"SELECT CASE WHEN {_REPOSITORY} THEN 'linux' ELSE 'web' END AS lane, "
+                    f"CASE WHEN {_IS_HARVEST} THEN 'harvest' ELSE 'user' END AS source, count(*) AS n "
+                    "FROM submissions WHERE status = 'queued' AND url LIKE 'https://%' GROUP BY 1, 2")
+    out: dict[str, dict[str, int]] = {}
+    for row in rows:
+        out.setdefault(row["lane"], {})[row["source"]] = int(row["n"])
+    return out
 
 
 def record_passed(record: SoftwareRecord) -> bool:
@@ -441,10 +601,17 @@ class Settings:
     worker_dir: Path
     commit: bool = True
     publish: bool = False
-    hourly_cap: int = DEFAULT_HOURLY_CAP
-    max_usd: float = DEFAULT_MAX_USD
-    concurrency: int = DEFAULT_CONCURRENCY
+    hourly_cap: int = 0  # >0: at most this many submissions start in a rolling hour; 0: none (the Worker caps intake)
+    max_usd: float | None = DEFAULT_MAX_USD  # model spend one run may reach (since it started); None: no run cap
+    daily_usd: float | None = None  # model spend in any rolling 24 h (the ledger); None: budget_path's, else none
+    budget_path: Path | None = None  # loop/budget.json: its model_usd.daily is the account's daily cap
+    concurrency: int = DEFAULT_CONCURRENCY  # linux slots
+    web_concurrency: int = DEFAULT_WEB_CONCURRENCY
+    windows_concurrency: int = DEFAULT_WINDOWS_CONCURRENCY  # at most WINDOWS_MAX_BOXES, whatever is asked
+    harvest_slots: int = DEFAULT_HARVEST_SLOTS  # harvest rows at once, all lanes together
+    user_reserve_usd: float = DEFAULT_USER_RESERVE_USD  # money a harvest row leaves free for people's
     interval_s: float = DEFAULT_INTERVAL_S
+    wake_settle_s: float = WAKE_SETTLE_S
     lanes: tuple[str, ...] = ("linux",)  # pickfit.lanes.ALL_LANES to take Windows, macOS and website submissions
     publish_mode: str = "deploy"  # deploy: run the deploy here; push: push the commits, the branch's CI deploys
     update_check_s: float = 0  # >0: when idle, this often see whether origin/main has new program code (restart)
@@ -494,9 +661,26 @@ class Watcher:
         self._lane_batches: dict[str, Future[list[Job]]] = {}  # one batch thread per lane
         self._lane_running: set[str] = set()  # parked submissions a lane is verifying now
         self._lane_hold: dict[str, datetime] = {}  # lane -> no batch before this (its box never started)
-        self._lane_pools = {name: ThreadPoolExecutor(max_workers=max(1, lane.concurrency))
-                            for name, lane in self.lanes.items()}
+        self._lane_hold_why: dict[str, str] = {}  # lane -> why it rests (for the status)
+        self.lane_limits = {name: self._lane_limit(name, lane) for name, lane in self.lanes.items()}
+        self._lane_pools = {name: ThreadPoolExecutor(max_workers=self.lane_limits[name]) for name in self.lanes}
         self._batch_pool = ThreadPoolExecutor(max_workers=max(1, len(self.lanes)))  # each lane's batch loop
+        # Every job in flight, in the main pool or a lane: its slot (linux, web, windows, macos) and the money it
+        # holds (its lane's reserve); harvest rows among them. Released as soon as the job ends.
+        self._slot_of: dict[str, str] = {}
+        self._held: dict[str, float] = {}
+        self._harvest: set[str] = set()
+        self._spend_events: list[tuple[datetime, float]] = []  # without a ledger: what this run spent, and when
+        self._why: dict[str, str | None] = {}  # slot -> why it started nothing new at its last look (the status)
+        self._logged_why: dict[str, str | None] = {}
+        self._parked_counts: dict[str, int] = {}  # lane -> parked jobs waiting for it, at the last tick
+        self._last_status_line: str | None = None
+        self._last_status_kinds: tuple[tuple[str, str], ...] | None = None
+        self._last_status_at = -math.inf
+        self._reserves: dict[str, tuple[float, str]] = {}
+        self._reserves_at = -math.inf
+        self._wake = threading.Event()  # set when a job ends: the loop looks for the next one at once
+        self.status_path = settings.runs_dir / "watch" / "status.json"
         for job in self.saved_jobs():  # a parked record keeps its slug and its repository across restarts
             if job.result == "parked":
                 if job.slug:
@@ -550,27 +734,133 @@ class Watcher:
         set_status(self.d1, job.submission_id, status, self.now(), slug=job.slug, reason=reason)
         job.status, job.reason = status, reason
 
-    # -- gate: hourly cap and budgets
+    # -- gate: slots, harvest's quota and money
 
-    def blocked(self) -> str | None:
-        """Why no new submission may start now, or None."""
-        hour_ago = self.now() - timedelta(hours=1)
+    def _lane_limit(self, name: str, lane: Any) -> int:
+        """A parked lane's slots: Windows as set, never past WINDOWS_MAX_BOXES; macOS what its host runs."""
+        if name == "windows":
+            return max(1, min(self.s.windows_concurrency, WINDOWS_MAX_BOXES))
+        return max(1, lane.concurrency)
+
+    def slot_limit(self, slot: str) -> int:
+        """How many jobs `slot` runs at once."""
+        if slot == "linux":
+            return max(1, self.s.concurrency)
+        if slot == "web":
+            return max(1, self.s.web_concurrency)
+        return self.lane_limits.get(slot, 1)
+
+    def busy(self, slot: str | None = None) -> int:
+        """Jobs in flight in `slot` (all slots without one)."""
         with self._state_lock:
-            running = set(self._running)
-            lane_running = set(self._lane_running)
-        started = {j.submission_id for j in self.saved_jobs() if _parse_time(j.started_at) >= hour_ago} | running
-        if len(started) >= self.s.hourly_cap:
-            return (f"hourly cap: {len(started)} submissions started in the last hour "
-                    f"(SUBMIT_HOURLY_CAP {self.s.hourly_cap})")
-        return self._money_blocked(len(running) + len(lane_running))
+            return len(self._slot_of) if slot is None else sum(1 for s in self._slot_of.values() if s == slot)
 
-    def _money_blocked(self, busy: int) -> str | None:
-        """Why one more job may not start while `busy` others may still spend their worst case, or None."""
-        if self.spent_usd + (busy + 1) * WORST_CASE_META_USD > self.s.max_usd:
-            return f"this run's cap: ${self.spent_usd:.2f} spent of --max-usd {self.s.max_usd:.2f}"
-        jobs = busy + 1  # the ones in flight may still spend their worst case
-        return budget_blocked([("Model pipeline", self.meta_ledger, WORST_CASE_META_USD * jobs),
-                               ("Baseten", self.baseten_ledger, WORST_CASE_BASETEN_USD * jobs)])
+    def _hold(self, key: str, slot: str, usd: float, *, harvest: bool = False) -> None:
+        with self._state_lock:
+            self._slot_of[key], self._held[key] = slot, usd
+            if harvest:
+                self._harvest.add(key)
+
+    def _release(self, key: str) -> None:
+        with self._state_lock:
+            self._let_go(key)
+        self._wake.set()
+
+    def _let_go(self, key: str) -> None:
+        """Free a job's slot and money (the state lock is held; done twice is harmless)."""
+        self._slot_of.pop(key, None)
+        self._held.pop(key, None)
+        self._harvest.discard(key)
+
+    def refresh_reserves(self, *, force: bool = False) -> dict[str, tuple[float, str]]:
+        """Each lane's share of the money per job (lane_reserves), read again every RESERVE_REFRESH_S."""
+        if force or time.monotonic() - self._reserves_at >= RESERVE_REFRESH_S:
+            self._reserves = lane_reserves(self.saved_jobs())
+            self._reserves_at = time.monotonic()
+        return self._reserves
+
+    def reserve(self, slot: str) -> float:
+        return (self._reserves or self.refresh_reserves()).get(slot, (WORST_CASE_META_USD, ""))[0]
+
+    def daily_cap(self) -> tuple[float, str]:
+        """(the rolling 24 h cap in USD, where it comes from): --daily-usd, else loop/budget.json's model_usd.daily
+        (DEFAULT_DAILY_USD when that file does not say), else none."""
+        if self.s.daily_usd is not None:
+            return self.s.daily_usd, f"--daily-usd {self.s.daily_usd:g}"
+        if self.s.budget_path is not None:
+            usd = account_daily_usd(self.s.budget_path)
+            if usd is not None:
+                return usd, f"{self.s.budget_path.parent.name}/{self.s.budget_path.name} model_usd.daily"
+            return DEFAULT_DAILY_USD, f"the default (no model_usd.daily in {self.s.budget_path.name})"
+        return math.inf, "none"
+
+    def spent_24h(self) -> float:
+        """Model spend over the last 24 hours: the shared ledger's, or without one what this run spent."""
+        now = self.now()
+        if self.meta_ledger is not None:
+            return rolling_spend(self.meta_ledger.path, now)
+        since = now - timedelta(hours=24)
+        with self._state_lock:
+            self._spend_events = [(at, usd) for at, usd in self._spend_events if at >= since]
+            return sum(usd for _, usd in self._spend_events)
+
+    def _spent(self, usd: float) -> None:
+        if usd:
+            with self._state_lock:
+                self.spent_usd += usd
+                self._spend_events.append((self.now(), usd))
+
+    def blocked(self, slot: str = "linux", source: str = "user") -> str | None:
+        """Why no new submission of `source` (user, harvest) may start in `slot` now, or None. Free slots are the
+        caller's to count; this is the hourly cap (when set), harvest's quota and the money."""
+        if self.s.hourly_cap > 0:
+            hour_ago = self.now() - timedelta(hours=1)
+            with self._state_lock:
+                running = set(self._running)
+            started = {j.submission_id for j in self.saved_jobs() if _parse_time(j.started_at) >= hour_ago} | running
+            if len(started) >= self.s.hourly_cap:
+                return (f"hourly cap: {len(started)} submissions started in the last hour "
+                        f"(--hourly-cap {self.s.hourly_cap})")
+        if source == "harvest":
+            why = self._harvest_blocked(slot)
+            if why:
+                return why
+        return self._money_blocked(self.reserve(slot), source=source)
+
+    def _harvest_blocked(self, slot: str) -> str | None:
+        """Harvest rows hold at most harvest_slots slots in all and leave one slot of each lane to people."""
+        limit = self.slot_limit(slot)
+        with self._state_lock:
+            total = len(self._harvest)
+            here = sum(1 for key in self._harvest if self._slot_of.get(key) == slot)
+        if total >= self.s.harvest_slots:
+            return f"harvest quota: {total} of {self.s.harvest_slots} harvest slots in use"
+        keep = 1 if limit > 1 else 0
+        if here >= limit - keep:
+            return f"harvest quota: {slot} keeps {keep} of its {limit} slots for people's submissions"
+        return None
+
+    def _money_blocked(self, need: float, *, source: str = "user") -> str | None:
+        """Why one more job needing `need` dollars may not start while the jobs in flight hold theirs, or None.
+        Each number it was held back by is in the answer."""
+        with self._state_lock:
+            held, busy = sum(self._held.values()), len(self._held)
+        holding = f"${held:.2f} held for {busy} running + ${need:.2f} for the next"
+        if self.s.max_usd is not None and self.spent_usd + held + need > self.s.max_usd + 1e-9:
+            return f"this run's cap: ${self.spent_usd:.2f} spent + {holding} > --max-usd {self.s.max_usd:.2f}"
+        cap, where = self.daily_cap()
+        if not math.isinf(cap):
+            try:
+                spent = self.spent_24h()
+            except sqlite3.Error as err:  # a ledger that cannot be read holds everything back, it never lets it go
+                return f"ledger unreadable: {type(err).__name__}: {err}"
+            kept = self.s.user_reserve_usd if source == "harvest" else 0.0
+            if spent + held + need + kept > cap + 1e-9:
+                return (f"rolling 24 h cap: ${spent:.2f} spent + {holding}"
+                        + (f" + ${kept:.2f} kept for people's submissions" if kept else "")
+                        + f" > ${cap:.2f} ({where})")
+        return budget_blocked([("Model pipeline", self.meta_ledger, held + need),
+                               ("Baseten", self.baseten_ledger, WORST_CASE_BASETEN_USD * (busy + 1))])
 
     # -- the pipeline for one submission
 
@@ -608,6 +898,7 @@ class Watcher:
             self._park_quietly(job, log)
             if job.lane:
                 self._lane_hold[job.lane] = self.now() + LANE_HOLD
+                self._lane_hold_why[job.lane] = str(err)
         except Rejected as err:
             self._finish(job, "rejected", "rejected", str(err), log)
         except BudgetExceeded as err:
@@ -627,7 +918,7 @@ class Watcher:
                         self._slugs_in_flight.discard(job.slug)
                     if job.repo_id and self._repos_in_flight.get(job.repo_id) == job.url:
                         self._repos_in_flight.pop(job.repo_id)
-                self.spent_usd += sum(job.cost_usd.get(k, 0.0) for k in ("model", "meta", "baseten")) - before
+            self._spent(sum(job.cost_usd.get(k, 0.0) for k in ("model", "meta", "baseten")) - before)
             self._save(job)
         log(f"{'parked' if job.result == 'parked' else 'done'} · {job.summary()}")
 
@@ -761,7 +1052,7 @@ class Watcher:
                     raise Rejected(f"Same site as another submission pickfit is reading now ({taking}).")
                 self._repos_in_flight[rid] = job.url
             job.repo_id = rid
-        run_id = f"watch-{job.submission_id.removeprefix('sub_')[:12]}-{self.now().strftime('%Y%m%d-%H%M%S')}"
+        run_id = f"watch-{_short_id(job.submission_id)}-{self.now().strftime('%Y%m%d-%H%M%S')}"
         record_dir = self.s.runs_dir / "watch" / job.submission_id / "software"
 
         def claim_slug(slug: str) -> bool:
@@ -854,7 +1145,7 @@ class Watcher:
             why = [r.removeprefix("reject:") for r in rule.reasons if r.startswith("reject:")]
             raise Rejected(f"Did not pass pickfit's rules ({', '.join(why) or rule.label}).")
 
-        run_id = f"watch-{job.submission_id.removeprefix('sub_')[:12]}-{self.now().strftime('%Y%m%d-%H%M%S')}"
+        run_id = f"watch-{_short_id(job.submission_id)}-{self.now().strftime('%Y%m%d-%H%M%S')}"
         with self._stage(job, "prescreen"):
             decision = self._prescreen(candidate, run_id, job)
         if decision is not None:
@@ -1220,18 +1511,48 @@ class Watcher:
 
     # -- the loop
 
+    def _free(self) -> dict[str, int]:
+        """Free slots of the lanes the main pool runs: linux (repositories, and a reverify) and web (when it is on)."""
+        slots = ["linux", *(["web"] if self._sites() else [])]
+        if self.restart_wanted:
+            return {slot: 0 for slot in slots}
+        return {slot: max(0, self.slot_limit(slot) - self.busy(slot)) for slot in slots}
+
+    def _start(self, pool: ThreadPoolExecutor, sub: dict[str, Any], slot: str, source: str) -> None:
+        """Run a claimed row in the main pool; its slot and its money are held until it ends."""
+        sid = sub["id"]
+        self._hold(sid, slot, self.reserve(slot), harvest=source == "harvest")
+        future = pool.submit(self.process, sub)
+        with self._state_lock:
+            self._running[sid] = future
+        future.add_done_callback(lambda _f, key=sid: self._release(key))  # outside the lock: it may run at once
+
+    def _held_back(self, slot: str, why: str | None, line: str | None = None) -> None:
+        """Remember why `slot` starts nothing new (the status); log it when the kind of reason changes. Full slots
+        are the normal state of a busy lane: the status line shows them, a line of their own would only repeat."""
+        self._why[slot] = why
+        kind = why.split(":")[0] if why else None
+        if kind == "slots":
+            return
+        if kind != self._logged_why.get(slot):
+            self._logged_why[slot] = kind
+            if why:
+                self.log(f"[{'watch' if slot in ('linux', 'web') else slot}] {line or why}")
+
     def tick(self, pool: ThreadPoolExecutor) -> list[str]:
         """Start what may start now; returns the submission ids started."""
         now = self.now()
         with self._state_lock:
             for sid in [s for s, f in self._running.items() if f.done()]:
                 self._running.pop(sid)
+                self._let_go(sid)  # its done callback does too, perhaps a moment after the result is out
             running = set(self._running)
             lane_running = set(self._lane_running)
-        free = 0 if self.restart_wanted else self.s.concurrency - len(running)
+        self.refresh_reserves()
+        free = self._free()
         try:
             back = requeue_stale(self.d1, now, running | lane_running)
-            todo = queued(self.d1, free, sites=self._sites()) if free > 0 else []
+            todo = {slot: queued(self.d1, n, lane=slot) for slot, n in free.items() if n > 0}
         except D1Error as err:
             self.log(f"[watch] D1 unreachable: {err}")
             return []
@@ -1239,24 +1560,32 @@ class Watcher:
             self.log(f"[watch] back to the queue (no watcher for {STALE_AFTER}): {', '.join(back)}")
         self._mark_deployed()
         started: list[str] = []
-        for sub in todo:
-            why = self.blocked()
-            if why:
-                self.log(f"[watch] not starting {sub['id']}: {why}")
-                break
-            try:
-                if not claim(self.d1, sub["id"], self.now()):
-                    continue  # another watcher took it
-            except D1Error as err:
-                self.log(f"[watch] D1 unreachable: {err}")
-                break
-            with self._state_lock:
-                self._running[sub["id"]] = pool.submit(self.process, sub)
-            started.append(sub["id"])
+        for slot in free:
+            why, line = None, None
+            if self.restart_wanted:
+                why = "restart: new program code, nothing new starts until what runs is done"
+            for sub in todo.get(slot, []):
+                source = submission_source(sub)
+                why = self.blocked(slot, source)
+                if why:  # people's rows come first, so whatever follows is held back as well
+                    line = f"not starting {sub['id']}: {why}"
+                    break
+                try:
+                    if not claim(self.d1, sub["id"], self.now()):
+                        continue  # another watcher took it
+                except D1Error as err:
+                    self.log(f"[watch] D1 unreachable: {err}")
+                    break
+                self._start(pool, sub, slot, source)
+                started.append(sub["id"])
+            if why is None and self.busy(slot) >= self.slot_limit(slot):
+                why = f"slots: {self.busy(slot)} of {self.slot_limit(slot)} running"
+            self._held_back(slot, why, line)  # once a tick: a reason that stays is logged once
         if self.reverifier is not None and self._start_reverify(pool):
             started.append("reverify")
         if not self.restart_wanted:
             started += [f"lane:{name}" for name in self._tick_lanes()]
+        self._write_status()
         return started
 
     def _tick_lanes(self) -> list[str]:
@@ -1272,37 +1601,57 @@ class Watcher:
             busy = set(self._lane_batches)
             running = set(self._lane_running)
         parked: dict[str, list[datetime]] = {}
+        first: dict[str, tuple[bool, str, str]] = {}  # lane -> the job its batch would start first
         for job in self.parked_jobs():
             if job.lane in self.lanes and job.submission_id not in running:
                 parked.setdefault(job.lane, []).append(_parse_time(job.parked_at or job.started_at))
+                key = (submission_source({"id": job.submission_id}) == "harvest", job.parked_at or "",
+                       job.submission_id)
+                first[job.lane] = min(first.get(job.lane, key), key)
+        self._parked_counts = {name: len(parked.get(name, [])) for name in self.lanes}
         free: dict[str, Any] = {}
         for name, lane in self.lanes.items():
             if name in busy:
-                continue
+                continue  # its batch says why it holds a job back
             if name not in parked:
+                self._held_back(name, None)
                 try:
                     lane.idle(self._say(name))
                 except Exception as err:  # noqa: BLE001 - a provider being down must not stop the watcher
                     self.log(f"[{name}] could not let its machines go: {type(err).__name__}: {str(err)[:200]}")
                 continue
             if self._lane_hold.get(name) and now < self._lane_hold[name]:
+                self._why[name] = (f"lane hold: rests until {self._lane_hold[name].strftime('%H:%M')} "
+                                   f"({self._lane_hold_why.get(name) or 'its box did not start'})")
                 continue
             free[name] = lane
         due = due_lanes(parked, free, now)
         for job in self.parked_jobs():  # an end-to-end test does not wait for a full batch
             if job.e2e and job.lane in free and job.lane not in due and job.submission_id not in running:
                 due[job.lane] = "an end-to-end test is waiting"
+        for name in free:
+            if name not in due:
+                self._why[name] = f"waiting for its batch: it starts {free[name].policy.describe()}"
         started = []
         for name, why in due.items():
+            # A batch its first job could not start in would only make the lane ready (rent a Mac, say) for nothing.
+            harvest, _, sid = first[name]
+            stop = self.blocked(name, "harvest" if harvest else "user")
+            if stop:
+                self._held_back(name, stop, f"no batch for {sid}: {stop}")
+                continue
             self.log(f"[{name}] batch of {len(parked[name])}: {why}")
+            self._why[name] = None
+            batch = self._batch_pool.submit(self._lane_batch, name)
             with self._state_lock:
-                self._lane_batches[name] = self._batch_pool.submit(self._lane_batch, name)
+                self._lane_batches[name] = batch
             started.append(name)
         return started
 
     def _lane_batch(self, name: str) -> list[Job]:
         """Make the lane ready (a Mac may be rented and set up first), then run its parked jobs, newly parked
-        ones too, until none is left, the money says stop or the lane goes down."""
+        ones too, until none is left, the money says stop or the lane goes down. People's jobs go first; at most
+        the lane's slots run at once, and each holds its share of the money only while it runs."""
         lane, log = self.lanes[name], self._say(name)
         try:
             why = lane.available(log)
@@ -1311,46 +1660,56 @@ class Watcher:
         if why:
             log(f"not ready: {why}; next try in {LANE_HOLD}")
             self._lane_hold[name] = self.now() + LANE_HOLD
+            self._lane_hold_why[name] = f"not ready: {why}"
             return []
+        limit = self.slot_limit(name)
         done: list[Job] = []
+        in_flight: dict[Future[Job], str] = {}
         while True:
             with self._state_lock:
                 running = set(self._lane_running)
-            todo = [j for j in self.parked_jobs(name) if j.submission_id not in running]
-            if not todo or (self._lane_hold.get(name) and self.now() < self._lane_hold[name]):
-                return done
-            futures = []
-            for job in sorted(todo, key=lambda j: j.parked_at or ""):
-                with self._state_lock:
-                    busy = len(self._running) + len(self._lane_running)
-                stop = self._money_blocked(busy)
-                if stop:
-                    log(f"not starting {job.submission_id}: {stop}")
+            resting = bool(self._lane_hold.get(name) and self.now() < self._lane_hold[name])
+            todo = [] if resting else sorted(
+                (j for j in self.parked_jobs(name) if j.submission_id not in running),
+                key=lambda j: (submission_source({"id": j.submission_id}) == "harvest", j.parked_at or ""))
+            for job in todo:
+                if len(in_flight) >= limit:
                     break
+                source = submission_source({"id": job.submission_id})
+                stop = self.blocked(name, source)
+                if stop:  # people's jobs come first, so whatever follows is held back as well
+                    self._held_back(name, stop, f"not starting {job.submission_id}: {stop}")
+                    break
+                self._hold(f"{name}:{job.submission_id}", name, self.reserve(name), harvest=source == "harvest")
                 with self._state_lock:
                     self._lane_running.add(job.submission_id)
-                futures.append(self._lane_pools[name].submit(self._lane_job, job, lane))
-            if not futures:
+                in_flight[self._lane_pools[name].submit(self._lane_job, job, lane, name)] = job.submission_id
+            if not in_flight:
                 return done
-            done += [f.result() for f in futures]
+            finished, _ = wait(list(in_flight), return_when=FIRST_COMPLETED)
+            for future in finished:
+                in_flight.pop(future)
+                done.append(future.result())
 
-    def _lane_job(self, job: Job, lane: Any) -> Job:
+    def _lane_job(self, job: Job, lane: Any, slot: str | None = None) -> Job:
         try:
             return self.resume(job, lane)
         finally:
             with self._state_lock:
                 self._lane_running.discard(job.submission_id)
+            self._release(f"{slot or lane.name}:{job.submission_id}")  # apart from the job's earlier main-pool run
 
     def _start_reverify(self, pool: ThreadPoolExecutor) -> bool:
-        """One reported failure at a time, in a free slot, when the budget allows."""
+        """One reported failure at a time, in a free linux slot, when the money allows."""
         with self._state_lock:
             if self._reverify is not None and not self._reverify.done():
                 return False
             finished, self._reverify = self._reverify, None
-            busy = len(self._running)
+            if finished is not None:
+                self._let_go("reverify")
         if finished is not None and finished.exception() is not None:
             self.log(f"[watch] reverify failed: {type(finished.exception()).__name__}: {finished.exception()}")
-        if busy >= self.s.concurrency:
+        if self.restart_wanted or self.busy("linux") >= self.slot_limit("linux"):
             return False
         try:
             if not self.reverifier.pending_count():
@@ -1358,32 +1717,107 @@ class Watcher:
         except D1Error as err:
             self.log(f"[watch] D1 unreachable: {err}")
             return False
-
-        def blocked() -> str | None:
-            if self.spent_usd + (busy + 1) * WORST_CASE_META_USD > self.s.max_usd:
-                return f"this run's cap: ${self.spent_usd:.2f} spent of --max-usd {self.s.max_usd:.2f}"
-            return budget_blocked([("Model pipeline", self.meta_ledger, WORST_CASE_META_USD * (busy + 1))])
+        if self.blocked("linux"):
+            return False
 
         def work() -> list[Any]:
             try:
-                results = self.reverifier.run(1, blocked=blocked)
+                # Its own share is held already, so each report asks for nothing more than what is held.
+                results = self.reverifier.run(1, blocked=lambda: self._money_blocked(0.0))
             except Exception as err:  # noqa: BLE001 - D1 unreachable while listing the queue, say
                 self.log(f"[watch] reverify failed: {type(err).__name__}: {str(err)[:300]}")
                 return []
-            with self._state_lock:
-                self.spent_usd += sum(r.cost_usd for r in results)
+            self._spent(sum(r.cost_usd for r in results))
             return results
 
+        self._hold("reverify", "linux", self.reserve("linux"))
+        future = pool.submit(work)
         with self._state_lock:
-            self._reverify = pool.submit(work)
+            self._reverify = future
+        future.add_done_callback(lambda _f: self._release("reverify"))
         return True
 
-    def run(self, *, once: bool = False, sleep: Callable[[float], None] = time.sleep) -> list[Job]:
-        """Poll until interrupted; with once, take what is queued now, wait for it, and stop."""
+    # -- what runs, what waits and why (runs/watch/status.json, `pickfit watch --status`)
+
+    def status(self, counts: dict[str, dict[str, int]] | None = None) -> dict[str, Any]:
+        """Each lane's running, limit, queued (or parked) and why it starts nothing new; the money behind it."""
+        cap, where = self.daily_cap()
+        try:
+            spent: float | None = round(self.spent_24h(), 4)
+        except sqlite3.Error:
+            spent = None
+        with self._state_lock:
+            held, harvest = round(sum(self._held.values()), 4), set(self._harvest)
+            slot_of = dict(self._slot_of)
+        reserves = self._reserves or self.refresh_reserves()
+        lanes: dict[str, Any] = {}
+        for slot in ("linux", *(["web"] if self._sites() else []), *self.lanes):
+            entry: dict[str, Any] = {"running": sum(1 for s in slot_of.values() if s == slot),
+                                     "limit": self.slot_limit(slot),
+                                     "harvest_running": sum(1 for k in harvest if slot_of.get(k) == slot)}
+            if slot in self.lanes:
+                entry["parked"] = self._parked_counts.get(slot, 0)
+            else:
+                by_source = (counts or {}).get(slot, {})
+                entry["queued"] = None if counts is None else sum(by_source.values())
+                entry["queued_harvest"] = None if counts is None else by_source.get("harvest", 0)
+            usd, basis = reserves.get(slot, (WORST_CASE_META_USD, "worst case"))
+            entry["reserve_usd"], entry["reserve_basis"] = usd, basis
+            entry["not_starting"] = self._why.get(slot)
+            lanes[slot] = entry
+        return {"at": self.now().isoformat(), "poll_s": self.s.interval_s, "restart_wanted": self.restart_wanted,
+                "money": {"spent_24h_usd": spent, "held_usd": held, "cap_24h_usd": None if math.isinf(cap) else cap,
+                          "cap_from": where, "run_spent_usd": round(self.spent_usd, 4), "run_cap_usd": self.s.max_usd},
+                "harvest": {"running": len(harvest), "slots": self.s.harvest_slots,
+                            "user_reserve_usd": self.s.user_reserve_usd},
+                "lanes": lanes}
+
+    @staticmethod
+    def status_line(status: dict[str, Any]) -> str:
+        """One log line: each lane's running/limit, what waits, and the kind of reason it starts nothing new."""
+        parts = []
+        for slot, entry in status["lanes"].items():
+            waiting, word = (entry["parked"], "parked") if "parked" in entry else (entry["queued"], "queued")
+            part = f"{slot} {entry['running']}/{entry['limit']}"
+            if waiting:
+                part += f", {waiting} {word}"
+                if entry["not_starting"]:
+                    part += f" ({entry['not_starting'].split(':')[0]})"
+            parts.append(part)
+        return "[watch] " + " · ".join(parts)
+
+    def _write_status(self) -> None:
+        try:
+            counts: dict[str, dict[str, int]] | None = queue_counts(self.d1)
+        except D1Error:
+            counts = None
+        status = self.status(counts)
+        try:
+            tmp = self.status_path.with_suffix(".tmp")
+            tmp.write_text(json.dumps(status, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+            tmp.replace(self.status_path)
+        except OSError as err:
+            self.log(f"[watch] status not written: {err}")
+        # Logged when a lane's reason changes, else at most every STATUS_LOG_S: a busy lane's counts move each tick.
+        line = self.status_line(status)
+        kinds = tuple((slot, (e["not_starting"] or "").split(":")[0]) for slot, e in status["lanes"].items())
+        if line != self._last_status_line and (kinds != self._last_status_kinds or
+                                               time.monotonic() - self._last_status_at >= STATUS_LOG_S):
+            self._last_status_line, self._last_status_kinds, self._last_status_at = line, kinds, time.monotonic()
+            self.log(line)
+
+    def run(self, *, once: bool = False, wait_for: Callable[[float], bool] | None = None,
+            sleep: Callable[[float], None] | None = None) -> list[Job]:
+        """Poll until interrupted; with once, take what is queued now, wait for it, and stop. Between polls it
+        waits for interval_s or for a job to end, whichever comes first (`wait_for(seconds)` -> True when woken);
+        a `sleep` instead waits the whole interval, as before 11/19."""
         done: list[Job] = []
-        with ThreadPoolExecutor(max_workers=max(1, self.s.concurrency)) as pool:
+        pause = wait_for or ((lambda seconds: bool(sleep(seconds))) if sleep else self._wake.wait)
+        workers = self.slot_limit("linux") + (self.slot_limit("web") if self._sites() else 0) + 1  # + a reverify
+        with ThreadPoolExecutor(max_workers=workers) as pool:
             while True:
                 began = time.monotonic()
+                self._wake.clear()  # before the tick: a job that ends during it still wakes the next wait
                 started = self.tick(pool)
                 if once:
                     with self._state_lock:
@@ -1408,4 +1842,5 @@ class Watcher:
                     if not busy:
                         self.log("[watch] stopping so the new code runs (exit 75 asks the service to restart)")
                         return done
-                sleep(max(0.0, self.s.interval_s - (time.monotonic() - began)))
+                if pause(max(0.0, self.s.interval_s - (time.monotonic() - began))) and self.s.wake_settle_s > 0:
+                    time.sleep(self.s.wake_settle_s)  # jobs that end together are taken in one tick

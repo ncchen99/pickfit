@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The ingest loop, unattended: one fresh Claude Code session per batch of items (docs/loop.md).
 #
-#   scripts/loop.sh                          # up to 10 batches of 3 items
+#   scripts/loop.sh                          # up to 10 batches of 6 items
 #   LOOP_BATCHES=30 LOOP_ITEMS=2 scripts/loop.sh
 #   LOOP_MODEL=sonnet scripts/loop.sh        # another model for the sessions
 #   scripts/loop.sh --dry-run                # print one batch's command and run nothing
@@ -32,8 +32,11 @@ case "$branch" in
 esac
 
 batches=${LOOP_BATCHES:-10}
-items=${LOOP_ITEMS:-3}
-batch_usd=${LOOP_BATCH_USD:-25}
+# 6 items a session (3 until 11/19): a session now reads one line per open issue and a few lines per verify run
+# (scripts/loop_state.py open-issues, run-summary), so each item fills less of its context, and the rules and the
+# issue list are read once for twice the items. Claude Code's spending estimate grows with it, about US$8 an item.
+items=${LOOP_ITEMS:-6}
+batch_usd=${LOOP_BATCH_USD:-$(( (items * 25 + 2) / 3 ))}
 model=${LOOP_MODEL:-}
 logs=${LOOP_LOG_DIR:-runs/loop}
 

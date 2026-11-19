@@ -92,9 +92,17 @@ session 不靠記憶。每個 session 開始時讀這些檔案，結束時什麼
 
 **看著跑**：在那個資料夾開一個 Claude Code session，權限模式選 Auto，貼上 `loop_setup.sh` 印出來的那行 `/goal`。看得到每一步，隨時可以插話。適合頭幾次。
 
-**放著跑**：`scripts/loop.sh`。每一批（預設 3 個項目）開一個全新的 `claude -p` session，跑完就結束，由腳本檢查、記錄，再開下一批。每批用全新的 session，是因為同一個 session 跑久了，前面的內容會被壓縮，判斷跟著變差。Anthropic 寫長時間 agent 的幾篇文章和社群的 Ralph loop 都是這個做法：狀態放檔案，context 用完就丟。停止的條件有五個：佇列空了、跑滿批數（預設 10）、`touch loop/STOP`、連兩批沒有任何進展、碰了受保護的檔案。
+**放著跑**：`scripts/loop.sh`。每一批（預設 6 個項目，11/19 前是 3 個）開一個全新的 `claude -p` session，跑完就結束，由腳本檢查、記錄，再開下一批。每批用全新的 session，是因為同一個 session 跑久了，前面的內容會被壓縮，判斷跟著變差。Anthropic 寫長時間 agent 的幾篇文章和社群的 Ralph loop 都是這個做法：狀態放檔案，context 用完就丟。停止的條件有五個：佇列空了、跑滿批數（預設 10）、`touch loop/STOP`、連兩批沒有任何進展、碰了受保護的檔案。
 
 `loop.sh` 要在自己的終端機裡跑，而且那個 shell 不要 export `ANTHROPIC_API_KEY`，不然 `claude` 會改用 API key 計費（plan 第 2 節第 7 條）。
+
+## 每個 session 少讀一點（11/19）
+
+loop 走訂閱，但每批 session 讀進來的東西還是有成本，讀太多也會讓 context 提早被壓縮。11/19 盤查時看到三個地方讀得太多：
+
+- **`loop/issues.md`**：每批都整份讀，已經 75 KB 還在變大，其中大半是已經修好的 issue 的筆記。現在 session 開工時改印 `loop_state.py open-issues`，還沒解決的 issue 一個一行（編號、標題、原因代碼、幾個項目在等），已解決的只給數量。要細節時用 `loop_state.py issue H-00X` 只印那一段。檔案內容不動，只改讀法。
+- **`verify` 的輸出**：安裝 agent 每一輪的 thinking 都會印出來，一筆就是幾百行。現在跑真的 `verify` 時把輸出導到 `runs/loop/verify-<slug>.log`，session 只讀 `loop_state.py run-summary --slug <slug>` 印的摘要。摘要從 `outcome.json` 和 `report.json` 抽出等級、原因、judge、花費、功能清單和失敗指令的 stderr 尾巴，一筆大約 1–2 KB，原本的 `report.json` 一筆約 55 KB。
+- **每批的項目數**：每個 session 開工都要讀一次 skill、issue 清單和 journal 的尾巴。每個項目佔的 context 變小之後，`LOOP_ITEMS` 的預設從 3 調成 6，同樣的開工成本分給兩倍的項目。`LOOP_BATCH_USD`（Claude Code 自己估的花費上限）沒有另外設的話跟著項目數算，6 個是 US$50。
 
 ## GUI 操作改用現成套件（H-006）
 
