@@ -7,7 +7,6 @@ from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-from uuid import uuid4
 
 import httpx2
 
@@ -19,6 +18,7 @@ from pickfit.harvest.leads import LeadsDB, known_keys
 from pickfit.harvest.sources import DEFAULT_SOURCES, SOURCES, Ctx, SourceError
 from pickfit.env import REPO_ROOT
 from pickfit.ledger import taipei_now
+from pickfit.watch import harvest_submission_id
 
 ENV_NAMES = ("GH_TOKEN", "GITHUB_TOKEN", "BSKY_HANDLE", "BSKY_APP_PASSWORD", "X_BEARER_TOKEN")
 FEED_RESERVE = 5  # submit_software rows per hour left for people
@@ -131,7 +131,8 @@ def feed(d1: Database, *, n: int, hourly_cap: int, apply: bool, db_path: Path | 
                 if apply:
                     db.set_status(lead["key"], "known", f"submission:{existing[0]['id']}:{existing[0]['status']}")
                 continue
-            row = {"id": f"sub_{uuid4().hex}", "url": url, "key": lead["key"], "kind_hint": lead["kind_hint"],
+            # sub_harvest<hex>: the watch takes it after people's rows and within harvest's own slots.
+            row = {"id": harvest_submission_id(), "url": url, "key": lead["key"], "kind_hint": lead["kind_hint"],
                    "priority": lead["priority"], "sources": lead["sources"]}
             note = ("harvest: " + ", ".join(lead["sources"]))[:NOTE_MAX]
             if apply:

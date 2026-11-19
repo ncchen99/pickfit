@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -13,6 +14,7 @@ from pickfit.discover.store import PipelineDB
 from pickfit.harvest import check, sources
 from pickfit.harvest.leads import Hit, LeadsDB, known_keys, priority
 from pickfit.harvest.run import default_sources, feed, run_harvest
+from pickfit.watch import HARVEST_ID_PREFIX, submission_source
 from tests.queue_fakes import d1, submit
 
 NOW = datetime(2026, 11, 19, 4, 0, tzinfo=UTC)
@@ -163,8 +165,12 @@ def test_feed_keeps_room_for_people(tmp_path: Path) -> None:
     urls = {r["url"] for r in rows}
     assert "https://github.com/o/b" not in urls and len(rows) == 3  # o/b was submitted before
     assert all(u == u.lower() for u in urls)
-    queued = database.query("SELECT url, note FROM submissions WHERE note LIKE 'harvest:%'")
+    queued = database.query("SELECT id, url, note FROM submissions WHERE note LIKE 'harvest:%'")
     assert len(queued) == 3 and queued[0]["note"] == "harvest: npm"
+    # The watch tells harvest rows from people's by this prefix (HARVEST_ID_PREFIX), and the status page still takes them.
+    assert all(q["id"].startswith(HARVEST_ID_PREFIX) and re.fullmatch(r"sub_[a-z0-9]{1,64}", q["id"]) for q in queued)
+    assert {r["id"] for r in rows} == {q["id"] for q in queued}
+    assert {submission_source(q) for q in queued} == {"harvest"} and submission_source({"id": "sub_p0"}) == "user"  # people's rows stay people's
     db = LeadsDB(tmp_path / "h.db")
     assert db.summary()["by_status"] == {"fed": 3, "known": 1, "new": 2}
     db.close()
