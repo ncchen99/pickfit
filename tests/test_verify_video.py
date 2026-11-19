@@ -44,6 +44,39 @@ def test_the_display_uid_records_pickfits_own_xvfb_and_never_the_box_user():
     assert record.ffmpeg_argv("x")[record.ffmpeg_argv("x").index("-framerate") + 1] == str(record.RECORD_FPS)
 
 
+def test_a_recording_keeps_enough_to_be_cut_again_and_shows_the_arrow_pointer():
+    argv = record.ffmpeg_argv("x")
+    assert argv[argv.index("-framerate") + 1] == "10" and argv[argv.index("-crf") + 1] == "22"
+    assert argv[argv.index("-g") + 1] == "20" and argv[argv.index("-fs") + 1] == str(record.MAX_BYTES)
+    assert record.Recording(path=None, sha256=None).crf == 22
+    script = record.start_script([], [], f"{gui.EVIDENCE_DIR}/t.mp4", f"{gui.EVIDENCE_DIR}/t.rec.log")
+    # the display uid sets the root window's pointer to the arrow before ffmpeg starts, and says whether it took
+    assert script.index("XCreateFontCursor") < script.index('echo "cursor $?"') < script.index("x11grab")
+    assert script.count(f"--reuid={gui.DISPLAY_UID}") == 2 and f"DISPLAY={gui.DISPLAY}" in script
+    compile(record.CURSOR_PY, "cursor", "exec")
+    assert f"XCreateFontCursor(d, {record.XC_LEFT_PTR})" in record.CURSOR_PY and record.XC_LEFT_PTR == 68
+
+    class Box:
+        def __init__(self) -> None:
+            self.calls = 0
+
+        def display_enter(self) -> list[str]:
+            return []
+
+        def seccomp(self) -> list[str]:
+            return []
+
+        def harness_exec(self, argv: list[str], timeout_s: int, **_: Any) -> ExecResult:
+            self.calls += 1
+            out = "cursor 0\nrec_pid 42\n" if self.calls == 1 else \
+                "Input #0, x11grab, from ':99':\n  Duration: N/A, start: 1762052345.5, bitrate: 1 kb/s\n"
+            return ExecResult(command="x", exit_code=0, stdout=out, stderr="", seconds=0.1)
+
+    rec = record.XvfbRecorder(Box(), "replay-1", Path("/nonexistent/x.mp4"))
+    rec.start()
+    assert rec.pid == 42 and rec.rec.pointer == "arrow" and rec.rec.started_at == pytest.approx(1762052345.5)
+
+
 def test_the_first_frames_time_comes_from_ffmpegs_input_line():
     log = ("[x11grab @ 0x5] stream 0: ...\nInput #0, x11grab, from ':99':\n"
            "  Duration: N/A, start: 1762052345.123456, bitrate: 393216 kb/s\n  Stream #0:0: Video: rawvideo\n")
@@ -279,28 +312,49 @@ def test_the_plan_keeps_the_install_steps_and_only_the_passed_operations():
     assert [c.run.command_id for c in plan.checks] == [6]
 
 
-def test_the_cards_and_captions_are_drawn_at_the_clips_size():
+def test_the_marks_are_drawn_at_the_clips_size_and_say_only_a_speed_and_seconds():
     from PIL import Image
     import io
 
-    first = Image.open(io.BytesIO(video.card_png("Recorded by pickfit in a sandbox on 2026-11-02", ["a", "b"], ["c"])))
-    over = Image.open(io.BytesIO(video.overlay_png("Recorded by pickfit · 2026-11-02", "Type 755 in Numeric")))
-    assert first.size == over.size == (video.W, video.H) and over.mode == "RGBA"
-    assert over.getpixel((video.W // 2, video.H // 2))[3] == 0  # the app shows through the middle
+    from pickfit.verify import video_marks
+
+    cut = video.Cut(raw=0, start=0.0, end=20.0, feature="f", caption="c", result_visible=True, faster=True,
+                    waits=[(2.0, 9.0)], gap_before=4.4)
+    assert video_marks.honesty_marks(True, 11.4) == ["2×", "−11 s"]  # no words: nothing to translate
+    assert video_marks.honesty_marks(False, 0.2) == [] and video_marks.honesty_marks(False, 0.6) == ["−1 s"]
+    over = Image.open(io.BytesIO(video.marks_overlay(cut)))
+    assert over.size == (video.W, video.H) == (1280, 800) and over.mode == "RGBA"
+    assert over.getpixel((video.W // 2, video.H // 2))[3] == 0  # the app shows through everywhere else
+    assert over.getpixel((video.W - 40, 40))[3] > 0  # the marks: the top right corner
+    plain = video.Cut(raw=0, start=0.0, end=5.0, feature="f", caption="c", result_visible=True, faster=False)
+    assert video.marks_overlay(plain) is None
 
 
 @pytest.mark.skipif(FFMPEG is None, reason="needs ffmpeg")
 def test_a_piece_is_cut_whole_from_its_recording_and_framed(tmp_path: Path):
+    from PIL import Image
+    import io
+
+    from pickfit.verify.video_marks import Overlay
+
     raw = tmp_path / "raw.mp4"
-    subprocess.run([FFMPEG, "-v", "error", "-f", "lavfi", "-i", "testsrc=size=1280x800:rate=4:duration=6",
+    subprocess.run([FFMPEG, "-v", "error", "-f", "lavfi", "-i", "color=c=gray:size=1280x800:rate=4:duration=6",
                     "-pix_fmt", "yuv420p", str(raw)], check=True)
     cut = video.Cut(raw=0, start=1.0, end=4.0, feature="f", caption="c", result_visible=True, faster=True)
     piece = tmp_path / "p.mp4"
-    (tmp_path / "o.png").write_bytes(video.overlay_png("label", "caption"))
-    video.render_piece(raw, cut, (100, 50, 400, 300), (1280, 800), tmp_path / "o.png", piece)
+    (tmp_path / "o.png").write_bytes(video.marks_overlay(cut))
+    dot = io.BytesIO()
+    Image.new("RGBA", (20, 20), (255, 0, 0, 255)).save(dot, "PNG")
+    video.render_piece(raw, cut, None, (1280, 800), tmp_path / "o.png", piece,
+                       [Overlay(dot.getvalue(), 600, 400, 0.5, 0.9)])
     assert record.probe_seconds(piece) == pytest.approx(1.5, abs=0.3)
-    png = record.png_frame(piece, 0.5)
-    assert png.startswith(b"\x89PNG")
+
+    def pixel(at: float, xy: tuple[int, int]) -> tuple[int, ...]:
+        return Image.open(io.BytesIO(record.png_frame(piece, at))).convert("RGB").getpixel(xy)
+
+    assert pixel(0.7, (610, 410))[0] > 200 and pixel(0.7, (610, 410))[1] < 60  # the overlay, while it applies
+    assert abs(pixel(1.2, (610, 410))[0] - pixel(1.2, (610, 410))[1]) < 20  # and gone after
+    assert not list(tmp_path.glob("p-ov*.png"))  # its pictures are not left behind
 
 
 class FakeVnc:
@@ -593,11 +647,38 @@ def test_a_rendered_clip_has_chapters_where_its_pieces_meet(tmp_path: Path):
     rows = [{"file": f"r{k}.mp4", "sha256": "b" * 64, "seconds": 8.0 + k} for k in range(2)]
     work = tmp_path / "work"
     work.mkdir()
-    seconds, chapters, problem = video.render_clip(
-        cuts, rows, tmp_path / "c.mp4", name="App", date="2026-11-02", os="linux", run="verify-app-20261102-000000-0000",
-        recording_run="video-app-20261102-000000-0000", raws=raws, crops=[None, None], screen=(1280, 800), work=work)
+    seconds, chapters, captions, problem = video.render_clip(
+        cuts, rows, tmp_path / "c.mp4", os="linux", raws=raws, crops=[None, None], screen=(1280, 800), work=work)
     assert problem is None
-    assert [c["feature"] for c in chapters] == [None, "open it", "save it", None]
-    found = video.boundaries(tmp_path / "c.mp4")
-    assert [c["start_s"] for c in chapters[1:]] == pytest.approx([found[0], found[2], found[3]], abs=0.13)
-    assert chapters[-1]["start_s"] < seconds
+    # no cards: the features alone, the first at 0, each naming the raw recording and where in it the chapter starts
+    assert chapters == [{"start_s": 0.0, "title": "Open it", "feature": "open it", "raw": 0, "raw_s": 0.5},
+                        {"start_s": pytest.approx(2.1 + 2.05, abs=0.25), "title": "Save it", "feature": "save it",
+                         "raw": 1, "raw_s": 1.0}]
+    assert seconds == pytest.approx(2.1 + 2.05 + 3.3, abs=0.6) and chapters[-1]["start_s"] < seconds  # a frame or two
+    # long a piece, at 10 frames a second from a 4-frame recording
+    assert [c["text"] for c in captions] == ["a", "b", "c"]
+    assert captions[0]["start_s"] == 0.0 and captions[-1]["end_s"] == pytest.approx(seconds, abs=0.15)
+    assert all(a["end_s"] == pytest.approx(b["start_s"], abs=0.01) for a, b in zip(captions, captions[1:]))
+    from PIL import Image
+    import io
+
+    frame = Image.open(io.BytesIO(record.png_frame(tmp_path / "c.mp4", 1.0)))
+    assert frame.size == (1280, 800)  # no label bar, no caption bar
+    comment = subprocess.run([shutil.which("ffprobe"), "-v", "error", "-show_entries", "format_tags=comment", "-of",
+                              "csv=p=0", str(tmp_path / "c.mp4")], capture_output=True, text=True).stdout
+    assert "r0.mp4 sha256 " + "b" * 64 in comment and "r1.mp4" in comment  # the last card's facts, in the file
+
+
+def test_the_captions_say_what_pickfit_did_and_mask_a_password():
+    rows = [{"step": 1, "kind": "click", "start_s": 1.0, "target": {"name": "Open", "source": "ocr"}},
+            {"step": 2, "kind": "key", "start_s": 2.0, "key": "cmd+shift+g"},
+            {"step": 3, "kind": "type", "start_s": 3.0, "text": "~/pickfit-in"},
+            {"step": 4, "kind": "click", "start_s": 4.0, "count": 2, "target": {"name": "row of sample.mp4",
+                                                                                "source": "operator"}},
+            {"step": 5, "kind": "type", "start_s": 5.0, "text": None, "masked": True, "secret": "password"}]
+    assert video.action_caption(rows[:3], "macos") == 'Click “Open”, then press ⇧⌘G, then type "~/pickfit-in"'
+    assert video.action_caption(rows[3:], "macos") == "Double-click the row of sample.mp4, then type a password"
+    assert video.action_caption([{"kind": "key", "key": "ctrl+s"}], "linux") == "Press Ctrl+S"
+    assert video.action_caption([{"kind": "key", "key": "Return"}], "linux") == "Press Enter"
+    assert video.action_caption([{"kind": "click"}] * 3) == "Click (x3)"
+    assert video.action_caption([]) is None

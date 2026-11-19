@@ -996,6 +996,20 @@ def _click(x: int, y: int, answer: OperatorAction) -> tuple[dict[str, Any] | Non
     return {"kind": "click", "x": x, "y": y, "count": 2 if answer.clicks == 2 else 1}, None
 
 
+def click_target(answer: OperatorAction, act: dict[str, Any], marks: list[Any] | tuple[Any, ...] = ()
+                 ) -> dict[str, Any] | None:
+    """What a click or scroll went for: the marked text it named (its words, as pickfit's OCR read them), else the
+    operator's `target` words; None for other actions or when neither is known."""
+    if act["kind"] not in ("click", "scroll"):
+        return None
+    element = getattr(answer, "element", None)
+    mark = next((m for m in marks if m.number == element), None) if element is not None and element >= 1 else None
+    if mark is not None and mark.text.strip():
+        return {"name": mark.text.strip()[:120], "source": "ocr"}
+    words = (getattr(answer, "target", None) or "").strip()
+    return {"name": words[:120], "source": "operator"} if words else None
+
+
 def describe(act: dict[str, Any]) -> str:
     kind = act["kind"]
     if kind == "click" and act.get("button") == "right":
@@ -1187,6 +1201,9 @@ class Step:
     answer: dict[str, Any] | None = None  # a refused answer's own x, y, element, key and text, for later analysis
     at: list[float] | None = None  # when the action ran, [start, end], in its recording's clock (record.py)
     aim: dict[str, Any] | None = None  # a click by x and y aimed again on a zoomed crop (aim): both points
+    # What a click or scroll went for, as pickfit knew it then (video.py's actions.json): a marked text's words (OCR),
+    # else the operator's own few words for it; {"name", "source": "ocr" | "operator"}.
+    target: dict[str, Any] | None = None
 
 
 @dataclass
@@ -1400,8 +1417,9 @@ def operate(display: Display, goal: str, *, model: str | None = None, max_steps:
             if step.aim["second"]:
                 act = {**act, "x": step.aim["second"][0], "y": step.aim["second"][1]}
         step.action = act
+        step.target = click_target(answer, act, found)
         steps.append(step)
-        aimed = f" (aimed from {step.aim['first'][0]},{step.aim['first'][1]})" if step.aim and step.aim["second"] \
+        aimed =f" (aimed from {step.aim['first'][0]},{step.aim['first'][1]})" if step.aim and step.aim["second"] \
             else ""
         log(f"    op {step_no} · {describe(act)}{aimed} · {answer.why[:100]}")
         if act["kind"] in ("done", "give_up"):

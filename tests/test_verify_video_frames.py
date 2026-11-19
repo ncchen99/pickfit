@@ -210,25 +210,30 @@ def test_the_box_and_the_card_name_the_runs_own_sandbox():
     assert "Windows" in video.sandbox_label("windows", "ec2-windows") and "tart" in video.sandbox_label("macos")
 
 
-@pytest.mark.parametrize("editor, picked", [
-    (video.EDITORS["claude"], "Claude Opus 5.5 picked these segments from frames of the unedited recordings"),
-    (None, "Muse Spark Open picked these segments from the unedited recordings")])
-def test_the_first_card_says_who_picked_the_segments_and_from_what(monkeypatch: pytest.MonkeyPatch, tmp_path: Path,
-                                                                   editor: Any, picked: str):
-    cards = []
-    monkeypatch.setattr(video, "card_png", lambda title, lines, small=(): cards.append((title, lines, small)) or b"png")
-    monkeypatch.setattr(video, "overlay_png", lambda *a: b"png")
-    for name in ("render_card", "render_piece", "concat"):
-        monkeypatch.setattr(video, name, lambda *a, **k: None)
-    monkeypatch.setattr(video, "boundaries", lambda clip: [])
+@pytest.mark.parametrize("os, keys", [("windows", ["Ctrl", "S"]), ("macos", ["⌘", "S"])])
+def test_a_clip_is_its_segments_alone_with_its_raw_recordings_in_its_metadata(monkeypatch: pytest.MonkeyPatch,
+                                                                             tmp_path: Path, os: str, keys: list[str]):
+    pieces, joined, drawn = [], [], []
+    monkeypatch.setattr(video, "render_piece", lambda raw, cut, crop, screen, overlay, out, overlays=(): pieces.append(
+        (cut.caption, overlay, list(overlays))))
+    monkeypatch.setattr(video, "concat", lambda parts, dest, comment="": joined.append((parts, comment)))
     monkeypatch.setattr(video.recording, "probe_seconds", lambda path: None)
+    import pickfit.verify.video_marks as marks
+
+    real = marks.key_caps
+    monkeypatch.setattr(marks, "key_caps", lambda name, os: drawn.append(real(name, os)) or real(name, os))
     rows = [{"file": "r.mp4", "sha256": "a" * 64, "seconds": 5.0, "feature": "f"}]
-    video.render_clip([video.Cut(0, 1.0, 3.0, "f", "c", True, False)], rows, tmp_path / "c.mp4", name="App",
-                      date="2026-11-17", os="windows", run="r", recording_run="v", raws=[(tmp_path / "r.mp4",)],
-                      crops=[None], screen=(1280, 800), work=tmp_path, runner="ec2-windows", editor=editor)
-    _, lines, small = cards[0]
-    assert picked in " ".join(lines)
-    assert any("Windows Server VM (AWS EC2)" in line for line in small)
+    actions = [[{"kind": "key", "key": "ctrl+s" if os != "macos" else "cmd+s", "start_s": 1.5},
+                {"kind": "click", "x": 640, "y": 400, "start_s": 2.0}]]
+    seconds, chapters, captions, problem = video.render_clip(
+        [video.Cut(0, 1.0, 3.0, "f", "Save the file", True, False)], rows, tmp_path / "c.mp4", os=os,
+        raws=[(tmp_path / "r.mp4",)], crops=[None], screen=(1280, 800), work=tmp_path, actions=actions)
+    assert [p[0] for p in pieces] == ["Save the file"]  # one piece: no first card, no last card
+    assert pieces[0][1] is None  # neither sped up nor shortened: no marks
+    assert drawn == [keys] and len(pieces[0][2]) == 1 + len(marks.RIPPLE_STAGES)  # its keys, and a ripple's frames
+    assert "r.mp4 sha256 " + "a" * 64 in joined[0][1]
+    assert seconds == 2.0 and problem is None and captions == [{"start_s": 0.0, "end_s": 2.0, "text": "Save the file"}]
+    assert chapters == [{"start_s": 0.0, "title": "F", "feature": "f", "raw": 0, "raw_s": 1.0}]
 
 
 # ---------------------------------------------------------------- a recording that shows an action seconds late
@@ -505,11 +510,23 @@ def test_a_made_clip_is_cut_again_without_its_waits_and_keeps_its_review(tmp_pat
     before = (run_dir / "clip.json").read_text()
 
     out = video.smooth_clip(run_dir, log=lambda *a: None)
-    assert out.clip == "app-20261118-1200.smooth.mp4" and out.retimed_from == "app-20261118-1200.mp4"
+    assert out.clip == "app-20261118-1200.recut.mp4" and out.retimed_from == "app-20261118-1200.mp4"
     assert [list(w) for w in out.cuts[0]["waits"]] == [[1.5, 10.0]] and "8 s of unchanged screen cut" in out.cuts[0]["note"]
     assert out.review[0]["ok"] and out.review[0]["first_seen_s"] == 2.0 and out.review[0]["segment_s"] == 5.5
-    assert out.seconds == pytest.approx(5.5 + 2 * video.CARD_S, abs=1.0) and not out.flags  # chapters line up
+    assert out.seconds == pytest.approx(5.5, abs=0.3) and not out.flags and not out.cards and out.os == "macos"
+    assert out.chapters == [{"start_s": 0.0, "title": "Open the app", "feature": "open the app", "raw": 0, "raw_s": 0.0}]
+    assert out.captions == [{"start_s": 0.0, "end_s": pytest.approx(out.seconds, abs=0.15),
+                             "text": "The app shows its window"}]
     assert (videos / "app" / out.clip).is_file() and record.sha256_file(videos / "app" / out.clip) == out.clip_sha256
-    saved = json.loads((videos / "app" / "app-20261118-1200.smooth.json").read_text())
-    assert saved["clip"] == out.clip and not saved["flagged"]
+    saved = json.loads((videos / "app" / "app-20261118-1200.recut.json").read_text())
+    assert saved["clip"] == out.clip and not saved["flagged"] and saved["cards"] is False
     assert (run_dir / "clip.json").read_text() == before  # the clip it came from is left as it was
+    from PIL import Image
+
+    with Image.open(videos / "app" / "app-20261118-1200.recut.jpg") as poster:  # a clean frame of the raw recording
+        assert poster.size == (1280, 800) and poster.getpixel((640, 400))[1] > 120  # the result, green
+    frame = Image.open(io.BytesIO(record.png_frame(videos / "app" / out.clip, 1.0))).convert("RGB")
+    corner = [frame.getpixel((x, y)) for x in range(1120, 1270, 2) for y in range(16, 60, 2)]
+    assert any(min(px) > 200 for px in corner)  # "−8 s", white on its pill in the top right corner
+    assert not any(min(frame.getpixel((x, y))) > 200 for x in range(10, 300, 4) for y in range(16, 60, 4))
+    assert (videos / "app" / "app-20261118-1200.actions.json").is_file()  # from the saved events, for a later cut
