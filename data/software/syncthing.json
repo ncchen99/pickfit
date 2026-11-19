@@ -1,0 +1,516 @@
+{
+  "schema_version": "software.v1",
+  "slug": "syncthing",
+  "repo_id": "gh:14712850",
+  "name": "Syncthing",
+  "summary": "A continuous file synchronization program that keeps files in sync between two or more computers.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "media_files",
+  "kind": "server_daemon",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "go",
+    "p2p",
+    "peer-to-peer",
+    "synchronization"
+  ],
+  "use_cases": [
+    "synchronize files between two or more computers"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "continuously synchronize files across computers",
+    "protect synced data from eavesdropping"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://syncthing.net/",
+  "repo": {
+    "url": "https://github.com/syncthing/syncthing",
+    "full_name": "syncthing/syncthing",
+    "created_at": "2013-11-26T09:48:21Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-syncthing-20261119-143633-8009",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/opt ~/.local/bin && curl -fsSL -o /tmp/st.tar.gz https://github.com/syncthing/syncthing/releases/download/v1.27.12/syncthing-linux-amd64-v1.27.12.tar.gz && tar -xzf /tmp/st.tar.gz -C ~/opt && ln -sf ~/opt/syncthing-linux-amd64-v1.27.12/syncthing ~/.local/bin/syncthing",
+          "purpose": "Download the official v1.27.12 linux-amd64 release tarball, unpack it into ~/opt and symlink it into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "syncthing --version",
+        "expected_signal": "syncthing v1.27.12"
+      },
+      "first_task": "sleep 10 && cat /tmp/syncB/hello.txt && echo \"second from B\" > /tmp/syncB/fromB.txt && sleep 15 && cat /tmp/syncA/fromB.txt"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MPL-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v2.1.7",
+    "published_at": "2026-10-21T06:09:14Z",
+    "url": "https://github.com/syncthing/syncthing/releases/tag/v2.1.7"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T14:38:32.157796+08:00",
+    "runs": [
+      {
+        "id": "verify-syncthing-20261119-143633-8009",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T14:38:32.157796+08:00",
+        "tool_version": "v1.27.12",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/opt ~/.local/bin && curl -fsSL -o /tmp/st.tar.gz https://github.com/syncthing/syncthing/releases/download/v1.27.12/syncthing-linux-amd64-v1.27.12.tar.gz && tar -xzf /tmp/st.tar.gz -C ~/opt && ln -sf ~/opt/syncthing-linux-amd64-v1.27.12/syncthing ~/.local/bin/syncthing",
+            "purpose": "Download the official v1.27.12 linux-amd64 release tarball, unpack it into ~/opt and symlink it into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "syncthing --version",
+            "expected_signal": "syncthing v1.27.12",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "syncthing v1.27.12 \"Gold Grasshopper\" (go1.22.6 linux-amd64) builder@github.syncthing.net 2024-09-06 07:15:45 UTC",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sleep 10 && cat /tmp/syncB/hello.txt && echo \"second from B\" > /tmp/syncB/fromB.txt && sleep 15 && cat /tmp/syncA/fromB.txt",
+            "expected_signal": "hello from A second from B",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "second from B",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/stA /tmp/stB /tmp/syncA /tmp/syncB && mkdir -p /tmp/syncA /tmp/syncB && syncthing generate --home=/tmp/stA --no-default-folder && syncthing generate --home=/tmp/stB --no-default-folder && echo \"hello from A\" > /tmp/syncA/hello.txt",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p /tmp/syncA/.stfolder /tmp/syncB/.stfolder && cat > /tmp/stcfg.py <<'EOF'\nimport xml.etree.ElementTree as ET\nhomes={'A':('/tmp/stA','/tmp/syncA','8384','22001'),'B':('/tmp/stB','/tmp/syncB','8385','22002')}\ntrees={};ids={}\nfor k,(h,_,_,_) in homes.items():\n    t=ET.parse(h+'/config.xml');trees[k]=t\n    ids[k]=t.getroot().find('device').get('id')\nfor k,(h,path,gui,port) in homes.items():\n    o='B' if k=='A' else 'A'\n    r=trees[k].getroot()\n    g=r.find('gui');g.find('address').text='127.0.0.1:'+gui\n    a=g.find('apikey')\n    if a is None: a=ET.SubElement(g,'apikey')\n    a.text='key'+k\n    op=r.find('options')\n    def s(n,v):\n        e=op.find(n)\n        if e is None: e=ET.SubElement(op,n)\n        e.text=v\n    for e in op.findall('listenAddress'): op.remove(e)\n    ET.SubElement(op,'listenAddress').text='tcp://127.0.0.1:'+port\n    s('globalAnnounceEnabled','false');s('localAnnounceEnabled','false');s('relaysEnabled','false');s('natEnabled','false');s('urAccepted','-1');s('startBrowser','false');s('crashReportingEnabled','false')\n    d=ET.Element('device',{'id':ids[o],'name':o,'compression':'metadata','introducer':'false'})\n    ET.SubElement(d,'address').text='tcp://127.0.0.1:'+homes[o][3]\n    r.insert(1,d)\n    f=ET.Element('folder',{'id':'test','label':'test','path':path,'type':'sendreceive','rescanIntervalS':'5','fsWatcherEnabled':'true'})\n    ET.SubElement(f,'device',{'id':ids['A']});ET.SubElement(f,'device',{'id':ids['B']})\n    r.insert(0,f)\n    trees[k].write(h+'/config.xml')\nprint('configured',ids)\nEOF\npython3 /tmp/stcfg.py",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "syncthing serve --home=/tmp/stB --no-browser --no-restart --no-upgrade > /tmp/stB.log 2>&1 & syncthing serve --home=/tmp/stA --no-browser --no-restart --no-upgrade",
+                "background": true,
+                "port": 8384
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsS -H 'X-API-Key: keyA' http://127.0.0.1:8384/rest/system/connections",
+            "expected_signal": "\"crypto\": \"TLS1.3-TLS_AES_128_GCM_SHA256\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"crypto\": \"TLS1.3-TLS_AES_128_GCM_SHA256\",",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/stA /tmp/stB /tmp/syncA /tmp/syncB && mkdir -p /tmp/syncA /tmp/syncB && syncthing generate --home=/tmp/stA --no-default-folder && syncthing generate --home=/tmp/stB --no-default-folder && echo \"hello from A\" > /tmp/syncA/hello.txt",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p /tmp/syncA/.stfolder /tmp/syncB/.stfolder && cat > /tmp/stcfg.py <<'EOF'\nimport xml.etree.ElementTree as ET\nhomes={'A':('/tmp/stA','/tmp/syncA','8384','22001'),'B':('/tmp/stB','/tmp/syncB','8385','22002')}\ntrees={};ids={}\nfor k,(h,_,_,_) in homes.items():\n    t=ET.parse(h+'/config.xml');trees[k]=t\n    ids[k]=t.getroot().find('device').get('id')\nfor k,(h,path,gui,port) in homes.items():\n    o='B' if k=='A' else 'A'\n    r=trees[k].getroot()\n    g=r.find('gui');g.find('address').text='127.0.0.1:'+gui\n    a=g.find('apikey')\n    if a is None: a=ET.SubElement(g,'apikey')\n    a.text='key'+k\n    op=r.find('options')\n    def s(n,v):\n        e=op.find(n)\n        if e is None: e=ET.SubElement(op,n)\n        e.text=v\n    for e in op.findall('listenAddress'): op.remove(e)\n    ET.SubElement(op,'listenAddress').text='tcp://127.0.0.1:'+port\n    s('globalAnnounceEnabled','false');s('localAnnounceEnabled','false');s('relaysEnabled','false');s('natEnabled','false');s('urAccepted','-1');s('startBrowser','false');s('crashReportingEnabled','false')\n    d=ET.Element('device',{'id':ids[o],'name':o,'compression':'metadata','introducer':'false'})\n    ET.SubElement(d,'address').text='tcp://127.0.0.1:'+homes[o][3]\n    r.insert(1,d)\n    f=ET.Element('folder',{'id':'test','label':'test','path':path,'type':'sendreceive','rescanIntervalS':'5','fsWatcherEnabled':'true'})\n    ET.SubElement(f,'device',{'id':ids['A']});ET.SubElement(f,'device',{'id':ids['B']})\n    r.insert(0,f)\n    trees[k].write(h+'/config.xml')\nprint('configured',ids)\nEOF\npython3 /tmp/stcfg.py",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "syncthing serve --home=/tmp/stB --no-browser --no-restart --no-upgrade > /tmp/stB.log 2>&1 & syncthing serve --home=/tmp/stA --no-browser --no-restart --no-upgrade",
+                "background": true,
+                "port": 8384
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Build from source with `go run build.go`",
+            "actually_needed": "Building from source needs a Go toolchain, which this box must not install. I used the official signed release binary from GitHub Releases instead, which the README mentions under 'Signed Releases'.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "README has no usage example; it links to the online getting-started guide",
+            "actually_needed": "To sync locally without a GUI: run `syncthing generate --home=DIR --no-default-folder` for each device, add the other device and a shared folder to config.xml, create a .stfolder marker in each folder, then run `syncthing serve --home=DIR`",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Use the latest release (no specific version named)",
+            "actually_needed": "I installed the pinned release v1.27.12. I did not check whether it is the newest release.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "File synced both directions between A and B, the connections API shows a connected TLS1.3 peer, and the version prints v1.27.12.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-syncthing-20261119-143633-8009/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-syncthing-20261119-143633-8009/check-1-cmd7.judged.png",
+            "runs/verify/verify-syncthing-20261119-143633-8009/check-2-cmd8.judged.png",
+            "runs/verify/verify-syncthing-20261119-143633-8009/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.200197,
+        "features": [
+          {
+            "feature": "continuously synchronize files across computers",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "protect synced data from eavesdropping",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T14:38:38+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/syncthing/syncthing@b0df1033fe2a",
+      "go.mod"
+    ],
+    "packages_checked": 97,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T14:38:32+08:00",
+    "quality": {
+      "total": 76.9,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.7794,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 98.3,
+      "signals": {
+        "stars": 90579,
+        "monthly_downloads": 4812,
+        "forks": 5610,
+        "dependents": null,
+        "release_downloads": 411434,
+        "hn_top_score": 623,
+        "registries_count": 1
+      },
+      "age_days": 4740,
+      "packages": [
+        "homebrew:syncthing"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 1.31
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:38:32.166083+08:00",
+      "sources_sha": "271d9bb066a358dfe4968d1bde124333c6423842977db7f8f8ba288cb8ecc7d5",
+      "items": {
+        "what_it_does": {
+          "score": 1,
+          "quote": "Syncthing is a **continuous file synchronization program**. It synchronizes\nfiles between two or more computers."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Syncthing is primarily about empowering the individual user with safe,\n   secure, and easy to use file synchronization."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "you just need to run `go run build.go` and the\nbinaries are created in `./bin`."
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "There is also a built-in automatic\nupgrade mechanism (disabled in some distribution channels)"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "There are also several [GUI\nimplementations][11] for Windows, Mac, and Linux."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/syncthing/syncthing",
+      "fetched_at": "2026-11-19T14:36:24+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/syncthing/syncthing/blob/main/README.md",
+      "fetched_at": "2026-11-19T14:36:24+08:00"
+    },
+    {
+      "id": "release:v2.1.7",
+      "kind": "release",
+      "url": "https://github.com/syncthing/syncthing/releases/tag/v2.1.7",
+      "fetched_at": "2026-11-19T14:36:24+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "There are a few examples for keeping Syncthing running in the background",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:36:30+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Syncthing is primarily about empowering the individual user with safe,\n   secure, and easy to use file synchronization.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:36:30+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "It synchronizes\nfiles between two or more computers.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:36:30+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Syncthing is a **continuous file synchronization program**. It synchronizes\nfiles between two or more computers.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:36:30+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "Syncthing is a **continuous file synchronization program**.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:36:30+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T14:36:24+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T14:36:24+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T14:36:24+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T14:36:24+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T14:36:24+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.1.7",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T14:36:24+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "It synchronizes\nfiles between two or more computers.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:36:30+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Syncthing is a **continuous file synchronization program**.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:36:30+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "we must never allow the user's data to be susceptible to\n   eavesdropping or modification by unauthorized parties.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:36:30+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T14:35:24+08:00",
+  "updated_at": "2026-11-19T14:38:38+08:00"
+}
