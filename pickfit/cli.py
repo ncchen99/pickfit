@@ -723,12 +723,13 @@ def _add_harvest_command(sub: argparse._SubParsersAction) -> None:
 
     h = sub.add_parser("harvest", help="collect leads from package registries, the MCP Registry, awesome lists, "
                                        "GitHub, HN and (with keys) Bluesky and X into runs/harvest.db ($0 except X)")
-    h.add_argument("action", choices=["run", "summary", "top", "export", "check", "screen", "feed"],
+    h.add_argument("action", choices=["run", "summary", "top", "export", "check", "screen", "feed", "probe"],
                    help="run: read the sources; summary: counts; top: best new leads; export: JSON lines; "
                         "check: GitHub facts for the best new leads, skipping gone, archived, forked, stale and "
                         "renamed ones ($0); screen: check, then prescreen the best with Claude Haiku "
                         "(about $0.001 a lead); feed: queue the best screened leads as submit_software rows "
-                        "for `pickfit watch`")
+                        "for `pickfit watch`; probe: is every source and the chain after it still working "
+                        "(a throwaway database, a dry-run feed; about $0.05 with X, $0.001 without)")
     h.add_argument("--source", action="append", choices=sorted(SOURCES),
                    help=f"run: one source (repeatable; default {', '.join(DEFAULT_SOURCES)})")
     h.add_argument("--limit", type=int, default=5000, help="run: hits per source (default 5000)")
@@ -742,9 +743,13 @@ def _add_harvest_command(sub: argparse._SubParsersAction) -> None:
     h.add_argument("--no-review", action="store_true", help="screen: no Claude Opus review of unsure screens")
     h.add_argument("--concurrency", type=int, default=2, help="screen: prescreens in flight (default 2)")
     h.add_argument("--any", action="store_true", help="feed: also leads the prescreen has not kept")
-    h.add_argument("--out", type=Path, default=None, help="export: file (default runs/harvest/leads-<date>.jsonl)")
+    h.add_argument("--no-screen", action="store_true", help="probe: skip the one prescreen call")
+    h.add_argument("--no-d1", action="store_true", help="probe: skip the dry-run feed against D1")
+    h.add_argument("--out", type=Path, default=None,
+                   help="export: file (default runs/harvest/leads-<date>.jsonl); probe: report (default "
+                        "runs/harvest/probe.json)")
     h.add_argument("--apply", action="store_true", help="feed: write to D1 (default: show what would be queued)")
-    h.add_argument("--local", action="store_true", help="feed: the local D1 of `wrangler dev`")
+    h.add_argument("--local", action="store_true", help="feed, probe: the local D1 of `wrangler dev`")
     h.add_argument("--worker", type=Path, default=Path("worker"), help="feed: the Worker directory")
     h.set_defaults(func=_harvest)
 
@@ -770,6 +775,31 @@ def _harvest(args: argparse.Namespace) -> int:
                     log=lambda line: print(line, file=sys.stderr))
         print(json.dumps({"applied": args.apply, "rows": rows}, indent=2, ensure_ascii=False))
         return 0
+    if args.action == "probe":
+        from pickfit.discover.github import GitHub
+        from pickfit.env import read_env
+        from pickfit.harvest.probe import probe
+        from pickfit.harvest.run import ENV_NAMES, pickfit_known
+        from pickfit.verify.result import DATA_DIR
+
+        env = read_env(ENV_NAMES)
+        token = env.get("GH_TOKEN") or env.get("GITHUB_TOKEN")
+        gh = GitHub(token) if token else None
+        d1 = None
+        if not args.no_d1:
+            from pickfit.d1 import D1
+            d1 = D1(remote=not args.local, worker_dir=args.worker)
+        try:
+            report = probe(args.source, env=env, gh=gh, d1=d1, screen=not args.no_screen, known=pickfit_known(),
+                           data_dir=DATA_DIR, log=lambda line: print(line, file=sys.stderr))
+        finally:
+            if gh is not None:
+                gh.close()
+        out = args.out or harvest_db_path().parent / "harvest" / "probe.json"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(report, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        print(f"probe {'ok' if report['ok'] else 'FAILED'} -> {out}")
+        return 0 if report["ok"] else 1
     if args.action in ("check", "screen"):
         from pickfit.discover.github import GitHub, github_token, runs_dir
         from pickfit.harvest import check

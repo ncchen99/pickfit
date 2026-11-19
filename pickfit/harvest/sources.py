@@ -215,8 +215,10 @@ def winget(ctx: Ctx) -> Iterator[Hit]:
                                                           "sort": "committer-date", "order": "desc"})
         items = (resp.json().get("items") if resp is not None else None) or []
         for item in items:
+            if len(seen) >= ctx.limit:
+                return
             m = _WINGET_NEW.search((item.get("commit") or {}).get("message") or "")
-            if not m or m.group(1) in seen or len(seen) >= ctx.limit:
+            if not m or m.group(1) in seen:
                 continue
             pkg, version = m.group(1), m.group(2)
             seen.add(pkg)

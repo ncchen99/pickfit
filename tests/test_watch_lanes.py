@@ -495,4 +495,6 @@ def test_the_services_watch_command_parses() -> None:
     argv = shlex.split(line)
     args = parse(argv[argv.index("pickfit") + 1:])
     assert args.publish == "push" and args.update_check_hours == 6 and args.lanes == "linux,windows,macos,web"
-    assert "--mac-rent" not in argv  # renting a Mac stays a choice someone makes
+    # Renting a Mac is a choice someone makes: 念誠 made it on 11/19 ("open one when it is needed"), so the service
+    # rents when a macOS batch is due and does the root step itself.
+    assert args.mac_rent and args.mac_root_from_provider

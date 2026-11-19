@@ -1,0 +1,22 @@
+# pickfit harvest probe: every lead source against its real API with a small limit, then check, one prescreen
+# (Claude Haiku, about $0.001) and a dry-run feed, all on a throwaway database. X reads 10 posts ($0.05).
+# The report is runs/harvest/probe.json; a broken source fails the unit, so it shows in `systemctl --failed`.
+[Unit]
+Description=pickfit harvest probe (are the lead sources still working?)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=pickfit
+Group=pickfit
+WorkingDirectory=/var/lib/pickfit/pickfit
+EnvironmentFile=/etc/pickfit/watch.env
+Environment=PYTHONUNBUFFERED=1
+ExecStartPre=/bin/mkdir -p runs/harvest
+ExecStart=/usr/local/bin/uv run pickfit harvest probe
+TimeoutStartSec=30m
+Nice=10
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true

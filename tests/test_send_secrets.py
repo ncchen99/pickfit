@@ -194,3 +194,23 @@ def test_watchs_own_scaleway_key_is_taken_in_place_of_this_macs(files) -> None:
     assert "SCW_ACCESS_KEY=SCWAPPKEY" in text and "SCW_SECRET_KEY=scw-app-secret" in text
     assert "SCWFAKE" not in text and "scw-fake-secret" not in text  # not this Mac's own key
     assert "SCW_DEFAULT_PROJECT_ID=proj-1" in text and "SCW_DEFAULT_ORGANIZATION_ID=org-1" in text
+
+
+def test_add_sets_only_the_named_lines(files, capsys, monkeypatch) -> None:
+    monkeypatch.setenv("BSKY_APP_PASSWORD", "bsky-fake-pass")
+    remote = Remote()
+    assert ss.main(argv(files, "--add", "BSKY_APP_PASSWORD", "--add", "HARVEST_FEED_PER_HOUR=5"), run=remote) == 0
+    assert len(remote.calls) == 1  # no other step: nothing else sent, the service not restarted
+    cmd, data = remote.calls[0]
+    assert "bsky-fake-pass" not in " ".join(cmd) and "bsky-fake-pass" not in capsys.readouterr().out
+    assert data.decode() == "BSKY_APP_PASSWORD=bsky-fake-pass\nHARVEST_FEED_PER_HOUR=5\n"
+    assert "grep -v -E '^(BSKY_APP_PASSWORD|HARVEST_FEED_PER_HOUR)='" in cmd[-1]
+
+
+def test_add_refuses_a_missing_secret_and_copies_harvest_db(files, monkeypatch) -> None:
+    monkeypatch.delenv("X_BEARER_TOKEN", raising=False)
+    remote = Remote()
+    assert ss.main(argv(files, "--add", "X_BEARER_TOKEN"), run=remote) == 1 and remote.calls == []
+    (files["runs"] / "harvest.db").write_bytes(b"sqlite")
+    assert ss.main(argv(files, "--add", "HARVEST_SOURCES=", "--harvest-db"), run=remote) == 0
+    assert remote.calls[-1][1] == b"sqlite" and "runs/harvest.db" in remote.calls[-1][0][-1]

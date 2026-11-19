@@ -18,8 +18,11 @@ Environment=PYTHONUNBUFFERED=1
 ExecStartPre=-/bin/sh -c 'git pull -q --rebase origin main || git rebase --abort'
 ExecStartPre=/usr/local/bin/uv sync --frozen -q
 ExecStartPre=/bin/sh -c 'cd worker && npm ci --silent'
+# --mac-rent: with no usable Mac host, the macOS lane rents one when its batch is due (at most one a week); the
+# rented Mac is deleted once its first paid day is over and nothing waits. --mac-root-from-provider does the
+# host's root step with the sudo password Scaleway gives for it, piped in, never logged or stored.
 ExecStart=/usr/local/bin/uv run --with playwright pickfit watch --publish push --update-check-hours 6 \
-    --lanes linux,windows,macos,web --mac-batch 10 --mac-max-wait-hours 24
+    --lanes linux,windows,macos,web --mac-batch 10 --mac-max-wait-hours 24 --mac-rent --mac-root-from-provider
 Restart=always
 RestartSec=30
 # A batch on a rented Mac or a verification may take a while to finish when the service stops.
