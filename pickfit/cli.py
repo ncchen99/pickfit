@@ -425,7 +425,7 @@ def _watch(args: argparse.Namespace) -> int:
     from pickfit.discover.github import GitHubError, runs_dir
     from pickfit.discover.run import pipeline_db_path
     from pickfit.ledger import default_ledger
-    from pickfit.watch import Settings, Watcher, hourly_cap, live_data_sha, live_steps
+    from pickfit.watch import Settings, Watcher, live_data_sha, live_steps
 
     from pickfit.lanes import ALL_LANES
 
@@ -443,6 +443,10 @@ def _watch(args: argparse.Namespace) -> int:
 
             print(json.dumps({"lanes": lane_status(runs_dir() / "watch" / "jobs", _watch_lanes(args, lanes),
                                                    now=None)}, ensure_ascii=False, indent=2))
+            status = runs_dir() / "watch" / "status.json"  # the running watcher's last tick, when there is one
+            if status.exists():
+                print(json.dumps({"watch": json.loads(status.read_text(encoding="utf-8"))}, ensure_ascii=False,
+                                 indent=2))
         return code
     if args.publish and args.no_commit:
         print("pickfit watch: --publish deploys committed data only; drop --no-commit", file=sys.stderr)
@@ -451,10 +455,20 @@ def _watch(args: argparse.Namespace) -> int:
         print("pickfit watch: --reverify rewrites steps from a user's report; read its diff and publish yourself, "
               "so not with --publish", file=sys.stderr)
         return 2
+    from pickfit.env import REPO_ROOT
+    from pickfit.watch import env_defaults
+
+    try:
+        env = env_defaults()
+    except ValueError as err:
+        print(f"pickfit watch: {err}", file=sys.stderr)
+        return 2
+    picked = {key: env[key] if getattr(args, key) is None else getattr(args, key) for key in env}
     settings = Settings(data_dir=args.data, runs_dir=runs_dir(), db_path=pipeline_db_path(), worker_dir=args.worker,
-                        commit=not args.no_commit, publish=bool(args.publish), hourly_cap=hourly_cap(args.worker),
-                        max_usd=args.max_usd, concurrency=args.concurrency, interval_s=args.interval, lanes=lanes,
-                        publish_mode=args.publish or "deploy", update_check_s=args.update_check_hours * 3600)
+                        commit=not args.no_commit, publish=bool(args.publish), max_usd=args.max_usd,
+                        budget_path=REPO_ROOT / "loop" / "budget.json", interval_s=args.interval, lanes=lanes,
+                        publish_mode=args.publish or "deploy", update_check_s=args.update_check_hours * 3600,
+                        **picked)
     try:
         steps = live_steps(runner=args.runner)
     except GitHubError as err:
@@ -482,8 +496,14 @@ def _watch(args: argparse.Namespace) -> int:
                       reverifier=reverifier, log=lambda line: print(line, flush=True),
                       live_sha=None if args.local else live_data_sha(args.worker))
     mac = steps.lanes.get("macos")
-    print(f"watch · {d1.where} · every {args.interval:.0f}s · {args.concurrency} at a time · "
-          f"hourly cap {settings.hourly_cap} · --max-usd {args.max_usd} · {args.runner} · "
+    cap, cap_from = watcher.daily_cap()
+    slots = " ".join(f"{slot} {watcher.slot_limit(slot)}" for slot in ("linux", "web", *watcher.lanes)
+                     if slot != "web" or "web" in lanes)
+    print(f"watch · {d1.where} · polls every {args.interval:.0f}s, and at once when a job ends · slots {slots}, "
+          f"harvest {settings.harvest_slots} · ${cap:g} a rolling 24 h ({cap_from})"
+          f"{f', ${settings.user_reserve_usd:g} kept for people' if settings.harvest_slots else ''}"
+          f"{f' · --max-usd {args.max_usd}' if args.max_usd is not None else ''}"
+          f"{f' · hourly cap {settings.hourly_cap}' if settings.hourly_cap else ''} · {args.runner} · "
           f"{'commit + push (CI deploys)' if args.publish == 'push' else 'commit + publish' if args.publish else 'commit, no deploy' if settings.commit else 'no commit'}"
           f"{' · reverify queue too' if reverifier else ''} · lanes {','.join(lanes)}"
           + (f" · macOS batch {mac.policy.describe()}, "
@@ -579,7 +599,9 @@ def _reverify(args: argparse.Namespace) -> int:
 def _add_queue_commands(sub: argparse._SubParsersAction) -> None:
     from pickfit.d1 import DEFAULT_WORKER_DIR
     from pickfit.profiles import DEFAULT_OUT
-    from pickfit.watch import DEFAULT_CONCURRENCY, DEFAULT_INTERVAL_S, DEFAULT_MAX_USD
+    from pickfit.watch import (DEFAULT_CONCURRENCY, DEFAULT_DAILY_USD, DEFAULT_HARVEST_SLOTS, DEFAULT_INTERVAL_S,
+                               DEFAULT_MAX_USD, DEFAULT_USER_RESERVE_USD, DEFAULT_WEB_CONCURRENCY,
+                               DEFAULT_WINDOWS_CONCURRENCY, WINDOWS_MAX_BOXES)
 
     def common(p: argparse.ArgumentParser) -> None:
         p.add_argument("--local", action="store_true", help="the local D1 of `wrangler dev` instead of the remote one")
@@ -602,13 +624,36 @@ def _add_queue_commands(sub: argparse._SubParsersAction) -> None:
                    help="when idle, this often look for new program code on origin/main and stop with exit 75 so "
                         "the service pulls it and starts again (default 0: never)")
     w.add_argument("--reverify", action="store_true", help="also take reported failures from reverify_queue")
-    w.add_argument("--status", action="store_true", help="read-only: list submissions and the reverify queue")
-    w.add_argument("--interval", type=float, default=DEFAULT_INTERVAL_S, help="seconds between polls (default 60)")
-    w.add_argument("--concurrency", type=int, default=DEFAULT_CONCURRENCY,
-                   help=f"submissions processed at once (default {DEFAULT_CONCURRENCY})")
+    w.add_argument("--status", action="store_true",
+                   help="read-only: list submissions, the reverify queue, each lane's parked jobs and the running "
+                        "watcher's last status (runs/watch/status.json: running, queued, why nothing new starts)")
+    w.add_argument("--interval", type=float, default=DEFAULT_INTERVAL_S,
+                   help="seconds between polls for new submissions (default 60); a job that ends wakes it sooner")
+    # Unset flags take PICKFIT_WATCH_* from the environment (the service's watch.env), else pickfit.watch's default.
+    w.add_argument("--concurrency", type=int, default=None,
+                   help=f"linux: repository submissions read and verified at once (default {DEFAULT_CONCURRENCY}; "
+                        "PICKFIT_WATCH_LINUX_CONCURRENCY)")
+    w.add_argument("--web-concurrency", type=int, default=None,
+                   help=f"web: website submissions at once (default {DEFAULT_WEB_CONCURRENCY}; "
+                        "PICKFIT_WATCH_WEB_CONCURRENCY)")
+    w.add_argument("--windows-concurrency", type=int, default=None,
+                   help=f"windows: EC2 boxes at once, never more than {WINDOWS_MAX_BOXES} (the account's quota; "
+                        f"default {DEFAULT_WINDOWS_CONCURRENCY}; PICKFIT_WATCH_WINDOWS_CONCURRENCY)")
+    w.add_argument("--harvest-slots", type=int, default=None,
+                   help=f"slots harvest rows may hold in all lanes together; people's submissions go first "
+                        f"(default {DEFAULT_HARVEST_SLOTS}; PICKFIT_WATCH_HARVEST_SLOTS)")
+    w.add_argument("--user-reserve-usd", type=float, default=None,
+                   help=f"of the rolling 24 h money, what a harvest row leaves free for people's submissions "
+                        f"(default {DEFAULT_USER_RESERVE_USD:g}; PICKFIT_WATCH_USER_RESERVE_USD)")
+    w.add_argument("--daily-usd", type=float, default=None,
+                   help="model spend allowed in any rolling 24 hours, counted in the shared ledger (default: "
+                        f"loop/budget.json's model_usd.daily, else {DEFAULT_DAILY_USD:g}; PICKFIT_WATCH_DAILY_USD)")
     w.add_argument("--max-usd", type=float, default=DEFAULT_MAX_USD,
-                   help="stop starting submissions after this much model spend "
-                        f"(default {DEFAULT_MAX_USD})")
+                   help="optional: stop starting submissions once this run has spent this much on models "
+                        "(default none: the rolling 24 h cap holds)")
+    w.add_argument("--hourly-cap", type=int, default=None,
+                   help="optional: at most this many submissions start in a rolling hour (default 0: none, the "
+                        "Worker caps intake; PICKFIT_WATCH_HOURLY_CAP)")
     w.add_argument("--lanes", default="linux,windows,macos,web",
                    help="where submissions are verified (default all): linux at once; windows (EC2) as soon as AWS "
                         "answers; macos in batches on a Mac host; web: website submissions, visited once")
