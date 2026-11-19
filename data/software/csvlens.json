@@ -1,0 +1,646 @@
+{
+  "schema_version": "software.v1",
+  "slug": "csvlens",
+  "repo_id": "gh:396072317",
+  "name": "csvlens",
+  "summary": "A terminal viewer for CSV files, similar to less, with search, filtering and sorting.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "data_db",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [
+    "browse a CSV file in the terminal",
+    "view CSV output piped from other commands"
+  ],
+  "alternatives_to": [
+    "less"
+  ],
+  "features": [
+    "search cells with regex and highlight matches",
+    "filter rows using regex",
+    "sort rows by selected column",
+    "filter columns using regex"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/YS-L/csvlens",
+    "full_name": "YS-L/csvlens",
+    "created_at": "2021-08-14T16:59:09Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install csvlens",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "csvlens <filename>"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-csvlens-20261119-150739-a7e5",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "cd /tmp && curl -fsSLO https://github.com/YS-L/csvlens/releases/download/v0.15.1/csvlens-x86_64-unknown-linux-musl.tar.xz && tar -xJf csvlens-x86_64-unknown-linux-musl.tar.xz && mkdir -p ~/.local/bin && cp csvlens-x86_64-unknown-linux-musl/csvlens ~/.local/bin/ && chmod +x ~/.local/bin/csvlens",
+          "purpose": "Download v0.15.1 x86_64 musl release tarball, extract, copy csvlens to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "csvlens --version",
+        "expected_signal": "csvlens 0.15.1"
+      },
+      "first_task": "python3 drive.py '/Paris\\r' csvlens data.csv"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install csvlens",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "csvlens <filename>"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.15.1",
+    "published_at": "2026-01-08T17:49:26Z",
+    "url": "https://github.com/YS-L/csvlens/releases/tag/v0.15.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T15:09:21.482214+08:00",
+    "runs": [
+      {
+        "id": "verify-csvlens-20261119-150739-a7e5",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T15:09:21.482214+08:00",
+        "tool_version": "csvlens 0.15.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd /tmp && curl -fsSLO https://github.com/YS-L/csvlens/releases/download/v0.15.1/csvlens-x86_64-unknown-linux-musl.tar.xz && tar -xJf csvlens-x86_64-unknown-linux-musl.tar.xz && mkdir -p ~/.local/bin && cp csvlens-x86_64-unknown-linux-musl/csvlens ~/.local/bin/ && chmod +x ~/.local/bin/csvlens",
+            "purpose": "Download v0.15.1 x86_64 musl release tarball, extract, copy csvlens to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "csvlens --version",
+            "expected_signal": "csvlens 0.15.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "csvlens 0.15.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 drive.py '/Paris\\r' csvlens data.csv",
+            "expected_signal": "\"Paris\":",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"Paris\":",
+            "setup": [
+              {
+                "command": "cat > data.csv <<'EOF'\nname,city,score\nalice,Paris,30\nbob,Berlin,10\ncarol,Paris,20\ndave,Rome,40\nEOF\ncat > drive.py <<'EOF'\nimport os, pty, sys, time, re, select, struct, fcntl, termios\nkeys = sys.argv[1].encode().decode('unicode_escape').encode()\nargs = sys.argv[2:]\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.execvp(args[0], args)\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 20, 100, 0, 0))\nout = b''\ndef pump(t):\n    global out\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try:\n                d = os.read(fd, 65536)\n            except OSError:\n                return\n            if not d:\n                return\n            out += d\npump(1.5)\nfor k in keys:\n    os.write(fd, bytes([k])); pump(0.3)\npump(1.0)\nos.write(fd, b'q'); pump(1.0)\n_, st = os.waitpid(pid, 0)\ntxt = out.decode('utf-8', 'replace')\ntxt = re.sub(r'\\x1b\\[(\\d+);(\\d+)H', '\\n', txt)\ntxt = re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]|\\x1b[()][A-Z0-9]|\\x1b[=>]', '', txt)\nprint('\\n'.join(l for l in txt.splitlines() if l.strip()))\nsys.exit(os.waitstatus_to_exitcode(st))\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 drive.py '&Rome|Berlin\\r' csvlens data.csv",
+            "expected_signal": "\"Rome|Berlin\":",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"Rome|Berlin\":",
+            "setup": [
+              {
+                "command": "cat > data.csv <<'EOF'\nname,city,score\nalice,Paris,30\nbob,Berlin,10\ncarol,Paris,20\ndave,Rome,40\nEOF\ncat > drive.py <<'EOF'\nimport os, pty, sys, time, re, select, struct, fcntl, termios\nkeys = sys.argv[1].encode().decode('unicode_escape').encode()\nargs = sys.argv[2:]\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.execvp(args[0], args)\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 20, 100, 0, 0))\nout = b''\ndef pump(t):\n    global out\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try:\n                d = os.read(fd, 65536)\n            except OSError:\n                return\n            if not d:\n                return\n            out += d\npump(1.5)\nfor k in keys:\n    os.write(fd, bytes([k])); pump(0.3)\npump(1.0)\nos.write(fd, b'q'); pump(1.0)\n_, st = os.waitpid(pid, 0)\ntxt = out.decode('utf-8', 'replace')\ntxt = re.sub(r'\\x1b\\[(\\d+);(\\d+)H', '\\n', txt)\ntxt = re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]|\\x1b[()][A-Z0-9]|\\x1b[=>]', '', txt)\nprint('\\n'.join(l for l in txt.splitlines() if l.strip()))\nsys.exit(os.waitstatus_to_exitcode(st))\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 drive.py '\\tllJ' csvlens data.csv",
+            "expected_signal": "[Sorting",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[Sorting",
+            "setup": [
+              {
+                "command": "cat > data.csv <<'EOF'\nname,city,score\nalice,Paris,30\nbob,Berlin,10\ncarol,Paris,20\ndave,Rome,40\nEOF\ncat > drive.py <<'EOF'\nimport os, pty, sys, time, re, select, struct, fcntl, termios\nkeys = sys.argv[1].encode().decode('unicode_escape').encode()\nargs = sys.argv[2:]\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.execvp(args[0], args)\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 20, 100, 0, 0))\nout = b''\ndef pump(t):\n    global out\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try:\n                d = os.read(fd, 65536)\n            except OSError:\n                return\n            if not d:\n                return\n            out += d\npump(1.5)\nfor k in keys:\n    os.write(fd, bytes([k])); pump(0.3)\npump(1.0)\nos.write(fd, b'q'); pump(1.0)\n_, st = os.waitpid(pid, 0)\ntxt = out.decode('utf-8', 'replace')\ntxt = re.sub(r'\\x1b\\[(\\d+);(\\d+)H', '\\n', txt)\ntxt = re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]|\\x1b[()][A-Z0-9]|\\x1b[=>]', '', txt)\nprint('\\n'.join(l for l in txt.splitlines() if l.strip()))\nsys.exit(os.waitstatus_to_exitcode(st))\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 drive.py '*name|score\\r' csvlens data.csv",
+            "expected_signal": "\"name|score\":",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"name|score\":",
+            "setup": [
+              {
+                "command": "cat > data.csv <<'EOF'\nname,city,score\nalice,Paris,30\nbob,Berlin,10\ncarol,Paris,20\ndave,Rome,40\nEOF\ncat > drive.py <<'EOF'\nimport os, pty, sys, time, re, select, struct, fcntl, termios\nkeys = sys.argv[1].encode().decode('unicode_escape').encode()\nargs = sys.argv[2:]\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.execvp(args[0], args)\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 20, 100, 0, 0))\nout = b''\ndef pump(t):\n    global out\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try:\n                d = os.read(fd, 65536)\n            except OSError:\n                return\n            if not d:\n                return\n            out += d\npump(1.5)\nfor k in keys:\n    os.write(fd, bytes([k])); pump(0.3)\npump(1.0)\nos.write(fd, b'q'); pump(1.0)\n_, st = os.waitpid(pid, 0)\ntxt = out.decode('utf-8', 'replace')\ntxt = re.sub(r'\\x1b\\[(\\d+);(\\d+)H', '\\n', txt)\ntxt = re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]|\\x1b[()][A-Z0-9]|\\x1b[=>]', '', txt)\nprint('\\n'.join(l for l in txt.splitlines() if l.strip()))\nsys.exit(os.waitstatus_to_exitcode(st))\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install csvlens (Cargo section)",
+            "actually_needed": "No Rust toolchain in box; used README's 'Direct download' option: release tarball csvlens-x86_64-unknown-linux-musl.tar.xz, extracted and copied to ~/.local/bin",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Shift+↓ (or J) sorts rows by the selected column",
+            "actually_needed": "In the default row selection mode, J only shows 'Press TAB and select a column before sorting'; press TAB to enter column mode first",
+            "kind": "note"
+          },
+          {
+            "readme_said": "csvlens <filename>",
+            "actually_needed": "It is an interactive TUI that needs a terminal; the checks here run it under a Python pty driver (drive.py) that sends keystrokes, then q",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Find for Paris shows [Find \"Paris\": 1/2], filter Rome|Berlin shows only bob/Berlin and dave/Rome rows with [Filter \"Rome|Berlin\": 1/2], and --version prints csvlens 0.15.1.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-csvlens-20261119-150739-a7e5/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-csvlens-20261119-150739-a7e5/check-1-cmd5.judged.png",
+            "runs/verify/verify-csvlens-20261119-150739-a7e5/check-2-cmd6.judged.png",
+            "runs/verify/verify-csvlens-20261119-150739-a7e5/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.190574,
+        "features": [
+          {
+            "feature": "search cells with regex and highlight matches",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "filter rows using regex",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "sort rows by selected column",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "filter columns using regex",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T15:09:27+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/YS-L/csvlens@6acf0606df0f",
+      "Cargo.lock"
+    ],
+    "packages_checked": 338,
+    "findings_total": 2,
+    "advisories_total": 2,
+    "findings": [
+      {
+        "package": "crates:quick-xml",
+        "version": "0.39.4",
+        "advisory": "RUSTSEC-2026-0194",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.39.4",
+        "advisory": "RUSTSEC-2026-0195",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T15:09:27+08:00",
+    "quality": {
+      "total": 76.7,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.72,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5778,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 100.0,
+      "signals": {
+        "stars": 4040,
+        "monthly_downloads": 19193,
+        "forks": 75,
+        "dependents": null,
+        "release_downloads": 51808,
+        "hn_top_score": 393,
+        "registries_count": 2
+      },
+      "age_days": 1922,
+      "packages": [
+        "crates:csvlens",
+        "homebrew:csvlens"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.0
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:09:21.508923+08:00",
+      "sources_sha": "523bef4bc16b4adbf02b05f049357e46780a315c2aef06aa374c7b0403d2689c",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "`csvlens` is a command line CSV file viewer. It is like `less` but made\nfor CSV."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Pipe CSV data directly to `csvlens`:"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Requires Rust 1.88.0 or newer."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "winget install --id YS-L.csvlens"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "csvlens <filename>"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "* `-d <char>`: Use this delimiter when parsing the CSV"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "| Apple Silicon macOS |"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/YS-L/csvlens",
+      "fetched_at": "2026-11-19T15:07:28+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/YS-L/csvlens/blob/main/README.md",
+      "fetched_at": "2026-11-19T15:07:26+08:00"
+    },
+    {
+      "id": "release:v0.15.1",
+      "kind": "release",
+      "url": "https://github.com/YS-L/csvlens/releases/tag/v0.15.1",
+      "fetched_at": "2026-11-19T15:07:26+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "`csvlens` is a command line CSV file viewer.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:07:35+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Run `csvlens` by providing the CSV filename:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:07:35+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Command line csv viewer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:07:35+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "`csvlens` is a command line CSV file viewer. It is like `less` but made\nfor CSV.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:07:35+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# csvlens",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:07:35+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "You can download the `tar.xz` or `zip` file matching your operating system",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:07:35+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:07:28+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:07:28+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T15:07:28+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.15.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:07:26+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Run `csvlens` by providing the CSV filename:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:07:35+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Pipe CSV data directly to `csvlens`:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:07:35+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "It is like `less` but made\nfor CSV.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:07:35+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Find content matching regex and highlight matches",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:07:35+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Filter rows using regex (show only matches)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:07:35+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Sort rows or toggle sort direction by the selected column",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:07:35+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Filter columns using regex (show only matches)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:07:35+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install csvlens",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:07:35+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install csvlens",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:07:35+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install csvlens",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:07:35+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T15:07:26+08:00",
+  "updated_at": "2026-11-19T15:09:27+08:00"
+}
