@@ -35,6 +35,58 @@
     "return probability for every answer",
     "flag uncertain cases instead of guessing"
   ],
+  "capabilities": [
+    {
+      "label": "Return probabilities for every allowed answer",
+      "area": "decisions"
+    },
+    {
+      "label": "Abstain on uncertain cases via threshold",
+      "area": "decisions"
+    },
+    {
+      "label": "Multi-select choice questions",
+      "area": "question types"
+    },
+    {
+      "label": "Serve decisions over HTTP API",
+      "area": "api"
+    },
+    {
+      "label": "Health check endpoint",
+      "area": "api"
+    },
+    {
+      "label": "Process inputs up to 32k tokens",
+      "area": "input"
+    },
+    {
+      "label": "Run INT8 weights on CUDA runtime",
+      "area": "runtimes"
+    },
+    {
+      "label": "Run GGUF weights via llama.cpp backends",
+      "items": [
+        "cuda",
+        "vulkan",
+        "hip",
+        "metal"
+      ],
+      "area": "runtimes"
+    },
+    {
+      "label": "Cache state for repeated questions",
+      "area": "performance"
+    },
+    {
+      "label": "Answer multiple questions in one pass",
+      "area": "api"
+    },
+    {
+      "label": "Calibrate probabilities with temperature file",
+      "area": "configuration"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -227,22 +279,22 @@
         "fixed_in": "2.10.0",
         "summary": "PyTorch Vulnerable to Remote Code Execution via Untrusted Checkpoint Files",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-01-21T16:21:16Z",
         "scope": "runtime",
+        "paths": [
+          "v0.5/serving/requirements.txt > torch"
+        ],
         "found_in": "v0.5/serving/requirements.txt",
         "kev": false,
         "epss": 0.00799,
-        "fix_published_at": "2026-01-21T16:21:16Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "user_interaction"
         ],
-        "paths": [
-          "v0.5/serving/requirements.txt > torch"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "pypi:torch",
@@ -255,22 +307,22 @@
         "fixed_in": "2.9.0",
         "summary": "An issue in the component torch.linalg.lu of pytorch v2.8.0 allows attackers to cause a Denial of Service (DoS) when performing a slice operation.",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2025-10-15T15:50:40Z",
         "scope": "runtime",
+        "paths": [
+          "v0.5/serving/requirements.txt > torch"
+        ],
         "found_in": "v0.5/serving/requirements.txt",
         "kev": false,
         "epss": 0.00423,
-        "fix_published_at": "2025-10-15T15:50:40Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "v0.5/serving/requirements.txt > torch"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "pypi:torch",
@@ -283,22 +335,22 @@
         "fixed_in": "2.9.0",
         "summary": "pytorch v2.8.0 was discovered to display unexpected behavior when the components torch.rot90 and torch.randn_like are used together.",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2025-10-15T15:50:40Z",
         "scope": "runtime",
+        "paths": [
+          "v0.5/serving/requirements.txt > torch"
+        ],
         "found_in": "v0.5/serving/requirements.txt",
         "kev": false,
         "epss": 0.00418,
-        "fix_published_at": "2025-10-15T15:50:40Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "v0.5/serving/requirements.txt > torch"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "pypi:torch",
@@ -311,21 +363,21 @@
         "fixed_in": null,
         "summary": "A vulnerability was identified in PyTorch 2.10.0. The affected element is an unknown function of the component pt2 Loading Handler. The manipulation leads to deserialization. The attack can only be pe",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "v0.5/serving/requirements.txt > torch"
+        ],
         "found_in": "v0.5/serving/requirements.txt",
         "kev": false,
         "epss": 0.00281,
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access"
         ],
-        "paths": [
-          "v0.5/serving/requirements.txt > torch"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "pypi:transformers",
@@ -338,21 +390,21 @@
         "fixed_in": null,
         "summary": "Hugging Face Transformers downloads custom generation code before trust consent",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "requirements.txt > transformers"
+        ],
         "found_in": "requirements.txt",
         "kev": false,
         "epss": 0.00099,
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access"
         ],
-        "paths": [
-          "requirements.txt > transformers"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "pypi:transformers",
@@ -365,22 +417,22 @@
         "fixed_in": "5.10.0",
         "summary": "Transformers save_pretrained path traversal allows arbitrary file writes through chat template names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-06-03T15:16:02Z",
         "scope": "runtime",
+        "paths": [
+          "requirements.txt > transformers"
+        ],
         "found_in": "requirements.txt",
         "kev": false,
         "epss": 0.0046,
-        "fix_published_at": "2026-06-03T15:16:02Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "user_interaction"
         ],
-        "paths": [
-          "requirements.txt > transformers"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -449,17 +501,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 83.6,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.875,
@@ -479,10 +528,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 83.6,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -830,8 +882,96 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T03:15:23+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "it returns a probability for every answer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:27+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "Set `abstain_threshold` and it flags the cases it is not sure about instead of guessing.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:27+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "`\"multi\": true` (choice with several correct options)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:27+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "`POST /v1/systemone`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:27+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "`GET /health` returns `{\"status\": \"ok\", \"model\": ...}`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:27+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "inputs up to 32k tokens",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:27+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "It runs the INT8 weights on the CUDA runtime, or the GGUF weights on llama.cpp, on one GPU.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:27+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "`BACKEND` picks the GPU API: `cuda` (default), `vulkan` (AMD, Intel),\n`hip` (AMD with ROCm) or `metal` (Apple)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:27+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Keep the latest long state on the GPU: asking again about the same state, or a state that grew (an agent transcript), decodes only the new tokens.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:27+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Questions in one request share a single pass over the state",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:27+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "Temperature applied to the probabilities",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:27+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:28:11+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

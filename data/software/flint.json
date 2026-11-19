@@ -37,6 +37,97 @@
     "Let agent work on files and projects",
     "Browse and download GGUF models from Hugging Face"
   ],
+  "capabilities": [
+    {
+      "label": "Chat with local models on your computer",
+      "area": "chat"
+    },
+    {
+      "label": "Agent works on files with approval",
+      "area": "agent"
+    },
+    {
+      "label": "Multi-model discussion rooms",
+      "area": "agent"
+    },
+    {
+      "label": "Run parallel sub-agents with built-in roles",
+      "items": [
+        "explorer",
+        "planner",
+        "implementer",
+        "reviewer",
+        "tester",
+        "security"
+      ],
+      "area": "agent"
+    },
+    {
+      "label": "Review diffs and apply per hunk",
+      "area": "editing"
+    },
+    {
+      "label": "Track token usage and cost",
+      "area": "usage"
+    },
+    {
+      "label": "Download GGUF models from Hugging Face",
+      "area": "models"
+    },
+    {
+      "label": "Use MLX models on Apple silicon",
+      "area": "models"
+    },
+    {
+      "label": "Connect OpenAI or Anthropic-compatible providers",
+      "area": "integrations"
+    },
+    {
+      "label": "Sandbox shell commands",
+      "items": [
+        "bubblewrap",
+        "Seatbelt",
+        "AppContainer"
+      ],
+      "area": "security"
+    },
+    {
+      "label": "Headless agent runs from command line",
+      "area": "cli"
+    },
+    {
+      "label": "Connect MCP servers",
+      "area": "integrations"
+    },
+    {
+      "label": "Web search",
+      "area": "agent"
+    },
+    {
+      "label": "Export audit and replay runs",
+      "area": "output"
+    },
+    {
+      "label": "Create pull requests from sessions",
+      "area": "integrations"
+    },
+    {
+      "label": "Run models on CUDA or Vulkan",
+      "area": "models"
+    },
+    {
+      "label": "Import local GGUF files",
+      "area": "models"
+    },
+    {
+      "label": "Migrate data from Jan",
+      "area": "migration"
+    },
+    {
+      "label": "Split view conversations and projects",
+      "area": "chat"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -346,22 +437,22 @@
         "fixed_in": "0.38.0",
         "summary": "Panic and unbounded allocation (OOM) in the CFB/OLE2 parser on malformed input",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-11-02T01:32:22Z",
         "scope": "runtime",
+        "paths": [
+          "tauri-plugin-rag > calamine"
+        ],
         "workspace": "src-tauri/plugins/tauri-plugin-rag",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-11-02T01:32:22Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "tauri-plugin-rag > calamine"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -372,22 +463,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "tauri-plugin-agent-tools > ashpd > wayland-client > wayland-scanner > quick-xml"
+        ],
         "workspace": "src-tauri/plugins/tauri-plugin-agent-tools",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "tauri-plugin-agent-tools > ashpd > wayland-client > wayland-scanner > quick-xml"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -398,22 +489,19 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "tauri-plugin-agent-tools > ashpd > wayland-client > wayland-scanner > quick-xml"
+        ],
         "workspace": "src-tauri/plugins/tauri-plugin-agent-tools",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:NsReader"
-        ],
-        "paths": [
-          "tauri-plugin-agent-tools > ashpd > wayland-client > wayland-scanner > quick-xml"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -421,7 +509,10 @@
           "evidence": [
             "the project's source does not use NsReader, but other packages depend on quick-xml"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quinn-proto",
@@ -432,22 +523,19 @@
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-14T10:08:32Z",
         "scope": "runtime",
+        "paths": [
+          "Jan > reqwest > quinn > quinn-proto"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-09-14T10:08:32Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "option:ACK_FREQUENCY"
-        ],
-        "paths": [
-          "Jan > reqwest > quinn > quinn-proto"
         ],
         "reachability": {
           "method": "option_grep",
@@ -455,7 +543,10 @@
           "evidence": [
             "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quinn-proto",
@@ -466,22 +557,22 @@
         "fixed_in": "0.11.17",
         "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-08-17T17:32:41Z",
         "scope": "runtime",
+        "paths": [
+          "Jan > reqwest > quinn > quinn-proto"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-08-17T17:32:41Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "Jan > reqwest > quinn > quinn-proto"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:rmcp",
@@ -492,22 +583,22 @@
         "fixed_in": "3.6.0",
         "summary": "Unbounded tool schema cache in Streamable HTTP server transport",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-20T05:53:35Z",
         "scope": "runtime",
+        "paths": [
+          "Jan > rmcp"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-20T05:53:35Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "Jan > rmcp"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -682,17 +773,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 76.8,
+      "raw_total": 76.8,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.5625,
@@ -712,10 +800,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 76.8,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -1167,8 +1258,160 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:35:56+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "Chat with models on your own computer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:29:48+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "An agent reads, writes and runs commands in a sandbox or a managed copy of your project, asks before doing anything you have not allowed",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:29:48+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "several models from different providers discuss a topic in one room, with a moderator, budgets, `@mentions`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:29:48+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "parallel sub-agents, six built-in roles (explorer, planner, implementer, reviewer, tester, security)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:29:48+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "a diff before every write, per-hunk apply, managed Git worktrees, checkpoints and rewind",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:29:48+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "token and prompt-cache counts per message and session, spend budgets, and a dashboard",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:29:48+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "browse and download GGUF models directly from Hugging Face in **Discover**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:29:48+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "use MLX repositories on Apple silicon",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:29:48+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "connect any OpenAI- or Anthropic-compatible provider with your own key",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:29:48+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "bubblewrap on Linux, Seatbelt on macOS, AppContainer on Windows",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:29:48+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "A command line** for headless agent runs, a JSON-lines API and background jobs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:29:48+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "MCP server cards with connection state, call rate, tools and an auto-approve switch",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:29:48+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "release:nightly-20261028-04",
+      "quote": "run several web searches and fetches in one call",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:29:48+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "a live tool timeline, replay, audit export",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:29:48+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "each with its worktree bar and a Create pull request action",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:29:48+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "You can switch each GPU between CUDA and Vulkan in **System Monitor**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:29:48+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "import a GGUF you already have with **Import GGUF**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:29:48+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "you can **copy** your Jan data into Flint, **reuse** it in place, **move** it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:29:48+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "can be grouped into projects, and can run side by side in a split view",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:29:48+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

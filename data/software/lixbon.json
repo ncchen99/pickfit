@@ -34,6 +34,101 @@
     "chat via web, desktop, CLI, mobile",
     "orchestrate role-based subagents toward goal"
   ],
+  "capabilities": [
+    {
+      "label": "OpenAI-compatible API gateway",
+      "area": "api"
+    },
+    {
+      "label": "Route inference to best GPU node",
+      "area": "orchestration"
+    },
+    {
+      "label": "Add GPU node without inbound ports",
+      "area": "orchestration"
+    },
+    {
+      "label": "One model per inference role",
+      "items": [
+        "chat",
+        "autocompletado",
+        "visión",
+        "embeddings",
+        "router"
+      ],
+      "area": "inference"
+    },
+    {
+      "label": "Per-plan usage limits",
+      "area": "billing"
+    },
+    {
+      "label": "Authenticate with API keys",
+      "area": "security"
+    },
+    {
+      "label": "Clients for web, desktop, CLI, Android",
+      "items": [
+        "web",
+        "desktop",
+        "CLI",
+        "Android"
+      ],
+      "area": "clients"
+    },
+    {
+      "label": "Orchestrate child agents by role",
+      "area": "agents"
+    },
+    {
+      "label": "Create marketing visuals via MCP server",
+      "items": [
+        "Claude Code",
+        "Cursor",
+        "VS Code"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Control sessions remotely from mobile",
+      "area": "clients"
+    },
+    {
+      "label": "Stream chat completions",
+      "area": "api"
+    },
+    {
+      "label": "CLI agent modes",
+      "items": [
+        "conversa",
+        "agente",
+        "auto",
+        "plan",
+        "delega"
+      ],
+      "area": "cli"
+    },
+    {
+      "label": "Adjust reasoning effort",
+      "area": "cli"
+    },
+    {
+      "label": "Run commands in background",
+      "area": "cli"
+    },
+    {
+      "label": "Web search with any provider",
+      "area": "search"
+    },
+    {
+      "label": "Skills catalog",
+      "items": [
+        "/marketing-lxo",
+        "/adversary"
+      ],
+      "area": "integrations"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -290,20 +385,20 @@
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-17T18:45:16Z",
         "scope": "runtime",
+        "paths": [
+          "lixbon > zip"
+        ],
         "workspace": "apps/desktop/src-tauri",
         "found_in": "apps/desktop/src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.0032,
-        "fix_published_at": "2026-10-17T18:45:16Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "lixbon > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -314,22 +409,19 @@
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "lixbon > zip"
+        ],
         "workspace": "apps/desktop/src-tauri",
         "found_in": "apps/desktop/src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:ZipStreamReader::extract",
           "symbol:ZipArchive::extract"
-        ],
-        "paths": [
-          "lixbon > zip"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -337,7 +429,10 @@
           "evidence": [
             "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -350,23 +445,23 @@
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "lixbon > zip"
+        ],
         "workspace": "apps/desktop/src-tauri",
         "found_in": "apps/desktop/src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.00461,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "lixbon > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -377,23 +472,23 @@
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "lixbon > zip"
+        ],
         "workspace": "apps/desktop/src-tauri",
         "found_in": "apps/desktop/src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction"
         ],
-        "paths": [
-          "lixbon > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:follow-redirects",
@@ -406,23 +501,23 @@
         "fixed_in": "1.16.1",
         "summary": "follow-redirects sensitiveHeaders regex escaping can expose credential headers",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-01T13:52:31Z",
         "scope": "runtime",
+        "paths": [
+          ". > axios > follow-redirects"
+        ],
         "workspace": ".",
         "found_in": "apps/web/package-lock.json",
         "kev": false,
         "epss": 0.00471,
-        "fix_published_at": "2026-10-01T13:52:31Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity"
         ],
-        "paths": [
-          ". > axios > follow-redirects"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:follow-redirects",
@@ -435,23 +530,23 @@
         "fixed_in": "1.16.2",
         "summary": "follow-redirects: Cross-realm sensitiveHeaders arrays are discarded and custom credentials can follow redirects",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-25T21:32:25Z",
         "scope": "runtime",
+        "paths": [
+          ". > axios > follow-redirects"
+        ],
         "workspace": ".",
         "found_in": "apps/web/package-lock.json",
         "kev": false,
         "epss": 0.00266,
-        "fix_published_at": "2026-10-25T21:32:25Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity"
         ],
-        "paths": [
-          ". > axios > follow-redirects"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:follow-redirects",
@@ -464,23 +559,23 @@
         "fixed_in": "1.16.1",
         "summary": "follow-redirects array-form headers bypass cross-origin credential stripping",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-01T13:52:31Z",
         "scope": "runtime",
+        "paths": [
+          ". > axios > follow-redirects"
+        ],
         "workspace": ".",
         "found_in": "apps/web/package-lock.json",
         "kev": false,
         "epss": 0.00471,
-        "fix_published_at": "2026-10-01T13:52:31Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity"
         ],
-        "paths": [
-          ". > axios > follow-redirects"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:image-size",
@@ -493,23 +588,23 @@
         "fixed_in": "2.0.3",
         "summary": "image-size: JXL and HEIF parsers allow denial of service through infinite loops",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-14T15:57:47Z",
         "scope": "runtime",
+        "paths": [
+          ". > expo > @expo/metro > metro > image-size"
+        ],
         "workspace": ".",
         "found_in": "apps/mobile/package-lock.json",
         "kev": false,
         "epss": 0.0043,
-        "fix_published_at": "2026-09-14T15:57:47Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > expo > @expo/metro > metro > image-size"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:image-size",
@@ -522,23 +617,23 @@
         "fixed_in": "2.0.3",
         "summary": "image-size: ICNS parser allows denial of service through an infinite loop",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-14T15:57:47Z",
         "scope": "runtime",
+        "paths": [
+          ". > expo > @expo/metro > metro > image-size"
+        ],
         "workspace": ".",
         "found_in": "apps/mobile/package-lock.json",
         "kev": false,
         "epss": 0.0043,
-        "fix_published_at": "2026-09-14T15:57:47Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > expo > @expo/metro > metro > image-size"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:markdown-it",
@@ -551,23 +646,23 @@
         "fixed_in": "14.3.3",
         "summary": "markdown-it: Quadratic-time rendering of a single multi-line link reference definition with default options (regression since 14.0)",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-16T01:47:54Z",
         "scope": "runtime",
+        "paths": [
+          ". > react-native-markdown-display > markdown-it"
+        ],
         "workspace": ".",
         "found_in": "apps/mobile/package-lock.json",
         "kev": false,
         "epss": 0.0055,
-        "fix_published_at": "2026-10-16T01:47:54Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > react-native-markdown-display > markdown-it"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:node-forge",
@@ -580,23 +675,23 @@
         "fixed_in": "1.4.1",
         "summary": "Forge: X.509 basicConstraints bypass in verifyCertificateChain() via deprecated extension OIDs 2.5.29.10 and 2.5.29.13",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-27T04:44:07Z",
         "scope": "runtime",
+        "paths": [
+          ". > expo > @expo/cli > node-forge"
+        ],
         "workspace": ".",
         "found_in": "apps/mobile/package-lock.json",
         "kev": false,
         "epss": 0.00242,
-        "fix_published_at": "2026-10-27T04:44:07Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity"
         ],
-        "paths": [
-          ". > expo > @expo/cli > node-forge"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:node-forge",
@@ -609,20 +704,20 @@
         "fixed_in": "1.4.1",
         "summary": "Forge: RSA PKCS#1 v1.5 signature forgery via non-canonical DigestInfo encoding",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-27T04:44:07Z",
         "scope": "runtime",
+        "paths": [
+          ". > expo > @expo/cli > node-forge"
+        ],
         "workspace": ".",
         "found_in": "apps/mobile/package-lock.json",
         "kev": false,
         "epss": 0.00204,
-        "fix_published_at": "2026-10-27T04:44:07Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          ". > expo > @expo/cli > node-forge"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:node-forge",
@@ -635,23 +730,23 @@
         "fixed_in": "1.4.1",
         "summary": "Forge: Regular expression denial of service in PEM decoding (pem.decode)",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-27T04:44:07Z",
         "scope": "runtime",
+        "paths": [
+          ". > expo > @expo/cli > node-forge"
+        ],
         "workspace": ".",
         "found_in": "apps/mobile/package-lock.json",
         "kev": false,
         "epss": 0.00669,
-        "fix_published_at": "2026-10-27T04:44:07Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > expo > @expo/cli > node-forge"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:node-forge",
@@ -665,19 +760,19 @@
         "fixed_in": null,
         "summary": "node-forge RSA PKCS#1 v1.5 signature verification accepts extra nested DigestAlgorithm elements",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          ". > expo > @expo/cli > node-forge"
+        ],
         "workspace": ".",
         "found_in": "apps/mobile/package-lock.json",
         "kev": false,
         "epss": 0.00491,
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          ". > expo > @expo/cli > node-forge"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:node-forge",
@@ -690,23 +785,23 @@
         "fixed_in": "1.4.1",
         "summary": "Forge: Denial of service in TLS record processing via a record interleaved with a fragmented handshake message",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-27T04:44:07Z",
         "scope": "runtime",
+        "paths": [
+          ". > expo > @expo/cli > node-forge"
+        ],
         "workspace": ".",
         "found_in": "apps/mobile/package-lock.json",
         "kev": false,
         "epss": 0.00415,
-        "fix_published_at": "2026-10-27T04:44:07Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > expo > @expo/cli > node-forge"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:node-forge",
@@ -719,23 +814,23 @@
         "fixed_in": "1.4.1",
         "summary": "Forge: Denial of service in TLS record processing via call stack exhaustion",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-27T04:44:07Z",
         "scope": "runtime",
+        "paths": [
+          ". > expo > @expo/cli > node-forge"
+        ],
         "workspace": ".",
         "found_in": "apps/mobile/package-lock.json",
         "kev": false,
         "epss": 0.00415,
-        "fix_published_at": "2026-10-27T04:44:07Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > expo > @expo/cli > node-forge"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:node-forge",
@@ -748,20 +843,20 @@
         "fixed_in": "1.4.1",
         "summary": "Forge: PKCS#12 MAC forgery and constant-key PBE via zero iteration count",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-27T04:44:07Z",
         "scope": "runtime",
+        "paths": [
+          ". > expo > @expo/cli > node-forge"
+        ],
         "workspace": ".",
         "found_in": "apps/mobile/package-lock.json",
         "kev": false,
         "epss": 0.00121,
-        "fix_published_at": "2026-10-27T04:44:07Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          ". > expo > @expo/cli > node-forge"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:node-forge",
@@ -774,23 +869,23 @@
         "fixed_in": "1.4.1",
         "summary": "Forge: ASN.1 resource exhaustion via BIT STRING decoding in asn1.fromDer",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-27T04:44:07Z",
         "scope": "runtime",
+        "paths": [
+          ". > expo > @expo/cli > node-forge"
+        ],
         "workspace": ".",
         "found_in": "apps/mobile/package-lock.json",
         "kev": false,
         "epss": 0.00429,
-        "fix_published_at": "2026-10-27T04:44:07Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > expo > @expo/cli > node-forge"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:sharp",
@@ -803,23 +898,23 @@
         "fixed_in": "0.35.0",
         "summary": "sharp inherited vulnerabilities in libvips: CVE-2026-33327, CVE-2026-33328, CVE-2026-35590, CVE-2026-35591",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-06-10T17:07:14Z",
         "scope": "runtime",
+        "paths": [
+          ". > @huggingface/transformers > sharp"
+        ],
         "workspace": ".",
         "found_in": "apps/web/package-lock.json",
         "kev": false,
         "epss": 0.00107,
-        "fix_published_at": "2026-06-10T17:07:14Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access"
         ],
-        "paths": [
-          ". > @huggingface/transformers > sharp"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:sharp",
@@ -832,24 +927,24 @@
         "fixed_in": "0.35.4",
         "summary": "sharp: Vulnerabilities in libheif: GHSA-g89c-p67h-r497 and GHSA-2jg2-4ch7-h545",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-08-26T09:42:27Z",
         "scope": "runtime",
+        "paths": [
+          ". > @huggingface/transformers > sharp"
+        ],
         "workspace": ".",
         "found_in": "apps/web/package-lock.json",
         "kev": false,
         "epss": 0.00241,
-        "fix_published_at": "2026-08-26T09:42:27Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "high_complexity"
         ],
-        "paths": [
-          ". > @huggingface/transformers > sharp"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -993,17 +1088,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 82.9,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.75,
@@ -1023,10 +1115,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 82.9,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -1465,8 +1560,136 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T03:15:07+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "**API compatible con OpenAI** en `/v1`: funciona con cualquier SDK, n8n, LangChain…",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:52+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "enruta la inferencia al mejor **nodo GPU** disponible",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:52+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "una GPU alquilada no necesita puerto entrante, túnel ni DNS",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:52+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "**Un modelo por rol de inferencia** (chat, autocompletado, visión, embeddings, router)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:52+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "**Límites por plan** con dos relojes: sesión de 5 h y cap semanal",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:52+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "autentica al usuario (cuenta web o API key `lixbon_sk_`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:52+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "**Cuatro clientes con la misma cuenta e historial**: web, desktop (Tauri), CLI (agente con herramientas y MCP) y Android.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:52+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "reparte un objetivo entre agentes hijos por rol, con Event Log y almacén seguro locales",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:52+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "creables desde cualquier agente (Claude Code, Cursor, VS Code, el CLI…) por el servidor MCP `lixbon.com/mcp`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:52+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "una sesión del CLI o del desktop se puede seguir y dirigir desde el móvil (`/remote`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:52+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "\"stream\": true",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:52+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "release:cli-v2.14.0",
+      "quote": "Modos con nombre y color propios: conversa, agente, auto (nuevo: edita y ejecuta sin preguntar), plan y delega.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:52+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "release:cli-v2.14.0",
+      "quote": "El esfuerzo se cambia con ←/→ en un deslizador.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:52+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "release:cli-v2.14.0",
+      "quote": "ctrl+b manda al fondo el comando que está corriendo",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:52+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "release:cli-v2.14.0",
+      "quote": "La búsqueda web funciona con cualquier proveedor",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:52+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "Catálogo de skills oficiales (`/marketing-lxo`, `/adversary`) en `lixbon.com/skills`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:52+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:31+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

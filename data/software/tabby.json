@@ -34,6 +34,103 @@
     "answer questions via Answer Engine",
     "chat and edit code in IDE"
   ],
+  "capabilities": [
+    {
+      "label": "Self-hosted AI coding assistant"
+    },
+    {
+      "label": "Serve API endpoint for IDE extensions",
+      "items": [
+        "serve",
+        "download"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Download language models for serving",
+      "area": "subcommands"
+    },
+    {
+      "label": "Run inference on multiple device types",
+      "items": [
+        "cpu",
+        "cuda",
+        "rocm",
+        "metal",
+        "vulkan"
+      ],
+      "area": "hardware"
+    },
+    {
+      "label": "Integrate via OpenAPI interface",
+      "area": "integrations"
+    },
+    {
+      "label": "Index GitLab Merge Requests as context",
+      "area": "context"
+    },
+    {
+      "label": "Add own documentation via REST APIs",
+      "area": "context"
+    },
+    {
+      "label": "Share Answer Engine messages as Pages",
+      "area": "chat"
+    },
+    {
+      "label": "Chat in IDE side panel",
+      "area": "chat"
+    },
+    {
+      "label": "LDAP authentication",
+      "area": "auth"
+    },
+    {
+      "label": "Generic OAuth support",
+      "area": "auth"
+    },
+    {
+      "label": "Index multiple repository branches",
+      "area": "context"
+    },
+    {
+      "label": "Repository-context code completion",
+      "area": "completion"
+    },
+    {
+      "label": "Generate commit messages automatically",
+      "area": "editor"
+    },
+    {
+      "label": "IDE plugins for VSCode, Vim, IntelliJ",
+      "items": [
+        "VSCode",
+        "Vim",
+        "IntelliJ"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Team usage analytics reports",
+      "area": "admin"
+    },
+    {
+      "label": "Team management and secured access",
+      "area": "admin"
+    },
+    {
+      "label": "GitHub and GitLab integration",
+      "area": "integrations"
+    },
+    {
+      "label": "Mistral embedding API support",
+      "area": "integrations"
+    },
+    {
+      "label": "Switch backend chat models",
+      "area": "chat"
+    }
+  ],
   "why_worth_it": null,
   "homepage": "https://tabbyml.com",
   "repo": {
@@ -234,23 +331,23 @@
         "fixed_in": "0.11.22",
         "summary": "lettre has TLS hostname verification disabled when using Boring TLS backend",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-05-14T08:57:46Z",
         "scope": "runtime",
+        "paths": [
+          "tabby-webserver > lettre"
+        ],
         "workspace": "ee/tabby-webserver",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00319,
-        "fix_published_at": "2026-05-14T08:57:46Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity"
         ],
-        "paths": [
-          "tabby-webserver > lettre"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -263,20 +360,20 @@
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-17T18:45:16Z",
         "scope": "runtime",
+        "paths": [
+          "tabby > utoipa-swagger-ui > zip"
+        ],
         "workspace": "crates/tabby",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.0032,
-        "fix_published_at": "2026-10-17T18:45:16Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "tabby > utoipa-swagger-ui > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -287,22 +384,19 @@
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "tabby > utoipa-swagger-ui > zip"
+        ],
         "workspace": "crates/tabby",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:ZipStreamReader::extract",
           "symbol:ZipArchive::extract"
-        ],
-        "paths": [
-          "tabby > utoipa-swagger-ui > zip"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -310,7 +404,10 @@
           "evidence": [
             "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:juniper",
@@ -321,22 +418,22 @@
         "fixed_in": "0.17.2",
         "summary": "Stack overflow on deeply nested GraphQL documents",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-28T22:46:09Z",
         "scope": "runtime",
+        "paths": [
+          "tabby-schema > juniper"
+        ],
         "workspace": "ee/tabby-schema",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-28T22:46:09Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "tabby-schema > juniper"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:juniper",
@@ -347,22 +444,22 @@
         "fixed_in": "0.17.2",
         "summary": "Excessive CPU and memory use on crafted GraphQL documents",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-28T22:46:09Z",
         "scope": "runtime",
+        "paths": [
+          "tabby-schema > juniper"
+        ],
         "workspace": "ee/tabby-schema",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-28T22:46:09Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "tabby-schema > juniper"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:lz4_flex",
@@ -375,23 +472,23 @@
         "fixed_in": "0.11.6",
         "summary": "lz4_flex's decompression can leak information from uninitialized memory or reused output buffer",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-03-14T14:49:05Z",
         "scope": "runtime",
+        "paths": [
+          "tabby > tantivy > lz4_flex"
+        ],
         "workspace": "crates/tabby",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00677,
-        "fix_published_at": "2026-03-14T14:49:05Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity"
         ],
-        "paths": [
-          "tabby > tantivy > lz4_flex"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:oneshot",
@@ -402,23 +499,23 @@
         "fixed_in": "0.1.12",
         "summary": "oneshot has potential Use After Free when used asynchronously",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-01-25T21:15:48Z",
         "scope": "runtime",
+        "paths": [
+          "tabby > tantivy > oneshot"
+        ],
         "workspace": "crates/tabby",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-01-25T21:15:48Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "high_complexity",
           "denial_of_service"
         ],
-        "paths": [
-          "tabby > tantivy > oneshot"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:openssl",
@@ -431,23 +528,23 @@
         "fixed_in": "0.10.78",
         "summary": "rust-openssl has incorrect bounds assertion in aes key wrap",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-19T20:02:38Z",
         "scope": "runtime",
+        "paths": [
+          "aim-downloader > reqwest > native-tls > openssl"
+        ],
         "workspace": "crates/aim-downloader",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00251,
-        "fix_published_at": "2026-04-19T20:02:38Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity"
         ],
-        "paths": [
-          "aim-downloader > reqwest > native-tls > openssl"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:openssl",
@@ -460,20 +557,20 @@
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: rustMdCtxRef::digest_final() writes past caller buffer with no length check",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-19T20:02:38Z",
         "scope": "runtime",
+        "paths": [
+          "aim-downloader > reqwest > native-tls > openssl"
+        ],
         "workspace": "crates/aim-downloader",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00359,
-        "fix_published_at": "2026-04-19T20:02:38Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "aim-downloader > reqwest > native-tls > openssl"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:openssl",
@@ -486,23 +583,23 @@
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: Unchecked callback length in PSK/cookie trampolines leaks adjacent memory to peer",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-19T20:02:38Z",
         "scope": "runtime",
+        "paths": [
+          "aim-downloader > reqwest > native-tls > openssl"
+        ],
         "workspace": "crates/aim-downloader",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.0028,
-        "fix_published_at": "2026-04-19T20:02:38Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity"
         ],
-        "paths": [
-          "aim-downloader > reqwest > native-tls > openssl"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:openssl",
@@ -515,24 +612,21 @@
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: Deriver::derive and PkeyCtxRef::derive can overflow short buffers on OpenSSL 1.1.1",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-19T20:02:38Z",
         "scope": "runtime",
+        "paths": [
+          "aim-downloader > reqwest > native-tls > openssl"
+        ],
         "workspace": "crates/aim-downloader",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00285,
-        "fix_published_at": "2026-04-19T20:02:38Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity",
           "symbol:Deriver::derive",
           "symbol:PkeyCtxRef::derive"
-        ],
-        "paths": [
-          "aim-downloader > reqwest > native-tls > openssl"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -540,7 +634,10 @@
           "evidence": [
             "the project's source does not use Deriver::derive, PkeyCtxRef::derive, but other packages depend on openssl"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:openssl",
@@ -553,22 +650,19 @@
         "fixed_in": "0.10.79",
         "summary": "rust-openssl has undefined behavior in X509Ref::ocsp_responders for certificates with non-UTF-8 OCSP URLs",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-05-04T00:19:55Z",
         "scope": "runtime",
+        "paths": [
+          "aim-downloader > reqwest > native-tls > openssl"
+        ],
         "workspace": "crates/aim-downloader",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00211,
-        "fix_published_at": "2026-05-04T00:19:55Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:X509Ref::ocsp_responders"
-        ],
-        "paths": [
-          "aim-downloader > reqwest > native-tls > openssl"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -576,7 +670,10 @@
           "evidence": [
             "the project's source does not use X509Ref::ocsp_responders, but other packages depend on openssl"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:rustls-webpki",
@@ -589,23 +686,23 @@
         "fixed_in": "0.103.13",
         "summary": "rustls-webpki: Denial of service via panic on malformed CRL BIT STRING",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-04-21T10:25:37Z",
         "scope": "runtime",
+        "paths": [
+          "aim-downloader > reqwest > rustls > rustls-webpki"
+        ],
         "workspace": "crates/aim-downloader",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00346,
-        "fix_published_at": "2026-04-21T10:25:37Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "aim-downloader > reqwest > rustls > rustls-webpki"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -618,23 +715,23 @@
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "tabby > utoipa-swagger-ui > zip"
+        ],
         "workspace": "crates/tabby",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00461,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "tabby > utoipa-swagger-ui > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -645,23 +742,23 @@
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "tabby > utoipa-swagger-ui > zip"
+        ],
         "workspace": "crates/tabby",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction"
         ],
-        "paths": [
-          "tabby > utoipa-swagger-ui > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -777,17 +874,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 56.4,
+      "raw_total": 56.4,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.595,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.5,
@@ -807,10 +901,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 56.4,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -1044,6 +1141,18 @@
       "kind": "release",
       "url": "https://github.com/TabbyML/tabby/releases/tag/v0.32.0",
       "fetched_at": "2026-11-04T13:05:44+08:00"
+    },
+    {
+      "id": "help:verify-tabby-20261104-210948-bdb0:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T01:54:57+08:00"
+    },
+    {
+      "id": "help:verify-tabby-20261104-210948-bdb0:2",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T01:54:57+08:00"
     }
   ],
   "evidence": [
@@ -1214,8 +1323,168 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-04T13:11:36+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "github_api",
+      "quote": "Self-hosted AI coding assistant",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:57+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "help:verify-tabby-20261104-210948-bdb0:1",
+      "quote": "Starts the api endpoint for IDE / Editor extensions",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:57+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "help:verify-tabby-20261104-210948-bdb0:2",
+      "quote": "Download the language model for serving",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:57+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "help:verify-tabby-20261104-210948-bdb0:1",
+      "quote": "Device to run model inference [default: cpu] [possible values: cpu, cuda, rocm, metal, vulkan]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:57+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "OpenAPI interface, easy to integrate with existing infrastructure (e.g Cloud IDE).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:57+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "supports indexing GitLab Merge Request as Context!",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:57+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "Enhance Tabby with your own documentation📃 through REST APIs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:57+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "transforming Answer Engine messages into persistent, shareable Pages",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:57+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "chat in side-panel",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:57+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "LDAP Authentication and better notification for background jobs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:57+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "release:v0.32.0",
+      "quote": "Add generic OAuth support.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:57+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "release:v0.32.0",
+      "quote": "Add support for indexing multiple branches.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:57+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "RAG-based code completion is enabled",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:57+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "auto-generated commit messages",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:57+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "Major updates for Tabby IDE plugins across [VSCode/Vim/IntelliJ]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:57+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "**Reports** tab with team-wise analytics for Tabby usage",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:57+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "team management and secured access",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:57+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "**GitHub & GitLab** integration",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:57+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "release:v0.32.0",
+      "quote": "Add support for mistral/embedding api kind.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:57+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "Switching between different backend chat models is supported in Answer Engine",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:57+08:00"
     }
   ],
   "first_seen_at": "2026-11-04T13:05:03+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

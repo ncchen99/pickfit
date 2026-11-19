@@ -40,6 +40,142 @@
     "Serve OpenAI and Anthropic compatible APIs",
     "Generate images and edit pictures"
   ],
+  "capabilities": [
+    {
+      "label": "Serve OpenAI-compatible API",
+      "items": [
+        "chat completions",
+        "completions",
+        "Responses API",
+        "embeddings",
+        "image generations and edits",
+        "audio transcriptions"
+      ],
+      "area": "apis"
+    },
+    {
+      "label": "Serve Anthropic-compatible messages API",
+      "area": "apis"
+    },
+    {
+      "label": "Load GGUF and safetensors weights",
+      "items": [
+        "GGUF",
+        "safetensors",
+        "MLX"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Run quantized models",
+      "items": [
+        "FP8",
+        "NVFP4",
+        "MXFP4",
+        "Q8_0",
+        "Q4_K_XL",
+        "Q4_K_L",
+        "Q4_K_M",
+        "UD-Q3_K_XL",
+        "UD-IQ3_XXS",
+        "PTQ1_0"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Compare local and cloud models side by side",
+      "area": "studio"
+    },
+    {
+      "label": "Download and manage models in web UI",
+      "area": "studio"
+    },
+    {
+      "label": "Run OpenAI and Anthropic batch jobs",
+      "items": [
+        "/v1/files",
+        "/v1/batches",
+        "/v1/messages/batches"
+      ],
+      "area": "apis"
+    },
+    {
+      "label": "Generate and edit images",
+      "area": "multimodal"
+    },
+    {
+      "label": "Transcribe speech and diarize speakers",
+      "area": "multimodal"
+    },
+    {
+      "label": "Live transcription over Realtime WebSocket",
+      "area": "apis"
+    },
+    {
+      "label": "Compute embeddings and reranking",
+      "area": "multimodal"
+    },
+    {
+      "label": "Predict table columns with Kumo Tabular",
+      "area": "multimodal"
+    },
+    {
+      "label": "Segment and track objects with SAM 3",
+      "area": "multimodal"
+    },
+    {
+      "label": "Extract documents from PDF and Office",
+      "area": "documents"
+    },
+    {
+      "label": "OCR and parse document pages",
+      "area": "documents"
+    },
+    {
+      "label": "Calibrated decisions on text",
+      "area": "apis"
+    },
+    {
+      "label": "Expose Model Context Protocol surface",
+      "area": "integrations"
+    },
+    {
+      "label": "Offload KV cache to RAM or disk",
+      "area": "memory"
+    },
+    {
+      "label": "Stream MoE experts from RAM",
+      "area": "memory"
+    },
+    {
+      "label": "Estimate whether a model fits",
+      "area": "memory"
+    },
+    {
+      "label": "Continuous batching with prefix caching",
+      "area": "serving"
+    },
+    {
+      "label": "Speculative decoding",
+      "area": "serving"
+    },
+    {
+      "label": "Publish OpenAPI spec",
+      "area": "apis"
+    },
+    {
+      "label": "Run on CUDA and Metal backends",
+      "items": [
+        "CUDA",
+        "Metal"
+      ],
+      "area": "backends"
+    },
+    {
+      "label": "Benchmark with paddock-bench harness",
+      "area": "benchmarking"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -275,20 +411,20 @@
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-17T18:45:16Z",
         "scope": "runtime",
+        "paths": [
+          "paddock-runner > calamine > zip"
+        ],
         "workspace": "crates/paddock-runner",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.0032,
-        "fix_published_at": "2026-10-17T18:45:16Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "paddock-runner > calamine > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -299,22 +435,19 @@
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "paddock-runner > calamine > zip"
+        ],
         "workspace": "crates/paddock-runner",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:ZipStreamReader::extract",
           "symbol:ZipArchive::extract"
-        ],
-        "paths": [
-          "paddock-runner > calamine > zip"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -322,7 +455,10 @@
           "evidence": [
             "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:calamine",
@@ -333,22 +469,22 @@
         "fixed_in": "0.38.0",
         "summary": "Panic and unbounded allocation (OOM) in the CFB/OLE2 parser on malformed input",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-11-02T01:32:22Z",
         "scope": "runtime",
+        "paths": [
+          "paddock-runner > calamine"
+        ],
         "workspace": "crates/paddock-runner",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-11-02T01:32:22Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "paddock-runner > calamine"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quinn-proto",
@@ -359,22 +495,19 @@
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-14T10:08:32Z",
         "scope": "runtime",
+        "paths": [
+          "paddock-manager > reqwest > quinn > quinn-proto"
+        ],
         "workspace": "crates/paddock-manager",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-09-14T10:08:32Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "option:ACK_FREQUENCY"
-        ],
-        "paths": [
-          "paddock-manager > reqwest > quinn > quinn-proto"
         ],
         "reachability": {
           "method": "option_grep",
@@ -382,7 +515,10 @@
           "evidence": [
             "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quinn-proto",
@@ -393,22 +529,22 @@
         "fixed_in": "0.11.18",
         "summary": "Outgoing datagram buffer accounting can panic the sender in quinn-proto",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-14T10:08:32Z",
         "scope": "runtime",
+        "paths": [
+          "paddock-manager > reqwest > quinn > quinn-proto"
+        ],
         "workspace": "crates/paddock-manager",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-09-14T10:08:32Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "paddock-manager > reqwest > quinn > quinn-proto"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:rmcp",
@@ -419,22 +555,22 @@
         "fixed_in": "3.6.0",
         "summary": "Unbounded tool schema cache in Streamable HTTP server transport",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-20T05:53:35Z",
         "scope": "runtime",
+        "paths": [
+          "paddock-manager > rmcp"
+        ],
         "workspace": "crates/paddock-manager",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-20T05:53:35Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "paddock-manager > rmcp"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -447,23 +583,23 @@
         "fixed_in": "9.0.0",
         "summary": "zip: legacy Shrink/Reduce/Implode decoder: denial of service from attacker-controlled ZIP64 uncompressed size",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "paddock-runner > calamine > zip"
+        ],
         "workspace": "crates/paddock-runner",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.0035,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "paddock-runner > calamine > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -476,23 +612,20 @@
         "fixed_in": "9.0.0",
         "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "paddock-runner > calamine > zip"
+        ],
         "workspace": "crates/paddock-runner",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00432,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity",
           "symbol:ZipArchive::extract"
-        ],
-        "paths": [
-          "paddock-runner > calamine > zip"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -500,7 +633,10 @@
           "evidence": [
             "the project's source does not use ZipArchive::extract, but other packages depend on zip"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -513,23 +649,23 @@
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "paddock-runner > calamine > zip"
+        ],
         "workspace": "crates/paddock-runner",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00461,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "paddock-runner > calamine > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -540,23 +676,23 @@
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "paddock-runner > calamine > zip"
+        ],
         "workspace": "crates/paddock-runner",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction"
         ],
-        "paths": [
-          "paddock-runner > calamine > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:@vue/server-renderer",
@@ -567,19 +703,19 @@
         "fixed_in": "3.5.42",
         "summary": "@vue/server-renderer: XSS via missing CR in attribute-name blacklist",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-08-27T05:48:31Z",
         "scope": "runtime",
+        "paths": [
+          ". > vue > @vue/server-renderer"
+        ],
         "workspace": ".",
         "found_in": "studio/package-lock.json",
         "kev": false,
-        "fix_published_at": "2026-08-27T05:48:31Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          ". > vue > @vue/server-renderer"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:source-map-js",
@@ -592,23 +728,23 @@
         "fixed_in": "1.2.2",
         "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-30T14:08:09Z",
         "scope": "runtime",
+        "paths": [
+          ". > vue > @vue/compiler-sfc > source-map-js"
+        ],
         "workspace": ".",
         "found_in": "studio/package-lock.json",
         "kev": false,
         "epss": 0.00455,
-        "fix_published_at": "2026-09-30T14:08:09Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > vue > @vue/compiler-sfc > source-map-js"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -704,17 +840,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 75.5,
+      "raw_total": 75.5,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.625,
@@ -734,10 +867,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 75.5,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -1197,8 +1333,208 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T03:15:24+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "OpenAI chat completions, completions, the Responses API, embeddings",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "Anthropic messages and token counting",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Weights load from both GGUF and safetensors.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "So far we support native FP8 and NVFP4, MXFP4, plus the Q8_0 and",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "comparing them side by side, and serving them",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "A built-in web UI for downloading and managing models",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "release:v0.1.19",
+      "quote": "the manager can now run OpenAI and Anthropic batch jobs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "image generation and editing",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "speech transcription and speaker diarization",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "live over the Realtime\nWebSocket too",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "embeddings of text, pictures and audio,\nreranking",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "`/v1/tabular/predictions` for NVIDIA's Kumo Tabular",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "`/v1/masks` for SAM 3 (with sessions that track objects\nthrough video)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "document extraction from PDF and Office files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "reads a page as text, or as\n  labelled blocks with their boxes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "the `/v1/systemone` decision call",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "a Model\nContext Protocol surface",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "KV offload to\nhost RAM and optionally to disk",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "MoE expert streaming from RAM for models larger\nthan VRAM",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "will-it-fit estimation",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "readme",
+      "quote": "continuous batching with chunked prefill, radix\nprefix caching",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "release:v0.1.19",
+      "quote": "Speculative decoding on the DGX Spark keeps working past 8 requests at once",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/22/label",
+      "source_id": "readme",
+      "quote": "The runner publishes its own `/openapi.json`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/23/label",
+      "source_id": "readme",
+      "quote": "**Backends:** CUDA and Metal.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
+    },
+    {
+      "field": "/capabilities/24/label",
+      "source_id": "readme",
+      "quote": "an in-process\nand HTTP harness",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:52:41+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:28:43+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

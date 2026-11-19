@@ -31,6 +31,148 @@
     "back up and sync encrypted history",
     "log exit code, cwd and duration"
   ],
+  "capabilities": [
+    {
+      "label": "full screen interactive history search",
+      "area": "search"
+    },
+    {
+      "label": "store shell history in SQLite",
+      "area": "storage"
+    },
+    {
+      "label": "sync encrypted history between machines",
+      "area": "sync"
+    },
+    {
+      "label": "log exit code, cwd, duration",
+      "area": "history"
+    },
+    {
+      "label": "calculate history statistics",
+      "area": "stats"
+    },
+    {
+      "label": "filter search by exit code and date",
+      "area": "search"
+    },
+    {
+      "label": "switch search filter modes",
+      "items": [
+        "global",
+        "host",
+        "session",
+        "directory",
+        "workspace",
+        "session-preload"
+      ],
+      "area": "search"
+    },
+    {
+      "label": "choose search modes",
+      "items": [
+        "prefix",
+        "fulltext",
+        "fuzzy",
+        "daemon-fuzzy"
+      ],
+      "area": "search"
+    },
+    {
+      "label": "supports multiple shells",
+      "items": [
+        "zsh",
+        "bash",
+        "fish",
+        "nushell",
+        "xonsh",
+        "PowerShell"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "import existing shell history",
+      "area": "subcommands"
+    },
+    {
+      "label": "self-host your own sync server",
+      "area": "sync"
+    },
+    {
+      "label": "MCP server exposing history search",
+      "area": "integrations"
+    },
+    {
+      "label": "search and resume coding agent threads",
+      "area": "ai"
+    },
+    {
+      "label": "run AI assistant",
+      "area": "ai"
+    },
+    {
+      "label": "year-in-review history recap",
+      "area": "subcommands"
+    },
+    {
+      "label": "work with captured command output",
+      "area": "subcommands"
+    },
+    {
+      "label": "store key-value pairs",
+      "area": "data"
+    },
+    {
+      "label": "manage scripts",
+      "area": "data"
+    },
+    {
+      "label": "delete duplicate history entries",
+      "area": "history"
+    },
+    {
+      "label": "prune history by exclusion filters",
+      "area": "history"
+    },
+    {
+      "label": "delete history matching a query",
+      "area": "search"
+    },
+    {
+      "label": "custom output format for results",
+      "area": "output"
+    },
+    {
+      "label": "filter by author, human or agent",
+      "area": "search"
+    },
+    {
+      "label": "export encryption key for another machine",
+      "area": "sync"
+    },
+    {
+      "label": "generate shell completions",
+      "area": "setup"
+    },
+    {
+      "label": "diagnose common issues",
+      "area": "setup"
+    },
+    {
+      "label": "self-update to latest version",
+      "area": "setup"
+    },
+    {
+      "label": "vim and emacs keymap modes",
+      "items": [
+        "emacs",
+        "vim-normal",
+        "vim-insert",
+        "auto"
+      ],
+      "area": "search"
+    }
+  ],
   "why_worth_it": null,
   "homepage": "https://atuin.sh",
   "repo": {
@@ -283,22 +425,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "atuin > arboard > wl-clipboard-rs > wayland-client > wayland-scanner > quick-xml"
+        ],
         "workspace": "crates/atuin",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "atuin > arboard > wl-clipboard-rs > wayland-client > wayland-scanner > quick-xml"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -309,22 +451,19 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "atuin > arboard > wl-clipboard-rs > wayland-client > wayland-scanner > quick-xml"
+        ],
         "workspace": "crates/atuin",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:NsReader"
-        ],
-        "paths": [
-          "atuin > arboard > wl-clipboard-rs > wayland-client > wayland-scanner > quick-xml"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -332,7 +471,10 @@
           "evidence": [
             "the project's source does not use NsReader, but other packages depend on quick-xml"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -397,17 +539,14 @@
     "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 79.9,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.4375,
@@ -427,10 +566,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       },
-      "raw_total": 79.9,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -666,6 +808,18 @@
       "kind": "release",
       "url": "https://github.com/atuinsh/atuin/releases/tag/v18.24.5",
       "fetched_at": "2026-11-04T13:05:31+08:00"
+    },
+    {
+      "id": "help:verify-atuin-20261104-192930-21af:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "id": "help:verify-atuin-20261104-192930-21af:2",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T00:59:55+08:00"
     }
   ],
   "evidence": [
@@ -820,8 +974,232 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-04T13:11:16+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "rebind `ctrl-r` and `up` (configurable) to a full screen history search UI",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "store shell history in a sqlite database",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "back up and sync **encrypted** shell history",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "log exit code, cwd, hostname, session, command duration, etc",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "calculate statistics such as \"most used command\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "atuin search --exit 0 --after \"yesterday 3pm\" make",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "help:verify-atuin-20261104-192930-21af:2",
+      "quote": "[possible values: global, host, session, directory, workspace, session-preload]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "help:verify-atuin-20261104-192930-21af:2",
+      "quote": "[possible values: prefix, fulltext, fuzzy, daemon-fuzzy]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Atuin supports zsh, bash, fish, nushell, xonsh, and PowerShell.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "help:verify-atuin-20261104-192930-21af:1",
+      "quote": "import           Import shell history from file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "You may use either the server I host, or host your own!",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "help:verify-atuin-20261104-192930-21af:1",
+      "quote": "mcp              Start an MCP server exposing history search to AI tools (stdio)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "help:verify-atuin-20261104-192930-21af:1",
+      "quote": "threads          Search, read and resume your coding agents' captured threads",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "help:verify-atuin-20261104-192930-21af:1",
+      "quote": "ai               Run the AI assistant",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "help:verify-atuin-20261104-192930-21af:1",
+      "quote": "wrapped          Show a fun, year-in-review recap of your shell history",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "help:verify-atuin-20261104-192930-21af:1",
+      "quote": "output           Work with captured command output",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "help:verify-atuin-20261104-192930-21af:1",
+      "quote": "kv               Get or set small key-value pairs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "help:verify-atuin-20261104-192930-21af:1",
+      "quote": "scripts          Manage your scripts with Atuin",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "help:verify-atuin-20261104-192930-21af:2",
+      "quote": "dedup       Delete duplicate history entries (that have the same command, cwd and hostname)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "help:verify-atuin-20261104-192930-21af:2",
+      "quote": "prune       Delete history entries matching the configured exclusion filters",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "help:verify-atuin-20261104-192930-21af:2",
+      "quote": "Delete anything matching this query. Will not print out the match",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "help:verify-atuin-20261104-192930-21af:2",
+      "quote": "Available variables: {command}, {directory}, {duration}, {user}, {host}, {time}, {exit} and {relativetime}.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/22/label",
+      "source_id": "help:verify-atuin-20261104-192930-21af:2",
+      "quote": "Filter by author. Supports $all-user (non-agents), $all-agent, or literal names.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/23/label",
+      "source_id": "help:verify-atuin-20261104-192930-21af:1",
+      "quote": "key              Print the encryption key for transfer to another machine",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/24/label",
+      "source_id": "help:verify-atuin-20261104-192930-21af:1",
+      "quote": "gen-completions  Generate shell completions",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/25/label",
+      "source_id": "help:verify-atuin-20261104-192930-21af:1",
+      "quote": "doctor           Run the doctor to check for common issues",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/26/label",
+      "source_id": "help:verify-atuin-20261104-192930-21af:1",
+      "quote": "update           Update atuin to the latest version on your release channel",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
+    },
+    {
+      "field": "/capabilities/27/label",
+      "source_id": "help:verify-atuin-20261104-192930-21af:2",
+      "quote": "[possible values: emacs, vim-normal, vim-insert, auto]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:55+08:00"
     }
   ],
   "first_seen_at": "2026-11-04T13:04:47+08:00",
-  "updated_at": "2026-11-20T00:06:03+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

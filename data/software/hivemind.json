@@ -28,6 +28,60 @@
     "steer other agents via hive ctl",
     "run agents remotely check from phone"
   ],
+  "capabilities": [
+    {
+      "label": "Run multiple coding agents side by side",
+      "items": [
+        "Claude Code",
+        "Codex",
+        "Pi"
+      ],
+      "area": "agents"
+    },
+    {
+      "label": "Give each agent a real terminal on a board",
+      "area": "terminal"
+    },
+    {
+      "label": "Have agents build views, widgets or tools",
+      "area": "plugins"
+    },
+    {
+      "label": "Let agents start and steer other agents",
+      "items": [
+        "hive ctl"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Control agents from scripts via API",
+      "area": "api"
+    },
+    {
+      "label": "Run agents on remote machines over ssh",
+      "area": "remote"
+    },
+    {
+      "label": "Check on agents from your phone",
+      "area": "mobile"
+    },
+    {
+      "label": "Install plugins from HiveHub",
+      "area": "plugins"
+    },
+    {
+      "label": "Browser tile in views",
+      "area": "views"
+    },
+    {
+      "label": "Customize with themes and sounds",
+      "area": "customization"
+    },
+    {
+      "label": "Agent notifications in every view",
+      "area": "notifications"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -502,23 +556,23 @@
         "fixed_in": "44.9.1",
         "summary": "Electron: Mitigation for compromised eMudhra intermediate certificates",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-20T02:53:15Z",
         "scope": "runtime",
+        "paths": [
+          "apps/desktop > electron"
+        ],
         "workspace": "apps/desktop",
         "found_in": "pnpm-lock.yaml",
         "kev": false,
         "epss": 0.00377,
-        "fix_published_at": "2026-10-20T02:53:15Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity"
         ],
-        "paths": [
-          "apps/desktop > electron"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:zod",
@@ -531,22 +585,22 @@
         "fixed_in": "4.6.6",
         "summary": "Zod can exhaust memory while validating oversized constrained collections",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-11T16:18:23Z",
         "scope": "runtime",
+        "paths": [
+          "packages/hive-core > zod"
+        ],
         "workspace": "packages/hive-core",
         "found_in": "pnpm-lock.yaml",
         "kev": false,
-        "fix_published_at": "2026-10-11T16:18:23Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "packages/hive-core > zod"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:pulldown-cmark",
@@ -557,21 +611,18 @@
         "fixed_in": "0.13.5",
         "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "hive-phone > pulldown-cmark"
+        ],
         "workspace": "crates/hive-phone",
         "found_in": "crates/Cargo.lock",
         "kev": false,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "option:ENABLE_WIKILINKS"
-        ],
-        "paths": [
-          "hive-phone > pulldown-cmark"
         ],
         "reachability": {
           "method": "option_grep",
@@ -579,7 +630,10 @@
           "evidence": [
             "no source file uses ENABLE_WIKILINKS; only the project depends on pulldown-cmark"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:pulldown-cmark",
@@ -590,21 +644,18 @@
         "fixed_in": "0.13.6",
         "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "hive-phone > pulldown-cmark"
+        ],
         "workspace": "crates/hive-phone",
         "found_in": "crates/Cargo.lock",
         "kev": false,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "option:ENABLE_WIKILINKS"
-        ],
-        "paths": [
-          "hive-phone > pulldown-cmark"
         ],
         "reachability": {
           "method": "option_grep",
@@ -612,7 +663,10 @@
           "evidence": [
             "no source file uses ENABLE_WIKILINKS; only the project depends on pulldown-cmark"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -758,17 +812,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 70.3,
+      "raw_total": 74.0,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.375,
@@ -788,10 +839,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 74.0,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -1179,8 +1233,96 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:36:21+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "runs Claude Code, Codex and every coding agent side by side",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:28+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "Hivemind puts every coding agent on one board, each in a real terminal",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:28+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Ask an agent for a view, a widget or a\ntool, and it builds one and plugs it in while you watch.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:28+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "With `hive ctl` an agent starts, reads and steers other agents.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:28+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "Your scripts can too, through the API.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:28+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "Agents run on other machines over ssh",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:28+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "you check on them from your phone",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:28+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "release:v2026.10.6",
+      "quote": "a HiveHub plugin's own page installs it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:28+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "release:v2026.10.6",
+      "quote": "a browser tile keeps its page across tab and view switches",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:28+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "release:v2026.10.6",
+      "quote": "settings that survive old builds, sounds, themes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:28+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "release:v2026.10.6",
+      "quote": "agent notifications show in every view, not only the canvas",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:28+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:15+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

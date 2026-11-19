@@ -35,6 +35,128 @@
     "Schedule recurring prompts as agent tasks",
     "Control tool safety with approvals and sandboxing"
   ],
+  "capabilities": [
+    {
+      "label": "Run one AI agent across terminal, desktop, mobile, chat apps",
+      "items": [
+        "Terminal UI (TUI)",
+        "desktop app (GUI)",
+        "mobile apps (Android & iOS)",
+        "CLI",
+        "IM bots"
+      ],
+      "area": "interfaces"
+    },
+    {
+      "label": "Run as a headless host on a server",
+      "area": "subcommands"
+    },
+    {
+      "label": "Control desktop from phone with end-to-end encryption",
+      "area": "remote"
+    },
+    {
+      "label": "Self-host the remote-control relay",
+      "items": [
+        "future relay init",
+        "future relay serve"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Configure tool approvals and OS sandboxing",
+      "items": [
+        "off",
+        "manual",
+        "sandbox",
+        "auto"
+      ],
+      "area": "security"
+    },
+    {
+      "label": "Use your own API keys for model providers",
+      "area": "models"
+    },
+    {
+      "label": "Sign in to hosted FutureOS models",
+      "area": "models"
+    },
+    {
+      "label": "Run long-horizon durable goals with verification gates",
+      "area": "goals"
+    },
+    {
+      "label": "Schedule recurring agent tasks",
+      "items": [
+        "interval",
+        "daily",
+        "weekly",
+        "monthly",
+        "yearly"
+      ],
+      "area": "automation"
+    },
+    {
+      "label": "Install and manage skill packs",
+      "area": "skills"
+    },
+    {
+      "label": "Built-in skills for images, documents, web, browser",
+      "items": [
+        "image read & generation",
+        "PDF/Word parsing",
+        "web search",
+        "browser control",
+        "slides",
+        "software install"
+      ],
+      "area": "skills"
+    },
+    {
+      "label": "Fork and clone conversation sessions",
+      "area": "sessions"
+    },
+    {
+      "label": "Compress conversation context",
+      "area": "sessions"
+    },
+    {
+      "label": "Show token usage and cost",
+      "area": "sessions"
+    },
+    {
+      "label": "Switch color themes in TUI",
+      "area": "tui"
+    },
+    {
+      "label": "Paste images from clipboard",
+      "area": "tui"
+    },
+    {
+      "label": "Diagnose connection problems",
+      "area": "subcommands"
+    },
+    {
+      "label": "Serve agent over TCP gRPC",
+      "area": "remote"
+    },
+    {
+      "label": "Unified CLI subcommands",
+      "items": [
+        "agent",
+        "tui",
+        "channel",
+        "goal",
+        "host",
+        "config",
+        "skills",
+        "auth",
+        "relay",
+        "doctor"
+      ],
+      "area": "subcommands"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -296,22 +418,19 @@
         "fixed_in": "0.13.5",
         "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-21T19:45:37Z",
         "scope": "runtime",
+        "paths": [
+          "future-agent > pulldown-cmark"
+        ],
         "workspace": "agent",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-21T19:45:37Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "option:ENABLE_WIKILINKS"
-        ],
-        "paths": [
-          "future-agent > pulldown-cmark"
         ],
         "reachability": {
           "method": "option_grep",
@@ -319,7 +438,10 @@
           "evidence": [
             "the project's source does not use ENABLE_WIKILINKS, but other packages depend on pulldown-cmark"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:pulldown-cmark",
@@ -330,22 +452,19 @@
         "fixed_in": "0.13.6",
         "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-30T08:50:18Z",
         "scope": "runtime",
+        "paths": [
+          "future-agent > pulldown-cmark"
+        ],
         "workspace": "agent",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-30T08:50:18Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "option:ENABLE_WIKILINKS"
-        ],
-        "paths": [
-          "future-agent > pulldown-cmark"
         ],
         "reachability": {
           "method": "option_grep",
@@ -353,7 +472,10 @@
           "evidence": [
             "the project's source does not use ENABLE_WIKILINKS, but other packages depend on pulldown-cmark"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -364,22 +486,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "future-agent > pprof > inferno > quick-xml"
+        ],
         "workspace": "agent",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "future-agent > pprof > inferno > quick-xml"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -390,22 +512,19 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "future-agent > pprof > inferno > quick-xml"
+        ],
         "workspace": "agent",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:NsReader"
-        ],
-        "paths": [
-          "future-agent > pprof > inferno > quick-xml"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -413,7 +532,10 @@
           "evidence": [
             "the project's source does not use NsReader, but other packages depend on quick-xml"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -487,17 +609,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 79.4,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.625,
@@ -517,10 +636,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 79.4,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -951,8 +1073,160 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:35:57+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "Terminal UI (TUI), desktop app (GUI), mobile apps (Android & iOS), CLI, IM bots — one agent, everywhere.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:54+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "`future host`: no window or WebView, works over SSH",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:54+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "the phone↔desktop channel is **end-to-end encrypted**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:54+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "`future relay init` and `future relay serve` run the relay behind remote control yourself",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:54+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "approval rules and tiers (`off` / `manual` / `sandbox`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:54+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "any OpenAI- or Anthropic-compatible endpoint can be added through `models.json`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:54+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "future auth login",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:54+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Durable goals/todos/gates/monitors for long-horizon runs of 24+ hours",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:54+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "run at full permission on a schedule (interval / daily / weekly / monthly / yearly, or a single date)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:54+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "future skills install <name>   # install one skill",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:54+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "image read & generation, PDF/Word parsing, web search, browser control, slides, software install",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:54+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "Branch any conversation like a repo — fork, clone, and tree navigation over JSONL session history",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:54+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "Compress conversation context",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:54+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "Session state, token usage, cost",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:54+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "Switch the color theme",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:54+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "Paste clipboard (image or text)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:54+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "Run `future doctor`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:54+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "pass `--grpc-addr 127.0.0.1:50051` to\n> `future agent` to serve plain TCP instead",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:54+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "`future agent`,\n> `future tui`, `future channel`, `future goal`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:54+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

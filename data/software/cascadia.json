@@ -26,6 +26,107 @@
     "export a HuggingFace model to INT4 shards"
   ],
   "alternatives_to": [],
+  "capabilities": [
+    {
+      "label": "Serve models via OpenAI-compatible API",
+      "area": "api"
+    },
+    {
+      "label": "Shard a model across multiple machines",
+      "area": "distributed"
+    },
+    {
+      "label": "Convert HuggingFace model into INT4 shards",
+      "area": "subcommands"
+    },
+    {
+      "label": "Choose among inference engines",
+      "items": [
+        "mock",
+        "ov-genai",
+        "ov-runtime",
+        "ov-dist-spec",
+        "gemma4",
+        "sparse-moe",
+        "qwen35"
+      ],
+      "area": "engines"
+    },
+    {
+      "label": "Discover LAN peers over mDNS",
+      "area": "subcommands"
+    },
+    {
+      "label": "Diagnose OpenVINO GPU detection problems",
+      "area": "subcommands"
+    },
+    {
+      "label": "Run a model on a single machine",
+      "area": "subcommands"
+    },
+    {
+      "label": "Run a worker stage with full control",
+      "area": "subcommands"
+    },
+    {
+      "label": "Distributed speculative decoding",
+      "area": "inference"
+    },
+    {
+      "label": "Run large mixture-of-experts models on CPU",
+      "items": [
+        "Kimi K2.6",
+        "MiniMax-M2",
+        "GLM-5",
+        "DeepSeek-V4",
+        "Inkling"
+      ],
+      "area": "inference"
+    },
+    {
+      "label": "Shard supported model families",
+      "items": [
+        "Llama",
+        "Mistral",
+        "Qwen2 / Qwen2.5",
+        "Qwen3 dense",
+        "DeepSeek R1 Distills",
+        "Phi-3",
+        "Phi-4 / Phi-4-mini",
+        "Gemma 1 / Gemma 2",
+        "Gemma 4"
+      ],
+      "area": "models"
+    },
+    {
+      "label": "Web dashboard with topology and chat",
+      "area": "output"
+    },
+    {
+      "label": "Export Prometheus metrics",
+      "area": "monitoring"
+    },
+    {
+      "label": "Benchmark devices with profile-devices",
+      "area": "subcommands"
+    },
+    {
+      "label": "Split prefill on NPU and decode on CPU",
+      "area": "inference"
+    },
+    {
+      "label": "Link stages over Unix domain sockets",
+      "area": "distributed"
+    },
+    {
+      "label": "List available engines",
+      "area": "subcommands"
+    },
+    {
+      "label": "Serve OpenVINO IR with FastDraft and prompt-lookup",
+      "area": "inference"
+    }
+  ],
   "why_worth_it": null,
   "homepage": "https://cascadia.to",
   "repo": {
@@ -111,23 +212,23 @@
         "fixed_in": "7.18.0",
         "summary": "React Router: Unauthenticated Denial of Service via Inefficient Route Matching",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-16T14:12:39Z",
         "scope": "runtime",
+        "paths": [
+          ". > react-router-dom > react-router"
+        ],
         "workspace": ".",
         "found_in": "crates/cascadia-dashboard/web/package-lock.json",
         "kev": false,
         "epss": 0.00708,
-        "fix_published_at": "2026-06-16T14:12:39Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > react-router-dom > react-router"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:react-router",
@@ -138,22 +239,22 @@
         "fixed_in": "7.18.2",
         "summary": "React Router: RSC Mode CSRF Bypass Allows Action Execution Before 400 Response",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-07-28T21:53:08Z",
         "scope": "runtime",
+        "paths": [
+          ". > react-router-dom > react-router"
+        ],
         "workspace": ".",
         "found_in": "crates/cascadia-dashboard/web/package-lock.json",
         "kev": false,
-        "fix_published_at": "2026-07-28T21:53:08Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "user_interaction"
         ],
-        "paths": [
-          ". > react-router-dom > react-router"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -227,17 +328,14 @@
     "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 87.3,
       "confidence": 0.5,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.8125,
@@ -257,10 +355,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 87.3,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -665,8 +766,152 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:35:54+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "`/v1/chat/completions` with SSE streaming; point existing clients at it unchanged",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "shard a model into stages and run each stage on a different machine, activations relayed over TCP",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "`cascadia shard` cuts a HuggingFace model into INT4 per-stage shards; no external tooling",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "**Seven engines**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "`cascadia discover` finds LAN peers over mDNS",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "diagnoses the one failure everyone hits: OpenVINO silently not seeing your GPU",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "`run` is single-machine sugar: one stage, OpenAI API on :8000.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "For full control over engine, device, ports, and the speculative / sparsity knobs, use `cascadia worker`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "`ov-dist-spec` (distributed speculative decoding)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "a CPU-targeted `sparse-moe` engine for large mixture-of-experts models",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "`cascadia shard` works today with Llama (1–3.3), Mistral (7B, NeMo, Small 3.x text), Qwen2 / Qwen2.5, Qwen3 dense",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "cluster topology with per-link latency/bandwidth, live request/token counters, and a chat surface",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "serve Prometheus metrics at `GET /metrics`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "`cascadia profile-devices --model <dir>` benchmarks each OV device (iGPU / NPU / CPU) on a host",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "runs the compute-bound chunked prefill on the NPU and the bandwidth-bound decode on the CPU",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "Link them over a Unix domain socket instead of loopback TCP",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "$ cascadia engines",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "which adds FastDraft speculative decode and prompt-lookup",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:28:30+08:00",
-  "updated_at": "2026-11-20T00:06:03+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

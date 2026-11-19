@@ -40,6 +40,117 @@
     "write long-form posts",
     "review drafts with multi-model QA"
   ],
+  "capabilities": [
+    {
+      "label": "Discover trending topics from feeds",
+      "items": [
+        "HackerNews",
+        "Dev.to"
+      ],
+      "area": "pipeline"
+    },
+    {
+      "label": "Write long-form posts with local LLMs",
+      "area": "pipeline"
+    },
+    {
+      "label": "Review drafts with multi-model adversarial QA",
+      "area": "quality"
+    },
+    {
+      "label": "Detect hallucinated people, stats, quotes",
+      "area": "quality"
+    },
+    {
+      "label": "Publish static JSON, RSS, JSON Feed",
+      "items": [
+        "Static JSON",
+        "RSS",
+        "JSON Feed 1.1"
+      ],
+      "area": "output"
+    },
+    {
+      "label": "Generate podcasts, images, text-to-video",
+      "area": "media"
+    },
+    {
+      "label": "Monitor with Grafana dashboards and alerts",
+      "items": [
+        "Telegram",
+        "Discord"
+      ],
+      "area": "monitoring"
+    },
+    {
+      "label": "Route to cloud LLM providers",
+      "items": [
+        "Anthropic",
+        "OpenAI",
+        "Groq",
+        "OpenRouter",
+        "Bedrock",
+        "Vertex"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Store output on S3-compatible storage",
+      "items": [
+        "Cloudflare R2",
+        "AWS S3",
+        "Backblaze B2",
+        "MinIO"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Manage tasks via CLI",
+      "items": [
+        "tasks create",
+        "tasks list",
+        "tasks qa",
+        "tasks approve",
+        "tasks publish"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Change settings at runtime",
+      "area": "configuration"
+    },
+    {
+      "label": "Aggregate health probes with doctor",
+      "area": "subcommands"
+    },
+    {
+      "label": "Manage multiple sites from one daemon"
+    },
+    {
+      "label": "Extend with plugins",
+      "items": [
+        "Taps",
+        "TopicSources",
+        "LLMProviders",
+        "ImageProviders",
+        "PublishAdapters",
+        "Probes",
+        "Jobs",
+        "Stages",
+        "Reviewers",
+        "Modules"
+      ],
+      "area": "plugins"
+    },
+    {
+      "label": "Resume pipelines mid-run",
+      "area": "pipeline"
+    },
+    {
+      "label": "Expose REST API with OAuth",
+      "area": "api"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -283,22 +394,22 @@
         "fixed_in": "2.9.2",
         "summary": "dnspython has excessive memory and CPU use",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-11-03T23:56:52Z",
         "scope": "runtime",
+        "paths": [
+          "src/cofounder_agent/poetry.lock > dnspython"
+        ],
         "found_in": "src/cofounder_agent/poetry.lock",
         "kev": false,
         "epss": 0.00527,
-        "fix_published_at": "2026-11-03T23:56:52Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "src/cofounder_agent/poetry.lock > dnspython"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "pypi:filelock",
@@ -311,22 +422,22 @@
         "fixed_in": "4.2.1",
         "summary": "filelock ReadWriteLock: SQLite reopens the lock database by name, so a planted symlink or journal file makes the lock user's process overwrite or unlink its own files",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-10-17T16:48:12Z",
         "scope": "runtime",
+        "paths": [
+          "src/cofounder_agent/poetry.lock > filelock"
+        ],
         "found_in": "src/cofounder_agent/poetry.lock",
         "kev": false,
         "epss": 0.0019,
-        "fix_published_at": "2026-10-17T16:48:12Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access"
         ],
-        "paths": [
-          "src/cofounder_agent/poetry.lock > filelock"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "pypi:oauthlib",
@@ -339,19 +450,19 @@
         "fixed_in": "4.0.1",
         "summary": "OAuthLib: Bearer token can be retrieved as long as client knows a valid client ID for device workflow",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-31T09:52:56Z",
         "scope": "runtime",
+        "paths": [
+          "src/cofounder_agent/poetry.lock > oauthlib"
+        ],
         "found_in": "src/cofounder_agent/poetry.lock",
         "kev": false,
         "epss": 0.00328,
-        "fix_published_at": "2026-10-31T09:52:56Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "src/cofounder_agent/poetry.lock > oauthlib"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "pypi:soupsieve",
@@ -364,22 +475,19 @@
         "fixed_in": "3.0.2",
         "summary": "Soup Sieve: Exponential ReDoS in selector compilation via \\9-run in CSS_ESCAPES/IDENTIFIER",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-12T01:36:23Z",
         "scope": "runtime",
+        "paths": [
+          "src/cofounder_agent/poetry.lock > soupsieve"
+        ],
         "found_in": "src/cofounder_agent/poetry.lock",
         "kev": false,
         "epss": 0.00434,
-        "fix_published_at": "2026-10-12T01:36:23Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "option:CSS_ESCAPES"
-        ],
-        "paths": [
-          "src/cofounder_agent/poetry.lock > soupsieve"
         ],
         "reachability": {
           "method": "option_grep",
@@ -387,7 +495,10 @@
           "evidence": [
             "the project's source does not use CSS_ESCAPES, but other packages depend on soupsieve"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "pypi:soupsieve",
@@ -400,22 +511,22 @@
         "fixed_in": "4.0.0",
         "summary": "Soup Sieve: Polynomial-time denial of service in the descendant combinator",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-11-03T14:28:53Z",
         "scope": "runtime",
+        "paths": [
+          "src/cofounder_agent/poetry.lock > soupsieve"
+        ],
         "found_in": "src/cofounder_agent/poetry.lock",
         "kev": false,
         "epss": 0.00538,
-        "fix_published_at": "2026-11-03T14:28:53Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "src/cofounder_agent/poetry.lock > soupsieve"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "pypi:virtualenv",
@@ -428,24 +539,24 @@
         "fixed_in": "21.14.9",
         "summary": "virtualenv: Xonsh activation literals depend on the script decoding codec",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-10-17T16:09:40Z",
         "scope": "runtime",
+        "paths": [
+          "src/cofounder_agent/poetry.lock > virtualenv"
+        ],
         "found_in": "src/cofounder_agent/poetry.lock",
         "kev": false,
         "epss": 0.00235,
-        "fix_published_at": "2026-10-17T16:09:40Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction",
           "high_complexity"
         ],
-        "paths": [
-          "src/cofounder_agent/poetry.lock > virtualenv"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "pypi:virtualenv",
@@ -458,24 +569,24 @@
         "fixed_in": "21.14.9",
         "summary": "virtualenv: Bash prompt values can change meaning under older compatibility modes",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-10-17T16:09:40Z",
         "scope": "runtime",
+        "paths": [
+          "src/cofounder_agent/poetry.lock > virtualenv"
+        ],
         "found_in": "src/cofounder_agent/poetry.lock",
         "kev": false,
         "epss": 0.00235,
-        "fix_published_at": "2026-10-17T16:09:40Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction",
           "high_complexity"
         ],
-        "paths": [
-          "src/cofounder_agent/poetry.lock > virtualenv"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "pypi:virtualenv",
@@ -488,23 +599,23 @@
         "fixed_in": "21.14.9",
         "summary": "virtualenv: Generated POSIX console launchers interpret destination paths as shell syntax",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-10-17T16:09:40Z",
         "scope": "runtime",
+        "paths": [
+          "src/cofounder_agent/poetry.lock > virtualenv"
+        ],
         "found_in": "src/cofounder_agent/poetry.lock",
         "kev": false,
         "epss": 0.00261,
-        "fix_published_at": "2026-10-17T16:09:40Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction"
         ],
-        "paths": [
-          "src/cofounder_agent/poetry.lock > virtualenv"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "pypi:virtualenv",
@@ -517,23 +628,23 @@
         "fixed_in": "21.14.7",
         "summary": "virtualenv bash activate runs commands from an environment name with a backslash before $",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-10-12T01:27:29Z",
         "scope": "runtime",
+        "paths": [
+          "src/cofounder_agent/poetry.lock > virtualenv"
+        ],
         "found_in": "src/cofounder_agent/poetry.lock",
         "kev": false,
         "epss": 0.00277,
-        "fix_published_at": "2026-10-12T01:27:29Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction"
         ],
-        "paths": [
-          "src/cofounder_agent/poetry.lock > virtualenv"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -685,17 +796,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 89.8,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.875,
@@ -715,10 +823,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 89.8,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -1189,8 +1300,136 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:36:33+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "**Discovers** trending topics from HackerNews, Dev.to, and your niche feeds",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:08+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "**Writes** long-form posts using local LLMs — or cloud models via the optional LiteLLM plugin",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:08+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "**Reviews** every draft with multi-model adversarial QA",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:08+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "catches fake people, stats, quotes, impossible claims",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:08+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "Static JSON + RSS + JSON Feed 1.1 to S3-compatible storage or a local folder (`/site/`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:08+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "**Generates** podcast episodes, AI images, and short text-to-video clips (alpha, opt-in)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:08+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "**Monitors** itself with Grafana dashboards, self-heals via a watchdog daemon, alerts on Telegram/Discord",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:08+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "LiteLLM provider plugin routes to Anthropic, OpenAI, Groq, OpenRouter",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:08+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "any S3-compatible (Cloudflare R2, AWS S3, Backblaze B2, MinIO)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:08+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Approve it with `poindexter tasks approve <id>`, publish it with `poindexter tasks publish <id>`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:08+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "2,600+ settings in PostgreSQL. Change with SQL, REST, or CLI.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:08+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "The `doctor` command aggregates every health probe into one score",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:08+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "One daemon manages N sites.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:08+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "Eighteen plugin entry-point groups let you extend the system without touching core code",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:08+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "Declarative DAGs with Postgres checkpointing — resumable mid-run",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:08+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "Every consumer (CLI, MCP, scripts) mints scoped JWTs.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:08+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:24+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

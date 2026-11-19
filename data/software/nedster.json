@@ -39,6 +39,145 @@
     "return JSON outcome backed by test runs",
     "chat in terminal coding UI"
   ],
+  "capabilities": [
+    {
+      "label": "Delegate coding tasks from a brief file",
+      "area": "delegation"
+    },
+    {
+      "label": "Return JSON outcome of a run",
+      "items": [
+        "outcome",
+        "reasons",
+        "changed_paths",
+        "answer",
+        "session_id"
+      ],
+      "area": "output"
+    },
+    {
+      "label": "Stream engine events as JSON lines",
+      "area": "output"
+    },
+    {
+      "label": "Run read-edit-test loop with local Ollama model",
+      "area": "agent"
+    },
+    {
+      "label": "Read-only plan, review, explain roles",
+      "items": [
+        "plan",
+        "review",
+        "explain"
+      ],
+      "area": "roles"
+    },
+    {
+      "label": "Answer questions about a codebase",
+      "area": "roles"
+    },
+    {
+      "label": "Verify results with recognized test runners",
+      "items": [
+        "pytest",
+        "unittest",
+        "npm",
+        "node --test",
+        "cargo",
+        "go"
+      ],
+      "area": "testing"
+    },
+    {
+      "label": "Auto-run tests after edits",
+      "area": "testing"
+    },
+    {
+      "label": "Run commands in sandboxes",
+      "items": [
+        "Docker",
+        "bubblewrap",
+        "Seatbelt"
+      ],
+      "area": "security"
+    },
+    {
+      "label": "Undo last turn's edits",
+      "area": "editing"
+    },
+    {
+      "label": "Terminal UI chat interface",
+      "area": "interface"
+    },
+    {
+      "label": "Plan mode in terminal UI",
+      "area": "interface"
+    },
+    {
+      "label": "Show diff of changes",
+      "area": "editing"
+    },
+    {
+      "label": "Hardware-aware setup and model pull",
+      "area": "setup"
+    },
+    {
+      "label": "Check readiness with doctor",
+      "area": "subcommands"
+    },
+    {
+      "label": "Recommend and switch local models",
+      "area": "models"
+    },
+    {
+      "label": "Write starter AGENTS.md",
+      "area": "subcommands"
+    },
+    {
+      "label": "Integrate with paid coding agents",
+      "items": [
+        "Claude Code",
+        "Codex",
+        "Cursor",
+        "Gemini CLI",
+        "Aider",
+        "Copilot CLI"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Run evaluation suites offline",
+      "area": "evals"
+    },
+    {
+      "label": "Compact old tool output for long sessions",
+      "area": "context"
+    },
+    {
+      "label": "Public-web and market-data tools",
+      "items": [
+        "read",
+        "search",
+        "edit",
+        "patch",
+        "diff",
+        "command",
+        "test",
+        "public-web",
+        "market-data"
+      ],
+      "area": "tools"
+    },
+    {
+      "label": "Plain and no-TUI automation modes",
+      "items": [
+        "--plain",
+        "--json",
+        "--no-tui"
+      ],
+      "area": "output"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -419,17 +558,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 93.5,
+      "raw_total": 93.5,
       "confidence": 0.6,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.875,
@@ -449,10 +585,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 93.5,
       "security": {
         "level": "none",
         "basis": "assessment",
@@ -851,8 +990,184 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T03:15:41+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "nedster run --brief task.md --json",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "`--json` prints one document (`outcome`, `reasons`, `changed_paths`, `answer`, `session_id`).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "`--jsonl` streams\nevery engine event, one per line.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Nedster runs the\nread-edit-test loop locally with an open-weights model through [Ollama](https://ollama.com)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "`--role plan|review|explain` makes a run read-only, enforced at tool dispatch",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "nedster run --role explain --expect answer \"<question>\" --json",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "a recognized test runner (pytest, unittest, npm, node --test, cargo, go) passed after the last change",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "if the model edits and stops without testing, Nedster runs the tests itself.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "run tests only inside a sandbox (Docker / bubblewrap / Seatbelt)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "`/undo` restores the last turn's edits.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "`nedster` opens the TUI: chat, `@file` completion, named\nsessions with a picker (Ctrl+S)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "plan mode (Shift+Tab, then `/act`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "`/diff`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "runs `nedster setup`, which detects your hardware, picks and pulls a\nmodel",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "nedster doctor                          # must say: inference ready, execution ready",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "Pick or switch models with `nedster models` / `nedster models use <name>`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "`nedster init` writes a starter\n`AGENTS.md`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "Cursor's agent, Gemini CLI, Aider (`/run`),\nCopilot CLI, or your own scripts",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "Two offline suites with check scripts that decide pass/fail independently of the agent",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "compacts old\ntool output deterministically",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "release:v3.1.0-alpha.2",
+      "quote": "Project-aware read, search, edit, patch, diff, command, test, public-web, and market-data tools",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "release:v3.1.0-alpha.2",
+      "quote": "stable `--plain`, `--json`, and `--no-tui` paths for automation and accessibility",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:48+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:28:59+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

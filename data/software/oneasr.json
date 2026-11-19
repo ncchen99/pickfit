@@ -33,6 +33,98 @@
     "strip BGM/noise via vocal separation",
     "generate ASS karaoke subtitles"
   ],
+  "capabilities": [
+    {
+      "label": "Transcribe audio/video to subtitles",
+      "area": "transcription"
+    },
+    {
+      "label": "Output subtitle and text formats",
+      "items": [
+        "SRT",
+        "ASS",
+        "TXT"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Batch queue many files",
+      "area": "batch"
+    },
+    {
+      "label": "Word-level alignment and sentence segmentation",
+      "area": "alignment"
+    },
+    {
+      "label": "ASS karaoke output with per-word timing",
+      "area": "output"
+    },
+    {
+      "label": "Transcribe 11 source languages",
+      "items": [
+        "中文普通话",
+        "English",
+        "粤语",
+        "日本語",
+        "한국어",
+        "Français",
+        "Deutsch",
+        "Italiano",
+        "Español",
+        "Português",
+        "Русский"
+      ],
+      "area": "languages"
+    },
+    {
+      "label": "Convert Chinese to Simplified or Traditional",
+      "items": [
+        "original",
+        "Simplified",
+        "Traditional"
+      ],
+      "area": "output"
+    },
+    {
+      "label": "Separate vocals before transcribing",
+      "area": "audio"
+    },
+    {
+      "label": "Hotword lists for names and terms",
+      "area": "transcription"
+    },
+    {
+      "label": "GPU acceleration with CPU fallback",
+      "items": [
+        "NVIDIA",
+        "AMD",
+        "Intel",
+        "Apple Silicon"
+      ],
+      "area": "performance"
+    },
+    {
+      "label": "Command-line interface subcommands",
+      "items": [
+        "transcribe",
+        "align",
+        "render"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Re-render saved timeline into another preset",
+      "area": "subcommands"
+    },
+    {
+      "label": "Choose ASR model size",
+      "items": [
+        "0.6B",
+        "1.7B"
+      ],
+      "area": "models"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -290,20 +382,20 @@
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-17T18:45:16Z",
         "scope": "runtime",
+        "paths": [
+          "oneasr-core > sensevoice-small-wgpu > zip"
+        ],
         "workspace": "crates/oneasr-core",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.0032,
-        "fix_published_at": "2026-10-17T18:45:16Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "oneasr-core > sensevoice-small-wgpu > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -314,22 +406,19 @@
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "oneasr-core > sensevoice-small-wgpu > zip"
+        ],
         "workspace": "crates/oneasr-core",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:ZipStreamReader::extract",
           "symbol:ZipArchive::extract"
-        ],
-        "paths": [
-          "oneasr-core > sensevoice-small-wgpu > zip"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -337,7 +426,10 @@
           "evidence": [
             "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -350,23 +442,23 @@
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "oneasr-core > sensevoice-small-wgpu > zip"
+        ],
         "workspace": "crates/oneasr-core",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00461,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "oneasr-core > sensevoice-small-wgpu > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -377,23 +469,23 @@
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "oneasr-core > sensevoice-small-wgpu > zip"
+        ],
         "workspace": "crates/oneasr-core",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction"
         ],
-        "paths": [
-          "oneasr-core > sensevoice-small-wgpu > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -458,17 +550,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 77.4,
+      "raw_total": 77.4,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.7,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.6875,
@@ -488,10 +577,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 77.4,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -916,8 +1008,112 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-01T16:45:12+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "Local · Offline · Batch audio/video → SRT / ASS / TXT subtitles",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:14+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "SRT / ASS / TXT, in any combination; saved next to the video by default",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:14+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "drop in many files at once; progress and stage are always visible",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:14+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "word-level alignment + smart sentence segmentation",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:14+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "**ASS karaoke output**: CJK characters (words in spaced languages) each carry their own timing",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:14+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "11 source languages",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:14+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "**Chinese script choice**: original / Simplified / Traditional",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:14+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "**Vocal separation (optional)**: strips BGM / noise before transcribing",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:14+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "put the names and terms the model keeps mishearing in a list",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:14+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "**GPU acceleration**: NVIDIA / AMD / Intel / Apple Silicon",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:14+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "oneasr-cli.exe transcribe --input \"video.mp4\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:14+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "`render` re-renders a saved `timeline.json` into another preset without loading any models",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:14+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "**Two ASR sizes**: 0.6B (faster / less VRAM) · 1.7B (more accurate / more resources)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:14+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:18+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

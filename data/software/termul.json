@@ -38,6 +38,157 @@
     "AI agent chat with ACP agents and terminal assist",
     "Git integration with diff views, history graph and worktrees"
   ],
+  "capabilities": [
+    {
+      "label": "Organize terminals by project workspace",
+      "area": "workspaces"
+    },
+    {
+      "label": "Split workspace into resizable panes",
+      "area": "layout"
+    },
+    {
+      "label": "Tabbed terminals with drag-and-drop reordering",
+      "area": "layout"
+    },
+    {
+      "label": "Choose shell per terminal",
+      "items": [
+        "PowerShell",
+        "CMD",
+        "Git Bash",
+        "WSL",
+        "bash",
+        "zsh",
+        "fish",
+        "sh"
+      ],
+      "area": "shells"
+    },
+    {
+      "label": "Chat with ACP AI agents",
+      "items": [
+        "Claude Agent",
+        "Codex",
+        "Gemini CLI",
+        "Cursor",
+        "OpenCode"
+      ],
+      "area": "ai agents"
+    },
+    {
+      "label": "Add custom ACP agents",
+      "area": "ai agents"
+    },
+    {
+      "label": "Explain or fix terminal output with AI",
+      "area": "ai agents"
+    },
+    {
+      "label": "Stage, commit, push Git changes",
+      "area": "git"
+    },
+    {
+      "label": "Stage individual hunks or lines",
+      "area": "git"
+    },
+    {
+      "label": "View inline and side-by-side diffs",
+      "area": "git"
+    },
+    {
+      "label": "Browse and search commit history graph",
+      "area": "git"
+    },
+    {
+      "label": "Manage branches and stashes",
+      "area": "git"
+    },
+    {
+      "label": "Generate AI commit messages",
+      "area": "git"
+    },
+    {
+      "label": "Create and switch Git worktrees",
+      "area": "git"
+    },
+    {
+      "label": "Open SSH sessions to saved hosts",
+      "area": "ssh"
+    },
+    {
+      "label": "Browse and edit remote files over SFTP",
+      "area": "ssh"
+    },
+    {
+      "label": "Local port forwarding over SSH",
+      "area": "ssh"
+    },
+    {
+      "label": "Control agent chats from phone",
+      "area": "remote"
+    },
+    {
+      "label": "Serve web client from headless Linux server",
+      "area": "remote"
+    },
+    {
+      "label": "Install web client as PWA",
+      "area": "remote"
+    },
+    {
+      "label": "Edit code with syntax highlighting",
+      "area": "editor"
+    },
+    {
+      "label": "Edit markdown with preview",
+      "area": "editor"
+    },
+    {
+      "label": "Render Mermaid diagrams",
+      "area": "editor"
+    },
+    {
+      "label": "Manage files in file explorer",
+      "area": "files"
+    },
+    {
+      "label": "Search project files with ripgrep",
+      "area": "search"
+    },
+    {
+      "label": "Browse web in embedded tabs",
+      "area": "browser"
+    },
+    {
+      "label": "Annotate web pages",
+      "area": "browser"
+    },
+    {
+      "label": "Command palette launcher",
+      "area": "navigation"
+    },
+    {
+      "label": "Search command history",
+      "area": "history"
+    },
+    {
+      "label": "Rebind keyboard shortcuts",
+      "area": "settings"
+    },
+    {
+      "label": "Save and restore workspace snapshots",
+      "area": "workspaces"
+    },
+    {
+      "label": "Draw diagrams on canvas editor",
+      "area": "editor"
+    },
+    {
+      "label": "Auto-update the app",
+      "area": "updates"
+    }
+  ],
   "why_worth_it": null,
   "homepage": "https://termul.dev",
   "repo": {
@@ -263,20 +414,20 @@
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-17T18:45:16Z",
         "scope": "runtime",
+        "paths": [
+          "termul-manager > zip"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.0032,
-        "fix_published_at": "2026-10-17T18:45:16Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "termul-manager > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -287,22 +438,19 @@
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "termul-manager > zip"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:ZipStreamReader::extract",
           "symbol:ZipArchive::extract"
-        ],
-        "paths": [
-          "termul-manager > zip"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -310,7 +458,10 @@
           "evidence": [
             "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -323,20 +474,20 @@
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-17T18:45:16Z",
         "scope": "runtime",
+        "paths": [
+          "termul-manager > tauri-plugin-updater > zip"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.0032,
-        "fix_published_at": "2026-10-17T18:45:16Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "termul-manager > tauri-plugin-updater > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -347,22 +498,19 @@
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "termul-manager > tauri-plugin-updater > zip"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:ZipStreamReader::extract",
           "symbol:ZipArchive::extract"
-        ],
-        "paths": [
-          "termul-manager > tauri-plugin-updater > zip"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -370,7 +518,10 @@
           "evidence": [
             "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quinn-proto",
@@ -381,22 +532,19 @@
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-14T10:08:32Z",
         "scope": "runtime",
+        "paths": [
+          "termul-manager > reqwest > quinn > quinn-proto"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-09-14T10:08:32Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "option:ACK_FREQUENCY"
-        ],
-        "paths": [
-          "termul-manager > reqwest > quinn > quinn-proto"
         ],
         "reachability": {
           "method": "option_grep",
@@ -404,7 +552,10 @@
           "evidence": [
             "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quinn-proto",
@@ -415,22 +566,22 @@
         "fixed_in": "0.11.17",
         "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-08-17T17:32:41Z",
         "scope": "runtime",
+        "paths": [
+          "termul-manager > reqwest > quinn > quinn-proto"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-08-17T17:32:41Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "termul-manager > reqwest > quinn > quinn-proto"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:rmcp",
@@ -441,22 +592,22 @@
         "fixed_in": "3.6.0",
         "summary": "Unbounded tool schema cache in Streamable HTTP server transport",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
-        "scope": "runtime",
-        "workspace": "src-tauri",
-        "found_in": "src-tauri/Cargo.lock",
-        "kev": false,
-        "fix_published_at": "2026-10-20T05:53:35Z",
         "attack_vector": "network",
         "dos_only": true,
-        "preconditions": [
-          "denial_of_service"
-        ],
+        "fix_published_at": "2026-10-20T05:53:35Z",
+        "scope": "runtime",
         "paths": [
           "termul-manager > rmcp"
-        ]
+        ],
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -469,23 +620,23 @@
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "termul-manager > zip"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.00461,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "termul-manager > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -496,23 +647,23 @@
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "termul-manager > zip"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction"
         ],
-        "paths": [
-          "termul-manager > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -525,23 +676,23 @@
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "termul-manager > tauri-plugin-updater > zip"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.00461,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "termul-manager > tauri-plugin-updater > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -552,23 +703,23 @@
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "termul-manager > tauri-plugin-updater > zip"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction"
         ],
-        "paths": [
-          "termul-manager > tauri-plugin-updater > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:russh",
@@ -581,22 +732,19 @@
         "fixed_in": "0.65",
         "summary": "russh: Agent server never calls `Agent::confirm`, so keys added with the confirm constraint (`ssh-add -c`) sign without confirmation",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "termul-manager > russh"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.00156,
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "symbol:Agent::confirm"
-        ],
-        "paths": [
-          "termul-manager > russh"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -604,7 +752,10 @@
           "evidence": [
             "no source file uses Agent::confirm; only the project depends on russh"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -709,17 +860,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 84.4,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.625,
@@ -739,10 +887,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 84.4,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -1229,8 +1380,272 @@
       "method": "model",
       "model": "meta-models/muse-spark-open-1026",
       "checked_at": "2026-11-02T17:33:28+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "Organize terminals by project with dedicated workspace directories, separate state, and per-project configuration",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "Split your workspace into resizable panes and arrange terminals, editors, and browser tabs side by side",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Windows Terminal-style tab bar with drag-and-drop reordering within and across panes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Detects PowerShell, CMD, Git Bash, and WSL on Windows, and bash, zsh, fish, and sh on macOS and Linux.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "Chat with ACP agents such as Claude Agent, Codex, Gemini CLI, Cursor, and OpenCode in any pane",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "Add your own ACP agents in Settings, or paste a Zed-style `agent_servers` config",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "choose **Explain with AI** or **Fix Command with AI**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Stage, unstage, and discard files, then commit, amend, push, or publish the branch to `origin`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Stage or unstage a single hunk or a selection of lines from the diff view",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Inline and side-by-side diffs with word-level highlighting, opened as tabs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "Commit graph for all branches or the current branch, with search by message, author, or hash",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "Search, switch, and create branches, and save, apply, pop, or drop stashes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "Generate a commit message from the staged diff with the selected ACP agent",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "Create a worktree from any base branch and switch between worktrees from the workspace switcher",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "Save hosts with password, key file, or SSH agent authentication, or import them from `~/.ssh/config`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "Browse, upload, download, rename, and delete remote files, and edit them in place in a built-in editor",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "Local port forwarding uses `direct-tcpip` channels on the session's connection",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "scan the QR code to drive your live agent chats from a phone",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "Standalone Linux server that serves the Termul web client from a headless host, with token auth",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "Install the web client as a PWA over HTTPS or `localhost`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "readme",
+      "quote": "Built-in code editor with syntax highlighting, file buffers, dirty-state tracking, and save/reload",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "readme",
+      "quote": "Rich markdown editing powered by BlockNote with a preview and source toggle",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/22/label",
+      "source_id": "readme",
+      "quote": "Render Mermaid diagrams inline in the markdown preview",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/23/label",
+      "source_id": "readme",
+      "quote": "Full file tree with create, rename, delete, clipboard operations, drag-and-drop, and context menus",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/24/label",
+      "source_id": "readme",
+      "quote": "Search file names and file contents from the file explorer with a bundled ripgrep.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/25/label",
+      "source_id": "readme",
+      "quote": "Browse the web inside your workspace in child webview tabs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/26/label",
+      "source_id": "readme",
+      "quote": "Click elements, text, or areas to attach notes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/27/label",
+      "source_id": "readme",
+      "quote": "Global command launcher (`Ctrl+K` / `Ctrl+Shift+P`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/28/label",
+      "source_id": "readme",
+      "quote": "Per-project and aggregate command history viewer with search (`Ctrl+R`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/29/label",
+      "source_id": "readme",
+      "quote": "Rebind most shortcuts in Settings",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/30/label",
+      "source_id": "readme",
+      "quote": "persistent sessions, snapshots, and a clean tabbed interface",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/31/label",
+      "source_id": "release:v0.4.52",
+      "quote": "There's a new canvas for drawing and diagrams, built on figcraft.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
+    },
+    {
+      "field": "/capabilities/32/label",
+      "source_id": "readme",
+      "quote": "get notified and update without leaving the app",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:25+08:00"
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

@@ -29,6 +29,115 @@
     "audit every AI tool call with queryable logs"
   ],
   "alternatives_to": [],
+  "capabilities": [
+    {
+      "label": "Expose many backends via one MCP endpoint",
+      "area": "gateway"
+    },
+    {
+      "label": "Describe REST APIs as MCP tools in YAML",
+      "area": "dadl"
+    },
+    {
+      "label": "Inject API keys server-side at call time",
+      "area": "credentials"
+    },
+    {
+      "label": "Store per-user credentials for backends",
+      "area": "credentials"
+    },
+    {
+      "label": "Authorize tool calls with OpenFGA",
+      "area": "authorization"
+    },
+    {
+      "label": "Request time-limited permission kits with approval",
+      "area": "authorization"
+    },
+    {
+      "label": "Audit log every tool call",
+      "area": "audit"
+    },
+    {
+      "label": "Query audit log with SQL",
+      "area": "audit"
+    },
+    {
+      "label": "Run multi-call JavaScript in Code Mode",
+      "items": [
+        "discover_tools",
+        "execute_code"
+      ],
+      "area": "code mode"
+    },
+    {
+      "label": "Filter or redact results with JavaScript policies",
+      "area": "policies"
+    },
+    {
+      "label": "Require agents to receive backend house rules",
+      "area": "policies"
+    },
+    {
+      "label": "Authenticate clients via OAuth 2.1 or API key",
+      "items": [
+        "OAuth 2.1",
+        "API key"
+      ],
+      "area": "authentication"
+    },
+    {
+      "label": "Support DADL API authentication methods",
+      "items": [
+        "bearer token",
+        "API key",
+        "OAuth2",
+        "session login"
+      ],
+      "area": "dadl"
+    },
+    {
+      "label": "Serve HTTPS with Let's Encrypt certificates",
+      "area": "tls"
+    },
+    {
+      "label": "Load credentials from a command like sops",
+      "items": [
+        "sops -d",
+        "vault kv get"
+      ],
+      "area": "credentials"
+    },
+    {
+      "label": "Export Prometheus metrics",
+      "area": "monitoring"
+    },
+    {
+      "label": "Proxy existing MCP servers over HTTP or stdio",
+      "items": [
+        "http",
+        "stdio"
+      ],
+      "area": "backends"
+    },
+    {
+      "label": "Connect MCP clients like Claude and ChatGPT",
+      "items": [
+        "Claude Code",
+        "Claude Desktop",
+        "ChatGPT"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Diagnostic debug tools for transport limits",
+      "items": [
+        "debug_echo",
+        "debug_generate"
+      ],
+      "area": "debugging"
+    }
+  ],
   "why_worth_it": null,
   "homepage": "https://toolmesh.io",
   "repo": {
@@ -222,17 +331,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 64.8,
+      "raw_total": 64.8,
       "confidence": 0.4,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.4375,
@@ -252,10 +358,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 64.8,
       "security": {
         "level": "none",
         "basis": "assessment",
@@ -703,8 +812,160 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-01T00:03:26+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "One MCP endpoint for many backends: REST APIs through DADL files and existing MCP servers over HTTP or stdio.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:58:45+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "A DADL file describes a REST API as MCP tools.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:58:45+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "ToolMesh reads them from its environment (`CREDENTIAL_<NAME>`) and adds them to the request at call time",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:58:45+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Each user stores their own on a page of ToolMesh, several accounts if they have them",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:58:45+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "OpenFGA: may this caller call this tool?",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:58:45+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "the agent asks for one, a person approves it, and the grant ends after its time.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:58:45+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "An audit entry for every call: who called which tool with which parameters",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:58:45+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "with `AUDIT_STORE=sqlite` in a database you can query with SQL.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:58:45+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "The model sees two tools, `discover_tools` and `execute_code`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:58:45+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Optional JavaScript policies that check a call before it runs and filter its result, for example to redact personal data.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:58:45+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "With `hint_required_for`, writes are refused until the agent shows that it has received the hint",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:58:45+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "authenticate     OAuth 2.1 or API key",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:58:45+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "how the API authenticates (bearer token, API key, OAuth2, session login)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:58:45+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "`TOOLMESH_TLS_ACME=true` gets a Let's Encrypt certificate",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:58:45+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "With `CREDENTIAL_STORE=command` ToolMesh takes the credentials from a command, such as a sops decryption",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:58:45+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "Prometheus metrics are served on a separate, unauthenticated listener.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:58:45+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "Existing MCP servers, over HTTP or stdio, sit behind the same endpoint.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:58:45+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "MCP client (Claude Code, Claude Desktop, ChatGPT, ...)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:58:45+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "`debug_echo` returns size and SHA-256 of a payload, `debug_generate` produces a printable string of N bytes.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:58:45+08:00"
     }
   ],
   "first_seen_at": "2026-10-31T00:18:34+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

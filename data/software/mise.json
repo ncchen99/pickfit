@@ -20,6 +20,116 @@
     "run tasks with dependencies",
     "set up machine with bootstrap"
   ],
+  "capabilities": [
+    {
+      "label": "Install dev tools per project",
+      "area": "tools"
+    },
+    {
+      "label": "Install tools from multiple backends",
+      "items": [
+        "GitHub releases",
+        "Aqua",
+        "Cargo",
+        "npm",
+        "PyPI"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Run a command with a specific tool version",
+      "area": "subcommands"
+    },
+    {
+      "label": "Load environment variables per directory",
+      "area": "environment"
+    },
+    {
+      "label": "Set environment variable in config",
+      "area": "environment"
+    },
+    {
+      "label": "Run project tasks with dependencies",
+      "area": "tasks"
+    },
+    {
+      "label": "Lock shared resources between tasks",
+      "area": "tasks"
+    },
+    {
+      "label": "Write lockfile with versions and checksums",
+      "area": "tools"
+    },
+    {
+      "label": "List and upgrade outdated tools",
+      "area": "tools"
+    },
+    {
+      "label": "Read idiomatic version files",
+      "items": [
+        ".tool-versions",
+        ".nvmrc",
+        ".python-version"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Activate in shells",
+      "items": [
+        "bash",
+        "zsh",
+        "fish",
+        "PowerShell",
+        "Nushell",
+        "Elvish",
+        "Xonsh"
+      ],
+      "area": "shells"
+    },
+    {
+      "label": "Check installation health",
+      "area": "subcommands"
+    },
+    {
+      "label": "Set up a machine from config",
+      "area": "bootstrap"
+    },
+    {
+      "label": "Manage dotfiles",
+      "area": "bootstrap"
+    },
+    {
+      "label": "Bootstrap subcommands",
+      "items": [
+        "accounts",
+        "compose",
+        "files",
+        "firewall",
+        "linux",
+        "macos",
+        "mise-shell-activate",
+        "packages",
+        "plan",
+        "plugins",
+        "remote",
+        "repos",
+        "secrets",
+        "services",
+        "status",
+        "unapply",
+        "user"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Bootstrap machines over SSH",
+      "area": "bootstrap"
+    },
+    {
+      "label": "Verify npm package provenance",
+      "area": "security"
+    }
+  ],
   "why_worth_it": null,
   "homepage": "https://mise.jdx.dev",
   "repo": {
@@ -277,23 +387,23 @@
         "fixed_in": "0.90.0",
         "summary": "gitoxide gix: untrusted .git/config disables filesystem .git-protection path checks via unfiltered protect_options()",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-10-22T13:58:58Z",
         "scope": "runtime",
+        "paths": [
+          "mise > gix"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-22T13:58:58Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction"
         ],
-        "paths": [
-          "mise > gix"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -366,17 +476,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 89.6,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.625,
@@ -396,10 +503,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       },
-      "raw_total": 89.6,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -637,6 +747,12 @@
       "kind": "release",
       "url": "https://github.com/jdx/mise/releases/tag/v2026.11.0",
       "fetched_at": "2026-11-04T13:05:41+08:00"
+    },
+    {
+      "id": "help:verify-mise-20261104-185323-9692:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T00:59:16+08:00"
     }
   ],
   "evidence": [
@@ -775,8 +891,144 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-04T13:10:38+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "Install a tool and record it in the current project's `mise.toml`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:16+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "directly\n  from [backends](https://mise.jdx.dev/dev-tools/backends/) like GitHub\n  releases, Aqua, Cargo, npm, and PyPI",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:16+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Run a command with the project's tools and environment",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:16+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Load [environment variables](https://mise.jdx.dev/environments/), `.env`\n  files, `PATH` entries, virtualenvs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:16+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "Set an environment variable in `mise.toml`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:16+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "Run a project task with its dependencies, tools, and environment",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:16+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "release:v2026.11.0",
+      "quote": "Tasks can now declare a `lock`, so runs that share a resource take turns",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:16+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Write exact tool versions and checksums to `mise.lock`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:16+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "List tools with newer releases than the installed version",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:16+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "mise also reads `.nvmrc`,\n`.python-version`, and other",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:16+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "For PowerShell, Nushell, Elvish, Xonsh, and IDE or CI shims",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:16+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "Check your mise installation, shell activation, and configuration",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:16+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "help:verify-mise-20261104-185323-9692:1",
+      "quote": "Set up this machine from your mise config",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:16+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "mise dot apply",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:16+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "help:verify-mise-20261104-185323-9692:1",
+      "quote": "Usage: mise bootstrap [FLAGS] [SUBCOMMAND]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:16+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "help:verify-mise-20261104-185323-9692:1",
+      "quote": "Bootstrap one or more machines over SSH",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:16+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "release:v2026.11.0",
+      "quote": "npm provenance verification (opt-in).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:16+08:00"
     }
   ],
   "first_seen_at": "2026-11-04T13:04:58+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

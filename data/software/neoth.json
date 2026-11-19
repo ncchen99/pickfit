@@ -41,6 +41,146 @@
     "plan and track coding tasks on Kanban",
     "predict own collapse risk via Babel-Index"
   ],
+  "capabilities": [
+    {
+      "label": "Remember approved facts across five memory tiers",
+      "items": [
+        "episode",
+        "profile",
+        "ground truth",
+        "consolidated",
+        "long-term"
+      ],
+      "area": "memory"
+    },
+    {
+      "label": "Connect chat channels",
+      "items": [
+        "Telegram",
+        "Slack",
+        "WhatsApp Business",
+        "Discord",
+        "Signal",
+        "LINE",
+        "IRC",
+        "iMessage",
+        "Mattermost",
+        "Google Chat",
+        "Matrix",
+        "Twitch",
+        "Nostr"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Ingest documents, calendar and media",
+      "items": [
+        "Paperless",
+        "CalDAV",
+        "Obsidian",
+        "IMAP"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Serve an OpenAI-compatible chat endpoint",
+      "area": "integrations"
+    },
+    {
+      "label": "Route across multiple LLM providers",
+      "area": "providers"
+    },
+    {
+      "label": "Verify HMAC-chained audit log",
+      "area": "audit"
+    },
+    {
+      "label": "Audit privacy and provider calls",
+      "area": "privacy"
+    },
+    {
+      "label": "Run sandboxed WASM plugins",
+      "area": "extensions"
+    },
+    {
+      "label": "Predict agent collapse with Babel-Index",
+      "area": "diagnostics"
+    },
+    {
+      "label": "Diagnose setup problems",
+      "area": "diagnostics"
+    },
+    {
+      "label": "Import memory from other assistants",
+      "items": [
+        "OpenClaw",
+        "Hermes",
+        "OpenHuman",
+        "Veronica"
+      ],
+      "area": "migration"
+    },
+    {
+      "label": "Import Claude Code/Codex/Gemini transcripts",
+      "area": "migration"
+    },
+    {
+      "label": "Export encrypted memory bundles",
+      "area": "migration"
+    },
+    {
+      "label": "Run n8n workflows and cron jobs",
+      "area": "automation"
+    },
+    {
+      "label": "Run bounded autonomous goal loops",
+      "area": "automation"
+    },
+    {
+      "label": "Set autonomy levels and permissions",
+      "area": "policy"
+    },
+    {
+      "label": "Pair nodes in a private mesh",
+      "area": "networking"
+    },
+    {
+      "label": "Cluster episodes into Obsidian notes nightly",
+      "area": "memory"
+    },
+    {
+      "label": "Export memory as Obsidian knowledge graph",
+      "area": "output"
+    },
+    {
+      "label": "Estimate token cost before a call",
+      "area": "providers"
+    },
+    {
+      "label": "Extract architecture decision records",
+      "area": "coding"
+    },
+    {
+      "label": "Pin immutable ground-truth facts",
+      "area": "memory"
+    },
+    {
+      "label": "Merge identities across channels",
+      "area": "memory"
+    },
+    {
+      "label": "Output doctor results as JSON",
+      "area": "output"
+    },
+    {
+      "label": "Run fully local mode",
+      "area": "privacy"
+    },
+    {
+      "label": "Grant time-limited capability leases",
+      "area": "policy"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -215,22 +355,19 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "level": "exposed",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "neothd-gui > rfd > ashpd > wayland-client > wayland-scanner > quick-xml"
+        ],
         "workspace": "SRC/neothd-gui",
         "found_in": "SRC/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:NsReader"
-        ],
-        "paths": [
-          "neothd-gui > rfd > ashpd > wayland-client > wayland-scanner > quick-xml"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -238,7 +375,10 @@
           "evidence": [
             "SRC/neothd/src/media/docx_structure.rs:6: use quick_xml::{NsReader, events::Event, name::ResolveResult};"
           ]
-        }
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -249,22 +389,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "neothd-gui > rfd > ashpd > wayland-client > wayland-scanner > quick-xml"
+        ],
         "workspace": "SRC/neothd-gui",
         "found_in": "SRC/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "neothd-gui > rfd > ashpd > wayland-client > wayland-scanner > quick-xml"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -382,17 +522,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 85.6,
       "confidence": 0.5,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.8125,
@@ -412,10 +549,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 85.6,
       "security": {
         "level": "exposed",
         "basis": "assessment",
@@ -858,8 +998,216 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:36:35+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "Uses five durable memory tiers — episode, profile, ground truth, consolidated, long-term — plus your external vault (Obsidian/Paperless) ingested into them.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "One canonical GUI/CLI registry for Telegram, Slack, WhatsApp Business",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Ingests Paperless documents, CalDAV calendar, notes, files, images, audio, and video into reviewable memory",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "OpenAI-compatible endpoint (`/v1/chat/completions`): point Cursor, Aider, or Continue at NEOTH",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "Each path binds to its own provider — Anthropic on the left, a local model on the right, OpenRouter as arbiter",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "`neoth verify`\n(chain integrity)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "`neoth privacy audit --last 30d` (recent provider calls + profile writes + channel egress)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "WASM code uses exact-digest operator approval, runtime capability checks, revocation and hostcall audit.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Scores its own event stream for collapse risk (Babel-Index)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Explains broken setup, missing keys, model cache problems, channel wiring",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "`neoth-migrate detect` discovers complete OpenClaw, Hermes, OpenHuman, and Veronica homes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "`neoth import session` covers Claude Code / Codex / Gemini transcripts",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "`neoth transfer export` moves whole memories between machines as X25519-encrypted, Ed25519-signed bundles",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "Runs small local cron jobs and larger n8n workflows",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "bounded autonomous iteration with L1-L3 budget ladders",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "Four built-in levels (`strict` through `full`) plus `custom`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "Pairs nodes over LAN/mDNS, Tailscale, Hysteria, and consent-gated cluster discovery.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "Cluster recent episodes into themes, written to Obsidian as notes.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "Your memory as an interlinked Obsidian knowledge graph.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "Token count and dollar estimate before the call is made.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "readme",
+      "quote": "Architecture Decision Records extracted from your sessions as structured files.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "readme",
+      "quote": "`neoth groundtruth add` pins them immutably",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/22/label",
+      "source_id": "readme",
+      "quote": "The same person on Telegram, WhatsApp, and email becomes one identity.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/23/label",
+      "source_id": "readme",
+      "quote": "Pipe `neoth doctor --output json` into CI or fleet checks.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/24/label",
+      "source_id": "readme",
+      "quote": "neoth preset activate fully-local",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
+    },
+    {
+      "field": "/capabilities/25/label",
+      "source_id": "readme",
+      "quote": "Time-limited capability grant that auto-expires; WAL-logged.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:24+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

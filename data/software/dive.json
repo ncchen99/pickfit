@@ -30,6 +30,72 @@
     "estimate image efficiency and wasted space",
     "build image and analyze immediately"
   ],
+  "capabilities": [
+    {
+      "label": "Explore Docker image contents layer by layer",
+      "area": "analysis"
+    },
+    {
+      "label": "Show what changed in each layer",
+      "area": "analysis"
+    },
+    {
+      "label": "Build an image and analyze it immediately",
+      "area": "subcommands"
+    },
+    {
+      "label": "Pass/fail CI check on image efficiency",
+      "items": [
+        "lowestEfficiency",
+        "highestWastedBytes",
+        "highestUserWastedPercent"
+      ],
+      "area": "ci"
+    },
+    {
+      "label": "Load images from multiple sources and engines",
+      "items": [
+        "docker",
+        "podman",
+        "docker-archive",
+        "oci-archive",
+        "oci-dir",
+        "registry",
+        "containerd",
+        "containers-storage",
+        "auto"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Select platform of multi-platform image",
+      "area": "analysis"
+    },
+    {
+      "label": "Export analysis to JSON file",
+      "area": "output"
+    },
+    {
+      "label": "Filter files in the file tree",
+      "area": "ui"
+    },
+    {
+      "label": "Show/hide added, removed, modified files",
+      "area": "ui"
+    },
+    {
+      "label": "Customize keybindings and UI via config",
+      "area": "configuration"
+    },
+    {
+      "label": "Generate shell autocompletion script",
+      "area": "subcommands"
+    },
+    {
+      "label": "Identify files wasting space in image",
+      "area": "analysis"
+    }
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -265,23 +331,23 @@
         "fixed_in": "4.1.6",
         "summary": "Go JOSE: DoS when parsing JWKs that contain RSA keys",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-14T22:46:21Z",
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/go-jose/go-jose/v4"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00489,
-        "fix_published_at": "2026-10-14T22:46:21Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "go.mod > github.com/go-jose/go-jose/v4"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -341,17 +407,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 73.3,
+      "raw_total": 73.3,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.6875,
@@ -371,10 +434,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       },
-      "raw_total": 73.3,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -610,6 +676,12 @@
       "kind": "release",
       "url": "https://github.com/wagoodman/dive/releases/tag/v0.13.1",
       "fetched_at": "2026-11-04T13:05:39+08:00"
+    },
+    {
+      "id": "help:verify-dive-20261104-185603-42a2:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T01:30:17+08:00"
     }
   ],
   "evidence": [
@@ -748,8 +820,104 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-04T13:12:03+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "Show Docker image contents broken down by layer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:17+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "Indicate what's changed in each layer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:17+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "dive build -t some-tag .",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:17+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Analyze an image and get a pass/fail result based on the image efficiency and wasted space.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:17+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "Multiple Image Sources and Container Engines Supported",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:17+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "`--platform` picks the variant to analyze",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:17+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "`--json <path>` skips the UI and writes the analysis to a file.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:17+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Filter files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:17+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Filetree view: show/hide added files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:17+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "you can create a config file and override values",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:17+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "help:verify-dive-20261104-185603-42a2:1",
+      "quote": "Generate the autocompletion script for the specified shell",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:17+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "help:verify-dive-20261104-185603-42a2:1",
+      "quote": "identifies the offending files from the image",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:17+08:00"
     }
   ],
   "first_seen_at": "2026-11-04T13:04:58+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

@@ -25,6 +25,62 @@
     "show DNS queries",
     "show total cumulative bandwidth usage"
   ],
+  "capabilities": [
+    {
+      "label": "Display network utilization by process",
+      "area": "monitoring"
+    },
+    {
+      "label": "Show per-connection bandwidth usage",
+      "area": "monitoring"
+    },
+    {
+      "label": "Show bandwidth by remote address",
+      "area": "monitoring"
+    },
+    {
+      "label": "Show processes table only",
+      "area": "output"
+    },
+    {
+      "label": "Listen on a specific network interface",
+      "area": "capture"
+    },
+    {
+      "label": "Disable hostname resolution",
+      "area": "dns"
+    },
+    {
+      "label": "Use a custom DNS server",
+      "area": "dns"
+    },
+    {
+      "label": "Machine-friendly raw output",
+      "area": "output"
+    },
+    {
+      "label": "Choose units for bandwidth display",
+      "items": [
+        "bin-bytes",
+        "bin-bits",
+        "si-bytes",
+        "si-bits"
+      ],
+      "area": "output"
+    },
+    {
+      "label": "Show total cumulative usage",
+      "area": "output"
+    },
+    {
+      "label": "Log debug output to a file",
+      "area": "logging"
+    },
+    {
+      "label": "Adapt display to terminal window size",
+      "area": "output"
+    }
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -196,20 +252,20 @@
         "fixed_in": "0.26.2",
         "summary": "NSEC3 records from another zone were accepted in proofs of nonexistence",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-09-03T19:35:28Z",
         "scope": "runtime",
+        "paths": [
+          "bandwhich > hickory-resolver > hickory-net"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00255,
-        "fix_published_at": "2026-09-03T19:35:28Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "bandwhich > hickory-resolver > hickory-net"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:hickory-resolver",
@@ -222,22 +278,19 @@
         "fixed_in": "0.26.2",
         "summary": "hickory-resolver: Resolver::lookup() and Resolver::lookup_ip() APIs obscure DNSSEC validation failures",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "bandwhich > hickory-resolver"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00231,
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:Resolver::lookup",
           "symbol:Resolver::lookup_ip"
-        ],
-        "paths": [
-          "bandwhich > hickory-resolver"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -245,7 +298,10 @@
           "evidence": [
             "no source file uses Resolver::lookup, Resolver::lookup_ip; only the project depends on hickory-resolver"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:hickory-resolver",
@@ -258,22 +314,19 @@
         "fixed_in": "0.26.2",
         "summary": "hickory-resolver: Unbounded TC-retry loop in `NameServerPool::try_send` (resource-exhaustion DoS)",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "bandwhich > hickory-resolver"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00343,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:NameServerPool::try_send"
-        ],
-        "paths": [
-          "bandwhich > hickory-resolver"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -281,7 +334,10 @@
           "evidence": [
             "no source file uses NameServerPool::try_send; only the project depends on hickory-resolver"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -348,17 +404,14 @@
     "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 59.5,
+      "raw_total": 59.5,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.5625,
@@ -378,10 +431,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 59.5,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -748,8 +804,104 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-04T13:12:58+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "displaying current network utilization by process, connection and remote IP/hostname",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:51+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "Show connections table only",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:51+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Show remote addresses table only",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:51+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Show processes table only",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:51+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "The network interface to listen on, eg. eth0",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:51+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "Do not attempt to resolve IPs to their hostnames",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:51+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "A dns server ip to use instead of the system default",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:51+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Machine friendlier output",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:51+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Choose a specific family of units",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:51+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Show total (cumulative) usages",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:51+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "Enable debug logging to a file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:51+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "It is responsive to the terminal window size, displaying less info if there is no room for it.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:51+08:00"
     }
   ],
   "first_seen_at": "2026-11-04T13:04:56+08:00",
-  "updated_at": "2026-11-20T00:06:03+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

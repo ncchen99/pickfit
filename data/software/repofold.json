@@ -33,6 +33,73 @@
     "Cite exact file lines for every claim",
     "Regenerate only what changed on reruns"
   ],
+  "capabilities": [
+    {
+      "label": "Cite exact file and lines for claims",
+      "area": "citations"
+    },
+    {
+      "label": "Validate citations against source",
+      "area": "citations"
+    },
+    {
+      "label": "Incrementally regenerate only changed pages",
+      "area": "generation"
+    },
+    {
+      "label": "Use local Ollama models",
+      "area": "integrations"
+    },
+    {
+      "label": "Output static HTML site",
+      "area": "output"
+    },
+    {
+      "label": "Export wiki as Markdown",
+      "area": "output"
+    },
+    {
+      "label": "Serve wiki locally for preview",
+      "area": "subcommands"
+    },
+    {
+      "label": "Record wiki changelog between runs",
+      "area": "output"
+    },
+    {
+      "label": "Fast single-pass generation mode",
+      "area": "generation"
+    },
+    {
+      "label": "Use separate planner model for architecture",
+      "area": "generation"
+    },
+    {
+      "label": "Generate architecture dependency diagram",
+      "area": "output"
+    },
+    {
+      "label": "Extract symbols and imports with Tree-sitter",
+      "area": "analysis"
+    },
+    {
+      "label": "Remove state and output directory",
+      "area": "subcommands"
+    },
+    {
+      "label": "Fact-check pass on generated pages",
+      "area": "generation"
+    },
+    {
+      "label": "Commands",
+      "items": [
+        "generate",
+        "serve",
+        "clean"
+      ],
+      "area": "subcommands"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -249,22 +316,22 @@
         "fixed_in": "4.6.6",
         "summary": "Zod can exhaust memory while validating oversized constrained collections",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-11T16:18:23Z",
         "scope": "runtime",
+        "paths": [
+          ". > zod"
+        ],
         "workspace": ".",
         "found_in": "pnpm-lock.yaml",
         "kev": false,
-        "fix_published_at": "2026-10-11T16:18:23Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > zod"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -326,17 +393,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 70.9,
+      "raw_total": 70.9,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.7225,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.8125,
@@ -356,10 +420,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 70.9,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -673,8 +740,128 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:37:01+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "Every claim in the wiki cites the exact file and lines of code it describes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:41+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "citations are validated against the source",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:41+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "incremental runs only regenerate what actually changed",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:41+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "the only network traffic is to your own local [Ollama](https://ollama.com) server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:41+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "a static HTML site (works from `file://`, no server needed)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:41+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "plus a `markdown/` export tree",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:41+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "repofold serve [path]           preview a previously generated wiki",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:41+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "A wiki changelog records what changed between runs.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:41+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "`--fast` switches to the single-pass pipeline",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:41+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "--planner-model <name>        stronger model for the architecture analysis",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:41+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "architecture with a dependency diagram",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:41+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "Tree-sitter extracts symbols, imports and skeletons per file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:41+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "repofold clean [path]           remove the .repofold state and output directory",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:41+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "--no-verify                   skip the fact-check pass",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:41+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "repofold generate [path]        generate or update the wiki (default command)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:41+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:05+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

@@ -35,6 +35,127 @@
     "handle daily briefings via MCP servers",
     "create custom personas from markdown files"
   ],
+  "capabilities": [
+    {
+      "label": "Write code and verify with project compiler",
+      "items": [
+        "TypeScript",
+        "Angular",
+        "C#",
+        "Go",
+        "Rust",
+        "Java",
+        "Kotlin",
+        "Swift",
+        "Dart",
+        "Python",
+        "PHP",
+        "JavaScript",
+        "Luau"
+      ],
+      "area": "verification"
+    },
+    {
+      "label": "Review code with a reviewer role or sub-agent",
+      "area": "review"
+    },
+    {
+      "label": "Run local LLM backends",
+      "items": [
+        "LM Studio",
+        "oMLX",
+        "Ollama",
+        "MTPLX"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Use cloud model providers",
+      "items": [
+        "OpenRouter",
+        "Google Gemini",
+        "Groq",
+        "Hugging Face"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Connect any OpenAI-compatible server",
+      "items": [
+        "vLLM",
+        "SGLang",
+        "llama.cpp",
+        "LiteLLM",
+        "LocalAI"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Switch between ask, planning and agent modes",
+      "items": [
+        "ask",
+        "planning",
+        "agent"
+      ],
+      "area": "modes"
+    },
+    {
+      "label": "Mix local and cloud models per mode",
+      "area": "configuration"
+    },
+    {
+      "label": "Define custom personas, roles and skills",
+      "area": "extensibility"
+    },
+    {
+      "label": "Run shell commands without model inference",
+      "area": "shell"
+    },
+    {
+      "label": "Attach command output to model context",
+      "area": "shell"
+    },
+    {
+      "label": "Connect MCP servers for email and music",
+      "area": "integrations"
+    },
+    {
+      "label": "Get news, weather and morning briefings"
+    },
+    {
+      "label": "Configure via setup wizard",
+      "area": "configuration"
+    },
+    {
+      "label": "Tune per-model sampling and context",
+      "area": "configuration"
+    },
+    {
+      "label": "Change thinking level mid-session",
+      "area": "configuration"
+    },
+    {
+      "label": "Switch terminal color themes",
+      "items": [
+        "default",
+        "matrix",
+        "amber",
+        "green"
+      ],
+      "area": "output"
+    },
+    {
+      "label": "Override verify with custom command",
+      "area": "verification"
+    },
+    {
+      "label": "Read images with a vision model"
+    },
+    {
+      "label": "Run as a desktop app",
+      "area": "desktop"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -260,23 +381,23 @@
         "fixed_in": "44.9.1",
         "summary": "Electron: Mitigation for compromised eMudhra intermediate certificates",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-20T02:53:15Z",
         "scope": "runtime",
+        "paths": [
+          ". > electron"
+        ],
         "workspace": ".",
         "found_in": "desktop/package-lock.json",
         "kev": false,
         "epss": 0.00377,
-        "fix_published_at": "2026-10-20T02:53:15Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity"
         ],
-        "paths": [
-          ". > electron"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:zod",
@@ -289,22 +410,22 @@
         "fixed_in": "4.6.6",
         "summary": "Zod can exhaust memory while validating oversized constrained collections",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-11T16:18:23Z",
         "scope": "runtime",
+        "paths": [
+          ". > @lmnr-ai/lmnr > zod"
+        ],
         "workspace": ".",
         "found_in": "package-lock.json",
         "kev": false,
-        "fix_published_at": "2026-10-11T16:18:23Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > @lmnr-ai/lmnr > zod"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:body-parser",
@@ -317,22 +438,19 @@
         "fixed_in": "2.4.0",
         "summary": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          ". > @modelcontextprotocol/sdk > express > body-parser"
+        ],
         "workspace": ".",
         "found_in": "package-lock.json",
         "kev": false,
         "epss": 0.00388,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "entry:the MCP SDK's HTTP server transports"
-        ],
-        "paths": [
-          ". > @modelcontextprotocol/sdk > express > body-parser"
         ],
         "reachability": {
           "method": "entry_point_grep",
@@ -340,7 +458,10 @@
           "evidence": [
             "no source file imports the MCP SDK's HTTP server transports (@modelcontextprotocol/sdk entry points)"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -413,17 +534,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 69.9,
+      "raw_total": 69.9,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.6875,
@@ -443,10 +561,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 69.9,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -768,8 +889,160 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T03:15:10+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "runs your project's own compiler or tests before it says \"done\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:33+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "a reviewer role in your session, or an isolated sub-agent on a different model",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:33+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "lists the models your local server\nalready has** if you picked LM Studio, Ollama, oMLX or MTPLX",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:33+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Cloud — someone else's GPU, your API key",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:33+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "Running something else that speaks the\nOpenAI API — vLLM, SGLang, llama.cpp's server, LiteLLM, your own gateway — pick **`openai-compat`**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:33+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "Switch with `/mode ask`, `/mode planning`, `/mode agent`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:33+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "`AGENT_MODEL_PROVIDER` puts one mode on a different provider, so a session runs part local and part\ncloud",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:33+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "personas, roles and skills are files you write",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:33+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "A line starting with `!` runs in your own\nshell, in the workspace, and the model never sees it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:33+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "the model sees the output only if you `/attach` it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:33+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "email and music through the MCP\n  servers you connect",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:33+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "news, weather, your morning briefing",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:33+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "rei --config       # the wizard: provider, model, endpoint, key.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:33+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "Per-model tuning lives in `rei.config.json`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:33+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "`/think <level>`\n  changes it mid-session",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:33+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "`REI_THEME`** — `default`, `matrix`, `amber` or `green`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:33+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "`REI_SANDBOX_VERIFY_COMMAND` overrides all of it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:33+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "`<PROVIDER>_MODEL_VISION` (who reads an image)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:33+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "**REI Desktop** *(experimental)* runs the same REI on a curved\nphosphor tube",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:33+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:28:11+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

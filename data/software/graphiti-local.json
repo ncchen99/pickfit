@@ -34,6 +34,75 @@
     "approve and apply queued graph updates",
     "build knowledge graph from own text"
   ],
+  "capabilities": [
+    {
+      "label": "Retrieve project decisions via read-only MCP tools",
+      "area": "integrations"
+    },
+    {
+      "label": "Queue proposed updates for human approval",
+      "area": "review"
+    },
+    {
+      "label": "Ask questions against the knowledge graph",
+      "area": "subcommands"
+    },
+    {
+      "label": "Run a demo without models",
+      "area": "subcommands"
+    },
+    {
+      "label": "Ingest JSONL, Markdown or text files",
+      "items": [
+        "jsonl",
+        "Markdown",
+        "text"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Review extracted facts before applying",
+      "items": [
+        "accept",
+        "refuse",
+        "contested"
+      ],
+      "area": "review"
+    },
+    {
+      "label": "View historical facts",
+      "area": "search"
+    },
+    {
+      "label": "Check setup with doctor command",
+      "area": "subcommands"
+    },
+    {
+      "label": "Use local inference with Ollama",
+      "area": "integrations"
+    },
+    {
+      "label": "Store graphs in multiple databases",
+      "items": [
+        "LadybugDB",
+        "FalkorDB",
+        "Neo4j"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Separate per-user graph files with tokens",
+      "area": "multi-user"
+    },
+    {
+      "label": "Track ingest receipts and failures",
+      "area": "ingestion"
+    },
+    {
+      "label": "Retract proposals",
+      "area": "review"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -279,22 +348,22 @@
         "fixed_in": "4.2.1",
         "summary": "filelock ReadWriteLock: SQLite reopens the lock database by name, so a planted symlink or journal file makes the lock user's process overwrite or unlink its own files",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-10-17T16:48:12Z",
         "scope": "runtime",
+        "paths": [
+          "pyproject.toml > filelock"
+        ],
         "found_in": "pyproject.toml",
         "kev": false,
         "epss": 0.0019,
-        "fix_published_at": "2026-10-17T16:48:12Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access"
         ],
-        "paths": [
-          "pyproject.toml > filelock"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -354,17 +423,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 86.5,
       "confidence": 0.8,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.6875,
@@ -384,10 +450,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       },
-      "raw_total": 86.5,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -762,8 +831,112 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T03:15:28+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "Retrieve project decisions through six read-only MCP tools or the `kg` CLI.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:34+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "Proposed updates stay in a separate queue until a human approves and applies them.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:34+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "uv run --frozen kg ask \"Which database does Aurora Analytics use?\" example",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:34+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "No Ollama,\nno model downloads, no database setup: retrieval runs on keywords alone",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:34+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "`kg-ingest` also accepts a Markdown/text file or a directory tree directly.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:34+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "mark every\nfact in the generated `review.jsonl.review.jsonl` file as `accept`, `refuse`, or\n`contested`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:34+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "`kg ask --history` is the explicit historical view.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:34+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "uv run --frozen kg doctor",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:34+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Ollama handles local inference; embedded LadybugDB stores the graph.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:34+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "FalkorDB and Neo4j are also supported.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:34+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "Give each user a group, and each group its own Ladybug file:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:34+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "`ingest-receipts.jsonl` and `ingest-failures.jsonl` in the workspace show\nexactly what landed",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:34+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "release:v0.10.0",
+      "quote": "retractable proposals",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:34+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

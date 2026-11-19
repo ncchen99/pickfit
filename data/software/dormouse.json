@@ -32,6 +32,72 @@
     "drive browser panes next to terminals",
     "get alerts when tasks need attention"
   ],
+  "capabilities": [
+    {
+      "label": "Alert when a terminal needs attention",
+      "items": [
+        "BEL",
+        "OSC 9/9;4/99/777"
+      ],
+      "area": "notifications"
+    },
+    {
+      "label": "Use tmux-compatible keybindings",
+      "area": "input"
+    },
+    {
+      "label": "Split and resize panes with the mouse",
+      "area": "layout"
+    },
+    {
+      "label": "Select and copy text in mouse-aware TUIs",
+      "area": "editing"
+    },
+    {
+      "label": "Minimize terminals to status indicators",
+      "area": "layout"
+    },
+    {
+      "label": "Embed agent-drivable browser panes",
+      "area": "integrations"
+    },
+    {
+      "label": "Run as VS Code extension",
+      "area": "integrations"
+    },
+    {
+      "label": "Self-host a Relay for remote control",
+      "area": "remote"
+    },
+    {
+      "label": "Edit Markdown files in rich editor",
+      "area": "editing"
+    },
+    {
+      "label": "Edit PNG/JPEG images",
+      "items": [
+        "PNG",
+        "JPEG"
+      ],
+      "area": "editing"
+    },
+    {
+      "label": "Open files with fuzzy file picker",
+      "area": "subcommands"
+    },
+    {
+      "label": "Reopen closed surfaces and workspaces",
+      "area": "subcommands"
+    },
+    {
+      "label": "Pin and unpin workspaces",
+      "area": "subcommands"
+    },
+    {
+      "label": "Resume Pi agent sessions after restart",
+      "area": "agents"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -127,22 +193,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "dormouse > tauri > plist > quick-xml"
+        ],
         "workspace": "standalone/src-tauri",
         "found_in": "standalone/src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "dormouse > tauri > plist > quick-xml"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -153,22 +219,19 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "dormouse > tauri > plist > quick-xml"
+        ],
         "workspace": "standalone/src-tauri",
         "found_in": "standalone/src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:NsReader"
-        ],
-        "paths": [
-          "dormouse > tauri > plist > quick-xml"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -176,7 +239,10 @@
           "evidence": [
             "the project's source does not use NsReader, but other packages depend on quick-xml"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -247,17 +313,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 54.5,
+      "raw_total": 54.5,
       "confidence": 0.4,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.3125,
@@ -277,10 +340,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 54.5,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -688,8 +754,120 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:36:11+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "Alerts when something needs you.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:44+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "tmux-compatible keybindings.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:44+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Click to split, drag to resize, scroll to navigate.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:44+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Click and drag selects text the way you'd expect, even in mouse-aware TUIs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:44+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "Minimize a terminal to a compact status indicator.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:44+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "Put a browser in the tiling layout next to the terminal serving it, drivable by you or your agents.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:44+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "Standalone desktop app (Mac/Windows/Linux) or VS Code extension.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:44+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "run the coordinating Relay on your own tailnet",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:44+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "release:v1.3.0",
+      "quote": "`.md` and `.markdown` files open in a rich Markdown editor",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:44+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "release:v1.3.0",
+      "quote": "A built-in PNG/JPEG image editor (markup, redact, crop, pixel tools) saves in place",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:44+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "release:v1.3.0",
+      "quote": "a bare `dor open` opens a fuzzy file picker that shows each file's handler",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:44+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "release:v1.3.0",
+      "quote": "command-mode `u` or `dor reopen` brings back closed Surfaces and Workspaces",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:44+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "release:v1.3.0",
+      "quote": "`dor workspace pin` / `unpin`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:44+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "release:v1.3.0",
+      "quote": "Pi agent sessions resume across app restart",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:44+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:15+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

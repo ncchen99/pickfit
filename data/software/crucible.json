@@ -37,6 +37,114 @@
     "quantize pruned models to W4A16",
     "benchmark served models for evaluation"
   ],
+  "capabilities": [
+    {
+      "label": "Prune MoE experts with REAP",
+      "area": "compression"
+    },
+    {
+      "label": "Inspect a model's MoE structure",
+      "area": "subcommands"
+    },
+    {
+      "label": "Score experts on calibration data once",
+      "area": "subcommands"
+    },
+    {
+      "label": "Compress model at a pruning ratio",
+      "area": "subcommands"
+    },
+    {
+      "label": "Quantize pruned model to W4A16",
+      "area": "subcommands"
+    },
+    {
+      "label": "Choose expert scoring strategies",
+      "items": [
+        "reap",
+        "pathfinder",
+        "task-aware",
+        "adaptive"
+      ],
+      "area": "compression"
+    },
+    {
+      "label": "Protect experts with routing-aware pruning",
+      "area": "compression"
+    },
+    {
+      "label": "Merge-then-prune experts with REAM",
+      "area": "compression"
+    },
+    {
+      "label": "Benchmark OpenAI-compatible endpoints",
+      "items": [
+        "vLLM",
+        "llama-server"
+      ],
+      "area": "evaluation"
+    },
+    {
+      "label": "Run coding, tool-use and knowledge benchmarks",
+      "items": [
+        "HumanEval",
+        "HumanEval+",
+        "MBPP+",
+        "BigCodeBench-Complete",
+        "BFCL",
+        "IFEval",
+        "MMLU-Pro",
+        "GPQA-Diamond"
+      ],
+      "area": "evaluation"
+    },
+    {
+      "label": "Select preset benchmark suites",
+      "items": [
+        "quick",
+        "coding",
+        "coding_plus",
+        "regression",
+        "instruct",
+        "full"
+      ],
+      "area": "evaluation"
+    },
+    {
+      "label": "Compare two benchmark runs",
+      "area": "evaluation"
+    },
+    {
+      "label": "Output comparison as Markdown",
+      "area": "output"
+    },
+    {
+      "label": "Write results as structured JSON",
+      "area": "output"
+    },
+    {
+      "label": "Sandbox generated code in containers",
+      "items": [
+        "podman",
+        "docker"
+      ],
+      "area": "security"
+    },
+    {
+      "label": "Run multi-turn agentic tool-calling probes",
+      "area": "evaluation"
+    },
+    {
+      "label": "Compress supported MoE model families",
+      "items": [
+        "Gemma 4 26B-A4B",
+        "Qwen 3.5 / 3.6 35B-A3B",
+        "Qwen3 30B-A3B",
+        "Mixtral 8x7B"
+      ],
+      "area": "models"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -282,17 +390,14 @@
     "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 67.3,
+      "raw_total": 67.3,
       "confidence": 0.6,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.625,
@@ -312,10 +417,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 67.3,
       "security": {
         "level": "none",
         "basis": "assessment",
@@ -621,8 +729,144 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:36:22+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "Implements [REAP](https://arxiv.org/abs/2510.13999) expert\npruning with several scoring strategies",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:20+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "uv run crucible inspect Qwen/Qwen3.6-35B-A3B",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:20+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "# Score experts once, reuse the scores across every compression ratio",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:20+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "uv run crucible compress Qwen/Qwen3.6-35B-A3B",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:20+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "# Quantize the pruned model to compressed-tensors W4A16 (needs llm-compressor)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:20+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "Scoring variants via `--scoring`:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:20+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "`--routing-aware` composes with any of them: it protects experts whose tokens have nowhere\nelse to go",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:20+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "**REAM** (`--method ream`) — merge-then-prune.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:20+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "drives any\nOpenAI-compatible endpoint (vLLM, llama-server, …)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:20+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "**Coding**: HumanEval, HumanEval+, MBPP+, BigCodeBench-Complete",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:20+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "Suites are preset (`--suite quick|coding|coding_plus|regression|instruct|full`).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:20+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "# Diff two runs, with recovery percentages",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:20+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "uv run crucible-bench compare results/baseline.json results/reap-40pct.json --markdown",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:20+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "Results are\nwritten as structured JSON, one file per run",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:20+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "default: containerize if podman/docker is present, else warn and run locally",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:20+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "multi-turn agentic probes under\n  `crucible_bench.agent_probes`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:20+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "| Mixtral 8x7B | 8 | 2 | modulelist |",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:20+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-11-20T00:06:03+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

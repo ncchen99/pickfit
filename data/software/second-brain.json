@@ -37,6 +37,144 @@
     "enrich notes with local LLM",
     "query knowledge base via MCP server"
   ],
+  "capabilities": [
+    {
+      "label": "Hybrid full-text and vector search",
+      "area": "search"
+    },
+    {
+      "label": "Ingest documents into the knowledge base",
+      "items": [
+        "TXT",
+        "MD",
+        "PDF",
+        "DOCX"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Ingest a directory recursively",
+      "area": "subcommands"
+    },
+    {
+      "label": "Store transcripts, Slack threads and Gmail",
+      "items": [
+        "Krisp transcripts",
+        "Slack threads",
+        "Gmail",
+        "Markdown notes"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Query the corpus via MCP server",
+      "area": "integrations"
+    },
+    {
+      "label": "Build a GraphRAG entity graph",
+      "area": "search"
+    },
+    {
+      "label": "Get cited multi-hop answers",
+      "area": "subcommands"
+    },
+    {
+      "label": "Recall passages within a token budget",
+      "area": "subcommands"
+    },
+    {
+      "label": "Quick-capture notes to an inbox",
+      "area": "subcommands"
+    },
+    {
+      "label": "Show a full document",
+      "area": "subcommands"
+    },
+    {
+      "label": "List documents by source",
+      "area": "subcommands"
+    },
+    {
+      "label": "Add and remove tags",
+      "area": "editing"
+    },
+    {
+      "label": "Output results as JSON",
+      "area": "output"
+    },
+    {
+      "label": "Generate a daily digest",
+      "area": "subcommands"
+    },
+    {
+      "label": "Resurface older notes for review",
+      "area": "subcommands"
+    },
+    {
+      "label": "Synthesize a weekly review page",
+      "area": "subcommands"
+    },
+    {
+      "label": "Show a theme's timeline",
+      "area": "subcommands"
+    },
+    {
+      "label": "Propose links between related notes",
+      "area": "subcommands"
+    },
+    {
+      "label": "Find unanswered query gaps",
+      "area": "subcommands"
+    },
+    {
+      "label": "Browse and edit notes in a web UI",
+      "area": "interface"
+    },
+    {
+      "label": "Read the brain from a phone over LAN",
+      "area": "interface"
+    },
+    {
+      "label": "Mark documents confidential",
+      "area": "privacy"
+    },
+    {
+      "label": "Back up database and vault",
+      "area": "maintenance"
+    },
+    {
+      "label": "Restore from a backup archive",
+      "area": "maintenance"
+    },
+    {
+      "label": "Report usage statistics",
+      "area": "maintenance"
+    },
+    {
+      "label": "Diagnose environment health",
+      "area": "maintenance"
+    },
+    {
+      "label": "Run an offline demo sandbox",
+      "area": "subcommands"
+    },
+    {
+      "label": "Sync vault edits with a watcher",
+      "area": "subcommands"
+    },
+    {
+      "label": "Re-embed documents",
+      "area": "subcommands"
+    },
+    {
+      "label": "Explain ranking and rate relevance",
+      "area": "search"
+    },
+    {
+      "label": "Run local embeddings and LLM enrichment",
+      "area": "integrations"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -309,17 +447,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 85.9,
+      "raw_total": 85.9,
       "confidence": 0.6,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.8125,
@@ -339,10 +474,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 85.9,
       "security": {
         "level": "none",
         "basis": "assessment",
@@ -694,8 +832,256 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:36:56+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "brain search \"what did I tell my manager about the migration\"   # hybrid FTS + vector search",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "brain ingest ~/Documents/resume.pdf --tag career          # ingest a file (TXT / MD / PDF / DOCX)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "brain ingest-dir ~/Documents/career                       # recursive, idempotent by content hash",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Stores career docs, interview prep, Krisp transcripts, Slack threads, Gmail, and authored Markdown notes in Postgres + pgvector.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "claude mcp add brain -- brain-mcp",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "brain builds an entity graph of the people and concepts that co-occur across the corpus",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "brain ask \"what did we decide about the data pipeline?\" # cited multi-hop answer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "brain recall \"platform migration runway\" --budget 800",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "brain capture --text \"follow up on the migration cutover\" # zero-friction inbox, tagged `inbox`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "brain show <id-prefix>                                    # full document body (6+ hex prefix)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "brain list --source gmail --limit 20                      # browse by source",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "brain tag <id-prefix> +interview +career -old-tag         # add (+name) / remove (-name) tags",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "Add `--json` to `search` / `show` / `list` for machine-readable output",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "brain brief                                             # today's digest",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "brain resurface                                         # older notes due for review",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "`brain review weekly` synthesizes an ISO week into a vault page",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "`brain timeline` shows how a theme moved over time",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "`brain connect` proposes links between notes that share entities but aren't linked yet",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "`brain gaps` mines the queries your brain failed to answer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "You can browse the tree, search with facets, read a document, and create, edit, move, or delete vault notes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "readme",
+      "quote": "brain ui --lan --read-only                # read from your phone: LAN address + a token",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "readme",
+      "quote": "brain mark-confidential <id-prefix>       # brain mark-normal downgrades it again",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/22/label",
+      "source_id": "readme",
+      "quote": "brain backup --label pre-upgrade    # checksummed DB + vault archive, with a manifest",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/23/label",
+      "source_id": "readme",
+      "quote": "brain restore <archive> --db-only",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/24/label",
+      "source_id": "readme",
+      "quote": "brain usage --days 30               # searches, opens, ingests, and search latency p50/p95",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/25/label",
+      "source_id": "readme",
+      "quote": "brain doctor                        # environment, database, embedder, daemons, mirror drift",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/26/label",
+      "source_id": "readme",
+      "quote": "brain demo        # spins up a sandbox Postgres, seeds 22 docs, runs a hero query",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/27/label",
+      "source_id": "readme",
+      "quote": "brain vault sync --watch",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/28/label",
+      "source_id": "readme",
+      "quote": "run `brain init && brain reembed`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/29/label",
+      "source_id": "readme",
+      "quote": "ranking diagnostics (`brain explain`) and relevance feedback (`brain rate`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
+    },
+    {
+      "field": "/capabilities/30/label",
+      "source_id": "readme",
+      "quote": "local, free embeddings + LLM enrichment",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:55+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

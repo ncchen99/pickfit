@@ -28,6 +28,70 @@
     "open files as structured data",
     "extend shell with plugins"
   ],
+  "capabilities": [
+    {
+      "label": "pipe structured data between commands",
+      "area": "pipelines"
+    },
+    {
+      "label": "list directory contents as a table",
+      "area": "commands"
+    },
+    {
+      "label": "filter rows with where",
+      "area": "commands"
+    },
+    {
+      "label": "list running processes",
+      "area": "commands"
+    },
+    {
+      "label": "open files and URLs as structured data",
+      "area": "formats"
+    },
+    {
+      "label": "load TOML files as structured data",
+      "area": "formats"
+    },
+    {
+      "label": "get nested fields from data",
+      "area": "commands"
+    },
+    {
+      "label": "extend the shell with plugins",
+      "area": "plugins"
+    },
+    {
+      "label": "run existing platform executables"
+    },
+    {
+      "label": "customize configuration via config.nu",
+      "area": "configuration"
+    },
+    {
+      "label": "integrates with third-party shell tools",
+      "items": [
+        "zoxide",
+        "starship",
+        "oh-my-posh",
+        "Couchbase Shell",
+        "virtualenv",
+        "atuin",
+        "clap",
+        "Dorothy",
+        "Direnv",
+        "x-cmd",
+        "vfox",
+        "Windmill",
+        "Lacy"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "use Nu in GitHub Actions",
+      "area": "integrations"
+    }
+  ],
   "why_worth_it": null,
   "homepage": "https://www.nushell.sh/",
   "repo": {
@@ -294,22 +358,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "nu_plugin_polars > polars-io > object_store > quick-xml"
+        ],
         "workspace": "crates/nu_plugin_polars",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "nu_plugin_polars > polars-io > object_store > quick-xml"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -320,22 +384,19 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "nu_plugin_polars > polars-io > object_store > quick-xml"
+        ],
         "workspace": "crates/nu_plugin_polars",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:NsReader"
-        ],
-        "paths": [
-          "nu_plugin_polars > polars-io > object_store > quick-xml"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -343,7 +404,10 @@
           "evidence": [
             "the project's source does not use NsReader, but other packages depend on quick-xml"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -408,17 +472,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 84.7,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.625,
@@ -438,10 +499,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       },
-      "raw_total": 84.7,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -872,8 +936,104 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-04T13:11:18+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "commands can output structured data (you can think of this as a third kind of stream)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:56+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "when you list the contents of a directory what you get back is a table of rows",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:56+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Commands that filter a stream (e.g., `where type == \"dir\"`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:56+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "use the built-in `ps` command to get a list of the running processes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:56+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "Nu can load file and URL contents as raw text or structured data (if it recognizes the format).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:56+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "you can load a .toml file as structured data and explore it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:56+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "open Cargo.toml | get package.version",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:56+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Nu supports plugins that offer additional functionality to the shell",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:56+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Nu ensures compatibility with existing platform-specific executables.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:56+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "To see where *config.nu* is located on your system simply type this command.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:56+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "Officially Supported By",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:56+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "To use `Nu` in GitHub Action, check [setup-nu]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:56+08:00"
     }
   ],
   "first_seen_at": "2026-11-04T13:04:47+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

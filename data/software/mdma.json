@@ -33,6 +33,117 @@
     "serve models over mTLS gRPC server"
   ],
   "alternatives_to": [],
+  "capabilities": [
+    {
+      "label": "Run local LLM inference on GGUF models",
+      "area": "inference"
+    },
+    {
+      "label": "Run on multiple hardware backends",
+      "items": [
+        "CPU",
+        "ROCm",
+        "Vulkan",
+        "Level Zero",
+        "CUDA",
+        "Metal",
+        "Coral Edge TPU"
+      ],
+      "area": "backends"
+    },
+    {
+      "label": "Load supported model architectures",
+      "items": [
+        "llama",
+        "internlm2",
+        "gemma4",
+        "qwen2",
+        "qwen3",
+        "qwen2vl",
+        "qwen35",
+        "glm4"
+      ],
+      "area": "models"
+    },
+    {
+      "label": "Inventory machine hardware",
+      "area": "subcommands"
+    },
+    {
+      "label": "Check which compiled backends work",
+      "area": "subcommands"
+    },
+    {
+      "label": "Estimate whether a model fits memory",
+      "area": "subcommands"
+    },
+    {
+      "label": "Offload layers between CPU and GPU",
+      "area": "memory"
+    },
+    {
+      "label": "Reject requests that exceed memory up front",
+      "area": "memory"
+    },
+    {
+      "label": "Serve models over mTLS gRPC",
+      "items": [
+        "Synthesize",
+        "Decide",
+        "Introspect"
+      ],
+      "area": "serving"
+    },
+    {
+      "label": "Stream completions from a client",
+      "area": "client"
+    },
+    {
+      "label": "Federate machines into a private inference fabric",
+      "area": "federation"
+    },
+    {
+      "label": "Enroll peers, grants and routes",
+      "area": "federation"
+    },
+    {
+      "label": "Generate development TLS certificates",
+      "area": "security"
+    },
+    {
+      "label": "View memory and federation in browser UI",
+      "area": "ui"
+    },
+    {
+      "label": "Benchmark load, prefill and decode",
+      "area": "benchmarking"
+    },
+    {
+      "label": "Check claims against a document",
+      "area": "inference"
+    },
+    {
+      "label": "Run Laya typed decisions from JSON",
+      "area": "inference"
+    },
+    {
+      "label": "Embed as a Rust library",
+      "area": "library"
+    },
+    {
+      "label": "Adapt limits to laptop battery power",
+      "area": "power"
+    },
+    {
+      "label": "Install as system service",
+      "items": [
+        "systemd",
+        "launchd",
+        "FreeBSD rc.d"
+      ],
+      "area": "serving"
+    }
+  ],
   "why_worth_it": null,
   "homepage": "https://crates.io/crates/mdma",
   "repo": {
@@ -321,20 +432,20 @@
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-17T18:45:16Z",
         "scope": "runtime",
+        "paths": [
+          "mdma > candle-core > zip"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.0032,
-        "fix_published_at": "2026-10-17T18:45:16Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "mdma > candle-core > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -345,22 +456,19 @@
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "mdma > candle-core > zip"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:ZipStreamReader::extract",
           "symbol:ZipArchive::extract"
-        ],
-        "paths": [
-          "mdma > candle-core > zip"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -368,7 +476,10 @@
           "evidence": [
             "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -381,23 +492,23 @@
         "fixed_in": "9.0.0",
         "summary": "zip: legacy Shrink/Reduce/Implode decoder: denial of service from attacker-controlled ZIP64 uncompressed size",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "mdma > candle-core > zip"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.0035,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "mdma > candle-core > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -410,23 +521,20 @@
         "fixed_in": "9.0.0",
         "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "mdma > candle-core > zip"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00432,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity",
           "symbol:ZipArchive::extract"
-        ],
-        "paths": [
-          "mdma > candle-core > zip"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -434,7 +542,10 @@
           "evidence": [
             "the project's source does not use ZipArchive::extract, but other packages depend on zip"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -447,23 +558,23 @@
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "mdma > candle-core > zip"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00461,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "mdma > candle-core > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -474,23 +585,23 @@
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "mdma > candle-core > zip"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction"
         ],
-        "paths": [
-          "mdma > candle-core > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -586,17 +697,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 81.9,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.6875,
@@ -616,10 +724,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       },
-      "raw_total": 81.9,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -964,8 +1075,168 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:14:23+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "mdma is an inference engine: GGUF loader,",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:14+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "One `Backend` trait, seven implementations",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:14+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Native GGUF loading dispatches on `general.architecture`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:14+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "`mdma info` inventories a machine",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:14+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "`mdma doctor` proves which compiled backends\nactually work on it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:14+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "`mdma plan` estimates whether a model fits before\nanything loads",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:14+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "`mdma run --gpu-layers auto`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:14+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "a request that cannot fit is rejected\nup front with `RESOURCE_EXHAUSTED`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:14+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "`mdma-serve` | mTLS gRPC server, configured by environment variables",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:14+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "minimal mTLS client: Introspect, streamed completion or `--decide`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:14+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "Machines you trust, yours and the people you choose, can form a federation.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:14+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "federation setup: node identity, peer enrollment and grants, routes, status",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:14+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "development CA, server and client certificates; `--spki` prints a certificate pin",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:14+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "loopback browser UI: 3D memory, federation and playground views over mTLS",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:14+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "isolated load, memory, prefill and decode measurements",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:14+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "a document and claims in, the probability\neach claim is supported out",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:14+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "Laya typed decisions from a JSON request",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:14+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "Embed it as a Rust crate",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:14+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "shrinks its\nlimits on battery and refuses new work at critical charge",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:14+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "systemd, launchd and FreeBSD rc.d templates, warm-up and readiness",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:14+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

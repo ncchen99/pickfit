@@ -32,6 +32,94 @@
     "test candidate manifests against references",
     "benchmark programs on real workloads"
   ],
+  "capabilities": [
+    {
+      "label": "Verify a model manifest",
+      "area": "subcommands"
+    },
+    {
+      "label": "Generate text from a model",
+      "area": "subcommands"
+    },
+    {
+      "label": "Test candidate manifest against reference",
+      "area": "subcommands"
+    },
+    {
+      "label": "Benchmark time per call on workloads",
+      "area": "subcommands"
+    },
+    {
+      "label": "Slice manifest into pipeline stages",
+      "area": "subcommands"
+    },
+    {
+      "label": "Serve models via OpenAI-compatible API",
+      "area": "serving"
+    },
+    {
+      "label": "List kern binary subcommands",
+      "items": [
+        "run",
+        "test",
+        "bench",
+        "server",
+        "verify",
+        "cut",
+        "kernels"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Run as model inside vLLM",
+      "area": "integrations"
+    },
+    {
+      "label": "Run as model inside SGLang",
+      "area": "integrations"
+    },
+    {
+      "label": "Fetch kernels from Hugging Face hub",
+      "area": "integrations"
+    },
+    {
+      "label": "Continuous batching",
+      "area": "serving"
+    },
+    {
+      "label": "Share prefix cache by page",
+      "area": "memory"
+    },
+    {
+      "label": "Capture programs as CUDA graphs",
+      "area": "runtime"
+    },
+    {
+      "label": "Parallelize with EP, TP, pipeline stages",
+      "items": [
+        "EP",
+        "TP",
+        "pipeline stages"
+      ],
+      "area": "parallelism"
+    },
+    {
+      "label": "Load weights from Hugging Face checkpoints",
+      "area": "formats"
+    },
+    {
+      "label": "Isolate single-call benchmarks cold and warm",
+      "area": "benchmarking"
+    },
+    {
+      "label": "Compare logits by per-row KL",
+      "area": "testing"
+    },
+    {
+      "label": "Sleep sessions to host memory",
+      "area": "serving"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -256,22 +344,19 @@
         "fixed_in": "0.13.5",
         "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-21T19:45:37Z",
         "scope": "runtime",
+        "paths": [
+          "kern-serve > infront-vllm > vllm-server > vllm-proto > tonic-prost-build > prost-build > pulldown-cmark"
+        ],
         "workspace": "crates/kern-serve",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-21T19:45:37Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "option:ENABLE_WIKILINKS"
-        ],
-        "paths": [
-          "kern-serve > infront-vllm > vllm-server > vllm-proto > tonic-prost-build > prost-build > pulldown-cmark"
         ],
         "reachability": {
           "method": "option_grep",
@@ -279,7 +364,10 @@
           "evidence": [
             "the project's source does not use ENABLE_WIKILINKS, but other packages depend on pulldown-cmark"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:pulldown-cmark",
@@ -290,22 +378,19 @@
         "fixed_in": "0.13.6",
         "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-30T08:50:18Z",
         "scope": "runtime",
+        "paths": [
+          "kern-serve > infront-vllm > vllm-server > vllm-proto > tonic-prost-build > prost-build > pulldown-cmark"
+        ],
         "workspace": "crates/kern-serve",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-30T08:50:18Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "option:ENABLE_WIKILINKS"
-        ],
-        "paths": [
-          "kern-serve > infront-vllm > vllm-server > vllm-proto > tonic-prost-build > prost-build > pulldown-cmark"
         ],
         "reachability": {
           "method": "option_grep",
@@ -313,7 +398,10 @@
           "evidence": [
             "the project's source does not use ENABLE_WIKILINKS, but other packages depend on pulldown-cmark"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -386,17 +474,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 78.5,
+      "raw_total": 78.5,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.7225,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.8125,
@@ -416,10 +501,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 78.5,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -844,8 +932,152 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T03:14:57+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "`verify` checks the whole manifest at once in milliseconds and reports every problem, not just the first.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "./target/release/kern run qwen3-4b --steps 320                  # generate",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "`kern test` takes a reference manifest A and a candidate B. It diffs them",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "`kern bench` takes a workload of shapes (sequences × rows × context) and",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "`kern cut` slices a manifest into pipeline stages by",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "./target/release/kern server qwen3-4b --port 8000               # OpenAI-compatible server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "The `kern` binary: `run`, `test`, `bench`, `server`, `verify`, `cut`, `kernels`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Inside vLLM, the manifest is the model and vLLM keeps everything else:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "SGLang works the same way through `kern_sglang`, in the same package",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "It is pinned by SHA-256 and fetched\nfrom a path, a URL or the Hugging Face hub.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "`kern-serve` is kern's own server: continuous batching",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "**It shares prefixes by page.**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "captured as a CUDA graph\nper shape bucket where it can",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "EP, TP and\npipeline stages across trays",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "a `weight` binds by name to a tensor in the\nHugging Face checkpoint",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "`--isolate` measures\na single call on its own, cold and warm",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "End to end it compares logits\nby per-row KL",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "sessions that sleep to host memory",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:28:30+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

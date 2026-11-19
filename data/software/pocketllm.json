@@ -37,6 +37,107 @@
     "transcribe speech audio to transcript",
     "process images with vision-language path"
   ],
+  "capabilities": [
+    {
+      "label": "Run Qwen3 models from GGUF files",
+      "area": "inference"
+    },
+    {
+      "label": "Serve OpenAI-compatible chat completions HTTP API",
+      "area": "server"
+    },
+    {
+      "label": "Decode packed quantized weight formats",
+      "items": [
+        "f16",
+        "q2_k",
+        "q3_k",
+        "q4_k",
+        "q5_k",
+        "q6_k",
+        "iq2_xxs",
+        "iq2_xs"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Run vision-language model Qwen3-VL on images",
+      "area": "multimodal"
+    },
+    {
+      "label": "Transcribe speech with Qwen3-ASR",
+      "area": "multimodal"
+    },
+    {
+      "label": "Run llama-architecture checkpoints like MiniCPM5-1B",
+      "area": "models"
+    },
+    {
+      "label": "Sample with temperature, top-k, top-p, min-p, seed",
+      "items": [
+        "temperature",
+        "top-k",
+        "top-p",
+        "min-p",
+        "seed"
+      ],
+      "area": "generation"
+    },
+    {
+      "label": "CLI subcommands for devices, backends, ops",
+      "items": [
+        "devices",
+        "backends",
+        "architectures",
+        "ops",
+        "run",
+        "serve"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Run on CPU, NVIDIA, Ascend, RDK S600",
+      "items": [
+        "CPU (AVX2)",
+        "NVIDIA (sm_75+)",
+        "RDK S600",
+        "Orange Pi AIpro (Ascend 310B1)"
+      ],
+      "area": "devices"
+    },
+    {
+      "label": "Decode GGML quantization blocks in Python",
+      "items": [
+        "IQ4_NL",
+        "IQ4_XS",
+        "IQ1_M",
+        "IQ2/IQ3",
+        "q2_k–q6_k",
+        "q8_0"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Read GGUF files",
+      "area": "formats"
+    },
+    {
+      "label": "Apply checkpoint's own chat template",
+      "area": "server"
+    },
+    {
+      "label": "Load third-party backends via entry points",
+      "area": "integrations"
+    },
+    {
+      "label": "Call engine from C via ABI",
+      "items": [
+        "pocketllm_vlm_*",
+        "pocketllm_asr_*"
+      ],
+      "area": "api"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -318,17 +419,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.1,
+      "raw_total": 79.1,
       "confidence": 0.6,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 0.7225,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.75,
@@ -348,10 +446,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 79.1,
       "security": {
         "level": "none",
         "basis": "assessment",
@@ -696,8 +797,120 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T03:15:35+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "`pocketllm run --model /path/to/qwen3-0.6b-f16.gguf --prompt \"The capital of France is\" --max-tokens 8`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:11+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "`serve` puts the same engine behind OpenAI-compatible HTTP, over the same checkpoint",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:11+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "`q2_k`, `q3_k`, `q5_k`, `iq2_xxs` and `iq2_xs` join `q4_k` and `q6_k` as formats the engine decodes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:11+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "`qwen3vl` runs end to end — the tower, any-size preprocessing, the image span and the text around it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:11+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "Qwen3-ASR-1.7B, speech in and a transcript out",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:11+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "the same C-core rows run a dense **`llama`-architecture** checkpoint",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:11+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "`run` is greedy by default and samples when `--temperature` is above zero, with `--top-k`, `--top-p`,",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:11+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "**Done** for all six commands — `devices`, `backends`, `architectures`, `ops`, `run`, `serve`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:11+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Qwen3, on four accelerator classes, through one engine.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:11+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "IQ4_NL, IQ4_XS, IQ1_M, IQ2/IQ3, q2_k–q6_k, q8_0",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:11+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "`pocketllm.loader.gguf` — GGUF reader",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:11+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "The prompt goes through the checkpoint's **own chat template**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:11+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "A backend can arrive from a third-party package through the `pocketllm.backends` entry-point group",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:11+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "Both paths also have an ABI entry point now",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:11+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:28:43+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

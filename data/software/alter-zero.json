@@ -36,6 +36,152 @@
     "Read files, edit code, run commands",
     "Delegate focused work to subagents"
   ],
+  "capabilities": [
+    {
+      "label": "AI coding agent in the terminal",
+      "area": "core"
+    },
+    {
+      "label": "Read files, edit, run commands",
+      "area": "core"
+    },
+    {
+      "label": "Connect to multiple model providers",
+      "items": [
+        "Agent Zero API",
+        "Venice",
+        "GitHub Copilot",
+        "ChatGPT Codex",
+        "Anthropic",
+        "Cline",
+        "ClinePass",
+        "OpenRouter",
+        "Ollama",
+        "LM Studio",
+        "Ollama Cloud"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Add custom OpenAI-compatible providers",
+      "area": "integrations"
+    },
+    {
+      "label": "Connect MCP servers",
+      "items": [
+        "stdio",
+        "HTTP",
+        "SSE"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Delegate work to subagents",
+      "items": [
+        "general-purpose",
+        "explore"
+      ],
+      "area": "agents"
+    },
+    {
+      "label": "Use reusable skills",
+      "items": [
+        "skill-creator",
+        "web-search",
+        "jina-reader",
+        "yt-dlp",
+        "flaredantic"
+      ],
+      "area": "extensions"
+    },
+    {
+      "label": "Lifecycle hooks for tool calls",
+      "area": "extensions"
+    },
+    {
+      "label": "Four permission modes",
+      "items": [
+        "manual",
+        "edit",
+        "auto",
+        "master"
+      ],
+      "area": "permissions"
+    },
+    {
+      "label": "Review changes at approval prompt",
+      "area": "permissions"
+    },
+    {
+      "label": "Checkpoints and rewind files",
+      "area": "sessions"
+    },
+    {
+      "label": "Resume saved conversations",
+      "area": "sessions"
+    },
+    {
+      "label": "Compact long conversations",
+      "area": "context"
+    },
+    {
+      "label": "View subscription usage limits",
+      "area": "context"
+    },
+    {
+      "label": "Syntax-highlighted diffs and file views",
+      "area": "output"
+    },
+    {
+      "label": "Review Git changes full-screen",
+      "area": "subcommands"
+    },
+    {
+      "label": "Inline images in terminal",
+      "items": [
+        "kitty",
+        "iTerm2",
+        "sixel"
+      ],
+      "area": "output"
+    },
+    {
+      "label": "Run background commands",
+      "area": "execution"
+    },
+    {
+      "label": "Export conversation as plain text",
+      "area": "output"
+    },
+    {
+      "label": "Store secrets by placeholder",
+      "area": "security"
+    },
+    {
+      "label": "Create AGENTS.md project guide",
+      "area": "subcommands"
+    },
+    {
+      "label": "Customise themes, mascots, spinners",
+      "area": "customisation"
+    },
+    {
+      "label": "Self-update to newest release",
+      "area": "subcommands"
+    },
+    {
+      "label": "Claude Code-style skills and MCP config",
+      "area": "integrations"
+    },
+    {
+      "label": "herdr pane integration",
+      "area": "integrations"
+    },
+    {
+      "label": "Run in Kali Linux container",
+      "area": "deployment"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -254,22 +400,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "alter-zero > wl-clipboard-rs > wayland-client > wayland-scanner > quick-xml"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "alter-zero > wl-clipboard-rs > wayland-client > wayland-scanner > quick-xml"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -280,22 +426,19 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "alter-zero > wl-clipboard-rs > wayland-client > wayland-scanner > quick-xml"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:NsReader"
-        ],
-        "paths": [
-          "alter-zero > wl-clipboard-rs > wayland-client > wayland-scanner > quick-xml"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -303,7 +446,10 @@
           "evidence": [
             "the project's source does not use NsReader, but other packages depend on quick-xml"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -410,17 +556,14 @@
     "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 91.3,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.8125,
@@ -440,10 +583,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 91.3,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -881,8 +1027,216 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T03:15:01+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "Give your terminal a coding agent.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "reading files, making edits, running commands, and checking results",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Connect to a supported subscription service, API provider, or local model server.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Any service with an OpenAI-compatible API, or a local server such as llama.cpp or vLLM, can be added in `~/.alter-zero/providers.toml`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "Connect tools over stdio, HTTP, or SSE, including remote servers with OAuth.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "Delegate focused work to agents with their own context, model, and tool access.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "Add reusable `SKILL.md` folders, mention one with `$`, or browse them with `/skills`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Use `hooks.json` to approve, reject, or adjust tool calls and supply context.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "**Four permission modes.**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Inspect proposed file content, diffs, and commands before approving them.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "Enable checkpoints per directory to snapshot your working files in a separate store.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "`/resume` opens a searchable session picker.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "`/compact` summarises long conversations, with automatic compaction as the window fills.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "See your subscriptions' usage limits: each window's share used and when it resets",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "Numbered, syntax-highlighted file views and diffs highlight the characters that changed",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "Review staged, unstaged, and untracked Git changes in a full-screen viewer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "Images render natively in kitty, iTerm2, and sixel terminals",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "Move a running command to the background with **Ctrl+B**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "Copy or save the conversation as plain text",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "Store credentials the agent uses by placeholder, `<secret:NAME>`, without ever seeing the value",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "readme",
+      "quote": "Create an `AGENTS.md` contributor guide",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "readme",
+      "quote": "Preview eleven themes with `/theme`, six mascots with `/mascot`, and nine spinner styles with `/spinner`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/22/label",
+      "source_id": "readme",
+      "quote": "`alter-zero update` to install the newest release over the binary you are running",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/23/label",
+      "source_id": "readme",
+      "quote": "Claude Code-style `.claude/skills/` and `.mcp.json` files are also supported.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/24/label",
+      "source_id": "readme",
+      "quote": "In a [herdr](https://herdr.dev) pane, the sidebar shows when the agent is working",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
+    },
+    {
+      "field": "/capabilities/25/label",
+      "source_id": "readme",
+      "quote": "`docker/` builds a small headless Kali Rolling image around the latest release",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:46:38+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-11-20T00:06:03+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

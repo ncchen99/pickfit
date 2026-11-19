@@ -39,6 +39,158 @@
     "query GraphQL APIs",
     "organize requests into collections"
   ],
+  "capabilities": [
+    {
+      "label": "Query GraphQL APIs and view schema",
+      "area": "protocols"
+    },
+    {
+      "label": "Test WebSocket connections",
+      "area": "protocols"
+    },
+    {
+      "label": "Receive Server-Sent Events streams",
+      "area": "protocols"
+    },
+    {
+      "label": "Send and receive Socket.IO data",
+      "area": "protocols"
+    },
+    {
+      "label": "Publish and subscribe to MQTT topics",
+      "area": "protocols"
+    },
+    {
+      "label": "Authorize requests",
+      "items": [
+        "None",
+        "Basic",
+        "Bearer Token",
+        "OAuth 2.0",
+        "OIDC Access Token/PKCE"
+      ],
+      "area": "auth"
+    },
+    {
+      "label": "Generate request code snippets",
+      "area": "output"
+    },
+    {
+      "label": "Import cURL commands",
+      "area": "import"
+    },
+    {
+      "label": "Share requests via public URL",
+      "area": "sharing"
+    },
+    {
+      "label": "Preview responses in multiple formats",
+      "items": [
+        "HTML",
+        "image",
+        "JSON",
+        "XML"
+      ],
+      "area": "output"
+    },
+    {
+      "label": "Download response as a file",
+      "area": "output"
+    },
+    {
+      "label": "Organize requests in collections and folders",
+      "area": "organization"
+    },
+    {
+      "label": "Export and import collections",
+      "area": "import"
+    },
+    {
+      "label": "Run pre-request JavaScript scripts",
+      "area": "scripting"
+    },
+    {
+      "label": "Write post-request tests",
+      "area": "testing"
+    },
+    {
+      "label": "Manage environment variables",
+      "area": "environments"
+    },
+    {
+      "label": "Collaborate in teams with role-based access",
+      "area": "collaboration"
+    },
+    {
+      "label": "Switch between personal and team workspaces",
+      "area": "collaboration"
+    },
+    {
+      "label": "Sync data across devices",
+      "items": [
+        "Workspaces",
+        "History",
+        "Collections",
+        "Environments",
+        "Settings"
+      ],
+      "area": "sync"
+    },
+    {
+      "label": "Sign in with external accounts",
+      "items": [
+        "GitHub",
+        "Google",
+        "Microsoft",
+        "Email",
+        "SSO (Single Sign-On)"
+      ],
+      "area": "auth"
+    },
+    {
+      "label": "Keep request history",
+      "area": "history"
+    },
+    {
+      "label": "Use proxy to fix CORS issues",
+      "area": "network"
+    },
+    {
+      "label": "Bulk edit key-value pairs",
+      "area": "editing"
+    },
+    {
+      "label": "Customize themes and accent colors",
+      "items": [
+        "System preference",
+        "Light",
+        "Dark",
+        "Black"
+      ],
+      "area": "interface"
+    },
+    {
+      "label": "Install as Progressive Web App offline",
+      "area": "interface"
+    },
+    {
+      "label": "Manage users and teams via admin dashboard",
+      "items": [
+        "Insights",
+        "Manage users",
+        "Manage teams"
+      ],
+      "area": "admin"
+    },
+    {
+      "label": "Run Hoppscotch from command line",
+      "area": "cli"
+    },
+    {
+      "label": "Use keyboard shortcuts",
+      "area": "interface"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -283,20 +435,20 @@
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-17T18:45:16Z",
         "scope": "runtime",
+        "paths": [
+          "hoppscotch-desktop > tauri-plugin-appload > zip"
+        ],
         "workspace": "packages/hoppscotch-desktop/src-tauri",
         "found_in": "packages/hoppscotch-desktop/src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.0032,
-        "fix_published_at": "2026-10-17T18:45:16Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "hoppscotch-desktop > tauri-plugin-appload > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -307,22 +459,19 @@
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "hoppscotch-desktop > tauri-plugin-appload > zip"
+        ],
         "workspace": "packages/hoppscotch-desktop/src-tauri",
         "found_in": "packages/hoppscotch-desktop/src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:ZipStreamReader::extract",
           "symbol:ZipArchive::extract"
-        ],
-        "paths": [
-          "hoppscotch-desktop > tauri-plugin-appload > zip"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -330,7 +479,10 @@
           "evidence": [
             "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -343,20 +495,20 @@
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-17T18:45:16Z",
         "scope": "runtime",
+        "paths": [
+          "hoppscotch-agent > tauri-plugin-updater > zip"
+        ],
         "workspace": "packages/hoppscotch-agent/src-tauri",
         "found_in": "packages/hoppscotch-agent/src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.0032,
-        "fix_published_at": "2026-10-17T18:45:16Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "hoppscotch-agent > tauri-plugin-updater > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -367,22 +519,19 @@
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "hoppscotch-agent > tauri-plugin-updater > zip"
+        ],
         "workspace": "packages/hoppscotch-agent/src-tauri",
         "found_in": "packages/hoppscotch-agent/src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:ZipStreamReader::extract",
           "symbol:ZipArchive::extract"
-        ],
-        "paths": [
-          "hoppscotch-agent > tauri-plugin-updater > zip"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -390,7 +539,10 @@
           "evidence": [
             "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:openssl",
@@ -403,23 +555,23 @@
         "fixed_in": "0.10.78",
         "summary": "rust-openssl has incorrect bounds assertion in aes key wrap",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-19T20:02:38Z",
         "scope": "runtime",
+        "paths": [
+          "hoppscotch-desktop > tauri-plugin-relay > relay > openssl"
+        ],
         "workspace": "packages/hoppscotch-desktop/src-tauri",
         "found_in": "packages/hoppscotch-desktop/src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.00251,
-        "fix_published_at": "2026-04-19T20:02:38Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity"
         ],
-        "paths": [
-          "hoppscotch-desktop > tauri-plugin-relay > relay > openssl"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:openssl",
@@ -432,20 +584,20 @@
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: rustMdCtxRef::digest_final() writes past caller buffer with no length check",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-19T20:02:38Z",
         "scope": "runtime",
+        "paths": [
+          "hoppscotch-desktop > tauri-plugin-relay > relay > openssl"
+        ],
         "workspace": "packages/hoppscotch-desktop/src-tauri",
         "found_in": "packages/hoppscotch-desktop/src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.00359,
-        "fix_published_at": "2026-04-19T20:02:38Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "hoppscotch-desktop > tauri-plugin-relay > relay > openssl"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:openssl",
@@ -458,23 +610,23 @@
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: Unchecked callback length in PSK/cookie trampolines leaks adjacent memory to peer",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-19T20:02:38Z",
         "scope": "runtime",
+        "paths": [
+          "hoppscotch-desktop > tauri-plugin-relay > relay > openssl"
+        ],
         "workspace": "packages/hoppscotch-desktop/src-tauri",
         "found_in": "packages/hoppscotch-desktop/src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.0028,
-        "fix_published_at": "2026-04-19T20:02:38Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity"
         ],
-        "paths": [
-          "hoppscotch-desktop > tauri-plugin-relay > relay > openssl"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:openssl",
@@ -487,24 +639,21 @@
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: Deriver::derive and PkeyCtxRef::derive can overflow short buffers on OpenSSL 1.1.1",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-19T20:02:38Z",
         "scope": "runtime",
+        "paths": [
+          "hoppscotch-desktop > tauri-plugin-relay > relay > openssl"
+        ],
         "workspace": "packages/hoppscotch-desktop/src-tauri",
         "found_in": "packages/hoppscotch-desktop/src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.00285,
-        "fix_published_at": "2026-04-19T20:02:38Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity",
           "symbol:Deriver::derive",
           "symbol:PkeyCtxRef::derive"
-        ],
-        "paths": [
-          "hoppscotch-desktop > tauri-plugin-relay > relay > openssl"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -512,7 +661,10 @@
           "evidence": [
             "the project's source does not use Deriver::derive, PkeyCtxRef::derive, but other packages depend on openssl"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:openssl",
@@ -525,22 +677,19 @@
         "fixed_in": "0.10.79",
         "summary": "rust-openssl has undefined behavior in X509Ref::ocsp_responders for certificates with non-UTF-8 OCSP URLs",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-05-04T00:19:55Z",
         "scope": "runtime",
+        "paths": [
+          "hoppscotch-desktop > tauri-plugin-relay > relay > openssl"
+        ],
         "workspace": "packages/hoppscotch-desktop/src-tauri",
         "found_in": "packages/hoppscotch-desktop/src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.00211,
-        "fix_published_at": "2026-05-04T00:19:55Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:X509Ref::ocsp_responders"
-        ],
-        "paths": [
-          "hoppscotch-desktop > tauri-plugin-relay > relay > openssl"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -548,7 +697,10 @@
           "evidence": [
             "the project's source does not use X509Ref::ocsp_responders, but other packages depend on openssl"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:openssl",
@@ -561,23 +713,23 @@
         "fixed_in": "0.10.78",
         "summary": "rust-openssl has incorrect bounds assertion in aes key wrap",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-19T20:02:38Z",
         "scope": "runtime",
+        "paths": [
+          "hoppscotch-agent > relay > openssl"
+        ],
         "workspace": "packages/hoppscotch-agent/src-tauri",
         "found_in": "packages/hoppscotch-agent/src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.00251,
-        "fix_published_at": "2026-04-19T20:02:38Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity"
         ],
-        "paths": [
-          "hoppscotch-agent > relay > openssl"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:openssl",
@@ -590,20 +742,20 @@
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: rustMdCtxRef::digest_final() writes past caller buffer with no length check",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-19T20:02:38Z",
         "scope": "runtime",
+        "paths": [
+          "hoppscotch-agent > relay > openssl"
+        ],
         "workspace": "packages/hoppscotch-agent/src-tauri",
         "found_in": "packages/hoppscotch-agent/src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.00359,
-        "fix_published_at": "2026-04-19T20:02:38Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "hoppscotch-agent > relay > openssl"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:openssl",
@@ -616,23 +768,23 @@
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: Unchecked callback length in PSK/cookie trampolines leaks adjacent memory to peer",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-19T20:02:38Z",
         "scope": "runtime",
+        "paths": [
+          "hoppscotch-agent > relay > openssl"
+        ],
         "workspace": "packages/hoppscotch-agent/src-tauri",
         "found_in": "packages/hoppscotch-agent/src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.0028,
-        "fix_published_at": "2026-04-19T20:02:38Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity"
         ],
-        "paths": [
-          "hoppscotch-agent > relay > openssl"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:openssl",
@@ -645,24 +797,21 @@
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: Deriver::derive and PkeyCtxRef::derive can overflow short buffers on OpenSSL 1.1.1",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-19T20:02:38Z",
         "scope": "runtime",
+        "paths": [
+          "hoppscotch-agent > relay > openssl"
+        ],
         "workspace": "packages/hoppscotch-agent/src-tauri",
         "found_in": "packages/hoppscotch-agent/src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.00285,
-        "fix_published_at": "2026-04-19T20:02:38Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity",
           "symbol:Deriver::derive",
           "symbol:PkeyCtxRef::derive"
-        ],
-        "paths": [
-          "hoppscotch-agent > relay > openssl"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -670,7 +819,10 @@
           "evidence": [
             "the project's source does not use Deriver::derive, PkeyCtxRef::derive, but other packages depend on openssl"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:openssl",
@@ -683,22 +835,19 @@
         "fixed_in": "0.10.79",
         "summary": "rust-openssl has undefined behavior in X509Ref::ocsp_responders for certificates with non-UTF-8 OCSP URLs",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-05-04T00:19:55Z",
         "scope": "runtime",
+        "paths": [
+          "hoppscotch-agent > relay > openssl"
+        ],
         "workspace": "packages/hoppscotch-agent/src-tauri",
         "found_in": "packages/hoppscotch-agent/src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.00211,
-        "fix_published_at": "2026-05-04T00:19:55Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:X509Ref::ocsp_responders"
-        ],
-        "paths": [
-          "hoppscotch-agent > relay > openssl"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -706,7 +855,10 @@
           "evidence": [
             "the project's source does not use X509Ref::ocsp_responders, but other packages depend on openssl"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -717,22 +869,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "hoppscotch-desktop > tauri > plist > quick-xml"
+        ],
         "workspace": "packages/hoppscotch-desktop/src-tauri",
         "found_in": "packages/hoppscotch-desktop/src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "hoppscotch-desktop > tauri > plist > quick-xml"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -743,30 +895,30 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
-        "scope": "runtime",
-        "workspace": "packages/hoppscotch-desktop/src-tauri",
-        "found_in": "packages/hoppscotch-desktop/src-tauri/Cargo.lock",
-        "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
         "attack_vector": "network",
         "dos_only": true,
-        "preconditions": [
-          "denial_of_service",
-          "symbol:NsReader"
-        ],
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "scope": "runtime",
         "paths": [
           "hoppscotch-desktop > tauri > plist > quick-xml"
         ],
+        "workspace": "packages/hoppscotch-desktop/src-tauri",
+        "found_in": "packages/hoppscotch-desktop/src-tauri/Cargo.lock",
+        "kev": false,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
+        ],
         "reachability": {
           "method": "symbol_grep",
           "result": "unknown",
           "evidence": [
             "the project's source does not use NsReader, but other packages depend on quick-xml"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -777,22 +929,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "hoppscotch-desktop > tauri-plugin-dialog > rfd > ashpd > wayland-client > wayland-scanner > quick-xml"
+        ],
         "workspace": "packages/hoppscotch-desktop/src-tauri",
         "found_in": "packages/hoppscotch-desktop/src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "hoppscotch-desktop > tauri-plugin-dialog > rfd > ashpd > wayland-client > wayland-scanner > quick-xml"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -803,22 +955,19 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "hoppscotch-desktop > tauri-plugin-dialog > rfd > ashpd > wayland-client > wayland-scanner > quick-xml"
+        ],
         "workspace": "packages/hoppscotch-desktop/src-tauri",
         "found_in": "packages/hoppscotch-desktop/src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:NsReader"
-        ],
-        "paths": [
-          "hoppscotch-desktop > tauri-plugin-dialog > rfd > ashpd > wayland-client > wayland-scanner > quick-xml"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -826,7 +975,10 @@
           "evidence": [
             "the project's source does not use NsReader, but other packages depend on quick-xml"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -837,22 +989,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "hoppscotch-agent > tauri-plugin-dialog > rfd > ashpd > wayland-client > wayland-scanner > quick-xml"
+        ],
         "workspace": "packages/hoppscotch-agent/src-tauri",
         "found_in": "packages/hoppscotch-agent/src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "hoppscotch-agent > tauri-plugin-dialog > rfd > ashpd > wayland-client > wayland-scanner > quick-xml"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -863,22 +1015,19 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "hoppscotch-agent > tauri-plugin-dialog > rfd > ashpd > wayland-client > wayland-scanner > quick-xml"
+        ],
         "workspace": "packages/hoppscotch-agent/src-tauri",
         "found_in": "packages/hoppscotch-agent/src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:NsReader"
-        ],
-        "paths": [
-          "hoppscotch-agent > tauri-plugin-dialog > rfd > ashpd > wayland-client > wayland-scanner > quick-xml"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -886,7 +1035,10 @@
           "evidence": [
             "the project's source does not use NsReader, but other packages depend on quick-xml"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/klauspost/compress",
@@ -899,22 +1051,19 @@
         "fixed_in": "1.18.7",
         "summary": "Compress/s2: Integer Overflow or Wraparound and Out-of-bounds Write in compress",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "packages/hoppscotch-selfhost-web/webapp-server/go.mod > github.com/klauspost/compress"
+        ],
         "workspace": "packages/hoppscotch-selfhost-web/webapp-server",
         "found_in": "packages/hoppscotch-selfhost-web/webapp-server/go.mod",
         "kev": false,
         "epss": 0.00572,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:NewDict"
-        ],
-        "paths": [
-          "packages/hoppscotch-selfhost-web/webapp-server/go.mod > github.com/klauspost/compress"
         ],
         "reachability": {
           "method": "import_grep",
@@ -922,7 +1071,10 @@
           "evidence": [
             "no .go file imports github.com/klauspost/compress/s2; go.mod requires github.com/klauspost/compress directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/klauspost/compress",
@@ -935,23 +1087,20 @@
         "fixed_in": "1.20.2",
         "summary": "Panic on two-block frames in github.com/klauspost/compress",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "packages/hoppscotch-selfhost-web/webapp-server/go.mod > github.com/klauspost/compress"
+        ],
         "workspace": "packages/hoppscotch-selfhost-web/webapp-server",
         "found_in": "packages/hoppscotch-selfhost-web/webapp-server/go.mod",
         "kev": false,
         "epss": 0.00333,
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:Compress",
           "symbol:Decompress",
           "symbol:Scratch.readNCount"
-        ],
-        "paths": [
-          "packages/hoppscotch-selfhost-web/webapp-server/go.mod > github.com/klauspost/compress"
         ],
         "reachability": {
           "method": "import_grep",
@@ -959,7 +1108,10 @@
           "evidence": [
             "no .go file imports github.com/klauspost/compress/fse, github.com/klauspost/compress/huff0; go.mod requires github.com/klauspost/compress directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -1056,19 +1208,16 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 91.1,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
-        "engineering_hygiene": {
-          "score": null,
-          "weight": 0.0
-        },
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 50
+          "weight": 50.0
         },
-        "responsiveness": {
+        "install_docs": {
           "score": null,
           "weight": 0.0
         },
@@ -1076,20 +1225,23 @@
           "score": null,
           "weight": 0.0
         },
-        "usage_outcomes": {
-          "score": null,
-          "weight": 10
-        },
-        "install_docs": {
+        "engineering_hygiene": {
           "score": null,
           "weight": 0.0
         },
+        "responsiveness": {
+          "score": null,
+          "weight": 0.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
         "browser_facts": {
           "score": 0.8,
-          "weight": 40
+          "weight": 40.0
         }
       },
-      "raw_total": 91.1,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -1367,8 +1519,232 @@
       "method": "model",
       "model": "claude-opus-5-5",
       "checked_at": "2026-11-16T00:50:49+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "Set endpoint and get schema",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "Establish full-duplex communication channels over a single TCP connection.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Receive a stream of updates from a server over an HTTP connection without resorting to polling.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Send and Receive data with the SocketIO server.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "Subscribe and Publish to topics of an MQTT Broker.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "Allows to identify the end-user.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "Generate/copy request code snippets for 10+ languages and frameworks",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Import `cURL`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Copy/share public \"Share URL\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "View raw and preview HTML, image, JSON, and XML responses",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "Download the response as a file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "Keep your API requests organized with collections and folders.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "Export and import as a file or GitHub gist",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "Snippets of code associated with a request that is executed before the request is sent.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "Write tests associated with a request that is executed after the request's response.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "Environment variables allow you to store and reuse values in your requests and scripts.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "Role-based access control",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "Switch between personal and team workspaces",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "Sign in and sync your data in real-time across all your devices.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "**Sign in with:**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "readme",
+      "quote": "Request entries are synced with your cloud/local session storage.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "readme",
+      "quote": "Enable Proxy Mode from Settings to access blocked APIs.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/22/label",
+      "source_id": "readme",
+      "quote": "Edit key-value pairs in bulk.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/23/label",
+      "source_id": "readme",
+      "quote": "Choose a theme: System preference, Light, Dark, and Black",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/24/label",
+      "source_id": "readme",
+      "quote": "Offline support",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/25/label",
+      "source_id": "readme",
+      "quote": "Manage your team and invite members.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/26/label",
+      "source_id": "readme",
+      "quote": "Command-line interface for Hoppscotch.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
+    },
+    {
+      "field": "/capabilities/27/label",
+      "source_id": "readme",
+      "quote": "Optimized for efficiency.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:30:07+08:00"
     }
   ],
   "first_seen_at": "2026-11-16T00:48:19+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

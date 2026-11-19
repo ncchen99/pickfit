@@ -32,6 +32,126 @@
     "view diffs side-by-side with wrapping",
     "show line numbers in diffs"
   ],
+  "capabilities": [
+    {
+      "label": "Syntax-highlight git and diff output as pager",
+      "items": [
+        "git",
+        "diff",
+        "grep",
+        "rg --json",
+        "blame"
+      ],
+      "area": "core"
+    },
+    {
+      "label": "Word-level diff highlighting",
+      "area": "diff"
+    },
+    {
+      "label": "Side-by-side diff view with line wrapping",
+      "area": "output"
+    },
+    {
+      "label": "Display line numbers in diffs",
+      "area": "output"
+    },
+    {
+      "label": "Navigate between files with n and N",
+      "area": "navigation"
+    },
+    {
+      "label": "Improved merge conflict display",
+      "area": "git"
+    },
+    {
+      "label": "Improved git blame display",
+      "area": "git"
+    },
+    {
+      "label": "Link commits to hosting providers",
+      "items": [
+        "GitHub",
+        "GitLab",
+        "SourceHut",
+        "Codeberg"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Syntax-highlight grep output",
+      "items": [
+        "rg",
+        "git grep",
+        "grep"
+      ],
+      "area": "search"
+    },
+    {
+      "label": "Support Git's --color-moved feature",
+      "area": "git"
+    },
+    {
+      "label": "Copy code directly without +/- markers",
+      "area": "output"
+    },
+    {
+      "label": "Emulate diff-highlight and diff-so-fancy",
+      "items": [
+        "diff-highlight",
+        "diff-so-fancy"
+      ],
+      "area": "modes"
+    },
+    {
+      "label": "Format file paths as hyperlinks",
+      "area": "output"
+    },
+    {
+      "label": "Style box/line decorations for headers",
+      "area": "styling"
+    },
+    {
+      "label": "Handle unified diff output",
+      "area": "formats"
+    },
+    {
+      "label": "Auto-detect light/dark terminal background",
+      "area": "styling"
+    },
+    {
+      "label": "Use bat syntax-highlighting themes",
+      "area": "themes"
+    },
+    {
+      "label": "Preview syntax themes",
+      "area": "themes"
+    },
+    {
+      "label": "Diff two files directly",
+      "area": "diff"
+    },
+    {
+      "label": "Color-only mode for interactive diffFilter",
+      "area": "modes"
+    },
+    {
+      "label": "List supported languages",
+      "area": "output"
+    },
+    {
+      "label": "List available syntax themes",
+      "area": "themes"
+    },
+    {
+      "label": "Map input styles to output styles",
+      "area": "styling"
+    },
+    {
+      "label": "Activate named feature collections",
+      "area": "configuration"
+    }
+  ],
   "why_worth_it": null,
   "homepage": "https://dandavison.github.io/delta/",
   "repo": {
@@ -284,22 +404,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "git-delta > bat > plist > quick-xml"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "git-delta > bat > plist > quick-xml"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -310,22 +430,19 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "git-delta > bat > plist > quick-xml"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:NsReader"
-        ],
-        "paths": [
-          "git-delta > bat > plist > quick-xml"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -333,7 +450,10 @@
           "evidence": [
             "the project's source does not use NsReader, but other packages depend on quick-xml"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -395,17 +515,14 @@
     "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 73.2,
+      "raw_total": 73.2,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.7225,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.4375,
@@ -425,10 +542,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       },
-      "raw_total": 73.2,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -671,6 +791,12 @@
       "kind": "package_registry",
       "url": "https://formulae.brew.sh/formula/git-delta",
       "fetched_at": "2026-11-04T13:28:15+08:00"
+    },
+    {
+      "id": "help:verify-delta-20261104-185239-61c3:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T01:34:35+08:00"
     }
   ],
   "evidence": [
@@ -825,8 +951,200 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-04T13:28:43+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "github_api",
+      "quote": "A syntax-highlighting pager for git, diff, grep, rg --json, and blame output",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "Word-level diff highlighting using a Levenshtein edit inference algorithm",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Side-by-side view with line-wrapping",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "help:verify-delta-20261104-185239-61c3:1",
+      "quote": "Display line numbers next to the diff.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "`n` and `N` keybindings to move between files in large diffs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "Improved merge conflict display",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "Improved `git blame` display",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Supported hosting providers are: GitHub, GitLab, SourceHut, Codeberg",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Syntax-highlights grep output from `rg`, `git grep`, `grep`, etc",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Support for Git's `--color-moved` feature.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "Code can be copied directly from the diff (`-/+` markers are removed by default).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "`diff-highlight` and `diff-so-fancy` emulation modes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "File paths can also be formatted as hyperlinks for opening in your OS.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "Stylable box/line decorations to draw attention to commit, file and hunk header sections.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "Handles traditional unified diff output in addition to git output",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "Automatic detection of light/dark terminal background",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "All the syntax-highlighting color themes that are available with [bat](https://github.com/sharkdp/bat/) are available with delta",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "delta --show-syntax-themes --dark",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "help:verify-delta-20261104-185239-61c3:1",
+      "quote": "`delta file1 file2` is equivalent to `diff -u file1 file2 | delta`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "help:verify-delta-20261104-185239-61c3:1",
+      "quote": "Do not alter the input structurally in any way.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "help:verify-delta-20261104-185239-61c3:1",
+      "quote": "List supported languages and associated file extensions",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "help:verify-delta-20261104-185239-61c3:1",
+      "quote": "List available syntax-highlighting color themes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/22/label",
+      "source_id": "help:verify-delta-20261104-185239-61c3:1",
+      "quote": "Map styles encountered in raw input to desired output styles.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
+    },
+    {
+      "field": "/capabilities/23/label",
+      "source_id": "help:verify-delta-20261104-185239-61c3:1",
+      "quote": "Names of delta features to activate (space-separated).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:35+08:00"
     }
   ],
   "first_seen_at": "2026-11-04T13:04:50+08:00",
-  "updated_at": "2026-11-20T00:06:03+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

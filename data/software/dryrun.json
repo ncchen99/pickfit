@@ -36,6 +36,111 @@
     "Validate queries against schema",
     "Compare schema snapshots for drift"
   ],
+  "capabilities": [
+    {
+      "label": "Lint PostgreSQL schema offline",
+      "area": "analysis"
+    },
+    {
+      "label": "Check migration safety and lock types",
+      "area": "analysis"
+    },
+    {
+      "label": "Validate SQL queries against schema",
+      "area": "analysis"
+    },
+    {
+      "label": "Diff snapshots and detect schema drift",
+      "area": "analysis"
+    },
+    {
+      "label": "Capture and diff pg_stat_statements query stats",
+      "area": "statistics"
+    },
+    {
+      "label": "Collect per-replica multi-node statistics",
+      "area": "statistics"
+    },
+    {
+      "label": "Introspect database catalog into snapshot",
+      "items": [
+        "tables",
+        "views",
+        "indexes",
+        "constraints",
+        "partitions",
+        "functions",
+        "enums",
+        "RLS policies",
+        "triggers",
+        "extensions",
+        "GUCs"
+      ],
+      "area": "snapshots"
+    },
+    {
+      "label": "Serve schema analysis as MCP server",
+      "items": [
+        "stdio",
+        "SSE"
+      ],
+      "area": "mcp"
+    },
+    {
+      "label": "Auto-configure AI agents for MCP",
+      "items": [
+        "Claude Code",
+        "Cursor",
+        "Codex",
+        "Zed"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Explore foreign key graphs",
+      "area": "analysis"
+    },
+    {
+      "label": "Share snapshots via shared directory",
+      "area": "snapshots"
+    },
+    {
+      "label": "Push snapshots to OCI registry",
+      "items": [
+        "GitHub Container Registry",
+        "Google Artifact Registry",
+        "Amazon ECR",
+        "Docker Hub",
+        "Harbor"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Export schema as JSON",
+      "area": "output"
+    },
+    {
+      "label": "Produce anonymized snapshots",
+      "area": "snapshots"
+    },
+    {
+      "label": "Check vacuum health",
+      "area": "analysis"
+    },
+    {
+      "label": "Live-database MCP tools",
+      "items": [
+        "explain_query",
+        "check_drift",
+        "columnar_report"
+      ],
+      "area": "mcp"
+    },
+    {
+      "label": "Manage multiple databases via profiles",
+      "area": "configuration"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -351,23 +456,23 @@
         "fixed_in": "2.6.2",
         "summary": "oras-go: Arbitrary file write outside file.Store root via symlink-chain bypass in tar extraction (pushDir)",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-07-10T14:50:25Z",
         "scope": "runtime",
+        "paths": [
+          "go.mod > oras.land/oras-go/v2"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00676,
-        "fix_published_at": "2026-07-10T14:50:25Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "user_interaction"
         ],
-        "paths": [
-          "go.mod > oras.land/oras-go/v2"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/klauspost/compress",
@@ -380,22 +485,19 @@
         "fixed_in": "1.18.7",
         "summary": "Compress/s2: Integer Overflow or Wraparound and Out-of-bounds Write in compress",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/klauspost/compress"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00572,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:NewDict"
-        ],
-        "paths": [
-          "go.mod > github.com/klauspost/compress"
         ],
         "reachability": {
           "method": "import_grep",
@@ -403,7 +505,10 @@
           "evidence": [
             "no .go file imports github.com/klauspost/compress/s2; go.mod requires github.com/klauspost/compress directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/klauspost/compress",
@@ -416,23 +521,20 @@
         "fixed_in": "1.20.2",
         "summary": "Panic on two-block frames in github.com/klauspost/compress",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/klauspost/compress"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00333,
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:Compress",
           "symbol:Decompress",
           "symbol:Scratch.readNCount"
-        ],
-        "paths": [
-          "go.mod > github.com/klauspost/compress"
         ],
         "reachability": {
           "method": "import_grep",
@@ -440,7 +542,10 @@
           "evidence": [
             "no .go file imports github.com/klauspost/compress/fse, github.com/klauspost/compress/huff0; go.mod requires github.com/klauspost/compress directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:oras.land/oras-go/v2",
@@ -453,23 +558,20 @@
         "fixed_in": "2.6.2",
         "summary": "`oras-go` tar extraction: Hardlink entry with relative Linkname escapes extract dir via process CWD resolution",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "go.mod > oras.land/oras-go/v2"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00403,
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "user_interaction",
           "symbol:New",
           "symbol:Store.Add"
-        ],
-        "paths": [
-          "go.mod > oras.land/oras-go/v2"
         ],
         "reachability": {
           "method": "import_grep",
@@ -477,7 +579,10 @@
           "evidence": [
             "no .go file imports oras.land/oras-go/v2/content/file; go.mod requires oras.land/oras-go/v2 directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -582,17 +687,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 85.4,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.875,
@@ -612,10 +714,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       },
-      "raw_total": 85.4,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -1069,8 +1174,144 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T03:14:48+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "**Lint** - 20+ convention rules (naming, types, primary keys, timestamps, partitioning) and 13 structural audit rules",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:13+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "**Migration safety** - lock type analysis, duration estimates, table rewrite detection, safe alternatives for each DDL statement",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:13+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "**Query validation** - SQL parsing via libpg_query, column reference checks against the actual schema, anti-pattern detection",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:13+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "compare schema, planner stats, or activity between snapshots; detect drift against the live database",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:13+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "captures `pg_stat_statements` per node, collapses ORM query variants into shapes, diffs two captures",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:13+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "per-replica statistics, seq_scan hotspots, routing imbalances",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:13+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "introspects the full catalog (tables, views, indexes, constraints, partitions, functions, enums, RLS policies, triggers, extensions, GUCs)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:13+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "It exposes 9 tools over stdio or SSE",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:13+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "`setup` detects Claude Code, Cursor, Codex, and Zed, writes the agent's MCP config",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:13+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "explore foreign key graphs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:13+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "dryrun snapshot push --to-path ./snapshots",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:13+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "Any OCI registry can hold snapshots: GitHub Container Registry, Google Artifact Registry, Amazon ECR, Docker Hub, Harbor, or a self-hosted one.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:13+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "To hand a human or an agent readable JSON, `dryrun dump-schema` still writes it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:13+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "for producing a snapshot you can hand to someone else: the PII mapping, masked capture",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:13+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "linting, vacuum health, and captured `pg_stat_statements` top queries",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:13+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "Three more (`explain_query`, `check_drift`, `columnar_report`) join when a live database is connected.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:13+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "declare profiles in `dryrun.toml`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:13+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

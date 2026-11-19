@@ -33,6 +33,82 @@
     "SGLang",
     "llama.cpp"
   ],
+  "capabilities": [
+    {
+      "label": "Serve StartLux-Decision models from GGUF files",
+      "area": "serving"
+    },
+    {
+      "label": "Answer typed questions with calibrated probabilities",
+      "items": [
+        "choice",
+        "noul",
+        "score"
+      ],
+      "area": "inference"
+    },
+    {
+      "label": "Answer several questions in one forward pass",
+      "area": "inference"
+    },
+    {
+      "label": "Answer questions about images and video frames",
+      "area": "multimodal"
+    },
+    {
+      "label": "Decode AutoThink thoughts on the GPU",
+      "area": "inference"
+    },
+    {
+      "label": "Report none-of-the-above probability",
+      "area": "output"
+    },
+    {
+      "label": "HTTP API endpoints",
+      "items": [
+        "POST /v1/systemone",
+        "/v1/decisions",
+        "GET /v1/models",
+        "GET /health",
+        "GET /stats"
+      ],
+      "area": "api"
+    },
+    {
+      "label": "Run quantized precisions",
+      "items": [
+        "int8",
+        "w4a8",
+        "bf16",
+        "mxfp4"
+      ],
+      "area": "precision"
+    },
+    {
+      "label": "Data parallelism across multiple GPUs",
+      "area": "scaling"
+    },
+    {
+      "label": "Tensor parallelism for lower latency",
+      "area": "scaling"
+    },
+    {
+      "label": "Cache shared evidence across requests",
+      "area": "performance"
+    },
+    {
+      "label": "Store KV cache in FP8",
+      "area": "performance"
+    },
+    {
+      "label": "Return read-out details and thought text",
+      "area": "output"
+    },
+    {
+      "label": "Produce bit-identical reproducible answers",
+      "area": "inference"
+    }
+  ],
   "why_worth_it": null,
   "homepage": "https://huggingface.co/startlux-models",
   "repo": {
@@ -141,17 +217,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 58.8,
+      "raw_total": 58.8,
       "confidence": 0.4,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.75,
@@ -171,10 +244,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 58.8,
       "security": {
         "level": "none",
         "basis": "assessment",
@@ -497,8 +573,120 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:36:47+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "serves StartLux-Decision v1 and v1.1 AutoThink (4B, 9B, 27B) straight from their released GGUF\nfiles",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:20+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "it turns each question into a calibrated probability for every option",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:20+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Several questions about the same evidence go in one request and are answered in one\nforward pass.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:20+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Ask about a video: sample eight frames, then send them as images",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:20+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "AutoThink thoughts are decoded on the GPU",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:20+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "`none_probability` is the probability that no listed option fits",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:20+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "Endpoints: `POST /v1/systemone` (also `/v1/decisions`), `GET /v1/models`, `GET /health` and `GET /stats`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:20+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "`int8` for Q8_0 files, `w4a8` for Q4_K_M files, `bf16` as the reference; `mxfp4` (opt-in, lower precision)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:20+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Data parallelism for throughput (3.92× on four H200s)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:20+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "tensor parallelism (`--tp 2` or\n  `4`) for latency",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:20+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "A prefix cache** keeps evidence across requests",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:20+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "`--kv-fp8` | off | Keys and values as e4m3",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:20+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "`return_details`, `return_thought` | off | Each answer's read-outs and timings; the thought's text",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:20+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "a request receives the same probabilities whatever\n  it is batched with",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:20+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:28:11+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

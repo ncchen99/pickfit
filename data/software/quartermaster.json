@@ -36,6 +36,171 @@
     "Auto-configure models to fit VRAM",
     "Hot-swap models behind unified API"
   ],
+  "capabilities": [
+    {
+      "label": "Hot-swap models behind one API",
+      "area": "serving"
+    },
+    {
+      "label": "Auto-compute model flags to fit VRAM",
+      "area": "configuration"
+    },
+    {
+      "label": "Orchestrate existing inference servers",
+      "items": [
+        "llama.cpp",
+        "ik_llama.cpp",
+        "vLLM",
+        "TabbyAPI",
+        "stable-diffusion.cpp",
+        "whisper.cpp"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Chat web app with per-user logins",
+      "area": "ui"
+    },
+    {
+      "label": "Web search with provider failover",
+      "items": [
+        "SearXNG",
+        "Brave",
+        "Tavily",
+        "DuckDuckGo",
+        "Google"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Generate and edit images",
+      "area": "media"
+    },
+    {
+      "label": "Render short video clips",
+      "area": "media"
+    },
+    {
+      "label": "Text to speech and transcription",
+      "area": "media"
+    },
+    {
+      "label": "Search and download models from Hugging Face",
+      "area": "models"
+    },
+    {
+      "label": "Save named model variants",
+      "area": "configuration"
+    },
+    {
+      "label": "Watch models folder for changes",
+      "area": "configuration"
+    },
+    {
+      "label": "Show VRAM breakdown before loading",
+      "area": "monitoring"
+    },
+    {
+      "label": "Persist KV-cache across model eviction",
+      "area": "serving"
+    },
+    {
+      "label": "Serve multiple ports with separate catalogs",
+      "area": "serving"
+    },
+    {
+      "label": "Run models concurrently via matrix DSL",
+      "area": "configuration"
+    },
+    {
+      "label": "Manage and track backend releases",
+      "area": "backends"
+    },
+    {
+      "label": "Diagnose missing DLLs for backends",
+      "area": "backends"
+    },
+    {
+      "label": "Export Prometheus metrics",
+      "area": "monitoring"
+    },
+    {
+      "label": "Stream logs over HTTP",
+      "area": "monitoring"
+    },
+    {
+      "label": "OpenAI-compatible endpoints",
+      "items": [
+        "chat/completions",
+        "responses",
+        "embeddings",
+        "models",
+        "speech",
+        "transcriptions",
+        "voices",
+        "generations",
+        "edits"
+      ],
+      "area": "api"
+    },
+    {
+      "label": "Anthropic-compatible endpoints",
+      "items": [
+        "messages",
+        "count_tokens"
+      ],
+      "area": "api"
+    },
+    {
+      "label": "Stable Diffusion SDAPI endpoints",
+      "items": [
+        "txt2img",
+        "img2img"
+      ],
+      "area": "api"
+    },
+    {
+      "label": "Segmentation and image upscaling endpoints",
+      "area": "api"
+    },
+    {
+      "label": "Rerank, infill and completion endpoints",
+      "items": [
+        "rerank",
+        "infill",
+        "completion"
+      ],
+      "area": "api"
+    },
+    {
+      "label": "Scope API keys to models",
+      "area": "security"
+    },
+    {
+      "label": "Hot-reload config on edit",
+      "area": "configuration"
+    },
+    {
+      "label": "Rewrite requests with filters",
+      "items": [
+        "stripParams",
+        "setParams",
+        "setParamsByID"
+      ],
+      "area": "configuration"
+    },
+    {
+      "label": "Self-update from GitHub releases",
+      "area": "updates"
+    },
+    {
+      "label": "Load models from GGUF files",
+      "items": [
+        "GGUF"
+      ],
+      "area": "formats"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -320,23 +485,20 @@
         "fixed_in": "1.20.2",
         "summary": "Panic on two-block frames in github.com/klauspost/compress",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/klauspost/compress"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00333,
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:Compress",
           "symbol:Decompress",
           "symbol:Scratch.readNCount"
-        ],
-        "paths": [
-          "go.mod > github.com/klauspost/compress"
         ],
         "reachability": {
           "method": "import_grep",
@@ -344,7 +506,10 @@
           "evidence": [
             "no .go file imports github.com/klauspost/compress/fse, github.com/klauspost/compress/huff0; go.mod requires github.com/klauspost/compress directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -414,17 +579,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 92.7,
+      "raw_total": 92.7,
       "confidence": 0.7,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.875,
@@ -444,10 +606,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 92.7,
       "security": {
         "level": "present_unreachable",
         "basis": "assessment",
@@ -891,8 +1056,240 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:36:59+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "hot-swaps between them on\ndemand behind one OpenAI- and Anthropic-compatible API",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "context length, GPU offload,\nCPU-MoE split and KV-cache sizing are computed per model and per architecture",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Any OpenAI-compatible server works as a backend: llama.cpp, ik_llama.cpp, vLLM, TabbyAPI,\nstable-diffusion.cpp, whisper.cpp and others.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Chat app with logins",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "then Brave,\n  Tavily, DuckDuckGo or Google behind it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "Generate and edit against the same models list, LoRAs and reference\n  images included.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "Short clips from a prompt or from a starting image, on the same\n  diffusion backend.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Text to speech against your local voices, and transcription\n  back the other way.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Search Hugging Face from inside the app, compare quants against the VRAM you actually have",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Save a tuned set and run it alongside the default",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "leave `-watch-models` on and have the folder watched",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "Weights, KV cache and compute buffer are accounted separately, per architecture.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "Snapshots a slot's KV-cache to disk before the model is evicted and restores it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "Bind several listeners on one shared scheduler, each with its own `/v1/models` view.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "A `matrix` DSL describes which models may run together",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "Builds are installed next to each other. Switch which one a backend\n  runs, or roll back",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "Quartermaster walks the binary's import table and names the DLL\n  that is missing",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "`/metrics` (Prometheus)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "curl -Ns http://host/logs/stream               # combined stream",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "`chat/completions`, `responses`, `embeddings`, `models`, audio (`speech`, `transcriptions`, `voices`), images (`generations`, `edits`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "readme",
+      "quote": "`messages`, `count_tokens`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "readme",
+      "quote": "SDAPI `txt2img`, `img2img`, LoRAs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/22/label",
+      "source_id": "readme",
+      "quote": "`/v1/segment`, `/v1/images/upscale`, `/v1/tools/*`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/23/label",
+      "source_id": "readme",
+      "quote": "`rerank`, `infill`, `completion`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/24/label",
+      "source_id": "readme",
+      "quote": "API keys can be scoped to individual models.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/25/label",
+      "source_id": "readme",
+      "quote": "a config file that hot-reloads when you edit it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/26/label",
+      "source_id": "readme",
+      "quote": "Rewrite requests before they are forwarded: `stripParams`, `setParams`, `setParamsByID`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/27/label",
+      "source_id": "readme",
+      "quote": "Release builds poll GitHub, swap the binary in place and relaunch themselves.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
+    },
+    {
+      "field": "/capabilities/28/label",
+      "source_id": "readme",
+      "quote": "Every GGUF is identified from its own header",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:53:17+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:28:17+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

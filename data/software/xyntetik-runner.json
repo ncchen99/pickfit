@@ -43,6 +43,149 @@
     "complete tool calls past token limit",
     "replay runs as signed receipts"
   ],
+  "capabilities": [
+    {
+      "label": "Serve GGUF models over HTTP",
+      "area": "serving"
+    },
+    {
+      "label": "OpenAI and Anthropic compatible API endpoints",
+      "items": [
+        "Chat Completions",
+        "Responses",
+        "Completions",
+        "Embeddings",
+        "Anthropic Messages"
+      ],
+      "area": "api"
+    },
+    {
+      "label": "Check whether a model fits before download",
+      "area": "planning"
+    },
+    {
+      "label": "Requantize model with per-tensor plan",
+      "area": "conversion"
+    },
+    {
+      "label": "Prune rarely used MoE experts",
+      "area": "conversion"
+    },
+    {
+      "label": "Remove attention or feed-forward sublayer",
+      "area": "conversion"
+    },
+    {
+      "label": "Compress the KV context cache",
+      "area": "memory"
+    },
+    {
+      "label": "Unload idle models to free memory",
+      "area": "memory"
+    },
+    {
+      "label": "Repair tool calls truncated by token limit",
+      "area": "tool calling"
+    },
+    {
+      "label": "Train LoRA adapters on quantized models",
+      "area": "training"
+    },
+    {
+      "label": "Merge LoRA adapter into Q8_0 or F16",
+      "area": "training"
+    },
+    {
+      "label": "Interactive chat in the terminal",
+      "area": "chat"
+    },
+    {
+      "label": "Download models from Hugging Face with verification",
+      "area": "models"
+    },
+    {
+      "label": "Structured JSON output",
+      "area": "output"
+    },
+    {
+      "label": "Rerank documents against a query",
+      "area": "api"
+    },
+    {
+      "label": "Prometheus metrics endpoint",
+      "area": "monitoring"
+    },
+    {
+      "label": "Load split multi-file GGUF models",
+      "area": "models"
+    },
+    {
+      "label": "Keep MoE expert layers in system RAM",
+      "area": "memory"
+    },
+    {
+      "label": "Cap reasoning length and stop loops",
+      "area": "generation"
+    },
+    {
+      "label": "Shadow mode retries coding tasks locally",
+      "area": "evaluation"
+    },
+    {
+      "label": "Desktop tray for managing models",
+      "area": "desktop"
+    },
+    {
+      "label": "Speculative draft decoding",
+      "items": [
+        "--draft small.gguf",
+        "--draft mtp",
+        "--draft mtp:head.gguf",
+        "--draft lookup"
+      ],
+      "area": "generation"
+    },
+    {
+      "label": "Pause and resume generations",
+      "area": "generation"
+    },
+    {
+      "label": "Record and verify signed run receipts",
+      "area": "attestation"
+    },
+    {
+      "label": "Watermark text and detect watermarks",
+      "area": "attestation"
+    },
+    {
+      "label": "Trace model file lineage",
+      "area": "attestation"
+    },
+    {
+      "label": "Diagnose a model and machine capabilities",
+      "area": "diagnostics"
+    },
+    {
+      "label": "Works with coding agents",
+      "items": [
+        "OpenCode",
+        "Claude Code",
+        "Codex CLI",
+        "Continue",
+        "Cline",
+        "pi"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Python and TypeScript clients",
+      "items": [
+        "Python",
+        "TypeScript"
+      ],
+      "area": "clients"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -570,17 +713,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 88.4,
+      "raw_total": 88.4,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.75,
@@ -600,10 +740,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       },
-      "raw_total": 88.4,
       "security": {
         "level": "none",
         "basis": "assessment",
@@ -1066,8 +1209,240 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:36:26+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "Standard GGUF model files and the OpenAI\n  and Anthropic APIs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "Chat\n  Completions, Responses, Completions, Embeddings and Anthropic Messages",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Runner reads the first few megabytes of a\n  model and tells you whether it fits your machine, and how.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "./runner -m model-Q8_0.gguf --rewrite out.gguf --type-plan plan.json",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "./runner -m model.gguf --rewrite pruned.gguf --prune-experts keep.json",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "./runner -m model.gguf --rewrite cut.gguf --remove-sublayer attn:48",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "`--kv k8v4` stores the context cache in about 41% of the usual\nbytes.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "./runner -m model.gguf --serve --ttl 300          # unload after five idle minutes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "a call cut short by `max_tokens` still parses",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Runner trains a LoRA adapter through the quantized file you serve",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "merge it into a Q8_0 or F16 file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "Prefer to chat in the terminal? `./runner -m model.gguf -i`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "Runner downloads it, checks it against the Hub's\nSHA-256 record",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "`--json`,\n  `--json FILE` or the API's `response_format` guarantee the shape of\n  the answer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "`POST /v1/rerank` scores documents\n  against a query",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "Prometheus counters for tokens, timings, memory\n  and the prefix cache",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "A standard split GGUF set loads\n  from any of its parts, with no merge step.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "`--cpu-moe` keeps a mixture-of-experts\n  model's expert layers off a small graphics card.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "`--reasoning-budget 512` caps how long a model thinks out\n  loud",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "retries your own finished\n  coding tasks with a local model under your own tests and keeps score",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "readme",
+      "quote": "On macOS and Windows an icon\n  shows which models are loaded and starts or stops them.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "readme",
+      "quote": "`--draft small.gguf`, `--draft mtp`, `--draft mtp:head.gguf`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/22/label",
+      "source_id": "readme",
+      "quote": "Session images with `--sessions DIR`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/23/label",
+      "source_id": "readme",
+      "quote": "./runner -m model.gguf --verify run.json     # VERIFIED, DIVERGED or UNVERIFIABLE",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/24/label",
+      "source_id": "readme",
+      "quote": "a text\nwatermark with its detector (`--watermark`, `runner attest detect`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/25/label",
+      "source_id": "readme",
+      "quote": "`runner attest lineage` walks a file, or a served answer's receipt, back to the\ndownload it started from",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/26/label",
+      "source_id": "readme",
+      "quote": "`./runner -m model.gguf --info doctor` loads a model, probes it and reports",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/27/label",
+      "source_id": "readme",
+      "quote": "OpenCode, Claude Code, Codex CLI, Continue, Cline and pi are checked\n  against it every release.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
+    },
+    {
+      "field": "/capabilities/28/label",
+      "source_id": "readme",
+      "quote": "a [Python client](python/README.md) and a\n  [TypeScript client]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:37+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

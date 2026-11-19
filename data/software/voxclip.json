@@ -37,6 +37,84 @@
     "transcribe existing audio files",
     "list recording devices and diagnostics"
   ],
+  "capabilities": [
+    {
+      "label": "Record, transcribe, and copy to clipboard",
+      "area": "subcommands"
+    },
+    {
+      "label": "Transcribe an existing audio file",
+      "area": "subcommands"
+    },
+    {
+      "label": "Download and verify speech models",
+      "area": "subcommands"
+    },
+    {
+      "label": "Select Whisper model size",
+      "items": [
+        "tiny",
+        "base",
+        "small",
+        "medium",
+        "large-v3"
+      ],
+      "area": "models"
+    },
+    {
+      "label": "Set transcription language",
+      "area": "transcription"
+    },
+    {
+      "label": "Choose recording backend",
+      "items": [
+        "pw-record",
+        "arecord",
+        "ffmpeg"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Choose input microphone device",
+      "area": "recording"
+    },
+    {
+      "label": "Detect near-silent recordings before transcription",
+      "area": "recording"
+    },
+    {
+      "label": "Record for a fixed duration",
+      "area": "recording"
+    },
+    {
+      "label": "Toggle recording with a hotkey",
+      "area": "workflows"
+    },
+    {
+      "label": "Output logs in JSON format",
+      "area": "output"
+    },
+    {
+      "label": "Print transcript to stdout for piping",
+      "area": "output"
+    },
+    {
+      "label": "Copy to clipboard on Wayland or X11",
+      "items": [
+        "wl-copy",
+        "xclip"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Append trailing newline to clipboard text",
+      "area": "output"
+    },
+    {
+      "label": "Automatically download missing models",
+      "area": "models"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -376,17 +454,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 92.4,
+      "raw_total": 92.4,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.8125,
@@ -406,10 +481,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       },
-      "raw_total": 92.4,
       "security": {
         "level": "none",
         "basis": "assessment",
@@ -791,8 +869,128 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T03:15:41+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "`voxclip` run the default flow (record -> transcribe -> copy)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:46+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "`voxclip transcribe <audio-file>` transcribe existing audio",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:46+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "`voxclip setup` download and verify model assets",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:46+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "select a model name (tiny, base, small, medium, large-v3) or local model path",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:46+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "`--language <auto|en|de|...>` set transcription language",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:46+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "`--backend <auto|pw-record|arecord|ffmpeg>` choose recording backend",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:46+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "`--input <selector>` choose input device",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:46+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "`--silence-gate` enable near-silent WAV detection before transcription",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:46+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "`--duration <duration>` set fixed recording duration, e.g. `10s`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:46+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "release:v1.1.0",
+      "quote": "`--pid-file` flag for toggle-style keyboard shortcut workflows",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:46+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "`--json` output logs in JSON format",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:46+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "Transcript output to stdout is intentional (for visibility/piping)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:46+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "Clipboard copy on Linux requires either `wl-copy` (Wayland sessions) or `xclip` (X11/XWayland sessions).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:46+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "`--copy-newline` append a trailing newline to the clipboard text",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:46+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "`--auto-download` automatically download a missing model",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:46+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:18+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

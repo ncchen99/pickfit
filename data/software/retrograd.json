@@ -30,6 +30,129 @@
     "serve a trained adapter via OpenAI-compatible API"
   ],
   "alternatives_to": [],
+  "capabilities": [
+    {
+      "label": "Fine-tune GGUF models with LoRA",
+      "area": "training"
+    },
+    {
+      "label": "Train full or selected base weights",
+      "area": "training"
+    },
+    {
+      "label": "Supervised fine-tuning on text, chat, tools",
+      "area": "training"
+    },
+    {
+      "label": "Offline preference optimization",
+      "items": [
+        "DPO",
+        "IPO",
+        "SimPO",
+        "ORPO"
+      ],
+      "area": "training"
+    },
+    {
+      "label": "Reinforcement learning with PPO and GRPO",
+      "items": [
+        "PPO",
+        "GRPO",
+        "GSPO"
+      ],
+      "area": "training"
+    },
+    {
+      "label": "Distill from a teacher model",
+      "area": "training"
+    },
+    {
+      "label": "Agentic GRPO with MCP tools, sandboxes",
+      "area": "training"
+    },
+    {
+      "label": "Collect rollout traces into SFT data",
+      "area": "data"
+    },
+    {
+      "label": "Choose optimizer",
+      "items": [
+        "AdamW",
+        "SGD",
+        "Muon",
+        "Gefen"
+      ],
+      "area": "training"
+    },
+    {
+      "label": "Train on CPU or GPU backends",
+      "items": [
+        "CPU",
+        "Metal",
+        "Vulkan",
+        "CUDA"
+      ],
+      "area": "devices"
+    },
+    {
+      "label": "Train LoRA on quantized base models",
+      "items": [
+        "F16",
+        "Q4_0 to Q8_0",
+        "K-quants",
+        "i-quants",
+        "MXFP4"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Serve adapter via OpenAI chat API",
+      "area": "subcommands"
+    },
+    {
+      "label": "CLI subcommands",
+      "items": [
+        "inspect",
+        "preflight",
+        "train",
+        "bench",
+        "chat",
+        "serve",
+        "tools list",
+        "scenarios generate",
+        "judge eval",
+        "collect",
+        "distill-teacher"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Compare base model and adapter in chat",
+      "area": "evaluation"
+    },
+    {
+      "label": "Benchmark adapter against base model",
+      "area": "evaluation"
+    },
+    {
+      "label": "Resume a stopped training run",
+      "area": "training"
+    },
+    {
+      "label": "Configure a run with one TOML file",
+      "area": "configuration"
+    },
+    {
+      "label": "Use via HTTP server, Rust, Python",
+      "items": [
+        "CLI",
+        "retrograd-server",
+        "Rust crate",
+        "Python bindings"
+      ],
+      "area": "interfaces"
+    }
+  ],
   "why_worth_it": null,
   "homepage": "https://tterrasson.github.io/retrograd/",
   "repo": {
@@ -91,22 +214,22 @@
         "fixed_in": "3.6.0",
         "summary": "Unbounded tool schema cache in Streamable HTTP server transport",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-20T05:53:35Z",
         "scope": "runtime",
+        "paths": [
+          "retrograd-tools > rmcp"
+        ],
         "workspace": "crates/retrograd-tools",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-20T05:53:35Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "retrograd-tools > rmcp"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:pyo3",
@@ -117,22 +240,19 @@
         "fixed_in": "0.29.0",
         "summary": "PyO3 has an Out-of-bounds Read in `nth` / `nth_back` for `PyList` and `PyTuple` iterators",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "retrograd-python > pyo3"
+        ],
         "workspace": "python/native",
         "found_in": "python/native/Cargo.lock",
         "kev": false,
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:nth_back",
           "symbol:PyList",
           "symbol:PyTuple"
-        ],
-        "paths": [
-          "retrograd-python > pyo3"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -140,7 +260,10 @@
           "evidence": [
             "no source file uses nth_back, PyList, PyTuple; only the project depends on pyo3"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -252,17 +375,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 58.4,
+      "raw_total": 58.4,
       "confidence": 0.4,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.625,
@@ -282,10 +402,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 58.4,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -584,8 +707,152 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:36:38+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "By default it trains a LoRA adapter, written as a standard GGUF that",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:39+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "It can also train the model's own weights,\nall of them or a selection.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:39+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "SFT (plain text, chat or tool conversations)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:39+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "offline\n  preference optimization (DPO, IPO, SimPO, ORPO)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:39+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "PPO, GRPO (token- or\n  sequence-level importance sampling, as in GSPO)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:39+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "distillation from a teacher\n  model",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:39+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "multi-turn agentic GRPO with MCP tools and sandboxed environments",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:39+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "`retrograd collect` turns the successful traces of\n  an agentic configuration into SFT records",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:39+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "AdamW (default), SGD, Muon and Gefen.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:39+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "CPU everywhere, GPU through Metal (macOS), Vulkan or CUDA.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:39+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "F16 or quantized base models (Q4_0 to Q8_0, K-quants, i-quants,\n  MXFP4) for LoRA training",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:39+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "`retrograd serve` exposes a trained adapter\n  through the OpenAI chat API",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:39+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "retrograd inspect --model base.gguf",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:39+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "retrograd chat run.toml --compare",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:39+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "base model against adapter, same examples",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:39+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "--resume continues a stopped run",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:39+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "One TOML file describes the whole run.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:39+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "a CLI, an HTTP server (`retrograd-server`), the `retrograd`\n  Rust crate and Python bindings",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:39+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:28:17+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

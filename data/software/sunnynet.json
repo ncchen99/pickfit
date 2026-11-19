@@ -39,6 +39,143 @@
     "support SunnyNet, RWKV-7, Mamba-2 and others",
     "serve OpenAI-compatible HTTP API"
   ],
+  "capabilities": [
+    {
+      "label": "Generate text from a checkpoint via CLI",
+      "area": "inference"
+    },
+    {
+      "label": "Decode with whole-model C backend",
+      "area": "inference"
+    },
+    {
+      "label": "Run OpenAI-compatible HTTP server",
+      "items": [
+        "GET /v1/models",
+        "POST /v1/chat/completions",
+        "POST /v1/completions",
+        "GET /health"
+      ],
+      "area": "server"
+    },
+    {
+      "label": "Serve Ollama native API",
+      "items": [
+        "GET /api/version",
+        "GET /api/tags",
+        "POST /api/generate",
+        "POST /api/chat"
+      ],
+      "area": "server"
+    },
+    {
+      "label": "Read GGUF weights and generate",
+      "area": "formats"
+    },
+    {
+      "label": "Run RWKV-7 models",
+      "area": "architectures"
+    },
+    {
+      "label": "Run Mamba-2 Hugging Face weights",
+      "area": "architectures"
+    },
+    {
+      "label": "Run DeltaNet, Mamba-2, GLA in C",
+      "items": [
+        "deltanet",
+        "mamba2",
+        "gla"
+      ],
+      "area": "architectures"
+    },
+    {
+      "label": "Quantize weights to INT4",
+      "area": "quantization"
+    },
+    {
+      "label": "Load weights as fp16",
+      "area": "quantization"
+    },
+    {
+      "label": "CLI subcommands",
+      "items": [
+        "chat",
+        "serve",
+        "convert",
+        "quantize",
+        "info"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Interactive streaming chat",
+      "area": "subcommands"
+    },
+    {
+      "label": "Quantize GGUF and measure perplexity",
+      "area": "subcommands"
+    },
+    {
+      "label": "Show model info",
+      "area": "subcommands"
+    },
+    {
+      "label": "Import models into Ollama",
+      "area": "integrations"
+    },
+    {
+      "label": "Set up LM Studio integration",
+      "area": "integrations"
+    },
+    {
+      "label": "Export release weights as safetensors",
+      "area": "export"
+    },
+    {
+      "label": "Train SunnyNet models",
+      "area": "training"
+    },
+    {
+      "label": "Evaluate checkpoints",
+      "area": "training"
+    },
+    {
+      "label": "Train BPE tokenizer and build corpus",
+      "area": "data"
+    },
+    {
+      "label": "Configure sampling parameters",
+      "items": [
+        "temperature",
+        "top-k",
+        "top-p",
+        "repetition-penalty"
+      ],
+      "area": "inference"
+    },
+    {
+      "label": "Stable versioned C ABI",
+      "area": "api"
+    },
+    {
+      "label": "Load models from Python",
+      "area": "api"
+    },
+    {
+      "label": "SIMD kernels for AVX2, AVX-512, NEON",
+      "items": [
+        "AVX2",
+        "AVX-512",
+        "NEON"
+      ],
+      "area": "kernels"
+    },
+    {
+      "label": "Run as Docker image",
+      "area": "deployment"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -301,17 +438,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 80.7,
+      "raw_total": 80.7,
       "confidence": 0.6,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.6875,
@@ -331,10 +465,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 80.7,
       "security": {
         "level": "none",
         "basis": "assessment",
@@ -712,8 +849,208 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:36:34+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "命令行推理 (加载 ckpt -> 分词器 -> 自回归解码, --backend torch/c;",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "可改走 C 内核解码，不用 torch 前向。",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "OpenAI 兼容 HTTP 服务 (标准库实现, --host / --port)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "`sunnynet/ollama.py` 提供 Ollama **原生** API",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "读入外部 GGUF 权重并逐 token 自回归生成，不经 PyTorch。",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "首个打通的模型是官方\nRWKV-7 191M",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "Runtime 接口加载 Mamba-2 官方权重",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "release:v0.3.0",
+      "quote": "DeltaNet, Mamba-2, and GLA now run their full forward pass in C",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "CLI：`--quant int4`（配合 `--gguf-backend c`）。",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "用法：`--backend c --half`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "**CLI 子命令（`chat` / `serve` / `convert` / `quantize` / `info`）**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "sunnynet chat   -m model.gguf --system \"...\" --ctx 8      # 交互式，流式",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "**GGUF 量化 + 困惑度评测（`sunnynet quantize`）**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "sunnynet info   -m model.gguf                              # 架构/层数/词表/张量数",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "sunnynet-integrate ollama <model.gguf> --name sunnynet-rwkv7 --run --smoke",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "sunnynet-integrate lmstudio --gguf <model.gguf> --models-dir <LM Studio models>",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "权重发布导出 (safetensors + runtime blob + 模型卡 + sha256)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "python train/train.py --preset small --steps 800 --batch-size 8 --seq-len 256",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "python train/evaluate.py --ckpt runs/<你的>.pt --gen",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "训练 BPE 分词器 -> 编码为 token 流 -> 划分训练/验证",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "readme",
+      "quote": "采样（temperature / top-k / top-p / repetition-penalty）在服务侧统一处理",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "readme",
+      "quote": "C API 稳定 ABI（`sunnynet/runtime/sn_abi.h`，版本化 + 能力位 + 错误码）",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/22/label",
+      "source_id": "readme",
+      "quote": "from sunnynet.runtime import load_model",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/23/label",
+      "source_id": "readme",
+      "quote": "AVX2/FMA 之外补两条 SIMD 后端源码",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
+    },
+    {
+      "field": "/capabilities/24/label",
+      "source_id": "readme",
+      "quote": "ghcr.io/sunnyclaw-cx/sunnynet",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:36:06+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:28:30+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

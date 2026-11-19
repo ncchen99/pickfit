@@ -42,6 +42,141 @@
     "run multi-stage agent workflows",
     "orchestrate thousands of agents in one process"
   ],
+  "capabilities": [
+    {
+      "label": "Run a coding agent on a task",
+      "area": "subcommands"
+    },
+    {
+      "label": "List running agents",
+      "area": "subcommands"
+    },
+    {
+      "label": "Steer a running agent mid-task",
+      "area": "subcommands"
+    },
+    {
+      "label": "Answer questions agents are waiting on",
+      "area": "subcommands"
+    },
+    {
+      "label": "Watch agents in a TUI dashboard",
+      "area": "interface"
+    },
+    {
+      "label": "Serve a REST and WebSocket API",
+      "area": "api"
+    },
+    {
+      "label": "Query runs through a GraphQL API",
+      "area": "api"
+    },
+    {
+      "label": "Serve an agent over Agent Client Protocol",
+      "items": [
+        "Zed",
+        "Gas City"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Scaffold your own agent blueprint",
+      "area": "subcommands"
+    },
+    {
+      "label": "Validate an agent blueprint",
+      "area": "subcommands"
+    },
+    {
+      "label": "Configure providers with interactive wizard",
+      "area": "subcommands"
+    },
+    {
+      "label": "Install daemon under launchd/systemd",
+      "area": "subcommands"
+    },
+    {
+      "label": "Structured context memory regions",
+      "area": "context"
+    },
+    {
+      "label": "Multi-stage workflow graphs per agent",
+      "area": "workflows"
+    },
+    {
+      "label": "Human-in-the-loop checkpoints and approvals",
+      "area": "interaction"
+    },
+    {
+      "label": "Sandbox shell commands in containers or namespaces",
+      "area": "security"
+    },
+    {
+      "label": "Taint tracking to gate exfiltration",
+      "area": "security"
+    },
+    {
+      "label": "Spawn sub-agents and fan out work",
+      "area": "orchestration"
+    },
+    {
+      "label": "Run thousands of agents in one process",
+      "area": "orchestration"
+    },
+    {
+      "label": "Signed webhook callbacks on completion",
+      "area": "api"
+    },
+    {
+      "label": "Export traces, metrics, logs via OpenTelemetry",
+      "area": "observability"
+    },
+    {
+      "label": "Connect to MCP tool servers",
+      "items": [
+        "stdio",
+        "HTTP"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Use multiple LLM providers",
+      "items": [
+        "Anthropic",
+        "OpenAI",
+        "Google (Gemini)",
+        "xAI",
+        "Meta",
+        "OpenRouter",
+        "AWS Bedrock",
+        "Ollama",
+        "OpenAI Codex",
+        "OpenAI-compatible endpoint"
+      ],
+      "area": "providers"
+    },
+    {
+      "label": "Per-stage model fallback",
+      "area": "providers"
+    },
+    {
+      "label": "Write custom tools in Rhai scripts",
+      "area": "scripting"
+    },
+    {
+      "label": "Embed the runtime as a Rust library",
+      "area": "library"
+    },
+    {
+      "label": "Bundled ready-made agents",
+      "items": [
+        "coder",
+        "deep-researcher",
+        "log-analyzer"
+      ],
+      "area": "agents"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -299,22 +434,19 @@
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-14T10:08:32Z",
         "scope": "runtime",
+        "paths": [
+          "leviath-cli > reqwest > quinn > quinn-proto"
+        ],
         "workspace": "crates/leviath-cli",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-09-14T10:08:32Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "option:ACK_FREQUENCY"
-        ],
-        "paths": [
-          "leviath-cli > reqwest > quinn > quinn-proto"
         ],
         "reachability": {
           "method": "option_grep",
@@ -322,7 +454,10 @@
           "evidence": [
             "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quinn-proto",
@@ -333,22 +468,22 @@
         "fixed_in": "0.11.17",
         "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-08-17T17:32:41Z",
         "scope": "runtime",
+        "paths": [
+          "leviath-cli > reqwest > quinn > quinn-proto"
+        ],
         "workspace": "crates/leviath-cli",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-08-17T17:32:41Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "leviath-cli > reqwest > quinn > quinn-proto"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -412,17 +547,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 84.6,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.75,
@@ -442,10 +574,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 84.6,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -948,8 +1083,224 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T03:14:50+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "lev run coder --task \"Build a CLI that converts CSV to JSON\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "lev ps                           # list running agents, and what each is waiting on",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "lev msg <agent-id> \"...\"         # steer a running agent mid-task",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "lev respond                      # answer questions agents are waiting on",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "lev dash                         # watch everything in the TUI dashboard",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "lev serve                        # REST + WebSocket API server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "release:v0.6.4",
+      "quote": "A GraphQL API for lev serve, and the execution history behind it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "lev agent-client --agent coder   # serve an agent over the Agent Client Protocol",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "lev create my-agent              # scaffold your own agent",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "lev validate .             # checks it and lists the inputs it takes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "lev setup      # interactive wizard",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "`lev daemon install` puts it under launchd/systemd so it starts at login",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "The window is split into named regions, and you decide what each one drops",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "Run them linearly or\nas a directed graph with conditional transitions, error recovery, and\nLLM-driven routing.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "<code>interactive_points</code> force a checkpoint to approve,\nrevise, or edit the output directly",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "Opt into hardened containers or lighter Linux namespaces per agent or per\nstage",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "Taint tracking (experimental)\ngates exfiltration-capable tool calls before they fire.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "A fan-out stage splits a task\ninto work items, runs one worker per item concurrently",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "Thousands of agents in one [bevy_ecs](https://bevyengine.org/) process, from a single binary.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "signed webhook callbacks on completion",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "readme",
+      "quote": "Production deployments can export structured traces, metrics, and logs over OpenTelemetry.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "readme",
+      "quote": "Leviath also connects to [Model Context Protocol](https://modelcontextprotocol.io) tool servers over stdio or HTTP",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/22/label",
+      "source_id": "readme",
+      "quote": "Anthropic, OpenAI, Google (Gemini), xAI (Grok chat, image, video and speech models)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/23/label",
+      "source_id": "readme",
+      "quote": "Per-stage model fallback",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/24/label",
+      "source_id": "readme",
+      "quote": "A Leviath agent is a TOML blueprint plus optional Rhai script tools.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/25/label",
+      "source_id": "readme",
+      "quote": "add the [`leviath`](https://crates.io/crates/leviath) crate to embed the runtime in your own application",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
+    },
+    {
+      "field": "/capabilities/26/label",
+      "source_id": "readme",
+      "quote": "Eleven agents ship out of the box, covering coding, review, research, data gathering, log",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:16+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:28:52+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

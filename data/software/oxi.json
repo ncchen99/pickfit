@@ -36,6 +36,123 @@
     "read, search and edit code",
     "review changes in diff editor"
   ],
+  "capabilities": [
+    {
+      "label": "Switch coding agents mid-chat keeping context",
+      "area": "agents"
+    },
+    {
+      "label": "Use existing agent subscriptions via ACP",
+      "items": [
+        "Claude Code",
+        "Cursor",
+        "Codex",
+        "GitHub Copilot"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Run local GGUF models via llama-server",
+      "area": "local models"
+    },
+    {
+      "label": "Connect to local model servers",
+      "items": [
+        "LM Studio",
+        "Ollama",
+        "llama.cpp"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Use hosted model APIs with your key",
+      "items": [
+        "OpenAI",
+        "Azure",
+        "OpenRouter",
+        "OpenCode Go",
+        "Anthropic-compatible"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Route tasks automatically across providers",
+      "area": "agents"
+    },
+    {
+      "label": "Agent reads, edits code and runs commands",
+      "area": "agents"
+    },
+    {
+      "label": "Call MCP servers",
+      "area": "integrations"
+    },
+    {
+      "label": "Review changes in side-by-side diff editor",
+      "area": "editing"
+    },
+    {
+      "label": "Git stage, commit, branch, pull, push",
+      "area": "git"
+    },
+    {
+      "label": "Plan mode before implementing changes",
+      "area": "agents"
+    },
+    {
+      "label": "Integrated workspace terminal"
+    },
+    {
+      "label": "Web search without an API key",
+      "items": [
+        "DuckDuckGo",
+        "Bing",
+        "SearXNG"
+      ],
+      "area": "search"
+    },
+    {
+      "label": "Local Whisper voice dictation"
+    },
+    {
+      "label": "Evidence mode with captured verification reports",
+      "area": "agents"
+    },
+    {
+      "label": "Remote workspaces over SSH",
+      "area": "remote"
+    },
+    {
+      "label": "Chat with agents from Android phone",
+      "area": "remote"
+    },
+    {
+      "label": "Run oxi as background server",
+      "area": "subcommands"
+    },
+    {
+      "label": "Load AGENTS.md instructions"
+    },
+    {
+      "label": "Choose from five themes",
+      "items": [
+        "Dark",
+        "Light",
+        "Midnight",
+        "Sublime",
+        "Sublime 4"
+      ],
+      "area": "themes"
+    },
+    {
+      "label": "Sublime Text package integration",
+      "area": "integrations"
+    },
+    {
+      "label": "Approve edits and commands before running",
+      "area": "agents"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -386,22 +503,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "oxi > rfd > wayland-client > wayland-scanner > quick-xml"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "oxi > rfd > wayland-client > wayland-scanner > quick-xml"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -412,22 +529,19 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "oxi > rfd > wayland-client > wayland-scanner > quick-xml"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:NsReader"
-        ],
-        "paths": [
-          "oxi > rfd > wayland-client > wayland-scanner > quick-xml"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -435,7 +549,10 @@
           "evidence": [
             "the project's source does not use NsReader, but other packages depend on quick-xml"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -563,17 +680,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 75.0,
+      "raw_total": 89.3,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.75,
@@ -593,10 +707,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 89.3,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -1045,8 +1162,184 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-01T16:45:12+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "github_api",
+      "quote": "switch agents mid-chat and the context comes along",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "Uses your existing subscription through ACP",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Pick a GGUF from HuggingFace and oxi installs <code>llama-server</code>, downloads it and runs it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Your own local or LAN server, optionally over SSH",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "Hosted APIs with your key",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "Picks one of your providers per task, and switches if one runs out of quota",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "It reads, searches and edits code, runs commands, searches the web and calls your MCP servers.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "calls your MCP servers",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Side by side or inline, editable, with Stage and Discard on every block.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Stage, commit, branch, compare, pull and push, with AI-written commit messages.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "<code>/plan</code> investigates without changing a file, with a live checklist.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "A terminal rooted in your workspace sits one click away.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "web search without an API key (DuckDuckGo, Bing or your SearXNG)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "local Whisper voice dictation",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "can capture before/after images or recordings, run checks, and cite\nthem in a report beneath their response",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "agents, files, Git and the terminal run on that host, and chats are saved there",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "release:v1.33.0",
+      "quote": "Native oxi app for Android with live chat, tool calls, approvals, QR pairing",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "release:v1.33.0",
+      "quote": "Run oxi as a background service on macOS (LaunchAgent), Linux (systemd), and Windows (Run entry)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "If a workspace has an `AGENTS.md` at its root, oxi adds it to the agent's instructions.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "five themes (Dark, Light, Midnight, Sublime, Sublime 4)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "readme",
+      "quote": "the same command adds oxi's [Sublime Text package](editors/sublime/README.md) too",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "readme",
+      "quote": "Edits and commands can ask for approval first.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:56+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

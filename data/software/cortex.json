@@ -36,6 +36,158 @@
     "Detect contradictions when decisions conflict",
     "Explore graph in web dashboard"
   ],
+  "capabilities": [
+    {
+      "label": "Watch project files for changes",
+      "items": [
+        "md",
+        "ts",
+        "js",
+        "py",
+        "json",
+        "yaml"
+      ],
+      "area": "ingestion"
+    },
+    {
+      "label": "Extract entities from files with LLMs",
+      "items": [
+        "decisions",
+        "patterns",
+        "components",
+        "dependencies",
+        "constraints",
+        "action items"
+      ],
+      "area": "extraction"
+    },
+    {
+      "label": "Infer relationships across projects",
+      "area": "extraction"
+    },
+    {
+      "label": "Detect conflicting decisions",
+      "area": "analysis"
+    },
+    {
+      "label": "Query in natural language with citations",
+      "area": "search"
+    },
+    {
+      "label": "Semantic search with embeddings",
+      "area": "search"
+    },
+    {
+      "label": "Route between cloud and local LLMs",
+      "items": [
+        "cloud-first",
+        "hybrid",
+        "local-first",
+        "local-only"
+      ],
+      "area": "llm"
+    },
+    {
+      "label": "Use multiple LLM providers",
+      "items": [
+        "Anthropic Claude",
+        "Google Gemini",
+        "DeepSeek",
+        "Groq",
+        "Any OpenAI-compatible API",
+        "Ollama"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Web dashboard with graph visualization",
+      "items": [
+        "Dashboard Home",
+        "Knowledge Graph",
+        "Live Feed",
+        "Query Explorer",
+        "Contradiction Resolver"
+      ],
+      "area": "dashboard"
+    },
+    {
+      "label": "MCP server for Claude Code",
+      "items": [
+        "cortex_ask",
+        "get_status",
+        "list_projects",
+        "find_entity",
+        "query_cortex",
+        "get_contradictions",
+        "resolve_contradiction",
+        "search_entities",
+        "ingest_file",
+        "add_project",
+        "remove_project",
+        "session_brief"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Keep restricted projects off the cloud",
+      "area": "privacy"
+    },
+    {
+      "label": "Redact secrets before cloud transmission",
+      "area": "privacy"
+    },
+    {
+      "label": "Find entities by name",
+      "area": "subcommands"
+    },
+    {
+      "label": "Track LLM costs and budget",
+      "area": "subcommands"
+    },
+    {
+      "label": "Manage Ollama models",
+      "area": "subcommands"
+    },
+    {
+      "label": "Exclude files and directories from watching",
+      "area": "configuration"
+    },
+    {
+      "label": "CLI subcommands",
+      "items": [
+        "init",
+        "doctor",
+        "projects",
+        "serve",
+        "watch",
+        "ingest",
+        "reindex",
+        "query",
+        "find",
+        "status",
+        "costs",
+        "contradictions",
+        "resolve",
+        "models",
+        "mcp",
+        "report",
+        "privacy",
+        "config",
+        "stop",
+        "restart",
+        "db"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Rebuild semantic search index",
+      "area": "subcommands"
+    },
+    {
+      "label": "Serve REST API and WebSocket",
+      "area": "output"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -242,22 +394,22 @@
         "fixed_in": "4.6.6",
         "summary": "Zod can exhaust memory while validating oversized constrained collections",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-11T16:18:23Z",
         "scope": "runtime",
+        "paths": [
+          "npm:@gzoo/cortex > @gzoo/cortex > zod"
+        ],
         "workspace": ".",
         "found_in": "registry:npm:@gzoo/cortex",
         "kev": false,
-        "fix_published_at": "2026-10-11T16:18:23Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "npm:@gzoo/cortex > @gzoo/cortex > zod"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -319,17 +471,14 @@
     "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 79.3,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.8125,
@@ -349,10 +498,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 79.3,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -676,8 +828,160 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T03:15:18+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "**Watches** your project files (md, ts, js, py, json, yaml) for changes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:40+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "**Extracts** entities: decisions, patterns, components, dependencies, constraints, action items",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:40+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "**Infers** relationships between entities across projects",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:40+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "**Detects** contradictions when decisions conflict",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:40+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "**Queries** in natural language with source citations",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:40+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "blends keyword and vector (embedding) similarity so queries match by meaning",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:40+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "**Routes** intelligently between cloud and local LLMs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:40+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Cortex is **provider-agnostic**. It supports:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:40+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "**Web dashboard** with knowledge graph visualization, live feed, and query explorer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:40+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "**MCP server** for direct integration with Claude Code",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:40+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "Files classified as `restricted` are **never** sent to cloud LLMs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:40+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "API key secrets are scanned and redacted before any cloud transmission",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:40+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "`cortex find <term>` | Find entities by name",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:40+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "`cortex costs` | Detailed cost breakdown",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:40+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "`cortex models list/pull/test/info` | Manage Ollama models",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:40+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "`cortex config exclude add/remove/list` | Manage file/directory exclusions",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:40+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "| `cortex init` | Interactive setup wizard |",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:40+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "Rebuild the semantic (embedding) search index for existing entities",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:40+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "**@cortex/server** — Express REST API + WebSocket relay",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:51:40+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-11-20T00:06:03+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

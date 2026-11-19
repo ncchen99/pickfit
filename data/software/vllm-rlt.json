@@ -30,6 +30,80 @@
     "Adaptive early-exit decoding with loop bounds",
     "OpenAI-compatible completions endpoint with streaming"
   ],
+  "capabilities": [
+    {
+      "label": "Serve supported recurrent language models",
+      "items": [
+        "Ouro-1.4B",
+        "Ouro-2.6B",
+        "Ouro-1.4B-Thinking",
+        "Ouro-2.6B-Thinking",
+        "Nanbeige4.2-3B",
+        "Huginn-0125"
+      ],
+      "area": "models"
+    },
+    {
+      "label": "Adaptive early-exit or fixed-depth decoding",
+      "area": "inference"
+    },
+    {
+      "label": "Depth-aware paged KV cache",
+      "items": [
+        "LAST-EXITED",
+        "SHARED"
+      ],
+      "area": "caching"
+    },
+    {
+      "label": "Optional prefix caching",
+      "area": "caching"
+    },
+    {
+      "label": "Priority scheduling and preemption with snapshots",
+      "area": "scheduling"
+    },
+    {
+      "label": "Chunked prefill and request cancellation",
+      "area": "scheduling"
+    },
+    {
+      "label": "Choose GPU attention backends",
+      "items": [
+        "Triton",
+        "FlashAttention"
+      ],
+      "area": "backends"
+    },
+    {
+      "label": "CUDA Graph capture of decode cores",
+      "area": "execution"
+    },
+    {
+      "label": "Self-speculative decoding",
+      "area": "execution"
+    },
+    {
+      "label": "Asynchronous scheduling with multiple CUDA streams",
+      "area": "execution"
+    },
+    {
+      "label": "Run inference from a Python API",
+      "area": "interfaces"
+    },
+    {
+      "label": "Run inference from the command line",
+      "area": "interfaces"
+    },
+    {
+      "label": "Greedy and seeded top-k/top-p sampling",
+      "area": "sampling"
+    },
+    {
+      "label": "Prefill/decode disaggregation across GPUs",
+      "area": "serving"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -310,17 +384,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 70.6,
+      "raw_total": 70.6,
       "confidence": 0.7,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.5625,
@@ -340,10 +411,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 70.6,
       "security": {
         "level": "none",
         "basis": "assessment",
@@ -692,8 +766,120 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T03:15:17+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "native support for **ByteDance/Ouro-1.4B** and\n**Nanbeige/Nanbeige4.2-3B**, plus **tomg-group-umd/huginn-0125**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:50+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "Run fixed-depth decoding or use Ouro's trained\n  early-exit gate, with per-request loop bounds and exit thresholds.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:50+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "**Depth-aware paged KV cache.** LAST-EXITED and SHARED layouts",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:50+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "optional prefix caching, incremental page allocation",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:50+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "priority scheduling, and preemption with CPU state snapshots",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:50+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "chunked prefill, dynamic\n  arrivals, and cancellation",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:50+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "Triton and FlashAttention backends",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:50+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "CUDA Graph capture\n  of decode recurrent cores",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:50+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Asynchronous self-speculation also supports compatible\n  paged FlashAttention backends",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:50+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "asynchronous\n  scheduling, multiple CUDA streams, reusable buffers",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:50+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "A Python API, a command-line interface,",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:50+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "A Python API, a command-line interface,",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:50+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "greedy decoding,\n  and seeded top-k/top-p sampling",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:50+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "Separate prefill and decode worker pools\n  across GPUs on one host, with NIXL KV transfer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:50+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:28:43+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

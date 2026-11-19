@@ -36,6 +36,129 @@
     "use integrated terminal with splits and history",
     "debug Python, JavaScript, Rust, C and C++"
   ],
+  "capabilities": [
+    {
+      "label": "Full LSP editing in the terminal",
+      "items": [
+        "completion",
+        "hover",
+        "go-to-definition",
+        "rename",
+        "quick fixes",
+        "inlay hints"
+      ],
+      "area": "editing"
+    },
+    {
+      "label": "Tree-sitter syntax highlighting",
+      "area": "editing"
+    },
+    {
+      "label": "Multi-cursor editing with minimap",
+      "area": "editing"
+    },
+    {
+      "label": "Optional vim mode",
+      "area": "editing"
+    },
+    {
+      "label": "Integrated terminal with splits and triggers",
+      "area": "terminal"
+    },
+    {
+      "label": "Source control with hunk staging",
+      "area": "git"
+    },
+    {
+      "label": "Inline git blame and gutter",
+      "area": "git"
+    },
+    {
+      "label": "Run tests in Test Explorer",
+      "area": "testing"
+    },
+    {
+      "label": "Zero-config task runner",
+      "area": "tasks"
+    },
+    {
+      "label": "Live re-run Python with inline values",
+      "area": "debugging"
+    },
+    {
+      "label": "Debug programs over DAP",
+      "items": [
+        "Python",
+        "JavaScript/TypeScript",
+        "Rust",
+        "C",
+        "C++"
+      ],
+      "area": "debugging"
+    },
+    {
+      "label": "Run croft on remote server over SSH",
+      "area": "subcommands"
+    },
+    {
+      "label": "Run inside a dev container",
+      "area": "subcommands"
+    },
+    {
+      "label": "Share persistent collaborative sessions",
+      "area": "collaboration"
+    },
+    {
+      "label": "AI pair-programming navigator",
+      "area": "ai"
+    },
+    {
+      "label": "Join sessions as MCP guest AI",
+      "area": "ai"
+    },
+    {
+      "label": "Preview images, PDFs and spreadsheets inline",
+      "items": [
+        "image",
+        "PDF",
+        "spreadsheet"
+      ],
+      "area": "preview"
+    },
+    {
+      "label": "Import VS Code settings",
+      "area": "subcommands"
+    },
+    {
+      "label": "Import color themes",
+      "area": "themes"
+    },
+    {
+      "label": "Configure iTerm2 and Ghostty keybindings",
+      "area": "subcommands"
+    },
+    {
+      "label": "Search, explorer and panel views",
+      "items": [
+        "Explorer",
+        "Search",
+        "Source Control",
+        "Remote (SSH)",
+        "Run and Debug",
+        "Extensions",
+        "Testing"
+      ],
+      "area": "interface"
+    },
+    {
+      "label": "Inline AI suggestions",
+      "area": "ai"
+    },
+    {
+      "label": "Manage language servers via Extensions",
+      "area": "extensions"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -252,22 +375,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "croft-software > quick-xml"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "croft-software > quick-xml"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -278,22 +401,19 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "croft-software > quick-xml"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:NsReader"
-        ],
-        "paths": [
-          "croft-software > quick-xml"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -301,7 +421,10 @@
           "evidence": [
             "the project's source does not use NsReader, but other packages depend on quick-xml"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:pulldown-cmark",
@@ -312,21 +435,18 @@
         "fixed_in": "0.13.5",
         "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "croft-software > pulldown-cmark"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "option:ENABLE_WIKILINKS"
-        ],
-        "paths": [
-          "croft-software > pulldown-cmark"
         ],
         "reachability": {
           "method": "option_grep",
@@ -334,7 +454,10 @@
           "evidence": [
             "no source file uses ENABLE_WIKILINKS; only the project depends on pulldown-cmark"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:pulldown-cmark",
@@ -345,21 +468,18 @@
         "fixed_in": "0.13.6",
         "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "croft-software > pulldown-cmark"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "option:ENABLE_WIKILINKS"
-        ],
-        "paths": [
-          "croft-software > pulldown-cmark"
         ],
         "reachability": {
           "method": "option_grep",
@@ -367,7 +487,10 @@
           "evidence": [
             "no source file uses ENABLE_WIKILINKS; only the project depends on pulldown-cmark"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -433,17 +556,14 @@
     "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 63.6,
+      "raw_total": 63.6,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.5,
@@ -463,10 +583,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 63.6,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -851,8 +974,192 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T03:14:48+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "full LSP editing (completion, hover, go-to-definition, rename, quick fixes, inlay hints)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "with tree-sitter highlighting",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "multi-cursor, minimap, git gutter, inline blame, and an optional vim mode",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "an optional vim mode",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "a real terminal with shell integration, splits, triggers, copy mode, and durable command history",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "Source Control with hunk staging and a commit graph",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "git gutter, inline blame",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "a Test Explorer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "a zero-config task runner",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Live Run, which re-runs a Python file as you type and shows every line's values inline",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "debugging for Python, JavaScript/TypeScript, Rust, C, and C++ over DAP",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "`croft remote <host>` runs\nit on a Linux server over SSH",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "`croft devcontainer`\nruns it inside a folder's dev container",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "`croft attach` keeps a session alive after you close the window, and lets other people join it.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "a resident pair-programming navigator croft hosts\nitself (`croft pair`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "An AI can\ntake a seat too, either as an MCP guest",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "Inline image / PDF / spreadsheet previews.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "release:v0.2.82",
+      "quote": "`croft import-vscode | head`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "release:v0.2.82",
+      "quote": "`croft theme-import --dry-run` prints only the manifest on stdout",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "`croft setup-iterm2` / `croft setup-ghostty` to deliver the `Cmd` chords",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "readme",
+      "quote": "switches the sidebar between Explorer, Search, Source Control, Remote (SSH), Run and Debug, Extensions, and Testing",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "release:v0.2.82",
+      "quote": "Inline suggestions send `ANTHROPIC_API_KEY` only over https or to this machine",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
+    },
+    {
+      "field": "/capabilities/22/label",
+      "source_id": "release:v0.2.82",
+      "quote": "A language server added or turned on in the Extensions view starts at once",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:34:09+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-11-20T00:06:03+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

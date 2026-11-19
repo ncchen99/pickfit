@@ -31,6 +31,143 @@
   "alternatives_to": [
     "llama.cpp"
   ],
+  "capabilities": [
+    {
+      "label": "Compute sentence embeddings",
+      "items": [
+        "embed",
+        "bench"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Answer typed decisions with d1-omni",
+      "items": [
+        "decide"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Generate text with LFM2/LFM2.5 models",
+      "items": [
+        "generate"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Generate text with Gemma 4 models",
+      "area": "models"
+    },
+    {
+      "label": "Multimodal embeddings from text, image, audio, video",
+      "items": [
+        "text",
+        "image",
+        "audio",
+        "video"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Run OpenAI-compatible HTTP server",
+      "items": [
+        "/v1/embeddings",
+        "/v1/chat/completions",
+        "/v1/completions",
+        "/v1/systemone",
+        "/apply-template",
+        "/tokenize",
+        "/detokenize",
+        "/metrics",
+        "/v1/models",
+        "/health",
+        "/chat"
+      ],
+      "area": "server"
+    },
+    {
+      "label": "Stream chat responses over SSE",
+      "area": "server"
+    },
+    {
+      "label": "Built-in web chat test page",
+      "area": "server"
+    },
+    {
+      "label": "Export Prometheus metrics",
+      "area": "server"
+    },
+    {
+      "label": "Cache prompt prefixes for faster requests",
+      "area": "server"
+    },
+    {
+      "label": "Decide over images and audio",
+      "items": [
+        "WAV",
+        "MP3",
+        "FLAC"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Crop image regions for decisions",
+      "area": "server"
+    },
+    {
+      "label": "Load GGUF model files directly",
+      "items": [
+        "Q8_0",
+        "F16",
+        "BF16",
+        "F32"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Run inference on Intel iGPU via OpenCL",
+      "area": "hardware"
+    },
+    {
+      "label": "Fall back to CPU inference",
+      "area": "hardware"
+    },
+    {
+      "label": "Configurable KV cache dtype",
+      "items": [
+        "f32",
+        "int8",
+        "f16"
+      ],
+      "area": "server"
+    },
+    {
+      "label": "Speculative decoding",
+      "area": "server"
+    },
+    {
+      "label": "API key authentication",
+      "area": "server"
+    },
+    {
+      "label": "Plan memory needs before loading",
+      "items": [
+        "plan"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Dump multimodal encoder embeddings",
+      "items": [
+        "mm-embed"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Return reasoning content separately",
+      "area": "output"
+    }
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -267,17 +404,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 57.1,
+      "raw_total": 57.1,
       "confidence": 0.6,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 0.7225,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.5625,
@@ -297,10 +431,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 57.1,
       "security": {
         "level": "none",
         "basis": "assessment",
@@ -452,6 +589,12 @@
       "kind": "readme",
       "url": "https://github.com/paragontasx/ferro/blob/main/README.md",
       "fetched_at": "2026-10-30T23:55:08+08:00"
+    },
+    {
+      "id": "help:verify-ferro-20261116-131250-25c2:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T00:59:48+08:00"
     }
   ],
   "evidence": [
@@ -574,8 +717,176 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:35:09+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "sentence embeddings (+ image / audio / video via `--mmproj`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "typed answers (yes/no, choice, score) over a state, one forward pass, no generated tokens",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "text generation: chat + completions, streaming, OpenAI-compatible",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "help:verify-ferro-20261116-131250-25c2:1",
+      "quote": "text generation with an LFM2/LFM2.5 or Gemma 4 model; chat template + sampler built in.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "help:verify-ferro-20261116-131250-25c2:1",
+      "quote": "items are interleaved in order into one 768-d embedding",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "One resident process, OpenAI-compatible, embeddings and/or language model and/or the d1 decision model",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "`stream` (SSE) + `stream_options.include_usage`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Built-in **`GET /chat`** test page (single file, no external requests)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Prometheus text (counters, live tokens/s, TTFT histogram, memory)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Prompt-prefix cache (`--prefix-cache-mb`, default 128, 0 = off)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "one** audio clip (WAV / MP3 / FLAC, any sample rate,",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "a frame plus a detector box needs no client-side crop / JPEG re-encode",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "it loads GGUFs directly",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "runs them **on the integrated GPU by default** (OpenCL, int8",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "with automatic CPU fallback",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "[--kv-dtype f32|int8|f16]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "help:verify-ferro-20261116-131250-25c2:1",
+      "quote": "[--spec-draft N]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "Bearer `--api-key`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "what this configuration needs vs the container limit, before anything is loaded",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "help:verify-ferro-20261116-131250-25c2:1",
+      "quote": "(per-chunk encoder output, mm_ref format)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "readme",
+      "quote": "`<think>..</think>` output is returned as `reasoning_content`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:48+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

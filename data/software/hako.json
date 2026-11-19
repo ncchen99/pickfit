@@ -38,6 +38,109 @@
     "serve resident model reusing KV cache",
     "run 3B and 7B models on CPU"
   ],
+  "capabilities": [
+    {
+      "label": "Run hako LLMs on CPU",
+      "items": [
+        "hako-sho",
+        "hako-koi"
+      ],
+      "area": "inference"
+    },
+    {
+      "label": "Raw greedy text completion",
+      "area": "generation"
+    },
+    {
+      "label": "One-shot ChatML chat turn",
+      "area": "generation"
+    },
+    {
+      "label": "Interactive multi-turn chat REPL",
+      "area": "generation"
+    },
+    {
+      "label": "Resident serve loop with KV reuse",
+      "area": "server"
+    },
+    {
+      "label": "Stream tokens as sampled",
+      "area": "server"
+    },
+    {
+      "label": "Show model architecture info",
+      "area": "output"
+    },
+    {
+      "label": "Convert GGUF to MLF2 format",
+      "items": [
+        "GGUF",
+        "MLF2"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Manage local model store",
+      "items": [
+        "list",
+        "pull",
+        "rm"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Download models from HuggingFace",
+      "area": "models"
+    },
+    {
+      "label": "Configurable sampling parameters",
+      "items": [
+        "temp",
+        "top-k",
+        "top-p",
+        "greedy",
+        "repetition penalty"
+      ],
+      "area": "sampling"
+    },
+    {
+      "label": "Cache system-prompt KV prefix on disk",
+      "area": "caching"
+    },
+    {
+      "label": "Supported quantization formats",
+      "items": [
+        "Q4_K",
+        "Q6_K",
+        "Q8_0"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Supported model architectures",
+      "items": [
+        "Qwen2",
+        "llama"
+      ],
+      "area": "models"
+    },
+    {
+      "label": "Tool-call dialect support",
+      "area": "generation"
+    },
+    {
+      "label": "Chat via stdin",
+      "area": "input"
+    },
+    {
+      "label": "Embed as in-process library",
+      "area": "integrations"
+    },
+    {
+      "label": "Refuse damaged model files",
+      "area": "validation"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -384,17 +487,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 81.8,
+      "raw_total": 81.8,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 0.7,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.6875,
@@ -414,10 +514,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       },
-      "raw_total": 81.8,
       "security": {
         "level": "none",
         "basis": "assessment",
@@ -798,8 +901,152 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T03:14:46+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "github_api",
+      "quote": "Runs hako-sho (3B) and hako-koi (7B) on CPU.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:35+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "./hakm \"$M\" --raw -t 0 \"def fibonacci(n):\"           # raw greedy completion",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:35+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "./hakm \"$M\" --sys \"You are hako.\" \"ring buffers in C\" # one ChatML turn",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:35+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "./hakm \"$M\" --sys \"You are hako.\"                    # interactive multi-turn REPL",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:35+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "`--serve` keeps the model warm and reuses the KV prefix across turns.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:35+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "`--serve` sends each token as it is sampled",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:35+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "./hakm \"$M\" --info                                   # arch banner, then exit",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:35+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "`tools/gguf2mlf.py` converts a Qwen2.5-Coder\n  GGUF to a native MLF2 file once",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:35+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "**Model store** — `hakm list | pull | rm`, resumable pulls, atomic install",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:35+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "hakm pull hako-sho      # resumable, checked, installed to ~/.hako/models/",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:35+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "src/sample.c       temp / top-k / top-p / greedy, repetition penalty",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:35+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "the prefilled system prompt is saved under\n  `~/.hako/cache/kv/` and restored on the next run",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:35+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "src/quant.c        Q4_K / Q6_K / Q8_0 dequant + int8 fast dot (bit-exact)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:35+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "src/model.c        Qwen2 / llama forward — GQA, KV cache, batched prefill, threaded attn",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:35+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "greedy + sampling, ChatML, multi-turn,\n  tool-call dialect",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:35+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "`--chat-stdin`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:35+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "optional in-process library (libhakm.a)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:35+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "**Damaged files are refused**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:35+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

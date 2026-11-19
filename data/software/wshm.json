@@ -37,6 +37,194 @@
     "show ranked merge queue",
     "generate PRs from issue descriptions"
   ],
+  "capabilities": [
+    {
+      "label": "Triage and label issues with AI",
+      "area": "triage"
+    },
+    {
+      "label": "Analyze pull request risk",
+      "area": "pull requests"
+    },
+    {
+      "label": "Scored merge queue with auto-merge",
+      "area": "pull requests"
+    },
+    {
+      "label": "Detect duplicate, stale and zombie PRs",
+      "area": "pull requests"
+    },
+    {
+      "label": "Detect conflicting PRs",
+      "area": "pull requests"
+    },
+    {
+      "label": "Inline AI code review on PR diffs",
+      "area": "pull requests"
+    },
+    {
+      "label": "Auto-generate fix PR from issue",
+      "area": "automation"
+    },
+    {
+      "label": "Work with multiple Git forges",
+      "items": [
+        "GitHub",
+        "GitLab",
+        "Gitea",
+        "Azure DevOps"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Use many AI providers",
+      "items": [
+        "Anthropic",
+        "OpenAI",
+        "Google",
+        "Mistral",
+        "Groq",
+        "DeepSeek",
+        "xAI",
+        "OpenRouter",
+        "Azure",
+        "Together",
+        "Fireworks",
+        "Cohere",
+        "Perplexity",
+        "Ollama",
+        "llama.cpp"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Log in with Claude subscription",
+      "area": "authentication"
+    },
+    {
+      "label": "Run local AI models",
+      "area": "ai"
+    },
+    {
+      "label": "Interactive terminal UI",
+      "area": "interfaces"
+    },
+    {
+      "label": "Run daemon with web dashboard",
+      "area": "interfaces"
+    },
+    {
+      "label": "React to webhooks or poll events",
+      "area": "daemon"
+    },
+    {
+      "label": "Slash commands in issue comments",
+      "items": [
+        "/wshm triage",
+        "/wshm analyze",
+        "/wshm review",
+        "/wshm label",
+        "/wshm unlabel",
+        "/wshm queue",
+        "/wshm health",
+        "/wshm help"
+      ],
+      "area": "daemon"
+    },
+    {
+      "label": "Send notifications to chat platforms",
+      "items": [
+        "Discord",
+        "Slack",
+        "Teams",
+        "webhook"
+      ],
+      "area": "notifications"
+    },
+    {
+      "label": "Generate repo reports",
+      "items": [
+        "md",
+        "html",
+        "pdf"
+      ],
+      "area": "output"
+    },
+    {
+      "label": "Generate changelog from merged PRs",
+      "area": "output"
+    },
+    {
+      "label": "Generate HTML metrics dashboard",
+      "area": "output"
+    },
+    {
+      "label": "Backup and restore state",
+      "area": "data"
+    },
+    {
+      "label": "Revert all wshm actions",
+      "area": "data"
+    },
+    {
+      "label": "Export repo context as markdown",
+      "area": "output"
+    },
+    {
+      "label": "Migrate between SQLite and PostgreSQL",
+      "area": "data"
+    },
+    {
+      "label": "Export data to cloud sinks",
+      "items": [
+        "S3",
+        "Azure Blob",
+        "GCS",
+        "PostgreSQL",
+        "MySQL",
+        "MongoDB",
+        "Elasticsearch",
+        "OpenSearch"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Read secrets from key vaults",
+      "items": [
+        "HashiCorp Vault",
+        "AWS Secrets Manager",
+        "Azure Key Vault",
+        "GCP Secret Manager"
+      ],
+      "area": "security"
+    },
+    {
+      "label": "OIDC single sign-on",
+      "items": [
+        "Google",
+        "GitHub",
+        "GitLab",
+        "Azure AD"
+      ],
+      "area": "security"
+    },
+    {
+      "label": "AI conflict resolution via rebase",
+      "area": "pull requests"
+    },
+    {
+      "label": "JSON output for scripting",
+      "area": "output"
+    },
+    {
+      "label": "Full cycle in one command",
+      "area": "subcommands"
+    },
+    {
+      "label": "Weighted auto-assignment of issues and PRs",
+      "area": "automation"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -276,22 +464,19 @@
         "fixed_in": "0.10.79",
         "summary": "rust-openssl has undefined behavior in X509Ref::ocsp_responders for certificates with non-UTF-8 OCSP URLs",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-05-04T00:19:55Z",
         "scope": "runtime",
+        "paths": [
+          "wshm-core > openssl"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00211,
-        "fix_published_at": "2026-05-04T00:19:55Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:X509Ref::ocsp_responders"
-        ],
-        "paths": [
-          "wshm-core > openssl"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -299,7 +484,10 @@
           "evidence": [
             "the project's source does not use X509Ref::ocsp_responders, but other packages depend on openssl"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:source-map-js",
@@ -312,23 +500,23 @@
         "fixed_in": "1.2.2",
         "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-30T14:08:09Z",
         "scope": "runtime",
+        "paths": [
+          ". > @tailwindcss/vite > @tailwindcss/node > source-map-js"
+        ],
         "workspace": ".",
         "found_in": "web/package-lock.json",
         "kev": false,
         "epss": 0.00455,
-        "fix_published_at": "2026-09-30T14:08:09Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > @tailwindcss/vite > @tailwindcss/node > source-map-js"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -444,17 +632,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 88.3,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.8125,
@@ -474,10 +659,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 88.3,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -937,8 +1125,248 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T03:15:34+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "**Issue triage** — AI classification (bug/feature/question/etc.), priority, confidence scoring, auto-labeling",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "**PR analysis** — risk level (low/medium/high), type (feature/fix/docs), summary, review checklist",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "**Merge queue** — scoring, auto-merge above threshold, conflict detection",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "**PR health** — duplicate detection, stale/zombie PR flagging",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "`wshm conflicts` | Detect conflicting PRs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "`wshm review [--pr <N>]` | Inline AI code review on PR diffs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "`wshm fix --issue <N>` | Auto-generate a fix PR from an issue",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Works with GitHub, GitLab, Gitea, and Azure DevOps.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "**Any API provider** — Anthropic, OpenAI, Google, Mistral, Groq, DeepSeek, xAI, OpenRouter, Azure, Together, Fireworks, Cohere, Perplexity",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "wshm login --claude    # Uses your existing Claude Max/Pro/Team subscription",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "`wshm model pull <name>` | Download a model for local inference",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "**TUI** — rich interactive terminal UI (issues, PRs, queue, stats)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "**Daemon + Web dashboard** — persistent multi-repo background service with embedded Svelte web UI",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "`wshm daemon` | Start persistent daemon (webhook + polling)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "`/wshm triage` comment | Re-triage the issue",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "`wshm notify` | Send priority summary (Discord/Slack/Teams/webhook)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "`wshm report` | Generate report (md/html/pdf)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "`wshm changelog` | Generate changelog from merged PRs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "`wshm dashboard` | Generate metrics dashboard (HTML + charts)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "**Backup / Restore** — snapshot your `.wshm/` data for safe migration",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "readme",
+      "quote": "**Revert** — undo all wshm actions (remove comments, labels, clear analyses)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "readme",
+      "quote": "**Context export** — dump repo context as LLM-ready markdown",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/22/label",
+      "source_id": "readme",
+      "quote": "**Migrate** — move data between SQLite and PostgreSQL",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/23/label",
+      "source_id": "readme",
+      "quote": "**Cloud exports** — ship issues/PRs/analyses to external sinks:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/24/label",
+      "source_id": "readme",
+      "quote": "Supported providers: **HashiCorp Vault**, **AWS Secrets Manager**, **Azure Key Vault**, **GCP Secret Manager**.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/25/label",
+      "source_id": "readme",
+      "quote": "**OIDC SSO** — login via Google, GitHub, GitLab, Azure AD",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/26/label",
+      "source_id": "readme",
+      "quote": "**AI conflict resolution** — automatic rebase with AI assistance",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/27/label",
+      "source_id": "readme",
+      "quote": "`--json` | JSON output for scripting",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/28/label",
+      "source_id": "readme",
+      "quote": "**Run** — one-command cycle: sync + triage + analyze + queue",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
+    },
+    {
+      "field": "/capabilities/29/label",
+      "source_id": "readme",
+      "quote": "[[assign.issues]]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:54:03+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

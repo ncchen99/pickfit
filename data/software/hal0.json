@@ -36,6 +36,134 @@
     "Open WebUI",
     "LocalAI"
   ],
+  "capabilities": [
+    {
+      "label": "Serve an OpenAI-compatible inference API",
+      "items": [
+        "chat",
+        "completions",
+        "embeddings",
+        "rerank",
+        "audio transcriptions",
+        "audio speech",
+        "image generations",
+        "image edits",
+        "models"
+      ],
+      "area": "api"
+    },
+    {
+      "label": "Run each workload in its own podman container slot",
+      "items": [
+        "llm",
+        "embedding",
+        "reranking",
+        "transcription",
+        "tts",
+        "image"
+      ],
+      "area": "slots"
+    },
+    {
+      "label": "Select hardware backend per slot",
+      "items": [
+        "gpu-rocm",
+        "gpu-vulkan",
+        "gpu-cuda",
+        "cpu",
+        "npu"
+      ],
+      "area": "hardware"
+    },
+    {
+      "label": "Pull models from Hugging Face with resume",
+      "area": "models"
+    },
+    {
+      "label": "Generate images with ComfyUI model catalog",
+      "area": "images"
+    },
+    {
+      "label": "Fall back to upstream model providers",
+      "items": [
+        "OpenRouter",
+        "Anthropic",
+        "OpenAI",
+        "Google AI Studio",
+        "Ollama"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Benchmark models with hal0 bench",
+      "items": [
+        "plan",
+        "run",
+        "results",
+        "eval",
+        "bundle",
+        "upload"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Manage slots and models from a web dashboard",
+      "area": "dashboard"
+    },
+    {
+      "label": "Chat with the steward in terminal",
+      "area": "subcommands"
+    },
+    {
+      "label": "Prewired Open WebUI chat interface",
+      "area": "integrations"
+    },
+    {
+      "label": "Conversation memory via Hindsight MCP server",
+      "area": "memory"
+    },
+    {
+      "label": "Speculative decoding with drafter models",
+      "items": [
+        "DFlash",
+        "EAGLE-3",
+        "LiLiCorr"
+      ],
+      "area": "inference"
+    },
+    {
+      "label": "Apply declarative stacks atomically with rollback",
+      "area": "configuration"
+    },
+    {
+      "label": "Self-update with signed releases and rollback",
+      "area": "updates"
+    },
+    {
+      "label": "Run chat, transcription, embedding on NPU",
+      "area": "hardware"
+    },
+    {
+      "label": "Probe hardware and warn about memory fit",
+      "area": "hardware"
+    },
+    {
+      "label": "Enable API key authentication",
+      "area": "auth"
+    },
+    {
+      "label": "Run Hermes agent profiles",
+      "area": "agents"
+    },
+    {
+      "label": "Stream per-slot logs from journald",
+      "area": "monitoring"
+    },
+    {
+      "label": "Diagnose installation with hal0 doctor",
+      "area": "subcommands"
+    }
+  ],
   "why_worth_it": null,
   "homepage": "https://hal0.dev",
   "repo": {
@@ -200,17 +328,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 87.5,
+      "raw_total": 87.5,
       "confidence": 0.5,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.75,
@@ -230,10 +355,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 87.5,
       "security": {
         "level": "none",
         "basis": "assessment",
@@ -712,8 +840,168 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:13:35+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "OpenAI-compatible `/v1/*` API** — chat, completions, embeddings,",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:15+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "Every inference workload runs as its own **podman container** under a",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:15+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "automatic hardware-backend selection (ROCm/Vulkan/CUDA/CPU/NPU)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:15+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "`hal0 model pull` streams from Hugging Face into the model registry",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:15+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "`hal0 comfyui models list|install|remove`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:15+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "upstream fallback (OpenRouter, Anthropic, OpenAI, Google AI\n  Studio, Ollama, custom OpenAI-shaped endpoints)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:15+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "`hal0 bench\nplan|run|results|eval|bundle|upload`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:15+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Dashboard** — React 18 + Vite UI for slot/model management",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:15+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "hal0 chat --brain",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:15+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "OpenWebUI, prewired, on `:3001` — zero config.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:15+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "the bundled Hindsight memory engine turns\nconversations into recallable facts behind an MCP server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:15+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "A model can carry a drafter file\n  (DFlash, EAGLE-3, LiLiCorr)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:15+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "declarative slot + profile + model bundles, applied atomically",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:15+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "Cosign-signed tarball releases via `hal0 update`, with one-flag rollback.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:15+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "hosts chat + transcription + embedding concurrently on one AMDXDNA hardware\ncontext",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:15+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "detects GPU / NPU / unified memory, writes\n  `/etc/hal0/hardware.json`, and surfaces VRAM/RAM fit warnings",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:15+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "opt in with `hal0 auth require on`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:15+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "Hermes agent profiles appear in its model picker next to your slots.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:15+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "a Journal panel streams per-slot container logs from journald",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:15+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "New `hal0 doctor all` rows",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:15+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

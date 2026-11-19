@@ -33,6 +33,106 @@
     "seal segments with handoff notes",
     "save and restore engine state"
   ],
+  "capabilities": [
+    {
+      "label": "Transparent proxy between coding agent and local model",
+      "area": "core"
+    },
+    {
+      "label": "Speak multiple LLM API protocols",
+      "items": [
+        "OpenAI Chat Completions",
+        "Anthropic Messages",
+        "OpenAI Responses"
+      ],
+      "area": "protocols"
+    },
+    {
+      "label": "Keep verbatim archive of all messages",
+      "area": "archive"
+    },
+    {
+      "label": "Mask old tool outputs as receipts",
+      "area": "context"
+    },
+    {
+      "label": "Recall archived content via recall tool",
+      "area": "search"
+    },
+    {
+      "label": "Segment sessions with handoff notes",
+      "area": "context"
+    },
+    {
+      "label": "Save and restore engine KV state",
+      "area": "state"
+    },
+    {
+      "label": "Deduplicated compressed archive of state files",
+      "area": "archive"
+    },
+    {
+      "label": "Load tool definitions on demand",
+      "area": "context"
+    },
+    {
+      "label": "Supported backend engines",
+      "items": [
+        "llama-server",
+        "Strata",
+        "ds4-server",
+        "Ollama",
+        "LM Studio",
+        "vLLM"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Works with coding agents",
+      "items": [
+        "pi",
+        "omp",
+        "Hermes Agent",
+        "Continue",
+        "Claude Code",
+        "Codex"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Run demo with scripted fake model",
+      "area": "subcommands"
+    },
+    {
+      "label": "Check engine and config readiness",
+      "area": "subcommands"
+    },
+    {
+      "label": "MCP server for read-only archive search",
+      "items": [
+        "recall",
+        "conversations",
+        "journal"
+      ],
+      "area": "mcp"
+    },
+    {
+      "label": "Exact token counts with tokenizer",
+      "area": "tokens"
+    },
+    {
+      "label": "Window guard against context overflow",
+      "area": "context"
+    },
+    {
+      "label": "Detect engine-truncated prompts",
+      "area": "diagnostics"
+    },
+    {
+      "label": "Pin lines to survive segment switches",
+      "area": "context"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -319,17 +419,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 94.0,
+      "raw_total": 94.0,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.8125,
@@ -349,10 +446,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       },
-      "raw_total": 94.0,
       "security": {
         "level": "none",
         "basis": "assessment",
@@ -734,8 +834,152 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T03:14:42+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "A transparent HTTP proxy that sits between a coding agent and a local model",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:02+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "It speaks OpenAI Chat Completions, Anthropic Messages and OpenAI Responses.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:02+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "every message, tool call and output stays on disk, verbatim, and the model can pull any of it back",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:02+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Old tool outputs and reasoning leave the prompt in stable blocks and become\n   one-line receipts with an id.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:02+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "A `recall` tool searches the verbatim archive",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:02+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "the model writes its own notes, the segment is\n   sealed and a fresh one starts",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:02+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "the KV\n   state is saved to disk: resuming after a pause, a restart or another client takes 1–3 s",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:02+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Old state files are rebuilt bit-for-bit from content-addressed zstd\n   blocks",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:02+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "The proxy keeps the core\n   ones and loads the rest by name",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:02+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "llama.cpp's `llama-server`,\n[Strata](https://github.com/Niko1221/Strata), [ds4-server](https://github.com/antirez/ds4), or any\nOpenAI-compatible server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:02+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "any MCP client (Claude Code, Codex, Hermes)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:02+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "mnemonic-proxy demo      # 1 minute, no model: archive, masking, recall -> PASS",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:02+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "`check` ends with `READY` (exit 0) or says, line by line, what to change",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:02+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "The archive can also be searched from any MCP client, read-only",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:02+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "for exact token counts",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:02+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "the proxy\nchecks `counted_prompt + max_tokens + window_margin ≤ window`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:02+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "A cut prompt is reported",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:02+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "Pinned lines (`!!` or `📌`) survive every switch",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:33:02+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

@@ -34,6 +34,93 @@
     "Ollama",
     "LM Studio"
   ],
+  "capabilities": [
+    {
+      "label": "Chat with AI models locally",
+      "area": "chat"
+    },
+    {
+      "label": "Run large models across multiple computers",
+      "area": "distributed"
+    },
+    {
+      "label": "Contribute spare compute to the swarm",
+      "area": "distributed"
+    },
+    {
+      "label": "Link your own devices into one group",
+      "area": "distributed"
+    },
+    {
+      "label": "OpenAI-compatible API endpoint",
+      "items": [
+        "OpenAI",
+        "Anthropic",
+        "Responses",
+        "MCP"
+      ],
+      "area": "api"
+    },
+    {
+      "label": "Use as a Claude Code backend",
+      "area": "integrations"
+    },
+    {
+      "label": "Tool calling with local models",
+      "area": "api"
+    },
+    {
+      "label": "Built-in MCP server",
+      "area": "integrations"
+    },
+    {
+      "label": "Route requests to 12 cloud providers",
+      "area": "integrations"
+    },
+    {
+      "label": "OpenClaw setup wizard plugin",
+      "area": "integrations"
+    },
+    {
+      "label": "Search and download models",
+      "items": [
+        "Llama",
+        "Qwen",
+        "Mistral",
+        "Gemma",
+        "Phi",
+        "GLM"
+      ],
+      "area": "models"
+    },
+    {
+      "label": "Private Mode restricting to own devices",
+      "area": "privacy"
+    },
+    {
+      "label": "Set a resource schedule",
+      "area": "settings"
+    },
+    {
+      "label": "Cap bandwidth and disk usage",
+      "area": "settings"
+    },
+    {
+      "label": "Print a diagnostics report",
+      "area": "subcommands"
+    },
+    {
+      "label": "Verify model parts integrity",
+      "area": "security"
+    },
+    {
+      "label": "Web dashboard and network map",
+      "area": "interface"
+    },
+    {
+      "label": "Self-updating with signed releases"
+    }
+  ],
   "why_worth_it": null,
   "homepage": "https://enapt.github.io/SwarmLLM/",
   "repo": {
@@ -106,22 +193,22 @@
         "fixed_in": null,
         "summary": "hickory-proto: NSEC3 closest-encloser proof validation enters unbounded loop on cross-zone responses",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "swarmllm > libp2p > libp2p-mdns > hickory-proto"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00343,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "swarmllm > libp2p > libp2p-mdns > hickory-proto"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:hickory-proto",
@@ -134,20 +221,20 @@
         "fixed_in": "0.26.0-beta.1",
         "summary": "NSEC3 owner names not checked against the zone in DNSSEC validation (hickory-proto)",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-03-12T20:56:51Z",
         "scope": "runtime",
+        "paths": [
+          "swarmllm > libp2p > libp2p-mdns > hickory-proto"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00255,
-        "fix_published_at": "2026-03-12T20:56:51Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "swarmllm > libp2p > libp2p-mdns > hickory-proto"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:hickory-resolver",
@@ -160,23 +247,20 @@
         "fixed_in": "0.26.2",
         "summary": "hickory-resolver: Resolver::lookup() and Resolver::lookup_ip() APIs obscure DNSSEC validation failures",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-09-03T19:35:39Z",
         "scope": "runtime",
+        "paths": [
+          "swarmllm > libp2p > libp2p-dns > hickory-resolver"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00231,
-        "fix_published_at": "2026-09-03T19:35:39Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:Resolver::lookup",
           "symbol:Resolver::lookup_ip"
-        ],
-        "paths": [
-          "swarmllm > libp2p > libp2p-dns > hickory-resolver"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -184,7 +268,10 @@
           "evidence": [
             "the project's source does not use Resolver::lookup, Resolver::lookup_ip, but other packages depend on hickory-resolver"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:yamux",
@@ -197,23 +284,23 @@
         "fixed_in": "0.13.10",
         "summary": "Yamux vulnerable to remote Panic via malformed Data frame with SYN set and len = 262145",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-03-09T14:02:49Z",
         "scope": "runtime",
+        "paths": [
+          "swarmllm > libp2p > libp2p-yamux > yamux"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00524,
-        "fix_published_at": "2026-03-09T14:02:49Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "swarmllm > libp2p > libp2p-yamux > yamux"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -294,17 +381,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 83.5,
       "confidence": 0.5,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.75,
@@ -324,10 +408,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 83.5,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -780,8 +867,152 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:35:09+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "**Chat with AI on your own computer.**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:02+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "**Use models too big for your computer.**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:02+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "**Help others with what you can spare.**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:02+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "**Link your own devices.**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:02+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "A free OpenAI- and Anthropic-compatible endpoint on your own machine.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:02+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "As a Claude Code backend:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:02+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "tool calling with local models, streaming, an MCP server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:02+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "an MCP server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:02+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "optional routing to 12 cloud providers with your own keys",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:02+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "a plugin that adds SwarmLLM to OpenClaw's setup wizard",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:02+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "search for a model, see its size and whether it runs on your computer, and download it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:02+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "**Private Mode** keeps your questions on your own linked devices",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:02+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "set a\n**Resource Schedule** so it holds back at the times you choose",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:02+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "You\ncan cap how fast it shares model parts in Settings",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:02+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "`swarmllm diagnostics` prints a report that's safe to paste",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:02+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "Model parts are verified when they arrive and\n  every time they load",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:02+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "The network map, lighting up the countries with SwarmLLM computers online",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:02+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "automatic updates only install releases signed by the\nproject",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:02+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

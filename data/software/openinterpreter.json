@@ -28,6 +28,136 @@
     "run as ACP agent in editors",
     "test web and native apps"
   ],
+  "capabilities": [
+    {
+      "label": "Run a coding agent in the terminal"
+    },
+    {
+      "label": "Switch agent harness emulation",
+      "items": [
+        "native",
+        "claude-code",
+        "claude-code-bare",
+        "zcode",
+        "kimi-code",
+        "kimi-cli",
+        "qwen-code",
+        "deepseek-tui",
+        "swe-agent",
+        "minimal"
+      ],
+      "area": "harnesses"
+    },
+    {
+      "label": "Switch providers and models from TUI",
+      "area": "models"
+    },
+    {
+      "label": "Use OpenAI-compatible Chat Completions providers",
+      "area": "models"
+    },
+    {
+      "label": "Use local providers via LM Studio or Ollama",
+      "items": [
+        "lmstudio",
+        "ollama"
+      ],
+      "area": "models"
+    },
+    {
+      "label": "Run as an ACP agent for editors",
+      "area": "integrations"
+    },
+    {
+      "label": "Drop-in replacement for Codex SDK binary",
+      "area": "integrations"
+    },
+    {
+      "label": "Run commands in native sandbox",
+      "items": [
+        "read-only",
+        "workspace-write",
+        "danger-full-access"
+      ],
+      "area": "security"
+    },
+    {
+      "label": "Test web and native apps via QA skill",
+      "area": "computer use"
+    },
+    {
+      "label": "Reuse AGENTS.md and shared skills",
+      "area": "portability"
+    },
+    {
+      "label": "Run the agent non-interactively",
+      "area": "subcommands"
+    },
+    {
+      "label": "Run a code review non-interactively",
+      "area": "subcommands"
+    },
+    {
+      "label": "Manage external MCP servers",
+      "area": "subcommands"
+    },
+    {
+      "label": "Start the agent as an MCP server",
+      "area": "subcommands"
+    },
+    {
+      "label": "Manage plugins",
+      "area": "subcommands"
+    },
+    {
+      "label": "Apply agent diff to working tree",
+      "area": "subcommands"
+    },
+    {
+      "label": "Resume or fork previous sessions",
+      "area": "sessions"
+    },
+    {
+      "label": "Archive or delete saved sessions",
+      "area": "sessions"
+    },
+    {
+      "label": "Diagnose installation and config health",
+      "area": "subcommands"
+    },
+    {
+      "label": "Generate shell completion scripts",
+      "area": "subcommands"
+    },
+    {
+      "label": "Enable live web search"
+    },
+    {
+      "label": "Attach images to the prompt"
+    },
+    {
+      "label": "Run session in managed Git worktree"
+    },
+    {
+      "label": "Print events as JSONL",
+      "area": "output"
+    },
+    {
+      "label": "Constrain final response with JSON Schema",
+      "area": "output"
+    },
+    {
+      "label": "Connect TUI to remote app server"
+    },
+    {
+      "label": "Browse remote tasks and apply locally",
+      "area": "subcommands"
+    },
+    {
+      "label": "Inspect feature flags",
+      "area": "subcommands"
+    }
+  ],
   "why_worth_it": null,
   "homepage": "http://openinterpreter.com/",
   "repo": {
@@ -237,20 +367,20 @@
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-17T18:45:16Z",
         "scope": "runtime",
+        "paths": [
+          "codex-core-plugins > zip"
+        ],
         "workspace": "codex-rs/core-plugins",
         "found_in": "codex-rs/Cargo.lock",
         "kev": false,
         "epss": 0.0032,
-        "fix_published_at": "2026-10-17T18:45:16Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "codex-core-plugins > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -261,22 +391,19 @@
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "codex-core-plugins > zip"
+        ],
         "workspace": "codex-rs/core-plugins",
         "found_in": "codex-rs/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:ZipStreamReader::extract",
           "symbol:ZipArchive::extract"
-        ],
-        "paths": [
-          "codex-core-plugins > zip"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -284,7 +411,10 @@
           "evidence": [
             "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:gix",
@@ -297,24 +427,21 @@
         "fixed_in": "0.83.0",
         "summary": "gitoxide: CommandForbiddenInModulesConfiguration Bypass in gix_submodule::File::update() Enables Arbitrary Command Execution via .gitmodules",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-04-27T23:01:17Z",
         "scope": "runtime",
+        "paths": [
+          "codex-git-utils > gix"
+        ],
         "workspace": "codex-rs/git-utils",
         "found_in": "codex-rs/Cargo.lock",
         "kev": false,
         "epss": 0.00651,
-        "fix_published_at": "2026-04-27T23:01:17Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction",
           "symbol:File::update"
-        ],
-        "paths": [
-          "codex-git-utils > gix"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -323,7 +450,10 @@
             "codex-rs/codex-mcp/src/connection_manager_tests.rs:1379: assert!(updating_manager.update(",
             "named only in files that do not import gix"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:gix",
@@ -336,20 +466,20 @@
         "fixed_in": "0.83.0",
         "summary": "gix and gitoxide: unvalidated submodule name traverses out of .git/modules and redirects state() / open() to another repository",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-27T23:01:17Z",
         "scope": "runtime",
+        "paths": [
+          "codex-git-utils > gix"
+        ],
         "workspace": "codex-rs/git-utils",
         "found_in": "codex-rs/Cargo.lock",
         "kev": false,
         "epss": 0.00522,
-        "fix_published_at": "2026-04-27T23:01:17Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "codex-git-utils > gix"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:gix",
@@ -362,24 +492,24 @@
         "fixed_in": "0.83.0",
         "summary": "gix's submodule name validation bypass + trust inheritance flaw enables path traversal and credential disclosure",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-27T23:01:17Z",
         "scope": "runtime",
+        "paths": [
+          "codex-git-utils > gix"
+        ],
         "workspace": "codex-rs/git-utils",
         "found_in": "codex-rs/Cargo.lock",
         "kev": false,
         "epss": 0.00657,
-        "fix_published_at": "2026-04-27T23:01:17Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "user_interaction",
           "high_complexity"
         ],
-        "paths": [
-          "codex-git-utils > gix"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:gix",
@@ -392,20 +522,20 @@
         "fixed_in": "0.83.0",
         "summary": "gix and gitoxide's symlinked .gitmodules are followed and parsed from outside of the repository",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-27T23:01:17Z",
         "scope": "runtime",
+        "paths": [
+          "codex-git-utils > gix"
+        ],
         "workspace": "codex-rs/git-utils",
         "found_in": "codex-rs/Cargo.lock",
         "kev": false,
         "epss": 0.00522,
-        "fix_published_at": "2026-04-27T23:01:17Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "codex-git-utils > gix"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:gix-fs",
@@ -418,24 +548,24 @@
         "fixed_in": "0.21.1",
         "summary": "gix-fs: Symlink prefix-reuse allows worktree escape during checkout",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-04-30T10:25:00Z",
         "scope": "runtime",
+        "paths": [
+          "codex-git-utils > gix > gix-fs"
+        ],
         "workspace": "codex-rs/git-utils",
         "found_in": "codex-rs/Cargo.lock",
         "kev": false,
         "epss": 0.00291,
-        "fix_published_at": "2026-04-30T10:25:00Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction"
         ],
-        "paths": [
-          "codex-git-utils > gix > gix-fs"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:gix-pack",
@@ -448,23 +578,23 @@
         "fixed_in": "0.69.0",
         "summary": "gix-pack has multiple DoS vectors: unchecked indexing panics and uncapped OOM allocations from crafted pack data",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-04-24T08:59:19Z",
         "scope": "runtime",
+        "paths": [
+          "codex-git-utils > gix > gix-pack"
+        ],
         "workspace": "codex-rs/git-utils",
         "found_in": "codex-rs/Cargo.lock",
         "kev": false,
         "epss": 0.00488,
-        "fix_published_at": "2026-04-24T08:59:19Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "codex-git-utils > gix > gix-pack"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:hickory-proto",
@@ -477,22 +607,22 @@
         "fixed_in": null,
         "summary": "hickory-proto: NSEC3 closest-encloser proof validation enters unbounded loop on cross-zone responses",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "codex-network-proxy > rama-dns > hickory-resolver > hickory-proto"
+        ],
         "workspace": "codex-rs/network-proxy",
         "found_in": "codex-rs/Cargo.lock",
         "kev": false,
         "epss": 0.00343,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "codex-network-proxy > rama-dns > hickory-resolver > hickory-proto"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:hickory-proto",
@@ -505,20 +635,20 @@
         "fixed_in": "0.26.0-beta.1",
         "summary": "NSEC3 owner names not checked against the zone in DNSSEC validation (hickory-proto)",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-03-12T20:56:51Z",
         "scope": "runtime",
+        "paths": [
+          "codex-network-proxy > rama-dns > hickory-resolver > hickory-proto"
+        ],
         "workspace": "codex-rs/network-proxy",
         "found_in": "codex-rs/Cargo.lock",
         "kev": false,
         "epss": 0.00255,
-        "fix_published_at": "2026-03-12T20:56:51Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "codex-network-proxy > rama-dns > hickory-resolver > hickory-proto"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:hickory-resolver",
@@ -531,23 +661,20 @@
         "fixed_in": "0.26.2",
         "summary": "hickory-resolver: Resolver::lookup() and Resolver::lookup_ip() APIs obscure DNSSEC validation failures",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-09-03T19:35:39Z",
         "scope": "runtime",
+        "paths": [
+          "codex-network-proxy > rama-dns > hickory-resolver"
+        ],
         "workspace": "codex-rs/network-proxy",
         "found_in": "codex-rs/Cargo.lock",
         "kev": false,
         "epss": 0.00231,
-        "fix_published_at": "2026-09-03T19:35:39Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:Resolver::lookup",
           "symbol:Resolver::lookup_ip"
-        ],
-        "paths": [
-          "codex-network-proxy > rama-dns > hickory-resolver"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -555,7 +682,10 @@
           "evidence": [
             "the project's source does not use Resolver::lookup, Resolver::lookup_ip, but other packages depend on hickory-resolver"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quinn-proto",
@@ -566,22 +696,19 @@
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-14T10:08:32Z",
         "scope": "runtime",
+        "paths": [
+          "codex-tcp-tunnel > quinn > quinn-proto"
+        ],
         "workspace": "codex-rs/tcp-tunnel",
         "found_in": "codex-rs/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-09-14T10:08:32Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "option:ACK_FREQUENCY"
-        ],
-        "paths": [
-          "codex-tcp-tunnel > quinn > quinn-proto"
         ],
         "reachability": {
           "method": "option_grep",
@@ -589,7 +716,10 @@
           "evidence": [
             "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quinn-proto",
@@ -600,22 +730,22 @@
         "fixed_in": "0.11.18",
         "summary": "Outgoing datagram buffer accounting can panic the sender in quinn-proto",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-14T10:08:32Z",
         "scope": "runtime",
+        "paths": [
+          "codex-tcp-tunnel > quinn > quinn-proto"
+        ],
         "workspace": "codex-rs/tcp-tunnel",
         "found_in": "codex-rs/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-09-14T10:08:32Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "codex-tcp-tunnel > quinn > quinn-proto"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:rmcp",
@@ -628,23 +758,23 @@
         "fixed_in": "2.0.0",
         "summary": "RMCP: Missing Resource Field Validation in OAuth Protected Resource Metadata Discovery",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-06-29T12:32:23Z",
         "scope": "runtime",
+        "paths": [
+          "codex-acp-server > agent-client-protocol > rmcp"
+        ],
         "workspace": "codex-rs/acp-server",
         "found_in": "codex-rs/Cargo.lock",
         "kev": false,
         "epss": 0.00195,
-        "fix_published_at": "2026-06-29T12:32:23Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "user_interaction"
         ],
-        "paths": [
-          "codex-acp-server > agent-client-protocol > rmcp"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:rmcp",
@@ -657,23 +787,23 @@
         "fixed_in": "2.0.0",
         "summary": "RMCP: Unauthenticated permanent session-table leak in rmcp Streamable HTTP server transport leads to remote denial-of-service",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T12:32:23Z",
         "scope": "runtime",
+        "paths": [
+          "codex-acp-server > agent-client-protocol > rmcp"
+        ],
         "workspace": "codex-rs/acp-server",
         "found_in": "codex-rs/Cargo.lock",
         "kev": false,
         "epss": 0.00535,
-        "fix_published_at": "2026-06-29T12:32:23Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "codex-acp-server > agent-client-protocol > rmcp"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:rmcp",
@@ -684,22 +814,22 @@
         "fixed_in": "3.6.0",
         "summary": "Unbounded tool schema cache in Streamable HTTP server transport",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-20T05:53:35Z",
         "scope": "runtime",
+        "paths": [
+          "codex-app-server-protocol > rmcp"
+        ],
         "workspace": "codex-rs/app-server-protocol",
         "found_in": "codex-rs/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-20T05:53:35Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "codex-app-server-protocol > rmcp"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -712,23 +842,23 @@
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "codex-core-plugins > zip"
+        ],
         "workspace": "codex-rs/core-plugins",
         "found_in": "codex-rs/Cargo.lock",
         "kev": false,
         "epss": 0.00461,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "codex-core-plugins > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -739,23 +869,23 @@
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "codex-core-plugins > zip"
+        ],
         "workspace": "codex-rs/core-plugins",
         "found_in": "codex-rs/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction"
         ],
-        "paths": [
-          "codex-core-plugins > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -838,17 +968,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 80.1,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.5625,
@@ -868,10 +995,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 80.1,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -1105,6 +1235,18 @@
       "kind": "release",
       "url": "https://github.com/openinterpreter/openinterpreter/releases/tag/rust-v0.0.59",
       "fetched_at": "2026-11-04T13:05:43+08:00"
+    },
+    {
+      "id": "help:verify-openinterpreter-20261104-193403-a2fb:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "id": "help:verify-openinterpreter-20261104-192546-6736:3",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T00:59:02+08:00"
     }
   ],
   "evidence": [
@@ -1275,8 +1417,232 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-11-04T13:11:01+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "A coding agent optimized for low-cost models.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "Use `/harness` to switch the active harness:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Switches providers and models from the TUI with `/model`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Runs any selected OpenAI-compatible provider through Chat Completions",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "help:verify-openinterpreter-20261104-193403-a2fb:1",
+      "quote": "Specify which local provider to use (lmstudio or ollama).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "Runs as an [Agent Client Protocol](https://agentclientprotocol.com/) agent for editors with `interpreter acp`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "Open Interpreter speaks the same Codex exec protocol.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Runs commands inside native sandboxing on macOS, Linux, and Windows.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Tests web and native apps through the built-in QA skill.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Reuses shared `AGENTS.md` instructions and `.agents/skills` directories.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "help:verify-openinterpreter-20261104-193403-a2fb:1",
+      "quote": "Run the agent non-interactively [alias: e]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "help:verify-openinterpreter-20261104-193403-a2fb:1",
+      "quote": "Run a code review non-interactively",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "help:verify-openinterpreter-20261104-193403-a2fb:1",
+      "quote": "Manage external MCP servers",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "help:verify-openinterpreter-20261104-193403-a2fb:1",
+      "quote": "Start the agent as an MCP server (stdio)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "help:verify-openinterpreter-20261104-193403-a2fb:1",
+      "quote": "Manage plugins",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "help:verify-openinterpreter-20261104-193403-a2fb:1",
+      "quote": "Apply the latest diff produced by the agent as a `git apply` to your local working",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "help:verify-openinterpreter-20261104-193403-a2fb:1",
+      "quote": "Resume a previous interactive session (picker by default; use --last to continue",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "help:verify-openinterpreter-20261104-193403-a2fb:1",
+      "quote": "Archive a saved session by id or session name",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "help:verify-openinterpreter-20261104-193403-a2fb:1",
+      "quote": "Diagnose the local installation, config, auth, and runtime health",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "help:verify-openinterpreter-20261104-193403-a2fb:1",
+      "quote": "Generate shell completion scripts for interpreter.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "help:verify-openinterpreter-20261104-193403-a2fb:1",
+      "quote": "Enable live web search.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "help:verify-openinterpreter-20261104-193403-a2fb:1",
+      "quote": "Optional image(s) to attach to the initial prompt",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/22/label",
+      "source_id": "help:verify-openinterpreter-20261104-193403-a2fb:1",
+      "quote": "Run the session in a new managed Git worktree",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/23/label",
+      "source_id": "help:verify-openinterpreter-20261104-192546-6736:3",
+      "quote": "Print events to stdout as JSONL",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/24/label",
+      "source_id": "help:verify-openinterpreter-20261104-192546-6736:3",
+      "quote": "Path to a JSON Schema file describing the model's final response shape",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/25/label",
+      "source_id": "help:verify-openinterpreter-20261104-193403-a2fb:1",
+      "quote": "Connect the TUI to a remote app server endpoint.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/26/label",
+      "source_id": "help:verify-openinterpreter-20261104-193403-a2fb:1",
+      "quote": "[EXPERIMENTAL] Browse remote tasks and apply changes locally",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
+    },
+    {
+      "field": "/capabilities/27/label",
+      "source_id": "help:verify-openinterpreter-20261104-193403-a2fb:1",
+      "quote": "Inspect feature flags",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:59:02+08:00"
     }
   ],
   "first_seen_at": "2026-11-04T13:05:02+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

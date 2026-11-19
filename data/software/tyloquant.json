@@ -39,6 +39,103 @@
     "serve models via OpenAI-compatible APIs",
     "quantize Hugging Face checkpoints to MFQ"
   ],
+  "capabilities": [
+    {
+      "label": "Quantize Hugging Face safetensors models to MFQ",
+      "area": "quantization"
+    },
+    {
+      "label": "Mixed-precision per-expert quantization",
+      "area": "quantization"
+    },
+    {
+      "label": "Quantize from MFQ and GGUF sources",
+      "items": [
+        "MFQ",
+        "GGUF"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Calibrate with activation importance matrices",
+      "area": "quantization"
+    },
+    {
+      "label": "Serve models via OpenAI/Anthropic-compatible APIs",
+      "items": [
+        "OpenAI",
+        "Anthropic"
+      ],
+      "area": "server"
+    },
+    {
+      "label": "Run local inference on CUDA and Metal",
+      "items": [
+        "CUDA",
+        "Metal",
+        "ROCm"
+      ],
+      "area": "backends"
+    },
+    {
+      "label": "Offload models across VRAM, RAM and SSD",
+      "area": "inference"
+    },
+    {
+      "label": "Stream MoE experts from SSD",
+      "area": "inference"
+    },
+    {
+      "label": "Manage multiple models with LRU eviction",
+      "area": "server"
+    },
+    {
+      "label": "Cache prefix and KV across RAM and SSD",
+      "area": "server"
+    },
+    {
+      "label": "Continuous batching",
+      "area": "server"
+    },
+    {
+      "label": "Download and run models in desktop app",
+      "area": "desktop app"
+    },
+    {
+      "label": "Visualize precision allocation of MoE checkpoints",
+      "area": "analysis"
+    },
+    {
+      "label": "CLI subcommands",
+      "items": [
+        "build",
+        "serve",
+        "quantize",
+        "calibrate"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Multi-token prediction speculative decoding",
+      "area": "inference"
+    },
+    {
+      "label": "WebSocket and realtime API",
+      "area": "server"
+    },
+    {
+      "label": "Supported model architectures",
+      "items": [
+        "Qwen3.5–3.8",
+        "Qwen Flash-Next / Qwen4-style",
+        "DeepSeek-V4-Flash Series",
+        "MiniCPM-o 4.5",
+        "GLM5–5.3",
+        "Gemma 4"
+      ],
+      "area": "models"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -303,20 +400,20 @@
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-17T18:45:16Z",
         "scope": "runtime",
+        "paths": [
+          "mfq-studio > zip"
+        ],
         "workspace": "MFQStudio/src-tauri",
         "found_in": "MFQStudio/src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.0032,
-        "fix_published_at": "2026-10-17T18:45:16Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "mfq-studio > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quinn-proto",
@@ -327,22 +424,19 @@
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-14T10:08:32Z",
         "scope": "runtime",
+        "paths": [
+          "mfq-studio > reqwest > quinn > quinn-proto"
+        ],
         "workspace": "MFQStudio/src-tauri",
         "found_in": "MFQStudio/src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-09-14T10:08:32Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "option:ACK_FREQUENCY"
-        ],
-        "paths": [
-          "mfq-studio > reqwest > quinn > quinn-proto"
         ],
         "reachability": {
           "method": "option_grep",
@@ -350,7 +444,10 @@
           "evidence": [
             "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quinn-proto",
@@ -361,22 +458,22 @@
         "fixed_in": "0.11.17",
         "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-08-17T17:32:41Z",
         "scope": "runtime",
+        "paths": [
+          "mfq-studio > reqwest > quinn > quinn-proto"
+        ],
         "workspace": "MFQStudio/src-tauri",
         "found_in": "MFQStudio/src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-08-17T17:32:41Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "mfq-studio > reqwest > quinn > quinn-proto"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -389,23 +486,23 @@
         "fixed_in": "9.0.0",
         "summary": "zip: legacy Shrink/Reduce/Implode decoder: denial of service from attacker-controlled ZIP64 uncompressed size",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "mfq-studio > zip"
+        ],
         "workspace": "MFQStudio/src-tauri",
         "found_in": "MFQStudio/src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.0035,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "mfq-studio > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -418,23 +515,23 @@
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "mfq-studio > zip"
+        ],
         "workspace": "MFQStudio/src-tauri",
         "found_in": "MFQStudio/src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.00461,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "mfq-studio > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -445,23 +542,23 @@
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "mfq-studio > zip"
+        ],
         "workspace": "MFQStudio/src-tauri",
         "found_in": "MFQStudio/src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction"
         ],
-        "paths": [
-          "mfq-studio > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -472,21 +569,18 @@
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "mfq-studio > zip"
+        ],
         "workspace": "MFQStudio/src-tauri",
         "found_in": "MFQStudio/src-tauri/Cargo.lock",
         "kev": false,
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:ZipStreamReader::extract",
           "symbol:ZipArchive::extract"
-        ],
-        "paths": [
-          "mfq-studio > zip"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -494,7 +588,10 @@
           "evidence": [
             "no source file uses ZipStreamReader::extract, ZipArchive::extract; only the project depends on zip"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -507,22 +604,19 @@
         "fixed_in": "9.0.0",
         "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "mfq-studio > zip"
+        ],
         "workspace": "MFQStudio/src-tauri",
         "found_in": "MFQStudio/src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.00432,
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity",
           "symbol:ZipArchive::extract"
-        ],
-        "paths": [
-          "mfq-studio > zip"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -530,7 +624,10 @@
           "evidence": [
             "no source file uses ZipArchive::extract; only the project depends on zip"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -635,17 +732,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 88.3,
       "confidence": 0.8,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.625,
@@ -665,10 +759,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       },
-      "raw_total": 88.3,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -1046,8 +1143,144 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T03:15:11+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "# Hugging Face safetensors -> self-contained MFQ",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:08+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "MFQ assigns precision to individual experts, projections, chunks, or neurons",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:08+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "The quantizer also supports full-precision MFQ and GGUF sources",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:08+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "per-tensor or\nExpert-Wise precision maps, activation importance matrices, and sharded output",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:08+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "MFQ Server exposes OpenAI- and\nAnthropic-compatible APIs for applications and agents.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:08+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "native CUDA/Metal runtimes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:08+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "CUDA combines VRAM, system RAM and SSD to run models that exceed GPU memory\ncapacity.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:08+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Metal supports bounded expert residency and SSD streaming for MoE\nexperts and PLE tables.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:08+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "It manages multiple\nmodels with LRU eviction",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:08+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "stores prefix and KV caches across RAM and SSD",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:08+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "Continuous batching is available on supported native paths.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:08+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "**MFQ Studio** brings model downloads, loading, memory budgets, quantization\ninspection and benchmarks into one desktop app.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:08+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "MFQ Studio's built-in quantization visualization makes it easy to explore\nthe precision allocation of any MoE checkpoint",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:08+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "uv run mfq build --backend auto",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:08+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "MTP enabled",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:08+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "[WebSocket and realtime API](./docs/api/websocket.md)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:08+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "| Architecture group | Backends |",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:50:08+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:28:11+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

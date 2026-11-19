@@ -24,6 +24,72 @@
     "stream only routed MoE experts per token"
   ],
   "alternatives_to": [],
+  "capabilities": [
+    {
+      "label": "Run LLM inference in C/C++",
+      "area": "inference"
+    },
+    {
+      "label": "Tensor-parallel split across four GPUs",
+      "area": "multi-gpu"
+    },
+    {
+      "label": "Run MoE models larger than VRAM",
+      "area": "offload"
+    },
+    {
+      "label": "Copy only routed experts per token",
+      "area": "offload"
+    },
+    {
+      "label": "Cache hot experts in VRAM",
+      "area": "offload"
+    },
+    {
+      "label": "Gather experts on the GPU device",
+      "area": "offload"
+    },
+    {
+      "label": "Choose frequency-recency expert cache policy",
+      "area": "offload"
+    },
+    {
+      "label": "All-reduce via NCCL or P2P kernel",
+      "area": "multi-gpu"
+    },
+    {
+      "label": "Estimate -ncmoe from a GGUF file",
+      "area": "tools"
+    },
+    {
+      "label": "Trace MoE expert routing to a file",
+      "area": "debugging"
+    },
+    {
+      "label": "Print expert cache statistics",
+      "area": "debugging"
+    },
+    {
+      "label": "Serve models with llama-server",
+      "area": "server"
+    },
+    {
+      "label": "Benchmark models with llama-bench",
+      "area": "tools"
+    },
+    {
+      "label": "Included command-line tools",
+      "items": [
+        "llama-bench",
+        "llama-cli",
+        "llama-gguf-split",
+        "llama-mtmd-cli",
+        "llama-perplexity",
+        "llama-server"
+      ],
+      "area": "tools"
+    }
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -288,17 +354,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 72.7,
+      "raw_total": 72.7,
       "confidence": 0.4,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.5625,
@@ -318,10 +381,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 72.7,
       "security": {
         "level": "none",
         "basis": "assessment",
@@ -610,8 +676,120 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:36:00+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "LLM inference in C/C++",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:50+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "The branch adds a *tensor-parallel* split mode (`-sm tensor`) on top of upstream llama.cpp",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:50+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "run **MoE models that are larger than VRAM** by keeping some expert layers in system RAM",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:50+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "release:b0001",
+      "quote": "Only the experts a batch actually routes to are copied",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:50+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "`GGML_META_EXPERT_CACHE=N` keeps the `N` most recently used experts of every offloaded MoE weight in",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:50+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "With `GGML_META_EXPERT_CACHE_DEVICE=1` the same pool is\nfilled by the GPU itself",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:50+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "`GGML_META_EXPERT_CACHE_POLICY=fr`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:50+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "release:b0001",
+      "quote": "A one-shot P2P all-reduce handles small messages alongside NCCL.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:50+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "release:b0001",
+      "quote": "scripts/estimate-ncmoe.py reads real per-layer expert sizes from a GGUF and\nsuggests a starting -ncmoe.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:50+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "`GGML_MOE_IDS_TRACE=<file>` logs the routing itself",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:50+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "`GGML_META_EXPERT_CACHE_STATS=1` prints the expert bytes a run moved",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:50+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "llama-server -m qwen35moe.gguf",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:50+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "`llama-bench -p 512 -n 128 -r 2 -fa on -lm none -lzm off -ub 2048`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:50+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "release:b0001",
+      "quote": "assets: estimate-ncmoe.py, llama-bench.exe, llama-cli.exe, llama-gguf-split.exe, llama-mtmd-cli.exe, llama-perplexity.exe, llama-server.exe",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:47:50+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

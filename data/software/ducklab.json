@@ -31,6 +31,113 @@
     "plan release notes of what shipped"
   ],
   "alternatives_to": [],
+  "capabilities": [
+    {
+      "label": "Turn a brief into requirements",
+      "area": "subcommands"
+    },
+    {
+      "label": "Generate spec from requirements",
+      "area": "subcommands"
+    },
+    {
+      "label": "Plan milestones and tasks from spec",
+      "area": "subcommands"
+    },
+    {
+      "label": "Build a task with LLMs",
+      "area": "subcommands"
+    },
+    {
+      "label": "Accept and commit a run",
+      "area": "subcommands"
+    },
+    {
+      "label": "Review a commit",
+      "area": "subcommands"
+    },
+    {
+      "label": "Plan a release",
+      "area": "subcommands"
+    },
+    {
+      "label": "Run tasks in multiple collaboration modes",
+      "items": [
+        "solo",
+        "pair",
+        "tournament",
+        "split",
+        "council"
+      ],
+      "area": "modes"
+    },
+    {
+      "label": "Gate verdicts on test exit codes",
+      "area": "verification"
+    },
+    {
+      "label": "Verify acceptance receipts",
+      "area": "verification"
+    },
+    {
+      "label": "Use local and hosted model endpoints",
+      "items": [
+        "llama.cpp",
+        "vLLM",
+        "OpenAI-compatible",
+        "Anthropic"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Configure model providers",
+      "area": "models"
+    },
+    {
+      "label": "Add and test model ducklings",
+      "area": "models"
+    },
+    {
+      "label": "View model scorecards and seat suggestions",
+      "area": "models"
+    },
+    {
+      "label": "Serve the loop as MCP server",
+      "area": "integrations"
+    },
+    {
+      "label": "Attach reference documents to stages",
+      "area": "context"
+    },
+    {
+      "label": "Adopt an existing codebase"
+    },
+    {
+      "label": "Create and run skills",
+      "area": "skills"
+    },
+    {
+      "label": "Chat with consultant about code, with images",
+      "area": "chat"
+    },
+    {
+      "label": "Set budget ceilings on runs",
+      "area": "budgets"
+    },
+    {
+      "label": "File bug reports with screenshots"
+    },
+    {
+      "label": "Run builds in isolated git worktrees"
+    },
+    {
+      "label": "Record briefs verbatim as intents",
+      "area": "subcommands"
+    },
+    {
+      "label": "Run autopilot"
+    }
+  ],
   "why_worth_it": null,
   "homepage": null,
   "repo": {
@@ -258,23 +365,20 @@
         "fixed_in": "0.41.0",
         "summary": "golang.org/x/image/tiff has excessive resource consumption in PackBits decompression",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "go.mod > golang.org/x/image"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00353,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:Decode",
           "symbol:unpackBits"
-        ],
-        "paths": [
-          "go.mod > golang.org/x/image"
         ],
         "reachability": {
           "method": "import_grep",
@@ -282,7 +386,10 @@
           "evidence": [
             "no .go file imports golang.org/x/image/tiff; go.mod requires golang.org/x/image directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -355,17 +462,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 76.7,
+      "raw_total": 76.7,
       "confidence": 0.6,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 0.6141,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.75,
@@ -385,10 +489,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 76.7,
       "security": {
         "level": "present_unreachable",
         "basis": "assessment",
@@ -787,8 +894,200 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:35:47+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "ducklab intake --from brief.txt             # brief        → requirements",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "ducklab spec                                # requirements → spec",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "ducklab plan                                # spec         → milestones and tasks",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "ducklab run T-001                           # build it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "ducklab run accept r-20260729-...           # commit it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "ducklab review T-001                        # read the commit",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "ducklab release plan --bump minor           # what shipped",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "`ducklab run T-001 --mode <mode>`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "A verdict is a command's exit code.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "acceptance receipts (`ducklab proof verify`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "local models first (llama.cpp,\nvLLM) beside any OpenAI-compatible or Anthropic endpoint",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "ducklab provider set openrouter --url https://openrouter.ai/api/v1 \\",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "ducklab duckling test pato-sonnet --prompt \"say OK\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "the roster board suggests seats from it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "`ducklab mcp serve` exposes the whole loop over stdio as an MCP server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "loads files or whole directories as background\nfor the architect",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "intake reads the code\nand writes as-built requirements",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "ducklab skill new house-style",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "takes **images**: paste a screenshot of a broken view and ask",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "Turns, tokens, cost, wallclock, tool output,\n  shell commands — every ceiling visible and liftable mid-run",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "readme",
+      "quote": "bug reports with screenshot evidence",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "readme",
+      "quote": "every build and test run\nexecutes in its own git worktree",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/22/label",
+      "source_id": "readme",
+      "quote": "ducklab intent                              # your briefs, verbatim, and what each one changed",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
+    },
+    {
+      "field": "/capabilities/23/label",
+      "source_id": "readme",
+      "quote": "releases,\nautopilot, a CLI, a desktop app",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:12+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

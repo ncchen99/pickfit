@@ -33,6 +33,123 @@
     "run Mixture-of-Experts models",
     "serve embeddings and reranking"
   ],
+  "capabilities": [
+    {
+      "label": "Run GGUF models locally",
+      "area": "inference"
+    },
+    {
+      "label": "Run on CPU, Metal or CUDA",
+      "items": [
+        "CPU",
+        "Metal",
+        "CUDA"
+      ],
+      "area": "backends"
+    },
+    {
+      "label": "Serve an OpenAI-compatible API",
+      "area": "server"
+    },
+    {
+      "label": "Serve Anthropic and Responses endpoints",
+      "area": "server"
+    },
+    {
+      "label": "Download models from Hugging Face",
+      "area": "subcommands"
+    },
+    {
+      "label": "Built-in tools and subcommands",
+      "items": [
+        "download",
+        "bench",
+        "batched-bench",
+        "quantize",
+        "imatrix",
+        "gguf-split",
+        "verify",
+        "serve"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Quantize models to Q8_0 and K-quants",
+      "area": "quantization"
+    },
+    {
+      "label": "Supported quantization formats",
+      "items": [
+        "K-quants",
+        "IQ tiers",
+        "MXFP4",
+        "F16",
+        "BF16"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Benchmark against llama.cpp",
+      "area": "benchmarking"
+    },
+    {
+      "label": "Enforce structured output with GBNF grammars",
+      "area": "output"
+    },
+    {
+      "label": "Parse tool calls for agents",
+      "area": "agents"
+    },
+    {
+      "label": "Stream reasoning content",
+      "area": "agents"
+    },
+    {
+      "label": "Serve embeddings from encoder models",
+      "items": [
+        "BGE",
+        "E5",
+        "GTE"
+      ],
+      "area": "embeddings"
+    },
+    {
+      "label": "Rerank and score documents",
+      "area": "embeddings"
+    },
+    {
+      "label": "Continuous batching for concurrent clients",
+      "area": "server"
+    },
+    {
+      "label": "Speculative decoding",
+      "area": "server"
+    },
+    {
+      "label": "Save and restore slots",
+      "area": "server"
+    },
+    {
+      "label": "Swap models at runtime",
+      "area": "server"
+    },
+    {
+      "label": "Return logprobs and sampling controls",
+      "area": "sampling"
+    },
+    {
+      "label": "Chat via Frink Studio web UI",
+      "area": "ui"
+    },
+    {
+      "label": "Use as a Rust library",
+      "area": "library"
+    },
+    {
+      "label": "Read GGUF metadata without loading weights",
+      "area": "library"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -354,22 +471,22 @@
         "fixed_in": "4.6.6",
         "summary": "Zod can exhaust memory while validating oversized constrained collections",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-11T16:18:23Z",
         "scope": "runtime",
+        "paths": [
+          ". > @assistant-ui/react > zod"
+        ],
         "workspace": ".",
         "found_in": "ui/package-lock.json",
         "kev": false,
-        "fix_published_at": "2026-10-11T16:18:23Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > @assistant-ui/react > zod"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -443,17 +560,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 87.0,
       "confidence": 0.8,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.625,
@@ -473,10 +587,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       },
-      "raw_total": 87.0,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -893,8 +1010,184 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:36:08+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "Frink loads GGUF checkpoints and runs them on the hardware you already\nown.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "Dense and MoE, on CPU, Apple Metal, or CUDA.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "github_api",
+      "quote": "**OpenAI-compatible server.**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Anthropic and Responses\n  endpoints",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "frink download bartowski/Llama-3.2-3B-Instruct-GGUF",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "`download`, `bench`,\n  `batched-bench`, `quantize`, `imatrix`, `gguf-split` and `verify` are\n  all inside it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "`quantize` writes Q8_0 and the K-quants\n  byte-identically to `llama-quantize`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "K-quants, the IQ tiers, MXFP4, F16 and BF16.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "frink bench -m models/Llama-3.2-3B-Instruct-Q4_K_M.gguf -p 512 -n 128 -r 3 --compare",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "A GBNF grammar, a forced\n  `tool_choice` in ten of the eleven tool-call wire formats",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "tool\n  calls parse in the eleven formats real checkpoints emit",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "Reasoning streams into `reasoning_content`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "Point\n  `-m` at a BGE, E5 or GTE checkpoint and `/v1/embeddings` serves it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "A cross-encoder with a rank head answers\n  `/v1/rerank` through the head itself",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "llama.cpp slots + continuous batching,\n  on by default",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "speculative decoding that stays lossless at any\n  temperature",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "slot save and restore that refuses a mismatched\n  checkpoint by name",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "runtime model\n  swap and sleep/wake",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "`logprobs` and\n  `prompt_logprobs`; `logit_bias`, `allowed_token_ids` and `bad_words`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "A web UI for the server: chat, the model inventory, live request\nactivity",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "readme",
+      "quote": "Using frink as a Rust library rather than a command?",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "readme",
+      "quote": "Read metadata without loading a single weight.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:31:38+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

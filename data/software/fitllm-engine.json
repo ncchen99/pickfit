@@ -35,6 +35,95 @@
     "scan downloaded Ollama and LM Studio models",
     "detect local GPU hardware automatically"
   ],
+  "capabilities": [
+    {
+      "label": "Check if an LLM fits a GPU or Mac",
+      "area": "fit check"
+    },
+    {
+      "label": "List models that fit given hardware",
+      "area": "fit check"
+    },
+    {
+      "label": "Output results as JSON for agents",
+      "area": "output"
+    },
+    {
+      "label": "Check public Hugging Face model IDs",
+      "area": "integrations"
+    },
+    {
+      "label": "Explain architecture, assumptions and memory inputs",
+      "area": "output"
+    },
+    {
+      "label": "Scan downloaded models for fit",
+      "items": [
+        "Ollama",
+        "LM Studio"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Use the engine as a library",
+      "area": "library"
+    },
+    {
+      "label": "Remote MCP server with fit tools",
+      "items": [
+        "check_llm_fit",
+        "what_fits_on_hardware",
+        "list_supported"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Check multi-GPU rigs with pooled VRAM",
+      "area": "hardware"
+    },
+    {
+      "label": "Suggest changes when a model won't fit",
+      "area": "fit check"
+    },
+    {
+      "label": "Guard model downloads via exit codes",
+      "area": "scripting"
+    },
+    {
+      "label": "Run fit checks in GitHub Actions CI",
+      "area": "integrations"
+    },
+    {
+      "label": "Record memory measurements as candidate reports",
+      "area": "subcommands"
+    },
+    {
+      "label": "Measure loaded model size from Ollama",
+      "area": "integrations"
+    },
+    {
+      "label": "Model sliding-window, MLA, hybrid and MoE KV",
+      "items": [
+        "MLA",
+        "sliding-window",
+        "hybrid",
+        "MoE"
+      ],
+      "area": "memory math"
+    },
+    {
+      "label": "Separate GGUF weight and KV-cache quantization",
+      "area": "quantization"
+    },
+    {
+      "label": "Check fit on DGX Spark GB10 clusters",
+      "area": "hardware"
+    },
+    {
+      "label": "Report structural premises behind verdicts",
+      "area": "output"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -370,17 +459,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 92.2,
+      "raw_total": 92.2,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.75,
@@ -400,10 +486,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       },
-      "raw_total": 92.2,
       "security": {
         "level": "none",
         "basis": "assessment",
@@ -820,8 +909,152 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T03:15:08+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "checks whether a local LLM fits on a GPU or Apple Silicon Mac using architecture-aware memory math",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:01+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "npx fitllm --top --gpu 4090                    # what can this hardware run?",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:01+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "detect every supported local GPU; agent-ready JSON",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:01+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "public Hugging Face ID or URL; unsupported configs fail closed",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:01+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "include architecture, evidence, assumptions, and exact memory inputs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:01+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "npx fitllm scan                                # what you already downloaded — does it fit this machine?",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:01+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "use the same engine as a library (see Usage)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:01+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Connect any Streamable HTTP MCP client to `https://fitllm.run/api/mcp`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:01+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "multi-GPU rig — VRAM pools (56GB), even mixed cards",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:01+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "✗ WON'T FIT → what to change to make it fit",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:01+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "Exit code 0/1 makes it a **pre-download guard**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:01+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "For CI, use the repository's composite Action.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:01+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "The command validates the conditions and prints a candidate JSON object plus a prefilled GitHub issue URL.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:01+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "npx fitllm measure --from-ollama",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:01+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "github_api",
+      "quote": "accurate memory math for MLA/sliding-window/hybrid/MoE architectures",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:01+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "with GGUF Q-tier weight quantization kept separate from KV-cache quantization",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:01+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "linked 2× / 4× clusters via `--count`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:01+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "The CLI prints each active premise as a `premise [id]:` line in text mode and includes the array in `--json`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:49:01+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

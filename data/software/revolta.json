@@ -35,6 +35,73 @@
     "offload KV cache to CPU or disk",
     "speculative decoding with MTP or DFlash2"
   ],
+  "capabilities": [
+    {
+      "label": "Serve Qwen3.8 Flash-Next via OpenAI-compatible API",
+      "area": "serving"
+    },
+    {
+      "label": "Multimodal input: text, images and video",
+      "items": [
+        "text",
+        "images",
+        "video"
+      ],
+      "area": "input"
+    },
+    {
+      "label": "Offload KV cache to CPU memory or disk",
+      "area": "kv cache"
+    },
+    {
+      "label": "MTP speculative decoding",
+      "area": "decoding"
+    },
+    {
+      "label": "DFlash2 speculative decoding",
+      "area": "decoding"
+    },
+    {
+      "label": "Run quantized weight formats",
+      "items": [
+        "AWQ",
+        "NVFP4"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Serve 512K-token context per request",
+      "area": "context"
+    },
+    {
+      "label": "Anthropic messages endpoint",
+      "items": [
+        "/v1/messages",
+        "/v1/messages/count_tokens"
+      ],
+      "area": "api"
+    },
+    {
+      "label": "Handle concurrent requests",
+      "area": "serving"
+    },
+    {
+      "label": "Use FP8 E4M3 or INT8 KV cache",
+      "items": [
+        "fp8_e4m3",
+        "INT8"
+      ],
+      "area": "kv cache"
+    },
+    {
+      "label": "Keep PLE table on local SSD",
+      "area": "memory"
+    },
+    {
+      "label": "Stack-dump watchdog for diagnostics",
+      "area": "diagnostics"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -149,23 +216,23 @@
         "fixed_in": "0.10.78",
         "summary": "rust-openssl has incorrect bounds assertion in aes key wrap",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-19T20:02:38Z",
         "scope": "runtime",
+        "paths": [
+          "vllm-chat > reqwest > native-tls > openssl"
+        ],
         "workspace": "rust/src/chat",
         "found_in": "rust/Cargo.lock",
         "kev": false,
         "epss": 0.00251,
-        "fix_published_at": "2026-04-19T20:02:38Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity"
         ],
-        "paths": [
-          "vllm-chat > reqwest > native-tls > openssl"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:openssl",
@@ -178,20 +245,20 @@
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: rustMdCtxRef::digest_final() writes past caller buffer with no length check",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-19T20:02:38Z",
         "scope": "runtime",
+        "paths": [
+          "vllm-chat > reqwest > native-tls > openssl"
+        ],
         "workspace": "rust/src/chat",
         "found_in": "rust/Cargo.lock",
         "kev": false,
         "epss": 0.00359,
-        "fix_published_at": "2026-04-19T20:02:38Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "vllm-chat > reqwest > native-tls > openssl"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:openssl",
@@ -204,23 +271,23 @@
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: Unchecked callback length in PSK/cookie trampolines leaks adjacent memory to peer",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-19T20:02:38Z",
         "scope": "runtime",
+        "paths": [
+          "vllm-chat > reqwest > native-tls > openssl"
+        ],
         "workspace": "rust/src/chat",
         "found_in": "rust/Cargo.lock",
         "kev": false,
         "epss": 0.0028,
-        "fix_published_at": "2026-04-19T20:02:38Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity"
         ],
-        "paths": [
-          "vllm-chat > reqwest > native-tls > openssl"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:openssl",
@@ -233,24 +300,21 @@
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: Deriver::derive and PkeyCtxRef::derive can overflow short buffers on OpenSSL 1.1.1",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-19T20:02:38Z",
         "scope": "runtime",
+        "paths": [
+          "vllm-chat > reqwest > native-tls > openssl"
+        ],
         "workspace": "rust/src/chat",
         "found_in": "rust/Cargo.lock",
         "kev": false,
         "epss": 0.00285,
-        "fix_published_at": "2026-04-19T20:02:38Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity",
           "symbol:Deriver::derive",
           "symbol:PkeyCtxRef::derive"
-        ],
-        "paths": [
-          "vllm-chat > reqwest > native-tls > openssl"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -258,7 +322,10 @@
           "evidence": [
             "the project's source does not use Deriver::derive, PkeyCtxRef::derive, but other packages depend on openssl"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:openssl",
@@ -271,22 +338,19 @@
         "fixed_in": "0.10.79",
         "summary": "rust-openssl has undefined behavior in X509Ref::ocsp_responders for certificates with non-UTF-8 OCSP URLs",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-05-04T00:19:55Z",
         "scope": "runtime",
+        "paths": [
+          "vllm-chat > reqwest > native-tls > openssl"
+        ],
         "workspace": "rust/src/chat",
         "found_in": "rust/Cargo.lock",
         "kev": false,
         "epss": 0.00211,
-        "fix_published_at": "2026-05-04T00:19:55Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:X509Ref::ocsp_responders"
-        ],
-        "paths": [
-          "vllm-chat > reqwest > native-tls > openssl"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -294,7 +358,10 @@
           "evidence": [
             "the project's source does not use X509Ref::ocsp_responders, but other packages depend on openssl"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quinn-proto",
@@ -307,23 +374,23 @@
         "fixed_in": "0.11.15",
         "summary": "Quinn: Remote memory exhaustion in quinn-proto from unbounded out-of-order stream reassembly",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-22T09:43:03Z",
         "scope": "runtime",
+        "paths": [
+          "vllm-chat > reqwest > quinn > quinn-proto"
+        ],
         "workspace": "rust/src/chat",
         "found_in": "rust/Cargo.lock",
         "kev": false,
         "epss": 0.00841,
-        "fix_published_at": "2026-06-22T09:43:03Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "vllm-chat > reqwest > quinn > quinn-proto"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quinn-proto",
@@ -334,22 +401,19 @@
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-14T10:08:32Z",
         "scope": "runtime",
+        "paths": [
+          "vllm-chat > reqwest > quinn > quinn-proto"
+        ],
         "workspace": "rust/src/chat",
         "found_in": "rust/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-09-14T10:08:32Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "option:ACK_FREQUENCY"
-        ],
-        "paths": [
-          "vllm-chat > reqwest > quinn > quinn-proto"
         ],
         "reachability": {
           "method": "option_grep",
@@ -357,7 +421,10 @@
           "evidence": [
             "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:rustls-webpki",
@@ -370,23 +437,23 @@
         "fixed_in": "0.103.13",
         "summary": "rustls-webpki: Denial of service via panic on malformed CRL BIT STRING",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-04-21T10:25:37Z",
         "scope": "runtime",
+        "paths": [
+          "vllm-chat > reqwest > rustls > rustls-webpki"
+        ],
         "workspace": "rust/src/chat",
         "found_in": "rust/Cargo.lock",
         "kev": false,
         "epss": 0.00346,
-        "fix_published_at": "2026-04-21T10:25:37Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "vllm-chat > reqwest > rustls > rustls-webpki"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -523,17 +590,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 88.3,
       "confidence": 0.4,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.8125,
@@ -553,10 +617,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 88.3,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -947,8 +1014,104 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:36:34+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "It runs Qwen3.8 Flash-Next for text, images and video behind an OpenAI-compatible API.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "Qwen3.8 Flash-Next for text, images and video",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Keep evicted prefixes in CPU memory or on disk",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "github_api",
+      "quote": "MTP or DFlash2 speculative decoding",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "Enable DFlash2 and choose its settings",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "github_api",
+      "quote": "Qwen3.8 Flash-Next with AWQ / NVFP4",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "Context per request | 512K tokens",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "release:v0.1.4",
+      "quote": "`/v1/messages` and `/v1/messages/count_tokens` return 400",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Concurrent requests | 8",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "release:v0.1.4",
+      "quote": "Use `fp8_e4m3` with DFlash2, or INT8 KV with MTP.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "An experimental option keeps the whole table on a local SSD instead",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "release:v0.1.4",
+      "quote": "**Opt-in stack-dump watchdog** (`--watchdog-config`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:35:51+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:28:30+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

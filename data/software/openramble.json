@@ -35,6 +35,106 @@
     "Superwhisper",
     "MacWhisper"
   ],
+  "capabilities": [
+    {
+      "label": "Push-to-talk dictation into any app",
+      "area": "dictation"
+    },
+    {
+      "label": "Offline speech-to-text in 25 European languages",
+      "area": "languages"
+    },
+    {
+      "label": "Hands-free dictation by double-pressing key",
+      "area": "dictation"
+    },
+    {
+      "label": "Remove filler words without rewording",
+      "area": "editing"
+    },
+    {
+      "label": "Personal dictionary with import and export",
+      "area": "dictation"
+    },
+    {
+      "label": "Replay, copy or delete dictation history",
+      "area": "history"
+    },
+    {
+      "label": "Press Return in terminal with \"Send it.\"",
+      "area": "voice commands"
+    },
+    {
+      "label": "Voice commands for new line and paragraph",
+      "items": [
+        "new line",
+        "New paragraph.",
+        "Send it.",
+        "Press enter.",
+        "Scratch that"
+      ],
+      "area": "voice commands"
+    },
+    {
+      "label": "Dictate into Claude Code, Codex, Cursor",
+      "items": [
+        "Claude Code",
+        "Codex",
+        "Cursor"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Record and transcribe meetings locally",
+      "area": "recording"
+    },
+    {
+      "label": "Export meeting transcript or audio",
+      "items": [
+        "Markdown",
+        "M4A"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Record screen with camera bubble",
+      "area": "recording"
+    },
+    {
+      "label": "Transcribe audio files from command line",
+      "area": "cli"
+    },
+    {
+      "label": "Output text, JSON, SRT or VTT",
+      "items": [
+        "plain text",
+        "JSON",
+        "SRT",
+        "VTT"
+      ],
+      "area": "output"
+    },
+    {
+      "label": "Agent skill to transcribe audio files",
+      "area": "integrations"
+    },
+    {
+      "label": "Generate HTML meeting summary page",
+      "area": "output"
+    },
+    {
+      "label": "Run Linux transcription server",
+      "area": "server"
+    },
+    {
+      "label": "Restore clipboard after paste",
+      "area": "dictation"
+    },
+    {
+      "label": "Learn corrected words from your edits",
+      "area": "dictation"
+    }
+  ],
   "why_worth_it": null,
   "homepage": "https://waiwai.is/ramble",
   "repo": {
@@ -103,23 +203,23 @@
         "fixed_in": "0.11.15",
         "summary": "Quinn: Remote memory exhaustion in quinn-proto from unbounded out-of-order stream reassembly",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-22T09:43:03Z",
         "scope": "runtime",
+        "paths": [
+          "openramble-desktop > reqwest > quinn > quinn-proto"
+        ],
         "workspace": "apps/desktop/src-tauri",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00841,
-        "fix_published_at": "2026-06-22T09:43:03Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "openramble-desktop > reqwest > quinn > quinn-proto"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quinn-proto",
@@ -130,22 +230,19 @@
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-14T10:08:32Z",
         "scope": "runtime",
+        "paths": [
+          "openramble-desktop > reqwest > quinn > quinn-proto"
+        ],
         "workspace": "apps/desktop/src-tauri",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-09-14T10:08:32Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "option:ACK_FREQUENCY"
-        ],
-        "paths": [
-          "openramble-desktop > reqwest > quinn > quinn-proto"
         ],
         "reachability": {
           "method": "option_grep",
@@ -153,7 +250,10 @@
           "evidence": [
             "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -295,17 +395,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 76.6,
+      "raw_total": 76.6,
       "confidence": 0.4,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.625,
@@ -325,10 +422,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 76.6,
       "security": {
         "level": "conditional",
         "basis": "assessment",
@@ -760,8 +860,160 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T00:36:05+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "Hold a key, speak and let go, and your words appear as text at the cursor in any app.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:29+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "github_api",
+      "quote": "Offline speech-to-text in 25 European languages",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:29+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Double-press the key to dictate without holding it.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:29+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "github_api",
+      "quote": "Removes filler words without rewording you.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:29+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "You can also import and export your dictionary as a file.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:29+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "Replay, copy or delete recent dictations, or recognize one again.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:29+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "\"Send it.\" presses Return in a terminal.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:29+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "OpenRamble acts on the spoken commands below.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:29+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "OpenRamble pastes into Claude Code, Codex, Cursor and any terminal",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:29+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "It transcribes both on your Mac while you record and labels them You and Others.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:29+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "export a Markdown transcript or an M4A audio file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:29+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "Choose Record Screen to record your screen, optionally with your microphone, your Mac's audio and a camera bubble",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:29+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "The `openramble` command-line tool comes inside the app.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:29+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "It writes plain text, JSON with word timestamps, SRT subtitles or VTT subtitles.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:29+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "The skill in [`skills/openramble-transcribe`](skills/openramble-transcribe/SKILL.md) lets an agent transcribe a local audio file with OpenRamble.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:29+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "turns a meeting into one HTML page with the outcome, the decisions, the tasks by owner, the open questions and the full transcript",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:29+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "`openramble serve` in [`apps/cli`](apps/cli) is a separate program you run on your own Linux server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:29+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "OpenRamble puts back what was on your clipboard, images included.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:29+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "\"Learn from your edits\" is off by default.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:48:29+08:00"
     }
   ],
   "first_seen_at": "2026-10-29T02:29:18+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }

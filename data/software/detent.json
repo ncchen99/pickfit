@@ -37,6 +37,70 @@
     "Land changes via serialized merge",
     "Monitor work on live dashboards"
   ],
+  "capabilities": [
+    {
+      "label": "Run board issues through coding agents",
+      "area": "orchestration"
+    },
+    {
+      "label": "Watch a GitHub Projects board",
+      "area": "integrations"
+    },
+    {
+      "label": "Isolated Git worktree per issue",
+      "area": "orchestration"
+    },
+    {
+      "label": "Supported coding agents",
+      "items": [
+        "OpenAI Codex CLI",
+        "Claude Code",
+        "Pi",
+        "local models through Ollama"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Validate changes with a gate command",
+      "area": "validation"
+    },
+    {
+      "label": "Serialized merge train landing",
+      "area": "merging"
+    },
+    {
+      "label": "Human review of change requests",
+      "area": "review"
+    },
+    {
+      "label": "Self-host the Hub server",
+      "area": "subcommands"
+    },
+    {
+      "label": "Enroll runner machines",
+      "area": "subcommands"
+    },
+    {
+      "label": "Expose board over MCP",
+      "area": "integrations"
+    },
+    {
+      "label": "Live web and terminal dashboards",
+      "area": "output"
+    },
+    {
+      "label": "Approve project policy via REST API",
+      "area": "api"
+    },
+    {
+      "label": "Import issues from GitHub",
+      "area": "integrations"
+    },
+    {
+      "label": "Self-update the binary",
+      "area": "subcommands"
+    }
+  ],
   "why_worth_it": null,
   "usage_guide": {
     "model": "claude-opus-5-5",
@@ -307,24 +371,21 @@
         "fixed_in": "4.16.0",
         "summary": "Echo's middleware.Static: `%2F`-encoded path bypasses route/group middleware guarding a statically-served path",
         "malicious": false,
-        "level": "exposed",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-09-27T22:45:34Z",
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/labstack/echo/v4"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00396,
-        "fix_published_at": "2026-09-27T22:45:34Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:MethodOverride",
           "symbol:MethodOverrideWithConfig",
           "symbol:Proxy"
-        ],
-        "paths": [
-          "go.mod > github.com/labstack/echo/v4"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -332,7 +393,10 @@
           "evidence": [
             "internal/artifact/http.go:54: func (h *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) { h.echo.ServeHTTP(w, r) }"
           ]
-        }
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/getkin/kin-openapi",
@@ -345,23 +409,23 @@
         "fixed_in": "0.148.0",
         "summary": "kin-openapi: YAML NaN/Inf Values Bypass Built-in Guards and Panic via OAS 3.1 Validation Path",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-08-27T10:09:50Z",
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/getkin/kin-openapi"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00595,
-        "fix_published_at": "2026-08-27T10:09:50Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "go.mod > github.com/getkin/kin-openapi"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/go-jose/go-jose/v4",
@@ -374,23 +438,23 @@
         "fixed_in": "4.1.6",
         "summary": "Go JOSE: DoS when parsing JWKs that contain RSA keys",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-14T22:46:21Z",
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/go-jose/go-jose/v4"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00489,
-        "fix_published_at": "2026-10-14T22:46:21Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "go.mod > github.com/go-jose/go-jose/v4"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/labstack/echo/v4",
@@ -403,24 +467,21 @@
         "fixed_in": "4.15.3",
         "summary": "Echo: Encoded slash (%2F) bypasses route-level protection and exposes static files",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-06-14T16:16:56Z",
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/labstack/echo/v4"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00519,
-        "fix_published_at": "2026-06-14T16:16:56Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:Echo.Static",
           "symbol:Echo.StaticFS",
           "symbol:Group.Static"
-        ],
-        "paths": [
-          "go.mod > github.com/labstack/echo/v4"
         ],
         "reachability": {
           "method": "import_grep",
@@ -429,7 +490,10 @@
             "internal/artifact/http.go:16: \"github.com/labstack/echo/v4\"",
             "no call to Echo.Static, Echo.StaticFS, Group.Static found"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:seroval",
@@ -442,20 +506,20 @@
         "fixed_in": "1.6.8",
         "summary": "Seroval: Deserialization invokes attacker-chosen callables: AsyncIteratorFactoryInstance calls source.on(listener) without type check",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-09-29T05:57:53Z",
         "scope": "runtime",
+        "paths": [
+          ". > @tanstack/react-router > @tanstack/router-core > seroval"
+        ],
         "workspace": ".",
         "found_in": "web/conversation/package-lock.json",
         "kev": false,
         "epss": 0.00342,
-        "fix_published_at": "2026-09-29T05:57:53Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          ". > @tanstack/react-router > @tanstack/router-core > seroval"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:seroval",
@@ -468,23 +532,23 @@
         "fixed_in": "1.6.8",
         "summary": "Seroval: fromJSON deserializer trusts node-supplied array length and sequence doneAt (unauthenticated event-loop DoS)",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-29T05:57:53Z",
         "scope": "runtime",
+        "paths": [
+          ". > @tanstack/react-router > @tanstack/router-core > seroval"
+        ],
         "workspace": ".",
         "found_in": "web/conversation/package-lock.json",
         "kev": false,
         "epss": 0.00451,
-        "fix_published_at": "2026-09-29T05:57:53Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > @tanstack/react-router > @tanstack/router-core > seroval"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:seroval",
@@ -497,24 +561,21 @@
         "fixed_in": "1.6.8",
         "summary": "Seroval `fromJSON`/`fromCrossJSON` denial of service via unvalidated array node length",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-29T05:57:53Z",
         "scope": "runtime",
+        "paths": [
+          ". > @tanstack/react-router > @tanstack/router-core > seroval"
+        ],
         "workspace": ".",
         "found_in": "web/conversation/package-lock.json",
         "kev": false,
         "epss": 0.00365,
-        "fix_published_at": "2026-09-29T05:57:53Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:fromJSON",
           "symbol:fromCrossJSON"
-        ],
-        "paths": [
-          ". > @tanstack/react-router > @tanstack/router-core > seroval"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -522,7 +583,10 @@
           "evidence": [
             "the project's source does not use fromJSON, fromCrossJSON, but other packages depend on seroval"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/labstack/echo/v4",
@@ -535,24 +599,21 @@
         "fixed_in": "4.16.1",
         "summary": "Echo: Rejected WebSocket upgrades can bypass Echo route-level access controls",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/labstack/echo/v4"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.0043,
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity",
           "symbol:BodyDump",
           "symbol:BodyDumpWithConfig",
           "symbol:Decompress"
-        ],
-        "paths": [
-          "go.mod > github.com/labstack/echo/v4"
         ],
         "reachability": {
           "method": "import_grep",
@@ -560,7 +621,10 @@
           "evidence": [
             "no .go file imports github.com/labstack/echo/v4/middleware, github.com/labstack/echo/v5/middleware, github.com/labstack/echo/v5; go.mod requires github.com/labstack/echo/v4 directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/getkin/kin-openapi",
@@ -573,23 +637,20 @@
         "fixed_in": "0.147.0",
         "summary": "kin-openapi: ValidationHandler security-requirement bypass via encoded-path operation confusion",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/getkin/kin-openapi"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00488,
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity",
           "symbol:ValidationHandler.ServeHTTP",
           "symbol:ValidationHandler.validateRequest"
-        ],
-        "paths": [
-          "go.mod > github.com/getkin/kin-openapi"
         ],
         "reachability": {
           "method": "import_grep",
@@ -597,7 +658,10 @@
           "evidence": [
             "no .go file imports github.com/getkin/kin-openapi/openapi3filter; go.mod requires github.com/getkin/kin-openapi directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/getkin/kin-openapi",
@@ -610,24 +674,21 @@
         "fixed_in": "0.149.0",
         "summary": "kin-openapi: Uncontrolled Recursion on Circular allOf/anyOf/oneOf Schemas Causes Fatal Process Crash",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/getkin/kin-openapi"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00435,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:Callback.Validate",
           "symbol:CallbackRef.Validate",
           "symbol:Components.Validate"
-        ],
-        "paths": [
-          "go.mod > github.com/getkin/kin-openapi"
         ],
         "reachability": {
           "method": "import_grep",
@@ -635,7 +696,10 @@
           "evidence": [
             "no .go file imports github.com/getkin/kin-openapi/openapi3, github.com/getkin/kin-openapi/openapi3filter; go.mod requires github.com/getkin/kin-openapi directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/getkin/kin-openapi",
@@ -648,24 +712,21 @@
         "fixed_in": "0.149.0",
         "summary": "kin-openapi: Incomplete Fix for GHSA-p6wj-qrr4-pgh5: Three Unpatched nil-Items Panic Paths in openapi3filter",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/getkin/kin-openapi"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00335,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:MultipartBodyDecoder",
           "symbol:UrlencodedBodyDecoder",
           "symbol:ValidateParameter"
-        ],
-        "paths": [
-          "go.mod > github.com/getkin/kin-openapi"
         ],
         "reachability": {
           "method": "import_grep",
@@ -673,7 +734,10 @@
           "evidence": [
             "no .go file imports github.com/getkin/kin-openapi/openapi3filter; go.mod requires github.com/getkin/kin-openapi directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/labstack/echo/v4",
@@ -686,16 +750,16 @@
         "fixed_in": "4.16.1",
         "summary": "Echo: WebSocket proxy can retain connections and handlers after client disconnect",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/labstack/echo/v4"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00302,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "high_complexity",
           "denial_of_service",
@@ -703,16 +767,16 @@
           "symbol:BodyDumpWithConfig",
           "symbol:Decompress"
         ],
-        "paths": [
-          "go.mod > github.com/labstack/echo/v4"
-        ],
         "reachability": {
           "method": "import_grep",
           "result": "not_reachable",
           "evidence": [
             "no .go file imports github.com/labstack/echo/v4/middleware, github.com/labstack/echo/v5, github.com/labstack/echo/v5/middleware; go.mod requires github.com/labstack/echo/v4 directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/labstack/echo/v4",
@@ -725,16 +789,16 @@
         "fixed_in": "4.16.1",
         "summary": "Echo: BodyDump captures request and response bodies without size limits in v4",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/labstack/echo/v4"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00372,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "high_complexity",
           "denial_of_service",
@@ -742,16 +806,16 @@
           "symbol:BodyDumpWithConfig",
           "symbol:Decompress"
         ],
-        "paths": [
-          "go.mod > github.com/labstack/echo/v4"
-        ],
         "reachability": {
           "method": "import_grep",
           "result": "not_reachable",
           "evidence": [
             "no .go file imports github.com/labstack/echo/v4/middleware; go.mod requires github.com/labstack/echo/v4 directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/labstack/echo/v4",
@@ -764,16 +828,16 @@
         "fixed_in": "4.16.1",
         "summary": "Echo: Decompress permits unbounded gzip expansion in v4",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/labstack/echo/v4"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00372,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "high_complexity",
           "denial_of_service",
@@ -781,16 +845,16 @@
           "symbol:BodyDumpWithConfig",
           "symbol:Decompress"
         ],
-        "paths": [
-          "go.mod > github.com/labstack/echo/v4"
-        ],
         "reachability": {
           "method": "import_grep",
           "result": "not_reachable",
           "evidence": [
             "no .go file imports github.com/labstack/echo/v4/middleware; go.mod requires github.com/labstack/echo/v4 directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -873,17 +937,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 82.7,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.625,
@@ -903,10 +964,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 82.7,
       "security": {
         "level": "exposed",
         "basis": "assessment",
@@ -1345,8 +1409,120 @@
       "method": "model",
       "model": "muse-spark-1.3",
       "checked_at": "2026-10-31T01:35:55+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "Detent hands each ready issue to an agent on a machine you control, checks the result against the gates you defined, and lands it.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:00+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "github_api",
+      "quote": "it watches a GitHub Projects board and runs each ready issue through an isolated Git worktree",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:00+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "creates an isolated worktree, and starts an agent (Codex or Claude Code)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:00+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Runners drive agents through their own CLIs, using the sign-in already on the runner.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:00+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "The agent works** on its own branch and runs your gate command.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:00+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "lands the change on the base branch with plain git, one change at a time",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:00+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "With `review.human: true` it waits in `Human Review` until a person approves it or sends it back",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:00+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Running Detent yourself means running the same Hub on your own machine or VM and enrolling runners against it.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:00+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Runners** are machines you enroll: a laptop, a build server, a VM, or a Fly Sprite.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:00+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "The Hub exposes its board, issues, changes, runners, and settings over MCP",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:00+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "github_api",
+      "quote": "live on web and terminal dashboards",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:00+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "The REST equivalent is\nGET and PUT on `/api/v2/organizations/{organization}/projects/{project}/policy`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:00+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "GitHub is an optional integration for importing issues and projecting summaries.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:00+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "Update a release install with `detent update`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T01:32:00+08:00"
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T02:16:11+08:00"
 }
