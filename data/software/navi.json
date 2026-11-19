@@ -1,0 +1,648 @@
+{
+  "schema_version": "software.v1",
+  "slug": "navi",
+  "repo_id": "gh:209799228",
+  "name": "navi",
+  "summary": "Interactive command-line cheatsheet tool that lets you browse cheatsheets and execute commands with suggested argument values.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "bash",
+    "cheatsheets",
+    "cli",
+    "command-line",
+    "rust",
+    "shell",
+    "snippet",
+    "snippets",
+    "terminal"
+  ],
+  "use_cases": [
+    "browse and run commands from cheatsheets",
+    "use cheatsheets inside tmux, including SSH sessions",
+    "use tldr and cheat.sh cheatsheets"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "browse cheatsheets and execute commands",
+    "dynamic suggested argument values",
+    "use as a shell widget",
+    "import cheatsheets from git repositories"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/denisidoro/navi",
+    "full_name": "denisidoro/navi",
+    "created_at": "2019-09-20T13:38:20Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "fzf or skim"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-navi-20261119-200455-f9ea",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -sL -o /tmp/navi-install.sh https://raw.githubusercontent.com/denisidoro/navi/master/scripts/install",
+          "purpose": "download the official install script (read before running)"
+        },
+        {
+          "command": "BIN_DIR=$HOME/.local/bin bash /tmp/navi-install.sh",
+          "purpose": "run install script with BIN_DIR=~/.local/bin; it fetches the v2.24.0 x86_64 musl release binary"
+        },
+        {
+          "command": "curl -sL -o /tmp/fzf.tgz https://github.com/junegunn/fzf/releases/download/v0.56.3/fzf-0.56.3-linux_amd64.tar.gz && tar xzf /tmp/fzf.tgz -C $HOME/.local/bin fzf && fzf --version",
+          "purpose": "install the fzf prerequisite from its GitHub release binary"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "navi --help",
+        "expected_signal": "navi repo add denisidoro/cheats"
+      },
+      "first_task": "fruit=kiwi navi --path /tmp/cheats --query 'hello fruit' --best-match"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "choco install navi",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "On Chocolatey installs, create a config file setting shell.command to powershell"
+      ],
+      "check": null,
+      "first_task": "navi --help"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v2.24.0",
+    "published_at": "2025-01-29T23:18:52Z",
+    "url": "https://github.com/denisidoro/navi/releases/tag/v2.24.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T20:06:19.038169+08:00",
+    "runs": [
+      {
+        "id": "verify-navi-20261119-200455-f9ea",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T20:06:19.038169+08:00",
+        "tool_version": "2.24.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -sL -o /tmp/navi-install.sh https://raw.githubusercontent.com/denisidoro/navi/master/scripts/install",
+            "purpose": "download the official install script (read before running)"
+          },
+          {
+            "command": "BIN_DIR=$HOME/.local/bin bash /tmp/navi-install.sh",
+            "purpose": "run install script with BIN_DIR=~/.local/bin; it fetches the v2.24.0 x86_64 musl release binary"
+          },
+          {
+            "command": "curl -sL -o /tmp/fzf.tgz https://github.com/junegunn/fzf/releases/download/v0.56.3/fzf-0.56.3-linux_amd64.tar.gz && tar xzf /tmp/fzf.tgz -C $HOME/.local/bin fzf && fzf --version",
+            "purpose": "install the fzf prerequisite from its GitHub release binary"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "navi --help",
+            "expected_signal": "navi repo add denisidoro/cheats",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "navi repo add denisidoro/cheats # import cheats from a git repository",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "fruit=kiwi navi --path /tmp/cheats --query 'hello fruit' --best-match",
+            "expected_signal": "hello kiwi",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hello kiwi",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/cheats && cat > /tmp/cheats/demo.cheat <<'EOF'\n% demo, greet\n\n# Say hello to a fruit\necho \"hello <fruit>\"\n\n# Count lines of a file\nwc -l <file>\n\n$ fruit: printf 'banana\\napple\\ncherry\\n'\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "script -qec \"navi --path /tmp/cheats --query 'hello fruit' --best-match --print --fzf-overrides-var '--query cherry --select-1 --exit-0'\" /dev/null",
+            "expected_signal": "echo \"hello cherry\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "echo \"hello cherry\"",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/cheats && cat > /tmp/cheats/demo.cheat <<'EOF'\n% demo, greet\n\n# Say hello to a fruit\necho \"hello <fruit>\"\n\n# Count lines of a file\nwc -l <file>\n\n$ fruit: printf 'banana\\napple\\ncherry\\n'\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "navi widget bash",
+            "expected_signal": "bind -x '\"\\C-g\": _navi_widget'",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "bind -x '\"\\C-g\": _navi_widget'",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rm -rf ~/.local/share/navi/cheats/tmp && FZF_DEFAULT_OPTS='--select-1 --exit-0' script -qec \"navi repo add file:///tmp/myrepo\" /dev/null && navi --query 'imported greeting' --best-match",
+            "expected_signal": "The following .cheat files were imported successfully:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "The following .cheat files were imported successfully:",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/myrepo && cd /tmp/myrepo && git init -q && printf '%% imported\\n\\n# Imported greeting\\necho imported-ok\\n' > imported.cheat && git add . && git -c user.name=t -c user.email=t@t commit -qm init",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "bash <(curl -sL .../scripts/install)",
+            "actually_needed": "The script installs to ~/.cargo/bin by default; set BIN_DIR=$HOME/.local/bin to put navi on PATH right away. It downloads a prebuilt release binary that could not be read before it ran.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Uses fzf or skim under the hood",
+            "actually_needed": "The install script does not install fzf. I installed it separately from the fzf GitHub release tarball.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Suggested values for arguments are dynamically displayed in a list",
+            "actually_needed": "Choosing a suggested value needs a TTY. When run without one, the variable stayed empty (command 7 printed 'inappropriate ioctl for device'). I got it to work by running it under `script` with --fzf-overrides-var '--query cherry --select-1'.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "import cheatsheets from git repositories (navi repo add)",
+            "actually_needed": "`navi repo add` opens an fzf file picker, so it needs a TTY. Without one it failed (command 12: 'Failed to copy .../cheats/tmp/'). It worked under `script` with FZF_DEFAULT_OPTS='--select-1 --exit-0' after deleting the leftover tmp clone. In that run fzf also printed a panic trace, but the import c…",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Check 1 prints 'hello kiwi', the captured output for check 2 is 'echo \"hello cherry\"' though its screenshot shows only the command line, and check 3 prints full help including 'navi repo add denisidoro/cheats'.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-navi-20261119-200455-f9ea/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-navi-20261119-200455-f9ea/check-1-cmd6.judged.png",
+            "runs/verify/verify-navi-20261119-200455-f9ea/check-2-cmd10.judged.png",
+            "runs/verify/verify-navi-20261119-200455-f9ea/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.252447,
+        "features": [
+          {
+            "feature": "browse cheatsheets and execute commands",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "dynamic suggested argument values",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "use as a shell widget",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: The output is only the generated bash widget script; the widget was never actually used."
+          },
+          {
+            "feature": "import cheatsheets from git repositories",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T20:06:25+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/denisidoro/navi@7cc5d42b22f2",
+      "Cargo.lock"
+    ],
+    "packages_checked": 111,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T20:06:19+08:00",
+    "quality": {
+      "total": 74.4,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.455,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.4818,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 96.0,
+      "signals": {
+        "stars": 17878,
+        "monthly_downloads": 758,
+        "forks": 585,
+        "dependents": null,
+        "release_downloads": 109470,
+        "hn_top_score": 268,
+        "registries_count": 2
+      },
+      "age_days": 2616,
+      "packages": [
+        "crates:navi",
+        "homebrew:navi"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 2.98
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:06:19.079570+08:00",
+      "sources_sha": "0a128d9bfd47aae6ec19ba55be6a5920d2815e3ec0e4aaef92c362d8e6792fa7",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "**navi** allows you to browse through cheatsheets (that you may write yourself or download from maintainers) and execute commands. Suggested values for arguments are dynamically displayed in a list."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "it will spare you from knowing CLIs by heart"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "It uses [fzf](https://github.com/junegunn/fzf) or [skim](https://github.com/lotabout/skim) under the hood"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "choco install navi"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "navi --help"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "- [setup your own config file](docs/configuration/README.md)"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "> You currently need to create the config file `$env:USERPROFILE\\AppData\\Roaming\\navi\\config.yaml`"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Note: builds for Apple devices are broken right now."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/denisidoro/navi",
+      "fetched_at": "2026-11-19T20:04:33+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/denisidoro/navi/blob/master/README.md",
+      "fetched_at": "2026-11-19T20:04:32+08:00"
+    },
+    {
+      "id": "release:v2.24.0",
+      "kind": "release",
+      "url": "https://github.com/denisidoro/navi/releases/tag/v2.24.0",
+      "fetched_at": "2026-11-19T20:04:32+08:00"
+    },
+    {
+      "id": "docs1",
+      "kind": "readme",
+      "url": "https://github.com/denisidoro/navi/blob/master/docs/installation/README.md",
+      "fetched_at": "2026-11-19T20:04:41+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "An interactive cheatsheet tool for the command-line.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:04:51+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "by typing `navi` in the terminal",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:04:51+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "An interactive cheatsheet tool for the command-line.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:04:51+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "**navi** allows you to browse through cheatsheets (that you may write yourself or download from maintainers) and execute commands. Suggested values for arguments are dynamically displayed in a list.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:04:51+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# navi",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:04:51+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "It uses [fzf](https://github.com/junegunn/fzf) or [skim](https://github.com/lotabout/skim) under the hood",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:04:51+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T20:04:33+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T20:04:33+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T20:04:33+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T20:04:33+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.24.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T20:04:32+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "**Maintenance mode.** navi still gets bug fixes, but no new features are planned.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:04:51+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "it will spare you from knowing CLIs by heart",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:04:51+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "you can use your cheatsheets in any command-line app even in SSH sessions",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:04:51+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "such as [tldr](https://github.com/tldr-pages/tldr) and [cheat.sh](https://github.com/chubin/cheat.sh)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:04:51+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**navi** allows you to browse through cheatsheets (that you may write yourself or download from maintainers) and execute commands.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:04:51+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Suggested values for arguments are dynamically displayed in a list.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:04:51+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "it can be either used as a command or as a shell widget (_à la_ Ctrl-R)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:04:51+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "import cheatsheets from git repositories",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:04:51+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "docs1",
+      "quote": "pacman -S navi",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:04:51+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "docs1",
+      "quote": "choco install navi",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:04:51+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T20:04:31+08:00",
+  "updated_at": "2026-11-19T20:06:25+08:00"
+}
