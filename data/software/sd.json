@@ -1,0 +1,589 @@
+{
+  "schema_version": "software.v1",
+  "slug": "sd",
+  "repo_id": "gh:162863623",
+  "name": "sd",
+  "summary": "A command-line find and replace tool using familiar regex syntax or string literals, as an alternative to sed.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "command-line",
+    "regex",
+    "rust",
+    "terminal",
+    "text-processing"
+  ],
+  "use_cases": [
+    "replace text in a file in place",
+    "find and replace across a project's files together with fd",
+    "trim trailing whitespace from input",
+    "replace newlines with commas"
+  ],
+  "alternatives_to": [
+    "sed",
+    "awk"
+  ],
+  "features": [
+    "find and replace with JavaScript/Python-style regex",
+    "non-regex string-literal replacement",
+    "use indexed and named capture groups",
+    "preview changes before modifying files"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/chmln/sd",
+    "full_name": "chmln/sd",
+    "created_at": "2018-12-23T05:00:16Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-sd-20261119-160940-ebc7",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p /tmp/sd ~/.local/bin && curl -fsSL -o /tmp/sd/sd.tar.gz https://github.com/chmln/sd/releases/download/v1.1.0/sd-v1.1.0-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/sd/sd.tar.gz -C /tmp/sd",
+          "purpose": "Download and extract the v1.1.0 x86_64 musl release tarball"
+        },
+        {
+          "command": "install -m 755 /tmp/sd/sd-v1.1.0-x86_64-unknown-linux-musl/sd ~/.local/bin/sd && sd --version",
+          "purpose": "Install the binary to ~/.local/bin and check the version"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "install -m 755 /tmp/sd/sd-v1.1.0-x86_64-unknown-linux-musl/sd ~/.local/bin/sd && which sd && sd --version",
+        "expected_signal": "sd 1.0.0"
+      },
+      "first_task": "echo 'lorem ipsum 23   ' | sd '\\s+$' ''"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v1.1.0",
+    "published_at": "2026-02-25T19:27:05Z",
+    "url": "https://github.com/chmln/sd/releases/tag/v1.1.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T16:10:18.542432+08:00",
+    "runs": [
+      {
+        "id": "verify-sd-20261119-160940-ebc7",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T16:10:18.542432+08:00",
+        "tool_version": null,
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p /tmp/sd ~/.local/bin && curl -fsSL -o /tmp/sd/sd.tar.gz https://github.com/chmln/sd/releases/download/v1.1.0/sd-v1.1.0-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/sd/sd.tar.gz -C /tmp/sd",
+            "purpose": "Download and extract the v1.1.0 x86_64 musl release tarball"
+          },
+          {
+            "command": "install -m 755 /tmp/sd/sd-v1.1.0-x86_64-unknown-linux-musl/sd ~/.local/bin/sd && sd --version",
+            "purpose": "Install the binary to ~/.local/bin and check the version"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "install -m 755 /tmp/sd/sd-v1.1.0-x86_64-unknown-linux-musl/sd ~/.local/bin/sd && which sd && sd --version",
+            "expected_signal": "sd 1.0.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "sd 1.0.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "echo 'lorem ipsum 23   ' | sd '\\s+$' ''",
+            "expected_signal": "lorem ipsum 23",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lorem ipsum 23",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "echo 'lots((([]))) of special chars' | sd -F '((([])))' ''",
+            "expected_signal": "lots of special chars",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lots of special chars",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "echo 'cargo +nightly watch' | sd '(\\w+)\\s+\\+(\\w+)\\s+(\\w+)' 'cmd: $1, channel: $2, subcmd: $3' && echo \"123.45\" | sd '(?P<dollars>\\d+)\\.(?P<cents>\\d+)' '$dollars dollars and $cents cents'",
+            "expected_signal": "123 dollars and 45 cents",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "123 dollars and 45 cents",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sd -p 'window.fetch' 'fetch' http.js && cat http.js",
+            "expected_signal": "const r = fetch('/api');",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "const r = fetch('/api');",
+            "setup": [
+              {
+                "command": "cat > http.js <<'EOF'\nconst r = window.fetch('/api');\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Install through cargo with `cargo install sd`",
+            "actually_needed": "There is no Rust toolchain here, so I used the prebuilt sd-v1.1.0-x86_64-unknown-linux-musl.tar.gz from GitHub releases and copied it to ~/.local/bin",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Release tag v1.1.0",
+            "actually_needed": "The binary in the v1.1.0 release prints 'sd 1.0.0' for --version",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exit 0 with expected output: trailing whitespace stripped, fixed-string special chars removed, and sd installed reporting 'sd 1.0.0' (though the tarball path says v1.1.0, the output matches the expected signal).",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-sd-20261119-160940-ebc7/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-sd-20261119-160940-ebc7/check-1-cmd5.judged.png",
+            "runs/verify/verify-sd-20261119-160940-ebc7/check-2-cmd6.judged.png",
+            "runs/verify/verify-sd-20261119-160940-ebc7/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.134077,
+        "features": [
+          {
+            "feature": "find and replace with JavaScript/Python-style regex",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "non-regex string-literal replacement",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "use indexed and named capture groups",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "preview changes before modifying files",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T16:10:25+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/chmln/sd@44febdf86343",
+      "Cargo.lock"
+    ],
+    "packages_checked": 103,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T16:10:18+08:00",
+    "quality": {
+      "total": 68.7,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.315,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.2611,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 96.8,
+      "signals": {
+        "stars": 7433,
+        "monthly_downloads": 1388,
+        "forks": 176,
+        "dependents": null,
+        "release_downloads": 1481353,
+        "hn_top_score": 58,
+        "registries_count": 1
+      },
+      "age_days": 2888,
+      "packages": [
+        "homebrew:sd"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 2.2
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:10:18.552959+08:00",
+      "sources_sha": "d0237f932f11e421c3ec793fddf37f8a02a4d030d80ca9472929c9c2d7550609",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "*String-literal mode.* &nbsp; Non-regex find & replace. No more backslashes or remembering which characters are special and need to be escaped."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Defaults follow common sense and are tailored for typical daily use."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Install through\n[`cargo`](https://doc.rust-lang.org/cargo/getting-started/installation.html) with\n`cargo install sd`"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "`cargo install sd`, or through various package managers"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "> echo 'lorem ipsum 23   ' | sd '\\s+$' ''\n   lorem ipsum 23"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "sd will interpret every argument starting with `-` as a (potentially unknown) flag."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "sd-v1.1.0-x86_64-pc-windows-msvc.zip"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/chmln/sd",
+      "fetched_at": "2026-11-19T16:09:28+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/chmln/sd/blob/master/README.md",
+      "fetched_at": "2026-11-19T16:09:26+08:00"
+    },
+    {
+      "id": "release:v1.1.0",
+      "kind": "release",
+      "url": "https://github.com/chmln/sd/releases/tag/v1.1.0",
+      "fetched_at": "2026-11-19T16:09:26+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Intuitive find & replace CLI (sed alternative)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:09:36+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "`sd` is an intuitive find & replace CLI.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:09:36+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Intuitive find & replace CLI (sed alternative)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:09:36+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "`sd` is an intuitive find & replace CLI.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:09:36+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# sd - `s`earch & `d`isplace",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:09:36+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T16:09:28+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T16:09:28+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T16:09:28+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T16:09:28+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.1.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T16:09:26+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "That's it. The file is modified in-place.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:09:36+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "fd --type file --exec sd 'from \"react\"' 'from \"preact\"'",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:09:36+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "let's trim some trailing whitespace",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:09:36+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Replace newlines with commas:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:09:36+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "github_api",
+      "quote": "Intuitive find & replace CLI (sed alternative)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:09:36+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "Forget about dealing with quirks of `sed` or `awk`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:09:36+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "`sd` uses regex syntax that you already know from JavaScript and Python.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:09:36+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "*String-literal mode.* &nbsp; Non-regex find & replace.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:09:36+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Indexed capture groups:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:09:36+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "To preview changes:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:09:36+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T16:09:26+08:00",
+  "updated_at": "2026-11-19T16:10:25+08:00"
+}
