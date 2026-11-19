@@ -1,0 +1,780 @@
+{
+  "schema_version": "software.v1",
+  "slug": "bookokrat",
+  "repo_id": "gh:1085269531",
+  "name": "Bookokrat",
+  "summary": "A terminal reader for EPUB, PDF and DJVU books with Vim-style keybindings, search, bookmarks and annotations.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "media_files",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "djvu",
+    "epub",
+    "epub-reader",
+    "pdf",
+    "rust",
+    "tui",
+    "tui-rs"
+  ],
+  "use_cases": [
+    "read an EPUB book in the terminal",
+    "view a PDF in the terminal",
+    "jump between LaTeX source and PDF output with SyncTeX"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "read EPUB, PDF and DJVU files",
+    "search, bookmarks and reading stats",
+    "annotate with comments exported to Markdown",
+    "navigate with Vim-style keybindings"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://bugzmanov.github.io/bookokrat/index.html",
+  "repo": {
+    "url": "https://github.com/bugzmanov/bookokrat",
+    "full_name": "bugzmanov/bookokrat",
+    "created_at": "2025-10-28T20:09:03Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "Rust (for building from source)"
+    ],
+    "system_packages": [
+      "C compiler/linker",
+      "pkg-config, libfontconfig1-dev, clang, libclang-dev (for PDF/DJVU on Debian/Ubuntu)"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install bookokrat",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Use a graphics-capable terminal such as Kitty or Ghostty to view PDF and DJVU"
+      ],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-bookokrat-20261119-230943-34b5",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/bkm && cd /tmp && curl -fsSLO https://github.com/bugzmanov/bookokrat/releases/download/v0.3.14/bookokrat-v0.3.14-x86_64-unknown-linux-musl.tar.gz && tar xzf bookokrat-v0.3.14-x86_64-unknown-linux-musl.tar.gz -C bkm && install -m755 bkm/bookokrat ~/.local/bin/bookokrat && bookokrat --version",
+          "purpose": "Download the v0.3.14 x86_64 musl release tarball, extract it, install it to ~/.local/bin and print the version"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "bookokrat --help",
+        "expected_signal": "A terminal-based EPUB/PDF Books reader"
+      },
+      "first_task": "cd ~/work && bookokrat print book.epub"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install bookokrat",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Use a graphics-capable terminal such as Kitty or Ghostty to view PDF and DJVU"
+      ],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "AGPL-3.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.3.14",
+    "published_at": "2026-10-17T13:34:21Z",
+    "url": "https://github.com/bugzmanov/bookokrat/releases/tag/v0.3.14"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T23:11:22.466660+08:00",
+    "runs": [
+      {
+        "id": "verify-bookokrat-20261119-230943-34b5",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T23:11:22.466660+08:00",
+        "tool_version": "0.3.14",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/bkm && cd /tmp && curl -fsSLO https://github.com/bugzmanov/bookokrat/releases/download/v0.3.14/bookokrat-v0.3.14-x86_64-unknown-linux-musl.tar.gz && tar xzf bookokrat-v0.3.14-x86_64-unknown-linux-musl.tar.gz -C bkm && install -m755 bkm/bookokrat ~/.local/bin/bookokrat && bookokrat --version",
+            "purpose": "Download the v0.3.14 x86_64 musl release tarball, extract it, install it to ~/.local/bin and print the version"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "bookokrat --help",
+            "expected_signal": "A terminal-based EPUB/PDF Books reader",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "A terminal-based EPUB/PDF Books reader",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd ~/work && bookokrat print book.epub",
+            "expected_signal": "The quick brown fox jumps over the lazy dog.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "The quick brown fox jumps over the lazy dog.",
+            "setup": [
+              {
+                "command": "cd ~/work && python3 - <<'EOF'\nimport zipfile\nz=zipfile.ZipFile('book.epub','w')\nz.writestr(zipfile.ZipInfo('mimetype'),'application/epub+zip')\nz.writestr('META-INF/container.xml','''<?xml version=\"1.0\"?><container version=\"1.0\" xmlns=\"urn:oasis:names:tc:opendocument:xmlns:container\"><rootfiles><rootfile full-path=\"OEBPS/content.opf\" media-type=\"application/oebps-package+xml\"/></rootfiles></container>''')\nz.writestr('OEBPS/content.opf','''<?xml version=\"1.0\" encoding=\"UTF-8\"?><package xmlns=\"http://www.idpf.org/2007/opf\" version=\"3.0\" unique-identifier=\"id\"><metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><dc:identifier id=\"id\">pickfit-test-1</dc:identifier><dc:title>Pickfit Test Book</dc:title><dc:creator>Test Author</dc:creator><dc:language>en</dc:language><meta property=\"dcterms:modified\">2024-01-01T00:00:00Z</meta></metadata><manifest><item id=\"nav\" href=\"nav.xhtml\" media-type=\"application/xhtml+xml\" properties=\"nav\"/><item id=\"c1\" href=\"c1.xhtml\" media-type=\"application/xhtml+xml\"/><item id=\"c2\" href=\"c2.xhtml\" media-type=\"application/xhtml+xml\"/></manifest><spine><itemref idref=\"c1\"/><itemref idref=\"c2\"/></spine></package>''')\nz.writestr('OEBPS/nav.xhtml','''<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:epub=\"http://www.idpf.org/2007/ops\"><head><title>Nav</title></head><body><nav epub:type=\"toc\"><ol><li><a href=\"c1.xhtml\">Chapter One</a></li><li><a href=\"c2.xhtml\">Chapter Two</a></li></ol></nav></body></html>''')\nfor i,(t,b) in enumerate([('Chapter One','The quick brown fox jumps over the lazy dog.'),('Chapter Two','Second chapter text about zebras.')],1):\n    z.writestr(f'OEBPS/c{i}.xhtml',f'''<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>{t}</title></head><body><h1>{t}</h1><p>{b}</p></body></html>''')\nz.close()\nobjs=[\"<< /Type /Catalog /Pages 2 0 R >>\",\"<< /Type /Pages /Kids [3 0 R] /Count 1 >>\",\"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\",None,\"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\"]\ns=b\"BT /F1 24 Tf 72 700 Td (Hello PDF from pickfit) Tj ET\"\nobjs[3]=\"<< /Length %d >>\\nstream\\n\"%len(s)+s.decode()+\"\\nendstream\"\nout=b\"%PDF-1.4\\n\";offs=[]\nfor i,o in enumerate(objs,1):\n    offs.append(len(out));out+=f\"{i} 0 obj\\n{o}\\nendobj\\n\".encode()\nx=len(out);out+=f\"xref\\n0 {len(objs)+1}\\n0000000000 65535 f \\n\".encode()\nfor o in offs: out+=f\"{o:010d} 00000 n \\n\".encode()\nout+=f\"trailer\\n<< /Size {len(objs)+1} /Root 1 0 R >>\\nstartxref\\n{x}\\n%%EOF\\n\".encode()\nopen('doc.pdf','wb').write(out)\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd ~/work && bookokrat print --toc book.epub",
+            "expected_signal": "Chapter Two",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Chapter Two",
+            "setup": [
+              {
+                "command": "cd ~/work && python3 - <<'EOF'\nimport zipfile\nz=zipfile.ZipFile('book.epub','w')\nz.writestr(zipfile.ZipInfo('mimetype'),'application/epub+zip')\nz.writestr('META-INF/container.xml','''<?xml version=\"1.0\"?><container version=\"1.0\" xmlns=\"urn:oasis:names:tc:opendocument:xmlns:container\"><rootfiles><rootfile full-path=\"OEBPS/content.opf\" media-type=\"application/oebps-package+xml\"/></rootfiles></container>''')\nz.writestr('OEBPS/content.opf','''<?xml version=\"1.0\" encoding=\"UTF-8\"?><package xmlns=\"http://www.idpf.org/2007/opf\" version=\"3.0\" unique-identifier=\"id\"><metadata xmlns:dc=\"http://purl.org/dc/elements/1.1/\"><dc:identifier id=\"id\">pickfit-test-1</dc:identifier><dc:title>Pickfit Test Book</dc:title><dc:creator>Test Author</dc:creator><dc:language>en</dc:language><meta property=\"dcterms:modified\">2024-01-01T00:00:00Z</meta></metadata><manifest><item id=\"nav\" href=\"nav.xhtml\" media-type=\"application/xhtml+xml\" properties=\"nav\"/><item id=\"c1\" href=\"c1.xhtml\" media-type=\"application/xhtml+xml\"/><item id=\"c2\" href=\"c2.xhtml\" media-type=\"application/xhtml+xml\"/></manifest><spine><itemref idref=\"c1\"/><itemref idref=\"c2\"/></spine></package>''')\nz.writestr('OEBPS/nav.xhtml','''<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\" xmlns:epub=\"http://www.idpf.org/2007/ops\"><head><title>Nav</title></head><body><nav epub:type=\"toc\"><ol><li><a href=\"c1.xhtml\">Chapter One</a></li><li><a href=\"c2.xhtml\">Chapter Two</a></li></ol></nav></body></html>''')\nfor i,(t,b) in enumerate([('Chapter One','The quick brown fox jumps over the lazy dog.'),('Chapter Two','Second chapter text about zebras.')],1):\n    z.writestr(f'OEBPS/c{i}.xhtml',f'''<?xml version=\"1.0\" encoding=\"UTF-8\"?><html xmlns=\"http://www.w3.org/1999/xhtml\"><head><title>{t}</title></head><body><h1>{t}</h1><p>{b}</p></body></html>''')\nz.close()\nobjs=[\"<< /Type /Catalog /Pages 2 0 R >>\",\"<< /Type /Pages /Kids [3 0 R] /Count 1 >>\",\"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>\",None,\"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\"]\ns=b\"BT /F1 24 Tf 72 700 Td (Hello PDF from pickfit) Tj ET\"\nobjs[3]=\"<< /Length %d >>\\nstream\\n\"%len(s)+s.decode()+\"\\nendstream\"\nout=b\"%PDF-1.4\\n\";offs=[]\nfor i,o in enumerate(objs,1):\n    offs.append(len(out));out+=f\"{i} 0 obj\\n{o}\\nendobj\\n\".encode()\nx=len(out);out+=f\"xref\\n0 {len(objs)+1}\\n0000000000 65535 f \\n\".encode()\nfor o in offs: out+=f\"{o:010d} 00000 n \\n\".encode()\nout+=f\"trailer\\n<< /Size {len(objs)+1} /Root 1 0 R >>\\nstartxref\\n{x}\\n%%EOF\\n\".encode()\nopen('doc.pdf','wb').write(out)\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Install via cargo, AUR (yay/paru), Nix, or prebuilt Linux binaries from GitHub Releases",
+            "actually_needed": "This box has no Rust, Arch or Nix, so I used the prebuilt release binary.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Prebuilt Linux binaries: download from GitHub Releases",
+            "actually_needed": "The x86_64-unknown-linux-gnu binary needs the system library libfontconfig.so.1 (package libfontconfig1). Without it, the binary fails to start with exit 127. The musl build starts without it.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "bookokrat path/to/book.pdf",
+            "actually_needed": "The static musl build panics on PDFs with 'Dynamic loading not supported' (fontconfig dlopen). PDF needs the gnu build plus libfontconfig1, which this box cannot install without root.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exit 0 and print their expected signals: the book text with the fox sentence, a TOC listing Chapter One and Chapter Two, and the help text with the tagline.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-bookokrat-20261119-230943-34b5/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-bookokrat-20261119-230943-34b5/check-1-cmd8.judged.png",
+            "runs/verify/verify-bookokrat-20261119-230943-34b5/check-2-cmd10.judged.png",
+            "runs/verify/verify-bookokrat-20261119-230943-34b5/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.293374,
+        "features": [
+          {
+            "feature": "read EPUB, PDF and DJVU files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; EPUB works: content and TOC printed. PDF failed: the musl build panics on a fontconfig dlopen, and the gnu build needs libfontconfig1, which can't be installed without root. DJVU not tried."
+          },
+          {
+            "feature": "search, bookmarks and reading stats",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Search, bookmarks and stats only run inside the interactive TUI. My pty-driven attempt could not show that search actually worked."
+          },
+          {
+            "feature": "annotate with comments exported to Markdown",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Comments and Markdown export only run inside the interactive TUI."
+          },
+          {
+            "feature": "navigate with Vim-style keybindings",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "--print-default-keybindings-grouped lists Vim bindings (j/k/gg/G/dd), but I could not check that navigation actually works without an interactive terminal."
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T23:11:29+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/bugzmanov/bookokrat@7797df51e8d5",
+      "Cargo.lock"
+    ],
+    "packages_checked": 542,
+    "findings_total": 12,
+    "advisories_total": 6,
+    "findings": [
+      {
+        "package": "crates:zip",
+        "version": "0.6.6",
+        "advisory": "GHSA-m665-v7pm-7grj",
+        "cves": [
+          "CVE-2026-115905"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.5",
+        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "3.0.0",
+        "advisory": "GHSA-m665-v7pm-7grj",
+        "cves": [
+          "CVE-2026-115905"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.5",
+        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "0.6.6",
+        "advisory": "RUSTSEC-2026-0369",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.0",
+        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "3.0.0",
+        "advisory": "RUSTSEC-2026-0369",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.0",
+        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.26.0",
+        "advisory": "RUSTSEC-2026-0194",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.38.4",
+        "advisory": "RUSTSEC-2026-0194",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.26.0",
+        "advisory": "RUSTSEC-2026-0195",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.38.4",
+        "advisory": "RUSTSEC-2026-0195",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "3.0.0",
+        "advisory": "GHSA-q7v9-x93c-xqv3",
+        "cves": [
+          "CVE-2026-115909"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "0.6.6",
+        "advisory": "RUSTSEC-2026-0367",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "3.0.0",
+        "advisory": "RUSTSEC-2026-0367",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "0.6.6",
+        "advisory": "RUSTSEC-2026-0429",
+        "cves": [
+          "CVE-2026-115909"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: `ZipArchive::extract` aborts the process on a symlink entry with a large declared size",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T23:11:29+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.7,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.6191,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.7,
+      "signals": {
+        "stars": 1299,
+        "monthly_downloads": 428,
+        "forks": 78,
+        "dependents": null,
+        "release_downloads": 7003,
+        "hn_top_score": 2,
+        "registries_count": 2
+      },
+      "age_days": 386,
+      "packages": [
+        "crates:bookokrat",
+        "homebrew:bookokrat"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 7.35
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:11:22.494364+08:00",
+      "sources_sha": "bd18d6fb19880fdd46c4e73d1a2bdf55014f378a587a10b1b99b45bd0d98282a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Terminal EPUB/PDF/DJVU reader focused on speed, smooth navigation, and Vim-style workflows."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Terminal EPUB/PDF/DJVU reader focused on speed, smooth navigation, and Vim-style workflows."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Build from source. Requires [Rust](https://rustup.rs) and a C compiler/linker."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "cargo install bookokrat"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "bookokrat path/to/book.epub"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Configure which editor to open in `~/.bookokrat_settings.yaml`:"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "> - If MuPDF fails to build, disable PDF/DJVU support: `cargo install bookokrat --no-default-features`"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/bugzmanov/bookokrat",
+      "fetched_at": "2026-11-19T23:09:27+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/bugzmanov/bookokrat/blob/main/README.md",
+      "fetched_at": "2026-11-19T23:09:28+08:00"
+    },
+    {
+      "id": "release:v0.3.14",
+      "kind": "release",
+      "url": "https://github.com/bugzmanov/bookokrat/releases/tag/v0.3.14",
+      "fetched_at": "2026-11-19T23:09:28+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "EPUB, PDF, and DJVU support in one TUI app",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:09:39+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Press `?` inside the app to open the built-in help.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:09:39+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A terminal EPUB / PDF Book Reader (+djvu)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:09:39+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Terminal EPUB/PDF/DJVU reader focused on speed, smooth navigation, and Vim-style workflows.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:09:39+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Bookokrat",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:09:39+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "### Cargo (all platforms)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:09:39+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Requires [Rust](https://rustup.rs) and a C compiler/linker.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:09:39+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Requires [Rust](https://rustup.rs) and a C compiler/linker.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:09:39+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "sudo apt install pkg-config libfontconfig1-dev clang libclang-dev",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:09:39+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:09:27+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:09:27+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T23:09:27+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:09:27+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:09:27+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.3.14",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:09:28+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "bookokrat path/to/book.epub",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:09:39+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "bookokrat path/to/book.pdf",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:09:39+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Bookokrat supports bidirectional SyncTeX navigation between LaTeX sources and PDF output.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:09:39+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "EPUB, PDF, and DJVU support in one TUI app",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:09:39+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Search, bookmarks, jump list history, reading stats",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:09:39+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Inline comments/annotations with persistent storage and Markdown export",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:09:39+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Vim-style keybindings and normal mode",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:09:39+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install bookokrat",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:09:39+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install bookokrat",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:09:39+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install bookokrat",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:09:39+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Bookokrat stores state in XDG-compliant locations and keeps project directories clean.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:09:39+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T23:09:27+08:00",
+  "updated_at": "2026-11-19T23:11:29+08:00"
+}
