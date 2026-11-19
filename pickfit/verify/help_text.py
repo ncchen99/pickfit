@@ -30,8 +30,8 @@ from pickfit.verify.verdict import last_command
 
 HELP_CHARS = 20_000  # the start matters most: a summary, then commands and options
 SUBCOMMANDS_MAX = 8
-HELP_TIMEOUT_S = 15
-HELP_SECONDS_MAX = 90  # all of one run's help commands together
+HELP_TIMEOUT_S = 5  # --help returns in well under a second; one that does not exit is not waited for
+HELP_SECONDS_MAX = 30  # all of one run's help commands together
 STORE = Path("capabilities") / "help"
 
 _HELP_FLAGS = {"--help", "-h", "-help", "-?", "/?"}
@@ -158,16 +158,22 @@ def subcommands(text: str) -> list[str]:
 
 def capture_help(exec_: Callable[[str, int], Any], tool: str, *, clock: Callable[[], float],
                  run_id: str | None = None) -> list[HelpText]:
-    """Run the tool's help, then its subcommands' help, in the box. exec_ is Box.exec. Stops at
-    HELP_SECONDS_MAX; a command that times out or prints no help is skipped."""
+    """Run the tool's help, then its subcommands' help, in the box. exec_ is Box.exec. Each command gets
+    HELP_TIMEOUT_S, and never more than what is left of HELP_SECONDS_MAX. The first command that times out
+    ends the capture (a tool that hangs on one --help likely hangs on the next); one that prints no help is
+    skipped."""
     started = clock()
     texts: list[HelpText] = []
+    hung = False
 
     def run(command: str) -> HelpText | None:
-        if clock() - started >= HELP_SECONDS_MAX:
+        nonlocal hung
+        left = HELP_SECONDS_MAX - (clock() - started)
+        if hung or left < 1:
             return None
-        result = exec_(command, HELP_TIMEOUT_S)
+        result = exec_(command, max(1, min(HELP_TIMEOUT_S, int(left))))
         if result.timed_out:
+            hung = True
             return None
         text = _help_of(result.stdout, result.stderr)
         if text is None:

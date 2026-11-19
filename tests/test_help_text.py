@@ -108,11 +108,14 @@ class Clock:
         return self.now
 
 
-def fake_exec(answers: dict[str, tuple[int, str, str]], ran: list[str]):
+def fake_exec(answers: dict[str, tuple[int, str, str]], ran: list[str], timeouts: list[int] | None = None,
+              hangs: set[str] = frozenset()):
     def exec_(command: str, timeout_s: int):
         ran.append(command)
+        if timeouts is not None:
+            timeouts.append(timeout_s)
         code, out, err = answers.get(command, (127, "", f"{command}: not found"))
-        return SimpleNamespace(exit_code=code, stdout=out, stderr=err, timed_out=False, truncated=False)
+        return SimpleNamespace(exit_code=code, stdout=out, stderr=err, timed_out=command in hangs, truncated=False)
     return exec_
 
 
@@ -175,3 +178,25 @@ def test_gather_prefers_newer_runs_and_pickfits_capture(tmp_path: Path):
 def test_long_help_keeps_its_start():
     texts = help_from_report(report("r", "", [cmd("frob --help", CLICK + "x" * 30_000)]))
     assert texts[0].truncated and texts[0].text.startswith("Usage: frob") and len(texts[0].text) == 20_000
+
+
+def test_each_help_command_gets_five_seconds_and_all_of_them_thirty():
+    ran: list[str] = []
+    timeouts: list[int] = []
+    answers = {"frob --help": (0, CLICK, ""), "frob convert --help": (0, CLICK, ""), "frob watch --help": (0, CLICK, "")}
+    capture_help(fake_exec(answers, ran, timeouts), "frob", clock=Clock(step=12))
+    # started at 12; --help at 24 (18 s left: 5), convert at 36 (6 s left: 5), watch at 48 (none left)
+    assert ran == ["frob --help", "frob convert --help"] and timeouts == [5, 5]
+    ran, timeouts = [], []
+    capture_help(fake_exec(answers, ran, timeouts), "frob", clock=Clock(step=13))
+    assert timeouts == [5, 4]  # started at 13; convert at 39 has 30 - 26 = 4 s left: never more than that
+
+
+def test_a_help_command_that_hangs_ends_the_capture():
+    ran: list[str] = []
+    assert capture_help(fake_exec({}, ran, hangs={"frob --help"}), "frob", clock=Clock()) == []
+    assert ran == ["frob --help"]  # -h and help are not tried
+    ran = []
+    texts = capture_help(fake_exec({"frob --help": (0, CLICK, "")}, ran, hangs={"frob convert --help"}),
+                         "frob", clock=Clock())
+    assert ran == ["frob --help", "frob convert --help"] and [t.command for t in texts] == ["frob --help"]
