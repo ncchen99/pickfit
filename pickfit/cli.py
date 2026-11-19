@@ -424,6 +424,9 @@ def _add_usability_command(sub: argparse._SubParsersAction) -> None:
                                          "(Claude Opus, paid; prints costs, never the scores)")
     u.add_argument("--slug", action="append", help="judge this record (repeatable)")
     u.add_argument("--pilot", action="store_true", help="judge the 12 apps in data/calibration/ease-pilot.json")
+    u.add_argument("--pending", action="store_true",
+                   help="every desktop or web app with kept screenshots of a passed run and no ease judgment of it")
+    u.add_argument("--limit", type=int, default=None, help="judge at most N of the records named")
     u.add_argument("--data-dir", default=None, help="records (default data/software)")
     u.add_argument("--model", default=MODEL, help='"prod" (Claude Opus, default) or a model id')
     u.add_argument("--samples", type=int, default=SAMPLES, help="times each call is made")

@@ -553,3 +553,80 @@ def test_writing_a_visual_check_refreshes_the_score_so_the_deduction_follows_at_
     written = SoftwareRecord.model_validate(json.loads(path.read_text(encoding="utf-8")))
     assert written.scores.formula_version == "b3.v7+visual.v1"
     assert written.scores.quality.total == round(before * 0.95, 1) and written.scores.quality.visual.before == before
+
+
+# --- the ease judgment in a pipeline (ease_one, needs_ease, pending_slugs) ---------------
+
+
+def ease_asks(calls: list[str]) -> tuple[Any, Any]:
+    def ask(body: dict[str, Any], out: type, kind: str) -> Asked:
+        calls.append(kind)
+        if kind == "first_look":
+            return Asked(first_answer(), 0.01, "claude-opus-5-5")
+        return Asked(in_use_answer(op(1, (2, "pickfit1 sent")), op(2, (4, "No menu"))), 0.01, "claude-opus-5-5")
+
+    def inspector(body: dict[str, Any], out: type, kind: str) -> Asked:
+        calls.append(kind)
+        return Asked(comfort_answer(), 0.02, "claude-opus-5-5")
+
+    return ask, inspector
+
+
+def test_a_new_desktop_app_gets_its_ease_judgment_once(tmp_path: Path) -> None:
+    from pickfit.usability import ease_one, needs_ease, pending_slugs
+
+    evidence = tmp_path / "evidence"
+    record = gui_record(evidence)
+    data = tmp_path / "software"
+    data.mkdir()
+    path = data / "fixture-chat-tui.json"
+    path.write_text(json.dumps(record), encoding="utf-8")
+    assert needs_ease(record, evidence) is not None and pending_slugs(data, evidence) == ["fixture-chat-tui"]
+    calls: list[str] = []
+    ask, inspector = ease_asks(calls)
+    cost, why = ease_one(path, evidence, ask=ask, comfort=inspector, finder=TextFinder(fake_ocr))
+    assert why is None and cost == 0.06
+    assert calls == ["first_look", "in_use", "first_look", "in_use", "comfort"]
+    written = SoftwareRecord.model_validate(json.loads(path.read_text(encoding="utf-8")))
+    assert written.usability is not None and written.usability.run_id == RUN and written.usability.score is not None
+    # Judged on this run: nothing more to do, and nothing is paid for it.
+    assert pending_slugs(data, evidence) == []
+    calls.clear()
+    assert ease_one(path, evidence, ask=ask, comfort=inspector, finder=TextFinder(fake_ocr))[0] == 0.0
+    assert calls == []
+
+
+def test_only_apps_with_kept_screens_of_a_passed_run_are_pending(tmp_path: Path) -> None:
+    from pickfit.usability import ease_one, needs_ease
+
+    evidence = tmp_path / "evidence"
+    record = gui_record(evidence)
+    cli = dict(record, kind="cli_tool")
+    assert needs_ease(cli, evidence) is None  # not a desktop or web app
+    assert needs_ease(record, tmp_path / "elsewhere") is None  # its screenshots were not kept
+    stale = dict(record, usability={"run_id": "verify-chat-0"})
+    assert needs_ease(stale, evidence) is not None  # judged on a run the record no longer shows
+    path = tmp_path / "cli.json"
+    path.write_text(json.dumps(cli), encoding="utf-8")
+
+    def never(*args: Any) -> Asked:
+        raise AssertionError("no call for a record with nothing to judge")
+
+    cost, why = ease_one(path, evidence, ask=never, comfort=never)
+    assert cost == 0.0 and why.startswith("nothing to judge")
+
+
+def test_a_judge_that_gives_no_answer_writes_nothing_and_says_why(tmp_path: Path) -> None:
+    from pickfit.usability import ease_one
+
+    evidence = tmp_path / "evidence"
+    path = tmp_path / "app.json"
+    path.write_text(json.dumps(gui_record(evidence)), encoding="utf-8")
+    before = path.read_text(encoding="utf-8")
+
+    def broken(body: dict[str, Any], out: type, kind: str) -> Asked:
+        return Asked(None, 0.01, "claude-opus-5-5", error="HTTP 529 overloaded")
+
+    cost, why = ease_one(path, evidence, ask=broken, comfort=broken, finder=TextFinder(fake_ocr))
+    assert why and "529" in why and cost > 0
+    assert path.read_text(encoding="utf-8") == before
