@@ -1,0 +1,714 @@
+{
+  "schema_version": "software.v1",
+  "slug": "fresh",
+  "repo_id": "gh:907990001",
+  "name": "Fresh",
+  "summary": "A terminal text editor with familiar keybindings, mouse support, LSP features, multi-cursor editing and git worktree multitasking.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ide",
+    "terminal-based",
+    "text-editor"
+  ],
+  "use_cases": [
+    "edit multi-gigabyte files in the terminal",
+    "compare two files",
+    "run coding agents in separate git worktrees"
+  ],
+  "alternatives_to": [
+    "VS Code",
+    "Sublime Text"
+  ],
+  "features": [
+    "command palette and fuzzy file finder",
+    "multitask across git worktrees with Orchestrator",
+    "multi-cursor editing",
+    "browse and apply color themes"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://getfresh.dev/",
+  "repo": {
+    "url": "https://github.com/sinelaw/fresh",
+    "full_name": "sinelaw/fresh",
+    "created_at": "2024-12-24T19:50:15Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": false,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install fresh-editor",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "On macOS, allow the unsigned Fresh Desktop app under Privacy & Security on first launch"
+      ],
+      "check": null,
+      "first_task": "fresh --update"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-fresh-20261119-150644-483d",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @fresh-editor/fresh-editor",
+          "purpose": "npm install -g @fresh-editor/fresh-editor"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "fresh --version",
+        "expected_signal": "fresh 0.5.9"
+      },
+      "first_task": "python3 /tmp/fr/drive.py sample.txt '\\x10' 'select theme'"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @fresh-editor/fresh-editor",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "On macOS, allow the unsigned Fresh Desktop app under Privacy & Security on first launch"
+      ],
+      "check": null,
+      "first_task": "fresh --update"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "GPL-3.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.5.9",
+    "published_at": "2026-11-16T22:24:11Z",
+    "url": "https://github.com/sinelaw/fresh/releases/tag/v0.5.9"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T15:10:54.457363+08:00",
+    "runs": [
+      {
+        "id": "verify-fresh-20261119-150644-483d",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T15:10:54.457363+08:00",
+        "tool_version": "fresh 0.5.9",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @fresh-editor/fresh-editor",
+            "purpose": "npm install -g @fresh-editor/fresh-editor"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "fresh --version",
+            "expected_signal": "fresh 0.5.9",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "fresh 0.5.9",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 /tmp/fr/drive.py sample.txt '\\x10' 'select theme'",
+            "expected_signal": "file | >command | :line | #buffer",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[>5u \u001b[0 q F ile E dit V iew S election G o LSP H elp sample.txt × + 1 │ foo bar 2 │ foo baz 3 │ foo qux 4 │ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ Trusted Local Ln 1, Col 1 Opened sample.txt LF ASCII Text Palette: Ctrl+P foo foo foo ┌────────────────────────────────────────────────────────…",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/fr && cd /tmp/fr && git init -q . 2>/dev/null; printf 'foo bar\\nfoo baz\\nfoo qux\\n' > /tmp/fr/sample.txt && cat > /tmp/fr/drive.py <<'EOF'\nimport os, pty, sys, time, re, select, struct, fcntl, termios\n# usage: drive.py file key1 key2 ... ; keys are python-escaped strings, sent with delay\nargs = sys.argv[1:]\nf = args[0]; keys = [k.encode().decode('unicode_escape') for k in args[1:]]\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.chdir('/tmp/fr')\n    os.execvp('fresh', ['fresh', '--no-upgrade-check', f])\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 30, 100, 0, 0))\nbuf = b''\ndef drain(t):\n    global buf\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try: buf += os.read(fd, 65536)\n            except OSError: return\ndrain(3)\nfor k in keys:\n    os.write(fd, k.encode()); drain(1.5)\nmark = len(buf)\ndrain(1)\ntext = buf.decode('utf-8', 'replace')\nplain = re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]|\\x1b\\][^\\x07]*\\x07|\\x1b[()][A-Z0-9]|\\x1b[=>]', ' ', text)\nprint(re.sub(r' {2,}', ' ', plain))\ntry:\n    os.write(fd, b'\\x11'); drain(1)\n    os.kill(pid, 9)\nexcept Exception: pass\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cp /tmp/fr/sample.txt /tmp/fr/mc.txt && python3 /tmp/fr/drive.py mc.txt '\\x04' '\\x04' '\\x04' 'ZZ' '\\x13' && cat /tmp/fr/mc.txt",
+            "expected_signal": "ZZ baz",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ZZ baz",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/fr && cd /tmp/fr && git init -q . 2>/dev/null; printf 'foo bar\\nfoo baz\\nfoo qux\\n' > /tmp/fr/sample.txt && cat > /tmp/fr/drive.py <<'EOF'\nimport os, pty, sys, time, re, select, struct, fcntl, termios\n# usage: drive.py file key1 key2 ... ; keys are python-escaped strings, sent with delay\nargs = sys.argv[1:]\nf = args[0]; keys = [k.encode().decode('unicode_escape') for k in args[1:]]\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.chdir('/tmp/fr')\n    os.execvp('fresh', ['fresh', '--no-upgrade-check', f])\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 30, 100, 0, 0))\nbuf = b''\ndef drain(t):\n    global buf\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try: buf += os.read(fd, 65536)\n            except OSError: return\ndrain(3)\nfor k in keys:\n    os.write(fd, k.encode()); drain(1.5)\nmark = len(buf)\ndrain(1)\ntext = buf.decode('utf-8', 'replace')\nplain = re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]|\\x1b\\][^\\x07]*\\x07|\\x1b[()][A-Z0-9]|\\x1b[=>]', ' ', text)\nprint(re.sub(r' {2,}', ' ', plain))\ntry:\n    os.write(fd, b'\\x11'); drain(1)\n    os.kill(pid, 9)\nexcept Exception: pass\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 /tmp/fr/drive.py sample.txt '\\x10' 'select theme' '\\r' 'light' '\\r'",
+            "expected_signal": "Theme changed to 'light'",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[>5u \u001b[0 q F ile E dit V iew S election G o LSP H elp sample.txt × + 1 │ foo bar 2 │ foo baz 3 │ foo qux 4 │ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ Trusted Local Ln 1, Col 1 Opened sample.txt LF ASCII Text Palette: Ctrl+P foo foo foo ┌────────────────────────────────────────────────────────…",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/fr && cd /tmp/fr && git init -q . 2>/dev/null; printf 'foo bar\\nfoo baz\\nfoo qux\\n' > /tmp/fr/sample.txt && cat > /tmp/fr/drive.py <<'EOF'\nimport os, pty, sys, time, re, select, struct, fcntl, termios\n# usage: drive.py file key1 key2 ... ; keys are python-escaped strings, sent with delay\nargs = sys.argv[1:]\nf = args[0]; keys = [k.encode().decode('unicode_escape') for k in args[1:]]\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.chdir('/tmp/fr')\n    os.execvp('fresh', ['fresh', '--no-upgrade-check', f])\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 30, 100, 0, 0))\nbuf = b''\ndef drain(t):\n    global buf\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try: buf += os.read(fd, 65536)\n            except OSError: return\ndrain(3)\nfor k in keys:\n    os.write(fd, k.encode()); drain(1.5)\nmark = len(buf)\ndrain(1)\ntext = buf.decode('utf-8', 'replace')\nplain = re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]|\\x1b\\][^\\x07]*\\x07|\\x1b[()][A-Z0-9]|\\x1b[=>]', ' ', text)\nprint(re.sub(r' {2,}', ' ', plain))\ntry:\n    os.write(fd, b'\\x11'); drain(1)\n    os.kill(pid, 9)\nexcept Exception: pass\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/fr && python3 /tmp/fr/drive.py sample.txt '\\x10' 'orchestrator new workspace' '\\r' '\\r' '\\x1b[B' '\\r' '\\x1b\\r' && git worktree list",
+            "expected_signal": "[fr-1]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "/home/sbx/.local/share/fresh/orchestrator/tmp_fr/fr-1 46a692d [fr-1]",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/fr && cd /tmp/fr && git init -q . 2>/dev/null; printf 'foo bar\\nfoo baz\\nfoo qux\\n' > /tmp/fr/sample.txt && cat > /tmp/fr/drive.py <<'EOF'\nimport os, pty, sys, time, re, select, struct, fcntl, termios\n# usage: drive.py file key1 key2 ... ; keys are python-escaped strings, sent with delay\nargs = sys.argv[1:]\nf = args[0]; keys = [k.encode().decode('unicode_escape') for k in args[1:]]\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.chdir('/tmp/fr')\n    os.execvp('fresh', ['fresh', '--no-upgrade-check', f])\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 30, 100, 0, 0))\nbuf = b''\ndef drain(t):\n    global buf\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try: buf += os.read(fd, 65536)\n            except OSError: return\ndrain(3)\nfor k in keys:\n    os.write(fd, k.encode()); drain(1.5)\nmark = len(buf)\ndrain(1)\ntext = buf.decode('utf-8', 'replace')\nplain = re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]|\\x1b\\][^\\x07]*\\x07|\\x1b[()][A-Z0-9]|\\x1b[=>]', ' ', text)\nprint(re.sub(r' {2,}', ' ', plain))\ntry:\n    os.write(fd, b'\\x11'); drain(1)\n    os.kill(pid, 9)\nexcept Exception: pass\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/fr && git -c user.name=t -c user.email=t@t add sample.txt && git -c user.name=t -c user.email=t@t commit -qm init && python3 /tmp/fr/drive.py sample.txt '\\x10' 'orchestrator'",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Features are shown as interactive GIF demos only",
+            "actually_needed": "Fresh is a full-screen TUI; the checks drove it through a Python pty script that sends keystrokes (Ctrl+P, Ctrl+D, Alt+Enter) and prints the screen text",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Start each task in its own worktree",
+            "actually_needed": "Orchestrator needs a git repo with at least one commit and an agent picked in the New Workspace dialog (the 'terminal' agent works with no account)",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The command palette opens and shows the 'file | >command | :line | #buffer' hint with the Select Theme entry, the multi-cursor edit saves 'ZZ bar/ZZ baz/ZZ qux', and the version check prints 'fresh 0.5.9'.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-fresh-20261119-150644-483d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-fresh-20261119-150644-483d/check-1-cmd4.judged.png",
+            "runs/verify/verify-fresh-20261119-150644-483d/check-2-cmd5.judged.png",
+            "runs/verify/verify-fresh-20261119-150644-483d/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.292683,
+        "features": [
+          {
+            "feature": "command palette and fuzzy file finder",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "multitask across git worktrees with Orchestrator",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "multi-cursor editing",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "browse and apply color themes",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T15:11:02+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "npm:@fresh-editor/fresh-editor (fresh install, 1 packages)",
+      "github.com/sinelaw/fresh@f05f2d41f2a9",
+      "Cargo.lock",
+      "crates/fresh-plugin-api-macros/Cargo.lock"
+    ],
+    "packages_checked": 719,
+    "findings_total": 2,
+    "advisories_total": 2,
+    "findings": [
+      {
+        "package": "crates:quick-xml",
+        "version": "0.39.4",
+        "advisory": "RUSTSEC-2026-0194",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.39.4",
+        "advisory": "RUSTSEC-2026-0195",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T15:11:02+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.6111,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 98.3,
+      "signals": {
+        "stars": 9514,
+        "monthly_downloads": 4773,
+        "forks": 382,
+        "dependents": null,
+        "release_downloads": 284089,
+        "hn_top_score": 101,
+        "registries_count": 2
+      },
+      "age_days": 694,
+      "packages": [
+        "npm:@fresh-editor/fresh-editor",
+        "homebrew:fresh-editor"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 1.34
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:10:54.467575+08:00",
+      "sources_sha": "e5be56af7327513cd1333b48c929154328ca27d8d4d2ba25c04f91a22f6ec2fc",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A modern, full-featured terminal text editor, **with zero configuration**. Familiar keybindings, mouse support, and IDE-level features — no learning curve required."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Fresh brings the intuitive UX of VS Code and Sublime Text to the terminal."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "To build it from source instead (needs Rust and Node.js), run this from a"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "winget install fresh-editor"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "./target/release/fresh [file]"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "To disable both upgrade checks and telemetry, use `--no-upgrade-check` or set `check_for_updates: false` in your config."
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "uninstalling is `rm` over that list plus\nthe install directory and the symlink."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "SPDX-License-Identifier: GPL-3.0-or-later"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/sinelaw/fresh",
+      "fetched_at": "2026-11-19T15:06:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/sinelaw/fresh/blob/master/README.md",
+      "fetched_at": "2026-11-19T15:06:28+08:00"
+    },
+    {
+      "id": "release:v0.5.9",
+      "kind": "release",
+      "url": "https://github.com/sinelaw/fresh/releases/tag/v0.5.9",
+      "fetched_at": "2026-11-19T15:06:28+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Terminal based IDE & text editor: easy, powerful and fast",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "A modern, full-featured terminal text editor",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Terminal based IDE & text editor",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A modern, full-featured terminal text editor, **with zero configuration**. Familiar keybindings, mouse support, and IDE-level features — no learning curve required.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Fresh",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Desktop app (Windows, macOS, Linux)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    },
+    {
+      "field": "/prerequisites/apple_silicon_only",
+      "source_id": "readme",
+      "quote": "macOS (Intel and Apple Silicon)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "To disable both upgrade checks and telemetry, use `--no-upgrade-check`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:06:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:06:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T15:06:29+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:06:29+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:06:29+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.5.9",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:06:28+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Fresh handles [multi-gigabyte files](https://noamlewis.com/blog/2025/12/09/how-fresh-loads-huge-files-fast) with negligible memory overhead",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "compare files (`fresh --diff`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "coding agents (claude, codex, opencode, aider) with resumable sessions",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Fresh brings the intuitive UX of VS Code and Sublime Text to the terminal.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "Fresh brings the intuitive UX of VS Code and Sublime Text to the terminal.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "One shortcut to find files, run commands, switch buffers, and jump to any line.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Start each task in its own worktree, hop between them with an arrow key, and leave the rest running.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Select and edit multiple occurrences simultaneously",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Browse and apply color themes instantly.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install fresh-editor",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g @fresh-editor/fresh-editor",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g @fresh-editor/fresh-editor",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "No personal data or file contents are collected.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:06:40+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T15:06:28+08:00",
+  "updated_at": "2026-11-19T15:11:02+08:00"
+}
