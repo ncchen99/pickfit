@@ -1033,12 +1033,8 @@ def report(records: Iterable[dict[str, Any]], *, as_of: str | None = None) -> di
     unknown = Counter()
     for cov in covs:
         for d in DIMENSIONS:
-            dim = cov["dimensions"][d]
-            if dim["status"] in ("partial", "unverified"):
-                cats = {g["category"] for g in dim["gaps"]} or {f"blocked_by_{dim['blocked_by']}"
-                                                              if dim["blocked_by"] else "unclassified"}
-                for cat in cats:
-                    unknown[f"{d}:{cat}"] += 1
+            for cat in unknown_reasons(cov["dimensions"][d], cov["platforms"]):
+                unknown[f"{d}:{cat}"] += 1
     shares = [c["summary"]["verified_share"] for c in covs if c["summary"]["verified_share"] is not None]
     return {
         "version": VERSION, "as_of": as_of or date.today().isoformat(), "records": len(covs),
@@ -1375,19 +1371,28 @@ def evaluate_rules(records: list[dict[str, Any]], now: datetime,
     return out
 
 
+def unknown_reasons(dim: dict[str, Any], platforms: list[str]) -> dict[str, set[str]]:
+    """A partial or unverified dimension's reasons: gap category -> the platforms it was seen on (the gaps' own, else
+    the record's claimed ones); a dimension waiting for another is blocked_by_<that one>. {} when verified."""
+    if dim["status"] not in ("partial", "unverified"):
+        return {}
+    out: dict[str, set[str]] = defaultdict(set)
+    for g in dim["gaps"]:
+        out[g["category"]].add(g.get("platform") or "")
+    if not out:
+        out[f"blocked_by_{dim['blocked_by']}" if dim["blocked_by"] else "unclassified"].add("")
+    return {cat: ({p for p in where if p} or set(platforms)) for cat, where in out.items()}
+
+
 def distribution(records: list[dict[str, Any]]) -> dict[str, Any]:
     """Unknowns for the treasure decision: per dimension, the records partial or unverified, by gap category, software
-    category and platform (a record counts once per category it has in that dimension)."""
+    category and platform (where the gap was seen, else the platforms the record claims; a record counts once per
+    category and platform it has in that dimension)."""
     rows: Counter[tuple[str, str, str, str]] = Counter()
     for cov in coverages(records):
         for d in DIMENSIONS:
-            dim = cov["dimensions"][d]
-            if dim["status"] not in ("partial", "unverified"):
-                continue
-            cats = {g["category"] for g in dim["gaps"]} or {f"blocked_by_{dim['blocked_by']}" if dim["blocked_by"]
-                                                          else "unclassified"}
-            for cat in cats:
-                for platform in cov["platforms"]:
+            for cat, platforms in unknown_reasons(cov["dimensions"][d], cov["platforms"]).items():
+                for platform in platforms:
                     rows[(d, cat, cov["category"] or "unknown", platform)] += 1
     return {"rows": [{"dimension": d, "gap_category": c, "category": s, "platform": p, "records": n}
                      for (d, c, s, p), n in sorted(rows.items(), key=lambda kv: (DIMENSIONS.index(kv[0][0]),
