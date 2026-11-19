@@ -712,15 +712,118 @@ def test_the_live_steps_give_desktop_apps_a_display_box_on_ec2_too(monkeypatch: 
     from pickfit.discover import github as gh
     from pickfit.verify import cli as verify_cli
 
+    from pickfit.verify import ec2_machine, modal_box
+    from pickfit.verify import pipeline as verify_pipeline
+
     monkeypatch.setattr(gh, "github_token", lambda: "t")
     made: list[dict[str, Any]] = []
     monkeypatch.setattr(verify_cli, "box_factory", lambda runner, lifetime, **kw: made.append({"runner": runner, **kw})
                         or (lambda run_id, role: None))
+    monkeypatch.setattr(verify_pipeline, "verify_task", lambda task, factory, **kw: "outcome")
+    monkeypatch.setattr(modal_box, "ensure_published_image", lambda **kw: "img")
+    monkeypatch.setattr(ec2_machine, "ensure_image", lambda **kw: "ami")
+    gui, cli = (task_of(extraction(kind=cited(kind, "x"))) for kind in ("desktop_app", "cli_tool"))
     for runner, shown in (("modal", True), ("ec2", True), ("docker", False)):
         made.clear()
         steps = watch.live_steps(runner=runner)
-        assert steps.display is shown and made[0] == {"runner": runner}
-        assert (made[1:] == [{"runner": runner, "display": True}]) is shown
+        assert steps.display is shown and steps.gpu is (runner == "modal")
+        assert steps.verify(gui, Path("."), lambda s: None) == "outcome"  # boxes are made when a record needs one
+        steps.verify(cli, Path("."), lambda s: None)
+        assert [m["display"] for m in made] == ([True, False] if shown else [False])
+
+
+# --- the box a record needs: GPU, microphone, toolchain (pickfit.verify.box_needs) ------------------
+
+def task_of(result: dict[str, Any], readme: str = "# tool\n") -> Any:
+    from pickfit.schema import ExtractionResult
+    from pickfit.verify.task import VerifyTask
+
+    return VerifyTask(slug="tool", repo_url="https://github.com/someone/tool", readme=readme,
+                      extraction=ExtractionResult.model_validate(result))
+
+
+def gpu_extraction(quote: str = "Requires an NVIDIA GPU") -> dict[str, Any]:
+    ex = extraction(install_methods=[{"method": "pip", "command": "pipx install tool", "platforms": []}])
+    ex["prerequisites"] = {**ex["prerequisites"], "gpu": cited("required", quote)}
+    return ex
+
+
+def routed(runner: str = "modal") -> tuple[Any, list[dict[str, Any]], list[dict[str, Any]], list[str]]:
+    from pickfit.verify.agent import AgentLimits
+
+    made: list[dict[str, Any]] = []
+    runs: list[dict[str, Any]] = []
+    published: list[str] = []
+
+    def run(task: Any, factory: Any, *, limits: Any, log: Any, data_dir: Path) -> str:
+        runs.append({"slug": task.slug, "max_seconds": limits.max_seconds})
+        return "outcome"
+
+    verify = watch_mod().routed_verify(
+        runner, limits=AgentLimits(), margin_s=120, toolchain_agent_s=45 * 60,
+        make_factory=lambda lifetime, **kind: made.append({"lifetime": lifetime, **kind}) or (lambda r, role: None),
+        run=run, publish=lambda **kind: published.append(json.dumps(kind, sort_keys=True)))
+    return verify, made, runs, published
+
+
+def watch_mod() -> Any:
+    from pickfit import watch
+
+    return watch
+
+
+def test_a_speech_tool_gets_the_simulated_microphone() -> None:
+    verify, made, _, published = routed()
+    ex = extraction(summary=cited("Dictation from your microphone to text.", "speak into your microphone"),
+                    install_methods=[{"method": "pipx", "command": "pipx install tool", "platforms": []}])
+    lines: list[str] = []
+    verify(task_of(ex), Path("."), lines.append)
+    assert made == [{"lifetime": 20 * 60 + 120, "display": False, "gpu": None, "audio": True, "toolchain": False}]
+    assert published == ['{"audio": true, "display": false, "toolchain": false}']
+    assert any("simulated microphone" in line for line in lines)
+
+
+def test_a_build_from_source_gets_the_toolchain_box_and_more_time() -> None:
+    verify, made, runs, _ = routed()
+    ex = extraction(install_methods=[{"method": "cargo", "command": "cargo install tool", "platforms": []}])
+    verify(task_of(ex), Path("."), lambda s: None)
+    assert made[0]["toolchain"] is True and made[0]["lifetime"] == 45 * 60 + 120
+    assert runs[0]["max_seconds"] == 45 * 60
+    # A prebuilt path ranked first needs no build box, even when a cargo path is listed after it.
+    verify, made, _, _ = routed()
+    ex = extraction(install_methods=[{"method": "binary", "command": "curl -fsSL https://t.dev/i.sh | sh",
+                                      "platforms": []},
+                                     {"method": "cargo", "command": "cargo install tool", "platforms": []}])
+    verify(task_of(ex), Path("."), lambda s: None)
+    assert made[0]["toolchain"] is False
+
+
+def test_a_gpu_record_gets_a_card_sized_to_its_stated_memory() -> None:
+    verify, made, _, _ = routed()
+    verify(task_of(gpu_extraction()), Path("."), lambda s: None)
+    verify(task_of(gpu_extraction("Needs a GPU with 20 GB VRAM")), Path("."), lambda s: None)
+    assert [m["gpu"] for m in made] == ["T4", "L4"]
+    # Only Modal has GPUs: on EC2 the same record gets no card.
+    verify, made, _, _ = routed("ec2")
+    verify(task_of(gpu_extraction()), Path("."), lambda s: None)
+    assert made[0]["gpu"] is None
+
+
+def test_the_lane_lets_a_gpu_record_in_only_within_the_cost_cap(env, tmp_path: Path, monkeypatch) -> None:
+    from pickfit.schema import ExtractionResult
+    from pickfit.verify.box_needs import GPU_MAX_USD_ENV
+
+    w = watcher(env, Pipeline(tmp_path))
+    ex = ExtractionResult.model_validate(gpu_extraction())
+    assert w._lane_for(ex) == (None, "needs a GPU")  # the steps cannot give a GPU
+    w.steps.gpu = True
+    assert w._lane_for(ex) == ("linux", None)
+    monkeypatch.setenv(GPU_MAX_USD_ENV, "0.10")  # a T4 for two 22-minute boxes is about US$0.43
+    lane, why = w._lane_for(ex)
+    assert lane is None and "over the US$0.10 cap" in why
+    monkeypatch.delenv(GPU_MAX_USD_ENV)
+    big = ExtractionResult.model_validate(gpu_extraction("Needs 48 GB of VRAM"))
+    assert w._lane_for(big) == (None, "needs a GPU with 48 GB of memory; pickfit's largest has 24 GB")
 
 
 # --- capabilities and features 1-6 (docs/proposals/capabilities.md) ------------------

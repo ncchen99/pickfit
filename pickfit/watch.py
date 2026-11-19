@@ -440,6 +440,9 @@ class Steps:
     site: pickfit.web_intake's steps for website submissions (the web lane), or None
     capabilities(candidate, run_id) -> capabilities-only extraction rows, one per attempt (extract_with_retries
         with capabilities_only); candidate["help"] holds the help texts of the run just verified. None: skipped
+    gpu: verify can give a record that requires a GPU an NVIDIA card (Modal); box_needs picks it and refuses one
+        over its per-record cost cap, so such a record is verified instead of listed as "needs a GPU"
+    box_lifetime_s, toolchain_lifetime_s: each box's lifetime and a build box's; box_needs prices a GPU with them
     """
 
     github: Any
@@ -454,6 +457,58 @@ class Steps:
     lanes: dict[str, Any] = field(default_factory=dict)
     site: Any = None
     capabilities: Callable[[dict[str, Any], str], list[dict[str, Any]]] | None = None
+    gpu: bool = False
+    box_lifetime_s: float = 22 * 60
+    toolchain_lifetime_s: float = 47 * 60
+
+
+def routed_verify(runner: str, *, limits: Any, make_factory: Callable[..., Any], run: Callable[..., Any],
+                  publish: Callable[..., Any] | None = None, margin_s: int = 120,
+                  toolchain_agent_s: float = 45 * 60) -> Callable[[VerifyTask, Path, Callable[[str], None]], Any]:
+    """verify(task, data_dir, log) that gives each record the box it needs (pickfit.verify.box_needs).
+
+    make_factory(lifetime_s, display=, gpu=, audio=, toolchain=) -> a box factory (verify.cli.box_factory with the
+    runner bound); run(task, factory, limits=, log=, data_dir=) -> the outcome (verify_task); publish(display=,
+    audio=, toolchain=) builds or finds the image once per kind (Modal, EC2). A desktop app gets a display (Modal,
+    EC2), a speech tool the simulated microphone (Modal, EC2), a build from source the toolchain box with a longer
+    agent time (Modal, EC2), a record that requires a GPU a T4 or L4 (Modal only, within the per-record cap).
+    """
+    from dataclasses import replace
+
+    from pickfit.verify.box import sized_for_build
+    from pickfit.verify.box_needs import box_needs
+
+    display_ok = runner in ("modal", "ec2")
+    extras_ok = runner in ("modal", "ec2")  # audio and toolchain boxes
+    lock = threading.Lock()
+    factories: dict[tuple[Any, ...], Any] = {}
+    images: set[tuple[bool, bool, bool]] = set()
+
+    def verify(task: VerifyTask, data_dir: Path, log: Callable[[str], None]) -> Any:
+        base = int(limits.max_seconds) + margin_s
+        needs = box_needs(task.extraction, readme=task.readme, lifetime_s=base,
+                          toolchain_lifetime_s=max(limits.max_seconds, toolchain_agent_s) + margin_s,
+                          gpu_available=runner == "modal")
+        gui = display_ok and task.extraction.kind.value == "desktop_app"
+        audio = extras_ok and needs.audio
+        toolchain = extras_ok and needs.toolchain
+        gpu = needs.gpu if runner == "modal" else None
+        run_limits = replace(limits, max_seconds=max(limits.max_seconds, toolchain_agent_s)) if toolchain else limits
+        if needs.why:
+            log(f"box: {', '.join(needs.why)}")
+        if needs.blocked:  # the README states more than the extraction did; the lane let it through on the latter
+            log(f"box: no GPU: {needs.blocked}")
+        key = (gui, gpu, audio, toolchain)
+        with lock:  # build or fetch each image once, not in every thread
+            if publish is not None and (gui, audio, toolchain) not in images:
+                publish(display=gui, audio=audio, toolchain=toolchain)
+                images.add((gui, audio, toolchain))
+            if key not in factories:
+                factories[key] = make_factory(int(run_limits.max_seconds) + margin_s, display=gui, gpu=gpu,
+                                              audio=audio, toolchain=toolchain)
+        return run(task, sized_for_build(factories[key], task), limits=run_limits, log=log, data_dir=data_dir)
+
+    return verify
 
 
 def live_steps(*, runner: str = "modal") -> Steps:
@@ -465,35 +520,29 @@ def live_steps(*, runner: str = "modal") -> Steps:
     from pickfit.prescreen import screen_and_review
     from pickfit.score import score_records
     from pickfit.verify.agent import AgentLimits
-    from pickfit.verify.cli import LIFETIME_MARGIN_S, box_factory
+    from pickfit.verify.cli import LIFETIME_MARGIN_S, TOOLCHAIN_AGENT_S, box_factory
     from pickfit.verify.pipeline import verify_task
 
     limits = AgentLimits()
-    lifetime = int(limits.max_seconds) + LIFETIME_MARGIN_S
     display = runner in ("modal", "ec2")
-    boxes = {False: box_factory(runner, lifetime),
-             True: box_factory(runner, lifetime, display=True) if display else None}
-    image_lock = threading.Lock()
-    images: set[bool] = set()
 
-    def verify(task: VerifyTask, data_dir: Path, log: Callable[[str], None]) -> Any:
-        gui = display and task.extraction.kind.value == "desktop_app"
+    def publish(*, display: bool, audio: bool, toolchain: bool) -> None:
         if runner == "modal":
-            with image_lock:  # build or fetch each image once, not in every thread
-                if gui not in images:
-                    from pickfit.verify.modal_box import ensure_published_image
+            from pickfit.verify.modal_box import ensure_published_image
 
-                    ensure_published_image(display=gui)
-                    images.add(gui)
-        elif runner == "ec2":
-            with image_lock:  # bake or find the AMI once
-                if gui not in images:
-                    from pickfit.verify.ec2_machine import ensure_image
-                    from pickfit.verify.linux_box import image_recipe
+            ensure_published_image(display=display, audio=audio, toolchain=toolchain)
+        elif runner == "ec2":  # bake or find the AMI
+            from pickfit.verify.ec2_machine import ensure_image
+            from pickfit.verify.linux_box import image_recipe
 
-                    ensure_image(recipe=image_recipe("vm", gui))
-                    images.add(gui)
-        return verify_task(task, boxes[gui], model=MODEL, limits=limits, log=log, write=True, data_dir=data_dir)
+            ensure_image(recipe=image_recipe("vm", display, audio, toolchain))
+
+    verify = routed_verify(
+        runner, limits=limits, margin_s=LIFETIME_MARGIN_S, toolchain_agent_s=TOOLCHAIN_AGENT_S,
+        make_factory=lambda lifetime, **kind: box_factory(runner, lifetime, **kind),
+        run=lambda task, factory, *, limits, log, data_dir: verify_task(task, factory, model=MODEL, limits=limits,
+                                                                         log=log, write=True, data_dir=data_dir),
+        publish=publish if runner in ("modal", "ec2") else None)
 
     def score(data_dir: Path, slug: str) -> str | None:
         from pickfit.discover.run import pipeline_db_path
@@ -534,6 +583,8 @@ def live_steps(*, runner: str = "modal") -> Steps:
                  extract=lambda c, run_id: extract_with_retries(c, model=MODEL, run_id=run_id,
                                                                 reasoning_effort=EXTRACT_EFFORT),
                  verify=verify, score=score, display=display, security=security, visual=visual, docs=docs,
+                 gpu=runner == "modal", box_lifetime_s=limits.max_seconds + LIFETIME_MARGIN_S,
+                 toolchain_lifetime_s=max(limits.max_seconds, TOOLCHAIN_AGENT_S) + LIFETIME_MARGIN_S,
                  capabilities=lambda c, run_id: extract_with_retries(c, model=MODEL, run_id=run_id,
                                                                      reasoning_effort=EXTRACT_EFFORT,
                                                                      capabilities_only=True))
@@ -932,8 +983,18 @@ class Watcher:
     # -- lanes: Windows and macOS records wait for their machines (pickfit.lanes)
 
     def _lane_for(self, ex: ExtractionResult) -> tuple[str | None, str | None]:
-        """(lane, None) for the first lane whose box can run it, else (None, why the Linux box cannot)."""
-        why = not_in_box(ex, display=self.steps.display)
+        """(lane, None) for the first lane whose box can run it, else (None, why the Linux box cannot).
+
+        A record that requires a GPU runs in the Linux lane when verify can give one (Steps.gpu) and box_needs
+        finds a card with the memory it states, within the per-record GPU cost cap; otherwise box_needs says why.
+        """
+        from pickfit.verify.box_needs import box_needs
+
+        needs = box_needs(ex, gpu_available=self.steps.gpu, lifetime_s=self.steps.box_lifetime_s,
+                          toolchain_lifetime_s=self.steps.toolchain_lifetime_s)
+        why = not_in_box(ex, gpu=needs.gpu is not None, display=self.steps.display)
+        if why == "needs a GPU" and needs.blocked:
+            why = needs.blocked
         if why is None:
             return "linux", None
         for name in ("windows", "macos"):
