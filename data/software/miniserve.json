@@ -1,0 +1,705 @@
+{
+  "schema_version": "software.v1",
+  "slug": "miniserve",
+  "repo_id": "gh:131135585",
+  "name": "miniserve",
+  "summary": "A self-contained command-line tool that serves files and directories over HTTP, with optional uploads, authentication and TLS.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "media_files",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "command-line",
+    "command-line-tool",
+    "http-server",
+    "serve",
+    "server",
+    "static-files"
+  ],
+  "use_cases": [
+    "serve a directory over HTTP",
+    "share a single file over HTTP",
+    "serve a single page application",
+    "upload photos from a smartphone"
+  ],
+  "alternatives_to": [
+    "darkhttpd",
+    "Python built-in webserver",
+    "netcat"
+  ],
+  "features": [
+    "serve files and directories over HTTP",
+    "username and password authentication",
+    "download folders as tar.gz or zip",
+    "upload files"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/svenstaro/miniserve",
+    "full_name": "svenstaro/miniserve",
+    "created_at": "2018-04-26T09:52:56Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install miniserve",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "miniserve --print-completions bash"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-miniserve-20261119-211142-5c38",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin && curl -fsSL -o ~/.local/bin/miniserve https://github.com/svenstaro/miniserve/releases/download/v0.35.0/miniserve-0.35.0-x86_64-unknown-linux-musl && chmod +x ~/.local/bin/miniserve",
+          "purpose": "Download the v0.35.0 x86_64 linux musl release binary to ~/.local/bin and make it executable"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "miniserve --version",
+        "expected_signal": "miniserve 0.35.0"
+      },
+      "first_task": "curl -fsS http://127.0.0.1:8080/hello.txt && curl -fsS 'http://127.0.0.1:8080/?raw=true'"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install --locked miniserve",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "miniserve --print-completions bash"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.35.0",
+    "published_at": "2026-04-08T12:11:43Z",
+    "url": "https://github.com/svenstaro/miniserve/releases/tag/v0.35.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T21:12:36.459645+08:00",
+    "runs": [
+      {
+        "id": "verify-miniserve-20261119-211142-5c38",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T21:12:36.459645+08:00",
+        "tool_version": "miniserve 0.35.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin && curl -fsSL -o ~/.local/bin/miniserve https://github.com/svenstaro/miniserve/releases/download/v0.35.0/miniserve-0.35.0-x86_64-unknown-linux-musl && chmod +x ~/.local/bin/miniserve",
+            "purpose": "Download the v0.35.0 x86_64 linux musl release binary to ~/.local/bin and make it executable"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "miniserve --version",
+            "expected_signal": "miniserve 0.35.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "miniserve 0.35.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -fsS http://127.0.0.1:8080/hello.txt && curl -fsS 'http://127.0.0.1:8080/?raw=true'",
+            "expected_signal": "hello-miniserve",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hello-miniserve",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/share/sub /tmp/up && echo hello-miniserve > /tmp/share/hello.txt && echo inner-file > /tmp/share/sub/inner.txt && echo upload-content-42 > /tmp/upfile.txt",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "miniserve -p 8080 --enable-tar-gz --enable-zip /tmp/share",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -s -o /dev/null -w 'noauth=%{http_code}\\n' http://127.0.0.1:8081/hello.txt && curl -fsS -u joe:123 http://127.0.0.1:8081/hello.txt",
+            "expected_signal": "noauth=401",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "noauth=401",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/share/sub /tmp/up && echo hello-miniserve > /tmp/share/hello.txt && echo inner-file > /tmp/share/sub/inner.txt && echo upload-content-42 > /tmp/upfile.txt",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "miniserve -p 8081 --auth joe:123 /tmp/share",
+                "background": true,
+                "port": 8081
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsS -o /tmp/sub.tgz 'http://127.0.0.1:8080/sub/?download=tar_gz' && tar tzvf /tmp/sub.tgz && curl -fsS -o /tmp/sub.zip 'http://127.0.0.1:8080/sub/?download=zip' && python3 -m zipfile -l /tmp/sub.zip",
+            "expected_signal": "sub/inner.txt",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "-rw-r--r-- 1000/1000 11 2026-11-19 13:12 sub/inner.txt",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/share/sub /tmp/up && echo hello-miniserve > /tmp/share/hello.txt && echo inner-file > /tmp/share/sub/inner.txt && echo upload-content-42 > /tmp/upfile.txt",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "miniserve -p 8080 --enable-tar-gz --enable-zip /tmp/share",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -fsS -F \"path=@/tmp/upfile.txt\" http://localhost:8082/upload\\?path\\=/ -o /dev/null && cat /tmp/up/upfile.txt",
+            "expected_signal": "upload-content-42",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "upload-content-42",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/share/sub /tmp/up && echo hello-miniserve > /tmp/share/hello.txt && echo inner-file > /tmp/share/sub/inner.txt && echo upload-content-42 > /tmp/upfile.txt",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "miniserve -p 8082 -u -- /tmp/up",
+                "background": true,
+                "port": 8082
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "On Linux: Download `miniserve-linux` from the releases page",
+            "actually_needed": "Release v0.35.0 has no asset called miniserve-linux; the assets are named like miniserve-0.35.0-x86_64-unknown-linux-musl",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "Folder download (compressed on the fly as .tar.gz or .zip)",
+            "actually_needed": "Folder download is off by default. It has to be turned on with --enable-tar-gz / --enable-zip and requested with ?download=tar_gz or ?download=zip",
+            "kind": "note"
+          },
+          {
+            "readme_said": "cargo install --locked miniserve",
+            "actually_needed": "This box has no Rust toolchain, so I used the prebuilt release binary instead",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "miniserve served hello.txt and a raw directory listing, returned 401 without auth and the file with credentials, and printed version 0.35.0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-miniserve-20261119-211142-5c38/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-miniserve-20261119-211142-5c38/check-1-cmd8.judged.png",
+            "runs/verify/verify-miniserve-20261119-211142-5c38/check-2-cmd9.judged.png",
+            "runs/verify/verify-miniserve-20261119-211142-5c38/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.187922,
+        "features": [
+          {
+            "feature": "serve files and directories over HTTP",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "username and password authentication",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "download folders as tar.gz or zip",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "upload files",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T21:12:42+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/svenstaro/miniserve@68b6f063cd63",
+      "Cargo.lock"
+    ],
+    "packages_checked": 433,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T21:12:36+08:00",
+    "quality": {
+      "total": 82.7,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.86,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 94.2,
+      "signals": {
+        "stars": 8157,
+        "monthly_downloads": 1590,
+        "forks": 419,
+        "dependents": null,
+        "release_downloads": 2247452,
+        "hn_top_score": 4,
+        "registries_count": 2
+      },
+      "age_days": 3129,
+      "packages": [
+        "crates:miniserve",
+        "homebrew:miniserve"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 4.8
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:12:36.471266+08:00",
+      "sources_sha": "fad90693691aa64bb5338f2fb9843c4ae3d761175eb08d967146b591d39216b7",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "**miniserve** is a small, self-contained cross-platform CLI tool that allows you to just grab the binary and serve some file(s) via HTTP."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "For when you really just want to serve some files over HTTP right now!"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Single binary drop-in with no extra dependencies required"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "Alternatively install with [Homebrew](https://brew.sh/):\n\n    brew install miniserve"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "    miniserve -i 192.168.0.1 --random-route /tmp\n    # Serving path /private/tmp at http://192.168.0.1/c789b6"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Alternatively, you can configure the service via environment variables:"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[![license](http://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/svenstaro/miniserve/blob/master/LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/svenstaro/miniserve",
+      "fetched_at": "2026-11-19T21:11:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/svenstaro/miniserve/blob/master/README.md",
+      "fetched_at": "2026-11-19T21:11:27+08:00"
+    },
+    {
+      "id": "release:v0.35.0",
+      "kind": "release",
+      "url": "https://github.com/svenstaro/miniserve/releases/tag/v0.35.0",
+      "fetched_at": "2026-11-19T21:11:27+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "miniserve - a CLI tool to serve files and dirs over HTTP",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "allows you to just grab the binary and serve some file(s) via HTTP",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "a CLI tool to serve files and dirs over HTTP",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "**miniserve** is a small, self-contained cross-platform CLI tool that allows you to just grab the binary and serve some file(s) via HTTP.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# miniserve - a CLI tool to serve files and dirs over HTTP",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "**On Windows**: Download `miniserve-win.exe` from",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T21:11:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T21:11:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T21:11:29+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T21:11:29+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.35.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T21:11:27+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "miniserve linux-distro-collection/",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "miniserve linux-distro.iso",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "miniserve --spa --index index.html",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Take pictures and upload them from smartphones:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "darkhttpd: Not easily available on Windows",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "Python built-in webserver: Need to have Python installed",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "netcat: Not as convenient to use",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "serve some file(s) via HTTP",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Authentication support with username and password (and hashed password)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Folder download (compressed on the fly as `.tar.gz` or `.zip`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "File uploading",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install miniserve",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install --locked miniserve",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install --locked miniserve",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Single binary drop-in with no extra dependencies required",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:11:38+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T21:11:27+08:00",
+  "updated_at": "2026-11-19T21:12:42+08:00"
+}
