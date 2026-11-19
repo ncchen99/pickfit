@@ -1080,7 +1080,7 @@ class VerifyAgent:
                                max_output_tokens=MAX_OUTPUT_TOKENS, model=self.model,
                                reasoning_effort=REASONING_EFFORT, scope=f"verify:{self.task.slug}",
                                scope_cap_usd=self.limits.scope_cap_usd, run_id=self.run_id, cache=False,
-                               runs_dir=self.runs_dir, **self.call_kwargs)
+                               runs_dir=self.runs_dir, conversation=self.mode == "replay", **self.call_kwargs)
         except BudgetExceeded as err:
             self.report.stop_reason, self.report.error = "budget", str(err)
             self._say(f"turn {turn} · stopped: {err}")
