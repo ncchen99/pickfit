@@ -89,6 +89,7 @@ DEFAULT_CONCURRENCY = 4
 # Same instructions and schema on every call: the provider caches that prefix (Claude: the system prompt
 # is a cache breakpoint; the key is a hint only Meta's API reads).
 PROMPT_CACHE_KEY = "pickfit-extract-v4"  # v2: the mcp section; v3: package-store entries; v4: install guides
+EXTRACT_CACHE_RETENTION = "1h"  # the instructions' prompt-cache lifetime (anthropic_messages.CACHE_RETENTION)
 # What a row was read with (docs/proposals/scoring.md R3). Bump PROMPT_VERSION with INSTRUCTIONS or the schema,
 # RENDERER_VERSION with build_sources or render_sources; neither makes anything be read again by itself.
 PROMPT_VERSION = "p5"  # p5: rule 8 asks for 1-6 features instead of 2-4 (read again with --refresh-before p5)
@@ -488,6 +489,11 @@ def build_body(sources: list[Source], features_only: bool = False, with_rubric: 
         "text": {"format": {"type": "json_schema", "name": name, "schema": meta_strict_schema(model), "strict": True}},
         "store": False,
         "prompt_cache_key": key,
+        # The instructions and schema are the same for every record, and records come minutes apart, more than the
+        # five-minute default: an hour keeps that prefix (about 6k tokens) cached between them. The sources differ
+        # per record and are almost never read twice (1.2 calls per record in the ledger, 11/13-20), so they are not
+        # cached: writing them would cost 1.25x for a read that rarely comes.
+        "prompt_cache_retention": EXTRACT_CACHE_RETENTION,
     }
 
 

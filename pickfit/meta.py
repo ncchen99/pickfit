@@ -243,6 +243,7 @@ class Usage:
     reasoning_tokens: int = 0
     web_searches: int = 0
     cache_write_tokens: int = 0  # of input_tokens, written to the provider's prompt cache (Anthropic)
+    cache_write_1h_tokens: int = 0  # of cache_write_tokens, written for an hour (2x input instead of cache_write)
 
     @classmethod
     def from_raw(cls, raw: dict[str, Any]) -> Usage | None:
@@ -264,6 +265,7 @@ class Usage:
                 reasoning_tokens=(u.get("completion_tokens_details") or {}).get("reasoning_tokens") or 0,
                 web_searches=searches,
                 cache_write_tokens=details.get("cache_write_tokens") or 0,
+                cache_write_1h_tokens=details.get("cache_write_1h_tokens") or 0,
             )
         details = u.get("input_tokens_details") or {}
         return cls(
@@ -273,6 +275,7 @@ class Usage:
             reasoning_tokens=(u.get("output_tokens_details") or {}).get("reasoning_tokens") or 0,
             web_searches=searches,
             cache_write_tokens=details.get("cache_write_tokens") or 0,
+            cache_write_1h_tokens=details.get("cache_write_1h_tokens") or 0,
         )
 
 
@@ -401,8 +404,10 @@ def cost_usd(price: Price, usage: Usage) -> float:
     written = min(usage.cache_write_tokens, usage.input_tokens - cached)
     cached_rate = price.input if price.cached is None else price.cached
     write_rate = price.input if price.cache_write is None else price.cache_write
+    hour = min(usage.cache_write_1h_tokens, written)  # an hour's write: 2x input (Anthropic)
     token_usd = ((usage.input_tokens - cached - written) * price.input + cached * cached_rate
-                 + written * write_rate + usage.output_tokens * price.output) / 1_000_000
+                 + (written - hour) * write_rate + hour * price.input * 2 + usage.output_tokens * price.output
+                 ) / 1_000_000
     return token_usd * _long_factor(price, usage.input_tokens) + usage.web_searches * WEB_SEARCH_USD
 
 
