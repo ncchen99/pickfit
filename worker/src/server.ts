@@ -2,7 +2,7 @@
 import { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 import { CARD_FIELDS } from './cards.ts';
-import { NAMED_CATEGORIES } from './catalog.ts';
+import { NAMED_CATEGORIES, SECURITY_LEVELS } from './catalog.ts';
 import { findAlternatives, findSoftware, type Deps } from './find.ts';
 import { installGuide, PITFALL_KINDS, UnknownSlugError } from './install.ts';
 import { NOT_CHECKED_REASONS } from './features.ts';
@@ -21,7 +21,7 @@ const ANSWER =
   "Keep drawbacks short; say why the obvious choice isn't recommended. " +
   'Tag well_known_option "(not verified by pickfit)" beside its name. ' +
   "Don't narrate the search or say pickfit found nothing; just answer. No disclaimers about what you didn't run. " +
-  "If security.status is vulnerable, warn the user first; if unchecked, don't call it safe.";
+  "If security.status is vulnerable, warn the user first (level conditional: one line on when); if unchecked, don't call it safe.";
 
 export const INSTRUCTIONS =
   ABOUT +
@@ -88,12 +88,28 @@ const webApp = z
   .nullable()
   .describe('A hosted web app: open the URL, nothing to install. null for software to install');
 
-/** Known high or critical vulnerabilities in what a fresh install brings (OSV.dev), in a pick or a guide. */
+/** Known vulnerabilities in what the tool brings (OSV.dev), in a pick or a guide. */
 const security = z
   .object({
     status: z
       .enum(['vulnerable', 'clean', 'unchecked'])
-      .describe('vulnerable = tell the user before they install or use it (quality capped at 79); clean = none known; unchecked = not checked, so do not call it safe'),
+      .describe('vulnerable = tell the user before they install or use it; clean = none known that it runs; unchecked = not checked (or only partly), so do not call it safe'),
+    level: z
+      .enum(SECURITY_LEVELS)
+      .nullable()
+      .describe(
+        'Known findings only. blocked = a malicious package or an exploited hole: do not recommend it; exposed = reached in normal use: warn first; ' +
+          'conditional = only in some uses: say when in one line; present_unreachable = in what installs, code not used; ' +
+          'not_shipped = only in development or build tools; none = none known; null = checked before levels existed: read status',
+      ),
+    coverage: z
+      .object({
+        state: z.enum(['complete', 'partial', 'unchecked']),
+        packages_checked: z.number().int(),
+        packages_found: z.number().int(),
+      })
+      .nullable()
+      .describe('How much could be checked, apart from level: partial or unchecked is not a vulnerability, and not safe either'),
     reason: z
       .enum(['no_source', 'no_lockfile', 'lockfile_not_supported', 'resolve_failed', 'not_run'])
       .nullable()
@@ -109,13 +125,17 @@ const security = z
         package: z.string().describe('Ecosystem and name, e.g. npm:undici'),
         version: z.string(),
         advisory: z.string().describe('Advisory ID; details at https://osv.dev/vulnerability/<advisory>'),
-        severity: z.enum(['CRITICAL', 'HIGH']),
+        severity: z.enum(['CRITICAL', 'HIGH', 'MODERATE', 'LOW', 'UNKNOWN']),
         fixed_in: z.string().nullable().describe('null = no fixed version yet'),
         malicious: z.boolean(),
+        level: z.enum(['blocked', 'exposed', 'conditional', 'present_unreachable', 'not_shipped']).nullable(),
+        preconditions: z
+          .array(z.string())
+          .describe('When it matters, as codes: user_interaction, local_access, denial_of_service, server_side, option:NAME, symbol:NAME, entry:WHAT'),
       }),
     ),
   })
-  .describe('Known high or critical vulnerabilities (OSV.dev) in the packages a fresh install brings');
+  .describe('Known vulnerabilities (OSV.dev) in the packages the tool brings, judged by where they sit and whether they run');
 
 /** A GUI app's run as pickfit saw it: a launch supports install; action_checked (a listed feature checked) supports function. */
 export const gui = z

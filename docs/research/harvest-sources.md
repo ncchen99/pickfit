@@ -124,11 +124,22 @@ feed 會花錢：每一筆進 watch 都要跑抽取與沙盒驗證（Anthropic A
 
 通過的 7 筆都由 watch 推上 main。10 筆的模型費共 US$3.60，Modal 箱子 US$0.04，平均一筆 US$0.36，比上面估的範圍低一點。一天 120 筆約 US$43。三筆沒通過的原因看起來都在 pickfit 這邊：重播時離線、抽取漏看安裝方式，要另外查。這次都在 Linux 箱子做完，沒有用到 Mac。
 
+## 測試
+
+有三層：
+
+- **單元測試**（不連網）：`tests/test_harvest.py` 測 lead 的合併、排序、check、screen、feed。`tests/test_harvest_sources.py` 用照真實 API 格式做的假回應，測每個來源送出的請求和讀出的 hit，例如 npm 的 repository 連結、Homebrew 跳過 deprecated、winget 的 manifest 路徑、awesome 清單不存說明文字、HN 的 Show HN 網站。`tests/test_harvest_probe.py` 測 probe 本身會不會把壞掉的來源判成失敗。
+- **連線檢查**（`pickfit harvest probe`）：每個來源對真的 API 讀 30 筆以內，存進丟棄式資料庫。來源出錯，或讀得到東西卻認不出任何軟體（通常是 API 改了格式），就算失敗。Bluesky、X 沒設 key 時記成 skipped。接著在同一份資料上跑 check 5 筆、初篩 1 筆、對 D1 做 dry-run feed，每一步都要有回答。整個約 US$0.05（X 讀 10 則加一次 Haiku），不寫 `runs/harvest.db`，也不寫 D1。報告在 `runs/harvest/probe.json`，有失敗時指令以 1 結束。
+- **同一份連線檢查進 pytest**：`PICKFIT_LIVE_HARVEST=1 uv run pytest tests/test_harvest_probe.py -k live`，預設跳過。
+
+11/19 在這台 Mac 跑 probe，10 個來源和 check、screen、feed 都通過，30 秒左右。
+
 ## 排程
 
-`deploy/watch/` 多了兩組 systemd unit，裝在跑 watch 的那台機器上：
+`deploy/watch/` 有三組 systemd unit，裝在跑 watch 的那台機器上，使用方式寫在 [deploy/watch/README.md](../../deploy/watch/README.md) 的「收集來源」：
 
+- `pickfit-harvest-probe.timer`：每天 02:50 UTC 跑 `pickfit harvest probe`，有來源壞掉時這個 unit 會失敗，`systemctl --failed` 看得到。
 - `pickfit-harvest.timer`：每天 03:30 UTC 跑一次 `pickfit harvest run`，結果寫在 `runs/harvest/last-run.json`。
 - `pickfit-harvest-feed.timer`：每小時先跑 `pickfit harvest screen -n $HARVEST_SCREEN_PER_HOUR`（預設 20 筆），再跑 `pickfit harvest feed -n $HARVEST_FEED_PER_HOUR --apply`（預設 5 筆，一天 120 筆）。
 
-watch 機器上的 `harvest.db` 和這台 Mac 的是分開的，第一次啟用前要先在機器上跑一次 `harvest run`，或把這台的 `runs/harvest.db` 複製過去。`bootstrap.sh` 會安裝這些 unit，但不會啟用。要啟用時在機器上執行 `systemctl enable --now pickfit-harvest.timer`，確定要開始花錢時再啟用 `pickfit-harvest-feed.timer`。花費仍受 `PICKFIT_PIPELINE_DAILY_CAP_USD` 管。
+watch 機器上的 `harvest.db` 和這台 Mac 的是分開的。`send_secrets.py --harvest-db` 會把這台的複製過去，timer 就從已經收集、初篩過的 lead 接著做。花費仍受 `PICKFIT_PIPELINE_DAILY_CAP_USD` 管。

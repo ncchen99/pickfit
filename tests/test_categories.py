@@ -81,13 +81,17 @@ def test_a_record_validates_in_a_new_category(category: str):
         SoftwareRecord.model_validate(data)
 
 
-def test_a_category_without_its_own_pool_is_scored_against_dev_clis_references():
+def test_a_category_without_its_own_pool_is_scored_against_the_pooled_references():
     signals = {"stars": 40, "forks": 5, "monthly_downloads": 20000, "release_downloads": 900, "dependents": None,
                "hn_top_score": 0, "registries_count": 1}
+    pooled = POPULARITY_REFS["_all"]
+    assert set(pooled) == set(POPULARITY_REFS["dev_cli"])  # every signal has a ref, so none is dropped
     for category in (*NEW, "other"):
-        assert category not in POPULARITY_REFS and popularity_refs(category) is POPULARITY_REFS["dev_cli"]
-        # A tool that moves out of dev_cli into its subject keeps its popularity, and so its treasure status.
-        assert popularity(signals, category, 200) == popularity(signals, "dev_cli", 200)
+        # b3.v7 (docs/proposals/scoring.md R8): not dev_cli's refs, the pooled ones, until a category has its own.
+        assert category not in POPULARITY_REFS and popularity_refs(category) is pooled
+        assert popularity(signals, category, 200) == popularity(signals, "_all", 200)
+    # The pooled refs sit between the two categories they were taken over, so a move changes little.
+    assert abs(popularity(signals, "other", 200) - popularity(signals, "dev_cli", 200)) < 5
     assert popularity_refs("mcp_server") is POPULARITY_REFS["mcp_server"]
 
 

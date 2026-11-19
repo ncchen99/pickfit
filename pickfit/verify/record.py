@@ -14,10 +14,14 @@ operation (gui_operate.run_operation). It is pickfit's, never the app's: the app
   (a remote Mac across the world: 10 s and more); each shows from when its answer began to arrive, and the
   recording keeps how many there were and the longest gap between two (Recording.frame_gap_s).
 
-Recordings are made at RECORD_FPS: Muse Spark Open samples at most 2 frames a second and placed changes
-within 0.5 s at 2 fps or more (probe, 11/2). Which operations are recorded: PICKFIT_RECORD=all (every one),
-off (none), else only a replay's (tag replay-...): the replay is the run whose checks a record keeps.
-A recorder that fails never fails the operation: the recording is just missing, with the reason.
+Recordings are made at RECORD_FPS and CRF (11/19: 10 fps at CRF 22, from 4 fps at CRF 30): the raw recording is the
+material every later cut is made from (video.py re-cuts offline, no box), and a frame not recorded cannot be added
+back. Measured on pickfit's own lossless screenshots of two Mac operations held as the screen held them, a minute
+took 2.6-3.7 MB before and 4.1-5.8 MB after; Xvfb's black desktop takes a tenth of that. On Linux the root window
+gets the arrow pointer (left_ptr) before ffmpeg starts: with no window manager X draws its default X-shaped one.
+Which operations are recorded: PICKFIT_RECORD=all (every one), off (none), else only a replay's (tag replay-...):
+the replay is the run whose checks a record keeps. A recorder that fails never fails the operation: the recording
+is just missing, with the reason.
 """
 
 from __future__ import annotations
@@ -40,18 +44,39 @@ from pickfit.verify import gui
 if TYPE_CHECKING:
     from pickfit.verify.box import Box
 
-RECORD_FPS = 4
+RECORD_FPS = 10
+CRF = 22  # x264's quality (lower is better): screen text stays sharp enough to read again when a clip zooms in
 MAX_SECONDS = 900  # a backstop: an operation takes 28 actions at most
 TAIL_S = 3.0  # recording goes on this long after the operation's last screenshot, so the result shows long enough
-MAX_BYTES = 40_000_000  # ffmpeg stops writing past this (-fs)
+MAX_BYTES = 120_000_000  # ffmpeg stops writing past this (-fs): 15 minutes of a Mac's desktop at ~8 MB a minute
 PART_BYTES = 8_000_000  # the host copies a recording out of the box in parts of this size
 COPY_READS = 3  # a long read can come back short when the box's output stream is slow (gui.SHOT_READS)
 START_WAIT_S = 10.0
 STOP_WAIT_S = 15.0
-ENCODE = ("-c:v", "libx264", "-preset", "veryfast", "-crf", "30", "-pix_fmt", "yuv420p", "-g", str(RECORD_FPS * 2),
+ENCODE = ("-c:v", "libx264", "-preset", "veryfast", "-crf", str(CRF), "-pix_fmt", "yuv420p", "-g", str(RECORD_FPS * 2),
           # fragmented: a recording cut short (a box that dies, a killed ffmpeg) is still playable up to there
           "-movflags", "+frag_keyframe+empty_moov+default_base_moof")
 _START = re.compile(r"Input #0, x11grab.*?start: (\d+(?:\.\d+)?)", re.S)
+XC_LEFT_PTR = 68  # X11/cursorfont.h
+# The display uid's: the root window's pointer as the arrow (what xsetroot -cursor_name left_ptr does, by libX11, which
+# xdotool brings: x11-xserver-utils is not in the image). A window that sets no cursor of its own shows its parent's.
+# Prints nothing; its exit status says whether it took.
+CURSOR_PY = f"""import ctypes, os, sys
+x = ctypes.CDLL("libX11.so.6")
+x.XOpenDisplay.restype, x.XOpenDisplay.argtypes = ctypes.c_void_p, [ctypes.c_char_p]
+x.XDefaultRootWindow.restype, x.XDefaultRootWindow.argtypes = ctypes.c_ulong, [ctypes.c_void_p]
+x.XCreateFontCursor.restype, x.XCreateFontCursor.argtypes = ctypes.c_ulong, [ctypes.c_void_p, ctypes.c_uint]
+x.XDefineCursor.argtypes = [ctypes.c_void_p, ctypes.c_ulong, ctypes.c_ulong]
+x.XFreeCursor.argtypes = [ctypes.c_void_p, ctypes.c_ulong]
+x.XCloseDisplay.argtypes = [ctypes.c_void_p]
+d = x.XOpenDisplay(os.environ["DISPLAY"].encode())
+if not d:
+    sys.exit(2)
+c = x.XCreateFontCursor(d, {XC_LEFT_PTR})
+x.XDefineCursor(d, x.XDefaultRootWindow(d), c)
+x.XFreeCursor(d, c)
+x.XCloseDisplay(d)
+"""
 
 
 def wanted(tag: str | int) -> bool:
@@ -78,6 +103,8 @@ class Recording:
     clock: str = ""  # box: the Linux box's clock; host: this machine's
     recorder: str = ""  # x11grab, vnc
     error: str | None = None
+    crf: int = CRF
+    pointer: str | None = None  # x11grab: "arrow" once the root window took it, "x" when it did not
     # vnc: how many fresh captures of the screen the frames hold, and the longest stretch of the recording between
     # two of them (a frame repeats the last capture until the next arrives: across a slow link, seconds of it).
     captures: int | None = None
@@ -140,12 +167,15 @@ def ffmpeg_argv(out: str) -> list[str]:
 
 
 def start_script(enter: list[str], seccomp: list[str], out: str, log: str) -> str:
-    """Root: the display uid's ffmpeg, detached (its output to `log`, so this command returns); prints its pid."""
+    """Root: the display uid sets the arrow pointer (CURSOR_PY; prints `cursor <status>`), then its ffmpeg, detached
+    (its output to `log`, so this command returns); prints its pid."""
     drop = ["/usr/bin/setpriv", f"--reuid={gui.DISPLAY_UID}", f"--regid={gui.DISPLAY_UID}", "--clear-groups",
             "--inh-caps=-all", "--no-new-privs", "--"]
     env = ["/usr/bin/env", "-i", f"PATH={gui.HARNESS_PATH}", f"HOME={gui.EVIDENCE_DIR}", f"DISPLAY={gui.DISPLAY}"]
     argv = [*enter, *drop, *seccomp, *env, *ffmpeg_argv(out)]
+    cursor = [*enter, *drop, *seccomp, *env, "/usr/bin/timeout", "10", gui.PYTHON, "-I", "-S", "-c", CURSOR_PY]
     return (f"/usr/bin/rm -f -- {shlex.quote(out)} {shlex.quote(log)}; "
+            f"{shlex.join(cursor)} < /dev/null > /dev/null 2>&1; echo \"cursor $?\"; "
             f"{{ /usr/bin/setsid {shlex.join(argv)} < /dev/null > {shlex.quote(log)} 2>&1 & }}; "
             "echo \"rec_pid $!\"")
 
@@ -189,6 +219,8 @@ class XvfbRecorder:
             started = self._root(script)
             pid = next((line.split()[1] for line in started.stdout.splitlines() if line.startswith("rec_pid ")), "")
             self.pid = int(pid) if pid.isdigit() else None
+            took = next((line.split()[1:] for line in started.stdout.splitlines() if line.startswith("cursor ")), None)
+            self.rec.pointer = None if took is None else "arrow" if took == ["0"] else "x"
             if self.pid is None:
                 raise RuntimeError(f"ffmpeg did not start: {started.stderr.strip()[-200:]}")
             deadline = time.monotonic() + START_WAIT_S

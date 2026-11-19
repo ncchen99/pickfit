@@ -611,7 +611,15 @@ export const script = () => `
     });
     play.addEventListener('click', toggle);
     video.addEventListener('click', toggle);
-    $('[data-mute]', fig).addEventListener('click', (e) => { video.muted = !video.muted; e.currentTarget.classList.toggle('is-muted', video.muted); });
+    // A clip has no sound, so no mute button; its captions are a track, on by default, that CC turns off and on.
+    const cc = $('[data-cc]', fig);
+    const track = video.textTracks && video.textTracks[0];
+    if (cc && track) {
+      const showCc = () => { const on = track.mode === 'showing'; cc.classList.toggle('is-off', !on); cc.setAttribute('aria-pressed', String(on)); };
+      cc.addEventListener('click', () => { track.mode = track.mode === 'showing' ? 'hidden' : 'showing'; showCc(); });
+      if (track.mode !== 'hidden') track.mode = 'showing'; // the track's default may not have taken yet
+      showCc();
+    } else if (cc) cc.hidden = true;
     $('[data-full]', fig).addEventListener('click', () => {
       const box = $('.player', fig);
       if (document.fullscreenElement) document.exitFullscreen();

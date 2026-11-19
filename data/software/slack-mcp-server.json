@@ -1,0 +1,933 @@
+{
+  "schema_version": "software.v1",
+  "slug": "slack-mcp-server",
+  "repo_id": "gh:965085580",
+  "name": "Slack MCP Server",
+  "summary": "MCP server that lets AI clients read, search and post messages in Slack workspaces, including DMs, threads and user groups.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "assistants",
+    "govslack",
+    "llm",
+    "mcp",
+    "mcp-server",
+    "slack",
+    "slack-api"
+  ],
+  "use_cases": [
+    "fetch Slack channel and thread history for an AI assistant",
+    "search Slack messages by date, user and content",
+    "collect unread Slack messages with priority sorting"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "run without workspace permissions or via OAuth",
+    "fetch channel and thread messages by name",
+    "fetch history paginated by date or count",
+    "search messages with filters"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/korotovsky/slack-mcp-server",
+    "full_name": "korotovsky/slack-mcp-server",
+    "created_at": "2025-04-12T11:31:34Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": [
+      "Slack token (xoxp, xoxb, or xoxc/xoxd)"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v1.3.0",
+    "published_at": "2026-05-14T22:55:09Z",
+    "url": "https://github.com/korotovsky/slack-mcp-server/releases/tag/v1.3.0"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "not_run",
+    "checked_at": null,
+    "runs": []
+  },
+  "mcp": {
+    "transports": [
+      "sse",
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": null,
+    "client_configs": [],
+    "env_vars": [
+      {
+        "name": "SLACK_MCP_XOXC_TOKEN",
+        "required": null,
+        "purpose": "Slack browser token"
+      },
+      {
+        "name": "SLACK_MCP_XOXD_TOKEN",
+        "required": null,
+        "purpose": "Slack browser cookie d"
+      },
+      {
+        "name": "SLACK_MCP_XOXP_TOKEN",
+        "required": null,
+        "purpose": "User OAuth token"
+      },
+      {
+        "name": "SLACK_MCP_XOXB_TOKEN",
+        "required": null,
+        "purpose": "Bot token"
+      },
+      {
+        "name": "SLACK_MCP_PORT",
+        "required": false,
+        "purpose": "Listen port"
+      },
+      {
+        "name": "SLACK_MCP_HOST",
+        "required": false,
+        "purpose": "Listen host"
+      },
+      {
+        "name": "SLACK_MCP_API_KEY",
+        "required": false,
+        "purpose": "Bearer token for SSE/HTTP"
+      },
+      {
+        "name": "SLACK_MCP_ADD_MESSAGE_TOOL",
+        "required": false,
+        "purpose": "Enable message posting"
+      },
+      {
+        "name": "SLACK_MCP_REACTION_TOOL",
+        "required": false,
+        "purpose": "Enable reaction tools"
+      },
+      {
+        "name": "SLACK_MCP_ENABLED_TOOLS",
+        "required": false,
+        "purpose": "List of tools to register"
+      }
+    ],
+    "tools": [
+      "conversations_history",
+      "conversations_replies",
+      "conversations_add_message",
+      "conversations_search_messages",
+      "channels_list",
+      "reactions_add",
+      "reactions_remove",
+      "users_search",
+      "usergroups_list",
+      "usergroups_create",
+      "usergroups_update",
+      "usergroups_users_update",
+      "usergroups_me",
+      "conversations_unreads",
+      "conversations_mark",
+      "saved_list",
+      "saved_update",
+      "saved_clear_completed"
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T12:27:37+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/korotovsky/slack-mcp-server@b88c0de3f706",
+      "go.mod"
+    ],
+    "packages_checked": 91,
+    "findings_total": 13,
+    "advisories_total": 13,
+    "findings": [
+      {
+        "package": "go:github.com/andybalholm/brotli",
+        "version": "v1.2.0",
+        "advisory": "GO-2026-6888",
+        "cves": [
+          "CVE-2026-111497"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "1.2.7",
+        "summary": "Excessive memory allocation when decompressing crafted streams in github.com/andybalholm/brotli",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.48.0",
+        "advisory": "GHSA-5cgq-3rg8-m6cv",
+        "cves": [
+          "CVE-2026-42508"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto vulnerable to auth bypass via unenforced @revoked status",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.48.0",
+        "advisory": "GHSA-89gr-r52h-f8rx",
+        "cves": [
+          "CVE-2026-39831"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: FIDO/U2F security key physical presence check can be bypassed",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.48.0",
+        "advisory": "GHSA-f5wc-c3c7-36mc",
+        "cves": [
+          "CVE-2026-39832"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto doesn't drop invoking agent constraints when forwarding keys",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.48.0",
+        "advisory": "GHSA-jppx-rxg9-jmrx",
+        "cves": [
+          "CVE-2026-39833"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto doesn't enforce invoking key constraints",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.48.0",
+        "advisory": "GHSA-rm3j-f69w-wqmq",
+        "cves": [
+          "CVE-2026-39834"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto vulnerable to infinite loop on large channel writes",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.48.0",
+        "advisory": "GHSA-vgwf-h737-ff37",
+        "cves": [
+          "CVE-2026-39830"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking client can cause server deadlock on unexpected responses",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.48.0",
+        "advisory": "GHSA-x527-x647-q7gg",
+        "cves": [
+          "CVE-2026-46595"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking VerifiedPublicKeyCallback permissions skip enforcement",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/go-jose/go-jose/v3",
+        "version": "v3.0.5",
+        "advisory": "GHSA-mgcc-cww5-fp2q",
+        "cves": [
+          "CVE-2026-116587"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "Go JOSE: DoS when parsing JWKs that contain RSA keys",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/klauspost/compress",
+        "version": "v1.18.0",
+        "advisory": "GHSA-259r-337f-4rfw",
+        "cves": [
+          "CVE-2026-63209"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.18.7",
+        "summary": "Compress/s2: Integer Overflow or Wraparound and Out-of-bounds Write in compress",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/klauspost/compress",
+        "version": "v1.18.0",
+        "advisory": "GO-2026-6865",
+        "cves": [
+          "CVE-2026-116591"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.2",
+        "summary": "Panic on two-block frames in github.com/klauspost/compress",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.48.0",
+        "advisory": "GHSA-q4h4-gmj2-qvw2",
+        "cves": [
+          "CVE-2026-46597"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking byte arithmetic causes underflow and panic",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.48.0",
+        "advisory": "GHSA-w879-237q-wc7r",
+        "cves": [
+          "CVE-2026-39829"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking pathological RSA/DSA parameters may cause DoS",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v7",
+    "computed_at": "2026-11-19T17:04:21+08:00",
+    "quality": {
+      "total": 53.4,
+      "raw_total": 53.4,
+      "confidence": 0.5,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.4375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.72,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.3577,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
+        }
+      },
+      "security": {
+        "level": "vulnerable",
+        "basis": "status",
+        "effect": "capped",
+        "deduction": 0.0
+      }
+    },
+    "popularity": {
+      "score": 86.0,
+      "signals": {
+        "stars": 1903,
+        "monthly_downloads": 11,
+        "forks": 396,
+        "dependents": null,
+        "release_downloads": 26693,
+        "hn_top_score": 2,
+        "registries_count": 1
+      },
+      "age_days": 585,
+      "packages": [
+        "homebrew:slack-mcp-server"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 7.48,
+      "blocked_by": "unverified"
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:31.228169+08:00",
+      "sources_sha": "2fb4f3b0ec91390c85a9af2c4f7244c22e7c1a7dad01e63c7d13af183708fdd7",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Model Context Protocol (MCP) server for Slack Workspaces."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Use the server with any MCP client that supports Stdio, SSE or HTTP transports"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "*You need one of: `xoxp` (user), `xoxb` (bot), or both `xoxc`/`xoxd` tokens for authentication."
+        },
+        "install_per_os": {
+          "score": 0,
+          "quote": null
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| `SLACK_MCP_XOXP_TOKEN`            | Yes*      | `nil`                     | User OAuth token (`xoxp-...`) — alternative to xoxc/xoxd"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "`%LocalAppData%/slack-mcp-server/users_cache.json` (Windows)"
+        }
+      },
+      "unquoted": []
+    },
+    "inputs": {
+      "version": "inputs.v1",
+      "github": null,
+      "issues": null,
+      "legacy": {
+        "maintenance": 0.72,
+        "engineering_hygiene": 1.0,
+        "responsiveness": 0.3577
+      }
+    },
+    "history": [
+      {
+        "formula_version": "b3.v6",
+        "computed_at": "2026-11-19T12:27:31+08:00",
+        "quality": 53.4,
+        "popularity": 86.0,
+        "is_treasure": false
+      }
+    ]
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/korotovsky/slack-mcp-server",
+      "fetched_at": "2026-11-19T12:26:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/korotovsky/slack-mcp-server/blob/master/README.md",
+      "fetched_at": "2026-11-19T12:26:55+08:00"
+    },
+    {
+      "id": "release:v1.3.0",
+      "kind": "release",
+      "url": "https://github.com/korotovsky/slack-mcp-server/releases/tag/v1.3.0",
+      "fetched_at": "2026-11-19T12:26:55+08:00"
+    },
+    {
+      "id": "docs1",
+      "kind": "readme",
+      "url": "https://github.com/korotovsky/slack-mcp-server/blob/master/docs/02-installation.md",
+      "fetched_at": "2026-11-19T12:27:13+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Model Context Protocol (MCP) server for Slack Workspaces.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "more than 9,000 are already using it.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Model Context Protocol (MCP) server for Slack Workspaces.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Model Context Protocol (MCP) server for Slack Workspaces.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Slack MCP Server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "`~/Library/Caches/slack-mcp-server/users_cache.json` (macOS)<br>`~/.cache/slack-mcp-server/users_cache.json` (Linux)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Routes API calls to `slack-gov.com` endpoints instead of `slack.com`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "*You need one of: `xoxp` (user), `xoxb` (bot), or both `xoxc`/`xoxd` tokens for authentication.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T12:26:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T12:26:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T12:26:57+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T12:26:57+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.3.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T12:26:55+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Fetch messages from channels and threads, including activity messages",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Search messages in channels, threads, and DMs using various filters like date, user, and content.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Get all unread messages across channels efficiently with priority sorting",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**Stealth and OAuth Modes**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**Channel and Thread Support with `#Name` `@Lookup`**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**Smart History**: Fetch messages with pagination by date (d1, 7d, 1m) or message count.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "**Search Messages**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Slack browser token (`xoxc-...`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "supports Stdio, SSE and HTTP transports",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "SLACK_MCP_XOXC_TOKEN",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "SLACK_MCP_XOXD_TOKEN",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "SLACK_MCP_XOXP_TOKEN",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "SLACK_MCP_XOXB_TOKEN",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/4",
+      "source_id": "readme",
+      "quote": "SLACK_MCP_PORT",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/5",
+      "source_id": "readme",
+      "quote": "SLACK_MCP_HOST",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/6",
+      "source_id": "readme",
+      "quote": "SLACK_MCP_API_KEY",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/7",
+      "source_id": "readme",
+      "quote": "SLACK_MCP_ADD_MESSAGE_TOOL",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/8",
+      "source_id": "readme",
+      "quote": "SLACK_MCP_REACTION_TOOL",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/9",
+      "source_id": "readme",
+      "quote": "SLACK_MCP_ENABLED_TOOLS",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "### 1. conversations_history:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "### 2. conversations_replies:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "### 3. conversations_add_message",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "### 4. conversations_search_messages",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "### 5. channels_list:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "### 6. reactions_add:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "### 7. reactions_remove:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "### 8. users_search:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "### 9. usergroups_list:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/9",
+      "source_id": "readme",
+      "quote": "### 10. usergroups_create:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/10",
+      "source_id": "readme",
+      "quote": "### 11. usergroups_update:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/11",
+      "source_id": "readme",
+      "quote": "### 12. usergroups_users_update:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/12",
+      "source_id": "readme",
+      "quote": "### 13. usergroups_me:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/13",
+      "source_id": "readme",
+      "quote": "### 14. conversations_unreads",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/14",
+      "source_id": "readme",
+      "quote": "### 15. conversations_mark",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/15",
+      "source_id": "readme",
+      "quote": "### 16. saved_list",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/16",
+      "source_id": "readme",
+      "quote": "### 17. saved_update",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    },
+    {
+      "field": "/mcp/tools/17",
+      "source_id": "readme",
+      "quote": "### 18. saved_clear_completed",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:27:27+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T12:26:55+08:00",
+  "updated_at": "2026-11-19T17:04:21+08:00"
+}

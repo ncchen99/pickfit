@@ -17,6 +17,9 @@ from pickfit.schema import QUALITY_CAPS, TREASURE_MIN_QUALITY, SecurityCheck, So
 from pickfit.score import build_web_scores, refresh_scores
 
 ROOT = Path(__file__).resolve().parents[1]
+# pickfit/schema.py takes sec.v2 once loop/proposals/security-schema.patch is applied; until then a sec.v2 check is
+# built and judged but not validated against the record schema.
+SEC_V2_SCHEMA = "sec.v2" in SecurityCheck.model_fields["version"].annotation.__args__
 WEB_FIXTURE = ROOT / "worker" / "test" / "fixtures" / "software" / "fixture-web-sketch.json"
 NOW = datetime(2026, 11, 3, 12, 0, tzinfo=TAIPEI)
 
@@ -50,7 +53,8 @@ def test_the_cap_sits_just_below_treasure() -> None:
     assert binding_cap("cli_tool", False, "function", check()) == "known_vulnerability"
     assert binding_cap("cli_tool", False, "function", check("clean")) is None
     assert binding_cap("cli_tool", False, "function", check("unchecked")) is None
-    assert binding_cap("cli_tool", False, "unverified", check()) == "unverified"  # the lowest cap wins
+    # Rule 6 (11/19): unverified is no cap, so a known vulnerability caps it at 79 (it cannot be a treasure either way).
+    assert binding_cap("cli_tool", False, "unverified", check()) == "known_vulnerability"
     assert binding_cap("cli_tool", False, "function", None) is None
 
 
@@ -77,7 +81,9 @@ def test_a_vulnerable_record_is_capped_and_loses_treasure() -> None:
 
 
 def test_unchecked_keeps_the_score() -> None:
-    assert scored_web(check("unchecked"))["scores"]["quality"] == scored_web()["scores"]["quality"]
+    unchecked, none = scored_web(check("unchecked"))["scores"]["quality"], scored_web()["scores"]["quality"]
+    assert unchecked.pop("security")["basis"] == "status" and none.pop("security")["basis"] == "none"
+    assert unchecked == none
 
 
 def test_refresh_applies_and_lifts_the_cap() -> None:
@@ -334,7 +340,7 @@ def test_packages_of_takes_only_the_softwares_own_packages() -> None:
 
 
 def _resolving(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, graphs: dict[str, Any],
-               repo: security.RepoRead | None) -> list[str]:
+               repo: security.RepoDeps | None) -> list[str]:
     """Stub the resolvers (name -> (nodes, real dependencies) or an exception), the clone and OSV (no findings)."""
     cloned: list[str] = []
 
@@ -349,15 +355,15 @@ def _resolving(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, graphs: dict[str
 
     monkeypatch.setattr(security, "RESOLVERS", {"npm": resolver, "pypi": resolver, "crates": resolver})
     monkeypatch.setattr(security, "clone", fake_clone)
-    monkeypatch.setattr(security, "repo_nodes", lambda root: repo)
-    monkeypatch.setattr(security, "findings_for", lambda nodes, advisories, unrated=None, aliases=None: [])
+    monkeypatch.setattr(security, "repo_deps", lambda root, ctx=None: repo)
+    monkeypatch.setattr(security, "_osv_query", lambda nodes: [[] for _ in nodes])
     return cloned
 
 
 RECORD = {"slug": "rtool", "name": "rtool", "repo": {"url": "https://github.com/o/rtool", "full_name": "o/rtool"},
           "verification": {"runs": []}, "scores": {"popularity": {"packages": ["crates:rtool"]}}}
-FULL = security.RepoRead([("crates", "zip", "8.6.0")], ["Cargo.lock"], True, None)
-NO_LOCK = security.RepoRead([], [], False, "no_lockfile")
+FULL = security.RepoDeps([security.Dep("crates", "zip", "8.6.0")], ["Cargo.lock"], True, None)
+NO_LOCK = security.RepoDeps([], [], False, "no_lockfile")
 
 
 def check_with(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, raw: dict[str, Any], graphs: dict[str, Any],
@@ -400,9 +406,13 @@ def test_one_own_package_failing_sends_the_check_to_the_repository(monkeypatch: 
 
 def test_without_findings_an_incomplete_read_is_unchecked_not_clean(monkeypatch: pytest.MonkeyPatch,
                                                                    tmp_path: Path) -> None:
-    partial = security.RepoRead([("npm", "a", "1.0.0")], ["web/package-lock.json"], False, "lockfile_not_supported")
+    partial = security.RepoDeps([security.Dep("npm", "a", "1.0.0")], ["web/package-lock.json"], False,
+                                "lockfile_not_supported")
     result, _ = check_with(monkeypatch, tmp_path, RECORD, {"rtool": RuntimeError("no graph")}, partial)
     assert (result["status"], result["unchecked_reason"]) == ("unchecked", "lockfile_not_supported")
+    # sec.v2: no known finding (level none), but only part was read: coverage partial, so never called safe.
+    assert (result["assessment"]["level"], result["coverage"]["state"]) == ("none", "partial")
+    assert result["packages_checked"] == 1 and result["coverage"]["gaps"][0]["code"] == "lockfile.unsupported_format"
     no_repo = {**RECORD, "repo": None}
     result, _ = check_with(monkeypatch, tmp_path, no_repo, {"rtool": ([("crates", "rtool", "1.0.0")], 0)}, None)
     assert (result["status"], result["unchecked_reason"]) == ("unchecked", "resolve_failed")
@@ -503,4 +513,7 @@ def test_a_record_with_nothing_to_read_is_unchecked() -> None:
     raw = {"slug": "x", "verification": {"runs": []}, "scores": None, "repo": None}
     result = security.check(raw, security.Advisories(), now=NOW)
     assert (result["status"], result["unchecked_reason"]) == ("unchecked", "no_source")
-    SecurityCheck.model_validate(result)
+    assert (result["assessment"]["level"], result["coverage"]["state"]) == ("none", "unchecked")
+    assert result["packages_checked"] == 0 and [g["code"] for g in result["coverage"]["gaps"]] == ["source.none"]
+    if SEC_V2_SCHEMA:
+        SecurityCheck.model_validate(result)

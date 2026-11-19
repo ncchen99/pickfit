@@ -243,6 +243,53 @@ def test_status_reports_hosts_and_rentals(setup: SimpleNamespace) -> None:
     json.dumps(status)
 
 
+def test_the_same_configuration_error_twice_stops_the_retries_until_something_changes(setup: SimpleNamespace,
+                                                                                     monkeypatch) -> None:
+    # 11/18: a base whose build failed the same way every 30 minutes, for two hours.
+    add_host(setup.hosts, "scw1")
+    setup.world.ready["scw1"] = True
+
+    def failing(rec: HostRecord, steps: list[Any], out_dir: Path, *, log: Any = print) -> dict[str, Any]:
+        setup.tests.append([s.name for s in steps])
+        return {"passed": False, "steps": [{"step": "base", "exit": 1}]}
+
+    lane = setup.lane()
+    monkeypatch.setattr(lane, "_test", failing)
+    first = lane.available(setup.log)
+    assert first is not None and "needs an operator" not in first and "bases or limits test failed" in first
+    second = lane.available(setup.log)  # watch's next try, 30 minutes on
+    assert second.startswith("needs an operator: no Mac host is ready") and "pickfit mac-host clear" in second
+    assert len(setup.tests) == 2
+    calls = list(setup.world.calls)
+    assert lane.available(setup.log) == second and setup.world.calls == calls  # not tried again: nothing ran
+    assert len(setup.tests) == 2 and lane.status()["needs_operator"] == second
+    # Someone fixed the host (its record changed): the lane tries again.
+    add_host(setup.hosts, "scw1", extra={"note": "rebuilt by hand"})
+    monkeypatch.setattr(lane, "_test", setup.lane()._test)
+    assert lane.available(setup.log) is None and lane.status()["needs_operator"] is None
+    assert not (setup.hosts / mac_host.OPERATOR_FILE).exists()
+
+
+def test_what_passes_by_itself_is_retried_as_before(setup: SimpleNamespace) -> None:
+    add_host(setup.hosts, "down", target="m1@unreachable")
+    lane = setup.lane()
+    for _ in range(3):  # a host that does not answer may answer next time
+        assert "needs an operator" not in lane.available(setup.log)
+    setup.provider.fail = "no Scaleway Mac mini of type M4-S is in stock in fr-par-1"
+    lane = setup.lane(rent=True, root_from_provider=True, max_rentals=9)
+    for _ in range(3):
+        assert lane.available(setup.log).startswith("renting a Mac failed: no Scaleway")
+    setup.provider.fail = "Quota exceeded for resources 'AsServersType_M4_S' (0/0)"
+    assert lane.available(setup.log).startswith("renting a Mac failed: Quota exceeded")
+    assert lane.available(setup.log).startswith("needs an operator: renting a Mac failed: Quota exceeded")
+    assert len([c for c in setup.world.calls if c.startswith("create")]) == 5  # the sixth was not tried
+    assert lane.available(setup.log).startswith("needs an operator")
+    assert len([c for c in setup.world.calls if c.startswith("create")]) == 5
+    mac_host.clear_hold(setup.hosts)  # `pickfit mac-host clear`
+    lane.available(setup.log)
+    assert len([c for c in setup.world.calls if c.startswith("create")]) == 6
+
+
 def test_scaleway_root_password_reads_only_that_field(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     seen: list[list[str]] = []
 

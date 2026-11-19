@@ -87,9 +87,48 @@ ssh root@機器的IP journalctl -u pickfit-e2e@default -n 60
 
 發布那一段比對 pickfit.app 和 workers.dev 的資料是不是 origin/main 的。pickfit.app 由 Cloud Run 提供，CI 只部署 workers.dev，所以 Cloud Run 沒跟著部署時，這一段會失敗，整份報告也是 FAILED。
 
+## 收集來源（harvest）
+
+`pickfit harvest`（`pickfit/harvest/`，說明在 [docs/research/harvest-sources.md](../../docs/research/harvest-sources.md)）在這台機器上有三個 timer：
+
+| timer | 時間（UTC） | 做什麼 | 費用 |
+|---|---|---|---|
+| `pickfit-harvest-probe.timer` | 每天 02:50 | 每個來源各讀一小批，接著 check、一筆初篩、對 D1 的 dry-run feed，全在丟棄式資料庫裡。報告在 `runs/harvest/probe.json`，有來源壞掉時 unit 會失敗 | 約 US$0.05 |
+| `pickfit-harvest.timer` | 每天 03:30 | 讀所有來源，結果在 `runs/harvest/last-run.json` | X 約 US$0.5，其他免費 |
+| `pickfit-harvest-feed.timer` | 每小時 | 初篩 `HARVEST_SCREEN_PER_HOUR` 筆（預設 20），再把收下的 `HARVEST_FEED_PER_HOUR` 筆（預設 5）送進 D1 | 初篩約 US$0.04，送出的每筆進 watch 約 US$0.36 |
+
+Bluesky、X 的 key 和這些設定只改 watch.env 裡那幾行，在這台 Mac 跑：
+
+```bash
+uv run python deploy/watch/send_secrets.py root@機器的IP --key ~/.pickfit/ssh/scaleway-mac --add BSKY_HANDLE --add BSKY_APP_PASSWORD --add X_BEARER_TOKEN --add HARVEST_FEED_PER_HOUR=5 --harvest-db
+```
+
+`--harvest-db` 把這台的 `runs/harvest.db` 一起帶過去，timer 就從已經收集、初篩過的 lead 接著做。看狀況：
+
+```bash
+ssh root@機器的IP systemctl list-timers 'pickfit-harvest*'
+```
+
+```bash
+ssh root@機器的IP systemctl --failed
+```
+
 ## 平常要知道的事
 
-- macOS 那條預設不租 Mac，只用 `~pickfit/.pickfit/mac-hosts` 裡已經能用的主機。要自動租，在服務的 ExecStart 加 `--mac-rent`。要連 root 步驟也自動做，再加 `--mac-root-from-provider`（向 Scaleway 讀那台的 sudo 密碼，直接餵給主機上的腳本，不記錄、不存檔）。
+- macOS 那條沒有能用的 Mac 時，批次到了會自己租一台（`--mac-rent`，一週最多一台），root 步驟也自動做（`--mac-root-from-provider`，向 Scaleway 讀那台的 sudo 密碼，直接餵給主機上的腳本，不記錄、不存檔）。拿掉這兩個參數就只用 `~pickfit/.pickfit/mac-hosts` 裡已經能用的主機。
 - watch 自己租的 Mac，付費的第一天過完又沒事做時會自己刪。服務停掉時就不會刪，Scaleway 過了 24 小時按小時計費，要 `pickfit mac-host down 名稱 --yes`。
 - `systemctl stop pickfit-watch` 會等跑到一半的工作做完，最多 30 分鐘。
 - `pickfit watch --status`（在機器上以 pickfit 使用者執行）列出 D1 的送出、每條分流停著的工作和 Mac 主機。
+
+## 吞吐量的設定（11/19）
+
+watch 原本最多同時跑 2 筆，每筆先保留 US$6，花到約 US$24 就不再開新工作，要等重啟才會動。11/19 起改成這樣（[docs/proposals/throughput.md](../../docs/proposals/throughput.md)）：
+
+- 錢看帳本最近 24 小時花了多少，上限是 `loop/budget.json` 的 `model_usd.daily`（現在 US$80），不再從程式啟動起累計。每個在跑的工作保留所在分流最近 50 筆的 p95 花費，一條分流還不到 5 筆紀錄時才用 US$6。
+- 每條分流自己算同時幾筆：linux 6、web 2、windows 最多 2（EC2 的 8 vCPU 配額）、macos 看主機開得了幾台 VM。不再限制每小時開始幾筆。
+- id 以 `sub_harvest` 開頭的送出（`pickfit harvest feed` 要用 `pickfit.watch.harvest_submission_id()` 產生）排在一般人的送出後面，所有分流加起來最多占 4 格，每條分流留 1 格給人，而且要留 US$10 的當日額度給人。
+- 工作做完就馬上拿下一筆，新送出還是每 60 秒查一次。
+
+數字都能在 `/etc/pickfit/watch.env` 用 `PICKFIT_WATCH_*` 改，名稱和預設值寫在 `watch.env.example` 的最後一段。`send_secrets.py` 不會送這些變數，要改就在機器上直接加那幾行，再 `systemctl restart pickfit-watch`。之後重跑 `send_secrets.py` 會整份覆寫 `watch.env`，手加的行要再加一次。
+
+watch 每一輪把狀態寫到 `runs/watch/status.json`：每條分流在跑幾筆、上限幾筆、排隊或停著幾筆，以及沒開新工作的原因（錢、格子滿了、harvest 的額度、分流在休息、等 Mac 的那一批）。卡在錢的時候，原因會寫出是哪幾個數字加起來超過上限。`pickfit watch --status` 會一起印出來，journal 裡也看得到同樣的摘要。

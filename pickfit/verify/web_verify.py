@@ -330,6 +330,26 @@ class OperatorLedger:
     errors: list[str] = field(default_factory=list)
 
 
+def element_settings() -> dict[str, Any]:
+    """The operator's element list, for a comparison only (docs/proposals/tokens.md, T6): PICKFIT_WEB_ELEMENTS_CHARS
+    (2,000 to 40,000; the harness keeps 12,000 unless set) and PICKFIT_WEB_ELEMENT_ATTRIBUTES ("compact": a
+    shorter attribute list, web_harness.COMPACT_ATTRIBUTES). Unset, the harness gets nothing and works as before.
+    Checked when read, so a bad value fails before a box is paid for."""
+    out: dict[str, Any] = {}
+    chars = get_env("PICKFIT_WEB_ELEMENTS_CHARS")
+    if chars and chars.strip():
+        value = int(chars)
+        if not 2_000 <= value <= 40_000:
+            raise ValueError("PICKFIT_WEB_ELEMENTS_CHARS must be between 2000 and 40000")
+        out["elements_chars"] = value
+    attributes = (get_env("PICKFIT_WEB_ELEMENT_ATTRIBUTES") or "").strip().lower()
+    if attributes not in ("", "default", "compact"):
+        raise ValueError(f"PICKFIT_WEB_ELEMENT_ATTRIBUTES must be default or compact, got {attributes!r}")
+    if attributes == "compact":
+        out["element_attributes"] = "compact"
+    return out
+
+
 def operator_answer(message: dict[str, Any], *, run_id: str, scope: str, spent: OperatorLedger,
                     caller: Callable[..., Any] = call_meta) -> dict[str, Any]:
     """Answer one model call from the harness through call_meta: the operator model, the fallback when it
@@ -768,7 +788,7 @@ def verify_site(target: WebTarget, *, max_steps: int = MAX_STEPS, revisit: str |
         version = next((w for w in chrome_version if re.match(r"^\d+\.\d+", w)), "")
         start = {"url": target.url, "site": site, "user_agent": user_agent(version), "max_steps": max_steps,
                  "wait_between_actions": wait, "sample_files": sample_paths, "settle_s": 6,
-                 "operator_thinking": operator_writes_thinking(OPERATOR_MODEL)}
+                 "operator_thinking": operator_writes_thinking(OPERATOR_MODEL), **element_settings()}
         result["user_agent"] = start["user_agent"]
 
         def handle(message: dict[str, Any]) -> dict[str, Any] | None:

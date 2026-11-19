@@ -6,10 +6,10 @@
  * here calls a model. The plain feature titles, steps and open hint come from the record's usage_guide,
  * which names the model that wrote them.
  */
-import { bestGuide, isVerified, isWebApp, OSES, securityOf, verifiedOn, webCheck, type Catalog, type Entry, type InstallGuide, type OS, type RunVideo, type SecurityFinding } from '../catalog.ts';
+import { bestGuide, isVerified, isWebApp, OSES, securityOf, verifiedOn, webCheck, type Catalog, type Entry, type InstallGuide, type OS, type RunVideo, type GapCategory, type SecurityCheck, type SecurityFinding } from '../catalog.ts';
 import { featuresOut, type FeaturesOut, type NotCheckedReason } from '../features.ts';
 import { advisoriesOf } from '../security.ts';
-import { L } from '../i18n.ts';
+import { L, lang } from '../i18n.ts';
 import { installGuide, type InstallOutput } from '../install.ts';
 import { EMPTY_FORM, installSection, levelLine, stepText, webFactList } from '../page.ts';
 import { day, guideTitle, guiSentence, KIND, KIND_PLURAL, levelLabel, OS_NAME, PRICE, PROCESSING, passed, webLevelLabel, webRunWords } from '../ui/facts.ts';
@@ -17,7 +17,7 @@ import { esc, link, listOf, safeUrl } from '../ui/html.ts';
 import { icon, osMark, type IconName } from '../ui/icons.ts';
 import { age, badge, compareToggle, confidenceRow, coverage, fitz, kindTag, levelIcon, measure, osList, popover, runFacts, tape, type FitzName, type MeasureRow } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
-import { posterOf, videoPath } from '../video.ts';
+import { captionsOf, posterOf, videoPath } from '../video.ts';
 import { NO_INSTALL_LABEL, noInstallLabel } from '../webapp.ts';
 
 const MATURITY: Record<string, string> = {
@@ -123,6 +123,8 @@ export interface Chapter {
   start: number;
   end: number;
   title: string;
+  /** Where the chapter's first segment is in its unedited recording (a clip cut since 11/19): the file, seconds. */
+  raw?: { file: string; at: number };
 }
 
 // ---------------------------------------------------------------- the checks, as marks
@@ -193,12 +195,96 @@ const securityReason = (reason: string | undefined): string => {
   }
 };
 
-/** Every tool: known high or critical vulnerabilities (OSV.dev) in what a fresh install brings, as a shield. A vulnerable
- * one carries the count and jumps to the warning before the install steps, where the list is; one pickfit could not
- * check says so (a grey, dashed shield), never clean. */
+/** Why part of a sec.v2 check could not be done, by its first gap's category, as the end of a sentence. */
+const gapReason = (category: GapCategory | undefined): string => {
+  switch (category) {
+    case 'lockfile_missing':
+      return L('part of it has no lockfile to read', '有一部分沒有可讀取的 lockfile');
+    case 'lockfile_unreadable':
+      return L('part of it uses a lockfile pickfit cannot read yet', '有一部分用的 lockfile pickfit 還讀不了');
+    case 'resolve_failed':
+      return L('some dependencies could not be resolved', '有些相依套件無法解析');
+    case 'no_adapter':
+      return L('part of it is in a language pickfit cannot read dependencies of yet', '有一部分是 pickfit 還讀不了相依套件的語言');
+    case 'advisory_db':
+      return L('the vulnerability database has no data for part of it', '漏洞資料庫沒有其中一部分的資料');
+    case 'binary_no_metadata':
+      return L('its binaries do not list what they were built from', '它的執行檔沒有列出用了哪些套件');
+    case 'no_source':
+      return L('there is no repository or package to read', '沒有可讀取的 repo 或套件');
+    case 'tool_error':
+      return L('a step of the check failed and will be retried', '檢查有一步失敗了，之後會重試');
+    case 'platform_unsupported':
+      return L('pickfit cannot list what installs on macOS or Windows yet', 'pickfit 還無法列出在 macOS 或 Windows 上裝了什麼');
+    default:
+      return '';
+  }
+};
+
+/** How pickfit knows a finding's code is not used, as the end of a sentence (sec.v2's reachability methods). */
+const unusedBecause = (method: string | null): string => {
+  switch (method) {
+    case 'entry_point_grep':
+      return L('it never loads that part of the package', '程式沒有載入套件的這個部分');
+    case 'option_grep':
+      return L('it never turns on the option the hole needs', '程式沒有開啟漏洞需要的選項');
+    case 'symbol_grep':
+      return L('it never calls the affected code', '程式沒有呼叫受影響的程式碼');
+    case 'import_grep':
+      return L('it never imports the affected package', '程式沒有匯入受影響的套件');
+    case 'govulncheck_binary':
+    case 'govulncheck_source':
+      return L('govulncheck found the affected code is never called', 'govulncheck 確認受影響的程式碼沒被呼叫');
+    default:
+      return L('pickfit found it is not used', 'pickfit 確認沒有用到');
+  }
+};
+
+/** A finding's preconditions (pickfit/security.py's codes) as what follows "only when"; '' when it names none. */
+export function whenItMatters(codes: string[] = []): string {
+  const words = codes
+    .map((c) => {
+      const value = esc(c.slice(c.indexOf(':') + 1));
+      if (c.startsWith('option:')) return L(`${value} is turned on`, `開啟了 ${value}`);
+      if (c.startsWith('symbol:')) return L(`its code calls ${value}`, `程式呼叫了 ${value}`);
+      if (c.startsWith('entry:')) return L(`it uses ${value}`, `用到 ${value}`);
+      switch (c) {
+        case 'local_access':
+          return L('someone already has access to the machine', '對方已經能操作這台電腦');
+        case 'adjacent_network':
+          return L('the attacker is on the same network', '攻擊者和你在同一個網路');
+        case 'physical_access':
+          return L('someone has the device in hand', '對方拿得到這台裝置');
+        case 'user_interaction':
+          return L('you open a crafted file or link', '你打開特製的檔案或連結');
+        case 'high_privileges':
+          return L('the attacker already has high privileges', '攻擊者已經拿到高權限');
+        case 'high_complexity':
+          return L('specific conditions line up', '特定條件同時成立');
+        case 'denial_of_service':
+          return L('it gets crafted input (it can crash or hang, nothing leaks)', '收到特製的輸入（只會讓它當掉或卡住，不會外洩資料）');
+        case 'server_side':
+          return L('it runs as a server', '以伺服器模式執行');
+        default:
+          return '';
+      }
+    })
+    .filter(Boolean);
+  return [...new Set(words)].slice(0, 3).join(L(', or ', '或'));
+}
+
+/** Every tool: known vulnerabilities (OSV.dev) in what it brings, as a shield. A check from before levels (sec.v1) reads
+ * by its status: a vulnerable one carries the count and jumps to the warning before the install steps, where the list
+ * is; one pickfit could not check says so (a grey, dashed shield), never clean. A sec.v2 check reads by its level:
+ * blocked and exposed are red, conditional amber (both jump to the list); present_unreachable and not_shipped are green
+ * and say what was found where it does not run; partial is grey like unchecked, never clean. */
 export function securityMark(entry: Entry): string {
   const s = securityOf(entry);
   const date = s.checked_at ? day(s.checked_at) : '';
+  if (s.level) {
+    const marked = securityLevelMark(entry, s, date);
+    if (marked) return marked;
+  }
   if (s.status === 'clean') {
     const n = s.packages_checked ?? 0;
     return checkMark(
@@ -233,6 +319,92 @@ export function securityMark(entry: Entry): string {
   );
 }
 
+/** "pickfit checked N of M packages", when a sec.v2 check's coverage is partial; '' otherwise. */
+const checkedPart = (s: SecurityCheck): string => {
+  const c = s.coverage;
+  if (!c || c.state !== 'partial') return '';
+  const why = gapReason(c.gaps[0]?.category);
+  const of = c.packages_found > c.packages_checked ? L(` of ${c.packages_found}`, `（已知至少 ${c.packages_found} 個）`) : '';
+  return L(
+    ` pickfit checked ${c.packages_checked}${of} packages${why ? `; ${why}` : ''}.`,
+    `pickfit 檢查了 ${c.packages_checked} 個套件${of}${why ? `，${why}` : ''}。`,
+  );
+};
+
+/** The shield of a sec.v2 check by its level and, apart, its coverage. '' for none with complete or no coverage, and
+ * for an unchecked one: those read as sec.v1's clean and unchecked do. */
+function securityLevelMark(entry: Entry, s: SecurityCheck, date: string): string {
+  const web = isWebApp(entry);
+  const where = web ? L('the packages the site is built from', '這個網站用到的套件') : L('packages it installs', '它安裝的套件');
+  const n = s.packages_checked ?? 0;
+  const counts = s.counts ?? {};
+  const state = s.coverage?.state ?? 'complete';
+  if (state === 'partial' && !(s.level === 'blocked' || s.level === 'exposed' || s.level === 'conditional')) {
+    // Partly checked: never clean, never a vulnerability. What was found where it does not run is said too.
+    const unused = Math.max(counts.present_unreachable ?? 0, s.unreachable?.length ?? 0);
+    const only = counts.not_shipped ?? 0;
+    const extra = [
+      unused ? L(`${unused} found in code it installs but does not use`, `${unused} 個在裝了但沒用到的程式碼裡`) : '',
+      only ? L(`${only} only in development or build tools`, `${only} 個只在開發或建置工具裡`) : '',
+    ].filter(Boolean);
+    return checkMark(
+      'open',
+      'shield',
+      SECURITY(),
+      L(
+        `Only partly checked for known vulnerabilities: none known in the part pickfit could read.${checkedPart(s)}${extra.length ? ` Also ${extra.join(', ')}.` : ''}`,
+        `已知漏洞只檢查了一部分，讀得到的部分沒有已知漏洞。${checkedPart(s)}${extra.length ? `另有${extra.join('、')}。` : ''}`,
+      ),
+    );
+  }
+  if (state === 'unchecked') return '';
+  if (s.level === 'blocked' || s.level === 'exposed' || s.level === 'conditional') {
+    const vulns = advisoriesOf(s, Math.max(s.count ?? 0, s.findings?.length ?? 0, 1));
+    const plural = vulns === 1 ? 'vulnerability' : 'vulnerabilities';
+    const say =
+      s.level === 'blocked'
+        ? L(
+            `${vulns} known ${plural} in ${where}, with a malicious package or a hole attackers already exploit (OSV.dev, CISA${date ? `, ${date}` : ''}). See the list`,
+            `${where}有 ${vulns} 個已知漏洞，其中有惡意套件或已遭實際利用的漏洞（OSV.dev、CISA${date ? `，${date}` : ''}）。看清單`,
+          )
+        : s.level === 'exposed'
+          ? L(
+              `${vulns} known high or critical ${plural} in ${where}, reached in normal use (OSV.dev${date ? `, ${date}` : ''}). See the list`,
+              `${where}有 ${vulns} 個已知的高風險或嚴重漏洞，一般使用就會碰到（OSV.dev${date ? `，${date}` : ''}）。看清單`,
+            )
+          : L(
+              `${vulns} known high or critical ${plural} in ${where} that matter only in some uses (OSV.dev${date ? `, ${date}` : ''}). See when`,
+              `${where}有 ${vulns} 個已知的高風險或嚴重漏洞，只在某些用法下才會碰到（OSV.dev${date ? `，${date}` : ''}）。看是哪些情況`,
+            );
+    return checkMark(s.level === 'conditional' ? 'caution' : 'fail', 'shield-alert', SECURITY(), `${say}${checkedPart(s) ? `${L('.', '。')}${checkedPart(s)}` : ''}`, {
+      count: vulns,
+      href: '#security',
+    });
+  }
+  const clean = L(
+    `No known high or critical vulnerabilities in what it runs (OSV.dev${date ? `, checked ${date}` : ''}, ${n} ${n === 1 ? 'package' : 'packages'})`,
+    `執行到的部分沒有已知的高風險或嚴重漏洞（OSV.dev${date ? `，${date} 檢查` : ''}，共 ${n} 個套件）`,
+  );
+  if (s.level === 'present_unreachable') {
+    const unused = s.unreachable ?? [];
+    const m = Math.max(counts.present_unreachable ?? 0, unused.length);
+    const say = `${clean}${L(`. ${m} more in code it installs but does not use: open to see`, `。另有 ${m} 個在裝了但沒用到的程式碼裡，點開看`)}`;
+    const body =
+      `<ul class="vuln-list small">${unused
+        .map((f) => {
+          const cite = f.evidence.find((e) => /^\S+:\d+:/.test(e));
+          return `<li><code>${esc(f.package)} ${esc(f.version)}</code> — ${advisoryLink(f)}${L(`: ${unusedBecause(f.method)}`, `：${unusedBecause(f.method)}`)}${cite ? ` <code>${esc(cite)}</code>` : ''}</li>`;
+        })
+        .join('')}</ul>` + (m > unused.length ? `<p class="quiet">${L(`${m - unused.length} more not listed here.`, `另有 ${m - unused.length} 筆未列出。`)}</p>` : '');
+    return checkMark('pass', 'shield-check', SECURITY(), say, { pop: 'pop-security' }) + popover('pop-security', L('Found, but not in code it runs', '有找到，但不在執行到的程式碼裡'), body);
+  }
+  if (s.level === 'not_shipped') {
+    const m = counts.not_shipped ?? 0;
+    return checkMark('pass', 'shield-check', SECURITY(), m ? `${clean}${L(`. ${m} more only in development or build tools`, `。另有 ${m} 個只在開發或建置工具裡`)}` : clean);
+  }
+  return '';
+}
+
 /** At a glance's checks: the visual check (desktop and web apps) and known vulnerabilities, one mark each. */
 const checkMarks = (entry: Entry) =>
   `<ul class="check-marks" aria-label="${L('Checks', '檢查')}">${[visualMark(entry), securityMark(entry)]
@@ -240,13 +412,33 @@ const checkMarks = (entry: Entry) =>
     .map((m) => `<li>${m}</li>`)
     .join('')}</ul>`;
 
-const severityOf = (f: SecurityFinding) => (f.malicious ? L('malicious package', '惡意套件') : f.severity === 'CRITICAL' ? L('critical', '嚴重') : L('high', '高風險'));
+const severityOf = (f: SecurityFinding) =>
+  f.malicious
+    ? L('malicious package', '惡意套件')
+    : f.severity === 'CRITICAL'
+      ? L('critical', '嚴重')
+      : f.severity === 'HIGH'
+        ? L('high', '高風險')
+        : f.severity === 'MODERATE'
+          ? L('moderate', '中風險')
+          : f.severity === 'LOW'
+            ? L('low', '低風險')
+            : L('unrated', '未評等');
 const fixOf = (f: SecurityFinding) => (f.malicious ? '' : f.fixed_in ? L(`, fixed in ${esc(f.fixed_in)}`, `，${esc(f.fixed_in)} 已修正`) : L(', no fix yet', '，尚無修正版本'));
-const advisoryLink = (f: SecurityFinding) => link(`https://osv.dev/vulnerability/${encodeURIComponent(f.advisory)}`, esc(f.advisory));
+const advisoryLink = (f: Pick<SecurityFinding, 'advisory'>) => link(`https://osv.dev/vulnerability/${encodeURIComponent(f.advisory)}`, esc(f.advisory));
+/** sec.v2, a finding that matters only in some uses: when, in one line (nothing when the check could not tell). */
+const onlyWhen = (s: SecurityCheck, f: SecurityFinding) => {
+  if (s.level !== 'conditional' || f.level !== 'conditional') return '';
+  const when = whenItMatters(f.preconditions);
+  return when
+    ? ` <span class="quiet">${L(`Only when ${when}.`, `只在${when}時才會碰到。`)}</span>`
+    : ` <span class="quiet">${L('pickfit could not tell when it applies.', 'pickfit 判斷不出在什麼情況下會碰到。')}</span>`;
+};
 
 /** Before the first install step, or beside the site's address: a known vulnerability, so a person reading the page
  * weighs it before installing, as an agent is told to through the install guide's warning. The worst two packages, then
- * the rest the check kept in a fold. Nothing for clean or unchecked. */
+ * the rest the check kept in a fold. Nothing for clean or unchecked. A sec.v2 check that matters only in some uses
+ * (conditional) is amber and says when for each; blocked says not to install it. */
 export function securityNotice(entry: Entry): string {
   const s = securityOf(entry);
   if (s.status !== 'vulnerable') return '';
@@ -257,7 +449,7 @@ export function securityNotice(entry: Entry): string {
   // The worst of the first two packages (findings come worst first), so two advisories on one package do not hide a second.
   const worst = all.filter((f, i) => all.findIndex((g) => g.package === f.package) === i).slice(0, 2);
   const items = worst
-    .map((f) => `<li><code>${esc(f.package)} ${esc(f.version)}</code>${f.summary ? ` ${esc(f.summary)}` : ''} ${L(`(${advisoryLink(f)}, ${severityOf(f)}${fixOf(f)})`, `（${advisoryLink(f)}，${severityOf(f)}${fixOf(f)}）`)}</li>`)
+    .map((f) => `<li><code>${esc(f.package)} ${esc(f.version)}</code>${f.summary ? ` ${esc(f.summary)}` : ''} ${L(`(${advisoryLink(f)}, ${severityOf(f)}${fixOf(f)})`, `（${advisoryLink(f)}，${severityOf(f)}${fixOf(f)}）`)}${onlyWhen(s, f)}</li>`)
     .join('');
   // The rest the check kept (at most 10 in all), and how many more it counted: the count above stays the full one.
   const rest = count - all.length;
@@ -267,16 +459,36 @@ export function securityNotice(entry: Entry): string {
   const others = all.filter((f) => !worst.includes(f));
   const list = others.length
     ? `<details class="vuln-list small"><summary>${L(`See ${others.length} more`, `再看 ${others.length} 個`)}</summary><ul>` +
-      others.map((f) => `<li><code>${esc(f.package)} ${esc(f.version)}</code> — ${advisoryLink(f)}${L(` (${severityOf(f)})`, `（${severityOf(f)}）`)}${fixOf(f)}</li>`).join('') +
+      others.map((f) => `<li><code>${esc(f.package)} ${esc(f.version)}</code> — ${advisoryLink(f)}${L(` (${severityOf(f)})`, `（${severityOf(f)}）`)}${fixOf(f)}${onlyWhen(s, f)}</li>`).join('') +
       `</ul>${more('quiet')}</details>`
     : more('small quiet');
   const date = s.checked_at ? day(s.checked_at) : '';
+  const conditional = s.level === 'conditional';
+  const heading =
+    s.level === 'blocked'
+      ? web
+        ? L('Do not use it: a malicious package or an exploited hole', '不要使用：有惡意套件或已遭利用的漏洞')
+        : L('Do not install it: a malicious package or an exploited hole', '不要安裝：有惡意套件或已遭利用的漏洞')
+      : conditional
+        ? web
+          ? L('Before you use it: known vulnerabilities in some uses', '使用前先知道：某些用法下有已知漏洞')
+          : L('Before you install: known vulnerabilities in some uses', '安裝前先知道：某些用法下有已知漏洞')
+        : web
+          ? L('Before you use it: known vulnerabilities', '使用前先知道：有已知漏洞')
+          : L('Before you install: known vulnerabilities', '安裝前先知道：有已知漏洞');
+  const reached = s.level === 'exposed' ? L(' Normal use reaches them.', '一般使用就會碰到。') : '';
+  const lead = conditional
+    ? L(
+        ` Each matters only in some uses, which pickfit could not rule out. See when below before you ${web ? 'use it' : 'install it'}.`,
+        `這些漏洞只在某些用法下才會碰到，pickfit 無法排除。${web ? '使用' : '安裝'}前先看看下面列的情況。`,
+      )
+    : L(` Weigh this before you ${web ? 'use it' : 'install it'}.`, `${web ? '使用' : '安裝'}前請先考慮。`);
   return (
-    `<div class="notice error security-notice" role="note" id="security">${fitz('sorry', 64)}<div>` +
-    `<h3>${web ? L('Before you use it: known vulnerabilities', '使用前先知道：有已知漏洞') : L('Before you install: known vulnerabilities', '安裝前先知道：有已知漏洞')}</h3>` +
+    `<div class="notice ${conditional ? 'busy' : 'error'} security-notice" role="note" id="security">${fitz(conditional ? 'thinking' : 'sorry', 64)}<div>` +
+    `<h3>${heading}</h3>` +
     `<p>${L(
-      `pickfit found ${vulns} known high or critical ${vulns === 1 ? 'vulnerability' : 'vulnerabilities'}${count > vulns ? ` (${count} findings, one per affected package version)` : ''} in ${web ? 'the packages this site is built with' : 'the packages a fresh install brings'}${date ? ` (OSV.dev, ${esc(date)})` : ''}. Weigh this before you ${web ? 'use it' : 'install it'}.`,
-      `pickfit 在${web ? '這個網站用到的套件' : '安裝時會一併裝上的套件'}裡找到 ${vulns} 個已知的高風險或嚴重漏洞${count > vulns ? `（共 ${count} 筆，每個受影響的套件版本一筆）` : ''}${date ? `（OSV.dev，${esc(date)}）` : ''}，${web ? '使用' : '安裝'}前請先考慮。`,
+      `pickfit found ${vulns} known high or critical ${vulns === 1 ? 'vulnerability' : 'vulnerabilities'}${count > vulns ? ` (${count} findings, one per affected package version)` : ''} in ${web ? 'the packages this site is built with' : 'the packages a fresh install brings'}${date ? ` (OSV.dev, ${esc(date)})` : ''}.${reached}${lead}`,
+      `pickfit 在${web ? '這個網站用到的套件' : '安裝時會一併裝上的套件'}裡找到 ${vulns} 個已知的高風險或嚴重漏洞${count > vulns ? `（共 ${count} 筆，每個受影響的套件版本一筆）` : ''}${date ? `（OSV.dev，${esc(date)}）` : ''}，${reached ? reached : ''}${lead}`,
     )}</p>` +
     (items ? `<ul class="small">${items}</ul>` : '') +
     list +
@@ -284,24 +496,32 @@ export function securityNotice(entry: Entry): string {
   );
 }
 
-/** The clip's chapters for the page: a feature's plain title when there is one, fixed words for the two cards. */
+/**
+ * The clip's chapters for the page: its features, each by its plain title when there is one. A clip cut before 11/19
+ * opens and closes on a card; those are not chapters (what they said is in "How pickfit tested it"): the last
+ * feature's chapter runs to the clip's end.
+ */
 export function chaptersOf(entry: Entry, video: RunVideo): Chapter[] {
-  const list = [...(video.chapters ?? [])].filter((c) => c.start_s >= 0 && c.start_s < video.seconds).sort((a, b) => a.start_s - b.start_s);
-  return list.map((c, i) => ({
-    start: c.start_s,
-    end: i + 1 < list.length ? list[i + 1].start_s : video.seconds,
-    title: c.feature
-      ? (guideTitle(entry, c.feature) ?? c.title)
-      : i === 0
-        ? L('Recorded by pickfit', 'pickfit 錄製')
-        : L('Unedited recordings', '原始錄影'),
-  }));
+  const list = [...(video.chapters ?? [])]
+    .filter((c) => c.feature && c.start_s >= 0 && c.start_s < video.seconds)
+    .sort((a, b) => a.start_s - b.start_s);
+  return list.map((c, i) => {
+    const raw = c.raw != null ? video.raw[c.raw] : undefined;
+    return {
+      start: c.start_s,
+      end: i + 1 < list.length ? list[i + 1].start_s : video.seconds,
+      title: guideTitle(entry, c.feature!) ?? c.title,
+      ...(raw && c.raw_s != null ? { raw: { file: raw.file, at: c.raw_s } } : {}),
+    };
+  });
 }
 
 /**
  * The app itself, first: pickfit's own clip of it running. With chapters, the page script swaps the native
  * controls for a seek bar cut into the chapters (data-player), and the list under the clip jumps to each one.
- * Without the script, or without chapters, it is the browser's own player.
+ * Without the script, or without chapters, it is the browser's own player. A clip has no sound (no mute button)
+ * and, since 11/19, no words on its picture: its captions are a WebVTT track in the page's language, on by default,
+ * with a CC button on the bar. Each chapter of such a clip also links to the moment in its unedited recording.
  */
 function showcase(entry: Entry): string {
   const video = firstVideo(entry);
@@ -309,6 +529,7 @@ function showcase(entry: Entry): string {
   const slug = entry.slug;
   const chapters = chaptersOf(entry, video);
   const seconds = Math.round(video.seconds);
+  const captioned = !!video.captions?.length;
   const player = chapters.length
     ? `<div class="player-bar" data-bar hidden>` +
       `<button type="button" class="player-btn" data-play aria-label="${L('Play', '播放')}" data-label-play="${L('Play', '播放')}" data-label-pause="${L('Pause', '暫停')}">${icon('play')}${icon('pause')}</button>` +
@@ -318,7 +539,7 @@ function showcase(entry: Entry): string {
         .join('') +
       `<span class="chap-tip" data-tip-box hidden></span></div>` +
       `<span class="player-time" data-time>0:00 / ${clock(video.seconds)}</span>` +
-      `<button type="button" class="player-btn" data-mute aria-label="${L('Mute', '靜音')}">${icon('volume-2')}${icon('volume-x')}</button>` +
+      (captioned ? `<button type="button" class="player-btn" data-cc aria-pressed="true" aria-label="${L('Captions', '字幕')}">${icon('captions')}${icon('captions-off')}</button>` : '') +
       `<button type="button" class="player-btn" data-full aria-label="${L('Full screen', '全螢幕')}">${icon('maximize')}</button>` +
       `</div>`
     : '';
@@ -327,15 +548,26 @@ function showcase(entry: Entry): string {
     ? `<div class="chap-list"><h2 class="chap-head" id="chapters-title">${L('Chapters', '段落')}</h2>` +
       `<ol class="chapters" aria-labelledby="chapters-title">` +
       chapters
-        .map((c, i) => `<li><a href="${esc(atTime(slug, video, c.start))}" data-seek="${c.start}"${i === 0 ? ' aria-current="true"' : ''}><span class="chap-time">${clock(c.start)}</span><span class="chap-title">${esc(c.title)}</span></a></li>`)
+        .map(
+          (c, i) =>
+            `<li><a href="${esc(atTime(slug, video, c.start))}" data-seek="${c.start}"${i === 0 ? ' aria-current="true"' : ''}><span class="chap-time">${clock(c.start)}</span><span class="chap-title">${esc(c.title)}</span></a>` +
+            (c.raw
+              ? `<a class="chap-raw" href="${esc(`${videoPath(slug, c.raw.file)}#t=${c.raw.at}`)}" aria-label="${esc(L(`${c.title}: the unedited recording`, `${c.title}：原始錄影`))}">${L('Unedited', '原始錄影')}</a>`
+              : '') +
+            `</li>`,
+        )
         .join('') +
       `</ol></div>`
+    : '';
+  const track = captioned
+    ? `<track kind="captions" default srclang="${lang() === 'zh-TW' ? 'zh-Hant-TW' : 'en'}" label="${L('English', '中文')}" src="${esc(videoPath(slug, captionsOf(video.clip, lang())))}">`
     : '';
   return (
     `<figure class="showcase"${chapters.length ? ' data-player' : ''}>` +
     `<div class="player">` +
     `<video controls preload="metadata" playsinline poster="${esc(videoPath(slug, posterOf(video.clip)))}" aria-describedby="showcase-cap">` +
     `<source src="${esc(videoPath(slug, video.clip))}" type="video/mp4">` +
+    track +
     `<a href="${esc(videoPath(slug, video.clip))}">${L('Download the clip', '下載影片')}</a></video>` +
     player +
     `</div>` +
@@ -688,16 +920,28 @@ function webRun(entry: Entry): string {
 
 // ---------------------------------------------------------------- how pickfit tested it
 
-/** The unedited recordings the clip was cut from, each named by the feature it shows, to download. */
+/**
+ * The unedited recordings the clip was cut from, each named by the feature it shows, to download, with its sha256 (the
+ * clip's own mp4 names them too): a clip cut since 11/19 has no last card for these, and its marks are explained here.
+ */
 function rawList(entry: Entry, video: RunVideo): string {
   const raw = video.raw
     .map((r, i) => {
       const shows = r.feature_index != null ? video.features[r.feature_index] : null;
       const name = shows ? (guideTitle(entry, shows) ?? shows.charAt(0).toUpperCase() + shows.slice(1)) : L(`Recording ${i + 1}`, `錄影 ${i + 1}`);
-      return `<li><a href="${esc(videoPath(entry.slug, r.file))}" download>${esc(name)}</a> <span class="quiet">${L(`(${Math.round(r.seconds)} s)`, `（${Math.round(r.seconds)} 秒）`)}</span></li>`;
+      return (
+        `<li><a href="${esc(videoPath(entry.slug, r.file))}" download>${esc(name)}</a> <span class="quiet">${L(`(${Math.round(r.seconds)} s)`, `（${Math.round(r.seconds)} 秒）`)}</span>` +
+        `<br><span class="quiet">sha256</span> <code class="hash">${esc(r.sha256)}</code></li>`
+      );
     })
     .join('');
-  return raw ? `<p class="small">${L('The clip was cut from these unedited recordings:', '影片剪輯自以下原始錄影：')}</p><ul class="small raw-list">${raw}</ul>` : '';
+  const picked = video.captions?.length
+    ? `<p class="small quiet">${L(
+        'In the clip, sped-up parts are marked 2×, and where unchanged screen was cut out, the seconds removed are marked.',
+        '影片中加速的部分標著 2×；剪掉畫面沒變化的片段時，會標出剪去的秒數。',
+      )}</p>`
+    : '';
+  return raw ? `<p class="small">${L('The clip was cut from these unedited recordings:', '影片剪輯自以下原始錄影：')}</p><ul class="small raw-list">${raw}</ul>${picked}` : '';
 }
 
 /** Everything a skeptic wants and a user doesn't: where each run ran, who looked, the raw recordings, the sandbox-only differences. */
@@ -770,7 +1014,11 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string): strin
           })
         : badge('quiet', L('Not verified yet', '尚未驗證'), { icon: 'circle-dashed' }),
     securityOf(entry).status === 'vulnerable'
-      ? `<a class="badge-link" href="#security">${badge('fail', L('Known vulnerabilities', '有已知漏洞'), { icon: 'triangle-alert' })}</a>`
+      ? `<a class="badge-link" href="#security">${
+          securityOf(entry).level === 'conditional'
+            ? badge('caution', L('Known vulnerabilities in some uses', '某些用法下有已知漏洞'), { icon: 'triangle-alert' })
+            : badge('fail', L('Known vulnerabilities', '有已知漏洞'), { icon: 'triangle-alert' })
+        }</a>`
       : '',
     entry.scores?.treasure ? badge('gem', L('Hidden gem', '寶藏'), { icon: 'gem', pop: 'pop-gem' }) : '',
   ].join('');

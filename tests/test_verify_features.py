@@ -77,7 +77,7 @@ def graphtty(features: list[tuple[str, str]] = FEATURES) -> VerifyTask:
 
 def judge_answer() -> dict[str, Any]:
     text = json.dumps({"verdict": "working", "observed": "An arrow from a to b.", "error_text": None,
-                       "matches_expected_signal": True, "evidence_regions": []})
+                       "matches_expected_signal": True, "evidence_regions": [], "evidence": []})
     return {"id": "judge", "object": "response", "created_at": 0, "model": "muse-spark-1.3-contributor",
             "status": "completed", "output": [{"type": "message", "id": "m", "role": "assistant",
                                                "status": "completed",
@@ -223,7 +223,10 @@ def test_each_feature_is_checked_failed_or_not_checked_with_a_reason(tmp_path: P
     svg = features["export to SVG"]
     assert (svg.status, svg.reason) == ("not_checked", "not_attempted")
     # The replay reran the passing checks offline, then the failed feature check once, online.
-    replay = [(c, net) for c, _, net in boxes.made[1][1].ran]
+    # The replay's own commands; the SBOM (pickfit/sbom.py) is taken after them, before the box closes.
+    ran = [(c, net) for c, _, net in boxes.made[1][1].ran]
+    replay = [(c, net) for c, net in ran if not c.startswith("mkdir -p /tmp/pickfit-sbom")]
+    assert len(ran) == len(replay) + 1 and ran[-1][0].startswith("mkdir -p /tmp/pickfit-sbom")
     assert replay[-1] == (NEON, True) and replay.count((NEON, True)) == 1
     assert ("graphtty graph.json", False) in replay
     assert any(line.startswith("  features: 1 checked · 1 test_failed · 2 not_checked") for line in lines)

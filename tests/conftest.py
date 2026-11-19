@@ -25,6 +25,7 @@ def _no_shared_ledger_or_traces(tmp_path_factory: pytest.TempPathFactory, monkey
     monkeypatch.setenv("PICKFIT_LEDGER", str(scratch / "ledger.sqlite"))
     monkeypatch.setenv("PICKFIT_RUNS_DIR", str(scratch / "runs"))
     monkeypatch.delenv("PICKFIT_TART_HOST", raising=False)
+    monkeypatch.setenv("PICKFIT_SCREEN_OCR", "off")  # no host OCR in a test; tests pass check_screen their own
     from pickfit.verify import tart_box, tart_host
 
     monkeypatch.setattr(tart_box, "STATE_DIR", scratch / "tart")

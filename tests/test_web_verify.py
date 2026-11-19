@@ -224,6 +224,29 @@ def test_claude_is_not_asked_to_write_its_reasoning_into_the_answer():
     assert 'use_thinking=bool(start.get("operator_thinking", True))' in harness
 
 
+def test_the_operators_element_list_is_todays_unless_a_comparison_sets_it(monkeypatch: pytest.MonkeyPatch):
+    from pickfit.verify import web_harness
+
+    for name in ("PICKFIT_WEB_ELEMENTS_CHARS", "PICKFIT_WEB_ELEMENT_ATTRIBUTES"):
+        monkeypatch.delenv(name, raising=False)
+    assert wv.element_settings() == {}
+    assert web_harness.element_options({}) == {"max_clickable_elements_length": 12_000}  # browser-use's attributes
+    monkeypatch.setenv("PICKFIT_WEB_ELEMENTS_CHARS", "7000")
+    monkeypatch.setenv("PICKFIT_WEB_ELEMENT_ATTRIBUTES", "compact")
+    start = wv.element_settings()
+    assert start == {"elements_chars": 7000, "element_attributes": "compact"}
+    options = web_harness.element_options(start)
+    assert options["max_clickable_elements_length"] == 7000 and "ax_name" in options["include_attributes"]
+    assert "pattern" not in options["include_attributes"]
+    harness = (Path(wv.__file__).parent / "web_harness.py").read_text(encoding="utf-8")
+    assert "**element_options(start)" in harness
+    for name, bad in (("PICKFIT_WEB_ELEMENTS_CHARS", "500"), ("PICKFIT_WEB_ELEMENT_ATTRIBUTES", "tiny")):
+        monkeypatch.setenv(name, bad)
+        with pytest.raises(ValueError, match=name):
+            wv.element_settings()
+        monkeypatch.delenv(name)
+
+
 def test_a_visits_judges_are_capped_with_the_operator_not_below_it():
     # DuckDB's shell, 11/16: the operator spent $0.69 in the visit's scope, and the judge, capped at $0.50 in
     # that same scope, was refused; the visit was lost. A judge's cap is the visit's.

@@ -3,9 +3,13 @@ and a failed translation never stops a deploy."""
 
 import json
 
+import pytest
+
 import pickfit.publish as publish_mod
 import pickfit.translate as translate
 from pickfit.i18n import load, save
+from pickfit.ledger import Ledger
+from batch_fakes import FakeBatches, fake_client, succeeded, user_text
 
 
 ENTRIES = [
@@ -61,3 +65,30 @@ def test_publish_translation_never_raises(tmp_path, monkeypatch):
     assert any("skipped (RuntimeError: no credits)" in line for line in lines)
     publish_mod.translate_new({"entries": ENTRIES}, data, dry_run=True, out=lines.append)
     assert lines[-1] == "publish: dry run; would translate 3 sentence(s) of 2 tool(s) into zh-TW"
+
+
+def test_a_batch_run_sends_every_request_at_once_and_saves_what_came_back(tmp_path):
+    def answer(params):
+        said = json.loads(user_text(params).split("\n\n", 1)[1])
+        if said[0]["tool"] == "b":
+            return {"type": "errored", "error": {"type": "error", "error": {"type": "invalid_request_error"}}}
+        return succeeded(json.dumps({"items": [{"i": item["i"], "zh": f"中文{item['i']}"} for item in said]}))
+
+    batches = FakeBatches(answer)
+    known, todo = translate.missing(ENTRIES, tmp_path)
+    groups = [[p for p in todo if p[0] == "a"], [p for p in todo if p[0] == "b"]]
+    options = {"client": fake_client(batches), "ledger": Ledger(tmp_path / "l.sqlite"), "sleep": lambda s: None,
+               "resend": False}
+    totals = translate.run(groups, known, tmp_path, out=lambda _: None, batch=True, batch_options=options)
+    assert len(batches.created) == 1 and len(batches.created[0]) == 2  # one batch for both requests
+    params = batches.created[0][0]["params"]
+    assert params["model"] == "claude-opus-5-5" and params["output_config"]["effort"] == "low"
+    assert params["output_config"]["format"]["type"] == "json_schema"
+    assert (totals.sentences, totals.requests, totals.failed) == (2, 1, 1)
+    assert load(tmp_path, "a") == {"Converts files offline.": "中文0", "convert a file": "中文1"}
+    assert load(tmp_path, "b") == {}
+
+
+def test_only_claude_requests_go_in_a_batch(tmp_path):
+    with pytest.raises(ValueError, match="message batch"):
+        translate.run([], {}, tmp_path, model="open-modal", batch=True)

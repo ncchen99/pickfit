@@ -101,12 +101,35 @@ def test_public_cidrs_leave_out_metadata_and_private_ranges():
 def test_create_kwargs_use_gvisor_hard_limits_and_an_allowlist():
     kw = ModalBox(limits=BoxLimits(cpus=2.0, memory_mb=2048, lifetime_s=900), tags={"run": "x"}).create_kwargs()
     assert kw["runtime"] == "gvisor" and kw["timeout"] == 900
-    assert kw["cpu"] == (1.0, 1.0) and kw["memory"] == (2048, 2048)  # request == limit
+    # A low CPU request under the box's limit (Modal bills max(request, use)); memory request == limit.
+    assert kw["cpu"] == (0.5, 1.0) and kw["memory"] == (2048, 2048)
     assert kw["outbound_cidr_allowlist"] == ONLINE_CIDRS and kw["outbound_domain_allowlist"] == []
     assert kw["tags"] == {"pickfit": "verify", "run": "x"}
     assert "secrets" not in kw and "env" not in kw
-    # 1 core and 2 GiB at sandbox prices: about $0.19 an hour alive.
+    # 1 core and 2 GiB at sandbox prices: about $0.19 an hour alive at most (the limit, the ledger's upper bound).
     assert ModalBox().usd_per_second() == pytest.approx(0.00003942 + 2 * 0.00000667)
+
+
+def test_a_build_box_keeps_its_cpu_request_at_its_limit(monkeypatch: pytest.MonkeyPatch):
+    # A compile gets the cores the build box was sized for; only a box that mostly waits asks for less.
+    build = ModalBox(limits=BoxLimits(cpus=4.0, memory_mb=6144), toolchain=True)
+    assert build.create_kwargs()["cpu"] == (2.0, 2.0)
+    build.limits = BoxLimits(cpus=8.0, memory_mb=6144)  # sized_for_build: read when the box is used
+    assert build.create_kwargs()["cpu"] == (4.0, 4.0)
+    # The request is set from the environment, never above the limit nor below Modal's smallest.
+    monkeypatch.setenv(mb.CPU_REQUEST_ENV, "0.25")
+    assert ModalBox().create_kwargs()["cpu"] == (0.25, 1.0)
+    monkeypatch.setenv(mb.CPU_REQUEST_ENV, "3")
+    assert ModalBox().create_kwargs()["cpu"] == (1.0, 1.0)
+    monkeypatch.setenv(mb.CPU_REQUEST_ENV, "0.01")
+    assert ModalBox().create_kwargs()["cpu"] == (0.125, 1.0)
+    monkeypatch.setenv(mb.CPU_REQUEST_ENV, "lots")
+    assert ModalBox().create_kwargs()["cpu"] == (0.5, 1.0)
+    # A web box's machine keeps request == limit (nothing sets a request for it).
+    from pickfit.verify.web_box import WebBox
+
+    assert WebBox(site="https://example.com").create_kwargs()["cpu"][0] == WebBox(
+        site="https://example.com").create_kwargs()["cpu"][1]
 
 
 def test_gpu_box_asks_modal_for_the_card_and_prices_it():

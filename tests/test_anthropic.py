@@ -125,12 +125,38 @@ def call(server: FakeAnthropic, ledger: Ledger, endpoint: str = "responses", bod
 def test_the_tiers_are_claude_models_and_the_hackathon_ids_keep_their_providers(monkeypatch: pytest.MonkeyPatch):
     assert (resolve_model("prod"), resolve_model("dev"), resolve_model("open")) == (PROD_MODEL, BULK_MODEL, BULK_MODEL)
     assert (PROD_MODEL, BULK_MODEL) == ("claude-opus-5-5", "claude-haiku-5-5")
-    assert resolve_model(None) == BULK_MODEL  # PICKFIT_MODE unset: dev
-    monkeypatch.setenv("PICKFIT_MODE", "prod")
-    assert resolve_model(None) == PROD_MODEL
+    assert resolve_model(None) == PROD_MODEL  # PICKFIT_MODE unset: prod
+    monkeypatch.setenv("PICKFIT_MODE", "dev")
+    assert resolve_model(None) == BULK_MODEL
     assert provider_for(PROD_MODEL) == provider_for("claude-sonnet-5-5") == "anthropic"
     assert provider_for("muse-spark-1.3") == "meta" and resolve_model("prod", "meta") == "muse-spark-1.3"
     assert provider_for(resolve_model("open-modal")) == "modal"  # the endpoint that takes video
+
+
+def test_no_model_named_means_opus_and_haiku_only_by_name(monkeypatch: pytest.MonkeyPatch,
+                                                          capsys: pytest.CaptureFixture[str]):
+    monkeypatch.setattr(meta, "_dev_noted", set())
+    assert resolve_model(None) == PROD_MODEL  # no environment variable: Opus
+    assert capsys.readouterr().err == ""
+    monkeypatch.setenv("PICKFIT_MODE", "dev")
+    assert resolve_model(None) == BULK_MODEL  # PICKFIT_MODE=dev: Haiku, and stderr says so once
+    assert resolve_model(None) == BULK_MODEL
+    err = capsys.readouterr().err
+    assert err.count("model tier dev") == 1 and "PICKFIT_MODE" in err
+    assert resolve_model("prod") == PROD_MODEL  # a model the caller names wins over PICKFIT_MODE
+    monkeypatch.setenv("PICKFIT_MODE", "prod")
+    assert resolve_model("dev") == BULK_MODEL and "the caller" in capsys.readouterr().err
+    assert resolve_model("claude-sonnet-5-5") == "claude-sonnet-5-5"
+    monkeypatch.setenv("PICKFIT_MODE", "cheap")
+    with pytest.raises(ValueError, match="PICKFIT_MODE"):
+        resolve_model(None)
+
+
+def test_a_call_with_no_model_is_sent_to_opus_and_recorded_so(ledger: Ledger, tmp_path: Path):
+    server = FakeAnthropic(ok(message(text("pong"))))
+    result = call(server, ledger, model=None)
+    assert server.requests[0]["model"] == PROD_MODEL and result.model == PROD_MODEL
+    assert {r["model"] for r in traces(tmp_path)} == {PROD_MODEL}
 
 
 def test_claude_prices_count_cache_reads_cache_writes_and_long_prompts():
@@ -214,6 +240,26 @@ def test_a_single_call_caches_only_its_instructions_and_haiku_gets_no_fallback()
     assert kwargs["output_config"] == {"effort": "medium"}
     assert "betas" not in kwargs and "fallbacks" not in kwargs
     assert "betas" not in to_request("responses", {**request, "model": PROD_MODEL}, fallbacks=False)[0]
+
+
+AGENT_TOOL = {"type": "function", "name": "run_command", "description": "Run a command.",
+              "parameters": {"type": "object", "properties": {"cmd": {"type": "string"}}}}
+
+
+def test_a_conversation_caches_its_first_turn_and_a_single_call_does_not(ledger: Ledger):
+    first_turn = {"model": PROD_MODEL, "instructions": "You verify tools.", "tools": [AGENT_TOOL],
+                  "input": [{"type": "message", "role": "user", "content": "Task: tinyq. <source>README</source>"}],
+                  "reasoning": {"effort": "medium"}, "max_output_tokens": 8000, "store": False}
+    kwargs, _ = to_request("responses", first_turn, conversation=True)
+    assert kwargs["cache_control"] == {"type": "ephemeral"}  # the task is read from the cache on turn 2
+    assert kwargs["system"][0]["cache_control"] == {"type": "ephemeral"}  # the instructions keep their own
+    assert "cache_control" not in to_request("responses", first_turn)[0]  # a judge, a translation: one call
+
+    server = FakeAnthropic(ok(message(TOOL_USE)), ok(message(text("Graded."))))
+    call(server, ledger, body={k: first_turn[k] for k in ("instructions", "tools", "input")}, conversation=True)
+    call(server, ledger, body={"instructions": "Grade the README.", "input": "<source>README</source>"})
+    assert server.requests[0]["cache_control"] == {"type": "ephemeral"}
+    assert "cache_control" not in server.requests[1]
 
 
 def test_a_json_schema_and_a_reasoning_summary_are_asked_for_the_claude_way():
@@ -546,10 +592,11 @@ def test_claude_refuses_what_only_metas_api_does(ledger: Ledger):
 
 
 def test_ping_is_a_small_claude_call(ledger: Ledger):
-    server = FakeAnthropic(ok(message(text("pong"), model=BULK_MODEL)))
-    result = ping(client=server.client(), ledger=ledger)
-    assert (result.provider, result.model, result.text) == ("anthropic", BULK_MODEL, "pong")
+    server = FakeAnthropic(ok(message(text("pong"))), ok(message(text("pong"), model=BULK_MODEL)))
+    result = ping(client=server.client(), ledger=ledger)  # no model named: the prod model, as every call
+    assert (result.provider, result.model, result.text) == ("anthropic", PROD_MODEL, "pong")
     assert server.requests[0]["max_tokens"] == meta.PING_MAX_OUTPUT_TOKENS and not result.cache_hit
+    assert ping(model="dev", client=server.client(), ledger=ledger).model == BULK_MODEL
 
 
 def test_a_user_cap_blocks_through_caps_given_to_the_ledger(tmp_path: Path):
