@@ -92,3 +92,29 @@ Checked on 11/20 in a copy outside every checkout: the refresh rewrites 305 reco
 exactly 79.0 186 -> 5, the schema check passes (the JSON schema does not change), 2369 passed; the Worker builds,
 typechecks and passes its tests but test/cloudrun.test.ts (aws4fetch missing there). A conditional record's
 security.status still reads vulnerable, so the MCP server and the page still warn about it.
+
+## 11/20: what the feature judge reads (feature-judge-output-head-and-colour.patch)
+
+On feat/opt-worker-judges, from the repository root:
+
+```sh
+git apply loop/proposals/feature-judge-output-head-and-colour.patch
+uv run pytest -q tests/test_verify_features.py
+```
+
+pickfit/verify/feature_judge.py (guarded) and one test. Why: of the features the judge did not see working
+(`function.not_shown`, 492 features in 273 records), the 53 whose runs this machine kept show two causes on pickfit's
+side, besides checks that showed nothing (fixed in the agent's guide, pickfit/verify/features.py, not guarded):
+
+- The judge got only the last 1,500 characters of each check's output; 16 of the 53 had printed more than 3,000, so a
+  result printed first was cut off. Now an output of up to 3,000 characters goes whole, and a longer one keeps its
+  first 1,200 and its last 1,800.
+- Terminal colour codes were removed without a word, so a feature that colours its output (`dog --color=always`,
+  delta's syntax highlighting) could never be shown working. Now the judge is told how many colour or style codes
+  the output carried before they were removed.
+
+Nothing is judged again by applying it: it changes new runs. The feature judge cost about US$0.005 a run on the ledger
+(549 calls, US$2.91), and the longer input adds about a third at most. `pickfit verify --rejudge-features` only lowers
+checked features; recovering the 492 not_shown ones from saved evidence needs a mode that also restores a feature the
+judge now confirms (rebuilding its smoke-test indexes from report.json and replay.json), about US$1.5-2 for the 273
+records whose evidence is on the machine that ran them. Not written yet.

@@ -547,3 +547,12 @@ def test_a_passed_run_saves_the_tools_own_help_outside_the_command_log(tmp_path:
     assert not any("--help" in c["command"] for c in report["commands"])  # not the agent's, not citable
     assert any(line.startswith("  help: 2 text(s) saved (graphtty --help and 1 subcommands)") for line in lines)
     assert outcome.run.level == "function"
+
+
+def test_the_guide_says_what_a_feature_check_must_print():
+    from pickfit.verify.features import GUIDE
+
+    for words in ("print its result to stdout", "must show the feature doing its job", "--help or config text",
+                  "a list of tools or settings", "`echo done`", "something to find or change",
+                  "--color=always", "longer than 500 characters cannot be kept", "up to 4000 characters"):
+        assert words in GUIDE, words
