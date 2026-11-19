@@ -197,6 +197,16 @@ def test_a_clips_saved_events_give_its_actions_for_a_later_cut():
         {"kind": "key", "start_s": 3.0, "end_s": 3.1, "key": "cmd+shift+g"}]
 
 
+def test_a_clip_cut_before_the_action_log_masks_what_it_typed_into_a_password_field():
+    clip = video.ClipResult(slug="s", run="r", recording_run="v", raw=[{"file": "r.mp4"}],
+                            cuts=[{"raw": 0, "start": 0.0, "end": 5.0, "caption": "Type the same password in Confirm"},
+                                  {"raw": 0, "start": 5.0, "end": 9.0, "caption": "Name the file vault.kdbx"}],
+                            events=[{"raw": "r.mp4", "events": [
+                                {"kind": "type", "t": 1.0, "what": 'pickfit types "s3cret-Pass!"; the screen changes'},
+                                {"kind": "type", "t": 6.0, "what": 'pickfit types "vault.kdbx"'}]}])
+    assert video.typed_secrets(clip) == ["s3cret-Pass!"]
+
+
 def _clip(tmp_path: Path) -> tuple[video.ClipResult, Path]:
     folder = tmp_path / "videos" / "app"
     folder.mkdir(parents=True)

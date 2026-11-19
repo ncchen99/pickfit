@@ -2262,12 +2262,10 @@ def recut_clip(clip_json: Path, *, videos: Path | None = None, os: str | None = 
         if not path.is_file() or recording.sha256_file(path) != row["sha256"]:
             raise SystemExit(f"{path} is missing or does not match its sha256")
         raws.append((path, row["seconds"]))
-    if os is None and not clip.os:
-        try:
-            os = next(r.os for r in load_record(clip.slug, data_dir).verification.runs if r.id == clip.run)
-        except (FileNotFoundError, StopIteration):
-            os = "linux"
-    os = os or clip.os
+    os = os or clip.os or clip_os(clip, data_dir)
+    if not os:
+        os = "linux"
+        log(f"{clip_json.name}: the recordings' desktop is not known (no run in the record, no evidence): linux keys")
     crops = [tuple(c) if c else None for c in clip.crops]
     before = [cut_of(c) for c in clip.cuts]
     cuts = [cut_of(c) for c in clip.cuts]
@@ -2316,14 +2314,56 @@ def recut_clip(clip_json: Path, *, videos: Path | None = None, os: str | None = 
             out.passed_only = {**clip.passed_only, "clip": name, "clip_sha256": recording.sha256_file(folder / name),
                                "seconds": seconds, "chapters": chapters, "captions": captions,
                                **({"problem": problem} if problem else {})}
-    (folder / out.clip).with_suffix(".json").write_text(
-        json.dumps(asdict(out) | {"flagged": out.flagged}, ensure_ascii=False, indent=1), encoding="utf-8")
+    (folder / out.clip).with_suffix(".json").write_text(redact(  # its edit list, for R2: a password typed is masked
+        json.dumps(asdict(out) | {"flagged": out.flagged}, ensure_ascii=False, indent=1), typed_secrets(clip)),
+        encoding="utf-8")
     for passed_only in (False, True):
         if not passed_only or out.passed_only:
             make_poster_raw(out, folder, passed_only)
     log(f"clip {out.clip} · {clip.seconds:.0f}s -> {out.seconds:.0f}s · review reused · "
         + ", ".join(f"segment {i}: {waits_label(c.waits)}" for i, c in enumerate(cuts, start=1) if c.waits))
     return out
+
+
+def typed_secrets(clip: ClipResult) -> list[str]:
+    """What a clip cut before actions.json typed into a secret's field, from its saved events: the text of each typing
+    inside a segment whose caption names one (SECRET_FIELD), for redact()."""
+    found: list[str] = []
+    saved = {e["raw"]: e["events"] for e in clip.events}
+    for c in clip.cuts:
+        if not SECRET_FIELD.search(c.get("caption") or ""):
+            continue
+        for e in saved.get(clip.raw[c["raw"]]["file"]) or []:
+            if e.get("kind") == "type" and c["start"] <= e["t"] < c["end"] and (e.get("what") or "").startswith(
+                    "pickfit types "):
+                try:
+                    found.append(json.JSONDecoder().raw_decode(e["what"][len("pickfit types "):])[0])
+                except ValueError:
+                    continue
+    return found
+
+
+def clip_os(clip: ClipResult, data_dir: Path = DATA_DIR) -> str | None:
+    """The desktop a clip's recordings show (macos, windows, linux): its run's in the record, else its recorded
+    replay's (runs/video/<recording run>/replay.json) or its evidence's (verification_run.json); None when neither is
+    here."""
+    try:
+        found = next((r.os for r in load_record(clip.slug, data_dir).verification.runs if r.id == clip.run), None)
+    except (FileNotFoundError, ValueError):
+        found = None
+    if found:
+        return found
+    for root in runs_roots():
+        for path, read in ((root / "video" / clip.recording_run / "replay.json", lambda d: (d.get("video") or {}).get("os")),
+                           (root / "verify" / clip.recording_run / "verification_run.json", lambda d: d.get("os"))):
+            if path.is_file():
+                try:
+                    found = read(json.loads(path.read_text(encoding="utf-8")))
+                except ValueError:
+                    found = None
+                if found:
+                    return found
+    return None
 
 
 def smooth_clip(video_dir: Path, *, data_dir: Path = DATA_DIR, log: Any = print) -> ClipResult:
