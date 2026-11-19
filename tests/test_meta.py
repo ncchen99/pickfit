@@ -116,6 +116,9 @@ def isolated(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> list[float]:
     monkeypatch.setattr(pickfit.env, "DOTENV_PATH", tmp_path / "missing.env")
     for name in ("PICKFIT_MODE", "PICKFIT_CACHE", "MODEL_API_KEY", "BASETEN_API_KEY", "PICKFIT_META_VIA"):
         monkeypatch.delenv(name, raising=False)
+    # These tests are about the hackathon's providers, where most calls went to the dev tier (the contributor
+    # model, cached): asked for by name, since no model named now means prod.
+    monkeypatch.setenv("PICKFIT_MODE", "dev")
     monkeypatch.setenv("PICKFIT_LEDGER", str(tmp_path / "default-ledger.sqlite"))
     monkeypatch.setenv("PICKFIT_RUNS_DIR", str(tmp_path / "runs"))
     sleeps: list[float] = []
@@ -208,7 +211,7 @@ def test_chat_call_settles_ledger_and_writes_trace(ledger: Ledger, runs: Path):
 
     sent = server.requests[0]
     assert sent["path"] == "/v1/chat/completions"
-    assert sent["model"] == "muse-spark-1.3-contributor"  # PICKFIT_MODE unset -> dev
+    assert sent["model"] == "muse-spark-1.3-contributor"  # PICKFIT_MODE=dev
     assert sent["max_completion_tokens"] == 1000
     assert sent["reasoning_effort"] == "minimal"
     assert "stream" not in sent
@@ -372,7 +375,7 @@ def test_scope_cap_blocks_before_sending(ledger: Ledger):
 def test_contributor_refused_for_non_public_data(ledger: Ledger):
     server = FakeServer()
     with pytest.raises(PrivateDataRefused):
-        call(server, ledger, public_data_only=False)  # default mode dev -> contributor
+        call(server, ledger, public_data_only=False)  # PICKFIT_MODE=dev -> contributor
     with pytest.raises(PrivateDataRefused):
         call(server, ledger, model="muse-spark-1.3-contributor", public_data_only=False)
     assert server.requests == []
@@ -675,6 +678,7 @@ def test_env_reads_only_requested_names_and_process_env_wins(tmp_path: Path, mon
         "EMPTY=\n"
     )
     monkeypatch.setenv("BASETEN_API_KEY", "from-process")
+    monkeypatch.delenv("PICKFIT_MODE")  # the fixture's; this test reads it from the file
     values = read_env(["MODEL_API_KEY", "BASETEN_API_KEY", "PICKFIT_MODE", "EMPTY", "MISSING"], dotenv)
     assert values == {"MODEL_API_KEY": "from-file", "BASETEN_API_KEY": "from-process", "PICKFIT_MODE": "prod"}
     assert "MODEL_API_KEY" not in os.environ  # never exported

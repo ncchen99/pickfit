@@ -84,7 +84,11 @@ CREATE TABLE IF NOT EXISTS extractions (
     cost_usd REAL NOT NULL DEFAULT 0,
     cache_hit INTEGER NOT NULL DEFAULT 0,
     response_id TEXT,
-    latency_s REAL
+    latency_s REAL,
+    input_sha TEXT,
+    prompt_version TEXT,
+    renderer_version TEXT,
+    rubric TEXT
 );
 CREATE INDEX IF NOT EXISTS extractions_repo ON extractions (repo_id, id);
 CREATE TABLE IF NOT EXISTS prescreens (
@@ -168,12 +172,32 @@ def repo_key(repo_id: int) -> str:
     return f"gh:{repo_id}"
 
 
+# Columns added to a table after databases with it were made: (table, column, type). PipelineDB adds the missing
+# ones when it opens a database, so an older runs/pipeline.db reads and writes them as null.
+_ADDED_COLUMNS = (
+    # Extraction reuse keys (pickfit/extract.py, docs/proposals/scoring.md R3) and the docs rubric an extraction
+    # asked for in the same call (R4).
+    ("extractions", "input_sha", "TEXT"),
+    ("extractions", "prompt_version", "TEXT"),
+    ("extractions", "renderer_version", "TEXT"),
+    ("extractions", "rubric", "TEXT"),
+)
+
+
 class PipelineDB:
     def __init__(self, path: Path | str) -> None:
         self.path = Path(path)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         with self._connect() as conn:
             conn.executescript(_SCHEMA)
+            for table, column, kind in _ADDED_COLUMNS:
+                have = {row["name"] for row in conn.execute(f"PRAGMA table_info({table})")}
+                if column not in have:
+                    try:
+                        conn.execute(f"ALTER TABLE {table} ADD COLUMN {column} {kind}")
+                    except sqlite3.OperationalError as err:  # another process added it first
+                        if "duplicate column" not in str(err):
+                            raise
 
     def _connect(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self.path, timeout=30)
@@ -403,18 +427,32 @@ class PipelineDB:
                         status: str, sources_sha: str, result: dict[str, Any] | None,
                         quote_failures: list[dict[str, Any]], quotes_checked: int,
                         error: str | None, usage: dict[str, Any] | None, cost_usd: float,
-                        cache_hit: bool, response_id: str | None, latency_s: float | None) -> int:
+                        cache_hit: bool, response_id: str | None, latency_s: float | None,
+                        input_sha: str | None = None, prompt_version: str | None = None,
+                        renderer_version: str | None = None, rubric: dict[str, Any] | None = None) -> int:
+        """One extraction attempt. input_sha, prompt_version and renderer_version are its reuse keys
+        (pickfit.extract.extraction_is_current); rubric is the docs rubric asked for in the same call."""
         with self._write() as conn:
             cur = conn.execute(
                 "INSERT INTO extractions (repo_id, run_id, created_at, model, reasoning_effort, status, "
                 "sources_sha, result, quote_failures, quotes_checked, error, usage, cost_usd, cache_hit, "
-                "response_id, latency_s) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "response_id, latency_s, input_sha, prompt_version, renderer_version, rubric) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (repo_id, run_id, taipei_now().isoformat(timespec="seconds"), model, reasoning_effort,
                  status, sources_sha, _dumps(result) if result is not None else None,
                  _dumps(quote_failures), quotes_checked, error,
                  _dumps(usage) if usage is not None else None, cost_usd, int(cache_hit),
-                 response_id, latency_s))
+                 response_id, latency_s, input_sha, prompt_version, renderer_version,
+                 _dumps(rubric) if rubric is not None else None))
             return int(cur.lastrowid)
+
+    def stamp_extraction(self, extraction_id: int, *, input_sha: str, prompt_version: str | None,
+                         renderer_version: str | None) -> None:
+        """Set the reuse keys of a row written before they existed (scripts/migrate_extraction_keys.py)."""
+        with self._write() as conn:
+            conn.execute("UPDATE extractions SET input_sha = ?, prompt_version = ?, renderer_version = ? "
+                         "WHERE id = ? AND input_sha IS NULL", (input_sha, prompt_version, renderer_version,
+                                                                extraction_id))
 
     def extractions(self) -> list[dict[str, Any]]:
         with self._connect() as conn:
@@ -601,6 +639,18 @@ class PipelineDB:
 _CHANNEL_PREFIXES = ("show_hn", "submission", "reverify", "flathub", "homebrew_cask", "named")
 
 
+class ReadOnlyPipelineDB(PipelineDB):
+    """A PipelineDB that opens the file read-only and adds no table or column: for dry runs of a migration."""
+
+    def __init__(self, path: Path | str) -> None:  # noqa: D107 - no schema, no migration
+        self.path = Path(path)
+
+    def _connect(self) -> sqlite3.Connection:
+        conn = sqlite3.connect(f"file:{self.path}?mode=ro", uri=True, timeout=30)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+
 def _channels(query_ids: list[str]) -> set[str]:
     """Which channels found a candidate, from its query ids: `show_hn:<category>`,
     `submission:<id>`, `reverify:<id>`, `flathub:<app id>`, `homebrew_cask:<token>`, `named:<owner/name>`
@@ -641,6 +691,7 @@ def _row_to_extraction(row: sqlite3.Row) -> dict[str, Any]:
     e["quote_failures"] = _loads(e["quote_failures"], [])
     e["usage"] = _loads(e["usage"])
     e["cache_hit"] = bool(e["cache_hit"])
+    e["rubric"] = _loads(e.get("rubric"))
     return e
 
 

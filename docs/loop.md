@@ -92,9 +92,17 @@ session 不靠記憶。每個 session 開始時讀這些檔案，結束時什麼
 
 **看著跑**：在那個資料夾開一個 Claude Code session，權限模式選 Auto，貼上 `loop_setup.sh` 印出來的那行 `/goal`。看得到每一步，隨時可以插話。適合頭幾次。
 
-**放著跑**：`scripts/loop.sh`。每一批（預設 3 個項目）開一個全新的 `claude -p` session，跑完就結束，由腳本檢查、記錄，再開下一批。每批用全新的 session，是因為同一個 session 跑久了，前面的內容會被壓縮，判斷跟著變差。Anthropic 寫長時間 agent 的幾篇文章和社群的 Ralph loop 都是這個做法：狀態放檔案，context 用完就丟。停止的條件有五個：佇列空了、跑滿批數（預設 10）、`touch loop/STOP`、連兩批沒有任何進展、碰了受保護的檔案。
+**放著跑**：`scripts/loop.sh`。每一批（預設 6 個項目，11/19 前是 3 個）開一個全新的 `claude -p` session，跑完就結束，由腳本檢查、記錄，再開下一批。每批用全新的 session，是因為同一個 session 跑久了，前面的內容會被壓縮，判斷跟著變差。Anthropic 寫長時間 agent 的幾篇文章和社群的 Ralph loop 都是這個做法：狀態放檔案，context 用完就丟。停止的條件有五個：佇列空了、跑滿批數（預設 10）、`touch loop/STOP`、連兩批沒有任何進展、碰了受保護的檔案。
 
 `loop.sh` 要在自己的終端機裡跑，而且那個 shell 不要 export `ANTHROPIC_API_KEY`，不然 `claude` 會改用 API key 計費（plan 第 2 節第 7 條）。
+
+## 每個 session 少讀一點（11/19）
+
+loop 走訂閱，但每批 session 讀進來的東西還是有成本，讀太多也會讓 context 提早被壓縮。11/19 盤查時看到三個地方讀得太多：
+
+- **`loop/issues.md`**：每批都整份讀，已經 75 KB 還在變大，其中大半是已經修好的 issue 的筆記。現在 session 開工時改印 `loop_state.py open-issues`，還沒解決的 issue 一個一行（編號、標題、原因代碼、幾個項目在等），已解決的只給數量。要細節時用 `loop_state.py issue H-00X` 只印那一段。檔案內容不動，只改讀法。
+- **`verify` 的輸出**：安裝 agent 每一輪的 thinking 都會印出來，一筆就是幾百行。現在跑真的 `verify` 時把輸出導到 `runs/loop/verify-<slug>.log`，session 只讀 `loop_state.py run-summary --slug <slug>` 印的摘要。摘要從 `outcome.json` 和 `report.json` 抽出等級、原因、judge、花費、功能清單和失敗指令的 stderr 尾巴，一筆大約 1–2 KB，原本的 `report.json` 一筆約 55 KB。
+- **每批的項目數**：每個 session 開工都要讀一次 skill、issue 清單和 journal 的尾巴。每個項目佔的 context 變小之後，`LOOP_ITEMS` 的預設從 3 調成 6，同樣的開工成本分給兩倍的項目。`LOOP_BATCH_USD`（Claude Code 自己估的花費上限）沒有另外設的話跟著項目數算，6 個是 US$50。
 
 ## GUI 操作改用現成套件（H-006）
 
@@ -126,13 +134,29 @@ cua-driver 需要「輔助使用」和「螢幕錄製」兩個權限，要在做
 - **套件釘住版本並核對 checksum。**
 - **loop 自己的權限。** auto mode 不是安全保證，所以另外有 hook、deny 規則和批次後的外部檢查；loop 只在自己的 worktree 和分支上動，不 push、不發布。
 
+## 機器時間與成本帳
+
+每台機器在帳本裡都有一列，放在 `boxes` 表，和模型呼叫同一個檔案（`~/.pickfit/ledger.sqlite`）。一列記下 provider、lane、用途（agent、replay、confirm、limits、bake、warmup、build、web、host）、開和關的時間、每小時價格和價格的出處。程式異常結束、沒關到的那一列，下一台機器開的時候會補上結束時間：有壽命上限的記在上限那一刻，沒有的標成 unknown。
+
+這些都是估計。實際花多少，用 `scripts/box_reconcile.py` 對 provider 的帳單，按 UTC 日期和 provider 列出差額。加 `--print-commands` 會印出要先跑的 `modal billing report` 和 `aws ce get-cost-and-usage`，這兩個要念誠的登入。
+
+- **Modal** 記的是 CPU 上限的價格，所以是上限值。一般箱子的 CPU request 調到 0.5 core（`PICKFIT_MODAL_CPU_REQUEST`），上限不變。建置箱的 request 等於上限，要從原始碼編 Rust 或 Go 的項目給 8 vCPU。
+- **EC2** 的 instance 和磁碟都帶 `pickfit:run_id`、`pickfit:purpose` 兩個 tag。要在 AWS Billing 把這兩個和 `pickfit` 開成 cost allocation tag，帳單才分得出來，而且只從開啟那天之後算。同一個區域同時最多兩台（`PICKFIT_EC2_MAX_BOXES` 只能調低），第三台會等前面的關掉。Windows 的 agent 箱開好之後就同時開 replay 箱，agent 沒過就關掉，時間照樣記帳。
+- **tart** 的 VM 本身不計價。租來的 Mac 主機自己一列，刪除主機時把整段租期的費用平均分給這段期間在上面開過的 VM，agent、replay、限制檢查、基底建置都算一台。
+
+### 租 Mac 的時機
+
+Scaleway 的 Mac mini 最少算 24 小時，之後按小時計，M4-S 一天約 €5.3。所以一次至少租滿 24 小時，租了就把排著的 macOS 項目一次跑完。大量收錄時，攢到 150–300 筆 macOS 項目再租一次，比零星租划算。watch 的 macOS lane 現在是 10 筆或最舊的等滿 24 小時就開一批（`lanes.MAC_POLICY`），到時候要把門檻調高。
+
+基底 VM 的 manifest 放在主機上，跟 VM 放在一起，哪一台 harness 連上去都讀同一份。`--prepare-base` 看到主機上已經有符合 manifest 的基底，就直接拿來用，不重建。同一個設定錯誤連續出現兩次，macOS lane 就不再每 30 分鐘重試，`pickfit watch --status` 的 `needs_operator` 會寫原因。修好之後跑 `pickfit mac-host clear`。改過主機紀錄（`mac-host add`、`setup`、`up`）或跑完 `mac-host root`，也會自動解除。
+
 ## 還沒做、還沒驗證的
 
 - **還沒跑過任何一批。** 測過的是 `loop_state.py` 與 `loop_guard.py`（50 個單元測試）、guard 直接吃 hook 輸入的行為、`loop.sh --dry-run`。
 - **hook 在真的 session 裡會不會擋，還沒實測。** 從寫這份文件的 session 裡起 `claude -p`，回的是 `Credit balance is too low`（那個環境走 API key 登入）。`loop_setup.sh` 之後先跑一次 `scripts/loop.sh --probe`，它會開一個小 session 試著改 `verdict.py`，確認被擋。
 - **佇列裡 43 筆，目前 `verify --batch` 只選得到 7 筆**（H-001）。loop 的第一件事多半是修這個。
 - **模型**：Anthropic API 的切換在另一個 worktree 進行中。loop 用的是管線當下設定的模型，切換合併後不用改 loop。
-- **Modal 的實際花費沒有進帳本。** `box` 的上限靠的是估計值，見「花費上限」一節。
+- **Modal 的實際花費沒有進帳本。** `box` 的上限靠的是估計值，見「花費上限」一節。帳本的 `boxes` 表也是估計，要用 `scripts/box_reconcile.py` 對過帳單才知道差多少，還沒對過。
 
 ## 參考
 

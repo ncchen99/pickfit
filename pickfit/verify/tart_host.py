@@ -14,7 +14,8 @@ outside the guest goes through its host:
 - the VNC server, on the host's loopback: SshHost forwards a local port to it.
 
 Select a remote host with PICKFIT_TART_HOST=user@host (and PICKFIT_TART_SSH_KEY, PICKFIT_TART_SSH_PORT); unset,
-boxes run on this Mac. The host's base manifests are kept here, under ~/.pickfit/tart/hosts/<host>/.
+boxes run on this Mac. A base VM's manifest is kept on the host beside the VM (~/.pickfit/tart/<base>.json there),
+so any harness that reaches the host reads the same one; a copy is cached here, under ~/.pickfit/tart/hosts/<host>/.
 """
 
 from __future__ import annotations
@@ -147,6 +148,22 @@ class LocalHost:
     def log_path(self, name: str) -> Any:
         self.state_dir.mkdir(parents=True, exist_ok=True)
         return self.state_dir / f"{name}.log"
+
+    # A base VM's manifest lives on the host next to the VM (tart_box.load_manifest): this Mac's is its state dir.
+
+    def read_manifest(self, base: str) -> dict[str, Any] | None:
+        """The manifest the host keeps for a base VM, or None when it has none (or it cannot be read)."""
+        try:
+            return json.loads((self.state_dir / f"{base}.json").read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return None
+
+    def write_manifest(self, base: str, manifest: dict[str, Any]) -> None:
+        self.state_dir.mkdir(parents=True, exist_ok=True)
+        (self.state_dir / f"{base}.json").write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+
+    def remove_manifest(self, base: str) -> None:
+        (self.state_dir / f"{base}.json").unlink(missing_ok=True)
 
     def start_vm(self, run_args: list[str], log: Any) -> tuple[subprocess.Popen[bytes], Any]:
         """`tart run` (its argv naming softnet's control fd as FD), its output to `log` (0600): (process, control)."""
@@ -308,6 +325,32 @@ class SshHost(LocalHost):
 
     def log_path(self, name: str) -> Any:
         return self.remote_state / f"{name}.log"
+
+    def read_manifest(self, base: str) -> dict[str, Any] | None:
+        """The manifest kept on the Mac beside the base VM (~/.pickfit/tart/<base>.json there), or None."""
+        try:
+            done = self.run(["/bin/cat", str(self.remote_state / f"{base}.json")], timeout=60)
+        except (OSError, subprocess.TimeoutExpired):
+            return None
+        if done.returncode != 0:
+            return None
+        try:
+            found = json.loads(done.stdout or "")
+        except ValueError:
+            return None
+        return found if isinstance(found, dict) else None
+
+    def write_manifest(self, base: str, manifest: dict[str, Any]) -> None:
+        from pickfit.verify.box import BoxError
+
+        script = 'mkdir -p "$(dirname "$1")" && cat > "$1.tmp" && mv -f "$1.tmp" "$1"'
+        done = self.run(["/bin/sh", "-c", script, "sh", str(self.remote_state / f"{base}.json")], timeout=60,
+                        input=json.dumps(manifest, indent=2) + "\n")
+        if done.returncode != 0:
+            raise BoxError(f"could not write {base}'s manifest on {self.target}: {done.stderr.strip()[-200:]}")
+
+    def remove_manifest(self, base: str) -> None:
+        self.run(["/bin/rm", "-f", str(self.remote_state / f"{base}.json")], timeout=60)
 
     def start_vm(self, run_args: list[str], log: Any) -> tuple[subprocess.Popen[bytes], Any]:
         proc = subprocess.Popen(self.wrap([HOST_PYTHON, "-I", "-c", RELAY, str(log), *run_args]),

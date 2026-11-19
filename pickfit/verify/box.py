@@ -18,6 +18,7 @@ LinuxBox (linux_box.py) implements the same interface on a cloud provider's mach
 from __future__ import annotations
 
 import hashlib
+import re
 import secrets
 import shlex
 import shutil
@@ -27,7 +28,7 @@ import threading
 import time
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import IO, Any
 
@@ -40,6 +41,12 @@ BOX_WORKDIR = f"{BOX_HOME}/work"
 RUST_VERSION = "1.100.0"
 GO_VERSION = "1.27.4"
 TOOLCHAIN_LIMITS = {"cpus": 4.0, "memory_mb": 6144, "max_command_s": 1800}
+# A build box whose install steps compile Rust or Go (sized_for_build): more cores where the provider bills by the
+# core-second (Modal: twice the cores for about half the time, nearly the same price; measured 11/19, two cargo
+# builds hit the 1800 s command limit on 4 vCPU, and a build runs twice, for the agent and the replay). Each box
+# class says how far it goes (Box.build_cpus); memory (agent.big_box reads a larger one as room for model weights)
+# and the command limit stay.
+COMPILES = re.compile(r"\b(?:cargo\s+(?:\+\S+\s+)?(?:install|build)|go\s+(?:install|build))\b")
 # Where user-level installs land: uv tool, pipx, `pip --user`, npm (prefix below), cargo, go.
 BOX_PATH = f"{BOX_HOME}/.local/bin:{BOX_HOME}/.cargo/bin:{BOX_HOME}/go/bin:/usr/local/bin:/usr/bin:/bin"
 # Only non-secret settings; nothing from the host environment is passed through.
@@ -127,6 +134,19 @@ class Box(ABC):
     user_rule: str = "You are not root: no sudo, no apt-get, nothing written outside $HOME and /tmp."
     detach: str = "setsid nohup"  # starts run_background processes in their own session, immune to SIGHUP
     shell: str = "bash"  # what run_command commands are written in
+    build_cpus: float | None = None  # a build box that compiles Rust or Go gets this many CPUs (sized_for_build)
+    # A box that takes minutes to boot (EC2 Windows): the pipeline starts the run's fresh replay box while the agent
+    # works (early_box.EarlyBox), so a passed agent does not wait for it. Never the agent's own box.
+    early_replay: bool = False
+
+    def reserve(self) -> bool:
+        """Take this box's place among the machines its provider may run at once, now and without waiting; False
+        when there is none free. A box that reserved nothing waits for a place in start(); close() gives it back.
+        Most providers have no such limit."""
+        return True
+
+    def unreserve(self) -> None:
+        """Give back a place reserve() took for a box that was never started (close() does it for one that was)."""
 
     def background(self, command: str, port: int | None, wait_s: int, tag: int | str) -> str:
         """The command that starts `command` in the background for run_background and the replay."""
@@ -193,6 +213,29 @@ class Box(ABC):
 
     def __exit__(self, *exc: Any) -> None:
         self.close()
+
+
+def compiles(task: Any) -> bool:
+    """Do the task's install steps build Rust or Go from source (`cargo install`, `cargo build`, `go install`,
+    `go build`)? A prebuilt binary (cargo binstall, a release download) does not."""
+    extraction = getattr(task, "extraction", None)
+    return any(COMPILES.search(claim.command or "") for claim in getattr(extraction, "install_methods", None) or [])
+
+
+def sized_for_build(make_box: Callable[[str, str], Box], task: Any) -> Callable[[str, str], Box]:
+    """The box factory for one task: a build box (toolchain) of a task that compiles Rust or Go gets its class's
+    build_cpus, the agent's box and the replay's alike. Any other box is as the factory made it."""
+    if not compiles(task):
+        return make_box
+
+    def make(run_id: str, role: str) -> Box:
+        box = make_box(run_id, role)
+        limits = getattr(box, "limits", None)
+        if box.toolchain and box.build_cpus and limits is not None and limits.cpus < box.build_cpus:
+            box.limits = replace(limits, cpus=box.build_cpus)
+        return box
+
+    return make
 
 
 def background_script(command: str, port: int | None, wait_s: int, tag: int | str, *,

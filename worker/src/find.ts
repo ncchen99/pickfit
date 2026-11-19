@@ -473,7 +473,10 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
       ? rulesRelevance(corpus, candidates, ruleTerms(...expansion.keywords))
       : filtered.relevance;
   const entries = new Map(candidates.map((entry) => [entry.slug, entry]));
-  const cards = new Map(candidates.map((entry) => [entry.slug, toCard(entry, cond.os, cond.arch)]));
+  // A card shows the documented capabilities the request's words, or the model's keywords for them, name.
+  const keywords = expansion?.keywords ?? [];
+  const asked = [...new Set([...ruleTerms(...keywords), ...(keywords.length ? queryTerms(req.rulesText, ...keywords) : [])])];
+  const cards = new Map(candidates.map((entry) => [entry.slug, toCard(entry, cond.os, cond.arch, asked)]));
 
   let choice: Choice;
   let matchedBy = 'rules';

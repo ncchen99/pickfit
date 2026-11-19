@@ -289,3 +289,47 @@ def test_tart_gui_limits_test_runs_the_macos_checks_not_the_xvfb_ones(monkeypatc
     monkeypatch.setattr(limits_mac, "gui_limits_test",
                         lambda *a, **k: ([ProbeResult("tcc_grants_scoped", False, "", 0, 0.0, "")], None))
     assert main(["verify", "--runner", "tart", "--display", "--limits-test"]) == 1  # one check failed
+
+
+def test_a_base_built_by_another_harness_counts_by_the_manifest_on_the_host(tmp_path: Path):
+    # 11/18: the watch saw the bases a laptop had built, without their manifests (kept on the laptop), and kept
+    # retrying. The host lists the manifests it keeps beside its VMs; a copy cached here still counts.
+    listed = {**READY, "images": f"{READY['images']} pickfit-macos-15-gui",
+              "manifests": "pickfit-macos-15.json pickfit-macos-15-gui.json"}
+    checks = {c.name: c.ok for c in _ops(listed, tmp_path).checks()}
+    assert checks["base:pickfit-macos-15"] and checks["base:pickfit-macos-15-gui"]
+    no_manifest = {**listed, "manifests": ""}
+    checks = {c.name: c.ok for c in _ops(no_manifest, tmp_path).checks()}
+    assert not checks["base:pickfit-macos-15"]  # a VM nobody vouches for
+    cached = tmp_path / "state" / "hosts" / "203.0.113.7"
+    cached.mkdir(parents=True)
+    (cached / "pickfit-macos-15.json").write_text("{}")
+    checks = {c.name: c.ok for c in _ops(no_manifest, tmp_path).checks()}
+    assert checks["base:pickfit-macos-15"] and not checks["base:pickfit-macos-15-gui"]
+    assert "manifests=" in mh.FACTS and ".pickfit/tart" in mh.FACTS
+
+
+def test_the_same_configuration_error_twice_needs_an_operator(tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+                                                             capsys: pytest.CaptureFixture[str]):
+    now = datetime(2026, 11, 19, 12, 0, tzinfo=UTC)
+    context = mh.lane_context(tmp_path, rent=False)
+    assert mh.operator_hold(tmp_path) is None
+    first = mh.note_failure(tmp_path, "renting-off:", "no Mac host is ready", context=context, now=now)
+    assert first["count"] == 1 and mh.operator_hold(tmp_path, context) is None  # once is not yet a pattern
+    second = mh.note_failure(tmp_path, "renting-off:", "no Mac host is ready", context=context, now=now)
+    assert second["count"] == 2 and mh.operator_hold(tmp_path, context)["first_at"] == "2026-11-19T12:00:00+00:00"
+    assert "needs an operator: no Mac host is ready" in mh.hold_message(second)
+    other = mh.note_failure(tmp_path, "rent-failed:quota", "quota", context=context, now=now)
+    assert other["count"] == 1  # another error starts counting again
+    mh.note_failure(tmp_path, "rent-failed:quota", "quota", context=context, now=now)
+    assert mh.operator_hold(tmp_path, mh.lane_context(tmp_path, rent=True)) is None  # other settings: tried again
+    mh.HostRecord(name="mac1", provider="ssh", target="m1@203.0.113.7").save(tmp_path)
+    assert mh.operator_hold(tmp_path, mh.lane_context(tmp_path, rent=False)) is None  # a host was added
+    assert not list(tmp_path.glob(mh.OPERATOR_FILE.replace(".txt", ".json")))  # never read as a host record
+    monkeypatch.setattr(mh, "HOSTS_DIR", tmp_path)
+    assert mh.main_command(SimpleNamespace(mac_command="list")) == 0
+    assert "needs an operator: quota" in capsys.readouterr().out
+    assert mh.main_command(SimpleNamespace(mac_command="clear")) == 0
+    assert "try its hosts again" in capsys.readouterr().out and mh.operator_hold(tmp_path) is None
+    assert mh.main_command(SimpleNamespace(mac_command="clear")) == 0
+    assert "holds nothing" in capsys.readouterr().out

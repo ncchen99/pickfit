@@ -77,7 +77,7 @@ def graphtty(features: list[tuple[str, str]] = FEATURES) -> VerifyTask:
 
 def judge_answer() -> dict[str, Any]:
     text = json.dumps({"verdict": "working", "observed": "An arrow from a to b.", "error_text": None,
-                       "matches_expected_signal": True, "evidence_regions": []})
+                       "matches_expected_signal": True, "evidence_regions": [], "evidence": []})
     return {"id": "judge", "object": "response", "created_at": 0, "model": "muse-spark-1.3-contributor",
             "status": "completed", "output": [{"type": "message", "id": "m", "role": "assistant",
                                                "status": "completed",
@@ -183,6 +183,21 @@ def test_finish_feature_takes_null_strings_and_unknown_reasons():
     claim = FinishFeature.model_validate({"feature": 2, "status": "not_checked", "command_ids": [],
                                           "reason": "needs_microphone", "failure": "null", "note": ""})
     assert (claim.reason, claim.failure, claim.note) == ("other", None, None)
+    # beyond_budget is pickfit's own reason: the agent is never offered it, and cannot claim it
+    item = FINISH_TOOL["parameters"]["properties"]["features"]["items"]
+    assert "beyond_budget" not in item["properties"]["reason"]["enum"]
+    claim = FinishFeature.model_validate({"feature": 1, "status": "not_checked", "reason": "beyond_budget"})
+    assert claim.reason == "other"
+
+
+SIX = [*FEATURES, ("print as a Mermaid file", "--mermaid"), ("read DOT input", "reads Graphviz DOT")]
+
+
+def test_the_task_lists_only_the_first_four_features():
+    task = graphtty(SIX)
+    text = render_task(task, plan_for(task.extraction, "linux"), FakeBox(), AgentLimits())
+    assert "F4. export to SVG" in text
+    assert "F5." not in text and "Mermaid" not in text and "DOT input" not in text
 
 
 # ---------------------------------------------------------------- end to end
@@ -208,11 +223,29 @@ def test_each_feature_is_checked_failed_or_not_checked_with_a_reason(tmp_path: P
     svg = features["export to SVG"]
     assert (svg.status, svg.reason) == ("not_checked", "not_attempted")
     # The replay reran the passing checks offline, then the failed feature check once, online.
-    replay = [(c, net) for c, _, net in boxes.made[1][1].ran]
+    # The replay's own commands; the SBOM (pickfit/sbom.py) is taken after them, before the box closes.
+    ran = [(c, net) for c, _, net in boxes.made[1][1].ran]
+    replay = [(c, net) for c, net in ran if not c.startswith("mkdir -p /tmp/pickfit-sbom")]
+    assert len(ran) == len(replay) + 1 and ran[-1][0].startswith("mkdir -p /tmp/pickfit-sbom")
     assert replay[-1] == (NEON, True) and replay.count((NEON, True)) == 1
     assert ("graphtty graph.json", False) in replay
     assert any(line.startswith("  features: 1 checked · 1 test_failed · 2 not_checked") for line in lines)
     # The record keeps it, and the schema holds the coverage to the smoke tests.
+    assert VerificationRun.model_validate(run.model_dump(mode="json")) == run
+
+
+def test_features_past_the_first_four_are_recorded_beyond_budget(tmp_path: Path):
+    boxes = Boxes(script(), script())
+    outcome, lines = verify(tmp_path, [*turns(REPORTED), *judges()], boxes, task=graphtty(SIX))
+    run = outcome.run
+    features = by_name(run)
+    assert list(features) == [label for label, _ in SIX]
+    assert features["render a graph as ASCII art"].status == "checked"
+    for label in ("print as a Mermaid file", "read DOT input"):
+        f = features[label]
+        assert (f.status, f.reason, f.smoke_tests) == ("not_checked", "beyond_budget", [])
+    assert features["export to SVG"].reason == "not_attempted"  # within budget, not reported: as before
+    assert any(line.startswith("  features: 1 checked · 1 test_failed · 4 not_checked") for line in lines)
     assert VerificationRun.model_validate(run.model_dump(mode="json")) == run
 
 
@@ -500,3 +533,17 @@ def test_the_apps_own_output_from_every_gui_launch_is_kept_under_its_command():
     parts = _gui_outputs(commands, "agent") + _gui_outputs(replay, "replay")
     assert parts == ["== agent [cmd 4] launch_gui: app ==\nGtk-WARNING: no bus\n",
                      "== replay [cmd 4] gui: app ==\nSegmentation fault\n"]
+
+
+def test_a_passed_run_saves_the_tools_own_help_outside_the_command_log(tmp_path: Path):
+    usage = ("Usage: graphtty [OPTIONS] FILE\n\nCommands:\n  render   Draw a graph as ASCII art\n"
+             "  themes   List the color themes\n")
+    agent = script(**{"graphtty --help": (0, usage, ""),
+                      "graphtty render --help": (0, "Usage: graphtty render FILE\n\nOptions:\n  --svg PATH", "")})
+    outcome, lines = verify(tmp_path, [*turns(REPORTED), *judges()], Boxes(agent, script()))
+    report = json.loads(next((tmp_path / "runs" / "verify").glob("*/report.json")).read_text())
+    assert [(h["command"], h["by"]) for h in report["help"]] == [("graphtty --help", "pickfit"),
+                                                                  ("graphtty render --help", "pickfit")]
+    assert not any("--help" in c["command"] for c in report["commands"])  # not the agent's, not citable
+    assert any(line.startswith("  help: 2 text(s) saved (graphtty --help and 1 subcommands)") for line in lines)
+    assert outcome.run.level == "function"

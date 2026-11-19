@@ -4,13 +4,15 @@
  * check every reason against the field it cites.
  */
 import { bestGuide, isWebApp, OSES, verifiedOn, verifiedOnUserSystem, webCheck, type Arch, type Entry, type InstallGuide, type OS } from './catalog.ts';
+import { matchedCapabilities } from './capabilities.ts';
 import { featuresOut } from './features.ts';
 import { runDay } from './evidence.ts';
 
 const MCP_TOOLS_SHOWN = 40;
 
 export type CardValue = string | number | boolean | string[] | null;
-export type Card = Record<CoreField, CardValue> & Partial<Record<WebField, CardValue>> & { slug: string };
+export type Card = Record<CoreField, CardValue> &
+  Partial<Record<WebField | MatchedField, CardValue>> & { slug: string };
 
 /** A web app's card only: what pickfit's browser saw. Other cards leave them out (60 cards, fewer tokens). */
 export const WEB_FIELDS = [
@@ -22,6 +24,11 @@ export const WEB_FIELDS = [
   'works_offline',
 ] as const;
 export type WebField = (typeof WEB_FIELDS)[number];
+
+/** Only when the request's words name some: the tool's documented capabilities they name (capabilities.ts).
+ * The docs claim them; pickfit did not check them one by one. Other cards leave the field out. */
+export const MATCHED_FIELDS = ['capabilities_matched'] as const;
+export type MatchedField = (typeof MATCHED_FIELDS)[number];
 
 const CORE_FIELDS = [
   'name',
@@ -61,7 +68,7 @@ const CORE_FIELDS = [
 type CoreField = (typeof CORE_FIELDS)[number];
 
 /** Fields a reason may cite. The model's schema enumerates exactly these. */
-export const CARD_FIELDS = [...CORE_FIELDS, ...WEB_FIELDS] as const;
+export const CARD_FIELDS = [...CORE_FIELDS, ...WEB_FIELDS, ...MATCHED_FIELDS] as const;
 export type CardField = (typeof CARD_FIELDS)[number];
 
 function runLabel(entry: Entry, os: OS): string {
@@ -89,7 +96,8 @@ function webFields(entry: Entry): Partial<Record<WebField, CardValue>> {
   };
 }
 
-export function toCard(entry: Entry, os?: OS, arch?: Arch): Card {
+/** query: the request's terms (relevance.ts), which choose the capabilities the card shows; none without it. */
+export function toCard(entry: Entry, os?: OS, arch?: Arch, query: readonly string[] = []): Card {
   const userGuide = os ? entry.install[os] : undefined;
   const pre = entry.prerequisites;
   const features = featuresOut(entry, bestGuide(entry, os));
@@ -132,7 +140,13 @@ export function toCard(entry: Entry, os?: OS, arch?: Arch): Card {
     mcp_tools: mcpTools(entry, userGuide),
     mcp_env_vars: (entry.mcp?.env_vars ?? []).map((v) => v.name),
     ...webFields(entry),
+    ...matchedFields(entry, query),
   };
+}
+
+function matchedFields(entry: Entry, query: readonly string[]): Partial<Record<MatchedField, CardValue>> {
+  const matched = matchedCapabilities(entry, query);
+  return matched.length ? { capabilities_matched: matched } : {};
 }
 
 /** Tool names a sandbox handshake listed (the user's OS first), else none: README tool lists are not shown. */

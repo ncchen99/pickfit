@@ -469,13 +469,12 @@ class Reverifier:
         result.outcome = "rewritten"
 
     def _extraction(self, candidate: dict[str, Any], run_id: str, result: Result) -> dict[str, Any]:
-        from pickfit.extract import FEATURES_STATUS, build_sources, sources_sha
+        from pickfit.extract import SIDE_STATUSES, extraction_is_current
 
-        current = sources_sha(build_sources(candidate))
         stored = [e for model in EXTRACTION_MODELS
-                  if (e := self.db.last_extraction(candidate["repo_id"], model, exclude=(FEATURES_STATUS,)))
+                  if (e := self.db.last_extraction(candidate["repo_id"], model, exclude=SIDE_STATUSES))
                   and e["status"] in DONE_EXTRACTIONS]
-        same = next((e for e in stored if e["sources_sha"] == current), None)
+        same = next((e for e in stored if extraction_is_current(e, candidate)), None)
         if same:
             return self._with_features(same)
         rows = self.steps.extract(candidate, run_id)
@@ -483,7 +482,7 @@ class Reverifier:
             self.db.save_extraction(**row)
             result.cost_usd += row["cost_usd"]
         if rows and rows[-1]["status"] in DONE_EXTRACTIONS:
-            fresh = self.db.last_extraction(candidate["repo_id"], MODEL, exclude=(FEATURES_STATUS,))
+            fresh = self.db.last_extraction(candidate["repo_id"], MODEL, exclude=SIDE_STATUSES)
             assert fresh is not None
             return self._with_features(fresh)
         if stored:  # the README changed but could not be read again: the older reading still says what the tool is

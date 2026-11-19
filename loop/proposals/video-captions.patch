@@ -1,0 +1,316 @@
+Proposal (video workstream, 2026-11-19): RunVideo takes the verification clip's captions, card-less chapters and
+the R2 keys of its action log and edit list (docs/proposals/video.md V2, V3).
+
+pickfit/schema.py and schema/ are protected in a loop session (scripts/loop_guard.py), so the change is here for the
+coordinator to review and apply:
+
+    git apply loop/proposals/video-captions.patch
+    uv run python scripts/export_schema.py --check     # schema/software.v1.json is in the patch too
+
+What it adds, all optional, so every record written before validates unchanged:
+
+- VideoChapter.raw / raw_s: the unedited recording a chapter's first segment comes from, and where in it.
+- VideoCaption {start_s, end_s, text} and RunVideo.captions: the clip's caption cues (served as WebVTT).
+- VideoSource {key, sha256} and RunVideo.actions / RunVideo.edit_list: <slug>/<stem>.actions.json and
+  <slug>/<clip stem>.json in the videos bucket.
+- The chapter rule accepts a clip with no cards (every chapter a feature, the first at 0) beside the old shape (a
+  first and a last card, feature null); captions must rise and end by the clip's end.
+
+Until it is applied, pickfit/verify/video.py writes a card-less clip's video field without chapters or captions
+(run_video checks RunVideo.model_fields), and tests/test_video_actions.py skips the test that needs it. Checked with
+the draft loaded in memory (no protected file written): tests/test_video_actions.py, test_verify_video*.py,
+test_web_video.py, test_index.py, test_i18n.py and test_schema.py pass; test_committed_schema_files_match_models only
+once the committed schema/software.v1.json is the one in this patch (it was rendered from the draft).
+
+Rebased on 11/19 by the coverage workstream onto security-schema.patch, with no change in what it does: its hunks now
+carry the line numbers they have once security-schema.patch is applied (the original's schema/software.v1.json hunks
+landed 81 and 869 lines off, one of them out of order), so `git apply` finds each at its stated place. Apply it
+second, after security-schema.patch (loop/proposals/APPLY.md).
+
+diff --git a/pickfit/schema.py b/pickfit/schema.py
+--- a/pickfit/schema.py
++++ b/pickfit/schema.py
+@@ -918,6 +918,8 @@
+ type VideoFile = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_][A-Za-z0-9_.-]*\.mp4$", max_length=120)]
+ VIDEO_MAX_S = 180
+ VIDEO_CHAPTER_TITLE_MAX = 80
++VIDEO_CAPTION_MAX = 120
++VIDEO_CAPTIONS_MAX = 200
+ 
+ 
+ class VideoRaw(_Model):
+@@ -931,23 +933,50 @@
+ 
+ 
+ class VideoChapter(_Model):
+-    """A chapter of a clip, for the player's progress bar: the first card, each feature's segments, the last card."""
++    """A chapter of a clip, for the player's progress bar: each feature's segments (a clip cut before 11/19 also has
++    its first and last cards, feature null)."""
+ 
+     start_s: float = Field(ge=0, description="Where the chapter starts in the clip, seconds.")
+     title: str = Field(min_length=1, max_length=VIDEO_CHAPTER_TITLE_MAX, description="English, for the progress bar.")
+     feature: Annotated[str, StringConstraints(min_length=1, max_length=FEATURE_MAX)] | None = Field(
+         description="The video.features entry the chapter shows; null for the first and last cards.")
++    raw: int | None = Field(default=None, ge=0, exclude_if=lambda value: value is None,
++                            description="Index into video.raw: the unedited recording the chapter's first segment "
++                                        "was cut from (its link on the page opens that recording there).")
++    raw_s: float | None = Field(default=None, ge=0, exclude_if=lambda value: value is None,
++                                description="Where in that recording the chapter's first segment starts, seconds.")
++
++
++class VideoCaption(_Model):
++    """One caption cue of a clip, served as a WebVTT track (the clip has no words drawn on it): English, put in
++    other languages by the page's translation like any other sentence of the record."""
++
++    start_s: float = Field(ge=0, description="Where the cue starts in the clip, seconds.")
++    end_s: float = Field(gt=0, description="Where it ends.")
++    text: str = Field(min_length=1, max_length=VIDEO_CAPTION_MAX)
++
++
++class VideoSource(_Model):
++    """A file kept in R2 beside the clip so the clip can be cut again later without a box: pickfit's action log of
++    the recordings (actions.json) or the clip's edit list (its segments, review and captions)."""
++
++    key: str = Field(pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*/[A-Za-z0-9_][A-Za-z0-9_.-]*\.json$", max_length=200,
++                     description="Its key in the videos bucket: <slug>/<file>.")
++    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+ 
+ 
+ class RunVideo(_Model):
+     """A short captioned clip of pickfit operating a GUI or web app to check its features (pickfit/verify/video.py).
+ 
+     A fresh box replayed this run's steps and operations (a web app: a second, recorded visit replaying the first
+-    visit's actions without a model) while pickfit recorded its own screen; Muse Spark Open
+-    watched each recording with pickfit's action log and picked whole segments, kept in their order (a speed-up
+-    is labelled on screen), and then watched the cut and confirmed that each caption shows on screen. Captions
+-    claim only checks that passed in this run and again in the recorded replay. The clip's first frame says it
+-    was recorded by pickfit in a sandbox, and on what date; it names each raw recording and its sha256.
++    visit's actions without a model) while pickfit recorded its own screen. pickfit picked whole segments, kept in
++    their order, by its own rules from its action log (before 11/19 a model watched each recording and picked them),
++    and checked that each segment shows what pickfit's own screenshot after each action showed; a model looks only
++    at segments that check could not match, and at a sample. A speed-up or a stretch left out is marked on the
++    picture ("2×", "−11 s"). Captions claim only checks that passed in this run and again in the recorded replay.
++    A clip cut before 11/19 opens on a card saying it was recorded by pickfit in a sandbox, and on what date, and
++    ends on one naming each raw recording and its sha256; since then the clip is the app alone, its captions a
++    WebVTT track, and the raw recordings and their sha256 are on the page (and in the mp4's metadata).
+     """
+ 
+     clip: VideoFile
+@@ -961,25 +990,42 @@
+         min_length=1, max_length=FEATURES_MAX, description="The run's checked features the clip shows.")
+     chapters: list[VideoChapter] = Field(
+         default=[], max_length=FEATURES_MAX * 2 + 2, exclude_if=lambda value: not value,
+-        description=("The clip's chapters in time order, covering it whole: the first card at 0, one chapter for each "
+-                     "run of segments of one feature, the last card."))
++        description=("The clip's chapters in time order, covering it whole from 0: one chapter for each run of "
++                     "segments of one feature (a clip cut before 11/19: between its first and last cards)."))
++    captions: list[VideoCaption] = Field(
++        default=[], max_length=VIDEO_CAPTIONS_MAX, exclude_if=lambda value: not value,
++        description="The clip's captions in time order (the page serves them as WebVTT, in the page's language).")
++    actions: VideoSource | None = Field(default=None, exclude_if=lambda value: value is None,
++                                        description="pickfit's log of every action in the raw recordings (R2).")
++    edit_list: VideoSource | None = Field(default=None, exclude_if=lambda value: value is None,
++                                          description="The clip's segments, captions and review, as cut (R2).")
+ 
+     @model_validator(mode="after")
+     def _check_chapters(self) -> RunVideo:
+-        """Chapters start at 0, rise, end before the clip does, open and close on the cards, and name only the
+-        clip's features, each at least once, never twice in a row."""
+-        if not self.chapters:
+-            return self
+-        starts = [c.start_s for c in self.chapters]
+-        if starts[0] != 0 or any(b <= a for a, b in zip(starts, starts[1:])) or starts[-1] >= self.seconds:
+-            raise ValueError("chapters must start at 0 and rise, all before the clip ends")
+-        inner = [c.feature for c in self.chapters[1:-1]]
+-        if len(self.chapters) < 3 or self.chapters[0].feature is not None or self.chapters[-1].feature is not None:
+-            raise ValueError("chapters open on the first card and close on the last (feature null), a feature between")
+-        if None in inner or set(inner) != set(self.features):
+-            raise ValueError("the chapters between the cards must name the clip's features, each at least once")
+-        if any(a == b for a, b in zip(inner, inner[1:])):
+-            raise ValueError("consecutive segments of one feature are one chapter")
++        """Chapters start at 0, rise, end before the clip does, and name only the clip's features, each at least
++        once, never twice in a row; a clip with cards opens and closes its chapters on them. Captions rise and end
++        by the clip's end."""
++        if self.chapters:
++            starts = [c.start_s for c in self.chapters]
++            if starts[0] != 0 or any(b <= a for a, b in zip(starts, starts[1:])) or starts[-1] >= self.seconds:
++                raise ValueError("chapters must start at 0 and rise, all before the clip ends")
++            if self.chapters[0].feature is None:  # cut before 11/19: a first and a last card around the features
++                inner = [c.feature for c in self.chapters[1:-1]]
++                if len(self.chapters) < 3 or self.chapters[-1].feature is not None:
++                    raise ValueError("chapters open on the first card and close on the last (feature null), "
++                                     "a feature between")
++            else:
++                inner = [c.feature for c in self.chapters]
++            if None in inner or set(inner) != set(self.features):
++                raise ValueError("the chapters between the cards must name the clip's features, each at least once")
++            if any(a == b for a, b in zip(inner, inner[1:])):
++                raise ValueError("consecutive segments of one feature are one chapter")
++            if any(c.raw is not None and c.raw >= len(self.raw) for c in self.chapters):
++                raise ValueError("a chapter's raw must be an index into video.raw")
++        cues = self.captions
++        if any(c.end_s <= c.start_s or c.end_s > self.seconds + 0.5 for c in cues) or any(
++                b.start_s < a.start_s for a, b in zip(cues, cues[1:])):
++            raise ValueError("captions must rise, each ending after it starts and by the clip's end")
+         return self
+ 
+ 
+diff --git a/schema/software.v1.json b/schema/software.v1.json
+--- a/schema/software.v1.json
++++ b/schema/software.v1.json
+@@ -2078,11 +2078,32 @@
+     },
+     "RunVideo": {
+       "additionalProperties": false,
+-      "description": "A short captioned clip of pickfit operating a GUI or web app to check its features (pickfit/verify/video.py).\n\nA fresh box replayed this run's steps and operations (a web app: a second, recorded visit replaying the first\nvisit's actions without a model) while pickfit recorded its own screen; Muse Spark Open\nwatched each recording with pickfit's action log and picked whole segments, kept in their order (a speed-up\nis labelled on screen), and then watched the cut and confirmed that each caption shows on screen. Captions\nclaim only checks that passed in this run and again in the recorded replay. The clip's first frame says it\nwas recorded by pickfit in a sandbox, and on what date; it names each raw recording and its sha256.",
+-      "properties": {
++      "description": "A short captioned clip of pickfit operating a GUI or web app to check its features (pickfit/verify/video.py).\n\nA fresh box replayed this run's steps and operations (a web app: a second, recorded visit replaying the first\nvisit's actions without a model) while pickfit recorded its own screen. pickfit picked whole segments, kept in\ntheir order, by its own rules from its action log (before 11/19 a model watched each recording and picked them),\nand checked that each segment shows what pickfit's own screenshot after each action showed; a model looks only\nat segments that check could not match, and at a sample. A speed-up or a stretch left out is marked on the\npicture (\"2×\", \"−11 s\"). Captions claim only checks that passed in this run and again in the recorded replay.\nA clip cut before 11/19 opens on a card saying it was recorded by pickfit in a sandbox, and on what date, and\nends on one naming each raw recording and its sha256; since then the clip is the app alone, its captions a\nWebVTT track, and the raw recordings and their sha256 are on the page (and in the mp4's metadata).",
++      "properties": {
++        "actions": {
++          "anyOf": [
++            {
++              "$ref": "#/$defs/VideoSource"
++            },
++            {
++              "type": "null"
++            }
++          ],
++          "default": null,
++          "description": "pickfit's log of every action in the raw recordings (R2)."
++        },
++        "captions": {
++          "default": [],
++          "description": "The clip's captions in time order (the page serves them as WebVTT, in the page's language).",
++          "items": {
++            "$ref": "#/$defs/VideoCaption"
++          },
++          "maxItems": 200,
++          "type": "array"
++        },
+         "chapters": {
+           "default": [],
+-          "description": "The clip's chapters in time order, covering it whole: the first card at 0, one chapter for each run of segments of one feature, the last card.",
++          "description": "The clip's chapters in time order, covering it whole from 0: one chapter for each run of segments of one feature (a clip cut before 11/19: between its first and last cards).",
+           "items": {
+             "$ref": "#/$defs/VideoChapter"
+           },
+@@ -2095,6 +2116,18 @@
+         "clip_sha256": {
+           "pattern": "^[0-9a-f]{64}$",
+           "type": "string"
++        },
++        "edit_list": {
++          "anyOf": [
++            {
++              "$ref": "#/$defs/VideoSource"
++            },
++            {
++              "type": "null"
++            }
++          ],
++          "default": null,
++          "description": "The clip's segments, captions and review, as cut (R2)."
+         },
+         "features": {
+           "description": "The run's checked features the clip shows.",
+@@ -3987,9 +4020,37 @@
+       "title": "VerificationRun",
+       "type": "object"
+     },
++    "VideoCaption": {
++      "additionalProperties": false,
++      "description": "One caption cue of a clip, served as a WebVTT track (the clip has no words drawn on it): English, put in\nother languages by the page's translation like any other sentence of the record.",
++      "properties": {
++        "end_s": {
++          "description": "Where it ends.",
++          "exclusiveMinimum": 0,
++          "type": "number"
++        },
++        "start_s": {
++          "description": "Where the cue starts in the clip, seconds.",
++          "minimum": 0,
++          "type": "number"
++        },
++        "text": {
++          "maxLength": 120,
++          "minLength": 1,
++          "type": "string"
++        }
++      },
++      "required": [
++        "start_s",
++        "end_s",
++        "text"
++      ],
++      "title": "VideoCaption",
++      "type": "object"
++    },
+     "VideoChapter": {
+       "additionalProperties": false,
+-      "description": "A chapter of a clip, for the player's progress bar: the first card, each feature's segments, the last card.",
++      "description": "A chapter of a clip, for the player's progress bar: each feature's segments (a clip cut before 11/19 also has\nits first and last cards, feature null).",
+       "properties": {
+         "feature": {
+           "anyOf": [
+@@ -4003,6 +4064,32 @@
+             }
+           ],
+           "description": "The video.features entry the chapter shows; null for the first and last cards."
++        },
++        "raw": {
++          "anyOf": [
++            {
++              "minimum": 0,
++              "type": "integer"
++            },
++            {
++              "type": "null"
++            }
++          ],
++          "default": null,
++          "description": "Index into video.raw: the unedited recording the chapter's first segment was cut from (its link on the page opens that recording there)."
++        },
++        "raw_s": {
++          "anyOf": [
++            {
++              "minimum": 0,
++              "type": "number"
++            },
++            {
++              "type": "null"
++            }
++          ],
++          "default": null,
++          "description": "Where in that recording the chapter's first segment starts, seconds."
+         },
+         "start_s": {
+           "description": "Where the chapter starts in the clip, seconds.",
+@@ -4057,6 +4144,28 @@
+         "smoke_test"
+       ],
+       "title": "VideoRaw",
++      "type": "object"
++    },
++    "VideoSource": {
++      "additionalProperties": false,
++      "description": "A file kept in R2 beside the clip so the clip can be cut again later without a box: pickfit's action log of\nthe recordings (actions.json) or the clip's edit list (its segments, review and captions).",
++      "properties": {
++        "key": {
++          "description": "Its key in the videos bucket: <slug>/<file>.",
++          "maxLength": 200,
++          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*/[A-Za-z0-9_][A-Za-z0-9_.-]*\\.json$",
++          "type": "string"
++        },
++        "sha256": {
++          "pattern": "^[0-9a-f]{64}$",
++          "type": "string"
++        }
++      },
++      "required": [
++        "key",
++        "sha256"
++      ],
++      "title": "VideoSource",
+       "type": "object"
+     },
+     "VisualCheck": {

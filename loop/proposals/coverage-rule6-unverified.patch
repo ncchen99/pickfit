@@ -1,0 +1,162 @@
+Treasure rule 6, the default from 11/19 (念誠's pick; docs/proposals/coverage-distribution.md)
+
+An unverified record loses the 69 cap: it keeps its own score, and its order among the others, but cannot be a
+treasure (scores.treasure.blocked_by "unverified"). Rules 3-5 stay off; rule 1 (conditional and the 79 cap) waits
+for the sec.v2 rescan. This flips schema.UNVERIFIED_CAP, which coverage-scoring-b3v7.patch added with today's rule
+as its default, and changes the tests that pinned the 69 cap (renamed or reworded, none removed).
+
+Applies LAST, after coverage-scoring-b3v7.patch (loop/proposals/APPLY.md). The stored scores then no longer match
+the rule, so records do not validate until `uv run pickfit score --refresh` rewrites them (offline, no model call,
+about a second). Checked on 11/19 in a copy outside every checkout, on integrate/proposals-1119: over the records in
+data/software, treasures stay 161; the 217 records at exactly 69.0 spread out (0 left); 214 unverified records lose
+their cap and 108 unverified records with a sec.v1 known vulnerability move to the 79 cap (79.0: 150 -> 197); then
+the full suite passes (2316 passed).
+
+diff --git a/pickfit/schema.py b/pickfit/schema.py
+index 058125f..6060999 100644
+--- a/pickfit/schema.py
++++ b/pickfit/schema.py
+@@ -277,8 +277,9 @@ SECURITY_NO_TREASURE_LEVELS: frozenset[str] = frozenset()
+ # yet) can be a treasure, and its page says it was not checked. False takes the treasure away until something is.
+ UNCHECKED_CAN_BE_TREASURE = True
+ # The 69 cap on an unverified record (QUALITY_CAPS). False: it keeps its score, and its order among the others, but
+-# cannot be a treasure (blocked_by "unverified"): a coverage rule in place of a cap.
+-UNVERIFIED_CAP = True
++# cannot be a treasure (blocked_by "unverified"): a coverage rule in place of a cap. False since 11/19 (念誠: rule 6 of
++# docs/proposals/coverage-distribution.md; the unverified records at exactly 69.0 spread out, no treasure moves).
++UNVERIFIED_CAP = False
+ # A treasure needs at least this share of its packages checked (security), or of its listed features judged
+ # (function): pickfit/coverage.py's measures, applied by pickfit/score.py (blocked_by "security_coverage",
+ # "function_coverage"). None: no such rule (default).
+diff --git a/pickfit/score.py b/pickfit/score.py
+index b872703..123610c 100644
+--- a/pickfit/score.py
++++ b/pickfit/score.py
+@@ -122,7 +122,7 @@ rule (docs/proposals/coverage-distribution.md has what each would do):
+   coverage rules: off, an unknown changes nothing;
+ - STALE_FIX_PENALTY (default 0): a fix out for STALE_FIX_DAYS or more that the checked version has not taken (a
+   finding's fix_published_at) taken off maintenance.
+-The same applies to web apps. schema.UNVERIFIED_CAP (default True, the 69 cap) and TREASURE_MIN_FUNCTION_COVERAGE
++The same applies to web apps. schema.UNVERIFIED_CAP (default False since 11/19: no 69 cap, not a treasure) and TREASURE_MIN_FUNCTION_COVERAGE
+ (default None) are the other coverage rules; treasure.blocked_by says which rule kept a record from being a treasure.
+ 
+ Inputs are the record, the GitHub snapshot it was built from (runs/pipeline.db; fetched live
+diff --git a/tests/test_schema.py b/tests/test_schema.py
+index 29b2ba3..5019339 100644
+--- a/tests/test_schema.py
++++ b/tests/test_schema.py
+@@ -225,7 +225,8 @@ MUTATIONS = {
+     ),
+     "archived without cap": ("cap_reason must be 'archived'", set_path("repo", "archived", True)),
+     "library without cap": ("cap_reason must be 'not_a_tool'", set_path("kind", "library_sdk")),
+-    "unverified without cap": ("cap_reason must be 'unverified'", without_runs),
++    # Rule 6 (11/19): an unverified record has no 69 cap, but it cannot be a treasure.
++    "unverified, still a treasure": ("blocked_by must be 'unverified'", without_runs),
+     "failed without cap": ("cap_reason must be 'verification_failed'", with_failed_run),
+     "weaker of two caps": (
+         "cap_reason must be 'archived'",
+@@ -298,7 +299,7 @@ def test_values_as_github_reports_them(example):
+ 
+ def test_binding_cap_picks_the_lowest():
+     assert binding_cap("cli_tool", False, "function") is None
+-    assert binding_cap("cli_tool", False, "unverified") == "unverified"
++    assert binding_cap("cli_tool", False, "unverified") is None  # rule 6 (11/19): no 69 cap, not a treasure
+     assert binding_cap("library_sdk", False, "unverified") == "not_a_tool"
+     assert binding_cap("library_sdk", False, "failed") == "verification_failed"
+     assert binding_cap("library_sdk", True, "failed") == "archived"
+diff --git a/tests/test_score.py b/tests/test_score.py
+index 7a8b35f..cf68857 100644
+--- a/tests/test_score.py
++++ b/tests/test_score.py
+@@ -527,11 +527,13 @@ def test_a_rescore_without_lookups_keeps_the_stored_signals(tmp_path: Path) -> N
+     assert after.popularity.signals == before.popularity.signals and after.popularity.packages == ["npm:tinyq"]
+ 
+ 
+-def test_unverified_records_are_capped_below_the_treasure_line(tmp_path: Path) -> None:
++def test_unverified_records_keep_their_score_but_cannot_be_treasures(tmp_path: Path) -> None:
+     db_path, out = setup_records(tmp_path, verified=False)
+     score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=NOW, grade=fake_grade())
+     scores = SoftwareRecord.model_validate_json((out / "tinyq.json").read_text(encoding="utf-8")).scores
+-    assert scores.quality.cap_reason == "unverified" and scores.quality.total <= 69
++    # Rule 6 (11/19): no 69 cap, so unverified records keep their order; the treasure is what they cannot have.
++    assert scores.quality.cap_reason is None and scores.quality.total == scores.quality.raw_total
++    assert scores.treasure.blocked_by == "unverified"
+     assert scores.quality.components.sandbox_verification.score is None
+     assert not scores.treasure.is_treasure
+ 
+@@ -549,7 +551,7 @@ def test_write_back_keeps_scores_and_refreshes_what_follows_the_run(tmp_path: Pa
+     db_path, out = setup_records(tmp_path, verified=False)
+     score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=NOW, grade=fake_grade(1))
+     before = SoftwareRecord.model_validate_json((out / "tinyq.json").read_text(encoding="utf-8")).scores
+-    assert before.quality.cap_reason == "unverified"
++    assert before.quality.cap_reason is None and before.treasure.blocked_by == "unverified"  # rule 6
+     new_run = VerificationRun.model_validate(run("verify-2", steps=5, pitfalls=1))
+     written, note = write_back(new_run, "tinyq", out)
+     assert written and "scores refreshed" in note
+@@ -704,7 +706,7 @@ def test_browser_facts_score_what_the_run_saw_and_drop_what_it_could_not_tell(fa
+     assert browser_facts_score(verification) == expected
+ 
+ 
+-def test_a_web_app_that_only_loaded_scores_lower_and_an_unverified_one_is_capped_with_no_total() -> None:
++def test_a_web_app_that_only_loaded_scores_lower_and_an_unverified_one_has_no_total() -> None:
+     data = web_record(operations=[], data_sent="unknown")
+     run = data["verification"]["runs"][0]
+     run.update(level="install", features=[])
+@@ -716,7 +718,7 @@ def test_a_web_app_that_only_loaded_scores_lower_and_an_unverified_one_is_capped
+     run["web"].update(screen="sign_in_wall")
+     data["verification"].update(level="unverified", unverified_reason="not_run")
+     q = web_scores(data)["quality"]
+-    assert (q["total"], q["cap_reason"], q["cap"]) == (None, "unverified", 69)
++    assert (q["total"], q["cap_reason"], q["cap"]) == (None, None, None)  # rule 6 (11/19): no 69 cap
+ 
+ 
+ def test_web_popularity_is_stars_with_a_repo_else_the_cited_show_hn_points() -> None:
+diff --git a/tests/test_score_v7.py b/tests/test_score_v7.py
+index 4da6de2..ab50b90 100644
+--- a/tests/test_score_v7.py
++++ b/tests/test_score_v7.py
+@@ -206,13 +206,16 @@ def test_the_unverified_cap_can_become_a_coverage_rule(tmp_path: Path, monkeypat
+                   grade=fake_grade())
+     data = json.loads((out / "tinyq.json").read_text(encoding="utf-8"))
+     q = data["scores"]["quality"]
+-    assert q["cap_reason"] == "unverified" and q["total"] == min(q["raw_total"], 69.0)
+-    monkeypatch.setattr(schema, "UNVERIFIED_CAP", False)
+-    refresh_scores(data, LATER)
+-    q, t = data["scores"]["quality"], data["scores"]["treasure"]
+-    assert q["cap_reason"] is None and q["total"] == q["raw_total"]  # it keeps its own score and order
++    t = data["scores"]["treasure"]
++    # Rule 6 (the default since 11/19): no 69 cap; it keeps its own score and order but cannot be a treasure.
++    assert q["cap_reason"] is None and q["total"] == q["raw_total"]
+     assert t["blocked_by"] == "unverified" and t["is_treasure"] is False
+     SoftwareRecord.model_validate(data)
++    monkeypatch.setattr(schema, "UNVERIFIED_CAP", True)  # the rule before 11/19
++    refresh_scores(data, LATER)
++    q = data["scores"]["quality"]
++    assert q["cap_reason"] == "unverified" and q["total"] == min(q["raw_total"], 69.0)
++    SoftwareRecord.model_validate(data)
+ 
+ 
+ def test_coverage_thresholds_block_a_treasure_only_when_set(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+@@ -289,7 +292,7 @@ def test_pickfit_coverage_rules_compares_every_candidate_without_writing(tmp_pat
+     for rule in result["rules"]["rules"].values():
+         assert {"treasures", "gained", "lost", "at_69.0", "at_79.0", "settings"} <= set(rule)
+     assert (out / "tinyq.json").read_bytes() == before
+-    assert schema.UNVERIFIED_CAP is True and schema.SECURITY_NO_TREASURE_LEVELS == frozenset()  # restored
++    assert schema.UNVERIFIED_CAP is False and schema.SECURITY_NO_TREASURE_LEVELS == frozenset()  # restored
+ 
+ 
+ # --- R1, R10: stored inputs, recomputed with no call, and history ----------------------------------------------------
+diff --git a/tests/test_security.py b/tests/test_security.py
+index ef6fec7..1bf2578 100644
+--- a/tests/test_security.py
++++ b/tests/test_security.py
+@@ -53,7 +53,8 @@ def test_the_cap_sits_just_below_treasure() -> None:
+     assert binding_cap("cli_tool", False, "function", check()) == "known_vulnerability"
+     assert binding_cap("cli_tool", False, "function", check("clean")) is None
+     assert binding_cap("cli_tool", False, "function", check("unchecked")) is None
+-    assert binding_cap("cli_tool", False, "unverified", check()) == "unverified"  # the lowest cap wins
++    # Rule 6 (11/19): unverified is no cap, so a known vulnerability caps it at 79 (it cannot be a treasure either way).
++    assert binding_cap("cli_tool", False, "unverified", check()) == "known_vulnerability"
+     assert binding_cap("cli_tool", False, "function", None) is None
+ 
+ 

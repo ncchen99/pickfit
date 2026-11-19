@@ -67,6 +67,16 @@ def test_a_function_visit_becomes_a_valid_web_run(tmp_path: Path):
     assert "HeadlessChrome" not in web.browser and web.browser.startswith("Chromium 156")
 
 
+def test_a_web_run_checks_the_first_four_features_and_lists_the_rest_beyond_budget(tmp_path: Path):
+    six = [*FEATURES, "share a link", "work offline", "import Visio files", "collaborate live"]
+    run = web_run(visit(), six, tmp_path)
+    assert [f.reason for f in run.features] == [None, "not_attempted", "not_attempted", "not_attempted",
+                                                "beyond_budget", "beyond_budget"]
+    record = SoftwareRecord.model_validate_json(FIXTURE.read_text())
+    record = record.model_copy(update={"features": six})
+    assert target_from_record(record).features == six[:4]
+
+
 def test_an_operation_the_judge_refused_leaves_install(tmp_path: Path):
     run = web_run(visit(level="function", function_judge={"feature_shown": False, "observed": "Nothing changed."},
                         works_offline=None, pwa=False), FEATURES, tmp_path)

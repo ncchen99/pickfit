@@ -225,7 +225,8 @@ MUTATIONS = {
     ),
     "archived without cap": ("cap_reason must be 'archived'", set_path("repo", "archived", True)),
     "library without cap": ("cap_reason must be 'not_a_tool'", set_path("kind", "library_sdk")),
-    "unverified without cap": ("cap_reason must be 'unverified'", without_runs),
+    # Rule 6 (11/19): an unverified record has no 69 cap, but it cannot be a treasure.
+    "unverified, still a treasure": ("blocked_by must be 'unverified'", without_runs),
     "failed without cap": ("cap_reason must be 'verification_failed'", with_failed_run),
     "weaker of two caps": (
         "cap_reason must be 'archived'",
@@ -298,7 +299,7 @@ def test_values_as_github_reports_them(example):
 
 def test_binding_cap_picks_the_lowest():
     assert binding_cap("cli_tool", False, "function") is None
-    assert binding_cap("cli_tool", False, "unverified") == "unverified"
+    assert binding_cap("cli_tool", False, "unverified") is None  # rule 6 (11/19): no 69 cap, not a treasure
     assert binding_cap("library_sdk", False, "unverified") == "not_a_tool"
     assert binding_cap("library_sdk", False, "failed") == "verification_failed"
     assert binding_cap("library_sdk", True, "failed") == "archived"
@@ -516,7 +517,7 @@ def test_committed_schema_files_match_models():
 # --- Features and feature coverage --------------------------------------------
 
 
-def test_extraction_features_keep_four_short_quoted_labels():
+def test_extraction_features_keep_six_short_quoted_labels():
     sample = copy.deepcopy(EXTRACTION_SAMPLE)
     assert ExtractionResult.model_validate(sample).features == []  # older extractions have none
     sample["features"] = [
@@ -526,11 +527,13 @@ def test_extraction_features_keep_four_short_quoted_labels():
         _cited("filter by level", "--level warn"),
         _cited("pretty-print fields", "pretty fields"),
         _cited("color output", "colors"),
-        _cited("one too many", "more"),
+        _cited("one more", "more"),
+        _cited("a sixth", "sixth"),
+        _cited("one too many", "seventh"),
     ]
     result = ExtractionResult.model_validate(sample)
     assert [f.value for f in result.features] == [
-        "follow a JSON log", "filter by level", "pretty-print fields", "color output"]
+        "follow a JSON log", "filter by level", "pretty-print fields", "color output", "one more", "a sixth"]
     strict = meta_strict_schema(ExtractionResult)
     assert "features" in strict["required"]
 
@@ -584,12 +587,75 @@ def test_feature_coverage_must_match_the_smoke_tests(example, mutate):
         SoftwareRecord.model_validate(mutate(example))
 
 
+def beyond(name):
+    return {"feature": name, "status": "not_checked", "reason": "beyond_budget",
+            "note": "pickfit checks the first 4 listed features one by one"}
+
+
+def test_a_run_lists_features_past_its_budget_as_beyond_budget(example):
+    checked = [CHECKED, *[{**NOT_CHECKED, "feature": f"f{i}"} for i in range(3)]]
+    record = SoftwareRecord.model_validate(with_features(example, *checked, beyond("f5"), beyond("f6")))
+    assert len(record.features) == 6
+    assert [f.reason for f in record.verification.runs[0].features][4:] == ["beyond_budget", "beyond_budget"]
+
+
+@pytest.mark.parametrize("mutate", [
+    # five checked one by one: one more than a run's budget
+    lambda d: with_features(d, CHECKED, *[{**NOT_CHECKED, "feature": f"f{i}"} for i in range(4)]),
+    # seven listed: more than a record keeps
+    lambda d: with_features(d, CHECKED, *[beyond(f"f{i}") for i in range(6)]),
+    lambda d: with_features(d, {**beyond("f5"), "status": "checked", "smoke_tests": [1]}),  # beyond is never checked
+])
+def test_a_run_checks_at_most_four_and_a_record_keeps_at_most_six(example, mutate):
+    with pytest.raises(ValidationError):
+        SoftwareRecord.model_validate(mutate(example))
+
+
 def test_a_failed_feature_test_says_whom_it_points_at(example):
     doc = with_features(failed_test(example), {"feature": "follow a growing file", "status": "test_failed",
                                                "smoke_tests": [2], "failure": "sandbox",
                                                "reason": "needs_more_resources"})
     run = SoftwareRecord.model_validate(doc).verification.runs[0]
     assert (run.features[0].failure, run.smoke_tests[2].passed) == ("sandbox", False)
+
+
+# --- Capabilities (matching only) -----------------------------------------------
+
+CAPABILITIES = [{"label": "convert documents between markup formats", "items": ["docx", "epub", "odt"]},
+                {"label": "render math in HTML output"}]
+
+
+def test_capabilities_are_kept_apart_from_features(example):
+    example["capabilities"] = CAPABILITIES
+    record = SoftwareRecord.model_validate(example)
+    assert [c.label for c in record.capabilities] == [c["label"] for c in CAPABILITIES]
+    assert record.capabilities[0].items == ["docx", "epub", "odt"]
+    dumped = record.model_dump(mode="json")
+    assert "items" not in dumped["capabilities"][1]  # an empty list is left out, as features are
+    assert "capabilities" not in SoftwareRecord.model_validate(
+        {k: v for k, v in example.items() if k != "capabilities"}).model_dump(mode="json")
+
+
+@pytest.mark.parametrize("capabilities", [
+    [CAPABILITIES[0], {"label": "Convert documents between markup formats"}],  # the same label twice
+    [{"label": f"capability {i}"} for i in range(41)],  # more than CAPABILITIES_MAX
+    [{"label": "x" * 81}],
+    [{"label": "read formats", "items": ["y" * 41]}],
+    [{"label": "read formats", "items": [f"f{i}" for i in range(61)]}],
+    [{"label": ""}],
+])
+def test_capabilities_are_bounded(example, capabilities):
+    example["capabilities"] = capabilities
+    with pytest.raises(ValidationError):
+        SoftwareRecord.model_validate(example)
+
+
+def test_capability_evidence_points_at_a_known_field(example):
+    example["capabilities"] = CAPABILITIES
+    source = example["sources"][0]["id"]
+    example["evidence"].append({"field": "/capabilities/0/label", "source_id": source, "quote": None,
+                                "method": "sandbox", "checked_at": example["updated_at"]})
+    assert SoftwareRecord.model_validate(example).evidence[-1].field == "/capabilities/0/label"
 
 
 # --- Hosted web apps (kind web_app) --------------------------------------------

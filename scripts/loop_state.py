@@ -20,6 +20,12 @@ is in two files under loop/, and this script is the only thing that changes thei
     uv run python scripts/loop_state.py issue-new "title" [--reason needs_toolchain]
     uv run python scripts/loop_state.py issue-status H-003 fixed   # fixed also puts its parked items back
     uv run python scripts/loop_state.py issues
+    uv run python scripts/loop_state.py open-issues [--all]  # one line per unresolved issue: id, title, reason
+    uv run python scripts/loop_state.py issue H-003          # that one section of loop/issues.md, notes and all
+    uv run python scripts/loop_state.py run-summary [RUN] [--slug SLUG]  # a verify run's outcome in a few lines
+
+A session reads the short forms (open-issues, run-summary) instead of the whole of loop/issues.md or a verify
+run's output, and opens one issue or the run's files only when it needs the detail (11/19).
 
 Standard library only, no model call, no network.
 """
@@ -29,6 +35,7 @@ from __future__ import annotations
 import argparse
 import fcntl
 import json
+import os
 import re
 import sys
 from collections import Counter
@@ -41,6 +48,7 @@ from zoneinfo import ZoneInfo
 REPO_ROOT = Path(__file__).resolve().parent.parent
 LOOP_DIR = REPO_ROOT / "loop"
 DATA_DIR = REPO_ROOT / "data" / "software"
+RUNS_DIR = REPO_ROOT / "runs"
 TAIPEI = ZoneInfo("Asia/Taipei")
 
 KINDS = ("reverify", "new")
@@ -220,6 +228,43 @@ def issue_reasons(loop_dir: Path) -> dict[str, str]:
     return reasons
 
 
+def issue_index(loop_dir: Path) -> list[dict[str, str | None]]:
+    """Each issue's id, status, title and `reason:` code, in file order: the headings, not the notes."""
+    path = loop_dir / "issues.md"
+    if not path.exists():
+        return []
+    out: list[dict[str, str | None]] = []
+    for line in path.read_text().splitlines():
+        match = _HEADING.match(line)
+        if match:
+            out.append({"id": match.group(1), "status": match.group(2), "title": match.group(3), "reason": None})
+            continue
+        reason = _REASON_LINE.match(line)
+        if reason and out and out[-1]["reason"] is None:
+            out[-1]["reason"] = reason.group(1)
+    return out
+
+
+def issue_section(loop_dir: Path, ident: str) -> str:
+    """One issue's section of loop/issues.md: its heading and notes, up to the next issue's heading."""
+    path = loop_dir / "issues.md"
+    lines = path.read_text().splitlines() if path.exists() else []
+    section: list[str] = []
+    for line in lines:
+        match = _HEADING.match(line)
+        if match:
+            if section:
+                break
+            if match.group(1) == ident:
+                section.append(line)
+            continue
+        if section:
+            section.append(line)
+    if not section:
+        raise StateError(f"no issue {ident} in loop/issues.md")
+    return "\n".join(section).rstrip() + "\n"
+
+
 def new_issue(loop_dir: Path, title: str, reason: str | None = None) -> str:
     title = " ".join(title.split())
     if not title:
@@ -282,6 +327,90 @@ def remaining(items: list[dict[str, Any]]) -> int:
     return sum(1 for item in items if item["status"] in ("todo", "doing"))
 
 
+# --- a verify run in a few lines -----------------------------------------------------------------------------
+
+
+def _clip(text: Any, limit: int) -> str | None:
+    if text is None:
+        return None
+    flat = " ".join(str(text).split())
+    return flat if len(flat) <= limit else flat[: limit - 1] + "…"
+
+
+def _tail(text: str | None, limit: int) -> str | None:
+    if not text:
+        return None
+    flat = " ".join(text.split())
+    return flat if len(flat) <= limit else "…" + flat[-(limit - 1):]
+
+
+def _load(path: Path) -> dict[str, Any] | None:
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def find_run(runs_dir: Path, run: str | None = None, slug: str | None = None) -> Path | None:
+    """A verify run's evidence directory: a path, a run id under runs/verify/, or the newest run (of `slug`)."""
+    if run:
+        path = Path(run)
+        if path.is_dir():
+            return path
+        path = runs_dir / "verify" / run
+        return path if path.is_dir() else None
+    pattern = f"verify-{slug}-*" if slug else "*"
+    runs = [p for p in (runs_dir / "verify").glob(pattern) if p.is_dir() and
+            ((p / "outcome.json").exists() or (p / "report.json").exists())]
+    if slug:  # verify-<slug>-<date>-<time>-<hex>: a longer slug that starts the same is another tool
+        runs = [p for p in runs if re.fullmatch(rf"verify-{re.escape(slug)}-\d{{8}}-\d{{6}}-[0-9a-f]+", p.name)]
+    return max(runs, key=lambda p: max(f.stat().st_mtime for f in p.iterdir() if f.is_file()), default=None)
+
+
+def run_summary(evidence: Path) -> dict[str, Any]:
+    """What a session needs to decide on a run, from outcome.json and report.json: the result, why, what it cost,
+    the failing command's tail. Never the agent's turns or its thinking (open the files for those)."""
+    outcome = _load(evidence / "outcome.json") or {}
+    report = _load(evidence / "report.json") or {}
+    finish = report.get("finish") or {}
+    verdict = report.get("verdict") or {}
+    out: dict[str, Any] = {"run": outcome.get("run_id") or report.get("run_id") or evidence.name,
+                           "slug": outcome.get("slug") or report.get("slug"), "evidence": str(evidence)}
+    if not outcome:
+        out["missing"] = "outcome.json (the run did not finish; its last lines are in the log you wrote)"
+    for key in ("level", "replayed", "judge", "unverified_reason", "runner", "written", "seconds", "cost_usd",
+                "box_usd"):
+        if key in outcome:
+            out[key] = outcome[key]
+    out["blocking_error"] = _clip(outcome.get("blocking_error") or finish.get("blocking_error"), 300)
+    out["stop_reason"] = report.get("stop_reason") or None
+    out["error"] = _clip(report.get("error"), 300)
+    out["summary"] = _clip(finish.get("summary"), 400)
+    if verdict:
+        out["verdict"] = {"level": verdict.get("level"), "agrees": verdict.get("agrees"),
+                          "problems": [_clip(p, 200) for p in (verdict.get("problems") or [])[:5]]}
+    features = report.get("features") or []
+    if features:
+        out["features"] = [f"{f.get('number')}. {_clip(f.get('feature'), 80)}: {f.get('status')}"
+                           for f in features[:12]]
+    commands = [c for c in report.get("commands") or [] if c.get("command_id") is not None]
+    failing = finish.get("failing_command_id") or verdict.get("failing_id")
+    picked = [c for c in commands if c.get("command_id") == failing] if failing else []
+    if not picked and out.get("level") in (None, "unverified"):
+        picked = commands[-3:]  # no command named: the last ones are where it ended
+    if picked:
+        out["commands"] = [{k: v for k, v in {
+            "id": c.get("command_id"), "command": _clip(c.get("command"), 200), "exit_code": c.get("exit_code"),
+            "timed_out": c.get("timed_out") or None, "stderr_tail": _tail(c.get("stderr"), 400),
+            "stdout_tail": None if c.get("stderr") else _tail(c.get("stdout"), 300)}.items() if v is not None}
+            for c in picked]
+    notes = outcome.get("notes") or []
+    if notes:
+        out["notes"] = [_clip(n, 200) for n in notes[:5]]
+    return {k: v for k, v in out.items() if v is not None}
+
+
 # --- command line --------------------------------------------------------------------------------------------
 
 
@@ -319,8 +448,27 @@ def main(argv: list[str] | None = None) -> int:
     issue_status.add_argument("id")
     issue_status.add_argument("status", choices=ISSUE_STATUSES)
     sub.add_parser("issues", help="list the issues with the items waiting on each")
+    open_issues = sub.add_parser("open-issues", help="one line per unresolved issue (open, fixing): id, title, "
+                                                     "reason code, items waiting; the rest as counts")
+    open_issues.add_argument("--all", action="store_true", help="every issue, fixed and parked ones too")
+    one = sub.add_parser("issue", help="print one issue's section of loop/issues.md")
+    one.add_argument("id")
+    summary = sub.add_parser("run-summary", help="a verify run's result in a few lines (outcome.json, report.json)")
+    summary.add_argument("run", nargs="?", help="the run's directory or id (default: the newest run)")
+    summary.add_argument("--slug", help="the newest run of this slug")
+    summary.add_argument("--runs-dir", type=Path, default=None, help="default PICKFIT_RUNS_DIR, else runs/")
     args = parser.parse_args(argv)
     loop_dir: Path = args.loop_dir
+
+    if args.command == "run-summary":  # reads runs/ only: no lock, no queue
+        runs_dir = args.runs_dir or Path(os.environ.get("PICKFIT_RUNS_DIR") or RUNS_DIR)
+        evidence = find_run(runs_dir, args.run, args.slug)
+        if evidence is None:
+            print(f"loop_state: no verify run {'like ' + (args.run or args.slug) if args.run or args.slug else ''} "
+                  f"under {runs_dir / 'verify'}", file=sys.stderr)
+            return 2
+        print(json.dumps(run_summary(evidence), ensure_ascii=False, indent=1))
+        return 0
 
     try:
         with locked(loop_dir):
@@ -368,6 +516,23 @@ def main(argv: list[str] | None = None) -> int:
                                   if item.get("issue") and item["status"] in ("todo", "doing", "parked"))
                 for ident, state in issues.items():
                     print(f"{ident} [{state}] {waiting.get(ident, 0)} items waiting")
+            elif args.command == "open-issues":
+                waiting = Counter(item["issue"] for item in items
+                                  if item.get("issue") and item["status"] in ("todo", "doing", "parked"))
+                index = issue_index(loop_dir)
+                shown = [i for i in index if args.all or i["status"] in ISSUE_ACTIVE]
+                for issue in shown:
+                    extra = [f"reason {issue['reason']}"] if issue["reason"] else []
+                    if waiting.get(issue["id"]):
+                        extra.append(f"{waiting[issue['id']]} items waiting")
+                    print(f"{issue['id']} [{issue['status']}] {issue['title']}"
+                          + (f" ({', '.join(extra)})" if extra else ""))
+                rest = Counter(i["status"] for i in index if i not in shown)
+                if rest:
+                    print("not listed: " + " ".join(f"{name}={rest[name]}" for name in ISSUE_STATUSES if rest[name])
+                          + " (--all lists them; `issue H-00X` prints one)")
+            elif args.command == "issue":
+                print(issue_section(loop_dir, args.id), end="")
     except StateError as error:
         print(f"loop_state: {error}", file=sys.stderr)
         return 2

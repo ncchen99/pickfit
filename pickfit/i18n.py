@@ -22,6 +22,10 @@ PROSE_KEYS = frozenset({
     "manual_steps", "actually_needed", "goal", "observed", "pricing_note", "data_sent_note", "api_keys",
     # usage_guide's plain feature titles, how-to steps and open hint; a video chapter's title.
     "title", "open_hint", "steps",
+    # a documented capability's label (its items are formats and names: kept as they are)
+    "label",
+    # a video caption cue's words (video.captions[].text): the clip draws none, the page serves them as WebVTT.
+    "text",
 })
 CODE = re.compile(r"[a-z0-9_]+")
 # Subtrees that hold commands, outputs or ids: never walked (same idea as KEEP in worker/src/i18n.ts).

@@ -22,6 +22,7 @@ from pickfit.env import REPO_ROOT
 from pickfit.ledger import taipei_now
 from pickfit.schema import (
     PASSED_LEVELS,
+    VERIFY_FEATURES_MAX,
     FeatureCheck,
     InstallStep,
     Judge,
@@ -37,6 +38,7 @@ from pickfit.schema import (
 )
 from pickfit.score import refresh_scores
 from pickfit.verify import web_guard as guard
+from pickfit.verify.features import BEYOND_BUDGET_NOTE
 from pickfit.verify.web_box import BROWSER_USE, image_name
 from pickfit.verify.web_verify import WebTarget, site_of
 
@@ -56,7 +58,7 @@ def target_from_record(record: SoftwareRecord) -> WebTarget:
     uses = "; ".join(record.use_cases[:3])
     return WebTarget(slug=record.slug, name=record.name, url=str(record.web.url),
                      use_case=f"{record.summary}" + (f" Typical uses: {uses}." if uses else ""),
-                     features=list(record.features))
+                     features=list(record.features[:VERIFY_FEATURES_MAX]))
 
 
 def record_targets(slugs: list[str], data_dir: Path | None = None) -> list[WebTarget]:
@@ -184,9 +186,12 @@ def web_run(result: dict[str, Any], features: list[str], run_dir: Path) -> Verif
                    pwa=result.get("pwa"), offline=offline, operations=operations)
     checked = {i for i, op in enumerate(operations) if op.passed and op.feature}
     feature_checks = []
-    for label in features:
+    for n, label in enumerate(features):
         cites = [operations[i].smoke_test for i in checked if operations[i].feature == label]
-        if cites:
+        if n >= VERIFY_FEATURES_MAX:  # past the run's budget: the browser agent was never asked for it
+            feature_checks.append(FeatureCheck(feature=label, status="not_checked", reason="beyond_budget",
+                                               note=BEYOND_BUDGET_NOTE))
+        elif cites:
             feature_checks.append(FeatureCheck(feature=label, status="checked", smoke_tests=sorted(set(cites))))
         else:
             gap = "needs_account" if result.get("account_required") else "not_attempted"

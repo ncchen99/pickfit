@@ -18,7 +18,10 @@ call_meta sends those requests to Claude through this module:
     parameters become the output schema, and from_message() hands the JSON back as that tool call.
   - Reasoning effort becomes `output_config.effort`; thinking is adaptive and cannot be switched off.
   - A conversation with earlier assistant turns also gets automatic caching, so a loop reads its history
-    from the cache and writes only what the last turn added.
+    from the cache and writes only what the last turn added. A caller that resends its history every turn
+    (the verification agent) says so (`conversation`), and its first turn is cached too: the task it sends
+    then (about 6K tokens with the README) is read from the cache on the second turn instead of written to
+    it. A single call does not get this: a cache write costs 1.25x input, and nothing would read it back.
 - from_message(): the Message -> the raw response the endpoint would have returned (a chat.completion or a
   Responses object), with usage in that endpoint's field names.
 
@@ -303,9 +306,12 @@ def _forced_tool(choice: Any) -> str | None:
 
 
 def to_request(endpoint: str, request: dict[str, Any], *, fallbacks: bool = True,
-               prompt_schema: bool = False) -> tuple[dict[str, Any], Plan]:
+               prompt_schema: bool = False, conversation: bool = False) -> tuple[dict[str, Any], Plan]:
     """Keyword arguments for `messages.create` from one Chat or Responses request, and the plan to read
     the answer back. Raises ValueError for anything that has no counterpart, rather than dropping it.
+
+    `conversation`: the caller sends this history again, longer, on its next turn, so the end of the request
+    is a cache breakpoint from the first turn on (later turns get one anyway: they hold assistant turns).
 
     A JSON schema is sent as the output format, which guarantees the answer follows it, unless Claude
     cannot compile it (more than UNION_LIMIT union-typed parameters, or `prompt_schema`: the API refused
@@ -366,7 +372,7 @@ def to_request(endpoint: str, request: dict[str, Any], *, fallbacks: bool = True
         kwargs["tool_choice"] = tool_choice
     if summary:
         kwargs["thinking"] = {"type": "adaptive", "display": "summarized"}
-    if any(m["role"] == "assistant" for m in messages):
+    if conversation or any(m["role"] == "assistant" for m in messages):
         kwargs["cache_control"] = {"type": "ephemeral"}
     if fallbacks and request["model"] in FALLBACK_MODELS:
         kwargs["betas"] = [FALLBACK_BETA]
@@ -469,12 +475,12 @@ def _to_dict(obj: Any) -> dict[str, Any]:
 
 
 def send(client: Any, endpoint: str, request: dict[str, Any], stream: bool = False, *,
-         fallbacks: bool = True) -> dict[str, Any]:
+         fallbacks: bool = True, conversation: bool = False) -> dict[str, Any]:
     """Send one Chat or Responses request to Claude and return the raw response in that endpoint's shape.
 
     An output schema the API refuses (a 400 before anything is generated or billed) is remembered and
     sent again at once with the schema in the prompt instead."""
-    kwargs, plan = to_request(endpoint, request, fallbacks=fallbacks)
+    kwargs, plan = to_request(endpoint, request, fallbacks=fallbacks, conversation=conversation)
     try:
         message = _post(client, kwargs, stream)
     except anthropic.BadRequestError as err:
@@ -482,7 +488,8 @@ def send(client: Any, endpoint: str, request: dict[str, Any], stream: bool = Fal
         if schema is None or plan.prompted_schema or "schema" not in str(err).lower():
             raise
         _refused_schemas.add(_schema_key(schema))
-        kwargs, plan = to_request(endpoint, request, fallbacks=fallbacks, prompt_schema=True)
+        kwargs, plan = to_request(endpoint, request, fallbacks=fallbacks, prompt_schema=True,
+                                  conversation=conversation)
         message = _post(client, kwargs, stream)
     return from_message(_to_dict(message), plan)
 
@@ -499,8 +506,9 @@ class _Endpoint:
     def __init__(self, owner: Client, endpoint: str) -> None:
         self._owner, self._endpoint = owner, endpoint
 
-    def create(self, *, stream: bool = False, **request: Any) -> dict[str, Any]:
-        return send(self._owner.anthropic, self._endpoint, request, stream, fallbacks=self._owner.fallbacks)
+    def create(self, *, stream: bool = False, conversation: bool = False, **request: Any) -> dict[str, Any]:
+        return send(self._owner.anthropic, self._endpoint, request, stream, fallbacks=self._owner.fallbacks,
+                    conversation=conversation)
 
 
 class _Chat:

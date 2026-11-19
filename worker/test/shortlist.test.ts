@@ -111,7 +111,8 @@ test('rules: relevance tier first, then verification on the OS, then treasure', 
   const entries = bulk();
   const scores = relevance(entries, entries, queryTerms('transcribe audio recordings'));
   assert.equal(rankByRules(entries, scores)[0].slug, 'quiet-transcriber');
-  const same = { summary: 'Transcribes audio recordings to text offline.', why_worth_it: null, tags: ['audio'], use_cases: [], alternatives_to: [] };
+  // The same profile, features too: relevance reads them (capabilities step 5).
+  const same = { summary: 'Transcribes audio recordings to text offline.', why_worth_it: null, tags: ['audio'], use_cases: [], alternatives_to: [], features: [] };
   const mac = like('fixture-llm-runner', 'mac-transcriber', 0, same);
   const linux = like('fixture-transcribe', 'linux-transcriber', 90, same);
   const pair = relevance([mac, linux], [mac, linux], queryTerms('transcribe audio recordings'));

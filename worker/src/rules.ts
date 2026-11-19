@@ -92,6 +92,10 @@ export function templateReasons(entry: Entry, card: Card, os?: OS): ModelReason[
   } else if (verified.length) {
     reasons.push({ claim: 'Install steps were run and checked by pickfit', field: 'verified_on', value: verified[0] });
   }
+  const documented = card.capabilities_matched as string[] | undefined;
+  if (documented?.length) {
+    reasons.push({ claim: `Its docs say it can: ${documented[0]} (not tested by pickfit)`, field: 'capabilities_matched', value: documented[0] });
+  }
   if (entry.use_cases.length) {
     reasons.push({ claim: `Use case: ${entry.use_cases[0]}`, field: 'use_cases', value: entry.use_cases[0] });
   }

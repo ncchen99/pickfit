@@ -154,6 +154,35 @@ def test_replay_mode_resends_history_without_storage(task, ledger, tmp_path):
     assert second["input"][0] == first["input"][0]
 
 
+class WholeClient:
+    """A client like pickfit's Anthropic one (whole responses, takes the prompt cache hint): records each call."""
+
+    returns_whole_response = True
+    api_key = None
+
+    def __init__(self, *replies: dict[str, Any]) -> None:
+        self.replies = list(replies)
+        self.calls: list[dict[str, Any]] = []
+        self.responses = self
+
+    def create(self, *, stream: bool = False, conversation: bool = False, **request: Any) -> dict[str, Any]:
+        self.calls.append({"conversation": conversation, **request})
+        return self.replies.pop(0)
+
+
+def test_replay_mode_marks_every_turn_a_conversation_so_the_first_is_cached(task, ledger, tmp_path):
+    client = WholeClient(response("r1", run_cmd("pipx install evnx")), response("r2", finish(steps=[1])))
+    VerifyAgent(task, FakeBox(EVNX_BOX), client=client, ledger=ledger, runs_dir=tmp_path / "runs",
+                log=lambda line: None, run_id="verify-evnx-test", mode="replay").run()
+    assert len(client.calls) >= 2 and all(c["conversation"] for c in client.calls)
+    assert [m["role"] for m in client.calls[0]["input"]] == ["user"]  # the first turn: the task alone
+    # The conversation as sent is kept beside the report: every turn's input is a prefix of it.
+    saved = json.loads((tmp_path / "runs" / "verify" / "verify-evnx-test" / "history.json").read_text())
+    assert saved["instructions"] == client.calls[0]["instructions"] and saved["tools"] == client.calls[0]["tools"]
+    assert all(saved["input"][:len(c["input"])] == c["input"] for c in client.calls)
+    assert saved["model"] == "claude-opus-5-5" and saved["reasoning_effort"] == "medium"
+
+
 def test_command_budget_forces_a_finish_only_turn(task, ledger, tmp_path):
     server = FakeServer(
         response("r1", run_cmd("echo 1")),
@@ -290,7 +319,8 @@ def test_a_trailing_tail_or_echo_is_dropped_before_the_command_runs(task, ledger
     a = agent(task, box, server, ledger, tmp_path)
     report = a.run()
     ran = [c for c, _ in box.ran if c.startswith(("pipx", "evnx"))]
-    assert ran == ["pipx install evnx 2>&1", "evnx --version"]
+    # then pickfit's own help capture (help_text.py), which finds no help text in this fake box
+    assert ran == ["pipx install evnx 2>&1", "evnx --version", "evnx --help", "evnx -h", "evnx help"]
     cmds = [(c.command, c.unmasked_from) for c in report.commands if c.tool == "run_command"]
     assert cmds == [("pipx install evnx 2>&1", "pipx install evnx 2>&1 | tail -20"),
                     ("evnx --version", 'evnx --version; echo "EXIT:$?"')]

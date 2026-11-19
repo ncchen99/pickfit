@@ -441,11 +441,14 @@ def test_a_cut_that_does_not_take_is_an_error():
     ssh.stuck_open = True  # the security group changed, a new connection still opens
     with pytest.raises(BoxError, match="closing"):
         m.set_egress(False)
+    m.close()  # each machine gives its slot back: two at once is the lane's limit
     m2, ec2, ssh = machine()
     m2.start()
     ec2.fail["modify_instance_attribute"] = AwsError("UnauthorizedOperation")
     with pytest.raises(BoxError, match="UnauthorizedOperation"):
         m2.set_egress(False)
+    ec2.fail.clear()
+    m2.close()
     m3, _, ssh = machine()
     m3.start()
     ssh.replies[s.CUT_TABLE] = (1, b"", b"nft: no such table")
@@ -865,13 +868,16 @@ def test_members_are_added_only_while_pickfit_stays_within_its_vcpus(monkeypatch
     m.start()  # another box runs: this box and one member make six
     assert [k["InstanceInitiatedShutdownBehavior"] for n, k in ec2.calls if n == "run_instances"] == ["terminate", "stop"]
     assert any(f"{e.VCPUS_ENV}=6" in line and "1 of 2 members" in line for line in lines)
+    m.close()  # each account below is another's: this host's slots are given back between them
     m2, ec2, _ = machine(cores=4, memory_mb=6144)  # a four-vCPU box alone leaves room for one member
     m2.start()
     assert ec2.names().count("run_instances") == 2
+    m2.close()
     monkeypatch.setenv(e.VCPUS_ENV, "8")
     m3, ec2, _ = machine(cores=4, memory_mb=6144)
     m3.start()
     assert ec2.names().count("run_instances") == 3
+    m3.close()
     monkeypatch.setenv(e.VCPUS_ENV, "2")  # only the box
     m4, ec2, _ = machine()
     assert m4.prepare()["Name"] == AMI["Name"] and ec2.names().count("run_instances") == 1  # with nothing running, one
@@ -937,3 +943,106 @@ def test_the_cli_makes_ec2_boxes():
         box_factory("ec2", 900, gpu="T4")
     with pytest.raises(ValueError):
         box_factory("docker", 900, toolchain=True)  # still modal's or ec2's
+
+
+# -- the ledger's rows, the cost allocation tags and the lane limit (docs/proposals/machines-cost.md)
+
+
+def test_every_instance_is_tagged_with_its_run_and_purpose_and_has_a_row_in_the_ledger():
+    from pickfit.ledger import box_ledger
+
+    m, ec2, _ = machine(tags={"pickfit.run": "verify-graphtty-20261119-101500-ab12", "pickfit.role": "replay"})
+    m.start()
+    tags = tags_of(ec2.instances["i-1"])
+    assert tags[e.RUN_TAG] == "verify-graphtty-20261119-101500-ab12" and tags[e.PURPOSE_TAG] == "replay"
+    volume = next(t["Tags"] for t in next(k for n, k in ec2.calls if n == "run_instances")["TagSpecifications"]
+                  if t["ResourceType"] == "volume")
+    assert {"Key": e.PURPOSE_TAG, "Value": "replay"} in volume  # the disk is billed under the same tags
+    [row] = box_ledger().boxes()
+    assert (row["provider"], row["lane"], row["purpose"], row["provider_ref"]) == ("ec2", "linux", "replay", "i-1")
+    assert row["run_id"].startswith("verify-graphtty-") and row["slug"] == "graphtty"
+    assert row["vcpu"] == 2 and row["memory_gb"] == 4.0 and row["min_billed_s"] == e.MIN_BILLED_S
+    assert row["rate_usd_per_hour"] == pytest.approx(m.usd_per_second() * 3600, abs=1e-6)
+    assert "c7i-flex.large" in row["rate_source"] and e.PRICES_READ in row["rate_source"]
+    assert row["ended_at"] is None and row["lifetime_s"] == 1200
+    m.close()
+    [row] = box_ledger().boxes()
+    assert row["end_note"] == "closed"
+    assert row["est_usd"] == pytest.approx(m.usd_per_second() * 60, rel=1e-4)  # billed a minute at least
+
+
+def test_a_bake_and_a_pool_member_are_rows_of_their_own(monkeypatch):
+    from pickfit.ledger import box_ledger
+
+    monkeypatch.setenv(e.POOL_ENV, "1")
+    m, ec2, _ = machine()
+    m.start()
+    rows = {r["purpose"]: r for r in box_ledger().boxes()}
+    assert set(rows) == {"box", "warmup"}  # no role in the tags: the machine says what it is
+    warm = rows["warmup"]
+    assert warm["provider_ref"] == "i-2" and warm["lifetime_s"] == e.WARM_LIFETIME_S and warm["ended_at"] is None
+    assert tags_of(ec2.instances["i-2"])[e.PURPOSE_TAG] == "warmup"
+    m.close()
+    builder = e.Ec2Machine(cores=2, memory_mb=2048, lifetime_s=600, ec2=FakeEc2(), control=CONTROL, role="bake",
+                           log=lambda line: None)
+    assert builder._purpose() == "bake" and builder._box_tags(0)[e.PURPOSE_TAG] == "bake"
+
+
+def test_no_more_than_two_ec2_machines_run_at_once(monkeypatch):
+    lines: list[str] = []
+    first, _, _ = machine()
+    second, _, _ = machine()
+    first.start()
+    second.start()
+    third, ec2, _ = machine(log=lines.append)
+    assert not third.reserve()  # now or not at all: no slot is free
+    monkeypatch.setenv(e.SLOT_WAIT_ENV, "30")
+    with pytest.raises(BoxError, match="no room for another EC2 machine"):
+        third.start()
+    assert "run_instances" not in ec2.names()  # it never launched
+    assert any("waiting for one to end" in line for line in lines)
+    first.close()  # a machine that ends gives its slot back
+    third, ec2, _ = machine()
+    third.start()
+    assert ec2.instances["i-1"]["State"]["Name"] == "running"
+    monkeypatch.setenv(e.MAX_BOXES_ENV, "9")  # the limit can be lowered, never raised
+    assert e.max_boxes() == e.MAX_BOXES == 2
+    monkeypatch.setenv(e.MAX_BOXES_ENV, "1")
+    assert e.max_boxes() == 1
+    second.close()
+    third.close()
+
+
+def test_a_slot_is_shared_by_threads_and_given_back_by_its_timer(tmp_path, monkeypatch):
+    import time as real_time
+
+    monkeypatch.setenv(e.SLOTS_DIR_ENV, str(tmp_path / "slots"))
+    one, two = e.take_slot("r"), e.take_slot("r")
+    assert one and two and e.take_slot("r") is None
+    assert e.take_slot("other-region") is not None  # a region's quota is its own
+    one.release()
+    one.release()  # twice is fine
+    three = e.take_slot("r")
+    assert three is not None
+    three.expire_after(0.05)  # a machine nobody closed: its slot goes back once it must be gone
+    deadline = real_time.monotonic() + 5
+    while three.held and real_time.monotonic() < deadline:
+        real_time.sleep(0.01)
+    assert not three.held and e.take_slot("r") is not None
+
+
+def test_a_reserved_slot_is_the_one_the_start_uses():
+    m, _, _ = machine()
+    assert m.reserve() and m.slot is not None
+    held = m.slot
+    m.start()
+    assert m.slot is held  # no second slot for the same machine
+    other, _, _ = machine()
+    assert other.reserve()  # so one is still free
+    third, _, _ = machine()
+    assert not third.reserve()
+    other.release_slot()  # given back without a start
+    assert third.reserve()
+    m.close()
+    third.release_slot()
+    assert not held.held

@@ -14,6 +14,7 @@ from pickfit.cli import main
 from pickfit.d1 import SqliteD1, sql
 from pickfit.outcomes import load_exclude, sync
 from pickfit.schema import SoftwareRecord
+from pickfit.score import refresh_scores
 
 ROOT = Path(__file__).resolve().parents[1]
 ISSUED = datetime.fromisoformat("2026-10-30T12:00:00+00:00")
@@ -36,6 +37,10 @@ def _data(tmp_path: Path) -> Path:
     data = tmp_path / "software"
     data.mkdir()
     shutil.copy(ROOT / "data" / "software" / "rei.json", data / "rei.json")
+    # As the current formula scores it (the stored record may predate it), so a test sees only what outcomes change.
+    record = _record(data)
+    refresh_scores(record, NOW)
+    (data / "rei.json").write_text(json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return data
 
 

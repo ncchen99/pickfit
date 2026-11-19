@@ -101,10 +101,11 @@ def unverified_run(run_id: str, reason: str = "other") -> VerificationRun:
     return VerificationRun.model_validate(base)
 
 
-def outcome(tmp_path: Path, run: VerificationRun, *, stop: str = "finish", cost: float = 0.08) -> Outcome:
+def outcome(tmp_path: Path, run: VerificationRun, *, stop: str = "finish", cost: float = 0.08,
+            report: dict[str, Any] | None = None) -> Outcome:
     evidence = tmp_path / "runs" / "verify" / run.id
     evidence.mkdir(parents=True, exist_ok=True)
-    (evidence / "report.json").write_text(json.dumps({"stop_reason": stop}), encoding="utf-8")
+    (evidence / "report.json").write_text(json.dumps({"stop_reason": stop, **(report or {})}), encoding="utf-8")
     return Outcome(slug="x", run_id=run.id, run=run, notes=[], evidence_dir=evidence, seconds=90.0,
                    cost_usd=cost, box_usd=0.004)
 
@@ -112,10 +113,12 @@ def outcome(tmp_path: Path, run: VerificationRun, *, stop: str = "finish", cost:
 class FakeVerify:
     """Answers with the next run; writes it back like verify_task(write=True) when given a data_dir."""
 
-    def __init__(self, tmp_path: Path, *runs: VerificationRun, stop: str = "finish") -> None:
+    def __init__(self, tmp_path: Path, *runs: VerificationRun, stop: str = "finish",
+                 report: dict[str, Any] | None = None) -> None:
         self.tmp_path = tmp_path
         self.runs = list(runs)
         self.stop = stop
+        self.report = report  # more of report.json, such as the help texts pickfit saved (help_text.py)
         self.tasks: list[Any] = []
 
     def __call__(self, task: Any, data_dir_or_log: Any, log: Any = None) -> Outcome:
@@ -123,4 +126,4 @@ class FakeVerify:
         run = self.runs.pop(0)
         if isinstance(data_dir_or_log, Path):
             write_back(run, task.slug, data_dir_or_log)
-        return outcome(self.tmp_path, run, stop=self.stop)
+        return outcome(self.tmp_path, run, stop=self.stop, report=self.report)

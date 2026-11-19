@@ -33,6 +33,10 @@ instance on EC2 is, Linux or Windows (ec2_windows.py is the Windows half). What 
   up holds two of them. A member is added only while pickfit's instances in the region stay within VCPUS_ENV
   (6 by default: two boxes and one member warming), and a box the quota refuses ends the newest warming member
   and takes its room; with none to end it waits for another box to finish, up to QUOTA_WAIT_S.
+- The lane limit: at most MAX_BOXES (2) machines of pickfit's at once in a region from one host, boxes and AMI
+  builders alike, each holding a slot (a locked file) from before its launch to its end. A third waits for a slot.
+- The ledger: every instance has a row in the boxes table (meter.BoxMeter: its type's price, at least a minute)
+  and carries RUN_TAG and PURPOSE_TAG, which AWS's bill groups by once they are activated as cost allocation tags.
 - The region is REGION_ENV, or DEFAULT_REGION: Taipei, because the harness is in Taiwan. Prices are on file for
   the regions in PRICES (Taipei's are 13% above us-east-1's for Linux and 8% for Windows; a command's round
   trips cost half). The security groups, the images and the pool are a region's own and are made there on
@@ -71,6 +75,7 @@ Measured 2026-11-16 and 17 on c7i-flex.large, with the harness in Taiwan:
 from __future__ import annotations
 
 import datetime
+import fcntl
 import hashlib
 import ipaddress
 import json
@@ -79,16 +84,20 @@ import os
 import secrets
 import shlex
 import subprocess
+import threading
 import time
 import urllib.request
 from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
+from pickfit.env import get_env
 from pickfit.verify.box import SANDBOX_DOCKERFILE, BoxError, BoxLimits, sandbox_image_tag
 from pickfit.verify.linux_box import ImageRecipe, LinuxBox, image_recipe
 from pickfit.verify.machine import ONLINE_CIDRS
+from pickfit.verify.meter import BoxMeter, identity
 from pickfit.verify.ssh_machine import DOCKER, NO_VSOCK_MODULES, SshMachine, lifetime_bootcmd
 
 REGION_ENV = "PICKFIT_EC2_REGION"
@@ -113,6 +122,7 @@ PRICES: dict[str, dict[str, Any]] = {
     "ap-east-2": {"linux": (0.09606, 0.11132, 0.19212, 0.22264, 0.44528),
                   "windows": (0.18346, 0.19872, 0.36692, 0.39744, 0.79488), "disk": 0.0864},
 }
+PRICES_READ = "2026-11-16"
 PRICE_REGION = DEFAULT_REGION  # what pick_type prices by when it is given no region
 INSTANCE_TYPES = tuple((name, vcpus, mib, PRICES[PRICE_REGION]["linux"][i])
                        for i, (name, vcpus, mib) in enumerate(INSTANCE_SIZES))
@@ -148,6 +158,28 @@ POOL_KEEP_S = 7 * 24 * 3600  # a member nobody took in this long is reaped
 WARM_LIFETIME_S = 20 * 60  # a member that is still up this long after its launch stops anyway
 CLAIM_SETTLE_S = 2.0  # between writing a claim and reading it back, so that of two harnesses one sees the other
 WARM_BOOT_WAIT_S = 100  # a claimed member answers in about 30 s; one that does not is replaced by a new instance
+
+# The cost allocation tags (docs/proposals/machines-cost.md, M1): every instance says which run it is for and why
+# it exists (agent, replay, confirm, limits, bake, warmup, web). AWS's bill groups by them once the account's owner
+# activates them as cost allocation tags; scripts/box_reconcile.py reads Cost Explorer's answer grouped by purpose.
+RUN_TAG = "pickfit:run_id"
+PURPOSE_TAG = "pickfit:purpose"
+MIN_BILLED_S = 60  # EC2 bills an instance for a minute at least, then by the second
+
+# The lane limit: at most MAX_BOXES EC2 machines of pickfit's (boxes, AMI builders) at once in a region from this
+# host. The account's quota is 8 vCPUs (ap-east-2, 11/17: not raised); two 2-vCPU boxes and one warming pool member
+# fit it (VCPUS_DEFAULT), a third box does not. A machine takes a slot before it is launched and gives it back when
+# it is destroyed; the slot is an exclusive lock on a file (SLOTS_DIR_ENV, else beside the ledger), so threads and
+# processes on this host share the limit and a process that dies gives its slots back. A start with no free slot
+# waits up to SLOT_WAIT_S. reserve(wait=False) takes one only if it is free now: the replay box a Windows run starts
+# early (early_box) never makes a box that is already started wait. Pool members are not counted here: VCPUS_ENV
+# keeps them out of the boxes' room.
+MAX_BOXES = 2
+MAX_BOXES_ENV = "PICKFIT_EC2_MAX_BOXES"  # may lower the limit, never raise it
+SLOTS_DIR_ENV = "PICKFIT_SLOTS_DIR"
+SLOT_WAIT_ENV = "PICKFIT_EC2_SLOT_WAIT_S"
+SLOT_WAIT_S = 2 * 3600  # longer than a box's lifetime: the machines holding the slots end by then
+SLOT_POLL_S = 5
 
 # Root on a fresh Debian: Docker (Debian 13 ships the client apart, as docker-cli) and nftables, no bridge (the
 # box uses the VM's own network; builds too), no apt timers competing with a box for CPU, room for the harness's
@@ -253,6 +285,92 @@ def pool_size() -> int:
 def vcpu_budget() -> int:
     given = os.environ.get(VCPUS_ENV, "")
     return max(0, int(given)) if given.strip().isdigit() else VCPUS_DEFAULT
+
+
+def max_boxes() -> int:
+    """MAX_BOXES, or less when MAX_BOXES_ENV says so (at least one)."""
+    given = os.environ.get(MAX_BOXES_ENV, "").strip()
+    return max(1, min(MAX_BOXES, int(given))) if given.isdigit() else MAX_BOXES
+
+
+def slots_dir() -> Path:
+    """Where the slot files are: SLOTS_DIR_ENV, else a `slots` directory beside the shared ledger."""
+    given = os.environ.get(SLOTS_DIR_ENV, "").strip()
+    if given:
+        return Path(given)
+    from pickfit.ledger import DEFAULT_PATH
+
+    return Path(get_env("PICKFIT_LEDGER") or DEFAULT_PATH).parent / "slots"
+
+
+def slot_wait_s() -> float:
+    given = os.environ.get(SLOT_WAIT_ENV, "").strip()
+    try:
+        return max(0.0, float(given)) if given else SLOT_WAIT_S
+    except ValueError:
+        return SLOT_WAIT_S
+
+
+class Slot:
+    """One of a region's max_boxes() places, held as an exclusive lock on its file until release(). A timer gives it
+    back when the machine holding it must be gone (its lifetime is over), should nobody release it."""
+
+    def __init__(self, path: Path, fd: int) -> None:
+        self.path, self.fd = path, fd
+        self._timer: threading.Timer | None = None
+        self._lock = threading.Lock()
+
+    @property
+    def held(self) -> bool:
+        return self.fd >= 0
+
+    def expire_after(self, seconds: float) -> None:
+        """Release the slot after `seconds` unless it is released before (a later call replaces an earlier one)."""
+        with self._lock:
+            if self._timer is not None:
+                self._timer.cancel()
+            if self.fd < 0:
+                return
+            self._timer = threading.Timer(seconds, self.release)
+            self._timer.daemon = True
+            self._timer.start()
+
+    def release(self) -> None:
+        with self._lock:
+            if self._timer is not None:
+                self._timer.cancel()
+                self._timer = None
+            if self.fd < 0:
+                return
+            try:
+                fcntl.flock(self.fd, fcntl.LOCK_UN)
+            finally:
+                os.close(self.fd)
+                self.fd = -1
+
+
+def take_slot(region: str, *, wait_s: float = 0.0, log: Callable[[str], None] = print) -> Slot | None:
+    """A free slot of the region's max_boxes(), waiting up to wait_s for one; None when none came free."""
+    folder = slots_dir()
+    folder.mkdir(parents=True, exist_ok=True)
+    deadline = _now() + wait_s
+    said = False
+    while True:
+        for index in range(max_boxes()):
+            path = folder / f"ec2-{region}-{index}.lock"
+            fd = os.open(path, os.O_RDWR | os.O_CREAT, 0o600)
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except OSError:
+                os.close(fd)
+                continue
+            return Slot(path, fd)
+        if _now() >= deadline:
+            return None
+        if not said:
+            log(f"ec2: {max_boxes()} machines already run in {region}; waiting for one to end (the lane's limit)")
+            said = True
+        _sleep(min(SLOT_POLL_S, max(0.1, deadline - _now())))
 
 
 def _vcpus(instance: dict[str, Any]) -> int:
@@ -482,12 +600,17 @@ class Ec2Instance:
 
     provider = "ec2"
     platform = "linux"  # the price table's key
+    lane = "linux"  # the ledger's (a web box sets "web")
+    purpose: str | None = None  # the ledger's and PURPOSE_TAG's, when the tags name no role
     boot_wait_s: float = 240
     warm_boot_wait_s: float = WARM_BOOT_WAIT_S
+    warm_lifetime_s: int = WARM_LIFETIME_S
 
     def _init_ec2(self, *, tags: dict[str, str] | None, region: str | None, ec2: Any, instance_type: str | None,
                   usd_per_hour: float | None, control: str | None, boot_image: dict[str, Any] | None,
                   role: str) -> None:
+        self.slot: Slot | None = None  # this machine's place among the region's max_boxes()
+        self.meter: BoxMeter | None = None
         self.tags = dict(tags or {})
         self.region = region or region_name()
         self.ec2 = ec2
@@ -532,9 +655,82 @@ class Ec2Instance:
         per_gb = PRICES.get(self.region, PRICES[PRICE_REGION])["disk"]
         return (self._price()[1] + IPV4_USD_PER_HOUR + self._disk_gb() * per_gb / HOURS_PER_MONTH) / 3600
 
+    def _purpose(self) -> str:
+        """Why the machine exists, for the ledger and PURPOSE_TAG: the role its tags name (agent, replay, ...), else
+        what the machine itself is (an AMI's builder, a web box)."""
+        return self.purpose or identity(self.tags)[1] or {"bake": "bake", "web": "web"}.get(self.role, "box")
+
     def _box_tags(self, now: float) -> dict[str, str]:
+        run_id = identity(self.tags)[0]
         return {"Name": f"pickfit-{self.role}", "pickfit": "verify", "pickfit:role": self.role,
-                EXPIRES_TAG: str(int(now + self.lifetime_s)), **self.tags}  # type: ignore[attr-defined]
+                EXPIRES_TAG: str(int(now + self.lifetime_s)), PURPOSE_TAG: self._purpose(),  # type: ignore[attr-defined]
+                **({RUN_TAG: run_id[:256]} if run_id else {}), **self.tags}
+
+    # -- the lane limit (MAX_BOXES) and the ledger's rows
+
+    def reserve(self, wait: bool = False) -> bool:
+        """Take one of the region's max_boxes() slots for this machine: now or not at all, or (wait) up to
+        slot_wait_s(). True when the machine holds one."""
+        if self.slot is not None and self.slot.held:
+            return True
+        self.slot = take_slot(self.region, wait_s=slot_wait_s() if wait else 0.0, log=self.log)  # type: ignore[attr-defined]
+        if self.slot is not None:  # never held past the latest a machine started now can be up
+            self.slot.expire_after(self.lifetime_s + QUOTA_WAIT_S + 2 * REAP_MARGIN_S)  # type: ignore[attr-defined]
+        return self.slot is not None
+
+    def release_slot(self) -> None:
+        if self.slot is not None:
+            self.slot.release()
+            self.slot = None
+
+    def _open_meter(self) -> None:
+        try:
+            name, _ = self._price()
+            size = next(((vcpus, mib) for n, vcpus, mib in INSTANCE_SIZES if n == name), (None, None))
+            source = (f"a price given for {name}" if self.usd_per_hour is not None else
+                      f"AWS on-demand {name} ({self.platform}) in {self.region}, price list read {PRICES_READ}")
+            self.meter = BoxMeter(
+                "ec2", lane=self.lane, purpose=self._purpose(), run_id=identity(self.tags)[0], vcpu=size[0],
+                memory_gb=size[1] / 1024 if size[1] else None, usd_per_hour=round(self.usd_per_second() * 3600, 6),
+                rate_source=f"{source}; with a public IPv4 and {self._disk_gb()} GB gp3",
+                lifetime_s=int(self.lifetime_s), min_billed_s=MIN_BILLED_S, log=self.log)  # type: ignore[attr-defined]
+        except Exception as error:  # never the reason a box does not start
+            self.log(f"box ledger: no row for {self.machine_id} ({type(error).__name__}: {error})")  # type: ignore[attr-defined]
+            return
+        self.meter.start(self.machine_id)  # type: ignore[attr-defined]
+
+    def _close_meter(self) -> None:
+        if self.meter is not None:
+            self.meter.end()
+            self.meter = None
+
+    def _meter_warm(self, launched: Any, image: dict[str, Any]) -> None:
+        """A pool member's row: it boots once and stops itself (warm_lifetime_s at the latest), so the row is left
+        open and the next start closes it at that lifetime, an upper bound."""
+        try:
+            iid = launched["Instances"][0]["InstanceId"]
+            name, usd = pick_type(*self._pool_size(), self.region, self.platform, reserve_mb=0)
+            size = next(((vcpus, mib) for n, vcpus, mib in INSTANCE_SIZES if n == name), (None, None))
+            disk = PRICES.get(self.region, PRICES[PRICE_REGION])["disk"] * self._disk_gb() / HOURS_PER_MONTH
+            meter = BoxMeter(
+                "ec2", lane=self.lane, purpose="warmup", vcpu=size[0], memory_gb=size[1] / 1024 if size[1] else None,
+                usd_per_hour=round(usd + IPV4_USD_PER_HOUR + disk, 6),
+                rate_source=f"AWS on-demand {name} ({self.platform}) in {self.region}, price list read {PRICES_READ}; "
+                            f"a pool member of {image.get('Name') or image.get('ImageId')} warming up; its stopped "
+                            "disk afterwards is not counted",
+                lifetime_s=self.warm_lifetime_s, min_billed_s=MIN_BILLED_S, log=self.log)  # type: ignore[attr-defined]
+        except Exception as error:  # never the reason the pool is not refilled
+            self.log(f"box ledger: no row for a pool member ({type(error).__name__}: {error})")  # type: ignore[attr-defined]
+            return
+        meter.start(iid)
+
+    def close(self) -> None:
+        """Destroy the machine (the class that reaches it does), then close its row and give back its slot."""
+        try:
+            super().close()  # type: ignore[misc]
+        finally:
+            self._close_meter()
+            self.release_slot()
 
     def run_kwargs(self, image: dict[str, Any], user_data: str, now: float) -> dict[str, Any]:
         """RunInstances arguments (separate so tests can check them)."""
@@ -557,7 +753,7 @@ class Ec2Instance:
         offline group alone), and a poweroff that stops it instead of ending it."""
         name = image.get("Name") or image["ImageId"]
         tags = {"Name": "pickfit-pool", "pickfit": "verify", "pickfit:role": "pool", POOL_TAG: name,
-                EXPIRES_TAG: str(int(now + POOL_KEEP_S))}
+                EXPIRES_TAG: str(int(now + POOL_KEEP_S)), PURPOSE_TAG: "warmup"}
         return {**self.run_kwargs(image, self._warm_user_data(), now),
                 "InstanceType": pick_type(*self._pool_size(), self.region, self.platform, reserve_mb=0)[0],
                 "SecurityGroupIds": [self.groups["offline"]], "InstanceInitiatedShutdownBehavior": "stop",
@@ -698,7 +894,8 @@ class Ec2Instance:
                     self.log(f"ec2 pool: {len(spare)} of {want} members for {name}; pickfit holds {held} vCPUs "  # type: ignore[attr-defined]
                              f"({VCPUS_ENV}={vcpu_budget()}), so the next one waits for a later start")
                     break
-                self.ec2.run_instances(**self.warm_kwargs(image, time.time()))
+                launched = self.ec2.run_instances(**self.warm_kwargs(image, time.time()))
+                self._meter_warm(launched, image)
                 held += member
                 spare.append({})
         except Exception as error:
@@ -715,7 +912,11 @@ class Ec2Instance:
         except Exception as error:  # never the reason a box does not start
             self.log(f"ec2 reap: {type(error).__name__}: {error}")  # type: ignore[attr-defined]
         self.groups = ensure_groups(self.ec2, self.control or control_cidr())
-        image = self.boot_image or self._ensure_image()
+        image = self.boot_image or self._ensure_image()  # a bake for it takes a slot of its own, so before this one's
+        if not self.reserve(wait=True):
+            raise BoxError(f"no room for another EC2 machine in {self.region}: {max_boxes()} of pickfit's ran for "
+                           f"{slot_wait_s():.0f}s (the lane's limit, {MAX_BOXES_ENV})")
+        assert self.slot is not None
         self._image = image.get("Name") or image["ImageId"]
         self._user_data, self._booted_image = user_data, image
         pooled = self.boot_image is None and pool_size() > 0
@@ -727,6 +928,9 @@ class Ec2Instance:
                 self.log(f"ec2 pool: not looked at ({_code(error) or type(error).__name__})")  # type: ignore[attr-defined]
         if not claimed:
             self._launch(image, user_data)
+        # From the launch the machine's own poweroff ends it within its lifetime: the slot goes back by then anyway.
+        self.slot.expire_after(self.lifetime_s + 2 * REAP_MARGIN_S)  # type: ignore[attr-defined]
+        self._open_meter()
         if pooled:
             self._refill(image)
         return str(self._wait_running()["PublicIpAddress"])
@@ -746,8 +950,10 @@ class Ec2Instance:
             return None
         self.log(f"ec2 pool: {self.machine_id} did not answer as this machine; starting a new instance instead")  # type: ignore[attr-defined]
         self._destroy()
+        self._close_meter()
         self._begin_start()
-        self._launch(self._booted_image, self._user_data)
+        self._launch(self._booted_image, self._user_data)  # in the slot the member had
+        self._open_meter()
         return str(self._wait_running()["PublicIpAddress"])
 
     def _seal(self) -> None:

@@ -45,7 +45,7 @@ export function makeWorker(indexData: unknown, options: WorkerOptions = {}) {
       const url = new URL(request.url);
       const moved = canonicalRedirect(request, url, env);
       if (moved) return moved;
-      const video = await serveVideo(request, env.VIDEOS, catalog);
+      const video = await serveVideo(request, env.VIDEOS, catalog, options.translations);
       if (video) return video;
       if (url.pathname !== '/mcp') {
         const page = await web.fetch(request, env, ctx, allowedHosts(env));

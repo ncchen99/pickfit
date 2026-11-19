@@ -1,7 +1,8 @@
 """Feature coverage: which of a tool's advertised features a verification exercised.
 
-The extraction lists the 2-4 main features the README advertises, each with its quote. The agent
-gets them numbered (F1, F2, ...) and reports, in finish, for each one: the smoke tests that
+The extraction lists the main features the README advertises, each with its quote. The agent
+gets the first VERIFY_FEATURES_MAX numbered (F1, F2, ...); any after them are recorded not_checked
+with reason beyond_budget (beyond_budget), never asked of the agent. It reports, in finish, for each one: the smoke tests that
 exercise it (checked), why this box cannot exercise it (not_checked, with a reason), or the check
 that ran after a working install and failed (test_failed, sandbox or tool). As with the level, the
 claim is an upper bound and the command log decides (resolve_features):
@@ -29,7 +30,16 @@ from typing import TYPE_CHECKING, Any, get_args
 
 from pydantic import BaseModel, field_validator
 
-from pickfit.schema import SETUP_MAX, FeatureCheck, FeatureFailure, FeatureGap, FeatureStatus, SetupStep, SmokeTest
+from pickfit.schema import (
+    SETUP_MAX,
+    VERIFY_FEATURES_MAX,
+    FeatureCheck,
+    FeatureFailure,
+    FeatureGap,
+    FeatureStatus,
+    SetupStep,
+    SmokeTest,
+)
 
 if TYPE_CHECKING:
     from pickfit.verify.agent import CommandRecord
@@ -37,6 +47,9 @@ if TYPE_CHECKING:
     from pickfit.verify.verdict import LogVerdict
 
 GAPS: tuple[str, ...] = get_args(FeatureGap.__value__)
+# The reasons the agent may give: beyond_budget is pickfit's own, for features the task never listed.
+AGENT_GAPS: tuple[str, ...] = tuple(g for g in GAPS if g != "beyond_budget")
+BEYOND_BUDGET_NOTE = f"pickfit checks the first {VERIFY_FEATURES_MAX} listed features one by one"
 # Checks that show the tool starts, not that a feature works: --version/--help, an MCP handshake alone, a GUI
 # launch (its window). A GUI feature is checked by an operation (gui_op) that passed pickfit's own check.
 NOT_FEATURE_KINDS = frozenset({"version", "mcp", "gui"})
@@ -58,7 +71,7 @@ FINISH_FEATURES = {
         "feature": {"type": "integer", "description": "Its number in the task: 1 for F1."},
         "status": {"type": "string", "enum": list(get_args(FeatureStatus.__value__))},
         "command_ids": {"type": "array", "items": {"type": "integer"}},
-        "reason": {"type": ["string", "null"], "enum": [*GAPS, None], "description": (
+        "reason": {"type": ["string", "null"], "enum": [*AGENT_GAPS, None], "description": (
             "not_checked: needs_account (an account or API key), needs_gpu, needs_display (a GUI or "
             "browser), needs_hardware (a microphone, camera, device), needs_service (an outside service "
             "or server pickfit does not run), needs_more_resources (too big or slow for this box, or more "
@@ -126,7 +139,7 @@ class FinishFeature(BaseModel):
     @field_validator("reason", mode="before")
     @classmethod
     def _known_reason(cls, value: Any) -> Any:
-        return "other" if isinstance(value, str) and value not in GAPS else value
+        return "other" if isinstance(value, str) and value not in AGENT_GAPS else value
 
 
 @dataclass
@@ -150,6 +163,17 @@ class ResolvedFeature:
 def labels(task_features: list[Any]) -> list[str]:
     """The listed features' labels, in order (Cited values from the extraction)."""
     return [str(f.value) for f in task_features if f.value]
+
+
+def split_budget(names: list[str]) -> tuple[list[str], list[str]]:
+    """The features a run checks one by one (the first VERIFY_FEATURES_MAX) and the ones past them."""
+    return names[:VERIFY_FEATURES_MAX], names[VERIFY_FEATURES_MAX:]
+
+
+def beyond_budget(names: list[str], start: int = VERIFY_FEATURES_MAX) -> list[ResolvedFeature]:
+    """Features past the run's budget, numbered after the checked ones: not_checked, beyond_budget."""
+    return [ResolvedFeature(start + i, name, "not_checked", reason="beyond_budget", note=BEYOND_BUDGET_NOTE)
+            for i, name in enumerate(names, 1)]
 
 
 # A feature that deletes files (a cleaner, an uninstaller): its result is a file gone, which operate_gui's gone shows.

@@ -93,3 +93,24 @@ test('find_software picks carry the features of the guide they show, and cards l
   assert.deepEqual(card.features_checked, ['transcribe audio files offline']);
   assert.deepEqual(card.features_not_checked, ['write SRT subtitles (test_failed)', 'dictate from a microphone (needs_hardware)']);
 });
+
+test('a feature past the run budget says pickfit tests only the first four, not that it failed', () => {
+  const data = structuredClone(fixtureIndex()) as any;
+  const entry = data.entries.find((e: any) => e.slug === 'fixture-transcribe');
+  entry.features = [...entry.features, 'translate a transcript', 'split audio by speaker'];
+  for (const feature of ['translate a transcript', 'split audio by speaker']) {
+    entry.install.linux.features.push({
+      feature,
+      status: 'not_checked',
+      reason: 'beyond_budget',
+      failure: null,
+      note: 'pickfit checks the first 4 listed features one by one',
+      checks: [],
+    });
+  }
+  const out = installGuide(loadCatalog(data), { slug: 'fixture-transcribe', os: 'linux' });
+  const past = out.features.not_checked.filter((f) => f.reason === 'beyond_budget');
+  assert.deepEqual(past.map((f) => f.feature), ['translate a transcript', 'split audio by speaker']);
+  assert.match(past[0].detail, /only the first 4 listed features one by one/);
+  assert.equal(out.features.checked.length, 1);
+});

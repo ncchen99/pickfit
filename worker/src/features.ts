@@ -22,6 +22,7 @@ export const NOT_CHECKED_REASONS = [
   'check_not_met',
   'app_error',
   'needs_desktop',
+  'beyond_budget',
   'test_failed_in_sandbox',
   'test_failed',
   'not_recorded',
@@ -46,6 +47,7 @@ const REASON_TEXT: Record<NotCheckedReason, string> = {
   check_not_met: "pickfit operated the app, but its own check did not find the result",
   app_error: 'the app showed no window, crashed or showed an error while pickfit operated it',
   needs_desktop: "needs a desktop piece the sandbox's display lacks (a file-chooser portal, a URL handler, Wayland)",
+  beyond_budget: 'pickfit checks only the first 4 listed features one by one; this one is past them',
   test_failed_in_sandbox: "its test failed, but the sandbox's limits explain the failure",
   test_failed:
     "its test failed with the tool's own error, after a working install; a user following the README may hit it too (not confirmed on a real machine)",

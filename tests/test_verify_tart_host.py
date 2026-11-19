@@ -177,3 +177,66 @@ def test_softnet_on_the_host_is_checked_there(monkeypatch: pytest.MonkeyPatch):
     assert "sudo chown root:wheel /opt/homebrew/Cellar/softnet/0.18/bin/softnet" in host.softnet_ready()
     assert host.softnet_ready() is None
     assert "could not check softnet" in host.softnet_ready()
+
+
+# -- a base's manifest lives on the host beside its VM (docs/proposals/machines-cost.md, M6)
+
+
+@POSIX_ONLY
+def test_the_manifest_is_kept_on_the_host_and_read_from_there(make_host, tmp_path: Path):
+    from pickfit.verify import tart_box as tb
+
+    host = make_host()
+    remote = tmp_path / "remote" / "pickfit-macos-26.json"
+    assert host.read_manifest("pickfit-macos-26") is None and not remote.exists()
+    # A base built before the host kept manifests: the copy cached here is given to the host.
+    assert tb.load_manifest("pickfit-macos-26", host.state_dir, host) == MANIFEST
+    assert json.loads(remote.read_text()) == MANIFEST
+    # The host's copy wins and refreshes the cache: another harness rebuilt the base.
+    rebuilt = {**MANIFEST, "build_id": "fedcba987654"}
+    host.write_manifest("pickfit-macos-26", rebuilt)
+    assert tb.load_manifest("pickfit-macos-26", host.state_dir, host) == rebuilt
+    assert json.loads((host.state_dir / "pickfit-macos-26.json").read_text())["build_id"] == "fedcba987654"
+    # A harness that never saw the base reads it from the host alone.
+    (host.state_dir / "pickfit-macos-26.json").unlink()
+    assert tb.load_manifest("pickfit-macos-26", host.state_dir, host)["build_id"] == "fedcba987654"
+    host.remove_manifest("pickfit-macos-26")
+    (host.state_dir / "pickfit-macos-26.json").unlink()
+    with pytest.raises(BoxError, match="--prepare-base"):
+        tb.load_manifest("pickfit-macos-26", host.state_dir, host)
+
+
+@POSIX_ONLY
+def test_prepare_base_takes_over_a_base_the_host_already_has(make_host, fakes, tmp_path: Path,
+                                                             monkeypatch: pytest.MonkeyPatch):
+    from pickfit.verify import tart_box as tb
+
+    tart, _ = fakes
+    host = make_host()
+    (host.state_dir / "pickfit-macos-26.json").unlink()  # built by another harness: nothing cached here
+    info = {"CPU": 4, "Memory": 8192, "Disk": 50, "Display": "1024x768", "OS": "darwin", "Running": False,
+            "State": "stopped", "Size": "21.3"}
+    host.write_manifest("pickfit-macos-26", {**MANIFEST, "vm": tb.vm_fingerprint(json.dumps(info))})
+    monkeypatch.setenv("FAKE_BASE_EXISTS", "1")
+    monkeypatch.setenv("FAKE_GET", json.dumps({**info, "Running": True, "Size": "21.9"}))  # what changes, changes
+    lines: list[str] = []
+    adopted = tb.prepare_base(tart=str(tart), host=host, log=lines.append)
+    assert adopted["build_id"] == MANIFEST["build_id"] and "using it as it is" in lines[-1]
+    assert not any(call[0] == "clone" for call in _calls(tart))  # nothing rebuilt
+    assert json.loads((host.state_dir / "pickfit-macos-26.json").read_text())["build_id"] == MANIFEST["build_id"]
+    # Another VM under the same name (its disk changed): not one the manifest describes.
+    monkeypatch.setenv("FAKE_GET", json.dumps({**info, "Disk": 80}))
+    with pytest.raises(BoxError, match="no manifest on the host describes it"):
+        tb.prepare_base(tart=str(tart), host=host, log=lines.append)
+    # An unhardened base is never taken over.
+    monkeypatch.setenv("FAKE_GET", json.dumps(info))
+    host.write_manifest("pickfit-macos-26", {**MANIFEST, "hardened": False})
+    with pytest.raises(BoxError, match="already exists"):
+        tb.prepare_base(tart=str(tart), host=host, log=lines.append)
+    # The GUI base: only one made from this very base.
+    host.write_manifest("pickfit-macos-26", MANIFEST)
+    host.write_manifest("pickfit-macos-26-gui", {**GUI_MANIFEST, "parent_build_id": "someone-elses"})
+    with pytest.raises(BoxError, match="made from this pickfit-macos-26"):
+        tb.prepare_gui_base(tart=str(tart), host=host, log=lines.append)
+    host.write_manifest("pickfit-macos-26-gui", {**GUI_MANIFEST, "parent_build_id": MANIFEST["build_id"]})
+    assert tb.prepare_gui_base(tart=str(tart), host=host, log=lines.append)["gui"] is True

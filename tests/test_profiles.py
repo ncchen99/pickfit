@@ -452,3 +452,78 @@ def test_a_store_listing_is_a_source_the_model_can_quote(db: PipelineDB, tmp_pat
     assert record["platforms"] == ["linux"]
     assert {e["field"]: e["source_id"] for e in record["evidence"]}["/platforms"] == store["id"]
     assert record["install"]["linux"]["steps"] == [{"command": store_install, "purpose": None}]
+
+
+# --- capabilities (docs/proposals/capabilities.md step 3) --------------------------
+
+HELP = "Usage: tinyq [OPTIONS] FILTER\n\nCommands:\n  fmt     Re-indent JSON Lines\n\nOutput formats: json, csv, tsv\n"
+
+
+def _capability_row(db: PipelineDB, key: str, capabilities: list[dict[str, Any]]) -> None:
+    db.save_extraction(repo_id=key, run_id="extract-capabilities-x", model=MODEL, reasoning_effort="minimal",
+                       status="capabilities", sources_sha="z", result={"capabilities": capabilities},
+                       quote_failures=[], quotes_checked=3, error=None, usage=None, cost_usd=0.02, cache_hit=False,
+                       response_id="r4", latency_s=1.0)
+
+
+def _help_store(tmp_path: Path) -> Path:
+    helps = tmp_path / "help"
+    helps.mkdir()
+    (helps / "tinyq.json").write_text(json.dumps({"slug": "tinyq", "help": [
+        {"command": "tinyq --help", "exit_code": 0, "text": HELP, "run_id": "verify-tinyq-1", "by": "pickfit"}]}))
+    return helps
+
+
+def cap(label: str, quote: str, items: list[str] | None = None, area: str | None = None) -> dict[str, Any]:
+    return {"label": cited(label, quote), "area": area, "items": items or []}
+
+
+def test_capabilities_only_sets_capabilities_and_cites_the_help(db: PipelineDB, tmp_path: Path) -> None:
+    from pickfit.profiles import write_capabilities
+
+    key = add(db, 7, "someone/tinyq", extraction(features=FEATURES))
+    out = tmp_path / "software"
+    write_profiles(db, model=MODEL, out_dir=out, now=NOW)
+    before = read(out, "tinyq")
+    helps = _help_store(tmp_path)
+    assert write_capabilities(db, model=MODEL, out_dir=out, help_from=helps, now=NOW).skipped == {
+        "tinyq": "no capabilities extraction by muse-spark-1.3"}
+    _capability_row(db, key, [
+        cap("re-indent JSON Lines", "fmt     Re-indent JSON Lines", area="subcommands"),
+        cap("write results as CSV or TSV", "Output formats: json, csv, tsv", ["csv", "tsv"], "formats"),
+        cap("query JSON Lines from the terminal", "A tiny jq-like query tool for JSON Lines."),
+        cap(FEATURES[0]["value"], FEATURES[0]["quote"]),  # the same as a feature: not repeated
+    ])
+    later = datetime(2026, 11, 20, 9, 0, tzinfo=TAIPEI)
+    summary = write_capabilities(db, model=MODEL, out_dir=out, help_from=helps, now=later)
+    assert summary.written == ["tinyq"]
+    after = read(out, "tinyq")
+    labels = [c["label"] for c in after["capabilities"]]
+    assert labels == ["re-indent JSON Lines", "write results as CSV or TSV", "query JSON Lines from the terminal"]
+    assert after["capabilities"][1]["items"] == ["csv", "tsv"]
+    assert [c.get("area") for c in after["capabilities"]] == ["subcommands", "formats", None]  # Capability.area
+    evidence = {e["field"]: e["source_id"] for e in after["evidence"] if e["field"].startswith("/capabilities/")}
+    assert evidence == {"/capabilities/0/label": "help:verify-tinyq-1:1", "/capabilities/1/label": "help:verify-tinyq-1:1",
+                        "/capabilities/2/label": "readme"}
+    help_source = next(s for s in after["sources"] if s["id"] == "help:verify-tinyq-1:1")
+    assert help_source["kind"] == "sandbox" and help_source["url"] is None
+    # Nothing else changes, and a record rebuilt from its extraction keeps them.
+    same = ("capabilities", "evidence", "sources", "updated_at")
+    assert {k: v for k, v in after.items() if k not in same} == {k: v for k, v in before.items() if k not in same}
+    assert write_capabilities(db, model=MODEL, out_dir=out, help_from=helps, now=later).unchanged == ["tinyq"]
+    write_profiles(db, model=MODEL, out_dir=out, now=later)
+    assert read(out, "tinyq")["capabilities"] == after["capabilities"]
+    assert build_index(out, now=later).index["entries"][0]["capabilities"][0]["label"] == "re-indent JSON Lines"
+
+
+def test_capabilities_no_source_holds_are_not_written(db: PipelineDB, tmp_path: Path) -> None:
+    from pickfit.profiles import write_capabilities
+
+    key = add(db, 7, "someone/tinyq", extraction())
+    out = tmp_path / "software"
+    write_profiles(db, model=MODEL, out_dir=out, now=NOW)
+    _capability_row(db, key, [cap("re-indent JSON Lines", "fmt     Re-indent JSON Lines")])
+    # Without the help text the quote was read from, the record cannot cite it.
+    assert write_capabilities(db, model=MODEL, out_dir=out, help_from=tmp_path / "none", now=NOW).skipped == {
+        "tinyq": "no quoted capability"}
+    assert "capabilities" not in read(out, "tinyq")

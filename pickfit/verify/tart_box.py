@@ -50,6 +50,9 @@ Mac over SSH (tart_host: PICKFIT_TART_HOST; everything below said of "the host" 
 - Lifetime: besides the harness's timer, the guest schedules its own
   shutdown and a detached host process stops and deletes the clone, so a
   dead harness does not leave a VM running.
+- The ledger: each VM (and each base build) has a row in the boxes table
+  (meter.BoxMeter) with no price of its own; a rented Mac's cost is split
+  evenly over the VMs that ran during the rental (mac_host.end_rental).
 - Apple allows at most two macOS VMs at once per Mac, and an open bug
   (FB22967193, reported on macOS 26.5) can leave the limit "used up" until the
   host reboots: run one box at a time, and stop when start() reports it.
@@ -90,6 +93,7 @@ from typing import Any
 from pickfit.env import get_env
 from pickfit.ledger import taipei_now
 from pickfit.verify.box import Box, BoxError, BoxLimits, ExecResult, HOST_GRACE_S, run_captured
+from pickfit.verify.meter import BoxMeter, identity
 from pickfit.verify.tart_host import FD, LocalHost, host_from_env
 
 TART = "tart"
@@ -355,12 +359,82 @@ def base_manifest_path(base: str = BASE_VM, state_dir: Path | None = None) -> Pa
     return (state_dir or STATE_DIR) / f"{base}.json"
 
 
-def load_manifest(base: str = BASE_VM, state_dir: Path | None = None) -> dict[str, Any]:
+def load_manifest(base: str = BASE_VM, state_dir: Path | None = None, host: LocalHost | None = None
+                  ) -> dict[str, Any]:
+    """A base VM's manifest. The host keeps it beside the VM, so a remote host's own copy comes first and is cached
+    in `state_dir`; a host without one is given the cached copy (bases built before the host kept manifests)."""
     path = base_manifest_path(base, state_dir)
+    if host is not None and host.remote:
+        found = host.read_manifest(base)
+        if found is not None:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(found, indent=2) + "\n", encoding="utf-8")
+            return found
+        if path.exists():
+            cached = json.loads(path.read_text(encoding="utf-8"))
+            try:
+                host.write_manifest(base, cached)
+            except (BoxError, OSError, subprocess.TimeoutExpired):
+                pass  # the cached copy still describes the base this harness built
+            return cached
     if not path.exists():
         raise BoxError(f"no prepared base VM {base!r} ({path} is missing); run "
                        "`pickfit verify --runner tart --prepare-base` first")
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def save_manifest(base: str, manifest: dict[str, Any], host: LocalHost) -> None:
+    """Write a base's manifest on its host, beside the VM, and the copy cached here."""
+    path = base_manifest_path(base, host.state_dir)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    if host.remote:
+        host.write_manifest(base, manifest)
+
+
+def forget_manifest(base: str, host: LocalHost) -> None:
+    """A base about to be rebuilt has no manifest anywhere: one without its VM describes nothing."""
+    base_manifest_path(base, host.state_dir).unlink(missing_ok=True)
+    if host.remote:
+        host.remove_manifest(base)
+
+
+VM_VOLATILE = ("Running", "State", "Size")  # what `tart get` says that changes without the VM changing
+
+
+def vm_fingerprint(info: str) -> dict[str, Any]:
+    """What `tart get <vm> --format json` says about a VM that only a change to the VM changes (CPU, memory, disk,
+    display, OS), so a manifest can name the VM it describes."""
+    try:
+        data = json.loads(info or "{}")
+    except ValueError:
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    return {key: value for key, value in sorted(data.items()) if not any(word in key for word in VM_VOLATILE)}
+
+
+def adopt_base(base: str, host: LocalHost, info: str, *, parent: dict[str, Any] | None = None,
+               log: Callable[[str], None] = print) -> dict[str, Any] | None:
+    """The manifest of a base VM that is already on the host, when one there (or cached here) describes it: built and
+    hardened by pickfit as `base`, the same VM when the manifest names one, and for a GUI base (`parent`: the base it
+    was made from) a GUI base made from that very build. Both copies are then written again. None when no manifest
+    does: the VM is not one pickfit can vouch for."""
+    try:
+        manifest = load_manifest(base, host.state_dir, host)
+    except BoxError:
+        return None
+    seen = vm_fingerprint(info)
+    if manifest.get("base") != base or not manifest.get("hardened"):
+        return None
+    if parent is not None and (not manifest.get("gui") or manifest.get("parent_build_id") != parent.get("build_id")):
+        return None
+    if manifest.get("vm") and seen and manifest["vm"] != seen:
+        return None
+    save_manifest(base, manifest, host)
+    log(f"tart: {base} is already on {host.name} with its manifest (build {manifest.get('build_id')}); using it "
+        "as it is")
+    return manifest
 
 
 def image_label(manifest: dict[str, Any]) -> str:
@@ -421,7 +495,9 @@ class TartBox(Box):
     def __init__(self, *, base: str | None = None, limits: BoxLimits = BoxLimits(), cpus: int = 4,
                  memory_mb: int = 8192, name: str | None = None, tart: str = TART,
                  state_dir: Path | None = None, log: Callable[[str], None] = print, display: bool = False,
-                 host: LocalHost | None = None) -> None:
+                 host: LocalHost | None = None, tags: dict[str, str] | None = None) -> None:
+        self.tags = dict(tags or {})  # who the VM is for (`pickfit.run`, `pickfit.role`), for the ledger's row
+        self.meter: BoxMeter | None = None
         self.base = base or (GUI_BASE_VM if display else BASE_VM)
         self.display = "vnc" if display else None  # a desktop session, seen and driven over VNC from the host
         self.vnc_url: str | None = None  # holds the server's password: never logged or recorded
@@ -483,7 +559,7 @@ class TartBox(Box):
         if not self.host.which(self.tart):
             raise BoxError(f"tart not found{' on ' + self.host.name if self.host.remote else ''}; install it with "
                            "`brew install cirruslabs/cli/tart`")
-        self.manifest = load_manifest(self.base, self.state_dir)
+        self.manifest = load_manifest(self.base, self.state_dir, self.host)
         if not self.manifest.get("hardened"):
             raise BoxError(f"base VM {self.base!r} predates hardening; `tart delete {self.base}` and run "
                            "`pickfit verify --runner tart --prepare-base`")
@@ -495,6 +571,7 @@ class TartBox(Box):
             if clone.returncode != 0:
                 raise BoxError(f"tart clone {self.base} failed: {clone.stderr.strip()[-500:]}")
             self.cloned = True
+            self._open_meter(identity(self.tags)[1] or "box")
             self._start_reaper()
             sized = self._tart("set", self.name, "--cpu", str(self.cpus), "--memory", str(self.memory_mb))
             if sized.returncode != 0:
@@ -711,6 +788,18 @@ class TartBox(Box):
             self._wait_desktop()  # the Dock is back before the session is noted
             self.session = gui_mac.session_procs(self)
 
+    def _open_meter(self, purpose: str) -> None:
+        """The VM's row in the ledger's boxes table. A VM has no price of its own: on a rented Mac its cost is a
+        share of the rental, written when the rental ends (mac_host.end_rental); on this Mac it is nothing."""
+        local = not self.host.remote
+        self.meter = BoxMeter(
+            "tart", lane="macos", purpose=purpose, run_id=identity(self.tags)[0], vcpu=self.cpus,
+            memory_gb=self.memory_mb / 1024, usd_per_hour=0.0 if local else None,
+            rate_source=("this Mac: nothing rented" if local else
+                         f"a share of the rented Mac {self.host.name}, written when its rental ends"),
+            lifetime_s=self.limits.lifetime_s + REAP_GRACE_S, host=self.host.name, log=self.log)
+        self.meter.start(self.name)
+
     def _expire(self) -> None:
         self.log(f"tart: {self.name} reached its {self.limits.lifetime_s}s lifetime; stopping it")
         self.close()
@@ -740,6 +829,8 @@ class TartBox(Box):
             if self.control is not None:
                 self.control.close()
                 self.control = None
+            if self.meter is not None:  # stopped: a clone left for the reaper uses no more of the host
+                self.meter.end()
             if not self.cloned:
                 self._stop_reaper()
                 return
@@ -1220,12 +1311,19 @@ def prepare_base(*, source: str = SOURCE_IMAGE, base: str = BASE_VM, tart: str =
 
     Needs `tart pull <source>` first (about 25 GB). The base is booted a second time after hardening,
     which proves auto-login (and so the guest agent) still works, and checked like every box will
-    check it. Only then is ~/.pickfit/tart/<base>.json written; a failed build deletes the base VM.
+    check it. Only then is the manifest written, on the host beside the VM (~/.pickfit/tart/<base>.json there) and
+    cached here; a failed build deletes the base VM. A base already on the host that its manifest describes is used
+    as it is (adopt_base): another harness built it.
     """
     host = host or host_from_env(STATE_DIR)
-    if host.run([tart, "get", base], timeout=120).returncode == 0:
-        raise BoxError(f"base VM {base!r} already exists; `tart delete {base}` to rebuild it")
-    base_manifest_path(base, host.state_dir).unlink(missing_ok=True)  # a manifest without its VM describes nothing
+    there = host.run([tart, "get", base, "--format", "json"], timeout=120)
+    if there.returncode == 0:
+        adopted = adopt_base(base, host, there.stdout, log=log)
+        if adopted is not None:
+            return adopted
+        raise BoxError(f"base VM {base!r} already exists and no manifest on the host describes it; `tart delete "
+                       f"{base}` to rebuild it")
+    forget_manifest(base, host)  # a manifest without its VM describes nothing
     began = time.monotonic()
     proc = host.run([tart, "clone", source, base], timeout=1800)
     if proc.returncode != 0:
@@ -1233,6 +1331,7 @@ def prepare_base(*, source: str = SOURCE_IMAGE, base: str = BASE_VM, tart: str =
     box = TartBox(base=base, name=base, tart=tart, limits=BoxLimits(lifetime_s=3600, max_command_s=1800), log=log,
                   host=host)
     box.cloned = False  # close() never deletes the base; a failure below does
+    box._open_meter("build")
     try:
         box.manifest = {"macos": "15" if "sequoia" in source else "26"}
         box._boot()
@@ -1274,8 +1373,8 @@ def prepare_base(*, source: str = SOURCE_IMAGE, base: str = BASE_VM, tart: str =
         log(f"tart: base build failed; deleted {base}")
         raise
     box.close()
-    host.state_dir.mkdir(parents=True, exist_ok=True)
-    base_manifest_path(base, host.state_dir).write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    manifest["vm"] = vm_fingerprint(host.run([tart, "get", base, "--format", "json"], timeout=120).stdout)
+    save_manifest(base, manifest, host)
     log(f"tart: base {base} ready in {time.monotonic() - began:.0f}s · {image_label(manifest)}")
     return manifest
 
@@ -1290,12 +1389,17 @@ def prepare_gui_base(*, base: str = BASE_VM, gui_base: str = GUI_BASE_VM, tart: 
     """
     host = host or host_from_env(state_dir or STATE_DIR)
     state_dir = host.state_dir
-    parent = load_manifest(base, state_dir)
+    parent = load_manifest(base, state_dir, host)
     if not parent.get("hardened"):
         raise BoxError(f"base VM {base!r} is not hardened; rebuild it with `pickfit verify --runner tart --prepare-base`")
-    if host.run([tart, "get", gui_base], timeout=120).returncode == 0:
-        raise BoxError(f"base VM {gui_base!r} already exists; `tart delete {gui_base}` to rebuild it")
-    base_manifest_path(gui_base, state_dir).unlink(missing_ok=True)
+    there = host.run([tart, "get", gui_base, "--format", "json"], timeout=120)
+    if there.returncode == 0:
+        adopted = adopt_base(gui_base, host, there.stdout, parent=parent, log=log)
+        if adopted is not None:
+            return adopted
+        raise BoxError(f"base VM {gui_base!r} already exists and no manifest on the host describes it (made from "
+                       f"this {base}); `tart delete {gui_base}` to rebuild it")
+    forget_manifest(gui_base, host)
     began = time.monotonic()
     for argv in ([tart, "clone", base, gui_base], [tart, "set", gui_base, "--display", GUI_DISPLAY]):
         proc = host.run(argv, timeout=600)
@@ -1305,6 +1409,7 @@ def prepare_gui_base(*, base: str = BASE_VM, gui_base: str = GUI_BASE_VM, tart: 
     box = TartBox(base=gui_base, name=gui_base, tart=tart, display=True, log=log, host=host,
                   limits=BoxLimits(lifetime_s=3600, max_command_s=1800))
     box.cloned = False  # close() never deletes the base; a failure below does
+    box._open_meter("build")
     try:
         box.manifest = dict(parent)
         box._boot()
@@ -1330,8 +1435,7 @@ def prepare_gui_base(*, base: str = BASE_VM, gui_base: str = GUI_BASE_VM, tart: 
         log(f"tart: GUI base build failed; deleted {gui_base}")
         raise
     box.close()
-    path = base_manifest_path(gui_base, state_dir)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    manifest["vm"] = vm_fingerprint(host.run([tart, "get", gui_base, "--format", "json"], timeout=120).stdout)
+    save_manifest(gui_base, manifest, host)
     log(f"tart: GUI base {gui_base} ready in {time.monotonic() - began:.0f}s · {image_label(manifest)}")
     return manifest

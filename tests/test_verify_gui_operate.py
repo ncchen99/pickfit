@@ -361,6 +361,78 @@ def clean_session() -> list[dict[str, Any]]:
     return [operator_reply("click", x=500, y=400), operator_reply("key", key="Delete"), operator_reply("done")]
 
 
+def test_screen_text_pickfits_ocr_finds_needs_no_screen_judge_and_what_it_misses_still_gets_one():
+    spec = op.GuiCheckSpec(kind="screen_text", contains=["Total: {nonce}", "Saved"])
+    asked: list[bytes] = []
+
+    def judge(png: bytes, expected: list[str]) -> tuple[list[str], float, str]:
+        asked.append(png)
+        return (["Total: n1", "Saved"] if png == b"last" else []), 0.004, "claude-opus-5-5"
+
+    ocr_reads = {b"last": ["File  Edit", "Total:   n1 items", "Saved."], b"first": ["File Edit"]}
+    seen = op.check_screen(b"last", spec, "n1", [], judge, before=b"first", ocr=ocr_reads.get)
+    # Both texts are on one OCR line each on the last screen: no call. The first screen lacks them, so the
+    # screen judge confirms that (OCR missing a text decides nothing).
+    assert seen["passed"] and asked == [b"first"] and seen["cost_usd"] == 0.004
+    assert seen["line"].startswith("on screen (read by pickfit's own OCR, from pickfit's last screenshot)")
+    assert seen["seen"]["read"] == ["Total:   n1 items", "Saved."]
+
+    asked.clear()
+    partly = {b"last": ["Total: n1"], b"first": []}  # "Saved" not read by the OCR: the judge reads the screen
+    seen = op.check_screen(b"last", spec, "n1", [], judge, before=b"first", ocr=partly.get)
+    assert seen["passed"] and asked == [b"last", b"first"]
+    assert "read by the screen judge, claude-opus-5-5" in seen["line"]
+
+    asked.clear()
+    split = {b"last": ["Total:", "n1 Saved"]}  # never matched across two OCR lines
+    op.check_screen(b"last", spec, "n1", [], judge, before=b"first", ocr=split.get)
+    assert asked[0] == b"last"
+
+    asked.clear()
+    there = {b"last": ["Total: n1", "Saved"], b"first": ["Total: n1", "Saved"]}
+    seen = op.check_screen(b"last", spec, "n1", [], judge, before=b"first", ocr=there.get)
+    assert not seen["passed"] and asked == [] and "before the first action" in seen["why"]
+
+
+def test_screen_ocr_is_the_hosts_unless_set_and_a_bad_setting_fails(monkeypatch: pytest.MonkeyPatch):
+    assert op.screen_ocr() is None  # the tests' setting (conftest): off
+    from pickfit.verify import marks
+
+    monkeypatch.setattr(marks, "ocr_lines", lambda png, engine="auto": [f"{engine}:{png.decode()}"])
+    monkeypatch.setenv("PICKFIT_SCREEN_OCR", "auto")
+    assert op.screen_ocr()(b"x") == ["auto:x"]
+    monkeypatch.setenv("PICKFIT_SCREEN_OCR", "tesseract")
+    assert op.screen_ocr()(b"x") == ["tesseract:x"]
+    monkeypatch.setenv("PICKFIT_SCREEN_OCR", "vision")
+    with pytest.raises(ValueError, match="PICKFIT_SCREEN_OCR"):
+        op.screen_ocr()
+
+
+def test_ocr_lines_are_the_tools_whole_lines_and_none_without_a_tool(tmp_path: Path):
+    from pickfit.verify import marks
+
+    long = "A line much longer than the operator's forty-eight character mark text limit"
+    (tmp_path / "read.json").write_text(json.dumps([
+        {"text": long, "x": 1, "y": 2, "w": 3, "h": 4, "conf": 0.9},
+        {"text": "unsure", "x": 1, "y": 9, "w": 3, "h": 4, "conf": 0.2},
+        {"text": "  spaced   out ", "x": 1, "y": 20, "w": 3, "h": 4}]))
+    tool = tmp_path / "ocr"
+    tool.write_text(f"#!/bin/sh\ncat '{tmp_path / 'read.json'}'\n")
+    tool.chmod(0o755)
+    assert marks.ocr_lines(b"png", tool=tool) == [long, "spaced out"]
+    if marks.ocr_tool() is None:
+        assert marks.ocr_lines(b"png") is None
+
+
+def test_tesseract_lines_keep_every_word_of_a_line_together():
+    from pickfit.verify import marks
+
+    header = "level\tpage_num\tblock_num\tpar_num\tline_num\tword_num\tleft\ttop\twidth\theight\tconf\ttext"
+    rows = ["5\t1\t1\t1\t1\t1\t0\t0\t9\t9\t96\tTotal:", "5\t1\t1\t1\t1\t2\t0\t0\t9\t9\t12\tn1",
+            "4\t1\t1\t1\t2\t0\t0\t0\t9\t9\t-1\t", "5\t1\t1\t1\t2\t1\t0\t0\t9\t9\t91\tSaved"]
+    assert marks.parse_tesseract("\n".join([header, *rows])) == ["Total: n1", "Saved"]
+
+
 def test_pickfit_checks_specs_of_a_file_the_app_deletes():
     assert op.spec_problems(operate_args(goal=CLEAN_GOAL, check=GONE_CHECK)) == []
     for bad, why in (({"path": "~/pickfit-plant/"}, "the one file the app deletes"),
@@ -670,6 +742,17 @@ def test_pickfits_samples_are_real_files_of_their_kind():
         assert op.sample_file(kind).startswith(head), kind
     assert zipfile.ZipFile(io.BytesIO(op.sample_file("zip"))).namelist() == ["page01.png", "page02.png", "page03.png"]
     assert op.sample_file("png") == op.sample_file("png")  # the same bytes every time
+
+
+def test_the_operators_input_size_flags_keep_todays_defaults():
+    assert op.operator_view_zoom(None) == op.operator_view_zoom("") == op.VIEW_MAX_ZOOM == 2.0
+    assert op.operator_view_zoom("1") == 1.0 and op.operator_view_zoom("1.5") == 1.5
+    for bad in ("0.5", "3", "big"):
+        with pytest.raises(ValueError):
+            op.operator_view_zoom(bad)
+    assert op.operator_aim(None) is True and op.operator_aim("off") is False and op.operator_aim("ON")
+    with pytest.raises(ValueError, match="PICKFIT_OPERATOR_AIM"):
+        op.operator_aim("0")
 
 
 def test_the_comparison_flags_refuse_unknown_values_when_read():

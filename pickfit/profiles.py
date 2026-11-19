@@ -11,8 +11,9 @@ Records start unverified. Install commands are kept as `readme_claim` guides,
 which the index never serves; verification (P3) adds runs and replayed guides.
 Writing again keeps what verification and scoring added to an existing record
 (verification, replayed or human guides, scores, outcomes) and its slug and
-first_seen_at, and its features when the extraction lists none (they came from
-a features-only extraction).
+first_seen_at, its features when the extraction lists none (they came from
+a features-only extraction), and its capabilities (a capabilities-only extraction,
+write_capabilities).
 
 A candidate found through Show HN also lists each post as a source of kind `hn`:
 where pickfit found the tool, not evidence for any field. An app a package store lists
@@ -40,10 +41,20 @@ from pydantic import ValidationError
 
 from pickfit.discover.store import PipelineDB
 from pickfit.extract import Source as ExtractSource
-from pickfit.extract import build_sources, feature_rows, normalize_for_match
+from pickfit.extract import (
+    ExtractedCapabilities,
+    build_sources,
+    capability_rows,
+    capability_sources,
+    feature_rows,
+    help_dir,
+    load_help,
+    normalize_for_match,
+)
 from pickfit.ledger import taipei_now
 from pickfit.schema import (
     COMMAND_MAX,
+    Capability,
     LISTED_CATEGORIES,
     TOOL_KINDS,
     ExtractedFeatures,
@@ -460,6 +471,11 @@ def _keep_verified_work(data: dict[str, Any], existing: dict[str, Any]) -> None:
         sources = {s["id"] for s in data["sources"]}
         data["evidence"] += [e for e in existing.get("evidence") or []
                              if e["field"].startswith("/features/") and e["source_id"] in sources]
+    if not data.get("capabilities") and existing.get("capabilities"):  # a full extraction lists none
+        data["capabilities"] = existing["capabilities"]
+        sources = {s["id"] for s in data["sources"]}
+        data["evidence"] += [e for e in existing.get("evidence") or []
+                             if e["field"].startswith("/capabilities/") and e["source_id"] in sources]
 
 
 def feature_update(candidate: dict[str, Any], extraction: dict[str, Any], existing: dict[str, Any]
@@ -517,6 +533,107 @@ def write_features(db: PipelineDB, *, model: str, out_dir: Path = DEFAULT_OUT, s
             (out_dir / f"{record.slug}.json").write_text(render(record), encoding="utf-8")
         summary.written.append(record.slug)
         log(f"  {'would set' if dry_run else 'set'} {len(record.features)} features on {record.slug}")
+    return summary
+
+
+# Capability.area comes with the schema patch loop/proposals/capabilities-area-features-1-6.patch; until it is
+# applied a record keeps label and items only (the extraction row keeps the area).
+_HAS_AREA = "area" in Capability.model_fields
+
+
+def capability_update(candidate: dict[str, Any], extraction: dict[str, Any], existing: dict[str, Any]
+                      ) -> dict[str, Any] | None:
+    """The existing record with only its capabilities (and their evidence) taken from `extraction`.
+
+    `candidate` carries the help texts the extraction read (candidate["help"]); each help text a kept
+    capability quotes becomes a source of the record (kind sandbox, id help:<run id>:<n>). A capability whose
+    quote no source the record can cite holds is dropped, and so is one that only repeats a feature. None
+    when nothing is left. Everything else in the record stays as it is.
+    """
+    result = ExtractedCapabilities.model_validate(
+        {"capabilities": (extraction["result"] or {}).get("capabilities") or []})
+    cited_ids = {s["id"] for s in existing.get("sources") or []}
+    sources = capability_sources(candidate)
+    # A source the record already cites under its own id (readme, docs1, a web app's site), then the renamed ones.
+    source_ids = {s.id: s.id for s in sources if s.id in cited_ids}
+    source_ids.update({"description": _API_SOURCE, "readme": "readme"})
+    if any(s.id == "release" for s in sources):
+        source_ids["release"] = next((sid for sid in cited_ids if sid.startswith("release:")), "release")
+    source_ids = {k: v for k, v in source_ids.items() if v in cited_ids}
+    helps: dict[str, dict[str, Any]] = {}
+    for n, h in enumerate(candidate.get("help") or [], start=1):
+        sid = f"help:{h.get('run_id') or 'run'}:{n}"
+        source_ids[f"help{n}"] = sid
+        helps[sid] = {"id": sid, "kind": "sandbox", "url": None, "fetched_at": extraction["created_at"]}
+    ev = _Evidence(sources, source_ids, extraction["model"], extraction["created_at"])
+    features = {f.casefold() for f in existing.get("features") or []}
+    caps: list[dict[str, Any]] = []
+    for c in result.capabilities:
+        label = c.label.value
+        if not label or label.casefold() in features or c.label.quote is None:
+            continue
+        if not ev.model_value(f"/capabilities/{len(caps)}/label", c.label.quote):
+            continue
+        cap: dict[str, Any] = {"label": label, **({"items": list(c.items)} if c.items else {})}
+        if _HAS_AREA and c.area:
+            cap["area"] = c.area
+        caps.append(cap)
+    if not caps:
+        return None
+    data = json.loads(json.dumps(existing))
+    data["capabilities"] = caps
+    data["evidence"] = [e for e in data["evidence"] if not e["field"].startswith("/capabilities/")] + ev.items
+    used = {e["source_id"] for e in ev.items}
+    data["sources"] = [s for s in data["sources"] if not s["id"].startswith("help:") or s["id"] in used]
+    have = {s["id"] for s in data["sources"]}
+    data["sources"] += [src for sid, src in helps.items() if sid in used and sid not in have]
+    return data
+
+
+def apply_capabilities(path: Path, candidate: dict[str, Any], extraction: dict[str, Any],
+                       now: datetime | None = None) -> int | None:
+    """Set the capabilities of the record at `path` from a capabilities-only extraction (capability_update) and
+    write it back; the number set, or None when none is quoted by a source the record can cite (unchanged)."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    updated = capability_update(candidate, extraction, data)
+    if updated is None:
+        return None
+    updated["updated_at"] = (now or taipei_now()).isoformat(timespec="seconds")
+    record = SoftwareRecord.model_validate(updated)
+    path.write_text(render(record), encoding="utf-8")
+    return len(record.capabilities)
+
+
+def write_capabilities(db: PipelineDB, *, model: str, out_dir: Path = DEFAULT_OUT, slugs: list[str] | None = None,
+                       help_from: Path | None = None, dry_run: bool = False, now: datetime | None = None,
+                       log: Callable[[str], None] | None = None) -> WriteSummary:
+    """Set `capabilities` on existing records from the newest capabilities-only extraction by `model`; nothing
+    else changes. help_from: the help texts that extraction read (default runs/capabilities/help)."""
+    log = log or (lambda line: None)
+    now = now or taipei_now()
+    helps = help_from or help_dir()
+    summary = WriteSummary()
+    for repo_id, data in _existing_records(out_dir).items():
+        if slugs and data["slug"] not in slugs:
+            continue
+        extraction = capability_rows(db, repo_id, model)
+        if extraction is None:
+            summary.skipped[data["slug"]] = f"no capabilities extraction by {model}"
+            continue
+        candidate = {**db.candidate(repo_id), "help": load_help(helps, data["slug"])}
+        updated = capability_update(candidate, extraction, data)
+        if updated is None:
+            summary.skipped[data["slug"]] = "no quoted capability"
+            continue
+        if updated["capabilities"] == data.get("capabilities"):
+            summary.unchanged.append(data["slug"])
+            continue
+        updated["updated_at"] = now.isoformat(timespec="seconds")
+        record = SoftwareRecord.model_validate(updated)
+        if not dry_run:
+            (out_dir / f"{record.slug}.json").write_text(render(record), encoding="utf-8")
+        summary.written.append(record.slug)
+        log(f"  {'would set' if dry_run else 'set'} {len(record.capabilities)} capabilities on {record.slug}")
     return summary
 
 

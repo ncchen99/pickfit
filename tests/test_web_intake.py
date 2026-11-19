@@ -76,6 +76,7 @@ class Fakes:
         self.claims = claims  # whether the visit claims the site (False: the VM never started)
         self.visits: dict[str, dict[str, Any]] = {}
         self.calls: list[str] = []
+        self.capabilities: Any = None  # the capabilities-only extraction step; None: no such step
 
     def steps(self) -> wi.SiteSteps:
         def screen(row: dict[str, Any], page: str, readme: str | None, run_id: str) -> dict[str, Any]:
@@ -101,7 +102,8 @@ class Fakes:
             return result
 
         return wi.SiteSteps(fetch=self.fetch, screen=screen, extract=extract, verify=verify,
-                            visited=self.visits.get, resolve=resolve, render=None, clock=lambda: NOW)
+                            visited=self.visits.get, resolve=resolve, render=None, clock=lambda: NOW,
+                            capabilities=self.capabilities)
 
 
 def passed_visit(target: Any, **over: Any) -> dict[str, Any]:
@@ -444,3 +446,62 @@ def test_site_record_id_matches_the_record():
     assert wi.site_record_id("https://WWW.Wordpad.example.com/index.html") == "web:wordpad.example.com"
     assert wi.site_record_id("http://wordpad.example.com/") is None
     assert wi.normalize_web_url("https://a.example.com/tool/?q=1#x") == "https://a.example.com/tool"
+
+
+# --- capabilities and features 1-6 (docs/proposals/capabilities.md) ------------------
+
+SIX = [(FEATURE, "Count words and characters as you type."), ("keep text in the browser", "Everything stays in your browser."),
+       ("use it without signing up", "Free, no sign-up."), ("paste a whole chapter", "paste a whole chapter"),
+       ("see counts update at once", "the counts update at once"), ("read the terms of use", "Terms of use")]
+
+
+def test_a_new_web_app_gets_six_features_and_its_capabilities_before_the_page_is_purged(dirs, monkeypatch):
+    from pickfit.extract import build_sources, sources_sha
+
+    fakes = Fakes()
+    six = [_c(label, quote) for label, quote in SIX]
+
+    def extract(candidate: dict[str, Any], run_id: str) -> list[dict[str, Any]]:
+        fakes.calls.append("extract")
+        return [{**extraction_row(candidate, run_id), "result": _extraction(features=six)["result"]}]
+
+    asked: list[str] = []
+
+    def capabilities(candidate: dict[str, Any], run_id: str) -> list[dict[str, Any]]:
+        asked.append(next(s.text for s in build_sources(candidate) if s.id == "site"))  # the page, still there
+        return [{**extraction_row(candidate, run_id), "status": "capabilities", "cost_usd": 0.02,
+                 "sources_sha": sources_sha(build_sources(candidate)),
+                 "result": {"capabilities": [
+                     {"label": _c("count characters as well as words", "Count words and characters as you type."),
+                      "area": None, "items": []},
+                     {"label": _c("export to PDF", "exports PDF files"), "area": None, "items": []}]}}]
+
+    fakes.capabilities = capabilities
+    steps = fakes.steps()
+    steps.extract = extract
+    monkeypatch.setattr(fakes, "steps", lambda: steps)
+    spent: list[tuple[str, float]] = []
+    got = read(fakes, dirs, spend=lambda kind, usd: spent.append((kind, usd)))
+    assert "Count words and characters as you type." in asked[0]
+    assert spent == [("model", 0.01), ("model", 0.015), ("model", 0.02)]
+    record = SoftwareRecord.model_validate_json(got.record_path.read_text())
+    assert [c.label for c in record.capabilities] == ["count characters as well as words"]  # the unquoted one is not
+    assert {e.source_id for e in record.evidence if e.field.startswith("/capabilities/")} == {"site"}
+    assert len(record.features) == 6
+    wi.verify_site_record(dirs["record_dir"], got.slug, steps=steps, log=lambda line: None)
+    record = SoftwareRecord.model_validate_json(got.record_path.read_text())
+    reasons = [f.reason for f in record.verification.runs[-1].features]
+    assert reasons[0] is None and reasons[4:] == ["beyond_budget", "beyond_budget"] and len(reasons) == 6
+    assert record.capabilities  # the visit keeps them
+
+
+def test_a_failing_capabilities_step_does_not_stop_a_site_reading(dirs):
+    fakes = Fakes()
+
+    def capabilities(candidate: dict[str, Any], run_id: str) -> list[dict[str, Any]]:
+        raise RuntimeError("the model is down")
+
+    fakes.capabilities = capabilities
+    got = read(fakes, dirs)
+    assert any(n.startswith("capabilities not added: RuntimeError") for n in got.notes)
+    assert "capabilities" not in json.loads(got.record_path.read_text())

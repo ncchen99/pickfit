@@ -39,13 +39,14 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 from pickfit.env import REPO_ROOT, get_env
 from pickfit.ledger import BudgetExceeded, taipei_now
 from pickfit.meta import MetaResult, ToolCall, call_meta, resolve_model
-from pickfit.schema import (COMMAND_MAX, SETUP_MAX, InstallMethod, PitfallKind, UnverifiedReason,
-                            VerificationLevel, is_passed)
+from pickfit.schema import (COMMAND_MAX, SETUP_MAX, VERIFY_FEATURES_MAX, InstallMethod, PitfallKind,
+                            UnverifiedReason, VerificationLevel, is_passed)
 from pickfit.verify import gui
 from pickfit.verify import gui_operate
 from pickfit.verify.audio import ListenArgs, run_listen
 from pickfit.verify.box import TOOLCHAIN_LIMITS, Box, BoxError, ExecResult
 from pickfit.verify import features as feature_checks
+from pickfit.verify import help_text
 from pickfit.verify.features import FINISH_FEATURES, FinishFeature, resolve_features
 from pickfit.verify.gui_operate import OperateArgs, box_home, run_operation, spec_problems
 from pickfit.verify.judge import judge_model_for, read_screen_text
@@ -779,7 +780,7 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
         for t in ex.smoke_test_candidates:
             shown = f" (README shows: {t.expected_output})" if t.expected_output else ""
             lines.append(f"- {t.command}{shown}")
-    listed = feature_checks.render(ex.features, gui=box.display)
+    listed = feature_checks.render(ex.features[:VERIFY_FEATURES_MAX], gui=box.display)
     if listed:
         lines += ["", "Main features the README advertises:", *listed]
         if limits.max_operations > 0:
@@ -876,6 +877,7 @@ class VerifyReport:
     finish: dict[str, Any] | None = None
     verdict: dict[str, Any] | None = None  # LogVerdict: what the command log supports
     features: list[dict[str, Any]] = field(default_factory=list)  # ResolvedFeature: what the log supports
+    help: list[dict[str, Any]] = field(default_factory=list)  # help_text.HelpText: pickfit's own --help capture
     stop_reason: str = ""
     error: str | None = None
     cost_usd: float = 0.0  # the agent's turns and the GUI operator's calls
@@ -981,6 +983,7 @@ class VerifyAgent:
         try:
             prepare_box(box, self.task)
             self._loop()
+            self._capture_help()
         except BoxError as err:
             self.report.stop_reason, self.report.error = "box_error", str(err)
         self.report.seconds = round(self._elapsed(), 1)
@@ -993,6 +996,7 @@ class VerifyAgent:
         lim = self.limits
         pending: list[dict[str, Any]] = [_user(render_task(self.task, self.plan, self.box, lim))]
         history: list[dict[str, Any]] = []
+        self.history = history  # saved with the report (history.json): every turn's input is a prefix of it
         previous_id: str | None = None
         wrap_up: str | None = None
         grace = 1  # turns after the wrap-up turn when the model has not called finish yet
@@ -1057,6 +1061,22 @@ class VerifyAgent:
                     return
                 grace -= 1
 
+    def _capture_help(self) -> None:
+        """After a passed run of a command-line tool, its own --help and its subcommands' help, for the capability
+        index (help_text.py). pickfit's commands, outside the agent's budget and the command log."""
+        if self.verdict is None or not is_passed(self.verdict.level) or is_mcp(self.task):
+            return
+        if getattr(self.box, "shell", "bash") != "bash":
+            return
+        tool = help_text.tool_command(self.verdict.checks)
+        if tool is None:
+            return
+        texts = help_text.capture_help(self.box.exec, tool, clock=self._elapsed, run_id=self.run_id)
+        self.report.help = [asdict(h) for h in texts]
+        if texts:
+            self._say(f"  help: {len(texts)} text(s) saved ({_one_line(texts[0].command, 80)}"
+                      + (f" and {len(texts) - 1} subcommands)" if len(texts) > 1 else ")"))
+
     def _stop(self, reason: str) -> None:
         # A finish sent back for a retry still stands if the model never sends another.
         self.report.stop_reason = "finished" if self.verdict is not None else reason
@@ -1080,7 +1100,7 @@ class VerifyAgent:
                                max_output_tokens=MAX_OUTPUT_TOKENS, model=self.model,
                                reasoning_effort=REASONING_EFFORT, scope=f"verify:{self.task.slug}",
                                scope_cap_usd=self.limits.scope_cap_usd, run_id=self.run_id, cache=False,
-                               runs_dir=self.runs_dir, **self.call_kwargs)
+                               runs_dir=self.runs_dir, conversation=self.mode == "replay", **self.call_kwargs)
         except BudgetExceeded as err:
             self.report.stop_reason, self.report.error = "budget", str(err)
             self._say(f"turn {turn} · stopped: {err}")
@@ -1153,9 +1173,9 @@ class VerifyAgent:
         self.verdict = verdict
         self.report.finish = args.model_dump()
         self.report.verdict = verdict.to_dict()
-        names = feature_checks.labels(self.task.extraction.features)
+        names, past = feature_checks.split_budget(feature_checks.labels(self.task.extraction.features))
         resolved = resolve_features(names, args.features, verdict, self.report.commands,
-                                    mcp=is_mcp(self.task))
+                                    mcp=is_mcp(self.task)) + feature_checks.beyond_budget(past, len(names))
         self.report.features = [f.to_dict() for f in resolved]
         said = "agrees" if verdict.agrees else f"lowered to {verdict.level}" if \
             verdict.level != args.level else "with problems"
@@ -1454,4 +1474,10 @@ class VerifyAgent:
         out.parent.mkdir(parents=True, exist_ok=True)
         self.report.report_path = str(out)
         out.write_text(json.dumps(self.report.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
+        if self.mode == "replay" and getattr(self, "history", None):
+            # The conversation as sent (thinking blocks as they came), so a decision point can be asked again
+            # offline: scripts/effort_compare.py. Turn n's input is the history up to its n-th answer.
+            (out.parent / "history.json").write_text(json.dumps(
+                {"model": self.model, "reasoning_effort": REASONING_EFFORT, "instructions": self.instructions,
+                 "tools": self.tools, "input": self.history}, ensure_ascii=False), encoding="utf-8")
         self._say(f"report: {out}")

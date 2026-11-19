@@ -57,8 +57,9 @@ test('legacy clients: initialize, list and call without a session', async () => 
   const initMsg = await message(init);
   assert.match(initMsg.result.instructions, /^pickfit matches software to the user's need; each was installed and tested in a sandbox\. Scope: .*desktop GUI apps/);
   // Every client loads these each session: keep them short (they grew past 512 with the answer guidance, past 900 with the GUI scope,
-  // past 1000 with the known-vulnerability sentence, past 1030 with the five categories added on 2026-11-15).
-  assert.ok(initMsg.result.instructions.length <= 1060);
+  // past 1000 with the known-vulnerability sentence, past 1030 with the five categories added on 2026-11-15, past 1060
+  // with the security level's conditional case on 2026-11-19).
+  assert.ok(initMsg.result.instructions.length <= 1100);
   assert.match(initMsg.result.instructions, /Scope: dev CLIs, local AI tools, MCP servers, DevOps, security, data, docs and media tools, desktop GUI apps, web apps\. /);
 
   const list = await message(
@@ -106,7 +107,7 @@ test('instructions say how to write the answer: pick first, alternative before t
     assert.match(text, /Tag well_known_option "\(not verified by pickfit\)" beside its name/);
     assert.match(text, /Don't narrate the search or say pickfit found nothing; just answer/);
     assert.match(text, /No disclaimers about what you didn't run/);
-    assert.match(text, /If security\.status is vulnerable, warn the user first; if unchecked, don't call it safe\./);
+    assert.match(text, /If security\.status is vulnerable, warn the user first \(level conditional: one line on when\); if unchecked, don't call it safe\./);
   }
 });
 

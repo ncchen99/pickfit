@@ -173,6 +173,7 @@ class ScalewayProvider(Provider):
 
     key = "scaleway"
     TYPES = ("M4-S", "M4-SP", "M4-M")  # cheapest first; €0.22, €0.24, €0.29 an hour on 2026-11-17
+    EUR_PER_HOUR = {"M4-S": 0.22, "M4-SP": 0.24, "M4-M": 0.29}  # scaleway.com/en/pricing/apple-silicon, 2026-11-17
 
     def __init__(self, zone: str = "fr-par-1", scw: str = "scw", types: tuple[str, ...] = TYPES) -> None:
         self.zone, self.scw, self.types = zone, scw, types
@@ -227,8 +228,16 @@ class ScalewayProvider(Provider):
         if server is None:
             raise BoxError("could not create a Mac mini: " + "; ".join(errors))
         log(f"scaleway: {server['id']} created; waiting until it is ready (often 10-30 minutes)")
-        server = self._call("apple-silicon", "server", "wait", server["id"], "timeout=90m", timeout=95 * 60)
-        return self._record(name, server)
+        made = HostRecord(name=name, provider=self.key, server_id=server["id"], zone=self.zone,
+                          server_type=server.get("type") or kind, created_at=server.get("created_at", ""))
+        try:
+            server = self._call("apple-silicon", "server", "wait", server["id"], "timeout=90m", timeout=95 * 60)
+        except BoxError:
+            meter_rental(made, log=log)  # billed from its creation, ready or not
+            raise
+        rec = self._record(name, server)
+        meter_rental(rec, log=log)
+        return rec
 
     def _record(self, name: str, server: dict[str, Any]) -> HostRecord:
         os_info = server.get("os") or {}
@@ -251,6 +260,7 @@ class ScalewayProvider(Provider):
             raise BoxError(f"Scaleway bills a Mac mini for 24 h; {rec.server_id} can be deleted after {when}")
         self._call("apple-silicon", "server", "delete", rec.server_id)
         log(f"scaleway: deleted {rec.server_id}")
+        end_rental(rec, log=log, now=now)
 
     def root_password(self, rec: HostRecord) -> str | None:
         # Not through _call, which scrubs it; nothing of this reply but the one field leaves this function, and an
@@ -276,6 +286,142 @@ def provider_for(rec_or_key: HostRecord | str, **kw: Any) -> Provider:
     if key == "scaleway" and isinstance(rec_or_key, HostRecord) and rec_or_key.zone:
         kw.setdefault("zone", rec_or_key.zone)
     return PROVIDERS[key](**kw)
+
+
+# ---------------------------------------------------------------- what a rented host costs (the ledger's boxes table)
+#
+# A rented Mac is one row (purpose "host"), from its creation to its deletion, billed by the hour and for 24 h at
+# least. The tart VMs that ran on it have rows of their own with no price; when the rental ends, its cost is split
+# evenly over them (BoxLedger.apportion): a VM's share is the rental's cost divided by the number of VMs, of any
+# purpose (agent, replay, limits, build), that started on that host during the rental. A host someone lent
+# (provider ssh) has no row, so its VMs have no cost. Scaleway prices in euros; the ledger keeps US dollars.
+
+USD_PER_EUR = 1.1127  # the ECB's euro reference rate of 2026-11-11, as Banca d'Italia publishes it
+RENTAL_MIN_S = 24 * 3600
+
+
+def rental_box_id(rec: HostRecord) -> str:
+    return f"{rec.provider}-{rec.server_id}"
+
+
+def host_name(rec: HostRecord) -> str:
+    """The name a TartBox's host gives the Mac (tart_host.SshHost.name), which the ledger's rows share."""
+    return rec.ssh_host().name if rec.target else rec.name
+
+
+def meter_rental(rec: HostRecord, *, ledger: Any = None, log: Callable[[str], None] = print) -> str | None:
+    """Open the ledger's row for a rented Mac, once (a row that is there already stays as it is). Its box_id, or None
+    for a host nobody rents. Never raises."""
+    if rec.provider != "scaleway" or not rec.server_id:
+        return None
+    from pickfit.ledger import box_ledger
+
+    box_id = rental_box_id(rec)
+    eur = ScalewayProvider.EUR_PER_HOUR.get(rec.server_type)
+    try:
+        ledger = ledger or box_ledger()
+        if ledger.has_box(box_id):
+            if rec.target:  # the address arrived after the row was written: the VMs' rows match the host by it
+                ledger.update_box(box_id, host=host_name(rec))
+            return box_id
+        ledger.open_box(box_id=box_id, provider=rec.provider, started_at=rec.created_at or None, lane="macos",
+                        purpose="host", rate_usd_per_hour=None if eur is None else round(eur * USD_PER_EUR, 6),
+                        rate_source=(f"Scaleway {rec.server_type} €{eur}/h on 2026-11-17 at US${USD_PER_EUR}/€ "
+                                     "(ECB, 2026-11-11), 24 h at least" if eur is not None else
+                                     f"Scaleway {rec.server_type or '?'}: no price on file"),
+                        min_billed_s=RENTAL_MIN_S, provider_ref=rec.server_id, host=host_name(rec))
+        return box_id
+    except Exception as err:  # noqa: BLE001 - never the reason a Mac is not rented
+        log(f"box ledger: could not record the rental of {rec.name} ({type(err).__name__}: {str(err)[:200]})")
+        return None
+
+
+def end_rental(rec: HostRecord, *, ledger: Any = None, now: datetime | None = None,
+               log: Callable[[str], None] = print) -> dict[str, Any] | None:
+    """Close a deleted Mac's row and split its cost over the VMs that ran on it ({host_usd, vms, share_usd}). A
+    rental with no row yet (made before the ledger had them) gets one from its creation. Never raises."""
+    box_id = meter_rental(rec, ledger=ledger, log=log)
+    if box_id is None:
+        return None
+    from pickfit.ledger import box_ledger
+
+    try:
+        ledger = ledger or box_ledger()
+        ledger.close_box(box_id, ended_at=now, note="deleted")
+        split = ledger.apportion(box_id, now=now)
+        log(f"box ledger: {rec.name} cost about US${split['host_usd'] or 0:.2f}, split over {split['vms']} VM(s)")
+        return split
+    except Exception as err:  # noqa: BLE001 - the Mac is deleted either way
+        log(f"box ledger: could not close the rental of {rec.name} ({type(err).__name__}: {str(err)[:200]})")
+        return None
+
+
+# ---------------------------------------------------------------- a configuration error that needs a person
+#
+# The macOS lane (mac_batch.MacLane) asks for a host again every time pickfit's watch retries the lane (LANE_HOLD,
+# 30 minutes). When the same configuration error comes back OPERATOR_AFTER times in a row (renting off with no
+# usable host, a host whose softnet or auto-login is not set up, bases or limits test failing the same way, a rental
+# refused for a quota), retrying cannot fix it: the lane stops trying and says it needs an operator, in its
+# `available()` answer (which watch logs) and its `status()` (`pickfit watch --status`). Errors that pass by
+# themselves (a host that does not answer, no stock, the rental cap) never hold, nor does a rented Mac waiting for
+# its root step (the lane says so already, and sees it done with a check that costs nothing). The hold is a file
+# next to the host records; it lets go when the host records or the lane's settings change (`mac-host add`,
+# `setup`, `up`, another `--mac-rent`), when a person runs `pickfit mac-host clear`, or after `mac-host root`.
+
+OPERATOR_FILE = "needs-operator.txt"  # JSON; not *.json, which are host records
+OPERATOR_AFTER = 2
+
+
+def lane_context(hosts_dir: Path, **settings: Any) -> str:
+    """What a hold was made under: the host records (names and changes) and the lane's settings."""
+    import hashlib
+
+    files = sorted((p.name, p.stat().st_mtime_ns) for p in hosts_dir.glob("*.json")) if hosts_dir.exists() else []
+    return hashlib.sha256(json.dumps([files, settings], sort_keys=True, default=str).encode()).hexdigest()[:16]
+
+
+def _read_hold(hosts_dir: Path) -> dict[str, Any] | None:
+    try:
+        data = json.loads((hosts_dir / OPERATOR_FILE).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def operator_hold(hosts_dir: Path | None = None, context: str | None = None) -> dict[str, Any] | None:
+    """The configuration error the macOS lane stopped retrying, or None: none, not yet repeated, or made under
+    another context (`lane_context`) than `context`."""
+    hold = _read_hold(hosts_dir or HOSTS_DIR)
+    if hold is None or int(hold.get("count", 0)) < OPERATOR_AFTER:
+        return None
+    if context is not None and hold.get("context") != context:
+        return None
+    return hold
+
+
+def note_failure(hosts_dir: Path, key: str, reason: str, *, context: str, now: datetime) -> dict[str, Any]:
+    """Count one more of the same configuration error (`key`) in this context, or start counting a new one."""
+    old = _read_hold(hosts_dir)
+    same = old is not None and old.get("key") == key and old.get("context") == context
+    stamp = now.isoformat(timespec="seconds")
+    hold = {"key": key, "reason": reason, "context": context, "count": int(old["count"]) + 1 if same else 1,
+            "first_at": old["first_at"] if same else stamp, "last_at": stamp}
+    hosts_dir.mkdir(parents=True, exist_ok=True)
+    (hosts_dir / OPERATOR_FILE).write_text(json.dumps(hold, indent=2) + "\n", encoding="utf-8")
+    return hold
+
+
+def clear_hold(hosts_dir: Path | None = None) -> bool:
+    """Let go of a hold; True when there was one."""
+    path = (hosts_dir or HOSTS_DIR) / OPERATOR_FILE
+    had = path.exists()
+    path.unlink(missing_ok=True)
+    return had
+
+
+def hold_message(hold: dict[str, Any]) -> str:
+    return (f"needs an operator: {hold['reason']} (the same {hold['count']} times in a row since {hold['first_at']}); "
+            "pickfit stops retrying it until the host records change or `pickfit mac-host clear` is run")
 
 
 # ---------------------------------------------------------------- host preparation (any provider)
@@ -365,6 +511,7 @@ echo "tart=$(tart --version 2>/dev/null)"; echo "softnet=$(softnet --version 2>/
 s=$(command -v softnet) && echo "softnet_mode=$(stat -L -f '%u %p' "$s")"
 echo "images=$(tart list --quiet 2>/dev/null | tr '\n' ' ')"
 echo "rootsetup=$([ -f "$HOME/.pickfit/rootsetup.py" ] && echo yes || echo no)"
+echo "manifests=$(cd "$HOME/.pickfit/tart" 2>/dev/null && ls -1 2>/dev/null | grep '\.json$' | tr '\n' ' ')"
 """
 
 # Boot a throwaway clone under softnet and wait for the guest agent: proves Virtualization.framework, softnet and
@@ -496,9 +643,12 @@ class HostOps:
         images = facts.get("images", "").split()
         out.append(Check("source_image", mac.source in images, mac.source if mac.source in images else
                          f"{mac.source} not pulled; `pickfit mac-host setup` pulls it"))
-        manifests = self.state_dir / "hosts" / self.rec.ssh_host().name
+        # A base's manifest is kept on the host beside its VM (tart_box.save_manifest), so any harness sees what
+        # another built; one cached here only (a base built before the host kept them) still counts.
+        on_host = set(facts.get("manifests", "").split())
+        cached = self.state_dir / "hosts" / self.rec.ssh_host().name
         for base in (mac.base, f"{mac.base}-gui"):
-            built = base in images and (manifests / f"{base}.json").exists()
+            built = base in images and (f"{base}.json" in on_host or (cached / f"{base}.json").exists())
             out.append(Check(f"base:{base}", built, "built" if built else
                              "not built; `pickfit mac-host test` builds it (informational)"))
         if boot and all(c.ok for c in out if not c.name.startswith("base:")):
@@ -601,6 +751,8 @@ def _root(rec: HostRecord, args: Any) -> int:
     ops.wait_ssh()
     checks = ops.checks(boot=True)
     _print_checks(checks)
+    if ready(checks) and clear_hold():  # the person did what the lane waited for
+        print("the macOS lane will try its hosts again")
     return 0 if ready(checks) else 1
 
 
@@ -612,6 +764,12 @@ def main_command(args: Any) -> int:
                 rec = HostRecord.load(path.stem)
                 print(f"{rec.name:<14} {rec.provider:<9} {rec.target:<24} macOS {rec.macos} "
                       f"{rec.server_type} deletable {rec.deletable_at or '-'}")
+            hold = operator_hold()
+            if hold:
+                print(f"macOS lane {hold_message(hold)}")
+            return 0
+        if cmd == "clear":
+            print("the macOS lane will try its hosts again" if clear_hold() else "the macOS lane holds nothing")
             return 0
         if cmd == "add":
             if not args.target and not args.scaleway_id:
@@ -621,6 +779,7 @@ def main_command(args: Any) -> int:
             if args.scaleway_id:  # adopt a Mac rented by hand: `down` can then delete it
                 rec.provider, rec.server_id, rec.zone = "scaleway", args.scaleway_id, args.zone
                 rec = provider_for(rec).refresh(rec)
+                meter_rental(rec)  # its cost is pickfit's from its creation
             rec.save()
             print(f"added {rec.name} ({rec.target}); next: pickfit mac-host setup {rec.name}")
             return 0
@@ -694,9 +853,11 @@ def main_command(args: Any) -> int:
 
 
 def add_parser(sub: Any) -> None:
-    m = sub.add_parser("mac-host", help="rented or spare Macs as tart hosts: up, setup, root, check, test, down")
+    m = sub.add_parser("mac-host", help="rented or spare Macs as tart hosts: up, setup, root, check, test, down, clear")
     msub = m.add_subparsers(dest="mac_command", required=True)
     msub.add_parser("list", help="the hosts pickfit knows")
+    msub.add_parser("clear", help="the macOS lane stopped on a configuration error (needs an operator): fixed, try "
+                                  "again")
     a = msub.add_parser("add", help="a Mac that already exists, reached over SSH")
     a.add_argument("name")
     a.add_argument("--target", default=None, help="user@host")

@@ -1,0 +1,82 @@
+diff --git a/pickfit/schema.py b/pickfit/schema.py
+index a8a66435..f68d41b6 100644
+--- a/pickfit/schema.py
++++ b/pickfit/schema.py
+@@ -215,6 +215,7 @@ FEATURE_MAX = 80
+ CAPABILITIES_MAX = 40
+ CAPABILITY_ITEMS_MAX = 60
+ CAPABILITY_ITEM_MAX = 40
++CAPABILITY_AREA_MAX = 30
+ # An MCP client config snippet (a `claude mcp add` line or an mcpServers JSON entry).
+ MCP_SNIPPET_MAX = 1500
+ MCP_TOOLS_MAX = 200
+@@ -576,7 +577,8 @@ class ExtractedMcp(_Model):
+ _NO_MCP = {"transports": {"value": None, "quote": None}, "launch_command": {"value": None, "quote": None},
+            "client_configs": [], "env_vars": [], "tools": []}
+ FEATURES_DESCRIPTION = (
+-    "The 2-4 main features the sources advertise, most prominent first: what a user can do with it, "
++    "The 1-6 main features the sources advertise, as many as they put forward (one for a tool that does one "
++    "thing), most prominent first: what a user can do with it, "
+     "each a short English label (at most 8 words, e.g. 'convert CSV files to JSON') quoting the passage "
+     "that advertises it. Not install methods, platforms, license or speed claims."
+ )
+@@ -2418,6 +2420,9 @@ class Capability(_Model):
+         default=[], max_length=CAPABILITY_ITEMS_MAX, exclude_if=lambda value: not value,
+         description=("When the capability is a list the docs give (formats, protocols, services, subcommands): its "
+                      "members, so a long list takes one entry ('docx', 'epub', 'odt')."))
++    area: str | None = Field(
++        default=None, min_length=1, max_length=CAPABILITY_AREA_MAX, exclude_if=lambda value: value is None,
++        description="One or two lowercase words that group it on a page, such as formats or subcommands.")
+ 
+ 
+ class SoftwareRecord(_Model):
+diff --git a/schema/extraction.v1.json b/schema/extraction.v1.json
+index bf55650b..dc1caed9 100644
+--- a/schema/extraction.v1.json
++++ b/schema/extraction.v1.json
+@@ -767,7 +767,7 @@
+     },
+     "features": {
+       "default": [],
+-      "description": "The 2-4 main features the sources advertise, most prominent first: what a user can do with it, each a short English label (at most 8 words, e.g. 'convert CSV files to JSON') quoting the passage that advertises it. Not install methods, platforms, license or speed claims.",
++      "description": "The 1-6 main features the sources advertise, as many as they put forward (one for a tool that does one thing), most prominent first: what a user can do with it, each a short English label (at most 8 words, e.g. 'convert CSV files to JSON') quoting the passage that advertises it. Not install methods, platforms, license or speed claims.",
+       "items": {
+         "$ref": "#/$defs/Cited_str_"
+       },
+diff --git a/schema/software.v1.json b/schema/software.v1.json
+index d76a9617..88420513 100644
+--- a/schema/software.v1.json
++++ b/schema/software.v1.json
+@@ -67,6 +67,20 @@
+       "additionalProperties": false,
+       "description": "One thing the software's own documentation says it does, for matching requests (docs/proposals/capabilities.md).\n\nUnlike `features`, a capability is never checked one by one: it says only that a source documents it (its\nquote is in evidence at /capabilities/<i>/label; a sandbox source is the tool's own --help or man page).",
+       "properties": {
++        "area": {
++          "anyOf": [
++            {
++              "maxLength": 30,
++              "minLength": 1,
++              "type": "string"
++            },
++            {
++              "type": "null"
++            }
++          ],
++          "default": null,
++          "description": "One or two lowercase words that group it on a page, such as formats or subcommands."
++        },
+         "items": {
+           "default": [],
+           "description": "When the capability is a list the docs give (formats, protocols, services, subcommands): its members, so a long list takes one entry ('docx', 'epub', 'odt').",
+diff --git a/tests/test_profiles.py b/tests/test_profiles.py
+index b5e43467..9e56a3fa 100644
+--- a/tests/test_profiles.py
++++ b/tests/test_profiles.py
+@@ -501,6 +501,7 @@ def test_capabilities_only_sets_capabilities_and_cites_the_help(db: PipelineDB,
+     labels = [c["label"] for c in after["capabilities"]]
+     assert labels == ["re-indent JSON Lines", "write results as CSV or TSV", "query JSON Lines from the terminal"]
+     assert after["capabilities"][1]["items"] == ["csv", "tsv"]
++    assert [c.get("area") for c in after["capabilities"]] == ["subcommands", "formats", None]  # Capability.area
+     evidence = {e["field"]: e["source_id"] for e in after["evidence"] if e["field"].startswith("/capabilities/")}
+     assert evidence == {"/capabilities/0/label": "help:verify-tinyq-1:1", "/capabilities/1/label": "help:verify-tinyq-1:1",
+                         "/capabilities/2/label": "readme"}
