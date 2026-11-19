@@ -112,6 +112,17 @@ def test_both_efforts_are_asked_in_run_order_and_the_disagreement_is_listed(runs
     assert report["output_tokens"] == {"medium": 900, "low": 360} and report["cost_usd"]["low"] > 0
 
 
+def test_points_are_picked_a_run_at_a_time_from_its_first_turn(runs: Path):
+    points, _ = effort_compare.load_points([runs])
+    other = [effort_compare.Point("verify-b", t, PROD_MODEL, "", [], [], []) for t in (1, 2, 3)]
+    chosen = effort_compare.pick(points + other, 4)
+    by_run: dict[str, list[int]] = {}
+    for p in chosen:
+        by_run.setdefault(p.run_id, []).append(p.turn)
+    assert len(chosen) == 4 and all(turns == list(range(1, len(turns) + 1)) for turns in by_run.values())
+    assert effort_compare.pick(points + other, 4) == chosen  # the same seed, the same points
+
+
 def test_the_dry_run_counts_points_and_estimates_without_a_call(runs: Path, capsys: pytest.CaptureFixture[str]):
     assert effort_compare.main(["--runs-dir", str(runs), "--dry-run"]) == 0
     err = capsys.readouterr().err

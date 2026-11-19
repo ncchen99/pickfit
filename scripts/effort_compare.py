@@ -16,11 +16,12 @@ goal). The output lists the agreement between the two efforts and with what the 
 and the cost and output tokens of each effort.
 
     uv run python scripts/effort_compare.py --dry-run                 # count points, estimate the cost
-    uv run python scripts/effort_compare.py --points 20 --max-usd 3   # paid: ~US$2 for 20 points (estimate)
+    uv run python scripts/effort_compare.py --points 20 --max-usd 3   # paid: about US$1-2 for 20 points
 
-Calls of one effort go in run order with the prompt cache marked (call_meta conversation=True), so a run's next
-point reads the earlier one's prefix from the cache; the two efforts do not share it (a change of effort starts
-the messages cache again).
+Points are taken a whole run at a time, and calls of one effort go in run order with the prompt cache marked
+(call_meta conversation=True), so a run's next point reads the earlier one's prefix from the cache, as the
+agent's own turns did; the two efforts do not share it (a change of effort starts the messages cache again).
+The estimate: a run of about 8 turns ending near 25K input tokens costs about US$0.2 per effort this way.
 """
 
 from __future__ import annotations
@@ -128,8 +129,19 @@ def load_points(runs_dirs: Iterable[Path], run_ids: list[str] | None = None) -> 
 
 
 def pick(points: list[Point], n: int, seed: int = 1119) -> list[Point]:
-    """n points spread over the runs (the same ones for the same seed), in run and turn order."""
-    chosen = points if n >= len(points) else random.Random(seed).sample(points, n)
+    """About n points, whole runs at a time (the same runs for the same seed), in run and turn order: a run's later
+    points then read its earlier ones from the prompt cache, as the agent's own turns did, which costs a fraction
+    of asking points from many runs."""
+    by_run: dict[str, list[Point]] = {}
+    for point in points:
+        by_run.setdefault(point.run_id, []).append(point)
+    runs = sorted(by_run)
+    random.Random(seed).shuffle(runs)
+    chosen: list[Point] = []
+    for run in runs:
+        if len(chosen) >= n:
+            break
+        chosen += sorted(by_run[run], key=lambda p: p.turn)[: n - len(chosen)]  # a run's first turns: one prefix
     return sorted(chosen, key=lambda p: (p.run_id, p.turn))
 
 
