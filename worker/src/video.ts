@@ -3,15 +3,38 @@
  * (binding VIDEOS, key <slug>/<file>). Only files the slug's record names are served: each run's clip, the raw
  * recordings it was cut from, and the clip's poster (<clip stem>.jpg). Everything else, and every request when
  * the binding is missing, is 404. Range requests get 206; names carry a timestamp, so responses are immutable.
+ *
+ * A clip with captions also has them as a WebVTT track per page language (<clip stem>.en.vtt, .zh-TW.vtt), made
+ * here from the record (the zh-TW one from the page's translations of the same sentences), not from R2.
  */
-import { OSES, type Catalog, type Entry, type RunSummary, type RunVideo } from './catalog.ts';
+import { OSES, type Catalog, type Entry, type RunSummary, type RunVideo, type VideoCaption } from './catalog.ts';
+import { LANGS, type Lang, type Translations } from './i18n.ts';
 
-const PATH = /^\/video\/([a-z0-9]+(?:-[a-z0-9]+)*)\/([A-Za-z0-9_][A-Za-z0-9_.-]{0,119}\.(mp4|jpg))$/;
-const TYPES: Record<string, string> = { mp4: 'video/mp4', jpg: 'image/jpeg' };
+const PATH = /^\/video\/([a-z0-9]+(?:-[a-z0-9]+)*)\/([A-Za-z0-9_][A-Za-z0-9_.-]{0,119}\.(mp4|jpg|vtt))$/;
+const TYPES: Record<string, string> = { mp4: 'video/mp4', jpg: 'image/jpeg', vtt: 'text/vtt; charset=utf-8' };
 const IMMUTABLE = 'public, max-age=31536000, immutable';
+const CAPTIONS_CACHE = 'public, max-age=3600'; // a caption's translation can change under the same name
 
 export const posterOf = (clip: string) => clip.replace(/\.mp4$/, '.jpg');
 export const videoPath = (slug: string, file: string) => `/video/${slug}/${encodeURIComponent(file)}`;
+/** The clip's caption track in a page language, beside it. */
+export const captionsOf = (clip: string, lang: Lang) => clip.replace(/\.mp4$/, `.${lang}.vtt`);
+
+/** hh:mm:ss.mmm */
+const cueTime = (s: number) => {
+  const ms = Math.max(0, Math.round(s * 1000));
+  const pad = (n: number, w = 2) => String(n).padStart(w, '0');
+  return `${pad(Math.floor(ms / 3600000))}:${pad(Math.floor(ms / 60000) % 60)}:${pad(Math.floor(ms / 1000) % 60)}.${pad(ms % 1000, 3)}`;
+};
+
+/** A clip's captions as WebVTT, each cue's text from `map` when it has a translation; plain text, never markup. */
+export function captionsVtt(captions: VideoCaption[], map?: Record<string, string>): string {
+  const text = (t: string) => (map?.[t] ?? t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\s+/g, ' ').trim();
+  const cues = captions
+    .filter((c) => Number.isFinite(c.start_s) && Number.isFinite(c.end_s) && c.end_s > c.start_s && c.text)
+    .map((c, i) => `${i + 1}\n${cueTime(c.start_s)} --> ${cueTime(c.end_s)}\n${text(c.text)}\n`);
+  return `WEBVTT\n\n${cues.join('\n')}`;
+}
 
 /** Every run with a clip: the install guides' runs and the other passed runs, once each. */
 export function runsWithVideo(entry: Entry): (RunSummary & { video: RunVideo })[] {
@@ -26,8 +49,18 @@ export function videoFiles(entry: Entry): Set<string> {
   for (const { video } of runsWithVideo(entry)) {
     files.add(video.clip).add(posterOf(video.clip));
     for (const raw of video.raw) files.add(raw.file);
+    if (video.captions?.length) for (const lang of LANGS) files.add(captionsOf(video.clip, lang));
   }
   return files;
+}
+
+/** The caption track a /video/ name asks for: its clip's captions and the language, or null. */
+function captionsFor(entry: Entry, file: string): { captions: VideoCaption[]; lang: Lang } | null {
+  for (const { video } of runsWithVideo(entry)) {
+    const lang = LANGS.find((l) => captionsOf(video.clip, l) === file);
+    if (lang && video.captions?.length) return { captions: video.captions, lang };
+  }
+  return null;
 }
 
 const notFound = () => new Response('Not found', { status: 404, headers: { 'cache-control': 'no-store' } });
@@ -50,15 +83,28 @@ function span(range: R2Range, size: number): [number, number] {
 }
 
 /** The response for a /video/ path, or null when the path is not one (the caller routes it elsewhere). */
-export async function serveVideo(request: Request, bucket: R2Bucket | undefined, catalog: Catalog): Promise<Response | null> {
+export async function serveVideo(
+  request: Request,
+  bucket: R2Bucket | undefined,
+  catalog: Catalog,
+  translations: Translations = {},
+): Promise<Response | null> {
   const url = new URL(request.url);
   if (!url.pathname.startsWith('/video/')) return null;
   const match = PATH.exec(url.pathname);
   const entry = match ? catalog.bySlug.get(match[1]) : undefined;
-  if (!match || !entry || !videoFiles(entry).has(match[2]) || !bucket) return notFound();
+  if (!match || !entry || !videoFiles(entry).has(match[2])) return notFound();
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     return new Response('Method not allowed', { status: 405, headers: { allow: 'GET, HEAD' } });
   }
+  if (match[3] === 'vtt') {
+    const track = captionsFor(entry, match[2]);
+    if (!track) return notFound();
+    const body = captionsVtt(track.captions, track.lang === 'zh-TW' ? translations[entry.slug] : undefined);
+    const headers = { 'content-type': TYPES.vtt, 'cache-control': CAPTIONS_CACHE, 'x-content-type-options': 'nosniff' };
+    return new Response(request.method === 'HEAD' ? null : body, { status: 200, headers });
+  }
+  if (!bucket) return notFound();
   const key = `${match[1]}/${match[2]}`;
   const headers = new Headers({
     'content-type': TYPES[match[3]],
