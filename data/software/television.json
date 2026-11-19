@@ -1,0 +1,554 @@
+{
+  "schema_version": "software.v1",
+  "slug": "television",
+  "repo_id": "gh:857898245",
+  "name": "Television (tv)",
+  "summary": "A terminal fuzzy finder that searches in real time through files, text, git repositories, environment variables, docker containers and other sources.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "command-line-tool",
+    "fuzzy",
+    "fuzzy-finder",
+    "fuzzy-matching",
+    "fuzzy-search",
+    "fuzzyfinder",
+    "grep",
+    "rust",
+    "television"
+  ],
+  "use_cases": [
+    "search file contents",
+    "find git repositories",
+    "search shell history"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "fuzzy search files and data sources in real time",
+    "create custom channels for any workflow",
+    "shell autocomplete and history search"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://alexpasmantier.github.io/television/",
+  "repo": {
+    "url": "https://github.com/alexpasmantier/television",
+    "full_name": "alexpasmantier/television",
+    "created_at": "2024-09-15T22:16:18Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-television-20261119-161141-264e",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "VER=$(curl -fsSL https://api.github.com/repos/alexpasmantier/television/releases/latest | python3 -c 'import sys,json;print(json.load(sys.stdin)[\"tag_name\"])') && cd /tmp && curl -fsSLO \"https://github.com/alexpasmantier/television/releases/download/$VER/tv-$VER-x86_64-unknown-linux-musl.tar.gz\" && tar -xzf tv-$VER-x86_64-unknown-linux-musl.tar.gz && mkdir -p ~/.local/bin && install -m755 tv-$VER-x86_64-unknown-linux-musl/tv ~/.local/bin/tv",
+          "purpose": "Download the latest release tarball (0.15.9, x86_64 musl) that install.sh would fetch and put the tv binary in ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "tv --help",
+        "expected_signal": "--take-1-fast"
+      },
+      "first_task": "script -qec \"tv fruits --cable-dir /tmp/cable --take-1-fast\" /dev/null"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "0.15.9",
+    "published_at": "2026-06-14T21:15:17Z",
+    "url": "https://github.com/alexpasmantier/television/releases/tag/0.15.9"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T16:13:09.251968+08:00",
+    "runs": [
+      {
+        "id": "verify-television-20261119-161141-264e",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T16:13:09.251968+08:00",
+        "tool_version": "0.15.9",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "VER=$(curl -fsSL https://api.github.com/repos/alexpasmantier/television/releases/latest | python3 -c 'import sys,json;print(json.load(sys.stdin)[\"tag_name\"])') && cd /tmp && curl -fsSLO \"https://github.com/alexpasmantier/television/releases/download/$VER/tv-$VER-x86_64-unknown-linux-musl.tar.gz\" && tar -xzf tv-$VER-x86_64-unknown-linux-musl.tar.gz && mkdir -p ~/.local/bin && install -m755 tv-$VER-x86_64-unknown-linux-musl/tv ~/.local/bin/tv",
+            "purpose": "Download the latest release tarball (0.15.9, x86_64 musl) that install.sh would fetch and put the tv binary in ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "tv --help",
+            "expected_signal": "--take-1-fast",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "--take-1-fast",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "script -qec \"tv fruits --cable-dir /tmp/cable --take-1-fast\" /dev/null",
+            "expected_signal": "apple",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[?1000h\u001b[?1002h\u001b[?1003h\u001b[?1015h\u001b[?1006h\u001b[?1049h\u001b[2J\u001b[J\u001b[?25h\u001b[?1006l\u001b[?1015l\u001b[?1003l\u001b[?1002l\u001b[?1000l\u001b[?1049lapple",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/cable && cat > /tmp/cable/fruits.toml <<'EOF'\n[metadata]\nname = \"fruits\"\ndescription = \"Browse fruit names\"\n\n[source]\ncommand = \"printf 'apple\\nbanana\\ncherry\\ndragonfruit\\n'\"\n\n[preview]\ncommand = \"echo 'fruit: {}'\"\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "tv init bash",
+            "expected_signal": "bind -x '\"\\C-R\": tv_shell_history'",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "bind -x '\"\\C-R\": tv_shell_history'",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "script -qec \"printf 'apple\\nbanana\\ncherry\\n' | tv --input bnna --select-1\" /dev/null",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "\u001b[0m",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "script -qec \"printf 'apple\\nbanana\\ncherry\\n' | tv --input bnna --take-1\" /dev/null",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "\u001b[0m",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL https://alexpasmantier.github.io/television/install.sh | bash",
+            "actually_needed": "The script uses sudo (on Debian it runs 'sudo dpkg -i'; otherwise it writes to /usr/local/bin). Without root, download the release tarball tv-<ver>-x86_64-unknown-linux-musl.tar.gz from GitHub and copy tv into ~/.local/bin.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "tv fuzzy-searches any data source in real time",
+            "actually_needed": "In this 2-CPU box, any run with a search pattern (--input) panicked in television-nucleo worker.rs:21 ('index out of bounds: the len is 0 but the index is 0'). --take-1-fast with no pattern worked.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The source output for check 1 ends with 'apple' after the terminal control codes, though screenshot 1 shows only the command line; check 2 prints the bash init script ending with bind -x '\"\\C-R\": tv_shell_history'; check 3 prints help text whose captured output includes --take-1-fast.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-television-20261119-161141-264e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-television-20261119-161141-264e/check-1-cmd11.judged.png",
+            "runs/verify/verify-television-20261119-161141-264e/check-2-cmd6.judged.png",
+            "runs/verify/verify-television-20261119-161141-264e/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.258931,
+        "features": [
+          {
+            "feature": "fuzzy search files and data sources in real time",
+            "status": "test_failed",
+            "smoke_tests": [
+              3,
+              4
+            ],
+            "reason": null,
+            "failure": "tool",
+            "note": "Panic in television-nucleo worker.rs:21 (index out of bounds, len 0) whenever a search pattern is given; it may depend on this 2-CPU box"
+          },
+          {
+            "feature": "create custom channels for any workflow",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "shell autocomplete and history search",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: The output is only the generated bash integration script with key bindings; no autocomplete or history search was actually exercised."
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T16:13:15+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/alexpasmantier/television@d91ab5b6e005",
+      "Cargo.lock"
+    ],
+    "packages_checked": 388,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T16:13:09+08:00",
+    "quality": {
+      "total": 67.4,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.62,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 0.5,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 97.3,
+      "signals": {
+        "stars": 6434,
+        "monthly_downloads": 2193,
+        "forks": 197,
+        "dependents": null,
+        "release_downloads": 50038,
+        "hn_top_score": 92,
+        "registries_count": 2
+      },
+      "age_days": 794,
+      "packages": [
+        "crates:television",
+        "homebrew:television"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 1.82
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:13:09.267694+08:00",
+      "sources_sha": "8e391098ba2b511f9bccc339195ff49dc29e76eeb432a8a527ad8ca46cdfb71f",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "It lets you search in real-time through any kind of data source such as files, text, git repositories, environment variables, docker containers, and more."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Television is a fast, portable fuzzy finder for the terminal."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "| **WinGet**     | `winget install --exact --id alexpasmantier.television` |"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "tv              # Search files (default channel)"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "# ~/.config/television/cable/tldr.toml"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "| **Arch Linux** | `pacman -S television`                                  |"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/alexpasmantier/television",
+      "fetched_at": "2026-11-19T16:11:28+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/alexpasmantier/television/blob/main/README.md",
+      "fetched_at": "2026-11-19T16:11:27+08:00"
+    },
+    {
+      "id": "release:0.15.9",
+      "kind": "release",
+      "url": "https://github.com/alexpasmantier/television/releases/tag/0.15.9",
+      "fetched_at": "2026-11-19T16:11:27+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Television is a fast, portable fuzzy finder for the terminal.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:11:36+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Television is a fast, portable fuzzy finder for the terminal.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:11:36+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Television is a fast, portable fuzzy finder for the terminal.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:11:36+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "It lets you search in real-time through any kind of data source such as files, text, git repositories, environment variables, docker containers, and more.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:11:36+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Television (tv)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:11:36+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T16:11:28+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T16:11:28+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T16:11:28+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T16:11:28+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T16:11:28+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:0.15.9",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T16:11:27+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "tv text         # Search file contents",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:11:36+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "tv git-repos    # Find git repositories",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:11:36+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "history search (<kbd>Ctrl</kbd>+<kbd>R</kbd>)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:11:36+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "It lets you search in real-time through any kind of data source",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:11:36+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Create custom channels for any workflow.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:11:36+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Enable smart autocomplete (<kbd>Ctrl</kbd>+<kbd>T</kbd>) and history search (<kbd>Ctrl</kbd>+<kbd>R</kbd>):",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:11:36+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "pacman -S television",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T16:11:36+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T16:11:27+08:00",
+  "updated_at": "2026-11-19T16:13:15+08:00"
+}
