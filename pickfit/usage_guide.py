@@ -10,7 +10,8 @@ for a feature the record still lists, steps only while a passed run still checks
 
 The guides are written through call_meta by the prod model (Claude Opus since 2026-11-15, as in the
 11/2 backfill of the records that already existed; muse-spark-1.3 before). Every guide records the model
-that wrote it.
+that wrote it. A run sends its requests as one Message Batch (pickfit.msg_batch: half price, answers
+usually within the hour) unless --no-batch asks for each at once.
 """
 
 from __future__ import annotations
@@ -156,20 +157,53 @@ class Generated:
     usage: dict[str, int] = field(default_factory=dict)
 
 
-def _call_meta(text: str, model: str | None, run_id: str) -> Generated:
-    from pickfit.meta import call_meta
+REASONING_EFFORT = "low"
 
-    body = {"instructions": INSTRUCTIONS,
+
+def request_body(text: str) -> dict[str, Any]:
+    return {"instructions": INSTRUCTIONS,
             "input": [{"role": "user", "content": [{"type": "input_text", "text": text}]}],
             "text": {"format": {"type": "json_schema", "name": "usage_guide",
                                 "schema": meta_strict_schema(GuideOut), "strict": True}},
             "store": False}
-    meta = call_meta("responses", body, stage=STAGE, public_data_only=True, max_output_tokens=MAX_OUTPUT_TOKENS,
-                     model=model or "prod", reasoning_effort="low", run_id=run_id, output_model=GuideOut)
+
+
+def generated(meta: Any) -> Generated:
+    """A call's answer (call_meta's or a batch's MetaResult) as the guide's words; raises when it did not parse."""
     if meta.parsed is None:
         raise RuntimeError(f"no parsed output: {meta.status} {meta.parse_error}")
     usage = {"input": meta.usage.input_tokens, "output": meta.usage.output_tokens} if meta.usage else {}
     return Generated(meta.parsed, meta.model, meta.cost_usd, usage)
+
+
+def _call_meta(text: str, model: str | None, run_id: str) -> Generated:
+    from pickfit.meta import call_meta
+
+    meta = call_meta("responses", request_body(text), stage=STAGE, public_data_only=True,
+                     max_output_tokens=MAX_OUTPUT_TOKENS, model=model or "prod", reasoning_effort=REASONING_EFFORT,
+                     run_id=run_id, output_model=GuideOut)
+    return generated(meta)
+
+
+def batch_guides(items: list[tuple[str, str]], model: str | None, run_id: str, max_usd: float,
+                 **options: Any) -> dict[str, Generated | str]:
+    """Each (key, rendered input) as one request of a Message Batch: {key: the guide's words, or why none}.
+    `max_usd` holds every request's worst case at once; what it cannot hold goes in a next batch."""
+    from pickfit import msg_batch
+
+    requests = [msg_batch.BatchRequest(key=key, endpoint="responses", body=request_body(text), stage=STAGE,
+                                       max_output_tokens=MAX_OUTPUT_TOKENS, model=model or "prod",
+                                       reasoning_effort=REASONING_EFFORT, output_model=GuideOut,
+                                       scope=f"{STAGE}:{run_id}", scope_cap_usd=max_usd)
+                for key, text in items]
+    options.setdefault("log", lambda line: print(line, file=sys.stderr))
+    out: dict[str, Generated | str] = {}
+    for key, outcome in msg_batch.run(requests, run_id=run_id, **options).items():
+        try:
+            out[key] = generated(outcome.result) if outcome.result is not None else (outcome.error or "no answer")
+        except RuntimeError as err:
+            out[key] = str(err)
+    return out
 
 
 # --- Records -------------------------------------------------------------------------------------
@@ -238,6 +272,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--max-usd", type=float, default=5.0, help="stop starting new calls past this spend")
     p.add_argument("--concurrency", type=int, default=6)
     p.add_argument("--force", action="store_true", help="rewrite guides that are already current")
+    p.add_argument("--batch", action=argparse.BooleanOptionalAction, default=True,
+                   help="send the requests as one Message Batch at half price and wait (default)")
     p.add_argument("--dry-run", action="store_true", help="print the first input and write nothing")
     args = p.parse_args(argv)
 
@@ -261,37 +297,59 @@ def main(argv: list[str] | None = None) -> int:
     log = (log_dir / f"{run_id}.jsonl").open("a", encoding="utf-8")
     spent, written, errors = 0.0, 0, {}
 
+    def write(path: Path, record: SoftwareRecord, run: VerificationRun | None, gen: Generated) -> None:
+        nonlocal spent, written
+        slug = record.slug
+        try:
+            spent += gen.cost_usd
+            raw = json.loads(path.read_text(encoding="utf-8"))
+            text = with_guide(raw, to_guide(record, run, gen, datetime.now(timezone.utc)))
+            tmp = path.with_suffix(".json.tmp")
+            tmp.write_text(text, encoding="utf-8")
+            os.replace(tmp, path)
+            written += 1
+            log.write(json.dumps({"slug": slug, "model": gen.model, "cost_usd": round(gen.cost_usd, 6),
+                                  "usage": gen.usage}) + "\n")
+            print(f"  written  {slug:<40} ${gen.cost_usd:.4f}  total ${spent:.2f}", file=sys.stderr)
+        except Exception as err:  # noqa: BLE001 - one record's failure is reported, the rest go on
+            failed(slug, f"{type(err).__name__}: {str(err)[:300]}")
+
+    def failed(slug: str, why: str) -> None:
+        errors[slug] = why
+        print(f"  error    {slug:<40} {why}", file=sys.stderr)
+
     def one(path: Path, record: SoftwareRecord) -> tuple[Path, SoftwareRecord, VerificationRun | None, Generated]:
         run = best_run(record)
         text = render_input(record, run)
         return path, record, run, _call_meta(text, args.model, run_id)
 
     started = time.monotonic()
-    with ThreadPoolExecutor(max_workers=args.concurrency) as pool:
-        pending = iter(todo)
-        futures = {pool.submit(one, *item): item[1].slug for item in [next(pending) for _ in range(min(args.concurrency, len(todo)))]}
-        while futures:
-            done = next(as_completed(futures))
-            slug = futures.pop(done)
-            try:
-                path, record, run, gen = done.result()
-                spent += gen.cost_usd
-                raw = json.loads(path.read_text(encoding="utf-8"))
-                text = with_guide(raw, to_guide(record, run, gen, datetime.now(timezone.utc)))
-                tmp = path.with_suffix(".json.tmp")
-                tmp.write_text(text, encoding="utf-8")
-                os.replace(tmp, path)
-                written += 1
-                log.write(json.dumps({"slug": slug, "model": gen.model, "cost_usd": round(gen.cost_usd, 6),
-                                      "usage": gen.usage}) + "\n")
-                print(f"  written  {slug:<40} ${gen.cost_usd:.4f}  total ${spent:.2f}", file=sys.stderr)
-            except Exception as err:  # noqa: BLE001 - one record's failure is reported, the rest go on
-                errors[slug] = f"{type(err).__name__}: {str(err)[:300]}"
-                print(f"  error    {slug:<40} {errors[slug]}", file=sys.stderr)
-            if spent < args.max_usd:
-                nxt = next(pending, None)
-                if nxt is not None:
-                    futures[pool.submit(one, *nxt)] = nxt[1].slug
+    if args.batch and todo:
+        runs = {record.slug: best_run(record) for _, record in todo}
+        answers = batch_guides([(record.slug, render_input(record, runs[record.slug])) for _, record in todo],
+                               args.model, run_id, args.max_usd)
+        for path, record in todo:
+            answer = answers.get(record.slug, "no answer")
+            if isinstance(answer, str):
+                failed(record.slug, answer)
+            else:
+                write(path, record, runs[record.slug], answer)
+    else:
+        with ThreadPoolExecutor(max_workers=args.concurrency) as pool:
+            pending = iter(todo)
+            futures = {pool.submit(one, *item): item[1].slug
+                       for item in [next(pending) for _ in range(min(args.concurrency, len(todo)))]}
+            while futures:
+                done = next(as_completed(futures))
+                slug = futures.pop(done)
+                try:
+                    write(*done.result())
+                except Exception as err:  # noqa: BLE001 - the call failed: reported, the rest go on
+                    failed(slug, f"{type(err).__name__}: {str(err)[:300]}")
+                if spent < args.max_usd:
+                    nxt = next(pending, None)
+                    if nxt is not None:
+                        futures[pool.submit(one, *nxt)] = nxt[1].slug
     log.close()
     print(json.dumps({"written": written, "errors": errors, "cost_usd": round(spent, 4), "todo": len(todo),
                       "seconds": round(time.monotonic() - started, 1), "log": str(log.name)}, indent=2))

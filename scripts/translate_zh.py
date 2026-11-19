@@ -2,11 +2,14 @@
 
 Usage:
     uv run python scripts/translate_zh.py --dry-run                      # count what is missing
-    uv run python scripts/translate_zh.py [--slug S]... [--limit N]      # Claude Opus
+    uv run python scripts/translate_zh.py [--slug S]... [--limit N]      # Claude Opus, one Message Batch
+    uv run python scripts/translate_zh.py --no-batch                     # Claude Opus, answers at once
     uv run python scripts/translate_zh.py --model open-modal             # Muse Spark Open on Modal's endpoint
 
 `pickfit publish` runs the same step before it builds the index, so this script is for
-backfills and comparisons (--out, --retranslate).
+backfills and comparisons (--out, --retranslate). A backfill can wait: Claude's requests go as one
+Message Batch (half price, answers usually within the hour) unless --no-batch. A batch reserves every
+request's worst case at once against --max-usd; what that cannot hold goes in a next batch.
 """
 
 from __future__ import annotations
@@ -33,6 +36,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--out", type=Path, help="write here instead of data/i18n/zh-TW (e.g. for a comparison)")
     parser.add_argument("--retranslate", action="store_true",
                         help="ask for the selected tools' sentences even if translated (with --out, for a comparison)")
+    parser.add_argument("--batch", action=argparse.BooleanOptionalAction, default=True,
+                        help="claude: send the requests as one Message Batch at half price and wait (default)")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args(argv)
 
@@ -48,11 +53,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.limit is not None:
         groups = groups[: args.limit]
     chars = sum(len(t) for g in groups for _, t in g)
-    print(f"translate_zh: {sum(map(len, groups))} sentences ({chars:,} chars) missing, {len(groups)} requests")
+    batch = args.batch and args.model == "claude"
+    print(f"translate_zh: {sum(map(len, groups))} sentences ({chars:,} chars) missing, {len(groups)} requests"
+          f"{' in a Message Batch' if batch and groups else ''}")
     if args.dry_run or not groups:
         return 0
     totals = run(groups, known, directory, model=args.model, effort=args.effort, max_usd=args.max_usd,
-                 concurrency=args.concurrency, out=lambda line: print(line, flush=True))
+                 concurrency=args.concurrency, out=lambda line: print(line, flush=True), batch=batch)
     print(f"translate_zh: {totals.requests} requests done, {totals.failed} failed; ≈ ${totals.usd:.2f} ({args.model})")
     return 1 if totals.failed else 0
 
