@@ -1,0 +1,591 @@
+{
+  "schema_version": "software.v1",
+  "slug": "serie",
+  "repo_id": "gh:834730157",
+  "name": "Serie",
+  "summary": "A terminal application that renders git commit graphs as images using terminal image display protocols, similar to git log --graph --all.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "git",
+    "git-client",
+    "git-graph",
+    "git-log",
+    "git-tools",
+    "ratatui",
+    "terminal",
+    "tui"
+  ],
+  "use_cases": [
+    "browse a git repository's commit graph in the terminal",
+    "view git diff output for a commit in a dedicated view"
+  ],
+  "alternatives_to": [
+    "git log --graph"
+  ],
+  "features": [
+    "render git commit graphs as terminal images",
+    "run custom external user commands",
+    "customize keybindings"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://lusingander.github.io/serie/",
+  "repo": {
+    "url": "https://github.com/lusingander/serie",
+    "full_name": "lusingander/serie",
+    "created_at": "2024-07-28T07:22:08Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "git"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-serie-20261119-200641-18d3",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/serie && curl -fsSL -o /tmp/serie/s.tar.gz https://github.com/lusingander/serie/releases/download/v0.11.0/serie-0.11.0-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/serie/s.tar.gz -C /tmp/serie",
+          "purpose": "download and extract v0.11.0 x86_64-linux-gnu release tarball"
+        },
+        {
+          "command": "install -m 755 /tmp/serie/serie ~/.local/bin/serie && serie --version",
+          "purpose": "install binary into ~/.local/bin and print version"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "install -m 755 /tmp/serie/serie ~/.local/bin/serie && serie --version",
+        "expected_signal": "serie 0.11.0"
+      },
+      "first_task": "python3 /tmp/drive.py graph"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.11.0",
+    "published_at": "2026-11-19T01:56:41Z",
+    "url": "https://github.com/lusingander/serie/releases/tag/v0.11.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T20:08:47.243025+08:00",
+    "runs": [
+      {
+        "id": "verify-serie-20261119-200641-18d3",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T20:08:47.243025+08:00",
+        "tool_version": "0.11.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/serie && curl -fsSL -o /tmp/serie/s.tar.gz https://github.com/lusingander/serie/releases/download/v0.11.0/serie-0.11.0-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/serie/s.tar.gz -C /tmp/serie",
+            "purpose": "download and extract v0.11.0 x86_64-linux-gnu release tarball"
+          },
+          {
+            "command": "install -m 755 /tmp/serie/serie ~/.local/bin/serie && serie --version",
+            "purpose": "install binary into ~/.local/bin and print version"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "install -m 755 /tmp/serie/serie ~/.local/bin/serie && serie --version",
+            "expected_signal": "serie 0.11.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "serie 0.11.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 /tmp/drive.py graph",
+            "expected_signal": "RESULT OK",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "RESULT OK",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/repo && mkdir -p /tmp/repo && cd /tmp/repo && git init -q -b main && git config user.email a@b.c && git config user.name T && echo 1>f && git add f && git commit -qm first && git checkout -qb feat && echo 2>>f && git commit -qam feat1 && git checkout -q main && echo 3>g && git add g && git commit -qm second && git merge -q --no-ff feat -m merge && git log --oneline --graph --all\ncat > /tmp/serie.toml <<'EOF'\n[keybind]\nquit = [\"x\"]\nuser_command_1 = [\"u\"]\n\n[core.user_command]\ncommands_1 = { name = \"write hash\", type = \"silent\", commands = [\"sh\", \"-c\", \"echo USERCMD {{target_hash}} > /tmp/uc_out.txt\"] }\nEOF\ncat > /tmp/drive.py <<'EOF'\nimport os, pty, sys, time, select, struct, fcntl, termios\nmode = sys.argv[1]\nenv = dict(os.environ, TERM=\"xterm-256color\")\nif mode != \"graph\":\n    env[\"SERIE_CONFIG_FILE\"] = \"/tmp/serie.toml\"\ntry: os.remove(\"/tmp/uc_out.txt\")\nexcept FileNotFoundError: pass\npid, fd = pty.fork()\nif pid == 0:\n    os.chdir(\"/tmp/repo\")\n    os.execvpe(\"serie\", [\"serie\", \"-p\", \"iterm\"], env)\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack(\"HHHH\", 40, 120, 800, 1200))\nbuf = b\"\"\ndef pump(t):\n    global buf\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try: d = os.read(fd, 65536)\n            except OSError: return\n            if not d: return\n            buf += d\ndef alive():\n    return os.waitpid(pid, os.WNOHANG) == (0, 0)\npump(3)\nok = True\nif mode == \"graph\":\n    n = buf.count(b\"\\x1b]1337;File=\")\n    print(\"iterm_images:\", n)\n    print(\"first commit msg shown:\", b\"merge\" in buf)\n    ok = n > 0\n    os.write(fd, b\"q\")\nelif mode == \"keys\":\n    os.write(fd, b\"q\"); pump(1.5)\n    a = alive(); print(\"alive after q (rebound):\", a); ok = a\n    os.write(fd, b\"x\")\nelif mode == \"usercmd\":\n    os.write(fd, b\"u\"); pump(2)\n    out = open(\"/tmp/uc_out.txt\").read().strip() if os.path.exists(\"/tmp/uc_out.txt\") else \"NO OUTPUT\"\n    print(\"user command output:\", out); ok = out.startswith(\"USERCMD\")\n    os.write(fd, b\"x\")\npump(3)\nst = os.waitpid(pid, os.WNOHANG)\nprint(\"exited:\", st[0] != 0, \"status:\", st[1])\nif st[0] == 0:\n    os.kill(pid, 9); ok = False\nprint(\"RESULT\", \"OK\" if ok else \"FAIL\")\nsys.exit(0 if ok else 1)\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "rm -rf /tmp/repo && mkdir -p /tmp/repo && cd /tmp/repo && git init -q -b main && git config user.email a@b.c && git config user.name T && echo one > f && git add f && git commit -qm first && git checkout -qb feat && echo two >> f && git commit -qam feat1 && git checkout -q main && echo three > g && git add g && git commit -qm second && git merge -q --no-ff feat -m merge && git log --oneline --graph --all",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 /tmp/drive.py usercmd",
+            "expected_signal": "user command output: USERCMD 91d46d67850b1ef8fb5426f0d32cc969fa8bc38c",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "RESULT OK",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/repo && mkdir -p /tmp/repo && cd /tmp/repo && git init -q -b main && git config user.email a@b.c && git config user.name T && echo 1>f && git add f && git commit -qm first && git checkout -qb feat && echo 2>>f && git commit -qam feat1 && git checkout -q main && echo 3>g && git add g && git commit -qm second && git merge -q --no-ff feat -m merge && git log --oneline --graph --all\ncat > /tmp/serie.toml <<'EOF'\n[keybind]\nquit = [\"x\"]\nuser_command_1 = [\"u\"]\n\n[core.user_command]\ncommands_1 = { name = \"write hash\", type = \"silent\", commands = [\"sh\", \"-c\", \"echo USERCMD {{target_hash}} > /tmp/uc_out.txt\"] }\nEOF\ncat > /tmp/drive.py <<'EOF'\nimport os, pty, sys, time, select, struct, fcntl, termios\nmode = sys.argv[1]\nenv = dict(os.environ, TERM=\"xterm-256color\")\nif mode != \"graph\":\n    env[\"SERIE_CONFIG_FILE\"] = \"/tmp/serie.toml\"\ntry: os.remove(\"/tmp/uc_out.txt\")\nexcept FileNotFoundError: pass\npid, fd = pty.fork()\nif pid == 0:\n    os.chdir(\"/tmp/repo\")\n    os.execvpe(\"serie\", [\"serie\", \"-p\", \"iterm\"], env)\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack(\"HHHH\", 40, 120, 800, 1200))\nbuf = b\"\"\ndef pump(t):\n    global buf\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try: d = os.read(fd, 65536)\n            except OSError: return\n            if not d: return\n            buf += d\ndef alive():\n    return os.waitpid(pid, os.WNOHANG) == (0, 0)\npump(3)\nok = True\nif mode == \"graph\":\n    n = buf.count(b\"\\x1b]1337;File=\")\n    print(\"iterm_images:\", n)\n    print(\"first commit msg shown:\", b\"merge\" in buf)\n    ok = n > 0\n    os.write(fd, b\"q\")\nelif mode == \"keys\":\n    os.write(fd, b\"q\"); pump(1.5)\n    a = alive(); print(\"alive after q (rebound):\", a); ok = a\n    os.write(fd, b\"x\")\nelif mode == \"usercmd\":\n    os.write(fd, b\"u\"); pump(2)\n    out = open(\"/tmp/uc_out.txt\").read().strip() if os.path.exists(\"/tmp/uc_out.txt\") else \"NO OUTPUT\"\n    print(\"user command output:\", out); ok = out.startswith(\"USERCMD\")\n    os.write(fd, b\"x\")\npump(3)\nst = os.waitpid(pid, os.WNOHANG)\nprint(\"exited:\", st[0] != 0, \"status:\", st[1])\nif st[0] == 0:\n    os.kill(pid, 9); ok = False\nprint(\"RESULT\", \"OK\" if ok else \"FAIL\")\nsys.exit(0 if ok else 1)\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "rm -rf /tmp/repo && mkdir -p /tmp/repo && cd /tmp/repo && git init -q -b main && git config user.email a@b.c && git config user.name T && echo one > f && git add f && git commit -qm first && git checkout -qb feat && echo two >> f && git commit -qam feat1 && git checkout -q main && echo three > g && git add g && git commit -qm second && git merge -q --no-ff feat -m merge && git log --oneline --graph --all",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          },
+          {
+            "command": "python3 /tmp/drive2.py",
+            "expected_signal": "custom key x quit serie: True",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "custom key x quit serie: True",
+            "setup": [
+              {
+                "command": "rm -rf /tmp/repo && mkdir -p /tmp/repo && cd /tmp/repo && git init -q -b main && git config user.email a@b.c && git config user.name T && echo 1>f && git add f && git commit -qm first && git checkout -qb feat && echo 2>>f && git commit -qam feat1 && git checkout -q main && echo 3>g && git add g && git commit -qm second && git merge -q --no-ff feat -m merge && git log --oneline --graph --all\ncat > /tmp/serie.toml <<'EOF'\n[keybind]\nquit = [\"x\"]\nuser_command_1 = [\"u\"]\n\n[core.user_command]\ncommands_1 = { name = \"write hash\", type = \"silent\", commands = [\"sh\", \"-c\", \"echo USERCMD {{target_hash}} > /tmp/uc_out.txt\"] }\nEOF\ncat > /tmp/drive.py <<'EOF'\nimport os, pty, sys, time, select, struct, fcntl, termios\nmode = sys.argv[1]\nenv = dict(os.environ, TERM=\"xterm-256color\")\nif mode != \"graph\":\n    env[\"SERIE_CONFIG_FILE\"] = \"/tmp/serie.toml\"\ntry: os.remove(\"/tmp/uc_out.txt\")\nexcept FileNotFoundError: pass\npid, fd = pty.fork()\nif pid == 0:\n    os.chdir(\"/tmp/repo\")\n    os.execvpe(\"serie\", [\"serie\", \"-p\", \"iterm\"], env)\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack(\"HHHH\", 40, 120, 800, 1200))\nbuf = b\"\"\ndef pump(t):\n    global buf\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try: d = os.read(fd, 65536)\n            except OSError: return\n            if not d: return\n            buf += d\ndef alive():\n    return os.waitpid(pid, os.WNOHANG) == (0, 0)\npump(3)\nok = True\nif mode == \"graph\":\n    n = buf.count(b\"\\x1b]1337;File=\")\n    print(\"iterm_images:\", n)\n    print(\"first commit msg shown:\", b\"merge\" in buf)\n    ok = n > 0\n    os.write(fd, b\"q\")\nelif mode == \"keys\":\n    os.write(fd, b\"q\"); pump(1.5)\n    a = alive(); print(\"alive after q (rebound):\", a); ok = a\n    os.write(fd, b\"x\")\nelif mode == \"usercmd\":\n    os.write(fd, b\"u\"); pump(2)\n    out = open(\"/tmp/uc_out.txt\").read().strip() if os.path.exists(\"/tmp/uc_out.txt\") else \"NO OUTPUT\"\n    print(\"user command output:\", out); ok = out.startswith(\"USERCMD\")\n    os.write(fd, b\"x\")\npump(3)\nst = os.waitpid(pid, os.WNOHANG)\nprint(\"exited:\", st[0] != 0, \"status:\", st[1])\nif st[0] == 0:\n    os.kill(pid, 9); ok = False\nprint(\"RESULT\", \"OK\" if ok else \"FAIL\")\nsys.exit(0 if ok else 1)\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "rm -rf /tmp/repo && mkdir -p /tmp/repo && cd /tmp/repo && git init -q -b main && git config user.email a@b.c && git config user.name T && echo one > f && git add f && git commit -qm first && git checkout -qb feat && echo two >> f && git commit -qam feat1 && git checkout -q main && echo three > g && git add g && git commit -qm second && git merge -q --no-ff feat -m merge && git log --oneline --graph --all",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cat > /tmp/drive2.py <<'EOF'\nimport os, pty, sys, time, select, struct, fcntl, termios\nenv = dict(os.environ, TERM=\"xterm-256color\", SERIE_CONFIG_FILE=\"/tmp/serie.toml\")\npid, fd = pty.fork()\nif pid == 0:\n    os.chdir(\"/tmp/repo\")\n    os.execvpe(\"serie\", [\"serie\", \"-p\", \"iterm\"], env)\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack(\"HHHH\", 40, 120, 800, 1200))\ndef pump(t):\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try:\n                if not os.read(fd, 65536): return\n            except OSError: return\npump(3)\nprint(\"alive before x:\", os.waitpid(pid, os.WNOHANG) == (0, 0))\nos.write(fd, b\"x\")\npump(3)\nst = os.waitpid(pid, os.WNOHANG)\nok = st[0] != 0\nprint(\"custom key x quit serie:\", ok)\nif not ok: os.kill(pid, 9)\nsys.exit(0 if ok else 1)\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install --locked serie",
+            "actually_needed": "No Rust toolchain in the box; used the prebuilt GitHub release tarball serie-0.11.0-x86_64-unknown-linux-gnu.tar.gz (the README points to the other download options)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "The default key bindings can be overridden",
+            "actually_needed": "Setting quit = [\"x\"] made x quit, but the default q still quit as well (cmd 8). Custom keys seem to be added to the default keys instead of replacing them.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Use a terminal emulator that supports the iTerm2 or kitty image protocol",
+            "actually_needed": "No real terminal here. serie ran in a pseudo-terminal with -p iterm and sent iTerm2 inline-image sequences, but whether the images display correctly was not seen.",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exited 0 and printed their expected signals: RESULT OK with 4 iterm images rendered, the custom x key quit serie, and the version reads serie 0.11.0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-serie-20261119-200641-18d3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-serie-20261119-200641-18d3/check-1-cmd7.judged.png",
+            "runs/verify/verify-serie-20261119-200641-18d3/check-2-cmd12.judged.png",
+            "runs/verify/verify-serie-20261119-200641-18d3/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.282664,
+        "features": [
+          {
+            "feature": "render git commit graphs as terminal images",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "run custom external user commands",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "customize keybindings",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T20:08:52+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/lusingander/serie@a30bb45e1afe",
+      "Cargo.lock"
+    ],
+    "packages_checked": 308,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T20:08:47+08:00",
+    "quality": {
+      "total": 79.5,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.55,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 95.3,
+      "signals": {
+        "stars": 2191,
+        "monthly_downloads": 651,
+        "forks": 72,
+        "dependents": null,
+        "release_downloads": 3795,
+        "hn_top_score": 18,
+        "registries_count": 2
+      },
+      "age_days": 844,
+      "packages": [
+        "crates:serie",
+        "homebrew:serie"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 3.74
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:08:47.254803+08:00",
+      "sources_sha": "db0b270380019e9eaf539f85e7304d6705ee0db242ab5d2c24ae060b94153909",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "is a TUI application that uses the terminal emulators' image display protocol to render commit graphs like `git log --graph --all`."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "While some users prefer to use Git via CLI, they often rely on a GUI or feature-rich TUI to view commit logs."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "- Git\n- Supported terminal emulator"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "$ cargo install --locked serie"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "$ cd <your git repository>\n$ serie"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "If the config file does not exist, the default values will be used for all items."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "MIT"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/lusingander/serie",
+      "fetched_at": "2026-11-19T20:06:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/lusingander/serie/blob/master/README.md",
+      "fetched_at": "2026-11-19T20:06:27+08:00"
+    },
+    {
+      "id": "release:v0.11.0",
+      "kind": "release",
+      "url": "https://github.com/lusingander/serie/releases/tag/v0.11.0",
+      "fetched_at": "2026-11-19T20:06:27+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "is a TUI application",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:06:36+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Run `serie` in the directory where your git repository exists.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:06:36+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A rich git commit graph in your terminal, like magic 📚",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:06:36+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Serie ([`/zéːriə/`](https://lusingander.github.io/serie/faq/index.html#how-do-i-pronounce-serie)) is a TUI application that uses the terminal emulators' image display protocol to render commit graphs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:06:36+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Serie",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:06:36+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "- Git",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:06:36+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T20:06:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T20:06:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T20:06:29+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T20:06:29+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T20:06:29+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.11.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T20:06:27+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Offer commit graph-centric browsing of Git repositories.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:06:36+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "You can display the output of commands like `git diff` in a dedicated view",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:06:36+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Provide a rich `git log --graph` experience in the terminal.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:06:36+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "uses the terminal emulators' image display protocol to render commit graphs like `git log --graph --all`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:06:36+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "The User command feature allows you to execute custom external commands.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:06:36+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "The [default key bindings](https://lusingander.github.io/serie/keybindings/index.html) can be overridden.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:06:36+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T20:06:27+08:00",
+  "updated_at": "2026-11-19T20:08:52+08:00"
+}
