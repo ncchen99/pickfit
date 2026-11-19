@@ -1,0 +1,662 @@
+{
+  "schema_version": "software.v1",
+  "slug": "nginx",
+  "repo_id": "gh:37912398",
+  "name": "NGINX",
+  "summary": "Open source web server that also acts as a load balancer, reverse proxy, API gateway and content cache.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "infra_devops",
+  "kind": "server_daemon",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "content-cache",
+    "http",
+    "http2",
+    "http3",
+    "https",
+    "load-balancer",
+    "mail-proxy-server",
+    "nginx",
+    "quic",
+    "reverse-proxy"
+  ],
+  "use_cases": [
+    "enable HTTPS with TLS certificates",
+    "load balance HTTP traffic",
+    "rate limit clients of an API gateway",
+    "cache content as a CDN edge server"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "serve web content",
+    "load balance traffic",
+    "reverse proxy requests",
+    "cache content"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://nginx.org/",
+  "repo": {
+    "url": "https://github.com/nginx/nginx",
+    "full_name": "nginx/nginx",
+    "created_at": "2015-06-23T10:26:27Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "gcc",
+      "make",
+      "libpcre3-dev",
+      "zlib1g-dev"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-nginx-20261119-143034-7910",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/nginx-pkg && cd ~/nginx-pkg && curl -fsSLO https://nginx.org/packages/debian/pool/nginx/n/nginx/nginx_1.30.7-1~trixie_amd64.deb && dpkg-deb -x nginx_1.30.7-1~trixie_amd64.deb root && ln -sf ~/nginx-pkg/root/usr/sbin/nginx ~/.local/bin/nginx",
+          "purpose": "Download the official nginx.org Debian trixie package, unpack it with dpkg-deb -x (no root needed) and symlink the binary into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "nginx -V",
+        "expected_signal": "nginx version: nginx/1.30.7"
+      },
+      "first_task": "curl -sS http://127.0.0.1:8080/"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "BSD-2-Clause",
+  "processing": null,
+  "last_release": {
+    "tag": "release-1.31.9",
+    "published_at": "2026-11-18T15:54:06Z",
+    "url": "https://github.com/nginx/nginx/releases/tag/release-1.31.9"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T14:31:36.960728+08:00",
+    "runs": [
+      {
+        "id": "verify-nginx-20261119-143034-7910",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T14:31:36.960728+08:00",
+        "tool_version": "nginx/1.30.7",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/nginx-pkg && cd ~/nginx-pkg && curl -fsSLO https://nginx.org/packages/debian/pool/nginx/n/nginx/nginx_1.30.7-1~trixie_amd64.deb && dpkg-deb -x nginx_1.30.7-1~trixie_amd64.deb root && ln -sf ~/nginx-pkg/root/usr/sbin/nginx ~/.local/bin/nginx",
+            "purpose": "Download the official nginx.org Debian trixie package, unpack it with dpkg-deb -x (no root needed) and symlink the binary into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "nginx -V",
+            "expected_signal": "nginx version: nginx/1.30.7",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "nginx version: nginx/1.30.7",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -sS http://127.0.0.1:8080/",
+            "expected_signal": "Hello from nginx static",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Hello from nginx static",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/ng/html /tmp/ng/cache /tmp/ng/tmp && echo 'Hello from nginx static' > /tmp/ng/html/index.html && cat > /tmp/ng/nginx.conf <<'EOF'\ndaemon off;\nworker_processes 1;\npid /tmp/ng/nginx.pid;\nerror_log stderr info;\nevents { worker_connections 64; }\nhttp {\n  access_log off;\n  client_body_temp_path /tmp/ng/tmp/cb; proxy_temp_path /tmp/ng/tmp/px;\n  fastcgi_temp_path /tmp/ng/tmp/fc; uwsgi_temp_path /tmp/ng/tmp/uw; scgi_temp_path /tmp/ng/tmp/sc;\n  proxy_cache_path /tmp/ng/cache keys_zone=mycache:1m;\n  server { listen 127.0.0.1:8081; location / { return 200 \"backend-A\\n\"; } }\n  server { listen 127.0.0.1:8082; location / { return 200 \"backend-B\\n\"; } }\n  upstream pool { server 127.0.0.1:8081; server 127.0.0.1:8082; }\n  server { listen 127.0.0.1:8080; root /tmp/ng/html; }\n  server { listen 127.0.0.1:8090; location / { proxy_pass http://pool; } }\n  server { listen 127.0.0.1:8091; location / { proxy_pass http://127.0.0.1:8081; } }\n  server { listen 127.0.0.1:8092; location / { proxy_cache mycache; proxy_cache_valid 200 10m; add_header X-Cache-Status $upstream_cache_status; proxy_pass http://127.0.0.1:8081; } }\n}\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "nginx -p /tmp/ng -e stderr -c /tmp/ng/nginx.conf",
+                "background": true,
+                "port": 8092
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -sS http://127.0.0.1:8090/ && curl -sS http://127.0.0.1:8090/",
+            "expected_signal": "backend-B",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "backend-B",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/ng/html /tmp/ng/cache /tmp/ng/tmp && echo 'Hello from nginx static' > /tmp/ng/html/index.html && cat > /tmp/ng/nginx.conf <<'EOF'\ndaemon off;\nworker_processes 1;\npid /tmp/ng/nginx.pid;\nerror_log stderr info;\nevents { worker_connections 64; }\nhttp {\n  access_log off;\n  client_body_temp_path /tmp/ng/tmp/cb; proxy_temp_path /tmp/ng/tmp/px;\n  fastcgi_temp_path /tmp/ng/tmp/fc; uwsgi_temp_path /tmp/ng/tmp/uw; scgi_temp_path /tmp/ng/tmp/sc;\n  proxy_cache_path /tmp/ng/cache keys_zone=mycache:1m;\n  server { listen 127.0.0.1:8081; location / { return 200 \"backend-A\\n\"; } }\n  server { listen 127.0.0.1:8082; location / { return 200 \"backend-B\\n\"; } }\n  upstream pool { server 127.0.0.1:8081; server 127.0.0.1:8082; }\n  server { listen 127.0.0.1:8080; root /tmp/ng/html; }\n  server { listen 127.0.0.1:8090; location / { proxy_pass http://pool; } }\n  server { listen 127.0.0.1:8091; location / { proxy_pass http://127.0.0.1:8081; } }\n  server { listen 127.0.0.1:8092; location / { proxy_cache mycache; proxy_cache_valid 200 10m; add_header X-Cache-Status $upstream_cache_status; proxy_pass http://127.0.0.1:8081; } }\n}\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "nginx -p /tmp/ng -e stderr -c /tmp/ng/nginx.conf",
+                "background": true,
+                "port": 8092
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -sS http://127.0.0.1:8091/",
+            "expected_signal": "backend-A",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "backend-A",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/ng/html /tmp/ng/cache /tmp/ng/tmp && echo 'Hello from nginx static' > /tmp/ng/html/index.html && cat > /tmp/ng/nginx.conf <<'EOF'\ndaemon off;\nworker_processes 1;\npid /tmp/ng/nginx.pid;\nerror_log stderr info;\nevents { worker_connections 64; }\nhttp {\n  access_log off;\n  client_body_temp_path /tmp/ng/tmp/cb; proxy_temp_path /tmp/ng/tmp/px;\n  fastcgi_temp_path /tmp/ng/tmp/fc; uwsgi_temp_path /tmp/ng/tmp/uw; scgi_temp_path /tmp/ng/tmp/sc;\n  proxy_cache_path /tmp/ng/cache keys_zone=mycache:1m;\n  server { listen 127.0.0.1:8081; location / { return 200 \"backend-A\\n\"; } }\n  server { listen 127.0.0.1:8082; location / { return 200 \"backend-B\\n\"; } }\n  upstream pool { server 127.0.0.1:8081; server 127.0.0.1:8082; }\n  server { listen 127.0.0.1:8080; root /tmp/ng/html; }\n  server { listen 127.0.0.1:8090; location / { proxy_pass http://pool; } }\n  server { listen 127.0.0.1:8091; location / { proxy_pass http://127.0.0.1:8081; } }\n  server { listen 127.0.0.1:8092; location / { proxy_cache mycache; proxy_cache_valid 200 10m; add_header X-Cache-Status $upstream_cache_status; proxy_pass http://127.0.0.1:8081; } }\n}\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "nginx -p /tmp/ng -e stderr -c /tmp/ng/nginx.conf",
+                "background": true,
+                "port": 8092
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -sS -D - -o /dev/null http://127.0.0.1:8092/c1 && curl -sS -D - http://127.0.0.1:8092/c1",
+            "expected_signal": "X-Cache-Status: HIT",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "X-Cache-Status: HIT",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/ng/html /tmp/ng/cache /tmp/ng/tmp && echo 'Hello from nginx static' > /tmp/ng/html/index.html && cat > /tmp/ng/nginx.conf <<'EOF'\ndaemon off;\nworker_processes 1;\npid /tmp/ng/nginx.pid;\nerror_log stderr info;\nevents { worker_connections 64; }\nhttp {\n  access_log off;\n  client_body_temp_path /tmp/ng/tmp/cb; proxy_temp_path /tmp/ng/tmp/px;\n  fastcgi_temp_path /tmp/ng/tmp/fc; uwsgi_temp_path /tmp/ng/tmp/uw; scgi_temp_path /tmp/ng/tmp/sc;\n  proxy_cache_path /tmp/ng/cache keys_zone=mycache:1m;\n  server { listen 127.0.0.1:8081; location / { return 200 \"backend-A\\n\"; } }\n  server { listen 127.0.0.1:8082; location / { return 200 \"backend-B\\n\"; } }\n  upstream pool { server 127.0.0.1:8081; server 127.0.0.1:8082; }\n  server { listen 127.0.0.1:8080; root /tmp/ng/html; }\n  server { listen 127.0.0.1:8090; location / { proxy_pass http://pool; } }\n  server { listen 127.0.0.1:8091; location / { proxy_pass http://127.0.0.1:8081; } }\n  server { listen 127.0.0.1:8092; location / { proxy_cache mycache; proxy_cache_valid 200 10m; add_header X-Cache-Status $upstream_cache_status; proxy_pass http://127.0.0.1:8081; } }\n}\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "nginx -p /tmp/ng -e stderr -c /tmp/ng/nginx.conf",
+                "background": true,
+                "port": 8092
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Build from source: sudo apt install gcc make libpcre3-dev zlib1g-dev, then auto/configure, make, sudo make install",
+            "actually_needed": "This box has no gcc, make or headers and no root, so I could not build from source. Instead I used the official nginx.org package for Debian trixie (the README's binary route), unpacked with dpkg-deb -x into $HOME",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Install the binary packages through the system package manager",
+            "actually_needed": "Without root, the package's default paths (/etc/nginx, /var/log/nginx, /var/cache/nginx, /run) can't be written. Running it needs -p/-e stderr, pid, and *_temp_path directives that point into /tmp",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The static page returned 'Hello from nginx static', the load-balanced requests returned backend-A then backend-B, and nginx -V printed version 1.30.7 with its build configuration.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-nginx-20261119-143034-7910/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-nginx-20261119-143034-7910/check-1-cmd7.judged.png",
+            "runs/verify/verify-nginx-20261119-143034-7910/check-2-cmd8.judged.png",
+            "runs/verify/verify-nginx-20261119-143034-7910/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.222069,
+        "features": [
+          {
+            "feature": "serve web content",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "load balance traffic",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "reverse proxy requests",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "cache content",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T14:31:43+08:00",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T14:31:36+08:00",
+    "quality": {
+      "total": 82.4,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.6,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.6944,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 99.0,
+      "signals": {
+        "stars": 32200,
+        "monthly_downloads": 8128,
+        "forks": 8406,
+        "dependents": null,
+        "release_downloads": 18851,
+        "hn_top_score": 549,
+        "registries_count": 1
+      },
+      "age_days": 4166,
+      "packages": [
+        "homebrew:nginx"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.82
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:31:36.973172+08:00",
+      "sources_sha": "7b49b005cfca71ad5c2db84e4cf3fd1fb92733bb1aa2d8036586b8c2dbb6664b",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "NGINX (pronounced \"engine x\" or \"en-jin-eks\") is the world's most popular Web Server, high performance Load Balancer, Reverse Proxy, API Gateway and Content Cache."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "The goal of this README is to provide a basic, structured introduction to NGINX for novice users."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "sudo apt install libpcre3-dev zlib1g-dev"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "sudo apt install gcc make"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "The output of which should start with:"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Provisioning the software is achieved via text-based config file(s) accepting parameters called \"[Directives](https://nginx.org/en/docs/dirindex.html)\"."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Future upgrades to the latest version can be managed using the same package manager without the need to manually download and verify binaries."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "NGINX is free and open source software, distributed under the terms of a simplified [2-clause BSD-like license](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/nginx/nginx",
+      "fetched_at": "2026-11-19T14:30:19+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/nginx/nginx/blob/master/README.md",
+      "fetched_at": "2026-11-19T14:30:17+08:00"
+    },
+    {
+      "id": "release:release-1.31.9",
+      "kind": "release",
+      "url": "https://github.com/nginx/nginx/releases/tag/release-1.31.9",
+      "fetched_at": "2026-11-19T14:30:17+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "is the world's most popular Web Server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:28+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "NGINX is installed software with binary packages available for all major operating systems",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:28+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "high performance Load Balancer, Reverse Proxy, API Gateway and Content Cache.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:28+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "is the world's most popular Web Server, high performance Load Balancer, Reverse Proxy, API Gateway and Content Cache.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:28+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "NGINX (pronounced \"engine x\" or \"en-jin-eks\")",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:28+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "sudo apt install gcc make",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:28+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "sudo apt install gcc make",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:28+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/2",
+      "source_id": "readme",
+      "quote": "sudo apt install libpcre3-dev zlib1g-dev",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:28+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/3",
+      "source_id": "readme",
+      "quote": "sudo apt install libpcre3-dev zlib1g-dev",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:28+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T14:30:19+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T14:30:19+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T14:30:19+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T14:30:19+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T14:30:19+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:release-1.31.9",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T14:30:17+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "The project has reached a stable, usable state and is being actively developed.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:28+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Installing SSL certificates and enabling TLS encryption",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:28+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Using nginx as HTTP load balancer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:28+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Rate limiting",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:28+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "how to use NGINX as a content cache (e.g. edge server of a content delivery network)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:28+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Web Server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:28+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "high performance Load Balancer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:28+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Reverse Proxy",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:28+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Content Cache",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:28+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "NGINX is free and open source software",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:28+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T14:30:17+08:00",
+  "updated_at": "2026-11-19T14:31:43+08:00"
+}
