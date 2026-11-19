@@ -57,6 +57,20 @@ CREATE TABLE IF NOT EXISTS state (
   name  TEXT PRIMARY KEY,
   value TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS lead_checks (
+  key            TEXT PRIMARY KEY,
+  checked_at     TEXT NOT NULL,
+  full_name      TEXT,
+  stars          INTEGER,
+  pushed_at      TEXT,
+  archived       INTEGER,
+  fork           INTEGER,
+  description    TEXT,
+  screened_at    TEXT,
+  screen_keep    INTEGER,
+  screen_kind    TEXT,
+  screen_reason  TEXT
+);
 """
 
 # What the 11/15 strategy puts first (CLAUDE.md): Linux, CLI, MCP and web; desktop GUI on macOS or
@@ -105,16 +119,32 @@ def _https(url: str | None) -> str:
 # Package registries list libraries next to tools; a lead only they know about is often a library, which the
 # watch's rules then reject. Curated or software-only sources do not have that problem.
 REGISTRY_ONLY = frozenset({"npm", "crates"})
+# Registries the author publishes to. An MCP server's author lists it in the MCP Registry, which points at its
+# npm package, so the two say the same thing once; they count as one voice when sources agree.
+AUTHOR_PUBLISHED = frozenset({"npm", "crates", "mcp_registry"})
+SCREENED_BONUS = 3.0  # the prescreen kept it: feed these first
+QUIET_PENALTY = 1.0  # no push for over a year (and under STALE_DAYS, after which it is skipped)
 
 
-def priority(kind_hint: str, platforms: list[str], percentiles: list[float], sources: list[str]) -> float:
+def channels(sources: Iterable[str]) -> set[str]:
+    """Sources as independent voices: the author-published registries are one."""
+    return {"registry" if s in AUTHOR_PUBLISHED else s for s in sources}
+
+
+def priority(kind_hint: str, platforms: list[str], percentiles: list[float], sources: list[str], *,
+             screen_keep: bool | None = None, quiet: bool = False) -> float:
     """Kind first; then attention as the best percentile within any one source (so a million npm downloads and a
-    hundred stars are not compared raw), two points per extra source, and less for registry-only leads."""
+    hundred stars are not compared raw), two points per extra independent voice, and less for registry-only
+    leads. A kept prescreen adds SCREENED_BONUS; a repo quiet for over a year loses a little."""
     linux_or_web = 0.5 if not platforms or {"linux", "web"} & set(platforms) else 0.0
     best = max(percentiles, default=0.0)
-    score = KIND_PRIORITY.get(kind_hint, 1.0) + linux_or_web + 2.0 * best + 2.0 * (len(set(sources)) - 1)
+    score = KIND_PRIORITY.get(kind_hint, 1.0) + linux_or_web + 2.0 * best + 2.0 * (len(channels(sources)) - 1)
     if sources and set(sources) <= REGISTRY_ONLY:
         score -= 2.0
+    if screen_keep:
+        score += SCREENED_BONUS
+    if quiet:
+        score -= QUIET_PENALTY
     return round(score, 3)
 
 
@@ -182,16 +212,74 @@ class LeadsDB:
                               (run_id, source, started, finished, hits, new, requests, error))
 
     def mark_known(self, known: dict[str, str]) -> int:
-        """Leads whose key is in `known` (key -> why: the record slug or `candidate`) become `known`."""
+        """Leads whose key is in `known` (key -> why: the record slug or `candidate`) become `known`.
+
+        A pipeline candidate that `harvest screen` made itself does not count: harvest stored it only to screen
+        it, and the lead still waits for the feed.
+        """
         changed = 0
+        screened = {r[0] for r in self.conn.execute("SELECT key FROM lead_checks WHERE screened_at IS NOT NULL")}
         with self.conn:
             for row in self.conn.execute("SELECT key FROM leads WHERE status = 'new'").fetchall():
                 why = known.get(row["key"])
+                if why == "candidate" and row["key"] in screened:
+                    continue
                 if why:
                     self.conn.execute("UPDATE leads SET status = 'known', status_note = ? WHERE key = ?",
                                       (why, row["key"]))
                     changed += 1
         return changed
+
+    def save_check(self, key: str, repo: dict[str, Any] | None, *, now: str | None = None) -> None:
+        """GitHub's facts for a lead (repo in normalize_repo's shape, or None when GitHub has no such repo)."""
+        now = now or taipei_now().isoformat(timespec="seconds")
+        repo = repo or {}
+        with self.conn:
+            self.conn.execute(
+                "INSERT INTO lead_checks(key, checked_at, full_name, stars, pushed_at, archived, fork, description) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(key) DO UPDATE SET checked_at = excluded.checked_at, "
+                "full_name = excluded.full_name, stars = excluded.stars, pushed_at = excluded.pushed_at, "
+                "archived = excluded.archived, fork = excluded.fork, description = excluded.description",
+                (key, now, repo.get("full_name"), repo.get("stargazers_count"), repo.get("pushed_at"),
+                 int(bool(repo.get("archived"))) if repo else None, int(bool(repo.get("fork"))) if repo else None,
+                 (repo.get("description") or "")[:TITLE_MAX] or None))
+
+    def save_screen(self, key: str, *, keep: bool | None, kind: str | None, reason: str | None,
+                    now: str | None = None) -> None:
+        now = now or taipei_now().isoformat(timespec="seconds")
+        with self.conn:
+            self.conn.execute("INSERT INTO lead_checks(key, checked_at) VALUES (?, ?) ON CONFLICT(key) DO NOTHING",
+                              (key, now))
+            self.conn.execute("UPDATE lead_checks SET screened_at = ?, screen_keep = ?, screen_kind = ?, "
+                              "screen_reason = ? WHERE key = ?",
+                              (now, None if keep is None else int(keep), kind, (reason or "")[:300] or None, key))
+
+    def check_of(self, key: str) -> dict[str, Any] | None:
+        row = self.conn.execute("SELECT * FROM lead_checks WHERE key = ?", (key,)).fetchone()
+        return dict(row) if row else None
+
+    def merge_into(self, alias: str, canonical: str, url: str) -> None:
+        """A repository renamed on GitHub: move the old name's sources to the current name's lead (made if
+        needed, keeping a status that is not `new`) and skip the old name."""
+        with self.conn:
+            old = self.conn.execute("SELECT * FROM leads WHERE key = ?", (alias,)).fetchone()
+            if old is None or alias == canonical:
+                return
+            row = self.conn.execute("SELECT * FROM leads WHERE key = ?", (canonical,)).fetchone()
+            if row is None:
+                self.conn.execute("INSERT INTO leads(key, url, kind_hint, platforms, status, first_seen, last_seen) "
+                                  "VALUES (?, ?, ?, ?, 'new', ?, ?)",
+                                  (canonical, url, old["kind_hint"], old["platforms"], old["first_seen"],
+                                   old["last_seen"]))
+            else:
+                kind = row["kind_hint"] if row["kind_hint"] != "unknown" else old["kind_hint"]
+                platforms = sorted(set(json.loads(row["platforms"])) | set(json.loads(old["platforms"])))
+                self.conn.execute("UPDATE leads SET kind_hint = ?, platforms = ? WHERE key = ?",
+                                  (kind, json.dumps(platforms), canonical))
+            self.conn.execute("UPDATE OR IGNORE lead_sources SET key = ? WHERE key = ?", (canonical, alias))
+            self.conn.execute("DELETE FROM lead_sources WHERE key = ?", (alias,))
+            self.conn.execute("UPDATE leads SET status = 'skipped', status_note = ? WHERE key = ?",
+                              (f"renamed:{canonical}", alias))
 
     def set_status(self, key: str, status: str, note: str | None) -> None:
         with self.conn:
@@ -200,9 +288,14 @@ class LeadsDB:
     # -- reading
 
     def ranked(self, *, status: str = "new", kinds: set[str] | None = None,
-               platforms: set[str] | None = None, limit: int | None = None) -> list[dict[str, Any]]:
-        """Leads with `status`, best first, each with its sources."""
+               platforms: set[str] | None = None, limit: int | None = None,
+               quiet_before: str | None = None) -> list[dict[str, Any]]:
+        """Leads with `status`, best first, each with its sources and its check (or None).
+
+        quiet_before: an ISO date; a checked repository last pushed before it loses QUIET_PENALTY.
+        """
         rows = self.conn.execute("SELECT * FROM leads WHERE status = ?", (status,)).fetchall()
+        checks = {r["key"]: dict(r) for r in self.conn.execute("SELECT * FROM lead_checks")}
         sources: dict[str, list[dict[str, Any]]] = {}
         by_source: dict[str, list[float]] = {}
         for s in self.conn.execute("SELECT * FROM lead_sources"):
@@ -229,8 +322,13 @@ class LeadsDB:
             src = sources.get(lead["key"], [])
             lead["sources"] = sorted({s["source"] for s in src})
             lead["best_signal"] = max((s["signal"] for s in src if s["signal"] is not None), default=None)
+            check = lead["check"] = checks.get(lead["key"])
+            check = check or {}
             lead["priority"] = priority(lead["kind_hint"], lead["platforms"],
-                                        [percentile(s["source"], s["signal"]) for s in src], lead["sources"])
+                                        [percentile(s["source"], s["signal"]) for s in src], lead["sources"],
+                                        screen_keep=bool(check.get("screen_keep")),
+                                        quiet=bool(quiet_before and check.get("pushed_at")
+                                                   and check["pushed_at"] < quiet_before))
             out.append(lead)
         out.sort(key=lambda x: (-x["priority"], x["first_seen"], x["key"]))
         return out[:limit] if limit else out

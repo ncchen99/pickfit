@@ -723,18 +723,25 @@ def _add_harvest_command(sub: argparse._SubParsersAction) -> None:
 
     h = sub.add_parser("harvest", help="collect leads from package registries, the MCP Registry, awesome lists, "
                                        "GitHub, HN and (with keys) Bluesky and X into runs/harvest.db ($0 except X)")
-    h.add_argument("action", choices=["run", "summary", "top", "export", "feed"],
+    h.add_argument("action", choices=["run", "summary", "top", "export", "check", "screen", "feed"],
                    help="run: read the sources; summary: counts; top: best new leads; export: JSON lines; "
-                        "feed: queue the best new leads as submit_software rows for `pickfit watch`")
+                        "check: GitHub facts for the best new leads, skipping gone, archived, forked, stale and "
+                        "renamed ones ($0); screen: check, then prescreen the best with Claude Haiku "
+                        "(about $0.001 a lead); feed: queue the best screened leads as submit_software rows "
+                        "for `pickfit watch`")
     h.add_argument("--source", action="append", choices=sorted(SOURCES),
                    help=f"run: one source (repeatable; default {', '.join(DEFAULT_SOURCES)})")
     h.add_argument("--limit", type=int, default=5000, help="run: hits per source (default 5000)")
     h.add_argument("--days", type=int, default=7, help="run: look-back days of HN, winget, Bluesky (default 7)")
     h.add_argument("--x-max-reads", type=int, default=100,
                    help="run: paid X post reads per run, $0.005 each (default 100)")
-    h.add_argument("-n", type=int, default=20, help="top, export, feed: how many (default 20)")
-    h.add_argument("--kind", action="append", choices=KINDS, help="top, export, feed: only this kind hint")
-    h.add_argument("--platform", action="append", choices=PLATFORMS, help="top, feed: only this platform")
+    h.add_argument("-n", type=int, default=20, help="top, export, check, screen, feed: how many (default 20)")
+    h.add_argument("--kind", action="append", choices=KINDS, help="top, check, screen, feed: only this kind hint")
+    h.add_argument("--platform", action="append", choices=PLATFORMS,
+                   help="top, check, screen, feed: only this platform")
+    h.add_argument("--no-review", action="store_true", help="screen: no Claude Opus review of unsure screens")
+    h.add_argument("--concurrency", type=int, default=2, help="screen: prescreens in flight (default 2)")
+    h.add_argument("--any", action="store_true", help="feed: also leads the prescreen has not kept")
     h.add_argument("--out", type=Path, default=None, help="export: file (default runs/harvest/leads-<date>.jsonl)")
     h.add_argument("--apply", action="store_true", help="feed: write to D1 (default: show what would be queued)")
     h.add_argument("--local", action="store_true", help="feed: the local D1 of `wrangler dev`")
@@ -759,8 +766,30 @@ def _harvest(args: argparse.Namespace) -> int:
         from pickfit.watch import hourly_cap
 
         rows = feed(D1(remote=not args.local, worker_dir=args.worker), n=args.n, hourly_cap=hourly_cap(args.worker),
-                    apply=args.apply, kinds=kinds, platforms=platforms, log=lambda line: print(line, file=sys.stderr))
+                    apply=args.apply, kinds=kinds, platforms=platforms, screened_only=not args.any,
+                    log=lambda line: print(line, file=sys.stderr))
         print(json.dumps({"applied": args.apply, "rows": rows}, indent=2, ensure_ascii=False))
+        return 0
+    if args.action in ("check", "screen"):
+        from pickfit.discover.github import GitHub, github_token, runs_dir
+        from pickfit.harvest import check
+        from pickfit.harvest.run import pickfit_known
+        from pickfit.verify.result import DATA_DIR
+
+        db, gh = LeadsDB(harvest_db_path()), GitHub(github_token())
+        log = lambda line: print(line, file=sys.stderr)  # noqa: E731
+        try:
+            if args.action == "check":
+                out = dict(check.check(db, n=args.n, gh=gh, known=pickfit_known(), kinds=kinds,
+                                       platforms=platforms, log=log))
+            else:
+                out = check.screen(db, n=args.n, gh=gh, known=pickfit_known(), pipeline_db=runs_dir() / "harvest-pipeline.db",
+                                   data_dir=DATA_DIR, review=not args.no_review, concurrency=args.concurrency,
+                                   kinds=kinds, platforms=platforms, log=log)
+        finally:
+            gh.close()
+            db.close()
+        print(json.dumps(out, indent=2, ensure_ascii=False))
         return 0
     if args.action == "export":
         out = args.out or harvest_db_path().parent / "harvest" / f"leads-{taipei_now().date().isoformat()}.jsonl"
@@ -771,9 +800,18 @@ def _harvest(args: argparse.Namespace) -> int:
         if args.action == "summary":
             print(json.dumps(db.summary(), indent=2, ensure_ascii=False))
         else:
-            for lead in db.ranked(kinds=kinds, platforms=platforms, limit=args.n):
+            from datetime import UTC, datetime
+
+            from pickfit.harvest.check import quiet_before
+
+            for lead in db.ranked(kinds=kinds, platforms=platforms, limit=args.n,
+                                  quiet_before=quiet_before(datetime.now(UTC))):
+                c = lead["check"] or {}
+                screen = {1: "kept", 0: "dropped"}.get(c.get("screen_keep"), "")
                 print(f"{lead['priority']:6.2f}  {lead['kind_hint']:<20} {lead['url']}  "
-                      f"[{'+'.join(lead['sources'])}; signal {lead['best_signal']}]")
+                      f"[{'+'.join(lead['sources'])}; signal {lead['best_signal']}"
+                      + (f"; {c['stars']}★ pushed {(c.get('pushed_at') or '')[:10]}" if c.get("stars") is not None else "")
+                      + (f"; {screen}" if screen else "") + "]")
     finally:
         db.close()
     return 0

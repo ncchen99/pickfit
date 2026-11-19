@@ -398,7 +398,9 @@ def bluesky(ctx: Ctx) -> Iterator[Hit]:
 
 
 # --- X (needs X_BEARER_TOKEN; pay per read) ---------------------------------------------------
-# Recent search (last 7 days). Each returned post is a paid read, so the run stops at x_max_reads.
+# Recent search (last 7 days). Each returned post is a paid read, so the run stops at x_max_reads. The API has no
+# min_faves, and sorted by recency almost every post is minutes old with no likes yet (11/19: 100 reads, 2 kept),
+# so the search is sorted by relevancy, which puts posts people engaged with first.
 # Kept: the post id, its link and like count; not its text (X's developer terms limit storing it).
 
 X_SEARCH = "https://api.x.com/2/tweets/search/recent"
@@ -407,7 +409,7 @@ X_QUERIES = ('url:"github.com" (mcp OR "mcp server") -is:retweet lang:en',
              'url:"github.com" ("built with claude" OR "claude code" OR agentic) -is:retweet',
              'url:"github.com" (cli OR tui OR terminal) -is:retweet lang:en',
              'url:"github.com" #buildinpublic -is:retweet')
-X_MIN_LIKES = 20
+X_MIN_LIKES = 10
 
 
 def x_posts(ctx: Ctx) -> Iterator[Hit]:
@@ -422,7 +424,7 @@ def x_posts(ctx: Ctx) -> Iterator[Hit]:
         take = min(100, per_query, ctx.x_max_reads - reads)
         if take < 10:  # the API's minimum page
             break
-        data = ctx.get("x", X_SEARCH, params={"query": q, "max_results": take,
+        data = ctx.get("x", X_SEARCH, params={"query": q, "max_results": take, "sort_order": "relevancy",
                                               "tweet.fields": "public_metrics,entities,created_at"},
                        headers={"Authorization": f"Bearer {token}"}).json()
         posts = data.get("data") or []
