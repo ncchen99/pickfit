@@ -1,0 +1,733 @@
+{
+  "schema_version": "software.v1",
+  "slug": "termusic",
+  "repo_id": "gh:372752273",
+  "name": "termusic",
+  "summary": "A terminal music and podcast player written in Rust with multiple audio backends and a tag editor.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "media_files",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [
+    "play local music files in the terminal",
+    "listen to podcasts via RSS feeds",
+    "download tracks from YouTube"
+  ],
+  "alternatives_to": [
+    "GOMU"
+  ],
+  "features": [
+    "play music and podcasts in the terminal",
+    "download tracks from YouTube and NetEase",
+    "edit audio tags",
+    "display album covers in terminal"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/tramhao/termusic",
+    "full_name": "tramhao/termusic",
+    "created_at": "2021-06-01T08:13:53Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "rust>=1.90.0"
+    ],
+    "system_packages": [
+      "protobuf-compiler",
+      "libasound2-dev",
+      "libdbus-1-dev",
+      "clang"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install termusic",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-termusic-20261120-000539-faf7",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/tm && curl -fsSL -o /tmp/tm/t.tar.xz https://github.com/tramhao/termusic/releases/download/v0.13.2/termusic-v0.13.2-x86_64-linux.tar.xz && tar -xJf /tmp/tm/t.tar.xz -C /tmp/tm",
+          "purpose": "Download and extract the v0.13.2 x86_64-linux release tarball (the asset cargo-binstall fetches)"
+        },
+        {
+          "command": "cp /tmp/tm/termusic-v0.13.2-x86_64-linux/termusic /tmp/tm/termusic-v0.13.2-x86_64-linux/termusic-server ~/.local/bin/ && chmod +x ~/.local/bin/termusic ~/.local/bin/termusic-server && ldd ~/.local/bin/termusic-server",
+          "purpose": "Copy termusic and termusic-server into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "termusic --version",
+        "expected_signal": "Termusic v0.13.2"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "GPL-3.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.13.2",
+    "published_at": "2026-05-06T01:31:04Z",
+    "url": "https://github.com/tramhao/termusic/releases/tag/v0.13.2"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-20T00:07:17.729141+08:00",
+    "runs": [
+      {
+        "id": "verify-termusic-20261120-000539-faf7",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:01363ad5a469",
+        "checked_at": "2026-11-20T00:07:17.729141+08:00",
+        "tool_version": "Termusic v0.13.2[g]",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/tm && curl -fsSL -o /tmp/tm/t.tar.xz https://github.com/tramhao/termusic/releases/download/v0.13.2/termusic-v0.13.2-x86_64-linux.tar.xz && tar -xJf /tmp/tm/t.tar.xz -C /tmp/tm",
+            "purpose": "Download and extract the v0.13.2 x86_64-linux release tarball (the asset cargo-binstall fetches)"
+          },
+          {
+            "command": "cp /tmp/tm/termusic-v0.13.2-x86_64-linux/termusic /tmp/tm/termusic-v0.13.2-x86_64-linux/termusic-server ~/.local/bin/ && chmod +x ~/.local/bin/termusic ~/.local/bin/termusic-server && ldd ~/.local/bin/termusic-server",
+            "purpose": "Copy termusic and termusic-server into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "termusic --version",
+            "expected_signal": "Termusic v0.13.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Termusic v0.13.2[g]",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install termusic termusic-server --locked / cargo binstall termusic termusic-server",
+            "actually_needed": "No Rust toolchain was allowed here. Instead, the prebuilt x86_64-linux tarball from the GitHub release was downloaded and its binaries copied to ~/.local/bin.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Dependencies table lists libasound2-dev only as a build dependency (Build-time-only: unknown); mpv and gstreamer are optional features",
+            "actually_needed": "The prebuilt termusic-server is dynamically linked against libasound.so.2, libmpv.so.2 and libgstreamer-1.0.so.0, so these runtime libraries must be installed (with root) or the server will not start.",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Running `termusic --version` exited 0 and printed 'Termusic v0.13.2[g]', which contains the expected version string.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-termusic-20261120-000539-faf7/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-termusic-20261120-000539-faf7/check-1-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.159736,
+        "features": [
+          {
+            "feature": "play music and podcasts in the terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "termusic-server fails to load because libasound.so.2 (plus libmpv and libgstreamer) is missing; installing them needs root, and the box has no audio device either."
+          },
+          {
+            "feature": "download tracks from YouTube and NetEase",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Downloads run inside the interactive TUI, which needs the server (cannot start here) plus the YouTube/NetEase services and yt-dlp."
+          },
+          {
+            "feature": "edit audio tags",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "The tag editor exists only inside the interactive TUI, which needs a terminal session and the running server."
+          },
+          {
+            "feature": "display album covers in terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Album covers need a Kitty or iTerm2 terminal, which the box does not have."
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:07:23+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/tramhao/termusic@84c7ee6bc5dc",
+      "Cargo.lock"
+    ],
+    "packages_checked": 699,
+    "findings_total": 12,
+    "advisories_total": 10,
+    "findings": [
+      {
+        "package": "crates:aws-lc-sys",
+        "version": "0.38.0",
+        "advisory": "GHSA-394x-vwmw-crm3",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.39.0",
+        "summary": "AWS-LC X.509 Name Constraints Bypass via Wildcard/Unicode CN",
+        "malicious": false
+      },
+      {
+        "package": "crates:aws-lc-sys",
+        "version": "0.38.0",
+        "advisory": "GHSA-9f94-5g5w-gf6r",
+        "cves": [
+          "CVE-2026-4428"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.39.0",
+        "summary": "CRL Distribution Point Scope Check Logic Error in AWS-LC",
+        "malicious": false
+      },
+      {
+        "package": "crates:pulldown-cmark",
+        "version": "0.13.0",
+        "advisory": "RUSTSEC-2026-0414",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.13.5",
+        "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
+        "malicious": false
+      },
+      {
+        "package": "crates:pulldown-cmark",
+        "version": "0.13.0",
+        "advisory": "RUSTSEC-2026-0433",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.13.6",
+        "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.39.2",
+        "advisory": "RUSTSEC-2026-0194",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.40.1",
+        "advisory": "RUSTSEC-2026-0194",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.39.2",
+        "advisory": "RUSTSEC-2026-0195",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.40.1",
+        "advisory": "RUSTSEC-2026-0195",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.13",
+        "advisory": "GHSA-4w2j-m93h-cj5j",
+        "cves": [
+          "CVE-2026-25800"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.11.15",
+        "summary": "Quinn: Remote memory exhaustion in quinn-proto from unbounded out-of-order stream reassembly",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.13",
+        "advisory": "GHSA-6xvm-j4wr-6v98",
+        "cves": [
+          "CVE-2026-31812"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.11.14",
+        "summary": "Quinn affected by unauthenticated remote DoS via panic in QUIC transport parameter parsing",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.13",
+        "advisory": "RUSTSEC-2026-0340",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.18",
+        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+        "malicious": false
+      },
+      {
+        "package": "crates:rustls-webpki",
+        "version": "0.103.9",
+        "advisory": "GHSA-82j2-j2ch-gfr8",
+        "cves": [
+          "CVE-2026-93599"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.103.13",
+        "summary": "rustls-webpki: Denial of service via panic on malformed CRL BIT STRING",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-20T00:07:23+08:00",
+    "quality": {
+      "total": 75.5,
+      "confidence": 0.7,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7225,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.86,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.75,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.7286,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 83.4,
+      "signals": {
+        "stars": 2254,
+        "monthly_downloads": 26,
+        "forks": 102,
+        "dependents": null,
+        "release_downloads": 7179,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 1997,
+      "packages": [
+        "homebrew:termusic"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 12.53
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:07:17.760597+08:00",
+      "sources_sha": "1e14dbac836c6231b1ebba52b8db395dee5342c81e378bda61a70e9db92b65a8",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "# Terminal Music and Podcast Player written in Rust"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Listen to music and podcasts freely as both in freedom and free of charge!"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "The minimal Rust version required to build this project is `1.90.0`."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "cargo install termusic termusic-server --locked"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "~/.local/share/cargo/bin/termusic"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "|  Linux  |           `~/.config/termusic/`           |"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "MIT License for main part of code."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/tramhao/termusic",
+      "fetched_at": "2026-11-20T00:05:27+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/tramhao/termusic/blob/master/README.md",
+      "fetched_at": "2026-11-20T00:05:25+08:00"
+    },
+    {
+      "id": "release:v0.13.2",
+      "kind": "release",
+      "url": "https://github.com/tramhao/termusic/releases/tag/v0.13.2",
+      "fetched_at": "2026-11-20T00:05:25+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Music Player TUI written in Rust",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Listen to music and podcasts freely as both in freedom and free of charge!",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Terminal Music and Podcast Player written in Rust",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Terminal Music and Podcast Player written in Rust",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "cargo install termusic termusic-server --locked",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "The minimal Rust version required to build this project is `1.90.0`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "`protobuf-compiler`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "`libasound2-dev`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/2",
+      "source_id": "readme",
+      "quote": "`libdbus-1-dev`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/3",
+      "source_id": "readme",
+      "quote": "`clang`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "You can download from YouTube, NetEase, Migu and KuGou for free.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T00:05:27+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T00:05:27+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-20T00:05:27+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.13.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T00:05:25+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Below are the audio formats supported by the various backends.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Listen to rss feeds/Podcasts.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "You can download from YouTube, NetEase, Migu and KuGou for free.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "As a contributor of [GOMU](https://github.com/issadarkthing/gomu), I met serious problems during development.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Terminal Music and Podcast Player written in Rust",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "You can download from YouTube, NetEase, Migu and KuGou for free.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "alt=\"Tag editor\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "By default, termusic can display album covers in Kitty or iTerm2.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install termusic",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "pacman -S termusic",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Listen to music and podcasts freely as both in freedom and free of charge!",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "The Indexed Music library",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:05:35+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-20T00:05:25+08:00",
+  "updated_at": "2026-11-20T00:07:23+08:00"
+}
