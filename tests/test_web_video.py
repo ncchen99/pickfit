@@ -93,8 +93,9 @@ def test_the_raw_recording_holds_each_paint_and_draws_the_pointer(tmp_path: Path
              "frames": [{"t": 100.4, "file": "a.jpg"}, {"t": 101.6, "file": "b.jpg"}]}
     out = tmp_path / "raw.mp4"
     seconds = web_video.encode_raw(tmp_path, index, 100.0, [(102.0, 160, 120)], out)
-    assert seconds == pytest.approx(3.25)
-    assert record.probe_seconds(out) == pytest.approx(3.25, abs=0.3)
+    fps = record.RECORD_FPS  # the frames from t0 to the end, each 1/fps: 3.25 s at 4 fps, 3.1 s at 10
+    assert seconds == pytest.approx((int(3.0 * fps) + 1) / fps)
+    assert record.probe_seconds(out) == pytest.approx(seconds, abs=0.3)
     import io
 
     def pixel(at: float, xy: tuple[int, int]) -> tuple[int, ...]:
