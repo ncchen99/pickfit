@@ -94,6 +94,29 @@ def operator_max_steps(value: str | None) -> int:
     return steps
 
 
+def operator_view_zoom(value: str | None) -> float:
+    """PICKFIT_OPERATOR_VIEW_ZOOM, 1 to 2: how far the operator's view of a small window is enlarged; unset keeps
+    2. The zoom came in on 11/1, when Muse Spark Open clicked 60 px below a 24 px text field on the full screen;
+    an enlarged image costs more input tokens (a 640x400 window shown at 2x is four times the pixels), and Claude
+    has not been compared on it (docs/proposals/tokens.md, T6)."""
+    if value is None or not value.strip():
+        return 2.0
+    zoom = float(value)  # a typo fails loudly instead of being ignored
+    if not 1.0 <= zoom <= 2.0:
+        raise ValueError("PICKFIT_OPERATOR_VIEW_ZOOM must be between 1 and 2")
+    return zoom
+
+
+def operator_aim(value: str | None) -> bool:
+    """PICKFIT_OPERATOR_AIM: "off" leaves out the second call that aims an x/y click again (AIM); unset keeps it on.
+    It fixed most misses on small controls for Muse Spark Open (11/3) and is 45 of 101 operator calls (11/16)."""
+    if value is None or not value.strip():
+        return True
+    if value.strip().lower() not in ("on", "off"):
+        raise ValueError(f"PICKFIT_OPERATOR_AIM must be on or off, got {value!r}")
+    return value.strip().lower() == "on"
+
+
 REASONING_EFFORT = operator_effort(get_env("PICKFIT_OPERATOR_EFFORT"))
 MAX_OUTPUT_TOKENS = 1_500
 # Actions per operation, done and give_up included (a first-run wizard alone can take 8).
@@ -105,14 +128,14 @@ TYPE_MAX = 300
 WAIT_MAX_S = 10
 SETTLE_MAX_S = 6.0  # a screenshot waits this long at most for two equal frames
 VIEW_MARGIN = 12  # pixels around what the app draws, in the operator's view
-VIEW_MAX_ZOOM = 2.0
+VIEW_MAX_ZOOM = operator_view_zoom(get_env("PICKFIT_OPERATOR_VIEW_ZOOM"))
 # A click by x and y is aimed again on a zoomed crop around it (a second call, the same model): the crop's size in
 # screen pixels and its zoom. An element click (marks.py) lands on OCR'd text and is not. On 14 saved MangoDisk clicks
 # on small controls (11/3), the first click hit 5 (median 30 px from the centre) and the aimed one 13 (median 4-6 px),
 # twice. Mapping is not the cause: on a synthetic 1280x800 screen the model's x was within 2 px; its y was up to 37 px
 # low mid-screen, which letterboxing the image to a square removed, but a square view hit fewer real controls (5 of
 # 18 against 7), and so did a square crop (12 of 14 against 13): neither is used.
-AIM = True
+AIM = operator_aim(get_env("PICKFIT_OPERATOR_AIM"))
 AIM_CROP = (200, 125)
 AIM_ZOOM = 4
 FILE_MAX_BYTES = 4_000_000

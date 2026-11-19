@@ -744,6 +744,17 @@ def test_pickfits_samples_are_real_files_of_their_kind():
     assert op.sample_file("png") == op.sample_file("png")  # the same bytes every time
 
 
+def test_the_operators_input_size_flags_keep_todays_defaults():
+    assert op.operator_view_zoom(None) == op.operator_view_zoom("") == op.VIEW_MAX_ZOOM == 2.0
+    assert op.operator_view_zoom("1") == 1.0 and op.operator_view_zoom("1.5") == 1.5
+    for bad in ("0.5", "3", "big"):
+        with pytest.raises(ValueError):
+            op.operator_view_zoom(bad)
+    assert op.operator_aim(None) is True and op.operator_aim("off") is False and op.operator_aim("ON")
+    with pytest.raises(ValueError, match="PICKFIT_OPERATOR_AIM"):
+        op.operator_aim("0")
+
+
 def test_the_comparison_flags_refuse_unknown_values_when_read():
     assert op.operator_effort(None) == "low" and op.operator_effort("medium") == "medium"
     with pytest.raises(ValueError, match="PICKFIT_OPERATOR_EFFORT must be one of"):

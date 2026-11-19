@@ -46,6 +46,12 @@ PROXY = "http://127.0.0.1:8080"
 TEXT_LIMIT = 12_000
 VIEWPORT = (1280, 900)
 ELEMENTS_CHARS = 12_000  # browser-use's element list per step (default 40,000): most of each call's tokens
+# A shorter attribute list for that element list, tried only when the host asks (start["element_attributes"]
+# "compact"; docs/proposals/tokens.md, T6): browser-use 0.13's own list without the validation, input-format and
+# ARIA-value attributes. browser-use already leaves out `class` and elements that are hidden or painted over.
+COMPACT_ATTRIBUTES = ["title", "type", "checked", "id", "name", "role", "value", "placeholder", "alt", "aria-label",
+                      "aria-expanded", "aria-checked", "data-state", "accept", "multiple", "contenteditable",
+                      "selected", "expanded", "pressed", "disabled", "required", "ax_name"]
 EXCLUDED_ACTIONS = ["search", "evaluate", "save_as_pdf", "write_file", "replace_file", "read_file"]
 # Controls that make the visitor visible to other people (multiplayer lines and rooms, chats, posts, shares,
 # votes) or that sign up, buy or book: never clicked, even when no form is sent (burger-person, 11/2).
@@ -486,6 +492,16 @@ def browser_profile(site: str, wait_between_actions: float) -> Any:
         viewport={"width": VIEWPORT[0], "height": VIEWPORT[1]}, device_scale_factor=1.0)
 
 
+def element_options(start: dict[str, Any]) -> dict[str, Any]:
+    """browser-use's element-list settings for this visit: the host's, if it sent any, else ELEMENTS_CHARS and
+    browser-use's own attribute list (so a host from before these settings gets what it always got)."""
+    chars = int(start.get("elements_chars") or ELEMENTS_CHARS)
+    options: dict[str, Any] = {"max_clickable_elements_length": chars}
+    if start.get("element_attributes") == "compact":
+        options["include_attributes"] = list(COMPACT_ATTRIBUTES)
+    return options
+
+
 def typed_inputs(history: Any) -> tuple[list[str], list[str]]:
     typed, uploaded = [], []
     for action in history.model_actions():
@@ -512,7 +528,7 @@ async def operate(session: Any, channel: Channel, task: str, start: dict[str, An
                   use_vision=True, max_actions_per_step=3, max_failures=3, calculate_cost=False,
                   directly_open_url=False, available_file_paths=start.get("sample_files") or None,
                   generate_gif=False, llm_timeout=180, step_timeout=300, page_extraction_llm=llm,
-                  final_response_after_failure=True, max_clickable_elements_length=ELEMENTS_CHARS,
+                  final_response_after_failure=True, **element_options(start),
                   # The host says whether its model may be asked to write its reasoning out (web_verify:
                   # operator_writes_thinking); a host that does not say is one from before the question came up.
                   use_thinking=bool(start.get("operator_thinking", True)))
