@@ -1,0 +1,609 @@
+{
+  "schema_version": "software.v1",
+  "slug": "bla",
+  "repo_id": "gh:1432859403",
+  "name": "BLA: Blind LLM Agents",
+  "summary": "MCP server and CLI that hardens software release artifacts against AI reverse-engineering agents across many binary and source formats.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "security_net",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "adversarial-ai",
+    "ai-security",
+    "android-security",
+    "binary-protection",
+    "claude-code",
+    "codex",
+    "cursor",
+    "electron-security",
+    "gguf",
+    "ghidra"
+  ],
+  "use_cases": [
+    "harden a project's build output against reverse engineering",
+    "register BLA with a coding agent for closed-loop defense",
+    "protect JS chunks and WASM at bundle time via Vite/Rollup/Webpack/esbuild",
+    "run a 14-target benchmark showcase locally"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "one-command CLI hardening of build artifacts",
+    "agent-driven closed-loop defense via MCP",
+    "bundler plugin for Vite/Rollup/Webpack/esbuild",
+    "26 format shields for binaries and source"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://bla.tools",
+  "repo": {
+    "url": "https://github.com/qybaihe/bla",
+    "full_name": "qybaihe/bla",
+    "created_at": "2026-10-25T05:25:45Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Node.js ^22.23.4 or >=24.0.0"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-bla-20261119-122018-5958",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g bla-agents && bla-agents --version",
+          "purpose": "npm install -g bla-agents; bla-agents on PATH, --version prints 3.5.1"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "npm install -g bla-agents && which bla-agents && bla-agents --version",
+        "expected_signal": "3.5.1"
+      },
+      "first_task": "cd /tmp/proj && bla-agents harden ."
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "bla-agents-3.5.1",
+    "published_at": "2026-11-18T18:12:45Z",
+    "url": "https://github.com/qybaihe/bla/releases/tag/bla-agents-3.5.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T12:22:25.458192+08:00",
+    "runs": [
+      {
+        "id": "verify-bla-20261119-122018-5958",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T12:22:25.458192+08:00",
+        "tool_version": "3.5.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g bla-agents && bla-agents --version",
+            "purpose": "npm install -g bla-agents; bla-agents on PATH, --version prints 3.5.1"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "npm install -g bla-agents && which bla-agents && bla-agents --version",
+            "expected_signal": "3.5.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "3.5.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/proj && bla-agents harden .",
+            "expected_signal": "Overall: SUCCESS",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Overall: SUCCESS",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/proj/dist && cat > /tmp/proj/dist/app.js <<'EOF'\nexport function licenseCheck(key){\n  const endpoint = \"https://api.example.com/validate\";\n  const channel = \"ipc-secure-channel\";\n  if(key === \"SECRET-1234\"){ return true; }\n  return false;\n}\nconsole.log(licenseCheck(\"x\"));\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/proj && bla-agents setup --all-clients --dry-run -y",
+            "expected_signal": "Setup Status: PLANNED (Preview)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "MCP: npx -y bla-agents@3.5.1 mcp",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/proj/dist && cat > /tmp/proj/dist/app.js <<'EOF'\nexport function licenseCheck(key){\n  const endpoint = \"https://api.example.com/validate\";\n  const channel = \"ipc-secure-channel\";\n  if(key === \"SECRET-1234\"){ return true; }\n  return false;\n}\nconsole.log(licenseCheck(\"x\"));\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd ~/.local/lib && node --input-type=module -e \"import { blaVitePlugin } from 'bla-agents/bundler'; const p = blaVitePlugin({intensity:'bankrupt', enableHoneySourceMaps:true}); console.log('vite plugin name:', p && p.name);\"",
+            "expected_signal": "vite plugin name: vite-plugin-bla-shield",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "vite plugin name: vite-plugin-bla-shield",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/proj && bla-agents benchmark",
+            "expected_signal": "14-Target Counter-Showcase Benchmark Suite",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[1m\u001b[35m⚡ BLA vs. REA — 14-Target Counter-Showcase Benchmark Suite\u001b[0m",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "import { blaVitePlugin } from \"bla-agents/bundler\"",
+            "actually_needed": "The bundler subpath is only resolvable when bla-agents is an installed dependency of the project (or node is run from the node_modules parent). require('bla-agents/bundler') from an unrelated dir fails with MODULE_NOT_FOUND; use ESM import from a dir where the package resolves.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "npx bla-agents setup registers BLA with coding agents",
+            "actually_needed": "Verified only in --dry-run/preview mode; an actual registration needs a real coding agent/MCP host, which this box has none of.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three commands succeeded: harden shows Overall: SUCCESS, setup shows PLANNED (Preview), and install/version prints 3.5.1.",
+          "model": "claude-opus-4-8"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-bla-20261119-122018-5958/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-bla-20261119-122018-5958/check-1-cmd4.judged.png",
+            "runs/verify/verify-bla-20261119-122018-5958/check-2-cmd6.judged.png",
+            "runs/verify/verify-bla-20261119-122018-5958/check-3-cmd1.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 1.099494,
+        "features": [
+          {
+            "feature": "one-command CLI hardening of build artifacts",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "agent-driven closed-loop defense via MCP",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Dry-run only lists client configs, not actual closed-loop defense in operation."
+          },
+          {
+            "feature": "bundler plugin for Vite/Rollup/Webpack/esbuild",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "26 format shields for binaries and source",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Benchmark shows only 14 targets with aggregate stats, not 26 format shields in use."
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T12:22:34+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "npm:bla-agents (fresh install, 18 packages)"
+    ],
+    "packages_checked": 18,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T12:22:25+08:00",
+    "quality": {
+      "total": 93.1,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 87.1,
+      "signals": {
+        "stars": 6153,
+        "monthly_downloads": 28981,
+        "forks": 770,
+        "dependents": null,
+        "release_downloads": 116,
+        "hn_top_score": 1,
+        "registries_count": 1
+      },
+      "age_days": 24,
+      "packages": [
+        "npm:bla-agents"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 12.01
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:22:25.469046+08:00",
+      "sources_sha": "5d6039dc7ca1fd7016a6924bcd6d52bdb0a0e91e952f389efcf1a4c73964293a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "It auto-discovers build outputs (`dist/`, `build/`, `.asar`, `.wasm`, `.sqlite`, `.safetensors`, native binaries, Python/C/Rust/Go) and runs **audit → protect → verify**:"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "BLA is engineered strictly for software authors and security teams protecting **their own** intellectual property and release artifacts."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "# Node.js ^22.23.4 or >=24.0.0 recommended"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "npx bla-agents harden .            # writes a partial mirror to .bla-hardened/ — nothing ships yet"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "npx bla-agents benchmark"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "BLA automatically generates and persists a unique cryptographic seed in `.blarc` / `bla.config.json` on first run so two projects never share decoy identifiers."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Do I need Ghidra, Hopper, IDA, or Wabt installed to protect files?"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "[MIT](LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/qybaihe/bla",
+      "fetched_at": "2026-11-19T12:19:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/qybaihe/bla/blob/main/README.md",
+      "fetched_at": "2026-11-19T12:19:57+08:00"
+    },
+    {
+      "id": "release:bla-agents-3.5.1",
+      "kind": "release",
+      "url": "https://github.com/qybaihe/bla/releases/tag/bla-agents-3.5.1",
+      "fetched_at": "2026-11-19T12:19:57+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Blue Defense MCP server & CLI",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:20:15+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "BLA is engineered strictly for software authors and security teams",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:20:15+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "protecting JS/TS, Electron ASAR, WASM, Python, Native Binaries",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:20:15+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "The open-source Counter-REA Blue Defense MCP & CLI that protects software releases against AI reverse-engineering agents",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:20:15+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# BLA: Blind LLM Agents",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:20:15+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "# Node.js ^22.23.4 or >=24.0.0 recommended",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:20:15+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T12:19:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T12:19:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T12:19:57+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T12:19:57+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T12:19:57+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:bla-agents-3.5.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T12:19:57+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "release:bla-agents-3.5.1",
+      "quote": "bla-agents 3.5.1",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:20:15+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "npx bla-agents harden .            # writes a partial mirror to .bla-hardened/",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:20:15+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "npx bla-agents setup",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:20:15+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Protect JS chunks, strip/replace SourceMaps with VLQ v3 honey maps, and shield `.wasm` assets automatically at bundle time",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:20:15+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Run `npx bla-agents benchmark` to execute the 14-target showcase locally",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:20:15+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "One-Command CLI Hardening",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:20:15+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Agent-Driven Closed-Loop Defense (MCP + Skill)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:20:15+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Build Bundler Plugin (Vite / Rollup / Webpack / esbuild)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:20:15+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "All 26 format shields are built directly into `bla-agents`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:20:15+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "[MIT](LICENSE)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:20:15+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "All 26 format shields are built directly into `bla-agents` with zero external packer dependencies",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:20:15+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T12:19:57+08:00",
+  "updated_at": "2026-11-19T12:22:34+08:00"
+}
