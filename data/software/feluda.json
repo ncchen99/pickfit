@@ -1,0 +1,636 @@
+{
+  "schema_version": "software.v1",
+  "slug": "feluda",
+  "repo_id": "gh:911737357",
+  "name": "Feluda",
+  "summary": "Command-line tool that analyzes a project's dependencies, lists their licenses, and flags restrictive or incompatible ones.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "prototype",
+  "tags": [
+    "cli",
+    "license-checking",
+    "rust"
+  ],
+  "use_cases": [
+    "gate CI builds on restrictive dependency licenses",
+    "generate NOTICE and third-party license files",
+    "scan a container image archive for licenses",
+    "validate an SBOM file"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "flag restrictive dependency licenses",
+    "generate SBOMs in SPDX and CycloneDX",
+    "generate license compliance files",
+    "browse dependencies in a TUI"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://feluda.readthedocs.io",
+  "repo": {
+    "url": "https://github.com/anistark/feluda",
+    "full_name": "anistark/feluda",
+    "created_at": "2025-01-03T18:15:30Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "rust"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-feluda-20261119-231241-fcfb",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/feluda.deb https://github.com/anistark/feluda/releases/download/v1.18.0/feluda-v1.18.0-x86_64.deb && dpkg-deb -c /tmp/feluda.deb",
+          "purpose": "Download the v1.18.0 x86_64 .deb from GitHub Releases"
+        },
+        {
+          "command": "mkdir -p ~/.local/opt/feluda ~/.local/bin && dpkg-deb -x /tmp/feluda.deb ~/.local/opt/feluda && ln -sf ~/.local/opt/feluda/usr/bin/feluda ~/.local/bin/feluda && feluda --version",
+          "purpose": "Unpack the .deb into ~/.local/opt/feluda with dpkg-deb -x (no root), symlink the binary into ~/.local/bin, then run --version"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "mkdir -p ~/.local/opt/feluda ~/.local/bin && dpkg-deb -x /tmp/feluda.deb ~/.local/opt/feluda && ln -sf ~/.local/opt/feluda/usr/bin/feluda ~/.local/bin/feluda && feluda --version",
+        "expected_signal": "Feluda v1.18.0"
+      },
+      "first_task": "cd ~/work/demo && feluda --no-clearlydefined --json"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v1.18.0",
+    "published_at": "2026-10-25T17:52:24Z",
+    "url": "https://github.com/anistark/feluda/releases/tag/v1.18.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T23:16:53.389028+08:00",
+    "runs": [
+      {
+        "id": "verify-feluda-20261119-231241-fcfb",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T23:16:53.389028+08:00",
+        "tool_version": "1.18.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/feluda.deb https://github.com/anistark/feluda/releases/download/v1.18.0/feluda-v1.18.0-x86_64.deb && dpkg-deb -c /tmp/feluda.deb",
+            "purpose": "Download the v1.18.0 x86_64 .deb from GitHub Releases"
+          },
+          {
+            "command": "mkdir -p ~/.local/opt/feluda ~/.local/bin && dpkg-deb -x /tmp/feluda.deb ~/.local/opt/feluda && ln -sf ~/.local/opt/feluda/usr/bin/feluda ~/.local/bin/feluda && feluda --version",
+            "purpose": "Unpack the .deb into ~/.local/opt/feluda with dpkg-deb -x (no root), symlink the binary into ~/.local/bin, then run --version"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mkdir -p ~/.local/opt/feluda ~/.local/bin && dpkg-deb -x /tmp/feluda.deb ~/.local/opt/feluda && ln -sf ~/.local/opt/feluda/usr/bin/feluda ~/.local/bin/feluda && feluda --version",
+            "expected_signal": "Feluda v1.18.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "▌▖▖▖ ▌▖▖▖ ▌ ▌ ▌ ▌ ▌ ▌▖▖▖▌ Feluda v1.18.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd ~/work/demo && feluda --no-clearlydefined --json",
+            "expected_signal": "\"is_restrictive\": true",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"is_restrictive\": true,",
+            "setup": [
+              {
+                "command": "mkdir -p ~/work/demo/node_modules/left-pad ~/work/demo/node_modules/gpl-thing && cd ~/work/demo && cat > package.json <<'EOF'\n{\"name\":\"demo\",\"version\":\"1.0.0\",\"license\":\"MIT\",\"dependencies\":{\"left-pad\":\"1.3.0\",\"gpl-thing\":\"2.0.0\"}}\nEOF\ncat > node_modules/left-pad/package.json <<'EOF'\n{\"name\":\"left-pad\",\"version\":\"1.3.0\",\"license\":\"MIT\"}\nEOF\ncat > node_modules/gpl-thing/package.json <<'EOF'\n{\"name\":\"gpl-thing\",\"version\":\"2.0.0\",\"license\":\"GPL-3.0\"}\nEOF\ncat > package-lock.json <<'EOF'\n{\"name\":\"demo\",\"version\":\"1.0.0\",\"lockfileVersion\":3,\"requires\":true,\"packages\":{\"\":{\"name\":\"demo\",\"version\":\"1.0.0\",\"license\":\"MIT\",\"dependencies\":{\"left-pad\":\"1.3.0\",\"gpl-thing\":\"2.0.0\"}},\"node_modules/left-pad\":{\"version\":\"1.3.0\",\"license\":\"MIT\"},\"node_modules/gpl-thing\":{\"version\":\"2.0.0\",\"license\":\"GPL-3.0\"}}}\nEOF\nls -R",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "cd ~/work/demo && feluda sbom",
+            "expected_signal": "\"bomFormat\": \"CycloneDX\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"bomFormat\": \"CycloneDX\",",
+            "setup": [
+              {
+                "command": "mkdir -p ~/work/demo/node_modules/left-pad ~/work/demo/node_modules/gpl-thing && cd ~/work/demo && cat > package.json <<'EOF'\n{\"name\":\"demo\",\"version\":\"1.0.0\",\"license\":\"MIT\",\"dependencies\":{\"left-pad\":\"1.3.0\",\"gpl-thing\":\"2.0.0\"}}\nEOF\ncat > node_modules/left-pad/package.json <<'EOF'\n{\"name\":\"left-pad\",\"version\":\"1.3.0\",\"license\":\"MIT\"}\nEOF\ncat > node_modules/gpl-thing/package.json <<'EOF'\n{\"name\":\"gpl-thing\",\"version\":\"2.0.0\",\"license\":\"GPL-3.0\"}\nEOF\ncat > package-lock.json <<'EOF'\n{\"name\":\"demo\",\"version\":\"1.0.0\",\"lockfileVersion\":3,\"requires\":true,\"packages\":{\"\":{\"name\":\"demo\",\"version\":\"1.0.0\",\"license\":\"MIT\",\"dependencies\":{\"left-pad\":\"1.3.0\",\"gpl-thing\":\"2.0.0\"}},\"node_modules/left-pad\":{\"version\":\"1.3.0\",\"license\":\"MIT\"},\"node_modules/gpl-thing\":{\"version\":\"2.0.0\",\"license\":\"GPL-3.0\"}}}\nEOF\nls -R",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "cd ~/work/demo && echo \"1\" | feluda generate --language node --project-license MIT && cat NOTICE",
+            "expected_signal": "NOTICE file generated successfully!",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✅ NOTICE file generated successfully!",
+            "setup": [
+              {
+                "command": "mkdir -p ~/work/demo/node_modules/left-pad ~/work/demo/node_modules/gpl-thing && cd ~/work/demo && cat > package.json <<'EOF'\n{\"name\":\"demo\",\"version\":\"1.0.0\",\"license\":\"MIT\",\"dependencies\":{\"left-pad\":\"1.3.0\",\"gpl-thing\":\"2.0.0\"}}\nEOF\ncat > node_modules/left-pad/package.json <<'EOF'\n{\"name\":\"left-pad\",\"version\":\"1.3.0\",\"license\":\"MIT\"}\nEOF\ncat > node_modules/gpl-thing/package.json <<'EOF'\n{\"name\":\"gpl-thing\",\"version\":\"2.0.0\",\"license\":\"GPL-3.0\"}\nEOF\ncat > package-lock.json <<'EOF'\n{\"name\":\"demo\",\"version\":\"1.0.0\",\"lockfileVersion\":3,\"requires\":true,\"packages\":{\"\":{\"name\":\"demo\",\"version\":\"1.0.0\",\"license\":\"MIT\",\"dependencies\":{\"left-pad\":\"1.3.0\",\"gpl-thing\":\"2.0.0\"}},\"node_modules/left-pad\":{\"version\":\"1.3.0\",\"license\":\"MIT\"},\"node_modules/gpl-thing\":{\"version\":\"2.0.0\",\"license\":\"GPL-3.0\"}}}\nEOF\nls -R",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install feluda (needs Rust) or sudo dpkg -i feluda_*.deb",
+            "actually_needed": "With no Rust and no root, I downloaded the release .deb and unpacked it with `dpkg-deb -x` into ~/.local, then symlinked usr/bin/feluda into ~/.local/bin. The binary is self-contained.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Download the latest feluda_*.deb",
+            "actually_needed": "The release asset is actually named feluda-v1.18.0-x86_64.deb, so the README's feluda_*.deb glob does not match it.",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "feluda (scan a project)",
+            "actually_needed": "In a Node project, the scan also lists the root package (demo) as a dependency, with license 'Unknown (failed to retrieve)' and compatibility 'Incompatible'.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "feluda (local license detection first)",
+            "actually_needed": "Even with --no-clearlydefined, the first run fetches the GitHub license list and OSI data from the network. Both are cached in ~/.cache/feluda.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Feluda printed a JSON license report with gpl-thing flagged \"is_restrictive\": true, generated SPDX and CycloneDX SBOMs, and printed \"Feluda v1.18.0\" for --version, all with exit code 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-feluda-20261119-231241-fcfb/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-feluda-20261119-231241-fcfb/check-1-cmd5.judged.png",
+            "runs/verify/verify-feluda-20261119-231241-fcfb/check-2-cmd6.judged.png",
+            "runs/verify/verify-feluda-20261119-231241-fcfb/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.295794,
+        "features": [
+          {
+            "feature": "flag restrictive dependency licenses",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: The visible JSON only shows the demo package itself with is_restrictive false; no restrictive dependency (e.g. gpl-thing) is shown being flagged."
+          },
+          {
+            "feature": "generate SBOMs in SPDX and CycloneDX",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Only CycloneDX output is visible; no SPDX output is shown, so generation of both formats isn't demonstrated."
+          },
+          {
+            "feature": "generate license compliance files",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "browse dependencies in a TUI",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "feluda --gui is an interactive TUI and needs a terminal; the box has no TTY"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T23:17:00+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/anistark/feluda@ae46f9100a8d",
+      "Cargo.lock"
+    ],
+    "packages_checked": 441,
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "crates:ruzstd",
+        "version": "0.9.0",
+        "advisory": "RUSTSEC-2026-0344",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.9.1",
+        "summary": "Decompression bomb in `ruzstd`: a tiny input can exhaust memory (OOM)",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T23:17:00+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.8,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7225,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 83.6,
+      "signals": {
+        "stars": 483,
+        "monthly_downloads": 924,
+        "forks": 36,
+        "dependents": null,
+        "release_downloads": 1235,
+        "hn_top_score": 0,
+        "registries_count": 2
+      },
+      "age_days": 684,
+      "packages": [
+        "crates:feluda",
+        "homebrew:feluda"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 12.96
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:16:53.408881+08:00",
+      "sources_sha": "a9466512e53e8fdbd4b1b4c012f28f454c1dbd0cfd3b1026b4a7e9dcd82b7c31",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "is a Rust-based command-line tool that analyzes the dependencies of a project, notes down their licenses, and flags any permissions that restrict personal or commercial usage"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "- 📱 **Mobile app distribution** (iOS App Store, Google Play)"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "- [Rust](https://rust-lang.org/tools/install) installed on your system."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install feluda"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "Sample Output for a sample cargo.toml file containing `serde` and `tokio` dependencies:"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export GITHUB_TOKEN=<your_token>"
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "feluda update           # Newest minor or patch release of your major version"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "`~/Library/Caches/feluda` on macOS, `$XDG_CACHE_HOME/feluda` (or `~/.cache/feluda`) on Linux, and `%LOCALAPPDATA%\\feluda` on Windows"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/anistark/feluda",
+      "fetched_at": "2026-11-19T23:12:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/anistark/feluda/blob/main/README.md",
+      "fetched_at": "2026-11-19T23:12:27+08:00"
+    },
+    {
+      "id": "release:v1.18.0",
+      "kind": "release",
+      "url": "https://github.com/anistark/feluda/releases/tag/v1.18.0",
+      "fetched_at": "2026-11-19T23:12:27+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Rust-based command-line tool",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:12:37+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Scan your project locally:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:12:37+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Detect license usage restrictions in your project!",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:12:37+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "**Feluda** is a Rust-based command-line tool that analyzes the dependencies of a project, notes down their licenses, and flags any permissions that restrict personal or commercial usage",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:12:37+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Feluda",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:12:37+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "[Rust](https://rust-lang.org/tools/install) installed on your system.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:12:37+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Use `--no-local` to skip local checks and force network-only license lookup.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:12:37+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:12:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:12:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T23:12:29+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:12:29+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:12:29+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.18.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:12:27+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "It's still highly experimental, but fast iterating.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:12:37+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "gate your CI on license compliance with the [GitHub Action]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:12:37+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Generate compliance files for legal requirements:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:12:37+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Gate a saved image on restrictive licenses, in one command",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:12:37+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "# Validate an SBOM file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:12:37+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "flags any permissions that restrict personal or commercial usage or are incompatible with your project's license",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:12:37+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "# Generate all supported SBOM formats (SPDX + CycloneDX)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:12:37+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Feluda can generate essential compliance files required for commercial software distribution",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:12:37+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "We've an awesome ✨ TUI mode available to browse through the dependencies",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:12:37+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "sudo dpkg -i feluda_*.deb",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:12:37+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "By default, Feluda checks local files first for license information before making network requests",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:12:37+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T23:12:27+08:00",
+  "updated_at": "2026-11-19T23:17:00+08:00"
+}
