@@ -266,3 +266,7 @@ harness：
 7. 我把還沒輪到的項目先平行跑起來，再照佇列順序記錄。skill 沒有寫可不可以，請看一眼。
 
 下一個 session 可以直接接的：佇列還有 13 筆 todo。toolmesh、turbograph、waveredact 已經抽取好，semquery 本機本來就有抽取，這四筆都是要建置的，可以直接 `--toolchain`（toolmesh 上次是記憶體不夠，加 `--memory-mb 8192`）。tracedecay 檢查檔案系統種類，先試 `--runtime vm`。mere-run、shura 要 CUDA 和大顯示卡，多半和 llamampere 一樣。renfield、re-call 要 Docker。whisper-install 的安裝程式要 root。
+
+## 2026-11-19 13:26 harvest 要推上 main，推送留給人
+
+念誠 11/19 要把 harvest 併入 main、讓 watch 上線。分支 `loop/20261115` 已經 merge 了 origin/main（`efead422`），plan 的狀態列也寫了（`7dc2c23c`），對 origin/main 是 fast-forward。hook 不讓 session 推送，所以沒有推。要推的人在這個 worktree 跑 `git push origin loop/20261115:main`。推上之後 watch 機器才拿得到 harvest 的程式，timer 要等那之後才開。
