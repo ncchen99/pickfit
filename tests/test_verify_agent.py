@@ -290,7 +290,8 @@ def test_a_trailing_tail_or_echo_is_dropped_before_the_command_runs(task, ledger
     a = agent(task, box, server, ledger, tmp_path)
     report = a.run()
     ran = [c for c, _ in box.ran if c.startswith(("pipx", "evnx"))]
-    assert ran == ["pipx install evnx 2>&1", "evnx --version"]
+    # then pickfit's own help capture (help_text.py), which finds no help text in this fake box
+    assert ran == ["pipx install evnx 2>&1", "evnx --version", "evnx --help", "evnx -h", "evnx help"]
     cmds = [(c.command, c.unmasked_from) for c in report.commands if c.tool == "run_command"]
     assert cmds == [("pipx install evnx 2>&1", "pipx install evnx 2>&1 | tail -20"),
                     ("evnx --version", 'evnx --version; echo "EXIT:$?"')]

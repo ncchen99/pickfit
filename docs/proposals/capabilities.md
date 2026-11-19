@@ -89,6 +89,11 @@
 
 步驟 1 可以先做，跟其他步驟無關。步驟 2 到 4 是資料端，步驟 5 是比對端，5 要等 3 有一批資料才調得動。
 
+## 進度（2026-11-19，分支 feat/capabilities-step2）
+
+- **步驟 2 完成。** 紀錄的 `features` 上限改成 6，驗證仍只逐項測前 4 項，第 5、6 項記成 not_checked、reason `beyond_budget`（agent 的 finish 不會拿到這個選項，web 驗證也一樣）。紀錄多了 `capabilities` 欄位（label 加上可選的 items，最多 40 項），目前還沒有程式寫入。抽取 prompt 和 `FEATURES_DESCRIPTION` 還是寫 2-4 項，等步驟 3 一起改。
+- **步驟 4 完成。** [help_text.py](../../pickfit/verify/help_text.py) 從已存的 verify run 撈 agent 跑過的 `--help`，`python -m pickfit.verify.help_text` 寫到 `runs/capabilities/help/<slug>.json`。本機 476 份 run 撈到 62 個工具、169 份說明文字，其中 38 個有子命令的說明。之後每次驗證通過，pickfit 會自己在 agent 的箱子裡跑一次 `<tool> --help` 和最多 8 個子命令的 help，存進 report.json 的 `help`。這些指令不算 agent 的額度，也不進指令紀錄。
+
 ## 成本
 
 抽取目前每筆約 US$0.09（[tokens.md](tokens.md)）。capabilities-only 只讀來源、輸出一份清單，估計每筆 US$0.03 到 0.05，1158 筆約 US$35 到 60。走 tokens 提案的 Batch API 再打五折。不用重開沙盒：`--help` 先從已存的 run 撈，沒有的等下次重驗再補。

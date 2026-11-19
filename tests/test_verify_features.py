@@ -530,3 +530,17 @@ def test_the_apps_own_output_from_every_gui_launch_is_kept_under_its_command():
     parts = _gui_outputs(commands, "agent") + _gui_outputs(replay, "replay")
     assert parts == ["== agent [cmd 4] launch_gui: app ==\nGtk-WARNING: no bus\n",
                      "== replay [cmd 4] gui: app ==\nSegmentation fault\n"]
+
+
+def test_a_passed_run_saves_the_tools_own_help_outside_the_command_log(tmp_path: Path):
+    usage = ("Usage: graphtty [OPTIONS] FILE\n\nCommands:\n  render   Draw a graph as ASCII art\n"
+             "  themes   List the color themes\n")
+    agent = script(**{"graphtty --help": (0, usage, ""),
+                      "graphtty render --help": (0, "Usage: graphtty render FILE\n\nOptions:\n  --svg PATH", "")})
+    outcome, lines = verify(tmp_path, [*turns(REPORTED), *judges()], Boxes(agent, script()))
+    report = json.loads(next((tmp_path / "runs" / "verify").glob("*/report.json")).read_text())
+    assert [(h["command"], h["by"]) for h in report["help"]] == [("graphtty --help", "pickfit"),
+                                                                  ("graphtty render --help", "pickfit")]
+    assert not any("--help" in c["command"] for c in report["commands"])  # not the agent's, not citable
+    assert any(line.startswith("  help: 2 text(s) saved (graphtty --help and 1 subcommands)") for line in lines)
+    assert outcome.run.level == "function"

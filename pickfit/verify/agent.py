@@ -46,6 +46,7 @@ from pickfit.verify import gui_operate
 from pickfit.verify.audio import ListenArgs, run_listen
 from pickfit.verify.box import TOOLCHAIN_LIMITS, Box, BoxError, ExecResult
 from pickfit.verify import features as feature_checks
+from pickfit.verify import help_text
 from pickfit.verify.features import FINISH_FEATURES, FinishFeature, resolve_features
 from pickfit.verify.gui_operate import OperateArgs, box_home, run_operation, spec_problems
 from pickfit.verify.judge import judge_model_for, read_screen_text
@@ -876,6 +877,7 @@ class VerifyReport:
     finish: dict[str, Any] | None = None
     verdict: dict[str, Any] | None = None  # LogVerdict: what the command log supports
     features: list[dict[str, Any]] = field(default_factory=list)  # ResolvedFeature: what the log supports
+    help: list[dict[str, Any]] = field(default_factory=list)  # help_text.HelpText: pickfit's own --help capture
     stop_reason: str = ""
     error: str | None = None
     cost_usd: float = 0.0  # the agent's turns and the GUI operator's calls
@@ -981,6 +983,7 @@ class VerifyAgent:
         try:
             prepare_box(box, self.task)
             self._loop()
+            self._capture_help()
         except BoxError as err:
             self.report.stop_reason, self.report.error = "box_error", str(err)
         self.report.seconds = round(self._elapsed(), 1)
@@ -1056,6 +1059,22 @@ class VerifyAgent:
                     self._stop("no_finish")
                     return
                 grace -= 1
+
+    def _capture_help(self) -> None:
+        """After a passed run of a command-line tool, its own --help and its subcommands' help, for the capability
+        index (help_text.py). pickfit's commands, outside the agent's budget and the command log."""
+        if self.verdict is None or not is_passed(self.verdict.level) or is_mcp(self.task):
+            return
+        if getattr(self.box, "shell", "bash") != "bash":
+            return
+        tool = help_text.tool_command(self.verdict.checks)
+        if tool is None:
+            return
+        texts = help_text.capture_help(self.box.exec, tool, clock=self._elapsed, run_id=self.run_id)
+        self.report.help = [asdict(h) for h in texts]
+        if texts:
+            self._say(f"  help: {len(texts)} text(s) saved ({_one_line(texts[0].command, 80)}"
+                      + (f" and {len(texts) - 1} subcommands)" if len(texts) > 1 else ")"))
 
     def _stop(self, reason: str) -> None:
         # A finish sent back for a retry still stands if the model never sends another.
