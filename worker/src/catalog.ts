@@ -100,6 +100,17 @@ export interface GuiOperation {
   operator_model?: string | null;
 }
 
+/** One documented capability (SoftwareRecord.capabilities): a label, and its members when it is a list. */
+export interface Capability {
+  label: string;
+  items?: string[];
+}
+
+/** Every documented capability's label and items as text, for the relevance index and the rules' fit profile. */
+export function capabilityTexts(entry: Entry): string[] {
+  return (entry.capabilities ?? []).flatMap((c) => [c.label, ...(c.items ?? [])]);
+}
+
 /** One advertised feature as the run behind a guide covered it (index.py _feature_coverage). */
 export interface FeatureCoverage {
   feature: string;
@@ -252,6 +263,9 @@ export interface Entry {
   alternatives_to: string[];
   /** The main features the README advertises; older indexes lack it. */
   features?: string[];
+  /** What the tool's own docs say it can do beyond its features, for matching only (never checked one by one);
+   * older indexes and records extracted before capabilities lack it. */
+  capabilities?: Capability[];
   homepage: string | null;
   /** null for a hosted web app with no public repository. */
   repo_url: string | null;

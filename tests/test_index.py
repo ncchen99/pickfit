@@ -319,3 +319,12 @@ def test_a_visual_deduction_that_does_not_follow_the_records_own_check_does_not_
     record["visual_check"]["run_id"] = "web-gone"  # the check no longer reads a run of the record
     with pytest.raises(ValueError, match="must follow the record's current visual_check"):
         SoftwareRecord.model_validate(record)
+
+
+def test_capabilities_reach_the_index_with_their_items(data_dir: Path) -> None:
+    caps = [{"label": "convert JSON to other formats", "items": ["csv", "yaml"]}, {"label": "color output"}]
+    edit(data_dir / "fixture-json-query.json", lambda r: r.update(capabilities=caps))
+    entries = {e["slug"]: e for e in build_index(data_dir).index["entries"]}
+    assert entries["fixture-json-query"]["capabilities"] == [
+        {"label": "convert JSON to other formats", "items": ["csv", "yaml"]}, {"label": "color output"}]  # empty items left out
+    assert entries["fixture-chat-tui"]["capabilities"] == []

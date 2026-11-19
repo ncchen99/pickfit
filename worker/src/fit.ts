@@ -25,7 +25,7 @@
  * "natural" outweigh the job. Each pick can say which of the request's words
  * its profile covers and which it does not. No model call.
  */
-import { OSES, type Entry } from './catalog.ts';
+import { capabilityTexts, OSES, type Entry } from './catalog.ts';
 import { L, isZh } from './i18n.ts';
 import { EN_PHRASES, GENERIC_WORDS, NOT_THE_JOB_WORDS, ZH_PHRASES } from './lexicon.ts';
 import { dropNegated, relevanceIndex, terms, zhWords } from './relevance.ts';
@@ -156,7 +156,8 @@ function profileOf(entry: Entry): Profile {
   let profile = profiles.get(entry);
   if (!profile) {
     const mcpTools = OSES.flatMap((os) => entry.install[os]?.mcp?.tools ?? []);
-    const texts = [entry.name, entry.slug, entry.summary, ...entry.use_cases, ...entry.tags, ...mcpTools];
+    const texts = [entry.name, entry.slug, entry.summary, ...entry.use_cases, ...entry.tags, ...mcpTools,
+      ...(entry.features ?? []), ...capabilityTexts(entry)];
     const replaced = texts.flatMap((t) => [...t.matchAll(ALTERNATIVE)].map((m) => m[1] ?? m[2]));
     profile = {
       does: new Set(texts.flatMap(terms)),

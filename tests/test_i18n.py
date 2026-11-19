@@ -33,3 +33,8 @@ def test_worker_translations_keep_only_sentences_the_index_still_has(tmp_path):
     index = {"entries": [{"slug": "x", "summary": "Converts files offline."}, {"slug": "y", "summary": "Other."}]}
     assert worker_translations(index, tmp_path) == {"x": {"Converts files offline.": "離線轉換檔案。"}}
     assert json.loads((tmp_path / "x.json").read_text())["lang"] == "zh-TW"
+
+
+def test_a_capabilitys_label_is_prose_and_its_items_are_not():
+    entry = {"slug": "x", "capabilities": [{"label": "convert JSON to other formats", "items": ["csv", "YAML 1.2"]}]}
+    assert prose(entry) == ["convert JSON to other formats"]

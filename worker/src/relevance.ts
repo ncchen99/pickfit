@@ -9,7 +9,7 @@
  * small dictionary, counts generic words for little and favors profiles that
  * match more of what the request asks for.
  */
-import { OSES, type Entry } from './catalog.ts';
+import { capabilityTexts, OSES, type Entry } from './catalog.ts';
 import { GENERIC_WORDS, NEGATION_LISTS, NEGATION_STOPS, NEGATIONS, NOT_NEGATIONS, ZH_EN } from './lexicon.ts';
 
 const STOPWORDS = new Set(
@@ -50,7 +50,11 @@ function mcpToolNames(entry: Entry): string[] {
   return OSES.flatMap((os) => entry.install[os]?.mcp?.tools ?? []);
 }
 
-/** BM25F-style field weights: a word in the name counts three times one in a use case. */
+/** BM25F-style field weights: a word in the name counts three times one in a use case. Documented capabilities
+ * (never checked one by one, and many) count half; BM25's length normalization keeps a long list from making a
+ * tool match everything. Both weights are to be tuned on worker/bench/capability once records have them. */
+export const FEATURES_WEIGHT = 1;
+export const CAPABILITIES_WEIGHT = 0.5;
 const FIELDS: [number, (entry: Entry) => string[]][] = [
   [3, (e) => [e.name, e.slug]],
   [2, (e) => e.tags],
@@ -59,6 +63,8 @@ const FIELDS: [number, (entry: Entry) => string[]][] = [
   [1, (e) => e.use_cases],
   [1, (e) => [e.why_worth_it ?? '']],
   [1, (e) => [...new Set(mcpToolNames(e))]],
+  [FEATURES_WEIGHT, (e) => e.features ?? []],
+  [CAPABILITIES_WEIGHT, capabilityTexts],
 ];
 const K1 = 1.2;
 const B = 0.75;

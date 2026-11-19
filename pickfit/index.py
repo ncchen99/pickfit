@@ -321,6 +321,7 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
         "use_cases": record.use_cases,
         "alternatives_to": record.alternatives_to,
         "features": record.features,
+        "capabilities": [c.model_dump(mode="json") for c in record.capabilities],
         "homepage": record.homepage,
         "repo_url": record.repo.url if record.repo else None,
         "platforms": record.platforms,

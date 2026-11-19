@@ -1093,6 +1093,11 @@ body.has-tray .showcase video{max-height:max(400px,calc(100svh - 356px - var(--t
 .prog-warn .prog-label{color:var(--caution)}
 .prog-label .i{display:none}
 .feat-title{font-weight:600}
+.more-caps{margin-top:14px}
+.more-caps summary{font-size:var(--t-small);color:var(--ink-2);cursor:pointer}
+.cap-list{margin:8px 0 0;padding-left:20px;font-size:.95rem}
+.cap-list li{margin-bottom:4px}
+.cap-items{color:var(--ink-2);font-size:var(--t-small)}
 .how-to{margin-top:2px}
 .how-to summary{font-size:var(--t-small);color:var(--ink-2);cursor:pointer}
 .how-to ol{margin:8px 0 4px;padding-left:20px;font-size:.95rem}

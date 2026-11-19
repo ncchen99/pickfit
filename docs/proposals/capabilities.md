@@ -93,6 +93,11 @@
 
 - **步驟 2 完成。** 紀錄的 `features` 上限改成 6，驗證仍只逐項測前 4 項，第 5、6 項記成 not_checked、reason `beyond_budget`（agent 的 finish 不會拿到這個選項，web 驗證也一樣）。紀錄多了 `capabilities` 欄位（label 加上可選的 items，最多 40 項），目前還沒有程式寫入。抽取 prompt 和 `FEATURES_DESCRIPTION` 還是寫 2-4 項，等步驟 3 一起改。
 - **步驟 4 完成。** [help_text.py](../../pickfit/verify/help_text.py) 從已存的 verify run 撈 agent 跑過的 `--help`，`python -m pickfit.verify.help_text` 寫到 `runs/capabilities/help/<slug>.json`。本機 476 份 run 撈到 62 個工具、169 份說明文字，其中 38 個有子命令的說明。之後每次驗證通過，pickfit 會自己在 agent 的箱子裡跑一次 `<tool> --help` 和最多 8 個子命令的 help，存進 report.json 的 `help`。這些指令不算 agent 的額度，也不進指令紀錄。
+- **步驟 5、7 的程式先做好了（合成資料測試）。** 紀錄還沒有 capabilities，所以權重還沒拿真實資料調。
+  - index 帶出 `capabilities`。BM25 加讀 `features`（權重 1）和 capabilities（權重 0.5）。rules 的 fit profile 也讀這兩個欄位。
+  - 請求的字詞（加上模型產生的關鍵字）點到的 capabilities，最多 5 項放進卡片的 `capabilities_matched`。沒點到就不放這個欄位。matcher prompt 第 2 條允許引用它，第 6 條要求在 tradeoffs 說明「文件寫有、pickfit 沒測」。rules 路徑的理由也會標「not tested by pickfit」。
+  - 工具頁在功能清單下面多一個摺疊區「文件寫的其他功能」。label 會翻譯，items（格式、名稱）不翻譯。
+  - 光是 BM25 和 fit 開始讀 features，次要功能查詢的 rules 推薦率就從 18% 升到 23%，主功能對照組從 66% 升到 69%（中文 52% 升到 58%）。舊的 fit-fresh dev 查詢結果有好有壞：標成 good 的 pick 站得住的比例從 30.4% 升到 42.1%，但答案是 good 的從 10 題降到 8 題，partial 站得住的比例從 23.1% 降到 16.3%，P@5 不變（15.3%）。fit 的字彙表來自全部 profile，多了 features 之後請求裡「認得的字」變多，要涵蓋的字也跟著變多。這部分等有真實 capabilities 時一起調。
 
 ## 成本
 

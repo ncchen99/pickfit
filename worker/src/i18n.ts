@@ -77,7 +77,7 @@ const KEEP = new Set([
   'json', 'claude_code', 'first_task', 'expected_signal', 'expected_contains', 'observed_excerpt', 'readme_said',
   'tags', 'kind', 'category', 'level', 'os', 'arch', 'method', 'runner', 'tier', 'screen', 'transport',
   'status', 'failure', 'replay', 'processing', 'pricing', 'license', 'platforms', 'tools', 'called_tool', 'field',
-  'value', 'alternatives_to', 'runtimes', 'system_packages', 'clip', 'file', 'raw', 'id', 'run_id', 'browser',
+  'value', 'items', 'alternatives_to', 'runtimes', 'system_packages', 'clip', 'file', 'raw', 'id', 'run_id', 'browser',
   'third_party_hosts', 'data_sent', 'offline', 'match', 'quality', 'formula_version', 'server_name',
   'client', 'display', 'reason', 'basis', 'maturity', 'audience', 'unverified_reason', 'works_offline', 'gpu', 'microphone', 'tool_version', 'checked_at', 'recorded_at', 'built_at', 'kind_label',
 ]);

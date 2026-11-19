@@ -576,10 +576,32 @@ function goodFor(entry: Entry, heading: boolean): string {
     : `${uses ? `<h3>${title}</h3>${uses}` : ''}${alt}`;
 }
 
-/** What it does: the features, each ticked when a run checked it. With no feature list, what it is good for says what it does instead. */
+/** What else the tool's own docs say it can do (capabilities): folded away and apart from the features, since pickfit
+ * did not test these one by one. A list-like one (formats, services) shows its members after the label. */
+function moreCapabilities(entry: Entry): string {
+  const caps = entry.capabilities ?? [];
+  if (!caps.length) return '';
+  const rows = caps.map((c) => {
+    const items = c.items?.length ? ` <span class="cap-items">${esc(listOf(c.items))}</span>` : '';
+    return `<li><span class="cap-label">${esc(c.label.charAt(0).toUpperCase() + c.label.slice(1))}</span>${items}</li>`;
+  });
+  return (
+    `<details class="more-caps"><summary>${L(`More it can do, from its docs (${caps.length})`, `文件寫的其他功能（${caps.length} 項）`)}</summary>` +
+    `<p class="small quiet">${L('From the tool’s own documentation and help. pickfit didn’t test these one by one.', '依據工具自己的文件和說明，pickfit 沒有逐項測試。')}</p>` +
+    `<ul class="cap-list">${rows.join('')}</ul></details>`
+  );
+}
+
+/** What it does: the features, each ticked when a run checked it, then what else its docs say (folded). With no feature
+ * list, what it is good for says what it does instead. */
 function about(entry: Entry, f: FeaturesOut): string {
   const features = featureList(entry, f);
-  const parts = [entry.why_worth_it ? `<p class="fit">${esc(entry.why_worth_it)}</p>` : '', features, features ? '' : goodFor(entry, false)].join('');
+  const parts = [
+    entry.why_worth_it ? `<p class="fit">${esc(entry.why_worth_it)}</p>` : '',
+    features,
+    features ? '' : goodFor(entry, false),
+    moreCapabilities(entry),
+  ].join('');
   return parts ? `<section class="block about" aria-labelledby="about-title"><h2 id="about-title">${L('What it does', '它能做什麼')}</h2>${parts}</section>` : '';
 }
 
