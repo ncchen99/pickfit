@@ -1,0 +1,657 @@
+{
+  "schema_version": "software.v1",
+  "slug": "slumber",
+  "repo_id": "gh:684277349",
+  "name": "Slumber",
+  "summary": "Terminal user interface HTTP client for defining, executing, and sharing configurable HTTP requests stored in local YAML collections.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "http",
+    "http-client",
+    "ratatui",
+    "rest-client",
+    "rust",
+    "tui"
+  ],
+  "use_cases": [
+    "run HTTP requests defined in a YAML collection from the terminal",
+    "import request collections from Insomnia"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "define HTTP requests in source-first config",
+    "import requests from Insomnia",
+    "build requests from other requests, files, commands",
+    "browse responses with JSONPath selectors"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://slumber.lucaspickering.me/",
+  "repo": {
+    "url": "https://github.com/LucasPickering/slumber",
+    "full_name": "LucasPickering/slumber",
+    "created_at": "2023-08-28T20:11:04Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-slumber-20261120-000245-f1a2",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl --proto '=https' --tlsv1.2 -LsSf -o /tmp/slumber-installer.sh https://github.com/LucasPickering/slumber/releases/download/v5.4.4/slumber-installer.sh",
+          "purpose": "download cargo-dist installer script (read before running)"
+        },
+        {
+          "command": "sh /tmp/slumber-installer.sh && ~/.cargo/bin/slumber --version",
+          "purpose": "run installer, installs to ~/.cargo/bin, print version"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && ln -sf ~/.cargo/bin/slumber ~/.local/bin/slumber && slumber --help && slumber request --help && slumber import --help",
+          "purpose": "symlink slumber into ~/.local/bin (on PATH) and show help"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "slumber request get",
+        "expected_signal": "\"species\":\"Barracuda\""
+      },
+      "first_task": "slumber request get"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "powershell -ExecutionPolicy Bypass -c \"irm https://github.com/LucasPickering/slumber/releases/download/v5.4.4/slumber-installer.ps1 | iex\"",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v5.4.4",
+    "published_at": "2026-10-27T14:23:07Z",
+    "url": "https://github.com/LucasPickering/slumber/releases/tag/v5.4.4"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-20T00:04:17.282052+08:00",
+    "runs": [
+      {
+        "id": "verify-slumber-20261120-000245-f1a2",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-20T00:04:17.282052+08:00",
+        "tool_version": "slumber 5.4.4",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl --proto '=https' --tlsv1.2 -LsSf -o /tmp/slumber-installer.sh https://github.com/LucasPickering/slumber/releases/download/v5.4.4/slumber-installer.sh",
+            "purpose": "download cargo-dist installer script (read before running)"
+          },
+          {
+            "command": "sh /tmp/slumber-installer.sh && ~/.cargo/bin/slumber --version",
+            "purpose": "run installer, installs to ~/.cargo/bin, print version"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && ln -sf ~/.cargo/bin/slumber ~/.local/bin/slumber && slumber --help && slumber request --help && slumber import --help",
+            "purpose": "symlink slumber into ~/.local/bin (on PATH) and show help"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "slumber request get",
+            "expected_signal": "\"species\":\"Barracuda\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[{\"id\":1,\"name\":\"Barry Bartlett\",\"species\":\"Barracuda\"},{\"id\":2,\"name\":\"Fiona\",\"species\":\"Flounder\"}]",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/srv && cd /tmp/srv && printf '[{\"id\":1,\"name\":\"Barry Bartlett\",\"species\":\"Barracuda\"},{\"id\":2,\"name\":\"Fiona\",\"species\":\"Flounder\"}]' > fish && printf 'Nemo' > /home/sbx/work/name.txt && cat > /home/sbx/work/slumber.yml <<'EOF'\nrequests:\n  get:\n    method: GET\n    url: http://127.0.0.1:8765/fish\n  derived:\n    method: GET\n    url: http://127.0.0.1:8765/fish\n    query:\n      from_file: \"{{ file('name.txt') }}\"\n      from_cmd: \"{{ command(['echo', 'hello']) | trim() }}\"\n      from_resp: \"{{ response('get') | jsonpath('$[1].species') }}\"\n  post:\n    method: POST\n    url: http://127.0.0.1:8765/fish\n    body:\n      type: json\n      data:\n        {\n          \"name\": \"Barry Bartlett\",\n          \"species\": \"Barracuda\",\n          \"age\": 3,\n          \"weight_kg\": 6.2,\n        }\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/srv && python3 -m http.server 8765 --bind 127.0.0.1",
+                "background": true,
+                "port": 8765
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "slumber request --dry-run post",
+            "expected_signal": "> POST http://127.0.0.1:8765/fish HTTP/1.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "> POST http://127.0.0.1:8765/fish HTTP/1.1",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/srv && cd /tmp/srv && printf '[{\"id\":1,\"name\":\"Barry Bartlett\",\"species\":\"Barracuda\"},{\"id\":2,\"name\":\"Fiona\",\"species\":\"Flounder\"}]' > fish && printf 'Nemo' > /home/sbx/work/name.txt && cat > /home/sbx/work/slumber.yml <<'EOF'\nrequests:\n  get:\n    method: GET\n    url: http://127.0.0.1:8765/fish\n  derived:\n    method: GET\n    url: http://127.0.0.1:8765/fish\n    query:\n      from_file: \"{{ file('name.txt') }}\"\n      from_cmd: \"{{ command(['echo', 'hello']) | trim() }}\"\n      from_resp: \"{{ response('get') | jsonpath('$[1].species') }}\"\n  post:\n    method: POST\n    url: http://127.0.0.1:8765/fish\n    body:\n      type: json\n      data:\n        {\n          \"name\": \"Barry Bartlett\",\n          \"species\": \"Barracuda\",\n          \"age\": 3,\n          \"weight_kg\": 6.2,\n        }\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "slumber -f slumber3.yml request -v derived",
+            "expected_signal": "from_file=Nemo&from_cmd=hello&from_resp=Flounder",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "> GET http://127.0.0.1:8765/fish?from_file=Nemo&from_cmd=hello&from_resp=Flounder HTTP/1.1",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/srv && cd /tmp/srv && printf '[{\"id\":1,\"name\":\"Barry Bartlett\",\"species\":\"Barracuda\"},{\"id\":2,\"name\":\"Fiona\",\"species\":\"Flounder\"}]' > fish && printf 'Nemo' > /home/sbx/work/name.txt && cat > /home/sbx/work/slumber.yml <<'EOF'\nrequests:\n  get:\n    method: GET\n    url: http://127.0.0.1:8765/fish\n  derived:\n    method: GET\n    url: http://127.0.0.1:8765/fish\n    query:\n      from_file: \"{{ file('name.txt') }}\"\n      from_cmd: \"{{ command(['echo', 'hello']) | trim() }}\"\n      from_resp: \"{{ response('get') | jsonpath('$[1].species') }}\"\n  post:\n    method: POST\n    url: http://127.0.0.1:8765/fish\n    body:\n      type: json\n      data:\n        {\n          \"name\": \"Barry Bartlett\",\n          \"species\": \"Barracuda\",\n          \"age\": 3,\n          \"weight_kg\": 6.2,\n        }\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp/srv && python3 -m http.server 8765 --bind 127.0.0.1",
+                "background": true,
+                "port": 8765
+              },
+              {
+                "command": "cat > /home/sbx/work/slumber3.yml <<'EOF'\nrequests:\n  get:\n    method: GET\n    url: http://127.0.0.1:8765/fish\n  derived:\n    method: GET\n    url: http://127.0.0.1:8765/fish\n    query:\n      from_file: \"{{ file('name.txt') }}\"\n      from_cmd: \"{{ command(['echo', 'hello']) | trim() }}\"\n      from_resp: \"{{ response('get', trigger='always') | jsonpath('$[1].species') }}\"\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Installer puts slumber on PATH",
+            "actually_needed": "Installer installs to ~/.cargo/bin and edits shell profiles; in a non-login shell it is not on PATH until a new shell, so I symlinked it into ~/.local/bin",
+            "kind": "note"
+          },
+          {
+            "readme_said": "README example uses shoal.lucaspickering.me",
+            "actually_needed": "Checks were pointed at a local python http.server so they replay offline; the POST recipe was checked with --dry-run (http.server rejects POST)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Build requests dynamically from other requests",
+            "actually_needed": "response('get') alone fails in the CLI with 'No response available' when there is no history; response('get', trigger='always') was needed",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Import from Insomnia",
+            "actually_needed": "A minimal handwritten Insomnia v4 JSON export failed with 'No children found for parent `wrk_1`', and an Insomnia v5 YAML file failed with 'missing field `resources`'. No real Insomnia export was available here to test with.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exit 0 and show their expected signals: the GET returns the Barracuda fish list, the dry-run prints the POST request line, and the derived request URL contains from_file=Nemo&from_cmd=hello&from_resp=Flounder with a 200 OK response.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-slumber-20261120-000245-f1a2/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-slumber-20261120-000245-f1a2/check-1-cmd6.judged.png",
+            "runs/verify/verify-slumber-20261120-000245-f1a2/check-2-cmd7.judged.png",
+            "runs/verify/verify-slumber-20261120-000245-f1a2/check-3-cmd11.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.29003,
+        "features": [
+          {
+            "feature": "define HTTP requests in source-first config",
+            "status": "checked",
+            "smoke_tests": [
+              0,
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "import requests from Insomnia",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "Handwritten minimal Insomnia v4 export rejected ('No children found for parent wrk_1'); no real Insomnia export available, so unclear if the input or the tool is at fault"
+          },
+          {
+            "feature": "build requests from other requests, files, commands",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "browse responses with JSONPath selectors",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows a request using a response value but no JSONPath browsing/filtering of response data by the user."
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:04:23+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/LucasPickering/slumber@5192959ca79b",
+      "Cargo.lock"
+    ],
+    "packages_checked": 496,
+    "findings_total": 3,
+    "advisories_total": 3,
+    "findings": [
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.13",
+        "advisory": "GHSA-4w2j-m93h-cj5j",
+        "cves": [
+          "CVE-2026-25800"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.11.15",
+        "summary": "Quinn: Remote memory exhaustion in quinn-proto from unbounded out-of-order stream reassembly",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.13",
+        "advisory": "GHSA-6xvm-j4wr-6v98",
+        "cves": [
+          "CVE-2026-31812"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.11.14",
+        "summary": "Quinn affected by unauthenticated remote DoS via panic in QUIC transport parameter parsing",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.13",
+        "advisory": "RUSTSEC-2026-0340",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.18",
+        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-20T00:04:23+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.9583,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 93.8,
+      "signals": {
+        "stars": 1241,
+        "monthly_downloads": 154,
+        "forks": 41,
+        "dependents": null,
+        "release_downloads": 5667,
+        "hn_top_score": 193,
+        "registries_count": 2
+      },
+      "age_days": 1178,
+      "packages": [
+        "crates:slumber",
+        "homebrew:slumber"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 4.9
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:04:17.290646+08:00",
+      "sources_sha": "60fc8c2d9c0be76c3c5c082fa39eee1d4064a2f143428a4697670d9e6757ba3e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Slumber is a TUI (terminal user interface) HTTP client. Define, execute, and share configurable HTTP requests."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Define, execute, and share configurable HTTP requests."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/LucasPickering/slumber/releases/download/v5.4.4/slumber-installer.sh | sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Create this file, then run the TUI with `slumber`."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "all configuration and data is stored locally and can be checked into version control"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "| Apple Silicon macOS |"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/LucasPickering/slumber",
+      "fetched_at": "2026-11-20T00:02:33+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/LucasPickering/slumber/blob/master/README.md",
+      "fetched_at": "2026-11-20T00:02:31+08:00"
+    },
+    {
+      "id": "release:v5.4.4",
+      "kind": "release",
+      "url": "https://github.com/LucasPickering/slumber/releases/tag/v5.4.4",
+      "fetched_at": "2026-11-20T00:02:31+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Slumber is a TUI (terminal user interface) HTTP client.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:02:41+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Usable as a TUI, CLI, or [Python package]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:02:41+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Terminal-based HTTP/REST client",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:02:41+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Slumber is a TUI (terminal user interface) HTTP client. Define, execute, and share configurable HTTP requests.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:02:41+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "Slumber is a TUI (terminal user interface) HTTP client.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:02:41+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T00:02:33+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T00:02:33+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-20T00:02:33+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T00:02:33+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T00:02:33+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v5.4.4",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T00:02:31+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Create this file, then run the TUI with `slumber`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:02:41+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Import from external formats (e.g. Insomnia)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:02:41+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Source-first configuration, for easy persistence and sharing",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:02:41+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Import from external formats (e.g. Insomnia)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:02:41+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Build requests dynamically from other requests, files, and shell commands",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:02:41+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Browse response data using JSONPath selectors",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:02:41+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "release:v5.4.4",
+      "quote": "powershell -ExecutionPolicy Bypass -c \"irm https://github.com/LucasPickering/slumber/releases/download/v5.4.4/slumber-installer.ps1 | iex\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:02:41+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "It will remain free to use forever",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:02:41+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "all configuration and data is stored locally and can be checked into version control",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:02:41+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-20T00:02:31+08:00",
+  "updated_at": "2026-11-20T00:04:23+08:00"
+}
