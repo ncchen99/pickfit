@@ -1,0 +1,638 @@
+{
+  "schema_version": "software.v1",
+  "slug": "killport",
+  "repo_id": "gh:615362447",
+  "name": "killport",
+  "summary": "A command-line tool that kills processes and containers listening on given ports.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [
+    "free up a port by killing the process using it",
+    "stop a container bound to a specific port",
+    "kill processes on several ports in one command"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "kill processes and containers by port",
+    "kill containers in Docker, Podman and others",
+    "preview kills with dry-run mode",
+    "send a chosen signal"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/jkfran/killport",
+    "full_name": "jkfran/killport",
+    "created_at": "2023-03-17T14:21:02Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "rust>=1.86 (for building from source)"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install killport",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "killport --dry-run 8080"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-killport-20261119-180341-2fc8",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -sL https://bit.ly/killport -o /tmp/killport_install.sh",
+          "purpose": "download install script"
+        },
+        {
+          "command": "bash /tmp/killport_install.sh",
+          "purpose": "run install script (downloads release tarball to ~/.local/bin)"
+        },
+        {
+          "command": "ln -sf ~/.local/bin/killport-x86_64-linux-gnu/killport ~/.local/bin/killport && killport --version",
+          "purpose": "symlink binary from extracted subdir onto PATH and check version"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ln -sf ~/.local/bin/killport-x86_64-linux-gnu/killport ~/.local/bin/killport && killport --version",
+        "expected_signal": "killport 2.0.2"
+      },
+      "first_task": "killport --dry-run 8080"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install killport",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "killport --dry-run 8080"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v2.0.2",
+    "published_at": "2026-08-01T08:09:15Z",
+    "url": "https://github.com/jkfran/killport/releases/tag/v2.0.2"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T18:04:30.120135+08:00",
+    "runs": [
+      {
+        "id": "verify-killport-20261119-180341-2fc8",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T18:04:30.120135+08:00",
+        "tool_version": "killport 2.0.2",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -sL https://bit.ly/killport -o /tmp/killport_install.sh",
+            "purpose": "download install script"
+          },
+          {
+            "command": "bash /tmp/killport_install.sh",
+            "purpose": "run install script (downloads release tarball to ~/.local/bin)"
+          },
+          {
+            "command": "ln -sf ~/.local/bin/killport-x86_64-linux-gnu/killport ~/.local/bin/killport && killport --version",
+            "purpose": "symlink binary from extracted subdir onto PATH and check version"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ln -sf ~/.local/bin/killport-x86_64-linux-gnu/killport ~/.local/bin/killport && killport --version",
+            "expected_signal": "killport 2.0.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "killport 2.0.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "killport --dry-run 8080",
+            "expected_signal": "Would kill process 'python3 -m http.server 8080' listening on port 8080",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Would kill process 'python3 -m http.server 8080' listening on port 8080",
+            "setup": [
+              {
+                "command": "python3 -m http.server 8080",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "killport -s sigterm 8080",
+            "expected_signal": "Successfully killed process 'python3 -m http.server 8080' listening on port 8080",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Successfully killed process 'python3 -m http.server 8080' listening on port 8080",
+            "setup": [
+              {
+                "command": "python3 -m http.server 8080",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "killport 9090 && python3 -c \"import socket,sys; s=socket.socket(); r=s.connect_ex(('127.0.0.1',9090)); print('port 9090 closed' if r else 'port 9090 still open'); sys.exit(0 if r else 1)\"",
+            "expected_signal": "port 9090 closed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "port 9090 closed",
+            "setup": [
+              {
+                "command": "python3 -m http.server 9090",
+                "background": true,
+                "port": 9090
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "killport --no-fail 8080",
+            "expected_signal": "No service found using port 8080",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "No service found using port 8080",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -sL https://bit.ly/killport | sh, which installs killport into $HOME/.local/bin",
+            "actually_needed": "The tarball unpacks into ~/.local/bin/killport-x86_64-linux-gnu/killport (a subdirectory), so the binary is not on PATH. It had to be symlinked: ln -sf ~/.local/bin/killport-x86_64-linux-gnu/killport ~/.local/bin/killport",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "pipe the script into sh",
+            "actually_needed": "The script starts with #!/bin/bash; I ran it with bash. It downloads a prebuilt binary from GitHub releases, which I could not review.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exited 0 with the expected output: the dry-run message, the successful kill message, and 'killport 2.0.2'.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-killport-20261119-180341-2fc8/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-killport-20261119-180341-2fc8/check-1-cmd6.judged.png",
+            "runs/verify/verify-killport-20261119-180341-2fc8/check-2-cmd7.judged.png",
+            "runs/verify/verify-killport-20261119-180341-2fc8/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.164327,
+        "features": [
+          {
+            "feature": "kill processes and containers by port",
+            "status": "checked",
+            "smoke_tests": [
+              3,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "kill containers in Docker, Podman and others",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_container",
+            "failure": null,
+            "note": "no Docker/Podman in box"
+          },
+          {
+            "feature": "preview kills with dry-run mode",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "send a chosen signal",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T18:04:36+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/jkfran/killport@ca21e8774443",
+      "Cargo.lock"
+    ],
+    "packages_checked": 181,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T18:04:30+08:00",
+    "quality": {
+      "total": 80.7,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5045,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 98.2,
+      "signals": {
+        "stars": 1844,
+        "monthly_downloads": 4435,
+        "forks": 44,
+        "dependents": null,
+        "release_downloads": 257529,
+        "hn_top_score": 153,
+        "registries_count": 2
+      },
+      "age_days": 1342,
+      "packages": [
+        "crates:killport",
+        "homebrew:killport"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 1.45
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:04:30.129810+08:00",
+      "sources_sha": "c836824f9ff7c3d6078b0b67033b0245cc4a1b9d4fcc2f5a38f2b624783d7e3e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "- **Dry-run mode** — preview what would be killed without doing it"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Suppress exit code 2 when nothing is found (useful in scripts):"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Minimum supported Rust version corrected from 1.74 to 1.86"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "curl -sL https://bit.ly/killport | sh"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "killport --dry-run 8080\n# Would kill process 'node' listening on port 8080"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Container runtime detection and kills honor `DOCKER_HOST` (colima, podman, remote docker)"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "**Cross-platform** — Linux, macOS, and Windows"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/jkfran/killport",
+      "fetched_at": "2026-11-19T18:03:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/jkfran/killport/blob/main/README.md",
+      "fetched_at": "2026-11-19T18:03:27+08:00"
+    },
+    {
+      "id": "release:v2.0.2",
+      "kind": "release",
+      "url": "https://github.com/jkfran/killport/releases/tag/v2.0.2",
+      "fetched_at": "2026-11-19T18:03:27+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "A command-line tool to kill processes and containers running on specified ports.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:03:36+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "github_api",
+      "quote": "A command-line tool to kill processes and containers running on specified ports.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:03:36+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A command-line tool to kill processes and containers running on specified ports.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:03:36+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A command-line tool to kill processes and containers running on specified ports.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:03:36+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# killport",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:03:36+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "**Cross-platform** — Linux, macOS, and Windows",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:03:36+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "release:v2.0.2",
+      "quote": "Minimum supported Rust version corrected from 1.74 to 1.86",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:03:36+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T18:03:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T18:03:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T18:03:29+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.0.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T18:03:27+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Kill whatever is using port 8080:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:03:36+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Kill only containers (skip native processes):",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:03:36+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Kill multiple ports at once:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:03:36+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Kill processes and containers by port number (single or multiple ports)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:03:36+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**Container runtime support** — works with Docker, OrbStack, Podman, Colima, and any OCI-compatible runtime",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:03:36+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**Dry-run mode** — preview what would be killed without doing it",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:03:36+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "**Signal control** — send any signal (SIGTERM, SIGKILL, SIGINT, etc.)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:03:36+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install killport",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:03:36+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -sL https://bit.ly/killport | sh",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:03:36+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install killport",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:03:36+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T18:03:27+08:00",
+  "updated_at": "2026-11-19T18:04:36+08:00"
+}
