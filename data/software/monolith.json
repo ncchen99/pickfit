@@ -1,0 +1,693 @@
+{
+  "schema_version": "software.v1",
+  "slug": "monolith",
+  "repo_id": "gh:82530909",
+  "name": "Monolith",
+  "summary": "A CLI tool, GUI and library that saves a complete web page, with its CSS, images and JavaScript embedded, as a single HTML file.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "media_files",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "come-and-take-it",
+    "e-hoarding",
+    "its-mine",
+    "make-the-internet-great-again",
+    "no-more-404",
+    "procrastination",
+    "save-the-internet",
+    "tab-rehab"
+  ],
+  "use_cases": [
+    "archive a web page as one self-contained HTML file",
+    "save multiple pages into a WARC archive",
+    "convert an MHTML file to HTML",
+    "save a page without ads by blocking domains"
+  ],
+  "alternatives_to": [
+    "wget"
+  ],
+  "features": [
+    "embed CSS, images and JavaScript into one HTML",
+    "render dynamic pages in a browser before saving",
+    "output as HTML, MHTML, WARC or WARCGZ",
+    "save pages from WARC, HAR, MHTML archives offline"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://crates.io/crates/monolith",
+  "repo": {
+    "url": "https://github.com/Y2Z/monolith",
+    "full_name": "Y2Z/monolith",
+    "created_at": "2017-02-20T07:47:35Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "Firefox or a Chromium-based browser (optional, for -B rendering)"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install monolith",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "monolith https://lyrics.github.io/db/P/Portishead/Dummy/Roads/"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-monolith-20261119-170645-8332",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin && curl -fsSL -o ~/.local/bin/monolith https://github.com/Y2Z/monolith/releases/download/v2.12.0/monolith-cli-linux-x86_64 && chmod +x ~/.local/bin/monolith",
+          "purpose": "Download the v2.12.0 prebuilt monolith-cli-linux-x86_64 release binary to ~/.local/bin/monolith and make it executable"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "monolith -V",
+        "expected_signal": "monolith 2.12.0"
+      },
+      "first_task": "monolith site/index.html -o -"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "choco install monolith",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "monolith https://lyrics.github.io/db/P/Portishead/Dummy/Roads/"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "0BSD",
+  "processing": "local",
+  "last_release": {
+    "tag": "v2.12.0",
+    "published_at": "2026-11-02T13:55:44Z",
+    "url": "https://github.com/Y2Z/monolith/releases/tag/v2.12.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T17:07:47.651321+08:00",
+    "runs": [
+      {
+        "id": "verify-monolith-20261119-170645-8332",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T17:07:47.651321+08:00",
+        "tool_version": "monolith 2.12.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin && curl -fsSL -o ~/.local/bin/monolith https://github.com/Y2Z/monolith/releases/download/v2.12.0/monolith-cli-linux-x86_64 && chmod +x ~/.local/bin/monolith",
+            "purpose": "Download the v2.12.0 prebuilt monolith-cli-linux-x86_64 release binary to ~/.local/bin/monolith and make it executable"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "monolith -V",
+            "expected_signal": "monolith 2.12.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "monolith 2.12.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "monolith site/index.html -o -",
+            "expected_signal": "<img src=\"data:image/png;base64,",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "<body><h1>Hello monolith</h1><img src=\"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==\" alt=\"pic\">",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/site && cd /home/sbx/work/site && cat > index.html <<'EOF'\n<!DOCTYPE html>\n<html><head><title>Local Test</title><link rel=\"stylesheet\" href=\"style.css\"><script src=\"script.js\"></script></head>\n<body><h1>Hello monolith</h1><img src=\"img.png\" alt=\"pic\"></body></html>\nEOF\ncat > style.css <<'EOF'\nh1 { color: rgb(200, 10, 10); }\nEOF\ncat > script.js <<'EOF'\nconsole.log(\"monolith-js-marker\");\nEOF\necho 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==' | base64 -d > img.png\ncd /home/sbx/work && printf 'From: <Saved by Blink>\\r\\nSubject: Saved Page\\r\\nSnapshot-Content-Location: http://example.test/page\\r\\nMIME-Version: 1.0\\r\\nContent-Type: multipart/related;\\r\\n\\ttype=\"text/html\";\\r\\n\\tboundary=\"----BOUNDARY42\"\\r\\n\\r\\n\\r\\n------BOUNDARY42\\r\\nContent-Type: text/html\\r\\nContent-ID: <frame-1@mhtml.blink>\\r\\nContent-Transfer-Encoding: quoted-printable\\r\\nContent-Location: http://example.test/page\\r\\n\\r\\n<html><head><title>MHTML Page</title><link rel=3D\"stylesheet\" href=3D\"http://example.test/s.css\"></head><body><p>from mhtml archive</p></body></html>\\r\\n\\r\\n------BOUNDARY42\\r\\nContent-Type: text/css\\r\\nContent-Transfer-Encoding: quoted-printable\\r\\nContent-Location: http://example.test/s.css\\r\\n\\r\\np { color: green; }\\r\\n\\r\\n------BOUNDARY42--\\r\\n' > page-saved-by-browser.mhtml && ls -la site page-saved-by-browser.mhtml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "monolith -m site/index.html -o -",
+            "expected_signal": "Content-Type: multipart/related;",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Content-Type: multipart/related;",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/site && cd /home/sbx/work/site && cat > index.html <<'EOF'\n<!DOCTYPE html>\n<html><head><title>Local Test</title><link rel=\"stylesheet\" href=\"style.css\"><script src=\"script.js\"></script></head>\n<body><h1>Hello monolith</h1><img src=\"img.png\" alt=\"pic\"></body></html>\nEOF\ncat > style.css <<'EOF'\nh1 { color: rgb(200, 10, 10); }\nEOF\ncat > script.js <<'EOF'\nconsole.log(\"monolith-js-marker\");\nEOF\necho 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==' | base64 -d > img.png\ncd /home/sbx/work && printf 'From: <Saved by Blink>\\r\\nSubject: Saved Page\\r\\nSnapshot-Content-Location: http://example.test/page\\r\\nMIME-Version: 1.0\\r\\nContent-Type: multipart/related;\\r\\n\\ttype=\"text/html\";\\r\\n\\tboundary=\"----BOUNDARY42\"\\r\\n\\r\\n\\r\\n------BOUNDARY42\\r\\nContent-Type: text/html\\r\\nContent-ID: <frame-1@mhtml.blink>\\r\\nContent-Transfer-Encoding: quoted-printable\\r\\nContent-Location: http://example.test/page\\r\\n\\r\\n<html><head><title>MHTML Page</title><link rel=3D\"stylesheet\" href=3D\"http://example.test/s.css\"></head><body><p>from mhtml archive</p></body></html>\\r\\n\\r\\n------BOUNDARY42\\r\\nContent-Type: text/css\\r\\nContent-Transfer-Encoding: quoted-printable\\r\\nContent-Location: http://example.test/s.css\\r\\n\\r\\np { color: green; }\\r\\n\\r\\n------BOUNDARY42--\\r\\n' > page-saved-by-browser.mhtml && ls -la site page-saved-by-browser.mhtml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "monolith page-saved-by-browser.mhtml -o -",
+            "expected_signal": "<p>from mhtml archive</p>",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "<html><head><title>MHTML Page</title><link rel=\"stylesheet\" href=\"data:text/css;charset=utf-8,p { color: green; }%0D%0A\"><meta name=\"robots\" content=\"none\"></head><body><p>from mhtml archive</p>",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/site && cd /home/sbx/work/site && cat > index.html <<'EOF'\n<!DOCTYPE html>\n<html><head><title>Local Test</title><link rel=\"stylesheet\" href=\"style.css\"><script src=\"script.js\"></script></head>\n<body><h1>Hello monolith</h1><img src=\"img.png\" alt=\"pic\"></body></html>\nEOF\ncat > style.css <<'EOF'\nh1 { color: rgb(200, 10, 10); }\nEOF\ncat > script.js <<'EOF'\nconsole.log(\"monolith-js-marker\");\nEOF\necho 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==' | base64 -d > img.png\ncd /home/sbx/work && printf 'From: <Saved by Blink>\\r\\nSubject: Saved Page\\r\\nSnapshot-Content-Location: http://example.test/page\\r\\nMIME-Version: 1.0\\r\\nContent-Type: multipart/related;\\r\\n\\ttype=\"text/html\";\\r\\n\\tboundary=\"----BOUNDARY42\"\\r\\n\\r\\n\\r\\n------BOUNDARY42\\r\\nContent-Type: text/html\\r\\nContent-ID: <frame-1@mhtml.blink>\\r\\nContent-Transfer-Encoding: quoted-printable\\r\\nContent-Location: http://example.test/page\\r\\n\\r\\n<html><head><title>MHTML Page</title><link rel=3D\"stylesheet\" href=3D\"http://example.test/s.css\"></head><body><p>from mhtml archive</p></body></html>\\r\\n\\r\\n------BOUNDARY42\\r\\nContent-Type: text/css\\r\\nContent-Transfer-Encoding: quoted-printable\\r\\nContent-Location: http://example.test/s.css\\r\\n\\r\\np { color: green; }\\r\\n\\r\\n------BOUNDARY42--\\r\\n' > page-saved-by-browser.mhtml && ls -la site page-saved-by-browser.mhtml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "monolith -F MHTML site/index.html -o -",
+            "expected_signal": "",
+            "exit_code": 2,
+            "passed": false,
+            "observed_excerpt": "error: unexpected argument 'site/index.html' found Usage: monolith [OPTIONS] <TARGET> For more information, try '--help'.",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/site && cd /home/sbx/work/site && cat > index.html <<'EOF'\n<!DOCTYPE html>\n<html><head><title>Local Test</title><link rel=\"stylesheet\" href=\"style.css\"><script src=\"script.js\"></script></head>\n<body><h1>Hello monolith</h1><img src=\"img.png\" alt=\"pic\"></body></html>\nEOF\ncat > style.css <<'EOF'\nh1 { color: rgb(200, 10, 10); }\nEOF\ncat > script.js <<'EOF'\nconsole.log(\"monolith-js-marker\");\nEOF\necho 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==' | base64 -d > img.png\ncd /home/sbx/work && printf 'From: <Saved by Blink>\\r\\nSubject: Saved Page\\r\\nSnapshot-Content-Location: http://example.test/page\\r\\nMIME-Version: 1.0\\r\\nContent-Type: multipart/related;\\r\\n\\ttype=\"text/html\";\\r\\n\\tboundary=\"----BOUNDARY42\"\\r\\n\\r\\n\\r\\n------BOUNDARY42\\r\\nContent-Type: text/html\\r\\nContent-ID: <frame-1@mhtml.blink>\\r\\nContent-Transfer-Encoding: quoted-printable\\r\\nContent-Location: http://example.test/page\\r\\n\\r\\n<html><head><title>MHTML Page</title><link rel=3D\"stylesheet\" href=3D\"http://example.test/s.css\"></head><body><p>from mhtml archive</p></body></html>\\r\\n\\r\\n------BOUNDARY42\\r\\nContent-Type: text/css\\r\\nContent-Transfer-Encoding: quoted-printable\\r\\nContent-Location: http://example.test/s.css\\r\\n\\r\\np { color: green; }\\r\\n\\r\\n------BOUNDARY42--\\r\\n' > page-saved-by-browser.mhtml && ls -la site page-saved-by-browser.mhtml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install monolith / make install (build from source)",
+            "actually_needed": "No Rust toolchain in the box; I used the prebuilt release binary monolith-cli-linux-x86_64 (v2.12.0) from GitHub Releases, which the README also lists",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "-F: Specify output format: HTML, MHTML, WARC, or WARCGZ",
+            "actually_needed": "In release 2.12.0, -F means --no-fonts, and MHTML output uses -m/--mhtml. This release has no WARC output. The README documents unreleased code on master",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "-B: let a browser render the page first; -a: take everything from an archive",
+            "actually_needed": "In release 2.12.0, -B means --blacklist-domains and -a means --no-audio. Browser rendering and the archive option are not in the released binary",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "Several targets can be given at once",
+            "actually_needed": "Release 2.12.0 takes a single <TARGET>",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Monolith inlined the image as a base64 data URI, produced a multipart/related MHTML archive with -m, and printed version 2.12.0, all exiting 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-monolith-20261119-170645-8332/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-monolith-20261119-170645-8332/check-1-cmd5.judged.png",
+            "runs/verify/verify-monolith-20261119-170645-8332/check-2-cmd9.judged.png",
+            "runs/verify/verify-monolith-20261119-170645-8332/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.215833,
+        "features": [
+          {
+            "feature": "embed CSS, images and JavaScript into one HTML",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "render dynamic pages in a browser before saving",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_toolchain",
+            "failure": null,
+            "note": "Release 2.12.0 has no browser rendering (its -B is --blacklist-domains). The README's -B needs a source build with cargo, and the box also has no browser"
+          },
+          {
+            "feature": "output as HTML, MHTML, WARC or WARCGZ",
+            "status": "test_failed",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": "tool",
+            "note": "-F MHTML fails with 'unexpected argument' because in this release -F means --no-fonts. -m produced MHTML output. WARC/WARCGZ output does not exist in this release"
+          },
+          {
+            "feature": "save pages from WARC, HAR, MHTML archives offline",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T17:07:55+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/Y2Z/monolith@487f8dced4e9",
+      "Cargo.lock"
+    ],
+    "packages_checked": 470,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T17:07:47+08:00",
+    "quality": {
+      "total": 68.9,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.6141,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.4184,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 0.6667,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 98.4,
+      "signals": {
+        "stars": 15613,
+        "monthly_downloads": 4847,
+        "forks": 484,
+        "dependents": null,
+        "release_downloads": 43873,
+        "hn_top_score": 772,
+        "registries_count": 2
+      },
+      "age_days": 3559,
+      "packages": [
+        "crates:monolith",
+        "homebrew:monolith"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 1.1
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:07:47.662362+08:00",
+      "sources_sha": "d0104a77f714cd7d3550a06ba7001213e36efdbba88a8b8a8f294cabc16c8600",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Unlike the conventional “Save page as”, `monolith` not only saves the target document, it embeds CSS, image, and JavaScript assets **all at once**, producing a single HTML5 document"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "A data hoarder’s dream come true: bundle any web page into a single HTML file."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Dependencies: `cargo`"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "| macOS, Linux | [Homebrew](https://formulae.brew.sh/formula/monolith) | `brew install monolith` |"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "monolith https://lyrics.github.io/db/P/Portishead/Dummy/Roads/"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Please set `https_proxy`, `http_proxy`, and `no_proxy` environment variables."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "it comes under the [Zero-Clause BSD](LICENSE) license (0BSD)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Y2Z/monolith",
+      "fetched_at": "2026-11-19T17:06:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Y2Z/monolith/blob/master/README.md",
+      "fetched_at": "2026-11-19T17:06:27+08:00"
+    },
+    {
+      "id": "release:v2.12.0",
+      "kind": "release",
+      "url": "https://github.com/Y2Z/monolith/releases/tag/v2.12.0",
+      "fetched_at": "2026-11-19T17:06:27+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "GUI/CLI tool and library for saving complete web pages as a single HTML file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "github_api",
+      "quote": "GUI/CLI tool and library",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "bundle any web page into a single HTML file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "GUI/CLI tool and library for saving complete web pages as a single HTML file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "Monolith is free to use, copy, modify, and distribute",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "`-B`: Let a browser render the page first (requires Firefox, or anything based on it or Chromium)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "never goes online to complete them",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:06:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:06:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T17:06:29+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:06:29+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:06:29+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.12.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:06:27+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "bundle any web page into a single HTML file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "monolith -F WARC https://some.site/ https://some.site/about -o some-site.warc",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "monolith page-saved-by-browser.mhtml -o page.html",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "monolith -I -d .googleusercontent.com -d googleanalytics.com -d .google.com https://example.com -o example-no-ads.html",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "If compared to saving websites with `wget -mpk`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "it embeds CSS, image, and JavaScript assets **all at once**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "option `-B` opens the page in a browser, waits for it to finish rendering, and saves what the page has become",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "`-F`: Specify output `format`: `HTML` (default), `MHTML`, `WARC`, or `WARCGZ`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Take everything from `archive` (WARC, HAR, MHTML, WebArchive) without going online",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install monolith",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "brew install monolith",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "choco install monolith",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "readme",
+      "quote": "Monolith is free to use, copy, modify, and distribute, for any purpose",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "lets browsers render the saved page exactly the way it was on the Internet, even when no network connection is available",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:06:40+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T17:06:27+08:00",
+  "updated_at": "2026-11-19T17:07:55+08:00"
+}
