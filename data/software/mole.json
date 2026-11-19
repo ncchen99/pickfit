@@ -1,0 +1,680 @@
+{
+  "schema_version": "software.v1",
+  "slug": "mole",
+  "repo_id": "gh:1062356571",
+  "name": "Mole",
+  "summary": "Command-line tool that cleans caches, uninstalls apps with leftovers, runs maintenance, analyzes disk usage and monitors system status on a Mac.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "analyzer",
+    "appcleaner",
+    "clean",
+    "cleaner",
+    "cleanmymac",
+    "command-line",
+    "daisydisk",
+    "deepseek-harness",
+    "dsh-plugin",
+    "dsh-skill"
+  ],
+  "use_cases": [
+    "remove caches, logs and leftovers to reclaim disk space",
+    "uninstall an app together with its leftovers",
+    "delete rebuildable project artifacts like node_modules",
+    "find and remove leftover installer files"
+  ],
+  "alternatives_to": [
+    "CleanMyMac",
+    "AppCleaner",
+    "DaisyDisk",
+    "iStat Menus"
+  ],
+  "features": [
+    "deep clean caches and app leftovers",
+    "uninstall apps with their leftovers",
+    "explore disk usage in an interactive TUI",
+    "monitor CPU, memory, disk and network live"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://mole.fit",
+  "repo": {
+    "url": "https://github.com/tw93/Mole",
+    "full_name": "tw93/Mole",
+    "created_at": "2025-09-23T06:38:40Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "macOS 12 or newer"
+    ],
+    "gpu": null,
+    "apple_silicon_only": false,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install mole",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Add the Raycast script directory in Raycast settings to use quick launchers"
+      ],
+      "check": null,
+      "first_task": "mo --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-mole-20261119-121714-5b09",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/mole-install.sh https://raw.githubusercontent.com/tw93/Mole/linux/install.sh",
+          "purpose": "download the Linux install.sh from the linux branch"
+        },
+        {
+          "command": "bash /tmp/mole-install.sh",
+          "purpose": "run the installer (fetches the checksummed 0.7.0 release into ~/.local/share/mole, links mo into ~/.local/bin)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "mo --version",
+        "expected_signal": "Mole version 0.7.0"
+      },
+      "first_task": "mo clean --dry-run"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "iwr -useb https://raw.githubusercontent.com/tw93/Mole/windows/quick-install.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Add the Raycast script directory in Raycast settings to use quick launchers"
+      ],
+      "check": null,
+      "first_task": "mo --version"
+    }
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "GPL-3.0",
+  "processing": null,
+  "last_release": {
+    "tag": "V1.73.0",
+    "published_at": "2026-11-18T15:14:08Z",
+    "url": "https://github.com/tw93/Mole/releases/tag/V1.73.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T12:18:22.317607+08:00",
+    "runs": [
+      {
+        "id": "verify-mole-20261119-121714-5b09",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T12:18:22.317607+08:00",
+        "tool_version": "0.7.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/mole-install.sh https://raw.githubusercontent.com/tw93/Mole/linux/install.sh",
+            "purpose": "download the Linux install.sh from the linux branch"
+          },
+          {
+            "command": "bash /tmp/mole-install.sh",
+            "purpose": "run the installer (fetches the checksummed 0.7.0 release into ~/.local/share/mole, links mo into ~/.local/bin)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mo --version",
+            "expected_signal": "Mole version 0.7.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Mole version 0.7.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mo clean --dry-run",
+            "expected_signal": "Dry run complete - no changes made",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Dry run complete - no changes made",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mo status --json",
+            "expected_signal": "\"top_processes\": [",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"top_processes\": [",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "mo analyze --json /home/sbx/work",
+            "expected_signal": "\"scan_status\": \"complete\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"scan_status\": \"complete\",",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Main README (macOS) says Mole requires macOS 12+ and installs via brew or main/install.sh",
+            "actually_needed": "Linux has a separate CLI on the linux branch (version 0.7.0, own README) installed via linux/install.sh into ~/.local/share/mole with links in ~/.local/bin; no sudo",
+            "kind": "note"
+          },
+          {
+            "readme_said": "mo analyze is an interactive TUI",
+            "actually_needed": "Without a TTY it fails ('could not open a new TTY'); `mo analyze --json PATH` gives a non-interactive scan",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Dry-run clean completed with 'Dry run complete - no changes made', status --json produced full JSON including top_processes in the captured output, and --version printed 'Mole version 0.7.0', all exit 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-mole-20261119-121714-5b09/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-mole-20261119-121714-5b09/check-1-cmd5.judged.png",
+            "runs/verify/verify-mole-20261119-121714-5b09/check-2-cmd7.judged.png",
+            "runs/verify/verify-mole-20261119-121714-5b09/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.289677,
+        "features": [
+          {
+            "feature": "deep clean caches and app leftovers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Dry run found nothing to tidy in every category, so no cleaning or reclaimable items were shown."
+          },
+          {
+            "feature": "uninstall apps with their leftovers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "uninstall --list said 'No removable apps found.' Nothing here can be uninstalled, and apt removal would need root"
+          },
+          {
+            "feature": "explore disk usage in an interactive TUI",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "monitor CPU, memory, disk and network live",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T12:18:29+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/tw93/Mole@7966afddcde6",
+      "go.mod"
+    ],
+    "packages_checked": 30,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T12:18:22+08:00",
+    "quality": {
+      "total": 96.5,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 100.0,
+      "signals": {
+        "stars": 75544,
+        "monthly_downloads": 72951,
+        "forks": 2724,
+        "dependents": null,
+        "release_downloads": 40205,
+        "hn_top_score": 33,
+        "registries_count": 1
+      },
+      "age_days": 421,
+      "packages": [
+        "homebrew:mole"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.0
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:18:22.335999+08:00",
+      "sources_sha": "3620faca17ff7a605f907d91ebd8f45683cd10ddd7150fe602f19c2b8695a4ff",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "- **Deep clean**: Removes caches, logs, leftovers, and orphaned app data to reclaim disk space"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Deep clean, uninstall, optimize, analyze disk and monitor your Mac. Free open-source CLI, plus a Mac app."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Mole requires macOS 12 or newer and supports both Intel and Apple Silicon Macs."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "iwr -useb https://raw.githubusercontent.com/tw93/Mole/windows/quick-install.ps1 | iex"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "$ mo clean\n\nClean Your Mac"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Mole runs without configuration. These environment variables adapt it to slow disks, stalled network or cloud mounts"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "mo remove                    # Remove Mole from system"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Mole is open source under GPL-3.0; see [LICENSE](LICENSE)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/tw93/Mole",
+      "fetched_at": "2026-11-19T12:16:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/tw93/Mole/blob/main/README.md",
+      "fetched_at": "2026-11-19T12:16:56+08:00"
+    },
+    {
+      "id": "release:V1.73.0",
+      "kind": "release",
+      "url": "https://github.com/tw93/Mole/releases/tag/V1.73.0",
+      "fetched_at": "2026-11-19T12:16:56+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "This repo is the free open-source CLI (`mo`).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Free open-source CLI, plus a Mac app.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Combines CleanMyMac, AppCleaner, DaisyDisk, and iStat Menus style workflows in one terminal command",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Deep clean, uninstall, optimize, analyze disk and monitor your Mac. Free open-source CLI, plus a Mac app.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "<h1>Mole</h1>",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Mole requires macOS 12 or newer and supports both Intel and Apple Silicon Macs.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/prerequisites/apple_silicon_only",
+      "source_id": "readme",
+      "quote": "supports both Intel and Apple Silicon Macs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T12:16:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T12:16:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T12:16:57+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T12:16:57+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T12:16:57+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:V1.73.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T12:16:56+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Removes caches, logs, leftovers, and orphaned app data to reclaim disk space",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Removes apps together with LaunchAgents, preferences, and leftovers",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "`mo purge` finds rebuildable project artifacts such as `node_modules`, `target`, `.build`, `build`, and `dist`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "mo installer                 # Find and remove installer files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Combines CleanMyMac, AppCleaner, DaisyDisk, and iStat Menus style workflows",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "Combines CleanMyMac, AppCleaner, DaisyDisk, and iStat Menus style workflows",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "Combines CleanMyMac, AppCleaner, DaisyDisk, and iStat Menus style workflows",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/alternatives_to/3",
+      "source_id": "readme",
+      "quote": "Combines CleanMyMac, AppCleaner, DaisyDisk, and iStat Menus style workflows",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**Deep clean**: Removes caches, logs, leftovers, and orphaned app data to reclaim disk space",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**Smart uninstaller**: Removes apps together with LaunchAgents, preferences, and leftovers",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**Disk analyzer**: Visualizes disk usage with an interactive TUI, finds large files, and navigates directories",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "**Live monitoring**: Shows real-time CPU, memory, disk I/O, network traffic, and process stats",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install mole",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://raw.githubusercontent.com/tw93/Mole/linux/install.sh | bash",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "iwr -useb https://raw.githubusercontent.com/tw93/Mole/windows/quick-install.ps1 | iex",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "release:V1.73.0",
+      "quote": "The CLI stays free and open source.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:17:09+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T12:16:56+08:00",
+  "updated_at": "2026-11-19T12:18:29+08:00"
+}
