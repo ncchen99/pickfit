@@ -1,0 +1,656 @@
+{
+  "schema_version": "software.v1",
+  "slug": "vortix",
+  "repo_id": "gh:1126657148",
+  "name": "Vortix",
+  "summary": "Terminal UI and CLI for managing WireGuard, OpenVPN and NetBird tunnels with telemetry, leak detection and a kill switch.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "security_net",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "kill-switch",
+    "linux",
+    "macos",
+    "netbird",
+    "network-security",
+    "networking",
+    "openvpn",
+    "ratatui",
+    "rust"
+  ],
+  "use_cases": [
+    "connect multiple VPN profiles with split and full tunnels",
+    "detect IPv4, IPv6 and DNS leaks",
+    "script VPN control via JSON output"
+  ],
+  "alternatives_to": [
+    "wg-quick"
+  ],
+  "features": [
+    "run multiple VPN tunnels side by side",
+    "view throughput, latency and packet loss",
+    "enable a kill switch",
+    "check IP and DNS exposure"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://crates.io/crates/vortix",
+  "repo": {
+    "url": "https://github.com/Harry-kp/vortix",
+    "full_name": "Harry-kp/vortix",
+    "created_at": "2026-01-02T10:43:16Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "rust>=1.85 (source builds)"
+    ],
+    "system_packages": [
+      "wireguard-tools",
+      "openvpn"
+    ],
+    "gpu": null,
+    "apple_silicon_only": false,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install vortix",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Run with root privileges to change tunnels, routes, DNS or firewall",
+        "Sign in to NetBird in a browser"
+      ],
+      "check": null,
+      "first_task": "vortix status"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-vortix-20261120-001144-036a",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @harry-kp/vortix",
+          "purpose": "npm install -g @harry-kp/vortix"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "vortix --version",
+        "expected_signal": "vortix 0.6.0"
+      },
+      "first_task": "vortix status"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.6.0",
+    "published_at": "2026-11-01T20:37:04Z",
+    "url": "https://github.com/Harry-kp/vortix/releases/tag/v0.6.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-20T00:12:34.065660+08:00",
+    "runs": [
+      {
+        "id": "verify-vortix-20261120-001144-036a",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:01363ad5a469",
+        "checked_at": "2026-11-20T00:12:34.065660+08:00",
+        "tool_version": "vortix 0.6.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @harry-kp/vortix",
+            "purpose": "npm install -g @harry-kp/vortix"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "vortix --version",
+            "expected_signal": "vortix 0.6.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "vortix 0.6.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "vortix status",
+            "expected_signal": "Kill Switch Off (Inactive)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Kill Switch Off (Inactive)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "vortix status --json",
+            "expected_signal": "\"killswitch_mode\": \"off\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"killswitch_mode\": \"off\",",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "vortix import ./work.conf && vortix list",
+            "expected_signal": "✓ Imported 'work'",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✓ Imported 'work'",
+            "setup": [
+              {
+                "command": "cat > work.conf <<'EOF'\n[Interface]\nPrivateKey = qX7mZp2Lr9TbVw4Kc8NsYh3Jd6Fg1Ae5Ru0Oi9Pl2M=\nAddress = 10.66.0.2/32\nDNS = 10.66.0.1\n\n[Peer]\nPublicKey = Hn4Tz8Wq1Lk6Vb3Xc9Ms2Pd7Gf5Jr0Ya8Eu4Ki1Oo=\nAllowedIPs = 0.0.0.0/0, ::/0\nEndpoint = 203.0.113.10:51820\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "sudo vortix up work / kill switch / dashboard",
+            "actually_needed": "Root; as non-root `vortix up` and `vortix killswitch` exit 2 with 'VPN operations require root privileges'",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Install wireguard-tools and openvpn first",
+            "actually_needed": "Not installed here (needs apt/root); import, list and status work without them",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exited 0 with expected output: status shows Kill Switch Off (Inactive), JSON status shows killswitch_mode off with ok true, and version prints vortix 0.6.0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-vortix-20261120-001144-036a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-vortix-20261120-001144-036a/check-1-cmd3.judged.png",
+            "runs/verify/verify-vortix-20261120-001144-036a/check-2-cmd5.judged.png",
+            "runs/verify/verify-vortix-20261120-001144-036a/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.147452,
+        "features": [
+          {
+            "feature": "run multiple VPN tunnels side by side",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "vortix up: 'VPN operations require root privileges'"
+          },
+          {
+            "feature": "view throughput, latency and packet loss",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "Telemetry needs a connected tunnel, which needs root"
+          },
+          {
+            "feature": "enable a kill switch",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "vortix killswitch block-on-drop needs root; status only shows mode off"
+          },
+          {
+            "feature": "check IP and DNS exposure",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "Exposure verdict needs the root dashboard or a connected tunnel"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:12:41+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "npm:@harry-kp/vortix (fresh install, 1 packages)",
+      "github.com/Harry-kp/vortix@3b2d2e017be9",
+      "Cargo.lock"
+    ],
+    "packages_checked": 319,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-20T00:12:34+08:00",
+    "quality": {
+      "total": 88.5,
+      "confidence": 0.7,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.6667,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 91.7,
+      "signals": {
+        "stars": 785,
+        "monthly_downloads": 732,
+        "forks": 36,
+        "dependents": null,
+        "release_downloads": 2950,
+        "hn_top_score": 3,
+        "registries_count": 2
+      },
+      "age_days": 321,
+      "packages": [
+        "npm:@harry-kp/vortix",
+        "homebrew:vortix"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 7.35
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:12:34.075955+08:00",
+      "sources_sha": "18a62eb0b5d14ec2eebbe0ca07462b5894310a6761130e464fe633c249a68650",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "VPN terminal UI (TUI) for WireGuard and OpenVPN with multi-tunnel control, real-time telemetry, and a kill switch."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "It is useful when plain `wg-quick` or `openvpn` provides too little visibility, while a full desktop VPN client is too heavy or tied to one provider."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Source builds need Rust 1.85 or newer. Linux 5.6 or newer is recommended for in-kernel WireGuard."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "| Homebrew (macOS, Linux) | `brew install vortix` (also installs `wireguard-tools` and `openvpn`) |"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "vortix import ./work.conf       # .conf, .ovpn, .netbird, URL, or directory"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "| [Configuration](https://github.com/Harry-kp/vortix/blob/main/docs/configuration.md) | Files, `config.toml`, `settings.toml`, hooks, DNS |"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "If `sudo vortix` is not found after a Cargo install or the shell installer, link it once: `sudo ln -s ~/.cargo/bin/vortix /usr/local/bin/vortix`."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://github.com/Harry-kp/vortix/blob/main/LICENSE)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Harry-kp/vortix",
+      "fetched_at": "2026-11-20T00:11:28+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Harry-kp/vortix/blob/main/README.md",
+      "fetched_at": "2026-11-20T00:11:26+08:00"
+    },
+    {
+      "id": "release:v0.6.0",
+      "kind": "release",
+      "url": "https://github.com/Harry-kp/vortix/releases/tag/v0.6.0",
+      "fetched_at": "2026-11-20T00:11:26+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "VPN terminal UI (TUI) for WireGuard and OpenVPN",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Vortix is a VPN TUI: it gives WireGuard and OpenVPN users one keyboard-driven view of their tunnels",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "VPN terminal UI (TUI) for WireGuard and OpenVPN",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "VPN terminal UI (TUI) for WireGuard and OpenVPN with multi-tunnel control, real-time telemetry, and a kill switch.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Vortix",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Work locally, over SSH, and across macOS and Linux.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "Source builds need Rust 1.85 or newer.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "brew install wireguard-tools openvpn",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "brew install wireguard-tools openvpn",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/prerequisites/apple_silicon_only",
+      "source_id": "release:v0.6.0",
+      "quote": "Intel macOS",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Vortix drives\n`wg-quick` and `openvpn` as subprocesses",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T00:11:28+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T00:11:28+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-20T00:11:28+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T00:11:28+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T00:11:28+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.6.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T00:11:26+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Connect multiple profiles and distinguish the default-route tunnel from split-route tunnels.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Detect IPv4, IPv6, and DNS-policy exposure",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Control the same engine from the TUI, CLI, or versioned JSON output.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "It is useful when plain `wg-quick` or `openvpn` provides too little visibility",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Full and split tunnels side by side, one default-route owner",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Throughput, latency, jitter, packet loss, public IP, ISP, and location",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "`off`, `block-on-drop`, and `vpn-only`, using PF on macOS or nftables on Linux",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "IPv4/IPv6 exposure, DNS, encryption and kill-switch state, with one verdict",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install vortix",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g @harry-kp/vortix",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "has no server of its own",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:11:40+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-20T00:11:26+08:00",
+  "updated_at": "2026-11-20T00:12:41+08:00"
+}
