@@ -16,12 +16,18 @@ A Mac is rented for a day at least (Scaleway: 24 h), so Mac jobs park until a ba
 While the lane holds a host (`live`), a newly parked Mac job runs at once, `concurrency` at a time (2: Apple's
 licence allows two macOS VMs on one Mac). `idle()`: a host the lane rented is deleted once nothing is parked or
 running and its first 24 h are over (Scaleway bills every hour after that). A host someone added is never deleted.
-Rentals are logged in ~/.pickfit/mac-hosts/rentals.jsonl.
+Rentals are logged in ~/.pickfit/mac-hosts/rentals.jsonl, and their cost in the ledger's boxes table (mac_host).
+
+The same configuration error twice in a row (no usable host with renting off, a host not set up, its bases or
+limits test failing, a rental refused for a quota) is not retried every time watch retries the lane: `available()`
+says the lane needs an operator, `status()` shows it under `needs_operator`, and it stays so until the host records
+or the lane's settings change or `pickfit mac-host clear` is run (mac_host.operator_hold).
 """
 
 from __future__ import annotations
 
 import json
+import re
 import threading
 import time
 from collections.abc import Callable
@@ -68,6 +74,7 @@ class MacLane:
         self._verify_task, self._make_box = verify_task, make_box
         self.host: HostRecord | None = None
         self.waiting_for_root: str | None = None  # a rented host that needs a person's root step
+        self._unusable: dict[str, str] = {}  # host -> why it was not used, in the last available()
         self._lock = threading.Lock()
 
     # -- the lane protocol
@@ -76,30 +83,59 @@ class MacLane:
         return self.host is not None
 
     def available(self, log: Callable[[str], None]) -> str | None:
+        """None when a host is ready. Otherwise why not; the same configuration error a second time in a row is
+        reported as needing an operator and not tried again until something changes (mac_host.operator_hold)."""
         with self._lock:
-            if self.host is not None and self._usable(self.host, log):
+            hold = mac_host.operator_hold(self.hosts_dir, self._context())
+            if hold is not None:
+                self.host = None
+                return mac_host.hold_message(hold)
+            why, key = self._find_host(log)
+            if why is None:
+                mac_host.clear_hold(self.hosts_dir)
                 return None
-            self.host = None
-            for rec in self._known():
-                if self._usable(rec, log):
-                    self.host, self.waiting_for_root = rec, None
-                    log(f"using {rec.name} ({rec.target}, macOS {rec.macos})")
-                    return None
-            if not self.rent:
-                return "no Mac host is ready and renting is off (`pickfit watch --mac-rent`)"
-            capped = self._rental_cap()
-            if capped:
-                return capped
-            try:
-                rec = self._rent_one(log)
-            except BoxError as err:
-                return f"renting a Mac failed: {err}"
-            if rec is None:
-                return self.waiting_for_root
+            if key is None:  # it passes by itself (no answer, no stock, the rental cap): tried again as before
+                return why
+            hold = mac_host.note_failure(self.hosts_dir, key, why, context=self._context(), now=self.clock())
+            return mac_host.hold_message(hold) if hold["count"] >= mac_host.OPERATOR_AFTER else why
+
+    def _context(self) -> str:
+        return mac_host.lane_context(self.hosts_dir, rent=self.rent, root_from_provider=self.root_from_provider,
+                                     provider=self.provider, zone=self.zone, macos=self.macos)
+
+    def _find_host(self, log: Callable[[str], None]) -> tuple[str | None, str | None]:
+        """(why no host is ready, or None; the configuration error's key, or None for one that passes by itself)."""
+        self._unusable = {}
+        if self.host is not None and self._usable(self.host, log):
+            return None, None
+        self.host = None
+        for rec in self._known():
             if self._usable(rec, log):
-                self.host = rec
-                return None
-            return f"{rec.name} was rented and set up but did not pass its checks; see `pickfit mac-host check {rec.name}`"
+                self.host, self.waiting_for_root = rec, None
+                log(f"using {rec.name} ({rec.target}, macOS {rec.macos})")
+                return None, None
+        kinds = sorted(set(self._unusable.values()))
+        passing = kinds == ["unreachable"]  # only hosts that did not answer: they may next time
+        if not self.rent:
+            seen = "; ".join(f"{name}: {kind}" for name, kind in sorted(self._unusable.items()))
+            why = "no Mac host is ready and renting is off (`pickfit watch --mac-rent`)" + (f" ({seen})" if seen else "")
+            return why, None if passing else f"renting-off:{','.join(kinds)}"
+        capped = self._rental_cap()
+        if capped:
+            return capped, None
+        try:
+            rec = self._rent_one(log)
+        except BoxError as err:
+            text = str(err)
+            return f"renting a Mac failed: {text}", None if "stock" in text.lower() else \
+                "rent-failed:" + re.sub(r"\d+", "#", text)[:200]
+        if rec is None:  # already says a person must act, and the check that sees the root step done costs nothing
+            return self.waiting_for_root, None
+        if self._usable(rec, log):
+            self.host = rec
+            return None, None
+        return (f"{rec.name} was rented and set up but did not pass its checks; see `pickfit mac-host check {rec.name}`",
+                f"rented-unusable:{self._unusable.get(rec.name, '')}")
 
     def verify(self, task: Any, data_dir: Path, log: Callable[[str], None]) -> Any:
         rec = self.host
@@ -127,7 +163,7 @@ class MacLane:
         base = f"{mac.base}-gui" if gui else mac.base
         longer = {"max_command_s": GUI_COMMAND_S} if gui else {}
         return lambda run_id, role: TartBox(base=base, limits=BoxLimits(lifetime_s=lifetime, **longer), display=gui,
-                                            host=rec.ssh_host())
+                                            host=rec.ssh_host(), tags={"pickfit.run": run_id, "pickfit.role": role})
 
     def idle(self, log: Callable[[str], None]) -> None:
         """Nothing parked or running: a host this lane rented goes once its paid first day is over."""
@@ -151,10 +187,12 @@ class MacLane:
         for rec in self._known(every=True):
             hosts.append({"name": rec.name, "provider": rec.provider, "target": rec.target, "macos": rec.macos,
                           "deletable_at": rec.deletable_at or None, "rented_by_watch": rec.extra.get("rented_by") == "watch"})
+        hold = mac_host.operator_hold(self.hosts_dir, self._context())
         return {"policy": self.policy.describe(), "rent": self.rent, "root_from_provider": self.root_from_provider,
                 "in_use": self.host.name if self.host else None, "hosts": hosts,
                 "rentals_in_window": len(self._rentals()), "max_rentals": self.max_rentals,
-                "waiting_for_root": self.waiting_for_root}
+                "waiting_for_root": self.waiting_for_root,
+                "needs_operator": mac_host.hold_message(hold) if hold else None}
 
     # -- hosts
 
@@ -171,17 +209,22 @@ class MacLane:
 
     def _usable(self, rec: HostRecord, log: Callable[[str], None]) -> bool:
         """Ready by `mac-host check`, and its bases built and its limits test passed (run now when missing)."""
+        unusable = self._unusable  # why each host was not used, this round
         try:
             ops = self._ops(rec, log=log)
             checks = ops.checks()
         except (BoxError, OSError, ValueError) as err:
             log(f"{rec.name}: not reachable ({type(err).__name__}: {str(err)[:200]})")
+            unusable[rec.name] = "unreachable"
             return False
         except Exception as err:  # noqa: BLE001 - an SSH timeout, a host that went away
             log(f"{rec.name}: not reachable ({type(err).__name__}: {str(err)[:200]})")
+            unusable[rec.name] = "unreachable"
             return False
         if not ready(checks):
-            log(f"{rec.name}: not ready ({', '.join(c.name for c in checks if not c.ok and not c.name.startswith('base:'))})")
+            failing = [c.name for c in checks if not c.ok and not c.name.startswith('base:')]
+            log(f"{rec.name}: not ready ({', '.join(failing)})")
+            unusable[rec.name] = f"not ready ({', '.join(failing)})"
             return False
         by = {c.name: c.ok for c in checks}
         mac = macos_for(rec.macos)
@@ -193,8 +236,9 @@ class MacLane:
         log(f"{rec.name}: {', '.join(s.name for s in steps)} before the batch")
         report = self._test(rec, steps, self.runs_dir / "mac-host" / f"{rec.name}-{stamp}", log=log)
         if not report.get("passed"):
-            log(f"{rec.name}: its bases or limits test failed: "
-                + ", ".join(f"{s['step']}={s['exit']}" for s in report.get("steps", [])))
+            failed = ", ".join(f"{s['step']}={s['exit']}" for s in report.get("steps", []))
+            log(f"{rec.name}: its bases or limits test failed: {failed}")
+            unusable[rec.name] = f"bases or limits test failed ({failed})"
             return False
         rec.extra["limits_passed"] = stamp
         rec.save(self.hosts_dir)

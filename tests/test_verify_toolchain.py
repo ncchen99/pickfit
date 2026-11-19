@@ -101,3 +101,32 @@ def test_a_build_box_is_not_taken_for_one_sized_for_model_weights(task: VerifyTa
     assert "sized for model weights" not in render_task(task, plan_for(task.extraction), build, AgentLimits())
     build.limits = BoxLimits(cpus=4.0, memory_mb=16384, home_mb=8192, max_command_s=1800)  # asked for: --memory-mb
     assert "sized for model weights" in render_task(task, plan_for(task.extraction), build, AgentLimits())
+
+
+def test_a_build_that_compiles_rust_or_go_gets_more_cores_where_cores_are_billed_by_the_second(task: VerifyTask):
+    from dataclasses import replace
+
+    from pickfit.schema import InstallClaim
+    from pickfit.verify.box import compiles, sized_for_build
+
+    assert compiles(task)  # evnx: `cargo install evnx`
+    sized = sized_for_build(box_factory("modal", 900, toolchain=True), task)
+    agent, replay = sized("run", "agent"), sized("run", "replay")
+    for box in (agent, replay):  # the agent's box and the replay's alike: a build runs in both
+        assert box.limits.cpus == 8.0 and box.create_kwargs()["cpu"] == (4.0, 4.0)  # request = limit for a build
+        assert box.limits.memory_mb == 6144 and box.limits.max_command_s == 1800  # the rest stays
+    assert "sized for model weights" not in render_task(task, plan_for(task.extraction), agent, AgentLimits())
+    # Not a build box, a provider that does not bill so (EC2: eight vCPUs are the whole account's quota), or a
+    # task that installs a prebuilt binary: as the factory made it.
+    assert sized_for_build(box_factory("modal", 900), task)("run", "agent").limits.cpus == 2.0
+    assert sized_for_build(box_factory("ec2", 900, toolchain=True), task)("run", "agent").limits.cpus == 4.0
+
+    def installs(*commands: str) -> VerifyTask:
+        claims = [InstallClaim(method="cargo" if "cargo" in c else "go", command=c, platforms=[]) for c in commands]
+        return replace(task, extraction=task.extraction.model_copy(update={"install_methods": claims}))
+
+    assert not compiles(installs("cargo binstall evnx"))
+    assert sized_for_build(box_factory("modal", 900, toolchain=True), installs("cargo binstall evnx"))(
+        "run", "agent").limits.cpus == 4.0
+    assert compiles(installs("go install github.com/x/y@latest")) and compiles(installs("cargo +nightly build -r"))
+    assert compiles(installs("git clone https://x/y && cd y && cargo build --release"))

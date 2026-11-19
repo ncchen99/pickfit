@@ -18,7 +18,8 @@ What a provider has to give:
 4. set_egress(): outbound traffic limited to ONLINE_CIDRS (never cloud metadata, never private ranges) or to
    nothing, decided outside the machine, where root inside it cannot widen it.
 5. The image: sandbox.Dockerfile plus what linux_box.image_recipe() lists for the kind of box.
-6. usd_per_second(), for the ledger.
+6. usd_per_second(), for the ledger, and a row in the ledger's boxes table (meter.BoxMeter) opened once the machine
+   exists and closed when it is destroyed.
 
 A new provider takes real runs only after `pickfit verify --limits-test` passes on it.
 
@@ -74,6 +75,11 @@ class Machine(ABC):
     machine_id: str | None = None  # the provider's id for the started machine
     gpu: str | None = None  # e.g. "T4" when the machine has an NVIDIA card
     grace_s: int = HOST_GRACE_S  # how long run() waits past a command's own timeout before it gives up
+    # The ledger's row for the machine (meter.BoxMeter), which the provider opens and closes: the lane it is counted
+    # in, and its purpose when its tags do not name a role (a web box sets both to "web").
+    lane: str = "linux"
+    purpose: str | None = None
+    meter: Any = None
 
     @abstractmethod
     def start(self) -> None:

@@ -109,7 +109,8 @@ def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64", 
         from pickfit.verify.tart_box import GUI_COMMAND_S, TartBox
 
         longer = {"max_command_s": GUI_COMMAND_S} if display else {}
-        return lambda run_id, role: TartBox(limits=BoxLimits(lifetime_s=lifetime_s, **longer), display=display)
+        return lambda run_id, role: TartBox(limits=BoxLimits(lifetime_s=lifetime_s, **longer), display=display,
+                                            tags={"pickfit.run": run_id, "pickfit.role": role})
     if runner == "vbox":
         if gpu:
             raise ValueError("--gpu needs --runner modal")
@@ -233,7 +234,10 @@ def run(args: argparse.Namespace) -> int:
             print(f"pickfit verify: one Windows box at a time; concurrency {args.concurrency} -> {VBOX_MAX_VMS}")
             args.concurrency = VBOX_MAX_VMS
         return _batch(args, make_box, limits)
-    outcome = verify_task(load_fixture(args.fixture), make_box, model=args.model, mode=args.mode or DEFAULT_MODE,
+    from pickfit.verify.box import sized_for_build
+
+    task = load_fixture(args.fixture)
+    outcome = verify_task(task, sized_for_build(make_box, task), model=args.model, mode=args.mode or DEFAULT_MODE,
                           limits=limits, write=args.write_back, keep_agent_box=args.keep_box)
     print(json.dumps(outcome.summary(), ensure_ascii=False, indent=2))
     return 0 if outcome.passed else 1
@@ -332,9 +336,11 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
 
         ensure_win_image(display=args.display)
 
-    def verify(task, log):
-        return verify_task(task, make_box, model=args.model, mode=args.mode or DEFAULT_MODE, limits=limits,
-                           runs_dir=runs_dir, log=log, write=args.write_back, data_dir=data_dir)
+    from pickfit.verify.box import sized_for_build
+
+    def verify(task, log):  # a build box that compiles Rust or Go gets more cores (sized_for_build)
+        return verify_task(task, sized_for_build(make_box, task), model=args.model, mode=args.mode or DEFAULT_MODE,
+                           limits=limits, runs_dir=runs_dir, log=log, write=args.write_back, data_dir=data_dir)
 
     summary = run_batch(items, verify, concurrency=args.concurrency, runs_dir=runs_dir,
                         meta={"db": str(db), "runner": args.runner, "runtime": args.runtime, "display": args.display,
