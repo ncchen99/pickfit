@@ -569,8 +569,9 @@ BUILD_EDGES = frozenset({("next", "postcss")})
 @dataclass(frozen=True)
 class Gate:
     """A package whose code behind some entry points pulls in more than its core: what only those entries load is not
-    reached when the project never imports them."""
+    reached when the project never imports them. `advisory` picks the package's own advisories about that code."""
 
+    name: str
     package: str
     label: str
     entries: re.Pattern[str]
@@ -578,18 +579,24 @@ class Gate:
     advisory: re.Pattern[str]
 
 
-# 11/19 (OpenPets): an MCP server on stdio never loads the MCP SDK's HTTP transports, so express, hono and the rest
-# (proxy-addr, body-parser...) and the SDK's own HTTP, session and OAuth advisories are present but unreachable.
+# 11/19 (OpenPets): an MCP server on stdio never loads the MCP SDK's HTTP server transports, so express, hono and the
+# rest (proxy-addr, body-parser...) and the SDK's own HTTP server and session advisories are present but unreachable;
+# likewise its HTTP client side (SSE, OAuth) for a project that never imports it. Client advisories are matched first.
 ENTRY_GATES = (
-    Gate(package="@modelcontextprotocol/sdk", label="the MCP SDK's HTTP transports and OAuth",
-         entries=re.compile(r"""["']@modelcontextprotocol/sdk(?:["']|/(?:server/(?:streamableHttp|sse|express|auth|"""
-                            r"""webStandardStreamableHttp)|client/(?:streamableHttp|sse|auth|websocket))\b)"""),
+    Gate(name="mcp-sdk-http-client", package="@modelcontextprotocol/sdk",
+         label="the MCP SDK's HTTP client and OAuth",
+         entries=re.compile(r"""["']@modelcontextprotocol/sdk(?:["']|/client/(?:streamableHttp|sse|auth|websocket)\b)"""),
+         deps=frozenset({"eventsource", "eventsource-parser"}),
+         advisory=re.compile(r"\b(OAuth|client|authori[sz]ation server)\b", re.I)),
+    Gate(name="mcp-sdk-http-server", package="@modelcontextprotocol/sdk", label="the MCP SDK's HTTP server transports",
+         entries=re.compile(r"""["']@modelcontextprotocol/sdk(?:["']|/server/(?:streamableHttp|sse|express|auth|"""
+                            r"""webStandardStreamableHttp)\b)"""),
          deps=frozenset({"express", "cors", "express-rate-limit", "raw-body", "content-type", "hono",
-                         "@hono/node-server", "body-parser", "jose", "pkce-challenge", "eventsource",
-                         "eventsource-parser"}),
-         advisory=re.compile(r"\b(HTTP|transports?|OAuth|authori[sz]ation|DNS rebinding|SSE|Streamable|sessions?|"
-                             r"request body|CORS)\b", re.I)),
+                         "@hono/node-server", "body-parser"}),
+         advisory=re.compile(r"\b(HTTP|transports?|handlers?|DNS rebinding|SSE|Streamable|sessions?|request body|"
+                             r"CORS)\b", re.I)),
 )
+GATES = {g.name: g for g in ENTRY_GATES}
 
 
 @dataclass
@@ -666,7 +673,7 @@ class Graph:
             without = walk(roots("runtime"), build=False, peer=False, cut=cut)
             for nid in runtime_seen:
                 if nid not in without:
-                    gated[nid] = gate.package
+                    gated[nid] = gate.name
         out = []
         for nid, (name, version) in self.nodes.items():
             scope, path, label = best.get(nid, ("runtime", (), None))
@@ -1382,6 +1389,7 @@ def clone(url: str, slug: str, clones: Path = CLONES) -> tuple[Path, str]:
 LANG_EXT = {"npm": (".js", ".mjs", ".cjs", ".ts", ".tsx", ".jsx", ".mts", ".cts", ".vue", ".svelte", ".astro"),
             "crates": (".rs",), "go": (".go",), "pypi": (".py",)}
 _SKIP_DIRS = re.compile(r"(^|/)(node_modules|target|dist|build|out|\.next|coverage|vendor)/")
+_COMMENT = re.compile(r"^(//|#(?!\[)|/\*|\*|--|<!--)")
 
 
 class Sources:
@@ -1430,16 +1438,20 @@ class Sources:
         self.files(eco)
         return eco not in self.truncated
 
-    def find(self, pattern: re.Pattern[str], eco: str, *, also: re.Pattern[str] | None = None) -> str | None:
-        """'path:line: text' of the first line matching `pattern` (in a file that also matches `also`), or None."""
+    def find(self, pattern: re.Pattern[str], eco: str, *, also: Any = None,
+             reject: re.Pattern[str] | None = None) -> str | None:
+        """'path:line: text' of the first code line matching `pattern` (in a file that also matches `also`), or None.
+        A comment line, or one `reject` matches (an option set to false), is not evidence."""
         for rel, text in self.files(eco):
             if also is not None and not also.search(text):
                 continue
-            m = pattern.search(text)
-            if m:
-                line = text.count("\n", 0, m.start()) + 1
-                body = text.splitlines()[line - 1].strip() if text else ""
-                return f"{rel}:{line}: {body[:200]}"
+            for m in pattern.finditer(text):
+                start = text.rfind("\n", 0, m.start()) + 1
+                end = text.find("\n", m.end())
+                body = text[start:end if end >= 0 else len(text)].strip()
+                if _COMMENT.match(body) or (reject is not None and reject.search(body)):
+                    continue
+                return f"{rel}:{text.count(chr(10), 0, m.start()) + 1}: {body[:200]}"
         return None
 
     @property
@@ -1526,8 +1538,9 @@ def _symbol_search(symbol: str) -> tuple[re.Pattern[str], re.Pattern[str] | None
     return re.compile(rf"\b{re.escape(symbol)}\b"), None
 
 
-def go_import_paths(v: dict[str, Any], advisories: Advisories | None) -> list[str]:
-    """The Go packages a Go advisory names (ecosystem_specific.imports), read from its GO- record when it is a GHSA."""
+def go_imports(v: dict[str, Any], advisories: Advisories | None) -> dict[str, list[str]]:
+    """The Go packages a Go advisory names (ecosystem_specific.imports) and their vulnerable symbols, read from its
+    GO- record when it is a GHSA."""
     records = [v]
     if advisories is not None:
         for alias in v.get("aliases") or []:
@@ -1536,13 +1549,51 @@ def go_import_paths(v: dict[str, Any], advisories: Advisories | None) -> list[st
                     records.append(advisories.get(alias))
                 except (urllib.error.URLError, TimeoutError, ValueError):
                     continue
-    paths = []
+    out: dict[str, list[str]] = {}
     for record in records:
         for a in record.get("affected") or []:
             for imp in (a.get("ecosystem_specific") or {}).get("imports") or []:
                 if imp.get("path"):
-                    paths.append(str(imp["path"]))
-    return list(dict.fromkeys(paths))
+                    out.setdefault(str(imp["path"]), []).extend(str(s) for s in imp.get("symbols") or [])
+    return {p: list(dict.fromkeys(s)) for p, s in out.items()}
+
+
+def go_import_paths(v: dict[str, Any], advisories: Advisories | None) -> list[str]:
+    return list(go_imports(v, advisories))
+
+
+def _go_package_name(path: str) -> str:
+    """The name a Go import path is used by: its last element, without a major-version suffix (echo/v4 -> echo,
+    gopkg.in/yaml.v3 -> yaml)."""
+    parts = path.split("/")
+    last = parts[-1] if not re.fullmatch(r"v\d+", parts[-1]) or len(parts) == 1 else parts[-2]
+    return re.sub(r"\.v\d+$", "", last).replace("-", "_")
+
+
+def _imports_package(eco: str, name: str) -> re.Pattern[str]:
+    """A source file that imports the package: positive evidence must sit in one."""
+    if eco == "npm":
+        return re.compile(rf"""["']{re.escape(name)}(?:/[^"']*)?["']""")
+    if eco == "pypi":
+        module = re.escape(_norm(name).replace("-", "_"))
+        return re.compile(rf"(?m)^\s*(?:import|from)\s+{module}\b")
+    crate = re.escape(name.replace("-", "_"))
+    return re.compile(rf"\b{crate}::|\buse\s+{crate}\b|\bextern\s+crate\s+{crate}\b")
+
+
+class _both:
+    """Two file patterns that must both match (Sources.find's `also`)."""
+
+    def __init__(self, *patterns: re.Pattern[str]) -> None:
+        self.patterns = patterns
+
+    def search(self, text: str) -> bool:
+        return all(p.search(text) for p in self.patterns)
+
+
+def _off(token: str) -> re.Pattern[str]:
+    """A line that names an option only to set it off (`trust_remote_code=False`): not evidence it is used."""
+    return re.compile(rf"(?i)\b{re.escape(token)}\b['\"]?\s*[:=]\s*(?:false|0|none|null|off|nil)\b")
 
 
 @dataclass
@@ -1554,6 +1605,33 @@ class Reach:
     govuln: dict[str, tuple[str, str]] = field(default_factory=dict)  # OSV id -> (symbol | package | module, evidence)
     govuln_ran: bool = False
     vendor: frozenset[str] | None = None  # Go packages in vendor/modules.txt
+
+
+_GO_IMPORT = re.compile(r'(?m)^\s*(?:import\s+)?(?:([A-Za-z_]\w*|\.)\s+)?"([^"\s]+)"')
+
+
+def go_call(sources: Sources, path: str, symbol: str) -> str | None:
+    """'file:line: text' of a call to a Go advisory's symbol in a file that imports `path`, or None. A function
+    (StaticFS) is called through the name the file imports the package by; a method (Echo.StaticFS) on a value, so a
+    call qualified by another package the file imports (detent.StaticFS) is not it."""
+    name = symbol.rsplit(".", 1)[-1]
+    call = re.compile(rf"(?:\b(\w+)|[)\]])\.{re.escape(name)}\s*\(")  # x.Name( or a chained f().Name(
+    for rel, text in sources.files("go"):
+        imports = {p: alias or _go_package_name(p) for alias, p in _GO_IMPORT.findall(text)}
+        if path not in imports:
+            continue
+        own = imports[path]
+        others = {a for p, a in imports.items() if p != path}
+        for m in call.finditer(text):
+            qualifier = m.group(1)
+            if ("." in symbol and qualifier in others) or ("." not in symbol and qualifier != own):
+                continue
+            start = text.rfind("\n", 0, m.start()) + 1
+            end = text.find("\n", m.end())
+            body = text[start:end if end >= 0 else len(text)].strip()
+            if not _COMMENT.match(body):
+                return f"{rel}:{text.count(chr(10), 0, m.start()) + 1}: {body[:200]}"
+    return None
 
 
 def _go_vendor(root: Path | None) -> frozenset[str] | None:
@@ -1572,8 +1650,9 @@ def reachability(f: dict[str, Any], dep: Dep, v: dict[str, Any], reach: Reach,
     if dep.name in NEXT_SERVER and reach.static_export and not _CLIENT_SIDE.search(text):
         return ({"method": "next_static_export", "result": "not_reachable",
                  "evidence": [f"{reach.static_export}: output 'export' (static HTML, no Next.js server)"]}, ["server_side"])
-    gate = next((g for g in ENTRY_GATES if g.package in (dep.gate, dep.name)), None)
-    if gate is not None and (dep.gate == gate.package or gate.advisory.search(text)) and reach.sources.available:
+    gate = GATES.get(dep.gate or "") or next((g for g in ENTRY_GATES if g.package == dep.name
+                                               and g.advisory.search(text)), None)
+    if gate is not None and reach.sources.available:
         pre.append(f"entry:{gate.label}")
         hit = reach.sources.find(gate.entries, "npm")
         if hit:
@@ -1588,19 +1667,29 @@ def reachability(f: dict[str, Any], dep: Dep, v: dict[str, Any], reach: Reach,
             level, evidence = min(known, key=lambda k: ("symbol", "package", "module").index(k[0]))
             return ({"method": "govulncheck_binary", "result": "reachable" if level == "symbol" else "not_reachable",
                      "evidence": [evidence]}, pre)
-        paths = go_import_paths(v, advisories)
+        imports = go_imports(v, advisories)
+        paths = list(imports)
         if paths:
-            pre += [f"symbol:{p}" for p in paths[:3]]
-            if reach.vendor is not None:
-                used = [p for p in paths if p in reach.vendor]
-                return ({"method": "import_grep", "result": "unknown" if used else "not_reachable",
-                         "evidence": [f"vendor/modules.txt {'lists' if used else 'does not list'} "
-                                      f"{', '.join((used or paths)[:3])}"]}, pre)
+            symbols = [s for p in paths for s in imports[p]]
+            pre += [f"symbol:{p}" for p in (symbols or paths)[:3]]
+            if reach.vendor is not None and not any(p in reach.vendor for p in paths):
+                return ({"method": "import_grep", "result": "not_reachable",
+                         "evidence": [f"vendor/modules.txt does not list {', '.join(paths[:3])}"]}, pre)
             if reach.sources.available:
                 pattern = re.compile("\"(" + "|".join(re.escape(p) for p in paths) + ")\"")
                 hit = reach.sources.find(pattern, "go")
                 if hit:
-                    return {"method": "import_grep", "result": "reachable", "evidence": [hit]}, pre
+                    # Imported: a call to a vulnerable symbol is the evidence; the import alone settles nothing. A
+                    # function is called through its package's name (echo's StaticFS as middleware.StaticFS), a
+                    # method on any value.
+                    for path in paths:
+                        for symbol in imports[path]:
+                            call = go_call(reach.sources, path, symbol)
+                            if call:
+                                return {"method": "symbol_grep", "result": "reachable", "evidence": [call]}, pre
+                    return ({"method": "import_grep", "result": "unknown",
+                             "evidence": [hit, f"no call to {', '.join(symbols[:3])} found" if symbols
+                                          else "the advisory names no function"]}, pre)
                 if dep.direct and reach.sources.complete("go") and reach.sources.files("go"):
                     return ({"method": "import_grep", "result": "not_reachable",
                              "evidence": [f"no .go file imports {', '.join(paths[:3])}; go.mod requires "
@@ -1610,15 +1699,19 @@ def reachability(f: dict[str, Any], dep: Dep, v: dict[str, Any], reach: Reach,
     pre += [f"option:{o}" for o in options[:3]] + [f"symbol:{s}" for s in symbols[:3]]
     if not (options or symbols) or not reach.sources.available or not reach.sources.files(eco):
         return None, pre
-    for option in options:
-        hit = reach.sources.find(re.compile(rf"(?i)\b{re.escape(option)}"), eco)
+    # Evidence that it is used sits in a file that imports the package; named only elsewhere, it is not settled.
+    uses = _imports_package(eco, dep.name)
+    named_elsewhere = None
+    for method, token, line, also in [("option_grep", o, re.compile(rf"(?i)\b{re.escape(o)}"), None) for o in options] + \
+            [("symbol_grep", s, *_symbol_search(s)) for s in symbols]:
+        reject = _off(token.rsplit("::", 1)[-1])
+        hit = reach.sources.find(line, eco, also=uses if also is None else _both(uses, also), reject=reject)
         if hit:
-            return {"method": "option_grep", "result": "reachable", "evidence": [hit]}, pre
-    for symbol in symbols:
-        line, also = _symbol_search(symbol)
-        hit = reach.sources.find(line, eco, also=also)
-        if hit:
-            return {"method": "symbol_grep", "result": "reachable", "evidence": [hit]}, pre
+            return {"method": method, "result": "reachable", "evidence": [hit]}, pre
+        named_elsewhere = named_elsewhere or reach.sources.find(line, eco, also=also, reject=reject)
+    if named_elsewhere:
+        return ({"method": "option_grep" if options else "symbol_grep", "result": "unknown",
+                 "evidence": [named_elsewhere, f"named only in files that do not import {dep.name}"]}, pre)
     if dep.direct and reach.sources.complete(eco):
         what = ", ".join([*options, *symbols][:4])
         return ({"method": "option_grep" if options else "symbol_grep", "result": "not_reachable",

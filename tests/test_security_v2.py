@@ -5,6 +5,7 @@ fixtures; repositories are folders written here."""
 from __future__ import annotations
 
 import json
+import re
 import subprocess
 import sys
 from datetime import datetime, timedelta
@@ -302,6 +303,66 @@ def test_openpets_with_an_http_transport_the_sdk_side_is_reached(monkeypatch: py
     assert result["assessment"]["level"] == "exposed"
 
 
+def test_the_mcp_sdk_http_client_and_server_are_told_apart(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    # 11/19, continue: an SSE client reaches the SDK's client code, not its HTTP server transports.
+    advisories = OPENPETS_ADVISORIES | {
+        "GHSA-sd03": adv("GHSA-sd03", "MCP TypeScript SDK: OAuth client could send credentials to an authorization server",
+                         vector=NET, package=("npm", "@modelcontextprotocol/sdk"), fixed="1.31.0")}
+    hits = OPENPETS_HITS | {("@modelcontextprotocol/sdk", "1.29.0"): ["GHSA-sd01", "GHSA-sd02", "GHSA-sd03"]}
+    fake_osv(monkeypatch, hits, advisories)
+    repo = openpets(tmp_path / "repo")
+    write(repo, "packages/mcp/src/remote.ts", 'import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";\n')
+    got = {f["advisory"]: f for f in run_check(monkeypatch, repo, record("openpets", "desktop_app")).details["findings"]}
+    assert got["GHSA-sd03"]["level"] == "exposed"  # the OAuth client: imported
+    assert got["GHSA-sd01"]["level"] == "present_unreachable"  # the HTTP server transports: never loaded
+    assert got["GHSA-pa01"]["level"] == "present_unreachable"  # express > proxy-addr: server side
+
+
+def test_evidence_sits_in_a_file_that_imports_the_package(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    # 11/19, eli-v2-0: `trust_remote_code=True` in a sample script for another library is no evidence about diffusers.
+    advisories = {"GHSA-df01": adv("GHSA-df01", "Diffusers has a `trust_remote_code` bypass via `custom_pipeline`",
+                                   package=("PyPI", "diffusers"))}
+    fake_osv(monkeypatch, {("diffusers", "0.37.1"): ["GHSA-df01"]}, advisories)
+    repo = tmp_path / "repo"
+    write(repo, "requirements.txt", "diffusers==0.37.1\n")
+    write(repo, "app/finetune.py", "from transformers import AutoModel\nAutoModel.from_pretrained(x, trust_remote_code=True)\n")
+    write(repo, "app/gen.py", "from diffusers import DiffusionPipeline\n")
+    f = run_check(monkeypatch, repo, record("tool")).details["findings"][0]
+    assert (f["reachability"]["result"], f["level"]) == ("unknown", "conditional")
+    write(repo, "app/gen.py", "from diffusers import DiffusionPipeline\nDiffusionPipeline.from_pretrained(x, custom_pipeline=p)\n")
+    f = run_check(monkeypatch, repo, record("tool")).details["findings"][0]
+    assert f["reachability"]["evidence"] == ["app/gen.py:2: DiffusionPipeline.from_pretrained(x, custom_pipeline=p)"]
+
+
+def test_a_go_function_is_called_through_its_package_name(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    # 11/19, detent: `detent.StaticFS()` is the project's own function, not echo's middleware.StaticFS.
+    advisories = {"GHSA-ec01": adv("GHSA-ec01", "Echo: encoded slash bypasses route protection", aliases=["GO-2026-0003"],
+                                   package=("Go", "github.com/labstack/echo/v4")),
+                  "GO-2026-0003": {"id": "GO-2026-0003", "affected": [{"ecosystem_specific": {"imports": [
+                      {"path": "github.com/labstack/echo/v4/middleware", "symbols": ["StaticFS"]}]}}]}}
+    fake_osv(monkeypatch, {("github.com/labstack/echo/v4", "v4.15.1"): ["GHSA-ec01"]}, advisories)
+    repo = tmp_path / "repo"
+    write(repo, "go.mod", "module example.com/d\n\ngo 1.25\n\nrequire github.com/labstack/echo/v4 v4.15.1\n")
+    write(repo, "a.go", 'package d\n\nimport "github.com/labstack/echo/v4/middleware"\n\nvar _ = middleware.Logger\n'
+                        'func f() { detent.StaticFS() }\n')
+    f = run_check(monkeypatch, repo, record("d")).details["findings"][0]
+    assert (f["reachability"]["result"], f["level"]) == ("unknown", "conditional")
+    write(repo, "a.go", 'package d\n\nimport "github.com/labstack/echo/v4/middleware"\n\nfunc f() { e.Use(middleware.StaticFS(fs)) }\n')
+    f = run_check(monkeypatch, repo, record("d")).details["findings"][0]
+    assert f["level"] == "exposed" and f["reachability"]["evidence"][0].startswith("a.go:5:")
+    assert security._go_package_name("gopkg.in/yaml.v3") == "yaml"
+    # A method symbol: called on a value, but not through another package the file imports.
+    src = tmp_path / "methods"
+    write(src, "b.go", 'package d\n\nimport (\n\t"github.com/labstack/echo/v4"\n\t"example.com/detent"\n)\n\n'
+                       'func f() { detent.StaticFS() }\n')
+    assert security.go_call(security.Sources(src), "github.com/labstack/echo/v4", "Echo.StaticFS") is None
+    write(src, "b.go", 'package d\n\nimport (\n\tlabecho "github.com/labstack/echo/v4"\n)\n\n'
+                       'func f() { e := labecho.New(); e.StaticFS("/", fs) }\n')
+    assert security.go_call(security.Sources(src), "github.com/labstack/echo/v4", "Echo.StaticFS").startswith("b.go:7:")
+    write(src, "b.go", 'package d\n\nimport labecho "github.com/labstack/echo/v4"\n\nfunc f() { labecho.New().StaticFS("/", fs) }\n')
+    assert security.go_call(security.Sources(src), "github.com/labstack/echo/v4", "Echo.StaticFS").startswith("b.go:5:")
+
+
 def test_a_kev_entry_blocks_only_where_the_code_reaches_it(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     fake_osv(monkeypatch, OPENPETS_HITS, OPENPETS_ADVISORIES)
     kev = {"CVE-2026-3001": "2026-11-01", "CVE-2026-1001": "2026-11-01"}
@@ -469,6 +530,16 @@ def test_crates_io_index_settles_an_optional_dependency_of_a_dependency(monkeypa
     assert result.details["findings"][0]["scope"] == "runtime"
 
 
+def test_an_option_set_off_or_named_in_a_comment_is_not_evidence(tmp_path: Path) -> None:
+    write(tmp_path, "a.py", "# trust_remote_code is unsafe\nload(trust_remote_code=False)\n")
+    write(tmp_path, "b.py", "load(trust_remote_code=True)\n")
+    sources = security.Sources(tmp_path)
+    token = re.compile(r"\btrust_remote_code\b")
+    assert sources.find(token, "pypi", reject=security._off("trust_remote_code")) == "b.py:1: load(trust_remote_code=True)"
+    (tmp_path / "b.py").unlink()
+    assert security.Sources(tmp_path).find(token, "pypi", reject=security._off("trust_remote_code")) is None
+
+
 def test_cargo_calls_found_in_the_source_are_evidence(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     fake_osv(monkeypatch, CARGO_HITS, CARGO_ADVISORIES)
     main = ("use pulldown_cmark::Options;\nfn main() {\n    let o = Options::ENABLE_WIKILINKS;\n"
@@ -521,11 +592,19 @@ def test_go_without_an_import_of_x_crypto_ssh(monkeypatch: pytest.MonkeyPatch, t
     # An indirect module: something else may import the package, so it is not settled.
     assert got["GHSA-kc01"]["level"] == "conditional"
     assert result["assessment"]["level"] == "conditional"
-    # Imported: the import line is the evidence.
-    write(repo, "ssh.go", 'package main\n\nimport "golang.org/x/crypto/ssh"\n')
+    # Imported but the vulnerable function never called: not settled (the import alone is not a call).
+    write(repo, "ssh.go", 'package main\n\nimport "golang.org/x/crypto/ssh"\n\nvar _ = ssh.Dial\n')
     result = run_check(monkeypatch, repo, record("tool"))
     got = {f["advisory"]: f for f in result.details["findings"]}
+    assert got["GHSA-xc01"]["reachability"]["result"] == "unknown"
     assert got["GHSA-xc01"]["reachability"]["evidence"][0].startswith("ssh.go:3:")
+    assert got["GHSA-xc01"]["level"] == "conditional"
+    # Called: the call is the evidence.
+    write(repo, "ssh.go", 'package main\n\nimport "golang.org/x/crypto/ssh"\n\n'
+                          'func check(c *ssh.ServerConn) {\n\t// c.Verify is what the advisory names\n\tc.Verify(nil)\n}\n')
+    result = run_check(monkeypatch, repo, record("tool"))
+    got = {f["advisory"]: f for f in result.details["findings"]}
+    assert got["GHSA-xc01"]["reachability"]["evidence"][0] == "ssh.go:7: c.Verify(nil)"  # the comment is skipped
     assert got["GHSA-xc01"]["level"] == "exposed"
 
 
