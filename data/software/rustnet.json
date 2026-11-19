@@ -1,0 +1,652 @@
+{
+  "schema_version": "software.v1",
+  "slug": "rustnet",
+  "repo_id": "gh:973688295",
+  "name": "RustNet",
+  "summary": "Terminal network monitor showing live TCP, UDP and QUIC connections with process attribution and packet inspection.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "security_net",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "android",
+    "cli",
+    "command-line",
+    "dpi",
+    "ebpf",
+    "freebsd",
+    "geoip",
+    "landlock",
+    "linux",
+    "macos"
+  ],
+  "use_cases": [
+    "see which process owns each live network connection",
+    "export captured traffic for analysis in Wireshark",
+    "stream JSON connection snapshots to monitoring scripts"
+  ],
+  "alternatives_to": [
+    "netstat"
+  ],
+  "features": [
+    "view live connections with process information",
+    "identify protocols via packet inspection",
+    "filter connections by process, address, port",
+    "export captures as PCAP or PCAPNG"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://github.com/domcyrus/rustnet#quick-start",
+  "repo": {
+    "url": "https://github.com/domcyrus/rustnet",
+    "full_name": "domcyrus/rustnet",
+    "created_at": "2025-04-27T14:29:47Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "Npcap (Windows)"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install rustnet",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Grant packet capture permissions (Linux capabilities, macOS PKTAP/BPF access)",
+        "Run with sudo on macOS for PKTAP"
+      ],
+      "check": null,
+      "first_task": "rustnet --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-rustnet-20261119-230650-5d79",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/rustnet && cd ~/rustnet && curl -fsSLO https://github.com/domcyrus/rustnet/releases/download/v1.7.0/rustnet-v1.7.0-x86_64-unknown-linux-musl.tar.gz && tar xzf rustnet-v1.7.0-x86_64-unknown-linux-musl.tar.gz",
+          "purpose": "download and extract v1.7.0 x86_64 musl release tarball"
+        },
+        {
+          "command": "install -m 755 ~/rustnet/rustnet-v1.7.0-x86_64-unknown-linux-musl/rustnet ~/.local/bin/rustnet && rustnet --version",
+          "purpose": "install binary into ~/.local/bin and check version"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "install -m 755 ~/rustnet/rustnet-v1.7.0-x86_64-unknown-linux-musl/rustnet ~/.local/bin/rustnet && rustnet --version",
+        "expected_signal": "rustnet 1.7.0"
+      },
+      "first_task": "unshare -rn sh -c 'ip link set lo up; cd /tmp; python3 -m http.server 8765 --bind 127.0.0.1 >/dev/null 2>&1 & sleep 1; (sleep 2; curl -s -o /dev/null http://127.0.0.1:8765/; sleep 1; curl -s -o /dev/null http://127.0.0.1:8765/) & rustnet --headless --duration 6 --output json -i lo --show-localhost -"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install rustnet-monitor",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Grant packet capture permissions (Linux capabilities, macOS PKTAP/BPF access)",
+        "Run with sudo on macOS for PKTAP"
+      ],
+      "check": null,
+      "first_task": "rustnet --version"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.7.0",
+    "published_at": "2026-10-06T18:40:17Z",
+    "url": "https://github.com/domcyrus/rustnet/releases/tag/v1.7.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T23:08:38.305338+08:00",
+    "runs": [
+      {
+        "id": "verify-rustnet-20261119-230650-5d79",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T23:08:38.305338+08:00",
+        "tool_version": "rustnet 1.7.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/rustnet && cd ~/rustnet && curl -fsSLO https://github.com/domcyrus/rustnet/releases/download/v1.7.0/rustnet-v1.7.0-x86_64-unknown-linux-musl.tar.gz && tar xzf rustnet-v1.7.0-x86_64-unknown-linux-musl.tar.gz",
+            "purpose": "download and extract v1.7.0 x86_64 musl release tarball"
+          },
+          {
+            "command": "install -m 755 ~/rustnet/rustnet-v1.7.0-x86_64-unknown-linux-musl/rustnet ~/.local/bin/rustnet && rustnet --version",
+            "purpose": "install binary into ~/.local/bin and check version"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "install -m 755 ~/rustnet/rustnet-v1.7.0-x86_64-unknown-linux-musl/rustnet ~/.local/bin/rustnet && rustnet --version",
+            "expected_signal": "rustnet 1.7.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "rustnet 1.7.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "unshare -rn sh -c 'ip link set lo up; cd /tmp; python3 -m http.server 8765 --bind 127.0.0.1 >/dev/null 2>&1 & sleep 1; (sleep 2; curl -s -o /dev/null http://127.0.0.1:8765/; sleep 1; curl -s -o /dev/null http://127.0.0.1:8765/) & rustnet --headless --duration 6 --output json -i lo --show-localhost --no-sandbox'",
+            "expected_signal": "\"application\":\"HTTP\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"schema_version\":1,\"type\":\"snapshot\",\"timestamp\":\"2026-11-19T15:08:21.135Z\",\"runtime\":{\"status\":\"stopped\",\"snapshot_generation\":13,\"interface\":\"lo\",\"capture_status\":\"healthy\",\"capture_error\":null,\"process_detection\":{\"method\":\"procfs\",\"degraded\":true,\"degradation_reason\":\"kernel BTF unavailable\",\"…",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "unshare -rn sh -c 'ip link set lo up; cd /tmp; python3 -m http.server 8765 --bind 127.0.0.1 >/dev/null 2>&1 & python3 -m http.server 8766 --bind 127.0.0.1 >/dev/null 2>&1 & sleep 1; (sleep 2; curl -s -o /dev/null http://127.0.0.1:8765/; curl -s -o /dev/null http://127.0.0.1:8766/) & rustnet --headless --duration 5 --output json -i lo --show-localhost --no-sandbox --filter port:8766'",
+            "expected_signal": "\"filter\":\"port:8766\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"schema_version\":1,\"type\":\"snapshot\",\"timestamp\":\"2026-11-19T15:08:27.315Z\",\"runtime\":{\"status\":\"stopped\",\"snapshot_generation\":11,\"interface\":\"lo\",\"capture_status\":\"healthy\",\"capture_error\":null,\"process_detection\":{\"method\":\"procfs\",\"degraded\":true,\"degradation_reason\":\"kernel BTF unavailable\",\"…",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install rustnet-monitor / sudo apt|dnf|pacman install rustnet",
+            "actually_needed": "No Rust toolchain or root here; the GitHub release tarball rustnet-v1.7.0-x86_64-unknown-linux-musl.tar.gz unpacked into ~/.local/bin works",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "On Linux, after configuring capabilities: rustnet (sudo setcap ...)",
+            "actually_needed": "Without CAP_NET_RAW it exits 1 'Insufficient privileges'; here capture was done inside an unprivileged user+network namespace (unshare -rn) with --no-sandbox, loopback only",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Exports captures as PCAP or PCAPNG",
+            "actually_needed": "Since v1.7.0 output dirs must be trusted; inside a user namespace the parent dirs appear owned by nobody, so --pcap-export is refused ('owned or writable by an untrusted user')",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "rustnet",
+            "actually_needed": "Localhost connections are hidden by default; --show-localhost is needed to see local test traffic",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "RustNet captured loopback HTTP connections labeled \"application\":\"HTTP\", applied the port:8766 filter showing only matching connections, and printed version 1.7.0; libbpf BTF warnings are a non-fatal fallback to procfs.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-rustnet-20261119-230650-5d79/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-rustnet-20261119-230650-5d79/check-1-cmd7.judged.png",
+            "runs/verify/verify-rustnet-20261119-230650-5d79/check-2-cmd8.judged.png",
+            "runs/verify/verify-rustnet-20261119-230650-5d79/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.29062,
+        "features": [
+          {
+            "feature": "view live connections with process information",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "identify protocols via packet inspection",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "filter connections by process, address, port",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output is truncated: only one port-8766 entry is visible, so it cannot be confirmed that the 8765 connection was excluded."
+          },
+          {
+            "feature": "export captures as PCAP or PCAPNG",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "Capture needs CAP_NET_RAW; in user netns the export dir is judged untrusted, and with uid mapping kept capture privilege is lost"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T23:08:45+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/domcyrus/rustnet@a60660856c9d",
+      "Cargo.lock"
+    ],
+    "packages_checked": 422,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T23:08:38+08:00",
+    "quality": {
+      "total": 86.2,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 92.9,
+      "signals": {
+        "stars": 5246,
+        "monthly_downloads": 344,
+        "forks": 248,
+        "dependents": null,
+        "release_downloads": 37400,
+        "hn_top_score": 5,
+        "registries_count": 2
+      },
+      "age_days": 571,
+      "packages": [
+        "crates:rustnet-monitor",
+        "homebrew:rustnet"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.12
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:08:38.387656+08:00",
+      "sources_sha": "141acfdb2a46395640c40671c52cc9abaf2a3f54e0fc8f0c5954b9b9edf6b84f",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "RustNet is a terminal network monitor that shows live TCP, UDP, and QUIC connections with process attribution when available."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Streams versioned JSON snapshots in headless mode for scripts and monitoring."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Windows also requires [Npcap](https://npcap.com). v1.7.0 supports its default settings; v1.6.0 requires \"WinPcap API compatible mode\"."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "| Windows (WinGet) | `winget install --id domcyrus.RustNet --exact --source winget` |"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "On Linux, after configuring capabilities:\n\n```bash\nrustnet\n```"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "`[view] group_by_process` in `config.toml`\n  enables process grouping at startup and on view reset; the default stays flat."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "[Installation](INSTALL.md): platforms, permissions, and troubleshooting"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "It runs on Linux, macOS, Windows, and FreeBSD."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/domcyrus/rustnet",
+      "fetched_at": "2026-11-19T23:06:35+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/domcyrus/rustnet/blob/main/README.md",
+      "fetched_at": "2026-11-19T23:06:32+08:00"
+    },
+    {
+      "id": "release:v1.7.0",
+      "kind": "release",
+      "url": "https://github.com/domcyrus/rustnet/releases/tag/v1.7.0",
+      "fetched_at": "2026-11-19T23:06:32+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "in a terminal UI that works over SSH",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:46+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "The `rustnet` binary is the supported product.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:46+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Per-process network monitoring for your terminal with deep packet inspection.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:46+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "RustNet is a terminal network monitor that shows live TCP, UDP, and QUIC connections with process attribution when available.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:46+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "RustNet is a terminal network monitor",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:46+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "It runs on Linux, macOS, Windows, and FreeBSD.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:46+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Windows also requires [Npcap](https://npcap.com).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:46+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:06:35+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:06:35+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T23:06:35+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:06:35+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:06:35+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.7.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:06:32+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "shows live TCP, UDP, and QUIC connections with process attribution when available",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:46+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Exports captures as PCAP or PCAPNG with best-effort annotations for analysis in Wireshark.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:46+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Streams versioned JSON snapshots in headless mode for scripts and monitoring.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:46+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "github_api",
+      "quote": "netstat-alternative",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:46+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Shows connection state, traffic, application protocol, and available process information in a terminal UI that works over SSH.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:46+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Identifies protocols such as HTTP, TLS/SNI, DNS, SSH, and QUIC through packet inspection.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:46+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Filters connections by process, address, port, protocol, and more.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:46+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Exports captures as PCAP or PCAPNG with best-effort annotations for analysis in Wireshark.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:46+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install rustnet",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:46+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install rustnet-monitor",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:46+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install rustnet-monitor",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:46+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "github_api",
+      "quote": "Per-process network monitoring for your terminal",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:46+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T23:06:32+08:00",
+  "updated_at": "2026-11-19T23:08:45+08:00"
+}
