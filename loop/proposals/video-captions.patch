@@ -22,6 +22,12 @@ the draft loaded in memory (no protected file written): tests/test_video_actions
 test_web_video.py, test_index.py, test_i18n.py and test_schema.py pass; test_committed_schema_files_match_models only
 once the committed schema/software.v1.json is the one in this patch (it was rendered from the draft).
 
+Rebased on 11/19 by the coverage workstream onto security-schema.patch, with no change in what it does: its hunks now
+carry the line numbers they have once security-schema.patch is applied (the original's schema/software.v1.json hunks
+landed 81 and 869 lines off, one of them out of order), so `git apply` finds each at its stated place. Apply it
+second, after security-schema.patch (loop/proposals/APPLY.md).
+
+diff --git a/pickfit/schema.py b/pickfit/schema.py
 --- a/pickfit/schema.py
 +++ b/pickfit/schema.py
 @@ -918,6 +918,8 @@
@@ -55,11 +61,11 @@ once the committed schema/software.v1.json is the one in this patch (it was rend
 +class VideoCaption(_Model):
 +    """One caption cue of a clip, served as a WebVTT track (the clip has no words drawn on it): English, put in
 +    other languages by the page's translation like any other sentence of the record."""
- 
++
 +    start_s: float = Field(ge=0, description="Where the cue starts in the clip, seconds.")
 +    end_s: float = Field(gt=0, description="Where it ends.")
 +    text: str = Field(min_length=1, max_length=VIDEO_CAPTION_MAX)
- 
++
 +
 +class VideoSource(_Model):
 +    """A file kept in R2 beside the clip so the clip can be cut again later without a box: pickfit's action log of
@@ -68,8 +74,8 @@ once the committed schema/software.v1.json is the one in this patch (it was rend
 +    key: str = Field(pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*/[A-Za-z0-9_][A-Za-z0-9_.-]*\.json$", max_length=200,
 +                     description="Its key in the videos bucket: <slug>/<file>.")
 +    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-+
-+
+ 
+ 
  class RunVideo(_Model):
      """A short captioned clip of pickfit operating a GUI or web app to check its features (pickfit/verify/video.py).
  
@@ -149,15 +155,17 @@ once the committed schema/software.v1.json is the one in this patch (it was rend
          return self
  
  
+diff --git a/schema/software.v1.json b/schema/software.v1.json
 --- a/schema/software.v1.json
 +++ b/schema/software.v1.json
-@@ -1997,11 +1997,32 @@
+@@ -2078,11 +2078,32 @@
      },
      "RunVideo": {
        "additionalProperties": false,
 -      "description": "A short captioned clip of pickfit operating a GUI or web app to check its features (pickfit/verify/video.py).\n\nA fresh box replayed this run's steps and operations (a web app: a second, recorded visit replaying the first\nvisit's actions without a model) while pickfit recorded its own screen; Muse Spark Open\nwatched each recording with pickfit's action log and picked whole segments, kept in their order (a speed-up\nis labelled on screen), and then watched the cut and confirmed that each caption shows on screen. Captions\nclaim only checks that passed in this run and again in the recorded replay. The clip's first frame says it\nwas recorded by pickfit in a sandbox, and on what date; it names each raw recording and its sha256.",
+-      "properties": {
 +      "description": "A short captioned clip of pickfit operating a GUI or web app to check its features (pickfit/verify/video.py).\n\nA fresh box replayed this run's steps and operations (a web app: a second, recorded visit replaying the first\nvisit's actions without a model) while pickfit recorded its own screen. pickfit picked whole segments, kept in\ntheir order, by its own rules from its action log (before 11/19 a model watched each recording and picked them),\nand checked that each segment shows what pickfit's own screenshot after each action showed; a model looks only\nat segments that check could not match, and at a sample. A speed-up or a stretch left out is marked on the\npicture (\"2×\", \"−11 s\"). Captions claim only checks that passed in this run and again in the recorded replay.\nA clip cut before 11/19 opens on a card saying it was recorded by pickfit in a sandbox, and on what date, and\nends on one naming each raw recording and its sha256; since then the clip is the app alone, its captions a\nWebVTT track, and the raw recordings and their sha256 are on the page (and in the mp4's metadata).",
-       "properties": {
++      "properties": {
 +        "actions": {
 +          "anyOf": [
 +            {
@@ -186,10 +194,11 @@ once the committed schema/software.v1.json is the one in this patch (it was rend
            "items": {
              "$ref": "#/$defs/VideoChapter"
            },
-@@ -2015,6 +2036,18 @@
+@@ -2095,6 +2116,18 @@
+         "clip_sha256": {
            "pattern": "^[0-9a-f]{64}$",
            "type": "string"
-         },
++        },
 +        "edit_list": {
 +          "anyOf": [
 +            {
@@ -201,11 +210,10 @@ once the committed schema/software.v1.json is the one in this patch (it was rend
 +          ],
 +          "default": null,
 +          "description": "The clip's segments, captions and review, as cut (R2)."
-+        },
+         },
          "features": {
            "description": "The run's checked features the clip shows.",
-           "items": {
-@@ -3037,9 +3070,37 @@
+@@ -3987,9 +4020,37 @@
        "title": "VerificationRun",
        "type": "object"
      },
@@ -244,10 +252,11 @@ once the committed schema/software.v1.json is the one in this patch (it was rend
        "properties": {
          "feature": {
            "anyOf": [
-@@ -3054,6 +3115,32 @@
+@@ -4003,6 +4064,32 @@
+             }
            ],
            "description": "The video.features entry the chapter shows; null for the first and last cards."
-         },
++        },
 +        "raw": {
 +          "anyOf": [
 +            {
@@ -273,11 +282,10 @@ once the committed schema/software.v1.json is the one in this patch (it was rend
 +          ],
 +          "default": null,
 +          "description": "Where in that recording the chapter's first segment starts, seconds."
-+        },
+         },
          "start_s": {
            "description": "Where the chapter starts in the clip, seconds.",
-           "minimum": 0,
-@@ -3107,6 +3194,28 @@
+@@ -4057,6 +4144,28 @@
          "smoke_test"
        ],
        "title": "VideoRaw",
