@@ -43,10 +43,10 @@ from pydantic import ValidationError
 
 from pickfit.discover.store import PipelineDB
 from pickfit.discover.webapps import RENDER_BELOW, WebSites, check_site, host_of, screen_sources, site_key, site_outcome
-from pickfit.extract import SIDE_STATUSES, extraction_is_current, same_tier, sources_sha
+from pickfit.extract import CAPABILITIES_STATUS, SIDE_STATUSES, capability_rows, extraction_is_current, same_tier, sources_sha
 from pickfit.ledger import taipei_now
 from pickfit.meta import PROD_MODEL
-from pickfit.profiles import render, slugify
+from pickfit.profiles import capability_update, render, slugify
 from pickfit.schema import SoftwareRecord
 from pickfit.webrecords import build_web_record, site_id, web_candidate
 
@@ -139,6 +139,8 @@ class SiteSteps:
     clock: the time a record is stamped with
     with_visits(path) -> the same steps, reading and claiming visits in `path` instead of runs/web/visits.jsonl
       (pickfit's end-to-end test: its visits never count against a real submission of the site)
+    capabilities(candidate, run_id) -> capabilities-only extraction rows (extract_with_retries with
+      capabilities_only), read from the same page as the record; None: skipped
     """
 
     fetch: Any
@@ -150,6 +152,7 @@ class SiteSteps:
     render: Callable[[str], dict[str, Any]] | None = None
     clock: Callable[[], datetime] = taipei_now
     with_visits: Callable[[Path], SiteSteps] | None = None
+    capabilities: Callable[[dict[str, Any], str], list[dict[str, Any]]] | None = None
 
 
 def live_site_steps(*, runner: str = "modal") -> SiteSteps:
@@ -173,7 +176,9 @@ def live_site_steps(*, runner: str = "modal") -> SiteSteps:
             extract=lambda c, run_id: extract_with_retries(c, model=MODEL, run_id=run_id,
                                                            reasoning_effort=EXTRACT_EFFORT),
             verify=lambda target, log: verify_site(target, log=log, box_factory=box_factory, visits=visits),
-            visited=lambda site: past_visit(site, visits), resolve=resolve_host, with_visits=steps)
+            visited=lambda site: past_visit(site, visits), resolve=resolve_host, with_visits=steps,
+            capabilities=lambda c, run_id: extract_with_retries(c, model=MODEL, run_id=run_id,
+                                                                reasoning_effort=EXTRACT_EFFORT, capabilities_only=True))
 
     return steps()
 
@@ -418,6 +423,7 @@ def read_site(url: str, *, submission_id: str, run_id: str, record_dir: Path, da
             record = _build(site, extraction, record_id, data_dir, taken_slugs, claim_slug, steps.clock())
         except (Refused, TryLater) as err:
             stop("record_skipped" if isinstance(err, Refused) else "slug_taken", err)
+        record = _with_capabilities(record, web_candidate(site), PipelineDB(db_path), steps, run_id, notes, paid, log)
     finally:
         sites.purge_pages([(SOURCE, submission_id)])  # what the page said lives on as the record's quotes
     if record_dir.exists():
@@ -448,6 +454,36 @@ def _extract(candidate: dict[str, Any], db: PipelineDB, steps: SiteSteps, run_id
     last = db.last_extraction(candidate["repo_id"], final["model"], DONE_EXTRACTIONS)
     assert last is not None
     return last
+
+
+def _with_capabilities(record: SoftwareRecord, candidate: dict[str, Any], db: PipelineDB, steps: SiteSteps, run_id: str,
+                       notes: list[str], paid: Callable[[float | None], None],
+                       log: Callable[[str], None]) -> SoftwareRecord:
+    """The record with the capabilities its page documents (docs/proposals/capabilities.md), read now, while the
+    page text is still there to quote (it is purged once the record is built). Never stops the reading: a failure
+    is a note, and the record goes on without them."""
+    if steps.capabilities is None:
+        return record
+    try:
+        rows = steps.capabilities(candidate, f"{run_id}-capabilities")
+        for row in rows:
+            db.save_extraction(**row)
+            paid(row.get("cost_usd"))
+        final = rows[-1] if rows else None
+        if final is None or final["status"] != CAPABILITIES_STATUS:
+            raise RuntimeError(f"extraction {final['status'] if final else 'did not run'}")
+        extraction = capability_rows(db, candidate["repo_id"], final["model"])
+        updated = capability_update(candidate, extraction, record.model_dump(mode="json")) if extraction else None
+        if updated is None:
+            notes.append("capabilities: none quoted by a source the record cites")
+            return record
+        record = SoftwareRecord.model_validate(updated)
+    except Exception as err:  # noqa: BLE001 - a model or budget problem must not lose a site that was read
+        notes.append(f"capabilities not added: {type(err).__name__}: {str(err)[:200]}")
+        log(f"capabilities not added: {err}")
+        return record
+    log(f"capabilities: {len(record.capabilities)} set")
+    return record
 
 
 def _build(site: dict[str, Any], extraction: dict[str, Any], record_id: str, data_dir: Path, taken_slugs: set[str],

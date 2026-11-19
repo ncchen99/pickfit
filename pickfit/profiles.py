@@ -554,10 +554,11 @@ def capability_update(candidate: dict[str, Any], extraction: dict[str, Any], exi
         {"capabilities": (extraction["result"] or {}).get("capabilities") or []})
     cited_ids = {s["id"] for s in existing.get("sources") or []}
     sources = capability_sources(candidate)
-    source_ids = {"description": _API_SOURCE, "readme": "readme"}
+    # A source the record already cites under its own id (readme, docs1, a web app's site), then the renamed ones.
+    source_ids = {s.id: s.id for s in sources if s.id in cited_ids}
+    source_ids.update({"description": _API_SOURCE, "readme": "readme"})
     if any(s.id == "release" for s in sources):
         source_ids["release"] = next((sid for sid in cited_ids if sid.startswith("release:")), "release")
-    source_ids.update({s.id: s.id for s in sources if s.id.startswith("docs")})
     source_ids = {k: v for k, v in source_ids.items() if v in cited_ids}
     helps: dict[str, dict[str, Any]] = {}
     for n, h in enumerate(candidate.get("help") or [], start=1):
@@ -587,6 +588,20 @@ def capability_update(candidate: dict[str, Any], extraction: dict[str, Any], exi
     have = {s["id"] for s in data["sources"]}
     data["sources"] += [src for sid, src in helps.items() if sid in used and sid not in have]
     return data
+
+
+def apply_capabilities(path: Path, candidate: dict[str, Any], extraction: dict[str, Any],
+                       now: datetime | None = None) -> int | None:
+    """Set the capabilities of the record at `path` from a capabilities-only extraction (capability_update) and
+    write it back; the number set, or None when none is quoted by a source the record can cite (unchanged)."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    updated = capability_update(candidate, extraction, data)
+    if updated is None:
+        return None
+    updated["updated_at"] = (now or taipei_now()).isoformat(timespec="seconds")
+    record = SoftwareRecord.model_validate(updated)
+    path.write_text(render(record), encoding="utf-8")
+    return len(record.capabilities)
 
 
 def write_capabilities(db: PipelineDB, *, model: str, out_dir: Path = DEFAULT_OUT, slugs: list[str] | None = None,

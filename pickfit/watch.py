@@ -438,6 +438,8 @@ class Steps:
         when the README itself holds no install path the sandbox can run
     lanes: name -> pickfit.lanes.Lane for records the Linux box cannot run (windows, macos); their jobs park
     site: pickfit.web_intake's steps for website submissions (the web lane), or None
+    capabilities(candidate, run_id) -> capabilities-only extraction rows, one per attempt (extract_with_retries
+        with capabilities_only); candidate["help"] holds the help texts of the run just verified. None: skipped
     """
 
     github: Any
@@ -451,6 +453,7 @@ class Steps:
     docs: Callable[[dict[str, Any]], dict[str, Any]] | None = None
     lanes: dict[str, Any] = field(default_factory=dict)
     site: Any = None
+    capabilities: Callable[[dict[str, Any], str], list[dict[str, Any]]] | None = None
 
 
 def live_steps(*, runner: str = "modal") -> Steps:
@@ -530,7 +533,10 @@ def live_steps(*, runner: str = "modal") -> Steps:
                  prescreen=lambda c, run_id: screen_and_review(c, run_id=run_id),
                  extract=lambda c, run_id: extract_with_retries(c, model=MODEL, run_id=run_id,
                                                                 reasoning_effort=EXTRACT_EFFORT),
-                 verify=verify, score=score, display=display, security=security, visual=visual, docs=docs)
+                 verify=verify, score=score, display=display, security=security, visual=visual, docs=docs,
+                 capabilities=lambda c, run_id: extract_with_retries(c, model=MODEL, run_id=run_id,
+                                                                     reasoning_effort=EXTRACT_EFFORT,
+                                                                     capabilities_only=True))
 
 
 def lane_status(jobs_dir: Path, lanes: dict[str, Any], *, now: datetime | None = None) -> dict[str, Any]:
@@ -1007,14 +1013,53 @@ class Watcher:
         self._tail(job, record_dir, f"the sandbox run did not pass ({run.unverified_reason or run.level})", log)
 
     def _tail(self, job: Job, record_dir: Path, not_passed: str | None, log: Callable[[str], None]) -> None:
-        """Scores, the vulnerability check, the visual check, then the record lands."""
+        """Scores, the vulnerability check, the visual check, the documented capabilities, then the record lands."""
         with self._stage(job, "score"):
             error = self.steps.score(record_dir, job.slug)
         if error:
             raise Retry(f"scores: {error}")
         self._security(job, record_dir, log)
         self._visual(job, record_dir, log)
+        self._capabilities(job, record_dir, log)
         self._land(job, record_dir, not_passed, log)
+
+    def _capabilities(self, job: Job, record_dir: Path, log: Callable[[str], None]) -> None:
+        """The capabilities its docs and its own --help document (docs/proposals/capabilities.md), after the run
+        so the help that run printed is a source. Never stops a landing: a failure is a note, and the record
+        lands without them (`pickfit extract --capabilities-only` can add them later). A web app's come with
+        its reading (web_intake.read_site), while the page it quotes is still there."""
+        if self.steps.capabilities is None or job.lane == "web" or not job.repo_id:
+            return
+        from pickfit.extract import CAPABILITIES_STATUS, capability_rows
+        from pickfit.profiles import apply_capabilities
+        from pickfit.verify import help_text
+
+        try:
+            candidate = self.db.candidate(job.repo_id)
+            if candidate is None:
+                return
+            helps = help_text.help_of_run(self.s.runs_dir, job.run_id)
+            candidate = {**candidate, "help": [asdict(h) for h in helps]}
+            with self._stage(job, "capabilities"):
+                rows = self.steps.capabilities(candidate, f"{job.run_id or job.submission_id}-capabilities")
+            for row in rows:
+                self.db.save_extraction(**row)
+                job.spent("model", row["cost_usd"])
+            final = rows[-1] if rows else None
+            if final is None or final["status"] != CAPABILITIES_STATUS:
+                raise RuntimeError(f"extraction {final['status'] if final else 'did not run'}"
+                                   + (f": {final['error'][:200]}" if final and final.get("error") else ""))
+            extraction = capability_rows(self.db, job.repo_id, final["model"])
+            count = apply_capabilities(record_dir / f"{job.slug}.json", candidate, extraction) if extraction else None
+            if helps:
+                help_text.write_store({job.slug: helps}, self.s.runs_dir / help_text.STORE)
+        except Exception as err:  # noqa: BLE001 - a model, budget or source problem must not lose a finished run
+            job.notes.append(f"capabilities not added: {type(err).__name__}: {str(err)[:200]}")
+            log(f"capabilities not added: {err}")
+            return
+        log(f"capabilities: {count or 0} set ({len(helps)} help text(s) read)")
+        if not count:
+            job.notes.append("capabilities: none quoted by a source the record cites")
 
     def _fail(self, job: Job, what: str, log: Callable[[str], None]) -> None:
         job.failures += 1

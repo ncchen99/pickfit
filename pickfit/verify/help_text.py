@@ -206,6 +206,32 @@ def _reports(runs_dir: Path) -> list[dict[str, Any]]:
     return sorted(out, key=lambda r: r.get("started_at") or "", reverse=True)
 
 
+def _key(h: HelpText) -> str:
+    return " ".join(_words(h.command) or [h.command])
+
+
+def help_of_report(report: dict[str, Any]) -> list[HelpText]:
+    """One run's help texts: pickfit's own capture first, then the agent's help commands, each command once."""
+    seen: set[str] = set()
+    found = []
+    for h in [*(HelpText(**x) for x in report.get("help") or []), *help_from_report(report)]:
+        if _key(h) not in seen:
+            seen.add(_key(h))
+            found.append(h)
+    return found
+
+
+def help_of_run(runs_dir: Path, run_id: str | None) -> list[HelpText]:
+    """The help texts of one verify run (runs/verify/<run id>/report.json); none when it has no report."""
+    if not run_id:
+        return []
+    path = runs_dir / "verify" / run_id / "report.json"
+    try:
+        return help_of_report(json.loads(path.read_text(encoding="utf-8")))
+    except (OSError, json.JSONDecodeError, TypeError):
+        return []
+
+
 def gather(runs_dir: Path, slugs: set[str] | None = None) -> dict[str, list[HelpText]]:
     """Per slug, the help texts of its saved runs, newest run first; a command seen in a newer run is not
     taken again from an older one. pickfit's own capture comes before the agent's commands of the same run."""
@@ -215,12 +241,10 @@ def gather(runs_dir: Path, slugs: set[str] | None = None) -> dict[str, list[Help
         slug = report.get("slug")
         if not slug or (slugs and slug not in slugs):
             continue
-        saved = [HelpText(**h) for h in report.get("help") or []]
-        for h in [*saved, *help_from_report(report)]:
-            key = " ".join(_words(h.command) or [h.command])
-            if key in seen.setdefault(slug, set()):
+        for h in help_of_report(report):
+            if _key(h) in seen.setdefault(slug, set()):
                 continue
-            seen[slug].add(key)
+            seen[slug].add(_key(h))
             by_slug.setdefault(slug, []).append(h)
     return by_slug
 

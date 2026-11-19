@@ -62,6 +62,7 @@ class Pipeline:
         self.visual: Any = None
         self.pages: list[dict[str, Any]] | None = None  # install pages the docs step reads; None: no docs step
         self.result_with_docs: dict[str, Any] | None = None  # what extraction answers once it has them
+        self.capabilities: Any = None  # the capabilities-only extraction step; None: no such step
 
     def steps(self) -> Steps:
         def prescreen(c: dict[str, Any], run_id: str) -> list[dict[str, Any]]:
@@ -88,7 +89,7 @@ class Pipeline:
 
         return Steps(github=self.github, prescreen=prescreen, extract=extract, verify=verify, score=score,
                      display=self.display, security=self.security, visual=self.visual,
-                     docs=docs if self.pages is not None else None)
+                     docs=docs if self.pages is not None else None, capabilities=self.capabilities)
 
 
 @pytest.fixture
@@ -720,3 +721,86 @@ def test_the_live_steps_give_desktop_apps_a_display_box_on_ec2_too(monkeypatch: 
         steps = watch.live_steps(runner=runner)
         assert steps.display is shown and made[0] == {"runner": runner}
         assert (made[1:] == [{"runner": runner, "display": True}]) is shown
+
+
+# --- capabilities and features 1-6 (docs/proposals/capabilities.md) ------------------
+
+HELP = "Usage: tinyq [OPTIONS] FILTER\n\nCommands:\n  fmt     Re-indent JSON Lines\n\nOutput formats: json, csv, tsv\n"
+SIX = [cited("query JSON Lines with a filter", "A tiny jq-like query tool for JSON Lines."),
+       cited("run fully offline", "fully offline"), cited("install with cargo", "cargo install tinyq"),
+       cited("print one field", "Prints `1`."), cited("work like jq", "jq-like"),
+       cited("run on macOS and Linux", "Works on **macOS and Linux**")]
+
+
+def six_feature_run(run_id: str) -> Any:
+    """A passed run that checked the first four features one by one and left the last two to the budget."""
+    from pickfit.schema import VerificationRun
+
+    run = passed_run(run_id, ["cargo install tinyq"], method="cargo").model_dump(mode="json")
+    run["features"] = (
+        [{"feature": f["value"], "status": "not_checked", "reason": "not_attempted", "note": "install-only run"}
+         for f in SIX[:4]]
+        + [{"feature": f["value"], "status": "not_checked", "reason": "beyond_budget",
+            "note": "pickfit checks the first 4 listed features one by one"} for f in SIX[4:]])
+    return VerificationRun.model_validate(run)
+
+
+def capabilities_row(repo_id: str, run_id: str) -> dict[str, Any]:
+    return {**extraction_row(repo_id, run_id, {"capabilities": [
+        {"label": cited("re-indent JSON Lines", "fmt     Re-indent JSON Lines"), "area": "subcommands", "items": []},
+        {"label": cited("write results as CSV or TSV", "Output formats: json, csv, tsv"), "area": "formats",
+         "items": ["csv", "tsv"]},
+    ]}), "status": "capabilities", "cost_usd": 0.02}
+
+
+def test_a_new_cli_tool_lands_with_six_features_and_the_capabilities_its_help_documents(env: dict[str, Any]) -> None:
+    run_id = "run-20261030-linux-7"
+    pipeline = Pipeline(env["tmp"], result=extraction(features=SIX), runs=[six_feature_run(run_id)])
+    pipeline.verify.report = {"help": [{"command": "tinyq --help", "exit_code": 0, "text": HELP, "run_id": run_id,
+                                        "by": "pickfit"}]}
+    asked: list[dict[str, Any]] = []
+
+    def capabilities(c: dict[str, Any], rid: str) -> list[dict[str, Any]]:
+        asked.append(c)
+        return [capabilities_row(c["repo_id"], rid)]
+
+    pipeline.capabilities = capabilities
+    lines: list[str] = []
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    [job] = run_once(env, pipeline, lines=lines)
+    assert job.result == "ready" and "capabilities" in job.stages
+    # It read the help the run just printed, and paid for it.
+    assert [h["command"] for h in asked[0]["help"]] == ["tinyq --help"]
+    assert job.cost_usd["model"] == pytest.approx(0.004 + 0.015 + 0.08 + 0.02)
+    record = SoftwareRecord.model_validate_json((env["data"] / "tinyq.json").read_text())
+    assert len(record.features) == 6
+    reasons = [f.reason for f in record.verification.runs[0].features]
+    assert reasons == ["not_attempted"] * 4 + ["beyond_budget"] * 2
+    assert [c.label for c in record.capabilities] == ["re-indent JSON Lines", "write results as CSV or TSV"]
+    assert record.capabilities[1].items == ["csv", "tsv"]
+    assert {e.source_id for e in record.evidence if e.field.startswith("/capabilities/")} == {f"help:{run_id}:1"}
+    assert any("capabilities: 2 set (1 help text(s) read)" in line for line in lines), lines
+    # The help is kept for a later capabilities-only run too.
+    store = json.loads((env["tmp"] / "runs" / "capabilities" / "help" / "tinyq.json").read_text())
+    assert [h["command"] for h in store["help"]] == ["tinyq --help"]
+
+
+def test_a_capabilities_step_that_fails_does_not_stop_the_landing(env: dict[str, Any]) -> None:
+    pipeline = Pipeline(env["tmp"])
+
+    def capabilities(c: dict[str, Any], rid: str) -> list[dict[str, Any]]:
+        raise BudgetExceeded("daily", 25.0, 25.0, 0.5)
+
+    pipeline.capabilities = capabilities
+    lines: list[str] = []
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    [job] = run_once(env, pipeline, lines=lines)
+    assert job.result == "ready"
+    assert any(n.startswith("capabilities not added: BudgetExceeded") for n in job.notes)
+    assert "capabilities" not in json.loads((env["data"] / "tinyq.json").read_text())
+    # An extraction that comes back without capabilities is a note as well.
+    pipeline = Pipeline(env["tmp"], repos={"someone/other": repo_item(8, "someone/other")})
+    pipeline.capabilities = lambda c, rid: [extraction_row(c["repo_id"], rid, None, "schema_error")]
+    submit(env["d1"], "sub_2", "https://github.com/someone/other")
+    [job] = run_once(env, pipeline)
+    assert job.result == "ready" and any("extraction schema_error" in n for n in job.notes)
