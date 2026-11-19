@@ -43,7 +43,7 @@ from pydantic import ValidationError
 
 from pickfit.discover.store import PipelineDB
 from pickfit.discover.webapps import RENDER_BELOW, WebSites, check_site, host_of, screen_sources, site_key, site_outcome
-from pickfit.extract import FEATURES_STATUS, extraction_is_current, same_tier, sources_sha
+from pickfit.extract import SIDE_STATUSES, extraction_is_current, same_tier, sources_sha
 from pickfit.ledger import taipei_now
 from pickfit.meta import PROD_MODEL
 from pickfit.profiles import render, slugify
@@ -434,7 +434,7 @@ def _extract(candidate: dict[str, Any], db: PipelineDB, steps: SiteSteps, run_id
              paid: Callable[[float | None], None]) -> dict[str, Any]:
     """The newest finished extraction of the same raw text, or a new one (rows stored as the batch stores them)."""
     for model in same_tier(MODEL):
-        last = db.last_extraction(candidate["repo_id"], model, exclude=(FEATURES_STATUS,))
+        last = db.last_extraction(candidate["repo_id"], model, exclude=SIDE_STATUSES)
         if last and last["status"] in DONE_EXTRACTIONS and extraction_is_current(last, candidate):
             notes.append("extraction reused")
             return last

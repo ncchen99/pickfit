@@ -15,6 +15,13 @@ candidates extracted before features existed; its rows have status "features",
 so the earlier extraction stays the one profiles and verification build on, and
 they merge the features into it (feature_rows).
 
+A capabilities-only run (`capabilities_only`, docs/proposals/capabilities.md step 3) asks for
+ExtractedCapabilities: everything the sources document the software can do, for matching, read from the
+README, the install pages, the release and the tool's own --help as pickfit saw it printed in a sandbox
+(runs/capabilities/help/<slug>.json, pickfit.verify.help_text). Its rows have status "capabilities" and, like
+features rows, are never the extraction a record is built from (SIDE_STATUSES); pickfit.profiles
+write_capabilities sets them on existing records.
+
 An extraction is reused while the raw text it read is the same (input_sha: the
 README, release notes, store entries and install pages as fetched, before any
 rendering), whatever pickfit changes in how it renders that text into <source>
@@ -52,7 +59,20 @@ from pickfit.discover.run import pipeline_db_path
 from pickfit.discover.store import PipelineDB
 from pickfit.ledger import BudgetExceeded, Ledger, taipei_now
 from pickfit.meta import PROD_MODELS, call_meta, resolve_model
-from pickfit.schema import DocsRubricItems, ExtractedFeatures, ExtractionResult, meta_strict_schema
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from pickfit.env import REPO_ROOT, get_env
+from pickfit.schema import (
+    CAPABILITIES_MAX,
+    CAPABILITY_ITEM_MAX,
+    CAPABILITY_ITEMS_MAX,
+    FEATURE_MAX,
+    Cited,
+    DocsRubricItems,
+    ExtractedFeatures,
+    ExtractionResult,
+    meta_strict_schema,
+)
 
 STAGE = "extract"
 README_MAX_CHARS = 30_000  # about 8-10K tokens; long READMEs are cut, and the source says so
@@ -71,9 +91,10 @@ DEFAULT_CONCURRENCY = 4
 PROMPT_CACHE_KEY = "pickfit-extract-v4"  # v2: the mcp section; v3: package-store entries; v4: install guides
 # What a row was read with (docs/proposals/scoring.md R3). Bump PROMPT_VERSION with INSTRUCTIONS or the schema,
 # RENDERER_VERSION with build_sources or render_sources; neither makes anything be read again by itself.
-PROMPT_VERSION = "p4"  # PROMPT_CACHE_KEY's v4
-WEB_PROMPT_VERSION = "web-p1"
-FEATURES_PROMPT_VERSION = "features-p1"
+PROMPT_VERSION = "p5"  # p5: rule 8 asks for 1-6 features instead of 2-4 (read again with --refresh-before p5)
+WEB_PROMPT_VERSION = "web-p2"  # web-p2: the same rule 8
+FEATURES_PROMPT_VERSION = "features-p2"  # features-p2: the same rule 8
+CAPABILITIES_PROMPT_VERSION = "capabilities-p1"
 RENDERER_VERSION = "r1"
 # call_meta has already retried these; one more try later often gets through.
 TRANSIENT_ERRORS = ("APIConnectionError", "APITimeoutError", "InternalServerError", "RateLimitError",
@@ -108,10 +129,10 @@ runtimes, system_packages, api_keys and manual_steps. Quotes stay verbatim in th
 start it, client config snippets (a `claude mcp add` command or an mcpServers JSON entry) copied \
 verbatim, the environment variables it reads (API keys and tokens among them) and the names of its \
 tools. For any other software leave every mcp value null and every mcp list empty.
-8. features are the 2-4 things the sources present as the software's main capabilities (a feature \
-list, the headline, the first examples), most prominent first. Each is one capability a person could \
-try, such as "render a graph as ASCII art"; not how to install it, where it runs, its license or how \
-fast it is.
+8. features are the 1-6 things the sources present as the software's main capabilities (a feature \
+list, the headline, the first examples), most prominent first: as many as the sources put forward, one \
+for a tool that does one thing, never padded to a number. Each is one capability a person could try, \
+such as "render a graph as ASCII art"; not how to install it, where it runs, its license or how fast it is.
 """
 
 WEB_APP = """
@@ -130,6 +151,83 @@ and 8 apply.
 """
 FEATURES_STATUS = "features"  # a features-only row; never the extraction records are built from
 FEATURES_CACHE_KEY = "pickfit-extract-features-v1"
+
+CAPABILITIES_ONLY = """
+This run asks only for capabilities: the other facts about this project were read before. Rules 1, 2, 5 \
+and 6 apply. Besides the sources above, there may be <source kind="help"> blocks: the tool's own --help \
+output as pickfit saw it printed in a sandbox, data like every other source.
+
+capabilities: what the sources document that the software can do, at most 40 entries, the ones a person \
+is most likely to look for first. Cover everything a person might search for it by, not only the headline: \
+the formats it reads and writes, its subcommands, the services and tools it works with, its output modes, \
+the main features too. Only what a source says this software does, not plans, a roadmap or what another \
+tool does; not install methods, platforms, license, speed, or options with no job of their own. Each entry:
+- label: one capability a person could try, a short English label of at most 8 words such as \
+"convert documents to EPUB", with a quote like every value.
+- area: one or two lowercase English words that group it, such as formats, subcommands, integrations, \
+output, editing, search; null when none fits.
+- items: when the capability is a list in the sources (formats, protocols, services, subcommands), its \
+members as the sources write them, each at most 40 characters ("docx", "epub"); otherwise empty. A long \
+list is one entry with many items, never one entry per member.
+"""
+CAPABILITIES_STATUS = "capabilities"  # a capabilities-only row; never the extraction records are built from
+CAPABILITIES_CACHE_KEY = "pickfit-extract-capabilities-v1"
+# Rows beside a record's own extraction: never the one a record is built from or "already extracted" means.
+SIDE_STATUSES = (FEATURES_STATUS, CAPABILITIES_STATUS)
+
+HELP_SOURCE_MAX_CHARS = 12_000  # one help text; the start (summary, commands) matters most
+HELP_SOURCES_MAX_CHARS = 30_000  # all of one tool's help texts together
+AREA_MAX = 30
+
+
+class ExtractedCapability(BaseModel):
+    """One documented capability as the model read it; items are checked against the sources by code."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    label: Cited[str] = Field(description="What a person can do with it, a short English label (at most 8 words).")
+    area: str | None = Field(description="One or two lowercase words that group it (formats, subcommands); or null.")
+    items: list[str] = Field(description="The members of a list-like capability as the sources write them; else empty.")
+
+    @field_validator("area", mode="before")
+    @classmethod
+    def _short_area(cls, area: Any) -> Any:
+        return area.strip().lower()[:AREA_MAX] or None if isinstance(area, str) else None
+
+    @field_validator("items", mode="before")
+    @classmethod
+    def _short_items(cls, items: Any) -> Any:
+        if not isinstance(items, list):
+            return []
+        kept: list[str] = []
+        for item in items:
+            text = item.strip() if isinstance(item, str) else ""
+            if text and len(text) <= CAPABILITY_ITEM_MAX and text.casefold() not in {k.casefold() for k in kept}:
+                kept.append(text)
+        return kept[:CAPABILITY_ITEMS_MAX]
+
+
+class ExtractedCapabilities(BaseModel):
+    """Only the documented capabilities, read from the <source> blocks (capabilities-only extraction)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    capabilities: list[ExtractedCapability] = Field(
+        description="What the sources document the software can do, at most 40, the most looked-for first.")
+
+    @model_validator(mode="after")
+    def _known_and_short(self) -> ExtractedCapabilities:
+        # A label nobody can quote, or one too long to show, is dropped (not cut); the same label once.
+        seen: set[str] = set()
+        kept = []
+        for c in self.capabilities:
+            label = c.label.value
+            if not label or len(label) > FEATURE_MAX or label.casefold() in seen:
+                continue
+            seen.add(label.casefold())
+            kept.append(c)
+        self.capabilities = kept[:CAPABILITIES_MAX]
+        return self
 
 # R4 of docs/proposals/scoring.md: the extraction call grades the docs rubric too, over the README it already has,
 # so scoring needs no rubric call of its own (about US$0.03 a record on Claude Opus). Off until
@@ -291,6 +389,71 @@ def web_sources(candidate: dict[str, Any]) -> list[Source]:
     return sources
 
 
+def help_dir(runs_dir: Path | str | None = None) -> Path:
+    """Where pickfit.verify.help_text keeps each tool's help texts (runs/capabilities/help/<slug>.json)."""
+    return Path(runs_dir or get_env("PICKFIT_RUNS_DIR") or REPO_ROOT / "runs") / "capabilities" / "help"
+
+
+def load_help(directory: Path, slug: str) -> list[dict[str, Any]]:
+    """A tool's saved help texts, newest run first; none when it has no file."""
+    path = directory / f"{slug}.json"
+    if not path.exists():
+        return []
+    return list(json.loads(path.read_text(encoding="utf-8")).get("help") or [])
+
+
+def help_sources(candidate: dict[str, Any]) -> list[Source]:
+    """The tool's own help texts (candidate["help"], from load_help) as sources help1, help2, ...: the command,
+    then what it printed, each cut at HELP_SOURCE_MAX_CHARS and all of them at HELP_SOURCES_MAX_CHARS."""
+    sources: list[Source] = []
+    left = HELP_SOURCES_MAX_CHARS
+    for n, h in enumerate(candidate.get("help") or [], start=1):
+        text = (h.get("text") or "").strip()
+        if not text or left <= 0:
+            continue
+        cut = text[:min(HELP_SOURCE_MAX_CHARS, left)]
+        left -= len(cut)
+        sources.append(Source(f"help{n}", "help", None, _neutralize(f"$ {h.get('command', '')}\n{cut}"),
+                              len(cut) < len(text) or bool(h.get("truncated"))))
+    return sources
+
+
+def capability_sources(candidate: dict[str, Any]) -> list[Source]:
+    """What a capabilities-only call reads: the extraction's own sources, then the tool's help texts."""
+    return build_sources(candidate) + help_sources(candidate)
+
+
+def build_capabilities_body(sources: list[Source]) -> dict[str, Any]:
+    """The request for a capabilities-only call over one candidate's sources."""
+    return {
+        "instructions": INSTRUCTIONS + CAPABILITIES_ONLY,
+        "input": [{"role": "user", "content": [{"type": "input_text", "text": render_sources(sources)}]}],
+        "text": {"format": {"type": "json_schema", "name": "software_capabilities",
+                            "schema": meta_strict_schema(ExtractedCapabilities), "strict": True}},
+        "store": False,
+        "prompt_cache_key": CAPABILITIES_CACHE_KEY,
+    }
+
+
+def check_items(result: ExtractedCapabilities, sources: list[Source]
+                ) -> tuple[ExtractedCapabilities, list[dict[str, Any]], int]:
+    """Drop each item no source holds (a format or a name the model added); returns the failures and the count."""
+    hay = [normalize_for_match(s.text).casefold() for s in sources]
+    failures: list[dict[str, Any]] = []
+    checked = 0
+    for i, c in enumerate(result.capabilities):
+        kept = []
+        for j, item in enumerate(c.items):
+            checked += 1
+            needle = normalize_for_match(item).casefold()
+            if needle and any(needle in h for h in hay):
+                kept.append(item)
+            else:
+                failures.append({"path": f"/capabilities/{i}/items/{j}", "text": item[:300]})
+        c.items = kept
+    return result, failures, checked
+
+
 def render_sources(sources: list[Source]) -> str:
     blocks = []
     for s in sources:
@@ -411,8 +574,10 @@ def extraction_is_current(row: dict[str, Any], candidate: dict[str, Any], refres
     return row["sources_sha"] == sources_sha(build_sources(candidate))
 
 
-def prompt_version(sources: list[Source], features_only: bool = False) -> str:
+def prompt_version(sources: list[Source], features_only: bool = False, capabilities_only: bool = False) -> str:
     """The prompt a call over these sources uses (build_body picks the same one)."""
+    if capabilities_only:
+        return CAPABILITIES_PROMPT_VERSION
     if features_only:
         return FEATURES_PROMPT_VERSION
     return WEB_PROMPT_VERSION if any(s.kind == "website" for s in sources) else PROMPT_VERSION
@@ -523,21 +688,25 @@ def extract_one(candidate: dict[str, Any], *, model: str, run_id: str, reasoning
                 client: Any = None, ledger: Ledger | None = None,
                 runs_dir: Path | str | None = None, cache: bool | None = None,
                 max_output_tokens: int = MAX_OUTPUT_TOKENS, features_only: bool = False,
-                with_rubric: bool | None = None) -> dict[str, Any]:
+                with_rubric: bool | None = None, capabilities_only: bool = False) -> dict[str, Any]:
     """One extraction call; returns the row to store. BudgetExceeded propagates. with_rubric (default
-    RUBRIC_IN_EXTRACTION): the call grades the docs rubric too, stored on the row as `rubric` (R4)."""
-    sources = build_sources(candidate)
-    rubric = grades_rubric(sources, features_only, with_rubric)
-    output_model = ExtractedFeatures if features_only else ExtractionWithRubric if rubric else ExtractionResult
+    RUBRIC_IN_EXTRACTION): the call grades the docs rubric too, stored on the row as `rubric` (R4).
+    capabilities_only: read capability_sources into ExtractedCapabilities instead (status "capabilities")."""
+    sources = capability_sources(candidate) if capabilities_only else build_sources(candidate)
+    rubric = not capabilities_only and grades_rubric(sources, features_only, with_rubric)
+    output_model = (ExtractedCapabilities if capabilities_only else ExtractedFeatures if features_only
+                    else ExtractionWithRubric if rubric else ExtractionResult)
     started = time.monotonic()
     row: dict[str, Any] = {"repo_id": candidate["repo_id"], "run_id": run_id, "model": model,
                            "reasoning_effort": reasoning_effort, "sources_sha": sources_sha(sources),
-                           "input_sha": input_sha(candidate), "prompt_version": prompt_version(sources, features_only),
+                           "input_sha": input_sha(candidate),
+                           "prompt_version": prompt_version(sources, features_only, capabilities_only),
                            "renderer_version": RENDERER_VERSION,
                            "result": None, "quote_failures": [], "quotes_checked": 0, "error": None,
                            "usage": None, "cost_usd": 0.0, "cache_hit": False, "response_id": None, "rubric": None}
     try:
-        meta = call_meta("responses", build_body(sources, features_only, rubric), stage=STAGE, public_data_only=True,
+        body = build_capabilities_body(sources) if capabilities_only else build_body(sources, features_only, rubric)
+        meta = call_meta("responses", body, stage=STAGE, public_data_only=True,
                          max_output_tokens=max_output_tokens, model=model,
                          reasoning_effort=reasoning_effort, scope=f"{STAGE}:{candidate['repo_id']}",
                          scope_cap_usd=SCOPE_CAP_USD, run_id=run_id, output_model=output_model,
@@ -565,7 +734,11 @@ def extract_one(candidate: dict[str, Any], *, model: str, run_id: str, reasoning
         row["rubric"] = graded.model_dump(mode="json")
         parsed = ExtractionResult.model_validate(parsed.model_dump(mode="json", exclude={"docs_rubric"}))
     cleaned, failures, checked = check_quotes(parsed, sources)
-    status = FEATURES_STATUS if features_only else "quotes_dropped" if failures else "ok"
+    if capabilities_only:
+        cleaned, item_failures, items_checked = check_items(cleaned, sources)
+        failures, checked = failures + item_failures, checked + items_checked
+    status = (CAPABILITIES_STATUS if capabilities_only else FEATURES_STATUS if features_only
+              else "quotes_dropped" if failures else "ok")
     return {**row, "status": status,
             "result": cleaned.model_dump(mode="json"), "quote_failures": failures,
             "quotes_checked": checked}
@@ -610,6 +783,12 @@ def feature_rows(db: PipelineDB, repo_id: str, model: str) -> dict[str, Any] | N
     rows = [r for r in (db.last_extraction(repo_id, model, (FEATURES_STATUS,)),
                         db.last_extraction(repo_id, model, _DONE)) if r and (r["result"] or {}).get("features")]
     return max(rows, key=lambda r: r["id"], default=None)
+
+
+def capability_rows(db: PipelineDB, repo_id: str, model: str) -> dict[str, Any] | None:
+    """The newest capabilities-only row for a repo by `model` that lists any; None when there is none."""
+    row = db.last_extraction(repo_id, model, (CAPABILITIES_STATUS,))
+    return row if row and (row["result"] or {}).get("capabilities") else None
 _LABEL_ORDER = {"tool": 0, "uncertain": 1}
 
 
@@ -623,7 +802,7 @@ def is_extracted(db: PipelineDB, candidate: dict[str, Any], model: str, refresh_
     """Whether `model` (or its tier) has a finished extraction that still stands for the candidate
     (extraction_is_current): the same raw text, and not older than `refresh_before`."""
     for m in same_tier(model):
-        last = db.last_extraction(candidate["repo_id"], m, exclude=(FEATURES_STATUS,))
+        last = db.last_extraction(candidate["repo_id"], m, exclude=SIDE_STATUSES)
         if last and last["status"] in _DONE and extraction_is_current(last, candidate, refresh_before):
             return True
     return False
@@ -631,7 +810,8 @@ def is_extracted(db: PipelineDB, candidate: dict[str, Any], model: str, refresh_
 
 def select_candidates(db: PipelineDB, *, model: str, limit: int, repo_ids: list[str] | None = None,
                       force: bool = False, features_only: bool = False,
-                      categories: list[str] | None = None, refresh_before: str | None = None) -> list[dict[str, Any]]:
+                      categories: list[str] | None = None, refresh_before: str | None = None,
+                      capabilities_only: bool = False) -> list[dict[str, Any]]:
     """Rule-passed candidates not yet extracted from the same raw text by this model (or, for the prod
     model, by the hackathon's: same_tier). refresh_before (a version such as p5 or r2) also takes those whose
     extraction used an older prompt or renderer.
@@ -656,7 +836,10 @@ def select_candidates(db: PipelineDB, *, model: str, limit: int, repo_ids: list[
             continue
         if not repo_ids and prescreen.get(c["repo_id"], {}).get("keep") is False:
             continue  # the open-weight prescreen (or its review) said this is not usable software
-        if features_only:
+        if capabilities_only:
+            if not force and any(db.last_extraction(c["repo_id"], m, (CAPABILITIES_STATUS,)) for m in same_tier(model)):
+                continue
+        elif features_only:
             if not force and any(feature_rows(db, c["repo_id"], m) for m in same_tier(model)):
                 continue
         elif not force and is_extracted(db, c, model, refresh_before):
@@ -677,13 +860,57 @@ def select_candidates(db: PipelineDB, *, model: str, limit: int, repo_ids: list[
     return interleaved
 
 
+def record_slugs(data_dir: Path | None = None) -> dict[str, str]:
+    """repo_id -> slug of every record in data_dir (default data/software)."""
+    from pickfit.index import DEFAULT_DATA_DIR
+
+    found = {}
+    for path in sorted((data_dir or DEFAULT_DATA_DIR).glob("*.json")):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        found[data["repo_id"]] = data["slug"]
+    return found
+
+
+DRY_RUN_OUTPUT_TOKENS = 2_500  # a guess at one answer: up to 40 short labels with quotes and items
+
+
+def dry_run_summary(todo: list[dict[str, Any]], run_id: str, model: str, *, features_only: bool = False,
+                    capabilities_only: bool = False) -> dict[str, Any]:
+    """What a run would send, without sending it: per candidate the request's size, and a rough cost at the
+    model's price in pickfit.meta.PRICES (input estimated as call_meta does, DRY_RUN_OUTPUT_TOKENS out; the
+    prompt cache and reasoning tokens are not counted)."""
+    from pickfit.meta import estimate_input_tokens, price_for, provider_for
+
+    sizes = []
+    for c in todo:
+        if capabilities_only:
+            sources = capability_sources(c)
+            body = build_capabilities_body(sources)
+        else:
+            sources = build_sources(c)
+            body = build_body(sources, features_only)
+        sizes.append({"repo_id": c["repo_id"], "full_name": c.get("full_name"),
+                      "input_tokens_est": estimate_input_tokens(body),
+                      "help_sources": sum(1 for s in sources if s.kind == "help")})
+    price = price_for(provider_for(model), model)
+    input_tokens = sum(s["input_tokens_est"] for s in sizes)
+    output_tokens = DRY_RUN_OUTPUT_TOKENS * len(sizes)
+    cost = (input_tokens * price.input + output_tokens * price.output) / 1_000_000
+    return {"run_id": run_id, "model": model, "dry_run": True, "candidates": len(sizes),
+            "with_help": sum(1 for s in sizes if s["help_sources"]),
+            "input_tokens_est": round(input_tokens), "output_tokens_est": output_tokens,
+            "cost_usd_est": round(cost, 4), "requests": sizes}
+
+
 def run_extract(*, limit: int, model: str = "dev", reasoning_effort: str = "minimal",
                 repo_ids: list[str] | None = None, force: bool = False, features_only: bool = False,
                 categories: list[str] | None = None, candidates: list[dict[str, Any]] | None = None,
                 concurrency: int = 1, max_attempts: int = MAX_ATTEMPTS,
                 db_path: Path | None = None, client: Any = None, ledger: Ledger | None = None,
                 runs_dir: Path | str | None = None, cache: bool | None = None,
-                log: Callable[[str], None] | None = None, refresh_before: str | None = None) -> dict[str, Any]:
+                log: Callable[[str], None] | None = None, refresh_before: str | None = None,
+                capabilities_only: bool = False, data_dir: Path | None = None, help_from: Path | None = None,
+                dry_run: bool = False) -> dict[str, Any]:
     """Extract up to `limit` candidates, `concurrency` calls at a time; returns a run summary.
 
     candidates: extract these (such as hosted web apps, pickfit.discover.webapps) instead of selecting
@@ -692,6 +919,10 @@ def run_extract(*, limit: int, model: str = "dev", reasoning_effort: str = "mini
 
     The budget or MAX_CONSECUTIVE_ERRORS failed candidates in a row stop the batch:
     no new call starts, and calls already in flight finish and are stored.
+
+    capabilities_only: only candidates that have a record in `data_dir` (data/software), each with its help texts
+    from `help_from` (runs/capabilities/help). dry_run: select and build every request, call nothing, store
+    nothing; the summary says how many and how large.
     """
     log = log or (lambda line: print(line, file=sys.stderr))
     if limit <= 0 or concurrency <= 0 or max_attempts <= 0:
@@ -700,12 +931,24 @@ def run_extract(*, limit: int, model: str = "dev", reasoning_effort: str = "mini
         parse_refresh(refresh_before)  # refuse a malformed version before anything is selected
     model_id = resolve_model(model)
     db = PipelineDB(db_path or pipeline_db_path())
-    run_id = f"{STAGE}{'-features' if features_only else ''}-" + taipei_now().strftime("%Y%m%d-%H%M%S")
+    mode = "-capabilities" if capabilities_only else "-features" if features_only else ""
+    run_id = f"{STAGE}{mode}-" + taipei_now().strftime("%Y%m%d-%H%M%S")
+    slugs: dict[str, str] = {}
+    if capabilities_only:
+        slugs = record_slugs(data_dir)
+        repo_ids = repo_ids or sorted(slugs)
     if candidates is not None:
         todo = [c for c in candidates if force or not is_extracted(db, c, model_id, refresh_before)][:limit]
     else:
         todo = select_candidates(db, model=model_id, limit=limit, repo_ids=repo_ids, force=force,
-                                 features_only=features_only, categories=categories, refresh_before=refresh_before)
+                                 features_only=features_only, categories=categories, refresh_before=refresh_before,
+                                 capabilities_only=capabilities_only)
+    if capabilities_only:
+        helps = help_from or help_dir(runs_dir)
+        todo = [{**c, "help": load_help(helps, slugs[c["repo_id"]])} for c in todo if c["repo_id"] in slugs]
+    if dry_run:
+        return dry_run_summary(todo, run_id, model_id, features_only=features_only,
+                               capabilities_only=capabilities_only)
     log(f"extract {run_id}: {len(todo)} candidates with {model_id} (effort {reasoning_effort}, "
         f"{concurrency} at a time, up to {max_attempts} attempts)")
     stop = threading.Event()
@@ -717,7 +960,8 @@ def run_extract(*, limit: int, model: str = "dev", reasoning_effort: str = "mini
         try:
             return extract_with_retries(c, max_attempts=max_attempts, model=model_id, run_id=run_id,
                                         reasoning_effort=reasoning_effort, client=client, ledger=ledger,
-                                        runs_dir=runs_dir, cache=cache, features_only=features_only)
+                                        runs_dir=runs_dir, cache=cache, features_only=features_only,
+                                        capabilities_only=capabilities_only)
         except BudgetExceeded as err:
             if not stop.is_set():
                 stopped.append(f"budget: {err}")
@@ -768,6 +1012,7 @@ def run_extract(*, limit: int, model: str = "dev", reasoning_effort: str = "mini
         "attempted": len(finals), "calls": len(rows), "by_status": statuses,
         "errors": sum(1 for r in finals if r["status"] in ("error", "incomplete", "schema_error")),
         "with_features": sum(1 for r in finals if (r["result"] or {}).get("features")),
+        "with_capabilities": sum(1 for r in finals if (r["result"] or {}).get("capabilities")),
         "quotes_checked": sum(r["quotes_checked"] for r in finals),
         "quote_failures": sum(len(r["quote_failures"]) for r in finals),
         "tokens": tokens, "cost_usd": round(sum(r["cost_usd"] for r in rows), 6),

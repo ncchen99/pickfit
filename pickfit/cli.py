@@ -92,12 +92,16 @@ def _extract(args: argparse.Namespace) -> int:
                         repo_ids=repo_ids, force=args.force, log=lambda line: print(line, file=sys.stderr))
         # A candidate that got a page is extracted again below without --force: its sources changed.
         print(f"install guides: looked for {docs['looked']}, read for {len(docs['read'])}", file=sys.stderr)
+    if args.capabilities_only and args.features_only:
+        print("--capabilities-only and --features-only ask for different calls: pick one", file=sys.stderr)
+        return 2
     summary = run_extract(limit=args.limit, model=args.model, reasoning_effort=args.effort,
                           repo_ids=repo_ids, force=args.force, features_only=args.features_only,
                           concurrency=args.concurrency, max_attempts=args.attempts, categories=args.category,
-                          refresh_before=args.refresh_before)
+                          refresh_before=args.refresh_before, capabilities_only=args.capabilities_only,
+                          help_from=args.help_dir, dry_run=args.dry_run)
     print(json.dumps(summary, ensure_ascii=False, indent=2))
-    return 0 if summary["errors"] == 0 else 1
+    return 0 if summary.get("errors", 0) == 0 else 1
 
 
 def _prescreen(args: argparse.Namespace) -> int:
@@ -113,8 +117,14 @@ def _profiles(args: argparse.Namespace) -> int:
     from pickfit.discover.run import pipeline_db_path
     from pickfit.discover.store import PipelineDB
     from pickfit.meta import resolve_model
-    from pickfit.profiles import DEFAULT_CATEGORIES, DEFAULT_OUT, write_features, write_profiles
+    from pickfit.profiles import DEFAULT_CATEGORIES, DEFAULT_OUT, write_capabilities, write_features, write_profiles
 
+    if args.capabilities_only:
+        summary = write_capabilities(PipelineDB(pipeline_db_path()), model=resolve_model(args.model),
+                                     out_dir=args.out or DEFAULT_OUT, slugs=args.slug, help_from=args.help_dir,
+                                     dry_run=args.dry_run, log=lambda line: print(line, file=sys.stderr))
+        print(json.dumps(summary.to_dict(), ensure_ascii=False, indent=2))
+        return 0
     if args.features_only:
         summary = write_features(PipelineDB(pipeline_db_path()), model=resolve_model(args.model),
                                  out_dir=args.out or DEFAULT_OUT, slugs=args.slug, dry_run=args.dry_run,
@@ -264,6 +274,13 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
                         "(by default only a changed README, release, store entry or install page is read again)")
     e.add_argument("--features-only", action="store_true",
                    help="ask only for the main advertised features (records extracted before features existed)")
+    e.add_argument("--capabilities-only", action="store_true",
+                   help="ask only for documented capabilities, from the README, install pages and the tool's own "
+                        "--help (runs/capabilities/help); only candidates with a record")
+    e.add_argument("--help-dir", type=Path, default=None,
+                   help="--capabilities-only: where the help texts are (default runs/capabilities/help)")
+    e.add_argument("--dry-run", action="store_true",
+                   help="select and build every request, call nothing, store nothing; print sizes and an estimate")
     e.add_argument("--records", action="store_true", help="the candidates that have a record in data/software")
     e.add_argument("--install-docs", action="store_true",
                    help="first read the install guide a README points to (the repository's own docs, the linked "
@@ -285,7 +302,12 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
     p.add_argument("--dry-run", action="store_true", help="build and validate, write nothing")
     p.add_argument("--features-only", action="store_true",
                    help="only set the advertised features (and their evidence) on existing records")
-    p.add_argument("--slug", action="append", help="--features-only: only this record (repeatable)")
+    p.add_argument("--capabilities-only", action="store_true",
+                   help="only set the documented capabilities (and their evidence) on existing records")
+    p.add_argument("--help-dir", type=Path, default=None,
+                   help="--capabilities-only: the help texts the extraction read (default runs/capabilities/help)")
+    p.add_argument("--slug", action="append",
+                   help="--features-only or --capabilities-only: only this record (repeatable)")
     p.set_defaults(func=_profiles)
 
     from pickfit.discover import webapps

@@ -76,6 +76,7 @@ from pickfit.d1 import D1Error, Database, sql, timestamp
 from pickfit.discover.github import normalize_repo
 from pickfit.discover.rules import RULES_VERSION, classify
 from pickfit.discover.store import PipelineDB, repo_key
+from pickfit.extract import SIDE_STATUSES
 from pickfit.installdocs import needs_install_docs
 from pickfit.lanes import PARKED_PREFIX, due_lanes, parked_reason
 from pickfit.ledger import TAIPEI, BudgetExceeded, Ledger, taipei_now
@@ -966,7 +967,7 @@ class Watcher:
                 return
             record_dir = self.s.runs_dir / "watch" / job.submission_id / "software"
             candidate = self.db.candidate(job.repo_id) if job.repo_id else None
-            extraction = self.db.last_extraction(job.repo_id, MODEL) if job.repo_id else None
+            extraction = self.db.last_extraction(job.repo_id, MODEL, exclude=SIDE_STATUSES) if job.repo_id else None
             path = record_dir / f"{job.slug}.json"
             if candidate is None or extraction is None or not path.exists():
                 raise Retry("the parked record or its extraction is gone")
@@ -1265,7 +1266,7 @@ class Watcher:
     def _extract(self, candidate: dict[str, Any], run_id: str, job: Job) -> dict[str, Any]:
         from pickfit.extract import extraction_is_current
 
-        last = self.db.last_extraction(candidate["repo_id"], MODEL)
+        last = self.db.last_extraction(candidate["repo_id"], MODEL, exclude=SIDE_STATUSES)
         if last and last["status"] in DONE_EXTRACTIONS and extraction_is_current(dict(last), candidate):
             job.notes.append("extraction reused")
             return last
@@ -1276,7 +1277,7 @@ class Watcher:
         final = rows[-1] if rows else None
         if final is None or final["status"] not in DONE_EXTRACTIONS:
             raise Retry(f"extraction {final['status'] if final else 'did not run'}")
-        last = self.db.last_extraction(candidate["repo_id"], MODEL)
+        last = self.db.last_extraction(candidate["repo_id"], MODEL, exclude=SIDE_STATUSES)
         assert last is not None
         return last
 

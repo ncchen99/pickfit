@@ -262,7 +262,8 @@ def test_check_quotes_drops_a_feature_no_source_advertises() -> None:
 
 
 def test_instructions_ask_for_main_features_in_english() -> None:
-    assert "features are the 2-4 things the sources present" in INSTRUCTIONS
+    assert "features are the 1-6 things the sources present" in INSTRUCTIONS
+    assert "as many as the sources put forward, one" in INSTRUCTIONS and "never padded" in INSTRUCTIONS
     assert "use_cases" in INSTRUCTIONS and "features, alternatives_to" in INSTRUCTIONS
 
 
@@ -507,7 +508,7 @@ def test_only_a_renderer_change_reads_nothing_again(tmp_path: Path, ledger: Ledg
     monkeypatch.setattr(extract_module, "RENDERER_VERSION", "r2")
     assert sources_sha(build_sources(db.candidate(key))) != before  # the old rule would read it again
     assert _rerun(tmp_path, db_path, ledger)["attempted"] == 0
-    monkeypatch.setattr(extract_module, "PROMPT_VERSION", "p5")  # a new prompt: still nothing by itself
+    monkeypatch.setattr(extract_module, "PROMPT_VERSION", "p6")  # a new prompt: still nothing by itself
     assert _rerun(tmp_path, db_path, ledger)["attempted"] == 0
 
 
@@ -526,12 +527,12 @@ def test_a_changed_readme_is_read_again(tmp_path: Path, ledger: Ledger) -> None:
 def test_an_explicit_refresh_reads_again_what_an_older_prompt_or_renderer_read(
         tmp_path: Path, ledger: Ledger, monkeypatch: pytest.MonkeyPatch) -> None:
     db_path, db, _ = _extract_once(tmp_path, ledger)
-    assert _rerun(tmp_path, db_path, ledger, refresh_before="p4")["attempted"] == 0  # read with p4: not older
+    assert _rerun(tmp_path, db_path, ledger, refresh_before="p5")["attempted"] == 0  # read with p5: not older
     assert _rerun(tmp_path, db_path, ledger, refresh_before="web-p9")["attempted"] == 0  # another prompt family
-    monkeypatch.setattr(extract_module, "PROMPT_VERSION", "p5")
-    assert _rerun(tmp_path, db_path, ledger, ok(extraction()), refresh_before="p5")["attempted"] == 1
-    assert db.extractions()[-1]["prompt_version"] == "p5"
-    assert _rerun(tmp_path, db_path, ledger, refresh_before="p5")["attempted"] == 0  # done once is enough
+    monkeypatch.setattr(extract_module, "PROMPT_VERSION", "p6")
+    assert _rerun(tmp_path, db_path, ledger, ok(extraction()), refresh_before="p6")["attempted"] == 1
+    assert db.extractions()[-1]["prompt_version"] == "p6"
+    assert _rerun(tmp_path, db_path, ledger, refresh_before="p6")["attempted"] == 0  # done once is enough
     assert _rerun(tmp_path, db_path, ledger, ok(extraction()), refresh_before="r2")["attempted"] == 1
     with pytest.raises(ValueError, match="refresh-before"):
         _rerun(tmp_path, db_path, ledger, refresh_before="v5")
@@ -584,3 +585,106 @@ def test_an_older_database_gets_the_new_columns_and_the_migration_stamps_legacy_
     assert all(is_extracted(db, db.candidate(k), "m") for k in rows)
     assert not is_extracted(db, db.candidate(changed), "m", refresh_before="r1")
     assert is_extracted(db, db.candidate(same), "m", refresh_before="r1")
+
+
+# --- capabilities-only (docs/proposals/capabilities.md step 3) ---------------------
+
+HELP = """Usage: tinyq [OPTIONS] FILTER [FILE]...
+
+Commands:
+  fmt     Re-indent JSON Lines
+  stats   Count keys per record
+
+Output formats: json, csv, tsv
+"""
+
+
+def _with_record(tmp_path: Path, key: str, slug: str = "tinyq") -> tuple[Path, Path]:
+    """A data dir holding a record for `key`, and a help store holding the tool's --help."""
+    data_dir = tmp_path / "software"
+    data_dir.mkdir(exist_ok=True)
+    (data_dir / f"{slug}.json").write_text(json.dumps({"repo_id": key, "slug": slug}))
+    helps = tmp_path / "help"
+    helps.mkdir(exist_ok=True)
+    (helps / f"{slug}.json").write_text(json.dumps({"slug": slug, "help": [
+        {"command": "tinyq --help", "exit_code": 0, "text": HELP, "run_id": "verify-tinyq-1", "by": "pickfit"}]}))
+    return data_dir, helps
+
+
+def capability(label: str, quote: str | None, area: str | None = None, items: list[str] | None = None) -> dict:
+    return {"label": cited(label, quote), "area": area, "items": items or []}
+
+
+CAPABILITIES = {"capabilities": [
+    capability("re-indent JSON Lines", "fmt     Re-indent JSON Lines", "subcommands"),
+    capability("write results as CSV or TSV", "Output formats: json, csv, tsv", "Formats", ["csv", "tsv", "xml"]),
+    capability("edit YAML in place", "edits YAML files"),  # no source says so
+    capability("re-indent json lines", "fmt     Re-indent JSON Lines"),  # the same label again
+]}
+
+
+def test_capabilities_only_reads_the_help_and_keeps_the_earlier_extraction(tmp_path: Path, ledger: Ledger) -> None:
+    from pickfit.extract import CAPABILITIES_STATUS, SIDE_STATUSES
+
+    db_path = tmp_path / "pipeline.db"
+    db = PipelineDB(db_path)
+    key = add_candidate(db, 1, "someone/tinyq")
+    add_candidate(db, 2, "someone/norecord")  # no record: never asked about
+    _rerun(tmp_path, db_path, ledger, ok(extraction()), max_attempts=1, repo_ids=[key])
+    data_dir, helps = _with_record(tmp_path, key)
+    server = FakeMeta(ok(CAPABILITIES))
+    summary = run_extract(limit=5, db_path=db_path, capabilities_only=True, data_dir=data_dir, help_from=helps,
+                          client=server.client(), ledger=ledger, runs_dir=tmp_path / "runs", log=lambda line: None)
+    assert summary["attempted"] == 1 and summary["by_status"] == {CAPABILITIES_STATUS: 1}
+    assert summary["run_id"].startswith("extract-capabilities-") and summary["with_capabilities"] == 1
+    (request,) = server.requests
+    assert request["text"]["format"]["name"] == "software_capabilities"
+    assert set(request["text"]["format"]["schema"]["properties"]) == {"capabilities"}
+    assert "This run asks only for capabilities" in request["instructions"]
+    user = request["input"][0]["content"][0]["text"]
+    assert '<source id="help1" kind="help">\n$ tinyq --help\nUsage: tinyq' in user and 'id="readme"' in user
+    row = db.extractions()[-1]
+    assert row["status"] == CAPABILITIES_STATUS and row["prompt_version"] == "capabilities-p1"
+    assert row["result"] == {"capabilities": [
+        {"label": cited("re-indent JSON Lines", "fmt     Re-indent JSON Lines"), "area": "subcommands", "items": []},
+        {"label": cited("write results as CSV or TSV", "Output formats: json, csv, tsv"), "area": "formats",
+         "items": ["csv", "tsv"]}]}
+    assert {f["path"] for f in row["quote_failures"]} == {"/capabilities/2/label", "/capabilities/1/items/2"}
+    # The record's own extraction still counts as done and is still the one found; capabilities are not asked again.
+    assert db.last_extraction(key, "claude-haiku-5-5", exclude=SIDE_STATUSES)["status"] == "ok"
+    assert _rerun(tmp_path, db_path, ledger, repo_ids=[key])["attempted"] == 0
+    assert run_extract(limit=5, db_path=db_path, capabilities_only=True, data_dir=data_dir, help_from=helps,
+                       client=FakeMeta().client(), ledger=ledger, runs_dir=tmp_path / "runs",
+                       log=lambda line: None)["attempted"] == 0
+
+
+def test_a_dry_run_builds_the_requests_and_calls_nothing(tmp_path: Path, ledger: Ledger) -> None:
+    db_path = tmp_path / "pipeline.db"
+    db = PipelineDB(db_path)
+    key = add_candidate(db, 1, "someone/tinyq")
+    data_dir, helps = _with_record(tmp_path, key)
+    summary = run_extract(limit=5, db_path=db_path, capabilities_only=True, data_dir=data_dir, help_from=helps,
+                          dry_run=True, client=FakeMeta().client(), ledger=ledger, runs_dir=tmp_path / "runs",
+                          log=lambda line: None)
+    assert summary["dry_run"] and summary["candidates"] == 1 and summary["with_help"] == 1
+    assert summary["requests"][0]["input_tokens_est"] > 500 and summary["cost_usd_est"] > 0
+    assert db.extractions() == [] and ledger.spend_summary()["total_usd"] == 0
+
+
+def test_help_sources_are_cut_and_capability_answers_are_kept_short() -> None:
+    from pickfit.extract import HELP_SOURCES_MAX_CHARS, ExtractedCapabilities, help_sources
+
+    long = {"command": "big --help", "text": "Usage: big\n" + "x" * 40_000}
+    sources = help_sources({"help": [long, long, {"command": "empty --help", "text": "  "}]})
+    assert [s.id for s in sources] == ["help1", "help2"] and all(s.truncated for s in sources)
+    assert sum(len(s.text) for s in sources) <= HELP_SOURCES_MAX_CHARS + 40
+    answer = ExtractedCapabilities.model_validate({"capabilities": [
+        capability("x" * 81, "too long a label"),
+        capability("convert files", "convert", " Formats And More Words That Go On Too Long ",
+                   ["docx", "DOCX", "y" * 41, " epub "]),
+        *[capability(f"capability {i}", f"cap {i}") for i in range(45)],
+    ]})
+    first = answer.capabilities[0]
+    assert first.label.value == "convert files" and first.items == ["docx", "epub"]
+    assert first.area == "formats and more words that go"[:30]
+    assert len(answer.capabilities) == 40
