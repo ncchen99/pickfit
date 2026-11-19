@@ -6,7 +6,7 @@
  * here calls a model. The plain feature titles, steps and open hint come from the record's usage_guide,
  * which names the model that wrote them.
  */
-import { bestGuide, isVerified, isWebApp, OSES, securityOf, verifiedOn, webCheck, type Catalog, type Entry, type InstallGuide, type OS, type RunVideo, type SecurityCheck, type SecurityFinding } from '../catalog.ts';
+import { bestGuide, isVerified, isWebApp, OSES, securityOf, verifiedOn, webCheck, type Catalog, type Entry, type InstallGuide, type OS, type RunVideo, type GapCategory, type SecurityCheck, type SecurityFinding } from '../catalog.ts';
 import { featuresOut, type FeaturesOut, type NotCheckedReason } from '../features.ts';
 import { advisoriesOf } from '../security.ts';
 import { L } from '../i18n.ts';
@@ -193,6 +193,32 @@ const securityReason = (reason: string | undefined): string => {
   }
 };
 
+/** Why part of a sec.v2 check could not be done, by its first gap's category, as the end of a sentence. */
+const gapReason = (category: GapCategory | undefined): string => {
+  switch (category) {
+    case 'lockfile_missing':
+      return L('part of it has no lockfile to read', '有一部分沒有可讀取的 lockfile');
+    case 'lockfile_unreadable':
+      return L('part of it uses a lockfile pickfit cannot read yet', '有一部分用的 lockfile pickfit 還讀不了');
+    case 'resolve_failed':
+      return L('some dependencies could not be resolved', '有些相依套件無法解析');
+    case 'no_adapter':
+      return L('part of it is in a language pickfit cannot read dependencies of yet', '有一部分是 pickfit 還讀不了相依套件的語言');
+    case 'advisory_db':
+      return L('the vulnerability database has no data for part of it', '漏洞資料庫沒有其中一部分的資料');
+    case 'binary_no_metadata':
+      return L('its binaries do not list what they were built from', '它的執行檔沒有列出用了哪些套件');
+    case 'no_source':
+      return L('there is no repository or package to read', '沒有可讀取的 repo 或套件');
+    case 'tool_error':
+      return L('a step of the check failed and will be retried', '檢查有一步失敗了，之後會重試');
+    case 'platform_unsupported':
+      return L('pickfit cannot list what installs on macOS or Windows yet', 'pickfit 還無法列出在 macOS 或 Windows 上裝了什麼');
+    default:
+      return '';
+  }
+};
+
 /** How pickfit knows a finding's code is not used, as the end of a sentence (sec.v2's reachability methods). */
 const unusedBecause = (method: string | null): string => {
   switch (method) {
@@ -291,12 +317,45 @@ export function securityMark(entry: Entry): string {
   );
 }
 
-/** The shield of a sec.v2 check by its level; '' for clean and unchecked, which read as sec.v1's do. */
+/** "pickfit checked N of M packages", when a sec.v2 check's coverage is partial; '' otherwise. */
+const checkedPart = (s: SecurityCheck): string => {
+  const c = s.coverage;
+  if (!c || c.state !== 'partial') return '';
+  const why = gapReason(c.gaps[0]?.category);
+  const of = c.packages_found > c.packages_checked ? L(` of ${c.packages_found}`, `（已知至少 ${c.packages_found} 個）`) : '';
+  return L(
+    ` pickfit checked ${c.packages_checked}${of} packages${why ? `; ${why}` : ''}.`,
+    `pickfit 檢查了 ${c.packages_checked} 個套件${of}${why ? `，${why}` : ''}。`,
+  );
+};
+
+/** The shield of a sec.v2 check by its level and, apart, its coverage. '' for none with complete or no coverage, and
+ * for an unchecked one: those read as sec.v1's clean and unchecked do. */
 function securityLevelMark(entry: Entry, s: SecurityCheck, date: string): string {
   const web = isWebApp(entry);
   const where = web ? L('the packages the site is built from', '這個網站用到的套件') : L('packages it installs', '它安裝的套件');
   const n = s.packages_checked ?? 0;
   const counts = s.counts ?? {};
+  const state = s.coverage?.state ?? 'complete';
+  if (state === 'partial' && !(s.level === 'blocked' || s.level === 'exposed' || s.level === 'conditional')) {
+    // Partly checked: never clean, never a vulnerability. What was found where it does not run is said too.
+    const unused = Math.max(counts.present_unreachable ?? 0, s.unreachable?.length ?? 0);
+    const only = counts.not_shipped ?? 0;
+    const extra = [
+      unused ? L(`${unused} found in code it installs but does not use`, `${unused} 個在裝了但沒用到的程式碼裡`) : '',
+      only ? L(`${only} only in development or build tools`, `${only} 個只在開發或建置工具裡`) : '',
+    ].filter(Boolean);
+    return checkMark(
+      'open',
+      'shield',
+      SECURITY(),
+      L(
+        `Only partly checked for known vulnerabilities: none known in the part pickfit could read.${checkedPart(s)}${extra.length ? ` Also ${extra.join(', ')}.` : ''}`,
+        `已知漏洞只檢查了一部分，讀得到的部分沒有已知漏洞。${checkedPart(s)}${extra.length ? `另有${extra.join('、')}。` : ''}`,
+      ),
+    );
+  }
+  if (state === 'unchecked') return '';
   if (s.level === 'blocked' || s.level === 'exposed' || s.level === 'conditional') {
     const vulns = advisoriesOf(s, Math.max(s.count ?? 0, s.findings?.length ?? 0, 1));
     const plural = vulns === 1 ? 'vulnerability' : 'vulnerabilities';
@@ -315,7 +374,10 @@ function securityLevelMark(entry: Entry, s: SecurityCheck, date: string): string
               `${vulns} known high or critical ${plural} in ${where} that matter only in some uses (OSV.dev${date ? `, ${date}` : ''}). See when`,
               `${where}有 ${vulns} 個已知的高風險或嚴重漏洞，只在某些用法下才會碰到（OSV.dev${date ? `，${date}` : ''}）。看是哪些情況`,
             );
-    return checkMark(s.level === 'conditional' ? 'caution' : 'fail', 'shield-alert', SECURITY(), say, { count: vulns, href: '#security' });
+    return checkMark(s.level === 'conditional' ? 'caution' : 'fail', 'shield-alert', SECURITY(), `${say}${checkedPart(s) ? `${L('.', '。')}${checkedPart(s)}` : ''}`, {
+      count: vulns,
+      href: '#security',
+    });
   }
   const clean = L(
     `No known high or critical vulnerabilities in what it runs (OSV.dev${date ? `, checked ${date}` : ''}, ${n} ${n === 1 ? 'package' : 'packages'})`,
@@ -337,17 +399,6 @@ function securityLevelMark(entry: Entry, s: SecurityCheck, date: string): string
   if (s.level === 'not_shipped') {
     const m = counts.not_shipped ?? 0;
     return checkMark('pass', 'shield-check', SECURITY(), m ? `${clean}${L(`. ${m} more only in development or build tools`, `。另有 ${m} 個只在開發或建置工具裡`)}` : clean);
-  }
-  if (s.level === 'partial') {
-    const why = securityReason(s.reason);
-    return checkMark(
-      'open',
-      'shield',
-      SECURITY(),
-      why
-        ? L(`Only partly checked for known vulnerabilities: ${why}. None found in the part pickfit could read`, `已知漏洞只檢查了一部分：${why}。讀得到的部分沒有發現`)
-        : L('Only partly checked for known vulnerabilities. None found in the part pickfit could read', '已知漏洞只檢查了一部分，讀得到的部分沒有發現'),
-    );
   }
   return '';
 }

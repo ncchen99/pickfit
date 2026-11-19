@@ -1,11 +1,12 @@
 /**
  * The vulnerability check in MCP answers (find_software, find_alternatives,
  * get_install_guide): known vulnerabilities (OSV.dev) in what the tool brings.
- * A sec.v2 check carries a level (pickfit/security.py): blocked (do not
- * recommend), exposed (warn first), conditional (say in one line when it
- * applies), partial or unchecked (never call it safe), and present_unreachable,
- * not_shipped or clean (nothing to warn about). A sec.v1 check has no level;
- * its status says vulnerable, clean or unchecked as before. Built field by
+ * A sec.v2 check carries the level of its known findings (pickfit/security.py):
+ * blocked (do not recommend), exposed (warn first), conditional (say in one
+ * line when it applies), present_unreachable, not_shipped or none (nothing to
+ * warn about); and apart from it, its coverage (a partial or unchecked one is
+ * never called safe, nor a vulnerability). A sec.v1 check has neither; its
+ * status says vulnerable, clean or unchecked as before. Built field by
  * field from the index, so nothing else it carries (the advisories' own
  * summaries) leaks.
  */
@@ -16,8 +17,10 @@ export const SECURITY_FINDINGS_MAX = 5;
 
 export interface SecurityOut {
   status: SecurityCheck['status'];
-  /** sec.v2's level; null for a check from before it (read status then). */
+  /** sec.v2's level of the known findings; null for a check from before it (read status then). */
   level: SecurityLevel | null;
+  /** sec.v2: how much could be checked, apart from the level; null for a check from before it. */
+  coverage: { state: 'complete' | 'partial' | 'unchecked'; packages_checked: number; packages_found: number } | null;
   /** unchecked only: why pickfit could not check it (or check all of it). */
   reason: SecurityReason | null;
   checked_at: string | null;
@@ -50,6 +53,9 @@ export function securityOut(entry: Entry): SecurityOut {
   return {
     status: s.status,
     level: s.level ?? null,
+    coverage: s.coverage
+      ? { state: s.coverage.state, packages_checked: s.coverage.packages_checked, packages_found: s.coverage.packages_found }
+      : null,
     reason: s.status === 'unchecked' ? (s.reason ?? 'not_run') : null,
     checked_at: s.checked_at ?? null,
     count,

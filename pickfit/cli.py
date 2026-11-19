@@ -357,6 +357,9 @@ def _add_security_command(sub: argparse._SubParsersAction) -> None:
                    help="print each record's sec.v2 level from what it already stores (no package lookups); "
                         "never writes")
     s.add_argument("--offline-intel", action="store_true", help="skip CISA KEV and FIRST EPSS (kev, epss stay null)")
+    s.add_argument("--gaps", action="store_true",
+                   help="print what could not be checked, grouped by gap code, ecosystem, category and platform "
+                        "(every listed record unless --slug/--all narrow it); reads only, never writes")
     s.add_argument("--data-dir", default=None, help="records (default data/software)")
     s.add_argument("--workers", type=int, default=6, help="records checked at once")
     s.add_argument("--write", action="store_true", help="store each check in its record and refresh its scores")

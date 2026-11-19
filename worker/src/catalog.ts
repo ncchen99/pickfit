@@ -313,12 +313,33 @@ export interface VisualCheck {
 /** Why pickfit could not check a tool for known vulnerabilities; not_run = no check yet. */
 export type SecurityReason = 'no_source' | 'no_lockfile' | 'lockfile_not_supported' | 'resolve_failed' | 'not_run';
 
-/** A sec.v2 check's level (pickfit/security.py), worst first. blocked, exposed and conditional read as status
- * vulnerable; present_unreachable, not_shipped and clean as clean; partial and unchecked as unchecked. */
-export type SecurityLevel = 'blocked' | 'exposed' | 'conditional' | 'partial' | 'present_unreachable' | 'not_shipped' | 'clean' | 'unchecked';
-export const SECURITY_LEVELS = ['blocked', 'exposed', 'conditional', 'partial', 'present_unreachable', 'not_shipped', 'clean', 'unchecked'] as const;
+/** A sec.v2 check's level (pickfit/security.py): its worst known finding's, or none. It says nothing about what could
+ * not be checked (SecurityCoverage). blocked, exposed and conditional read as status vulnerable. */
+export type SecurityLevel = 'blocked' | 'exposed' | 'conditional' | 'present_unreachable' | 'not_shipped' | 'none';
+export const SECURITY_LEVELS = ['blocked', 'exposed', 'conditional', 'present_unreachable', 'not_shipped', 'none'] as const;
 /** A finding's level: the first five. */
 export type FindingLevel = 'blocked' | 'exposed' | 'conditional' | 'present_unreachable' | 'not_shipped';
+/** Why something could not be checked: the gap taxonomy's categories (pickfit/security.py). */
+export type GapCategory =
+  | 'advisory_db'
+  | 'lockfile_missing'
+  | 'lockfile_unreadable'
+  | 'resolve_failed'
+  | 'no_adapter'
+  | 'binary_no_metadata'
+  | 'no_source'
+  | 'tool_error'
+  | 'platform_unsupported';
+
+/** How much of a sec.v2 check could be checked, apart from what it found: an unknown is never a vulnerability. */
+export interface SecurityCoverage {
+  state: 'complete' | 'partial' | 'unchecked';
+  packages_checked: number;
+  /** Checked plus what the gaps are known to hide (a lower bound). */
+  packages_found: number;
+  /** The first gaps: a stable code, its category, the ecosystem. */
+  gaps: { code: string; category: GapCategory; ecosystem: string }[];
+}
 
 /** One known vulnerability in a package the tool brings. */
 export interface SecurityFinding {
@@ -373,6 +394,7 @@ export interface SecurityCheck {
   /** What was scanned: the installed artifact's SBOM, a fresh registry install, or the repository's lockfiles. */
   target?: 'installed_artifact' | 'registry_resolve' | 'repo_lockfile';
   unreachable?: UnreachableFinding[];
+  coverage?: SecurityCoverage;
 }
 
 /** An entry's security check; an index from before the check has none, which reads as not checked yet. */

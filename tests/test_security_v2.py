@@ -279,8 +279,13 @@ def test_openpets_workspace_each_finding_lands_where_it_belongs(monkeypatch: pyt
     # A moderate one is observed, not counted.
     assert got["npm:zod@4.4.3"][0]["counted"] is False
     a = result["assessment"]
-    assert a["level"] == "conditional" and result["status"] == "vulnerable" and a["complete"]
+    assert a["level"] == "conditional" and result["status"] == "vulnerable"
     assert a["counts"] == {"conditional": 4, "present_unreachable": 3, "not_shipped": 5} and a["uncounted"] == 1
+    cover = result["coverage"]
+    assert (cover["state"], cover["target"], cover["gaps"]) == ("complete", "repo_lockfile", [])
+    assert cover["packages_found"] == cover["packages_checked"] == result["packages_checked"]
+    assert cover["components"] == [{"ecosystem": "npm", "component": "pnpm-lock.yaml", "status": "scanned",
+                                    "packages": result["packages_checked"], "gaps": []}]
     assert result["findings_total"] == 4 and {f["level"] for f in result["findings"]} == {"conditional",
                                                                                            "present_unreachable"}
     assert [f["package"] for f in result["findings"][:4]] == ["npm:@modelcontextprotocol/sdk", "npm:electron",
@@ -757,22 +762,27 @@ def f(level: str, severity: str = "HIGH", **over: Any) -> dict[str, Any]:
             "counted": severity in ("HIGH", "CRITICAL"), **over}
 
 
-def test_the_record_level_is_the_worst_counted_finding_then_the_read() -> None:
-    a = lambda fs, complete=True, packages=5: security.assess(fs, complete=complete, packages=packages, now=NOW)  # noqa: E731
+def test_the_level_is_the_worst_counted_finding_and_coverage_is_apart() -> None:
+    a = lambda fs: security.assess(fs, now=NOW)  # noqa: E731
     assert a([f("present_unreachable"), f("conditional"), f("not_shipped")])["level"] == "conditional"
     assert a([f("present_unreachable"), f("not_shipped")])["level"] == "present_unreachable"
     assert a([f("not_shipped")])["level"] == "not_shipped"
-    assert a([f("exposed", "MODERATE")])["level"] == "clean"  # observed, not counted
-    assert a([])["level"] == "clean"
-    assert a([f("present_unreachable")], complete=False)["level"] == "partial"  # never clean on a partial read
-    assert a([f("conditional")], complete=False)["level"] == "conditional"  # a finding warns whatever was not read
-    assert a([], complete=False, packages=0)["level"] == "unchecked"
-    got = a([f("conditional"), f("conditional", "CRITICAL"), f("not_shipped", "LOW")], complete=False)
-    assert got["counts"] == {"conditional": 2} and got["uncounted"] == 1 and got["reasons"][-1].startswith("incomplete:")
+    assert a([f("exposed", "MODERATE")])["level"] == "none"  # observed, not counted
+    assert a([])["level"] == "none"
+    got = a([f("conditional"), f("conditional", "CRITICAL"), f("not_shipped", "LOW")])
+    assert got["counts"] == {"conditional": 2} and got["uncounted"] == 1 and "complete" not in got
     assert got["reasons"][0].startswith("worst:GHSA-conditional npm:x@1.0.0 (conditional)")
-    assert {security.status_for(lvl) for lvl in ("blocked", "exposed", "conditional")} == {"vulnerable"}
-    assert {security.status_for(lvl) for lvl in ("present_unreachable", "not_shipped", "clean")} == {"clean"}
-    assert {security.status_for(lvl) for lvl in ("partial", "unchecked")} == {"unchecked"}
+    # Coverage: unknowns are never a level. Unchecked when nothing was checked, partial with a gap.
+    c = lambda checked, gaps: security.coverage("repo_lockfile", checked, [], gaps, now=NOW)  # noqa: E731
+    assert c(10, [])["state"] == "complete" and c(0, [])["state"] == "unchecked"
+    partial = c(10, [security.gap("lockfile.unsupported_format", "npm", "web/yarn.lock", "yarn_lock", found=30)])
+    assert (partial["state"], partial["packages_checked"], partial["packages_found"]) == ("partial", 10, 40)
+    # The sec.v1 status: vulnerable only for a level that warns; an unknown is unchecked, never vulnerable.
+    assert {security.status_for(lvl, s) for lvl in ("blocked", "exposed", "conditional")
+            for s in security.COVERAGE_STATES} == {"vulnerable"}
+    assert {security.status_for(lvl, "complete") for lvl in ("present_unreachable", "not_shipped", "none")} == {"clean"}
+    assert {security.status_for(lvl, s) for lvl in ("present_unreachable", "not_shipped", "none")
+            for s in ("partial", "unchecked")} == {"unchecked"}
 
 
 def test_level_of_reads_the_assessment_and_says_none_for_a_sec_v1_record() -> None:
@@ -781,7 +791,71 @@ def test_level_of_reads_the_assessment_and_says_none_for_a_sec_v1_record() -> No
     assert security.level_of({}) is None
     assert security.legacy_level({"status": "vulnerable", "findings": [{"malicious": True}]}) == "blocked"
     assert security.legacy_level({"status": "vulnerable", "findings": [{}]}) == "conditional"
-    assert security.legacy_level(None) == "unchecked"
+    assert security.legacy_level({"status": "unchecked"}) == security.legacy_level(None) == "none"
+    assert security.coverage_of({"security": {"status": "clean"}}) == "complete"
+    assert security.coverage_of({"security": {"status": "unchecked"}}) == "unchecked"
+    assert security.coverage_of({}) == "unchecked"
+
+
+def test_gaps_follow_the_taxonomy_and_sec_v1_reasons_map_onto_it() -> None:
+    for code, (category, capability) in security.GAP_CODES.items():
+        g = security.gap(code, "npm", "x", "yarn_lock is not read yet", now=NOW)
+        assert (g["category"], g["first_seen"], g["last_seen"]) == (category, "2026-11-19", "2026-11-19")
+        assert "{" not in g["capability"]
+    assert security.gap("adapter.missing", "rubygems")["capability"] == "adapter:rubygems"
+    assert security.gap("lockfile.unsupported_format", "npm", None, "yarn_lock is not read")["capability"] == \
+        "read_lockfile:yarn_lock"
+    v1 = {"version": "sec.v1", "status": "unchecked", "unchecked_reason": "no_lockfile", "checked_at": "2026-11-03T21:00:00+08:00"}
+    assert [(g["code"], g["ecosystem"], g["first_seen"]) for g in security.gaps_of({"security": v1})] == [
+        ("lockfile.missing", "unknown", "2026-11-03")]
+    assert {r: security.LEGACY_GAP[r] for r in ("resolve_failed", "no_source", "lockfile_not_supported")} == {
+        "resolve_failed": "resolve.registry_failed", "no_source": "source.none",
+        "lockfile_not_supported": "lockfile.unsupported_format"}
+    assert security.gaps_of({"security": {"version": "sec.v1", "status": "clean"}}) == []
+    assert security.gaps_of({}) == []  # never checked: counted apart as not run
+    # A gap seen before keeps its first_seen.
+    again = security.coverage("repo_lockfile", 3, [], [security.gap("lockfile.missing", "npm", now=NOW)],
+                              previous=security.gaps_of({"security": v1}), now=NOW)
+    assert again["gaps"][0]["first_seen"] == "2026-11-03"
+
+
+def test_the_repository_read_names_every_gap(tmp_path: Path) -> None:
+    write(tmp_path, "package.json", json.dumps({"dependencies": {"a": "1", "b": "2"}}))  # no lockfile
+    write(tmp_path, "web/yarn.lock", '"left-pad@^1.0.0":\n  version "1.3.0"\n\nchalk@^5:\n  version "5.3.0"\n')
+    write(tmp_path, "web/package.json", json.dumps({"dependencies": {"left-pad": "^1"}}))  # its yarn.lock covers it
+    write(tmp_path, "Cargo.toml", '[package]\nname = "t"\n\n[dependencies]\nzip = "8"\n')  # no Cargo.lock
+    write(tmp_path, "android/build.gradle", "dependencies {\n    implementation 'a:b:1'\n    api 'c:d:2'\n}\n")
+    write(tmp_path, "native/CMakeLists.txt", "project(x)\n")
+    write(tmp_path, "requirements.txt", "requests\nrich>=13\n")
+    write(tmp_path, "go.mod", "module x\n\ngo 1.25\n\nrequire github.com/a/b v1.2.3\n")
+    write(tmp_path, "sub/Cargo.lock", "not toml [[[")
+    got = security.repo_deps(tmp_path)
+    gaps = {(g["code"], g["ecosystem"], g["component"]): g.get("found") for g in got.gaps}
+    assert gaps == {("lockfile.missing", "npm", "package.json"): 2, ("lockfile.missing", "crates", "Cargo.toml"): 1,
+                    ("lockfile.unsupported_format", "npm", "web/yarn.lock"): 2,
+                    ("adapter.missing", "maven", "android/build.gradle"): 2,
+                    ("advisory_db.no_ecosystem", "c/c++", "native/CMakeLists.txt"): None,
+                    ("lockfile.missing", "pypi", "requirements.txt"): 2,
+                    ("lockfile.parse_error", "crates", "sub/Cargo.lock"): None}
+    assert [c["component"] for c in got.components if c["status"] == "scanned"] == ["go.mod"]
+    empty = tmp_path / "empty"
+    write(empty, "README.md", "hello\n")
+    assert [g["code"] for g in security.repo_deps(empty).gaps] == ["lockfile.none_found"]
+
+
+def test_gap_report_groups_by_code_ecosystem_category_and_platform() -> None:
+    v2 = {"category": "dev_cli", "verification": {"runs": [{"os": "macos"}]}, "security": {"coverage": {
+        "state": "partial", "gaps": [security.gap("lockfile.unsupported_format", "npm", "yarn.lock", "yarn_lock", found=9),
+                                     security.gap("adapter.missing", "maven", "build.gradle")]}}}
+    v1 = {"category": "mcp_server", "verification": {"runs": [{"os": "linux"}]},
+          "security": {"version": "sec.v1", "status": "unchecked", "unchecked_reason": "no_source"}}
+    report = security.gap_report([v2, v1, {"category": "x"}])
+    assert (report["records"], report["not_run"], report["records_with_gaps"]) == (3, 1, 2)
+    assert report["coverage"] == {"partial": 1, "unchecked": 1}
+    assert report["by_code"] == {"lockfile.unsupported_format": 1, "adapter.missing": 1, "source.none": 1}
+    assert report["by_category"]["no_source"] == 1 and report["by_ecosystem"]["maven"] == 1
+    assert report["by_software_category"]["mcp_server:source.none"] == 1
+    assert report["by_platform"]["macos:adapter.missing"] == 1 and report["packages_hidden"]["lockfile.unsupported_format"] == 9
 
 
 def test_the_levels_match_the_schema_patch() -> None:
@@ -790,7 +864,11 @@ def test_the_levels_match_the_schema_patch() -> None:
     if not SEC_V2_SCHEMA:
         pytest.skip("apply loop/proposals/security-schema.patch")
     assert schema.SECURITY_LEVELS == security.LEVELS and schema.FINDING_LEVELS == security.FINDING_LEVELS
-    assert schema.SECURITY_STATUS_OF_LEVEL == security.STATUS_OF_LEVEL
+    assert schema.COVERAGE_STATES == security.COVERAGE_STATES
+    assert schema.GAP_CATEGORY == {code: category for code, (category, _) in security.GAP_CODES.items()}
+    for level in security.LEVELS:
+        for state in security.COVERAGE_STATES:
+            assert schema.security_status_for(level, state) == security.status_for(level, state)
 
 
 def test_advisory_facts_and_tokens() -> None:
@@ -887,6 +965,8 @@ def test_the_index_carries_the_level_and_the_unreachable_findings(monkeypatch: p
     assert (entry["status"], entry["level"], entry["target"], entry["count"]) == \
         ("vulnerable", "conditional", "repo_lockfile", 4)
     assert entry["counts"] == {"conditional": 4, "present_unreachable": 3, "not_shipped": 5}
+    assert entry["coverage"] == {"state": "complete", "packages_checked": result["packages_checked"],
+                                 "packages_found": result["packages_checked"], "gaps": []}
     assert {f["level"] for f in entry["findings"]} == {"conditional"}
     sharp = next(f for f in entry["findings"] if f["package"] == "npm:sharp")
     assert sharp["preconditions"] == ["local_access", "user_interaction"] and sharp["scope"] == "runtime"

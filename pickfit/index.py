@@ -132,10 +132,11 @@ SECURITY_WARN_LEVELS = frozenset({"blocked", "exposed", "conditional"})
 def _security(record: SoftwareRecord) -> dict[str, Any]:
     """Known vulnerabilities in what the software brings (record field security): "vulnerable" (the advisories that
     warn listed, malicious ones first), "clean", or "unchecked" with why (no repository or package, a lockfile pickfit
-    cannot read, nothing resolved). A record not run yet is "unchecked" too, reason "not_run". A sec.v2 check adds its
-    level (blocked, exposed, conditional, partial, present_unreachable, not_shipped, clean, unchecked), the counted
-    findings per level, what was scanned, each listed finding's level, scope and preconditions, and the findings
-    present but unreachable with how pickfit knows."""
+    cannot read, nothing resolved). A record not run yet is "unchecked" too, reason "not_run". A sec.v2 check adds the
+    level of its known findings (blocked, exposed, conditional, present_unreachable, not_shipped, none), the counted
+    findings per level, each listed finding's level, scope and preconditions, the findings present but unreachable
+    with how pickfit knows, and its coverage apart: complete, partial or unchecked, packages checked of those found,
+    and the first gaps' codes."""
     check = record.security
     if check is None:
         return {"status": "unchecked", "reason": "not_run"}
@@ -147,6 +148,11 @@ def _security(record: SoftwareRecord) -> dict[str, Any]:
         if assessment.counts:
             out["counts"] = dict(assessment.counts)
         out["target"] = check.observation.target
+        cover = check.coverage
+        out["coverage"] = {"state": cover.state, "packages_checked": cover.packages_checked,
+                           "packages_found": cover.packages_found,
+                           "gaps": [{"code": g.code, "category": g.category, "ecosystem": g.ecosystem}
+                                    for g in cover.gaps[:5]]}
     if check.status == "unchecked":
         out["reason"] = check.unchecked_reason
         if assessment is not None and check.packages_checked:

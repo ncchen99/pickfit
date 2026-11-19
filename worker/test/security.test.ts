@@ -176,6 +176,7 @@ test('get_install_guide: the security field, and a warning to tell the user befo
   assert.deepEqual(out.security, {
     status: 'vulnerable',
     level: null,
+    coverage: null,
     reason: null,
     checked_at: '2026-11-03',
     count: 7,
@@ -208,11 +209,11 @@ test('get_install_guide: the security field, and a warning to tell the user befo
   assert.equal(installGuide(loadCatalog(indexWith(many)), { slug: SLUG, os: 'macos' }).security.findings.length, 5);
 
   const clean = installGuide(loadCatalog(indexWith(CLEAN)), { slug: SLUG, os: 'macos', arch: 'arm64' });
-  assert.deepEqual(clean.security, { status: 'clean', level: null, reason: null, checked_at: '2026-11-03', count: 0, advisories: 0, findings: [] });
+  assert.deepEqual(clean.security, { status: 'clean', level: null, coverage: null, reason: null, checked_at: '2026-11-03', count: 0, advisories: 0, findings: [] });
   assert.deepEqual(clean.warnings, []);
 
   const unchecked = installGuide(loadCatalog(indexWith(undefined)), { slug: SLUG, os: 'macos', arch: 'arm64' });
-  assert.deepEqual(unchecked.security, { status: 'unchecked', level: null, reason: 'not_run', checked_at: null, count: 0, advisories: 0, findings: [] });
+  assert.deepEqual(unchecked.security, { status: 'unchecked', level: null, coverage: null, reason: 'not_run', checked_at: null, count: 0, advisories: 0, findings: [] });
   assert.deepEqual(unchecked.warnings, []);
 
   // A web app's guide carries it too.
@@ -243,7 +244,7 @@ test('find_software: each pick carries its security check', async () => {
   });
   assert.ok(!('summary' in runner.security.findings[0]));
   const other = out.picks.find((p) => p.slug !== SLUG)!;
-  assert.deepEqual(other.security, { status: 'unchecked', level: null, reason: 'not_run', checked_at: null, count: 0, advisories: 0, findings: [] });
+  assert.deepEqual(other.security, { status: 'unchecked', level: null, coverage: null, reason: 'not_run', checked_at: null, count: 0, advisories: 0, findings: [] });
 });
 
 test('results: a vulnerable pick is flagged before its commands, with the count, the source and the list; others are not', async () => {
@@ -373,6 +374,7 @@ const CONDITIONAL: SecurityCheck = {
   advisories: 2,
   counts: { conditional: 2, present_unreachable: 3, not_shipped: 9 },
   target: 'repo_lockfile',
+  coverage: { state: 'complete', packages_checked: 755, packages_found: 755, gaps: [] },
   findings: [
     { package: 'npm:sharp', version: '0.34.5', advisory: 'GHSA-f88m-g3jw-g9cj', severity: 'HIGH', fixed_in: '0.35.0', summary: 'libvips holes.', malicious: false, level: 'conditional', scope: 'runtime', kev: false, preconditions: ['user_interaction'] },
     { package: 'npm:undici', version: '7.29.0', advisory: 'GHSA-2m5v-pch6-74hx', severity: 'HIGH', fixed_in: '7.30.1', summary: 'TLS bypass.', malicious: false, level: 'conditional', scope: 'runtime', kev: false, preconditions: [] },
@@ -389,6 +391,7 @@ const UNREACHABLE: SecurityCheck = {
   packages_checked: 40,
   counts: { present_unreachable: 1, not_shipped: 2 },
   target: 'repo_lockfile',
+  coverage: { state: 'complete', packages_checked: 40, packages_found: 40, gaps: [] },
   unreachable: [
     { package: 'crates:pulldown-cmark', version: '0.13.0', advisory: 'RUSTSEC-2026-0433', severity: 'HIGH', method: 'option_grep', evidence: ['no source file uses ENABLE_WIKILINKS'] },
   ],
@@ -429,11 +432,30 @@ test('sec.v2 tool page: present_unreachable and not_shipped are green, partial i
   const notShipped: SecurityCheck = { ...UNREACHABLE, level: 'not_shipped', counts: { not_shipped: 9 }, unreachable: undefined };
   assert.match(markFor(notShipped), /mark-pass" tabindex="0" data-tip="No known high or critical vulnerabilities in what it runs \(OSV\.dev, checked 19 Nov 2026, 40 packages\)\. 9 more only in development or build tools"/);
   assert.match(markFor(notShipped, 'zh-TW'), /另有 9 個只在開發或建置工具裡/);
-  const partial: SecurityCheck = { status: 'unchecked', level: 'partial', reason: 'no_lockfile', checked_at: '2026-11-19', packages_checked: 12 };
+  // Partly checked: grey, never clean and never a vulnerability, with how much was checked and why not the rest.
+  const partial: SecurityCheck = {
+    status: 'unchecked',
+    level: 'not_shipped',
+    reason: 'lockfile_not_supported',
+    checked_at: '2026-11-19',
+    packages_checked: 12,
+    counts: { not_shipped: 1 },
+    coverage: { state: 'partial', packages_checked: 12, packages_found: 30, gaps: [{ code: 'lockfile.unsupported_format', category: 'lockfile_unreadable', ecosystem: 'npm' }] },
+  };
   const grey = markFor(partial);
-  assert.match(grey, /^<span class="check-mark mark-open" tabindex="0" data-tip="Only partly checked for known vulnerabilities: there is no lockfile to read\. None found in the part pickfit could read"/);
-  assert.doesNotMatch(grey, /mark-pass|No known/);
+  assert.match(
+    grey,
+    /^<span class="check-mark mark-open" tabindex="0" data-tip="Only partly checked for known vulnerabilities: none known in the part pickfit could read\. pickfit checked 12 of 30 packages; part of it uses a lockfile pickfit cannot read yet\. Also 1 only in development or build tools\."/,
+  );
+  assert.doesNotMatch(grey, /mark-pass|mark-fail|mark-caution/);
+  assert.match(markFor(partial, 'zh-TW'), /已知漏洞只檢查了一部分，讀得到的部分沒有已知漏洞。pickfit 檢查了 12 個套件（已知至少 30 個），有一部分用的 lockfile pickfit 還讀不了。另有1 個只在開發或建置工具裡。/);
   assert.equal(noticeFor(partial), '');
+  // Nothing checked: as an unchecked check always read.
+  const none: SecurityCheck = { status: 'unchecked', level: 'none', reason: 'no_source', checked_at: '2026-11-19', packages_checked: 0, coverage: { state: 'unchecked', packages_checked: 0, packages_found: 0, gaps: [{ code: 'source.none', category: 'no_source', ecosystem: 'unknown' }] } };
+  assert.match(markFor(none), /mark-open" tabindex="0" data-tip="Not checked for known vulnerabilities: there is no repository or package to read"/);
+  // A warning keeps its colour when only part was checked, and says how much.
+  const amber = { ...CONDITIONAL, status: 'vulnerable' as const, coverage: { ...partial.coverage! } };
+  assert.match(markFor(amber), /mark-caution" href="#security" data-tip="[^"]*See when\. pickfit checked 12 of 30 packages; part of it uses a lockfile pickfit cannot read yet\."/);
 });
 
 test('sec.v2 head badge: conditional is amber, the rest that warn stay red', async () => {
@@ -459,13 +481,21 @@ test('sec.v2 get_install_guide: the level in the security field, and the warning
   const kev = { ...CONDITIONAL.findings![1], level: 'blocked' as const, kev: true };
   const blocked = guide({ ...CONDITIONAL, level: 'blocked', count: 1, advisories: 1, findings: [kev] });
   assert.deepEqual(blocked.warnings, ['Known exploited vulnerability (CISA KEV): npm:undici 7.29.0 GHSA-2m5v-pch6-74hx, fixed in 7.30.1. Do not recommend it; tell the user.']);
-  const quiet: SecurityCheck[] = [UNREACHABLE, { ...UNREACHABLE, level: 'not_shipped' }, { status: 'unchecked', level: 'partial', reason: 'no_lockfile' }];
+  const partly: SecurityCheck = {
+    status: 'unchecked',
+    level: 'none',
+    reason: 'no_lockfile',
+    coverage: { state: 'partial', packages_checked: 3, packages_found: 9, gaps: [{ code: 'lockfile.missing', category: 'lockfile_missing', ecosystem: 'npm' }] },
+  };
+  const quiet: SecurityCheck[] = [UNREACHABLE, { ...UNREACHABLE, level: 'not_shipped' }, partly];
   for (const security of quiet) {
     const out = guide(security);
-    assert.deepEqual(out.warnings, []);
+    assert.deepEqual(out.warnings, []); // an unknown is never a warning
     assert.equal(out.security.level, security.level);
     assert.deepEqual(out.security.findings, []);
   }
+  assert.deepEqual(guide(partly).security.coverage, { state: 'partial', packages_checked: 3, packages_found: 9 });
+  assert.equal(guide(partly).security.status, 'unchecked');
 });
 
 test('over MCP, a sec.v2 conditional tool passes the output schemas', async () => {

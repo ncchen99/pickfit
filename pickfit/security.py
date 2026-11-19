@@ -28,14 +28,51 @@ Observation, per record:
    is the package's only user), a Go package the project never imports, govulncheck's symbol results on the
    installed Go binaries, a Next.js app built as a static export (no server).
 
-Assessment (policy sec.v2): a finding is blocked (a malicious package, or a KEV entry the code is shown to reach), exposed
-(reachable by evidence and over the network), conditional (anything not settled: the default), present_unreachable
-(shipped, vulnerable code not used) or not_shipped (not in what the person gets). Only high and critical findings,
-malicious packages and KEV entries count; the rest are observed. The record takes the worst counted finding's level
-when it warns (blocked, exposed, conditional); else partial when the read was incomplete; else the worst of the rest,
-or clean; unchecked when nothing could be read. `status` follows the level, so sec.v1 readers keep working:
-vulnerable (blocked, exposed, conditional), clean (present_unreachable, not_shipped, clean), unchecked (partial,
-unchecked). Scoring reads security.assessment.level (level_of() below); a record still on sec.v1 keeps the 79 cap.
+Assessment (policy sec.v2) is about known findings only. A finding is blocked (a malicious package, or a KEV entry the
+code is shown to reach), exposed (reachable by evidence and over the network), conditional (anything not settled: the
+default), present_unreachable (shipped, vulnerable code not used) or not_shipped (not in what the person gets). Only
+high and critical findings, malicious packages and KEV entries count; the rest are observed. security.assessment.level
+is the worst counted finding's level, or `none` when no counted finding is known (level_of() below). It says nothing
+about what could not be checked: an unknown is never a vulnerability (念誠 11/19).
+
+Coverage (security.coverage) says how much could be checked, apart from the level: the target read, packages found
+against packages checked, each component (a lockfile, a resolved package, the SBOM) as scanned, partial or not_scanned,
+and every gap in the fixed taxonomy below. Its state is complete (something checked, no gap), partial (something
+checked, a gap) or unchecked (nothing checked). gaps_of() lists a record's gaps; gap_report() groups them (`pickfit
+security --gaps`, scripts/security_gaps.py) for the work that will close them.
+
+`status` keeps sec.v1's readers working: vulnerable when the level warns (blocked, exposed, conditional), else clean
+when coverage is complete, else unchecked ("not checked", never "safe"). Scoring reads the level; a record still on
+sec.v1 keeps its rule (status vulnerable caps quality at 79). Treasure eligibility is not decided here.
+
+Gap taxonomy (stable codes; a gap is {code, category, ecosystem, component, detail, capability, found, first_seen,
+last_seen}; `capability` names the harness capability that would close it, `found` the packages it hides when known):
+
+| code                        | category             | when                                                           | capability              |
+|-----------------------------|----------------------|----------------------------------------------------------------|-------------------------|
+| advisory_db.no_ecosystem    | advisory_db          | packages in an ecosystem OSV.dev has no data for (C/C++, deb)  | advisory_source:<eco>   |
+| lockfile.missing            | lockfile_missing     | a manifest (package.json, Cargo.toml, requirements) without a  | lockfile_from_manifest: |
+|                             |                      | lockfile or pins pickfit reads                                 | <eco>                   |
+| lockfile.none_found         | lockfile_missing     | no manifest or lockfile pickfit recognizes in the repository   | manifest_detection      |
+| lockfile.unsupported_format | lockfile_unreadable  | yarn.lock, bun.lock(b), pnpm-lock before v6                    | read_lockfile:<format>  |
+| lockfile.parse_error        | lockfile_unreadable  | a lockfile pickfit reads failed to parse                       | fix_lockfile_reader     |
+| resolve.registry_failed     | resolve_failed       | the software's own registry package did not resolve            | resolve_in_sandbox      |
+| resolve.pyproject_failed    | resolve_failed       | pyproject.toml did not resolve (uv pip compile --no-build)     | resolve_in_sandbox      |
+| adapter.missing             | no_adapter           | an ecosystem pickfit has no reader for (Gemfile.lock,          | adapter:<eco>           |
+|                             |                      | composer.lock, Maven, Gradle, NuGet, SwiftPM, pub, Hex)        |                         |
+| binary.prebuilt_package     | binary_no_metadata   | a registry package that wraps a compiled binary, no lockfile   | sbom_binary             |
+| binary.no_build_info        | binary_no_metadata   | installed executables list no dependencies (Rust without       | binary_analysis         |
+|                             |                      | cargo-auditable, stripped Go, C/C++)                           |                         |
+| source.none                 | no_source            | no repository and no package to read                           | locate_source           |
+| source.clone_failed         | tool_error           | the repository could not be cloned                             | retry                   |
+| tool.sbom_error             | tool_error           | a tool in the replay box failed (syft, npm ls, govulncheck)    | fix_sbom_tool           |
+| platform.sbom_unsupported   | platform_unsupported | only macOS or Windows runs, where no SBOM is taken yet, and    | sbom:<os>               |
+|                             |                      | nothing else covered it                                        |                         |
+
+sec.v1's unchecked_reason maps onto it (legacy_gaps()): no_lockfile -> lockfile.missing, resolve_failed ->
+resolve.registry_failed, no_source -> source.none, lockfile_not_supported -> lockfile.unsupported_format, each with
+ecosystem "unknown"; a rescan replaces them with what the repository actually holds. A sec.v2 check that is unchecked
+writes the legacy reason too (unchecked_reason), from its first gap's category.
 
 The record keeps a summary and the findings that matter; data/security/<slug>.json keeps the full observation (every
 finding, the SBOM's packages) so a new policy can be applied offline. `pickfit security --write` stores the check,
@@ -90,49 +127,126 @@ UNSUPPORTED_LOCKS = ("yarn.lock", "bun.lock", "bun.lockb")
 MAX_FINDINGS = 60  # sec.v1's record list
 RECORD_WARN = 20  # sec.v2: findings that warn kept in the record (all are in data/security/<slug>.json)
 RECORD_UNREACHABLE = 10  # and the ones present but unreachable
+RECORD_COVERAGE = 30  # components and gaps kept in the record (all are in data/security/<slug>.json)
 TIMEOUT = 300
 ALL_OS = frozenset({"macos", "linux", "windows"})
 OS_NAMES = {"darwin": "macos", "macos": "macos", "linux": "linux", "win32": "windows", "windows": "windows"}
 
-# The levels, worst first (pickfit/schema.py's SECURITY_* in loop/proposals/security-schema.patch mirror these).
-LEVELS = ("blocked", "exposed", "conditional", "partial", "present_unreachable", "not_shipped", "clean", "unchecked")
+# The levels, worst first (pickfit/schema.py's SECURITY_* in loop/proposals/security-schema.patch mirror these). A
+# finding has one of the first five; the record the worst counted one, or none. Coverage is apart (COVERAGE_STATES).
+LEVELS = ("blocked", "exposed", "conditional", "present_unreachable", "not_shipped", "none")
 FINDING_LEVELS = ("blocked", "exposed", "conditional", "present_unreachable", "not_shipped")
 WARN_LEVELS = frozenset({"blocked", "exposed", "conditional"})
-STATUS_OF_LEVEL = {"blocked": "vulnerable", "exposed": "vulnerable", "conditional": "vulnerable",
-                   "present_unreachable": "clean", "not_shipped": "clean", "clean": "clean",
-                   "partial": "unchecked", "unchecked": "unchecked"}
+COVERAGE_STATES = ("complete", "partial", "unchecked")
 # Where a dependency sits, most shipped first; only runtime reaches the person.
 SCOPES = ("runtime", "optional", "platform", "peer", "build", "test", "dev", "workspace")
+
+# The gap taxonomy (see the module docstring): code -> (category, capability; `{eco}` and `{detail}` filled in).
+GAP_CATEGORIES = ("advisory_db", "lockfile_missing", "lockfile_unreadable", "resolve_failed", "no_adapter",
+                  "binary_no_metadata", "no_source", "tool_error", "platform_unsupported")
+GAP_CODES: dict[str, tuple[str, str]] = {
+    "advisory_db.no_ecosystem": ("advisory_db", "advisory_source:{eco}"),
+    "lockfile.missing": ("lockfile_missing", "lockfile_from_manifest:{eco}"),
+    "lockfile.none_found": ("lockfile_missing", "manifest_detection"),
+    "lockfile.unsupported_format": ("lockfile_unreadable", "read_lockfile:{detail}"),
+    "lockfile.parse_error": ("lockfile_unreadable", "fix_lockfile_reader"),
+    "resolve.registry_failed": ("resolve_failed", "resolve_in_sandbox"),
+    "resolve.pyproject_failed": ("resolve_failed", "resolve_in_sandbox"),
+    "adapter.missing": ("no_adapter", "adapter:{eco}"),
+    "binary.prebuilt_package": ("binary_no_metadata", "sbom_binary"),
+    "binary.no_build_info": ("binary_no_metadata", "binary_analysis"),
+    "source.none": ("no_source", "locate_source"),
+    "source.clone_failed": ("tool_error", "retry"),
+    "tool.sbom_error": ("tool_error", "fix_sbom_tool"),
+    "platform.sbom_unsupported": ("platform_unsupported", "sbom:{detail}"),
+}
+assert {c for c, _ in GAP_CODES.values()} == set(GAP_CATEGORIES)
+# sec.v1's unchecked_reason, as the gap it stands for; and back, for a sec.v2 check that is unchecked.
+LEGACY_GAP = {"no_lockfile": "lockfile.missing", "resolve_failed": "resolve.registry_failed", "no_source": "source.none",
+              "lockfile_not_supported": "lockfile.unsupported_format"}
+LEGACY_REASON = {"lockfile_missing": "no_lockfile", "lockfile_unreadable": "lockfile_not_supported",
+                 "no_source": "no_source", "no_adapter": "lockfile_not_supported"}
 
 type Node = tuple[str, str, str]  # ecosystem key, name, version
 
 
-def status_for(level: str) -> str:
-    """The sec.v1 status a level reads as."""
-    return STATUS_OF_LEVEL[level]
+def gap(code: str, ecosystem: str = "unknown", component: str | None = None, detail: str = "", *,
+        found: int | None = None, now: datetime | None = None) -> dict[str, Any]:
+    """One gap in the taxonomy. Pure."""
+    category, capability = GAP_CODES[code]
+    day = (now or taipei_now()).date().isoformat()
+    return {"code": code, "category": category, "ecosystem": ecosystem, "component": component,
+            "detail": detail[:300], "capability": capability.format(eco=ecosystem, detail=detail.split(" ", 1)[0] or
+                                                                    ecosystem),
+            "found": found, "first_seen": day, "last_seen": day}
+
+
+def status_for(level: str, coverage: str = "complete") -> str:
+    """The sec.v1 status a level and a coverage state read as: vulnerable only for a level that warns; an unknown is
+    unchecked, never vulnerable and never clean."""
+    if level in WARN_LEVELS:
+        return "vulnerable"
+    return "clean" if coverage == "complete" else "unchecked"
 
 
 def legacy_level(check: dict[str, Any] | None) -> str:
-    """A sec.v1 check in sec.v2's words, read the way sec.v1 judged it: a malicious package blocked, any other finding
-    conditional (sec.v1 could not tell more), clean clean, the rest unchecked."""
-    if not check:
-        return "unchecked"
-    status = check.get("status")
-    if status == "vulnerable":
-        return "blocked" if any(f.get("malicious") for f in check.get("findings") or []) else "conditional"
-    return "clean" if status == "clean" else "unchecked"
+    """A sec.v1 check's known findings in sec.v2's words, read the way sec.v1 judged them: a malicious package blocked,
+    any other finding conditional (sec.v1 could not tell more), else none."""
+    if not check or check.get("status") != "vulnerable":
+        return "none"
+    return "blocked" if any(f.get("malicious") for f in check.get("findings") or []) else "conditional"
+
+
+def _security_of(record: Any) -> Any:
+    return record.get("security") if isinstance(record, dict) else getattr(record, "security", None)
+
+
+def _get(obj: Any, key: str) -> Any:
+    return obj.get(key) if isinstance(obj, dict) else getattr(obj, key, None)
 
 
 def level_of(record: Any) -> str | None:
-    """security.assessment.level of a record (a dict or a SoftwareRecord), or None when the record has no sec.v2
-    assessment: a caller then keeps sec.v1's rule (status vulnerable caps quality at 79). Pure: no I/O."""
-    security = record.get("security") if isinstance(record, dict) else getattr(record, "security", None)
+    """security.assessment.level of a record (a dict or a SoftwareRecord): the worst known finding's level, or none.
+    None when the record has no sec.v2 assessment: a caller then keeps sec.v1's rule (status vulnerable caps quality at
+    79). Never partial or unchecked: what could not be checked is coverage_of()'s. Pure: no I/O."""
+    assessment = _get(_security_of(record), "assessment") if _security_of(record) is not None else None
+    return None if assessment is None else _get(assessment, "level")
+
+
+def coverage_of(record: Any) -> str:
+    """How much of a record could be checked: complete, partial or unchecked. A sec.v1 record reads as its status did
+    (clean: complete; vulnerable: partial, since sec.v1 did not say; else unchecked). Pure."""
+    security = _security_of(record)
     if security is None:
-        return None
-    assessment = security.get("assessment") if isinstance(security, dict) else getattr(security, "assessment", None)
-    if assessment is None:
-        return None
-    return assessment.get("level") if isinstance(assessment, dict) else getattr(assessment, "level", None)
+        return "unchecked"
+    coverage = _get(security, "coverage")
+    if coverage is not None:
+        return str(_get(coverage, "state"))
+    status = _get(security, "status")
+    return "complete" if status == "clean" else "partial" if status == "vulnerable" else "unchecked"
+
+
+def legacy_gaps(check: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """The gap a sec.v1 check stands for (from its unchecked_reason), dated by its check. Pure."""
+    if not check:
+        return []
+    reason = check.get("unchecked_reason")
+    if check.get("status") != "unchecked" or reason not in LEGACY_GAP:
+        return []
+    day = str(check.get("checked_at") or "")[:10] or None
+    return [gap(LEGACY_GAP[reason], detail=f"sec.v1: {reason}") | {"first_seen": day, "last_seen": day}]
+
+
+def gaps_of(record: Any) -> list[dict[str, Any]]:
+    """Every gap of a record's security check: sec.v2's coverage gaps, or the one a sec.v1 reason stands for. A record
+    never checked has none (gap_report() counts it as not run). Pure."""
+    security = _security_of(record)
+    if security is None:
+        return []
+    coverage = _get(security, "coverage")
+    if coverage is not None:
+        return [g if isinstance(g, dict) else g.model_dump() for g in _get(coverage, "gaps") or []]
+    return legacy_gaps(security if isinstance(security, dict) else security.model_dump(mode="json"))
 
 
 # --- HTTP -------------------------------------------------------------------------------------------------------------
@@ -1249,12 +1363,15 @@ class RepoRead:
 
 @dataclass
 class RepoDeps:
-    """repo_deps(): every package with where it sits, what was read, and whether that is the whole software."""
+    """repo_deps(): every package with where it sits, what was read, and whether that is the whole software (sec.v1's
+    complete and reason); the components read and the gaps (sec.v2's coverage)."""
 
     deps: list[Dep]
     read: list[str]
     complete: bool
     reason: str | None
+    components: list[dict[str, Any]] = field(default_factory=list)
+    gaps: list[dict[str, Any]] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -1272,22 +1389,72 @@ def _main(rel: str) -> bool:
     return rel.count("/") <= 1
 
 
+# Manifests of ecosystems pickfit has no reader for (OSV.dev has their advisories): file -> ecosystem, and how to count
+# the packages they list when it is cheap to (a lower bound: `found` on the gap).
+ADAPTER_MANIFESTS: dict[str, tuple[str, str | None]] = {
+    "Gemfile.lock": ("rubygems", r"(?m)^    \S+ \("), "composer.lock": ("packagist", r'"name"\s*:'),
+    "pom.xml": ("maven", r"<dependency>"), "build.gradle": ("maven", r"(?m)^\s*(?:implementation|api|compile|runtimeOnly)\b"),
+    "build.gradle.kts": ("maven", r"(?m)^\s*(?:implementation|api|compile|runtimeOnly)\b"),
+    "packages.lock.json": ("nuget", r'"resolved"\s*:'), "Directory.Packages.props": ("nuget", r"<PackageVersion\b"),
+    "Package.resolved": ("swift", r'"identity"\s*:'), "pubspec.lock": ("pub", r"(?m)^  \S+:$"),
+    "mix.lock": ("hex", r'(?m)^  "'),
+}
+# The manifest that goes with a lockfile pickfit has no reader for: seen alone, it counts as that ecosystem's gap.
+ADAPTER_SOURCES = {"Gemfile": "rubygems", "composer.json": "packagist", "Package.swift": "swift",
+                   "pubspec.yaml": "pub", "mix.exs": "hex"}
+# C and C++ build files: OSV.dev has no package ecosystem for what they pull in.
+C_BUILD_FILES = ("CMakeLists.txt", "meson.build", "conanfile.txt", "conanfile.py", "vcpkg.json", "configure.ac")
+NPM_LOCKS = ("package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb")
+
+
+def _count(pattern: str | None, text: str) -> int | None:
+    return len(re.findall(pattern, text)) if pattern else None
+
+
+def _yarn_entries(text: str) -> int:
+    return len(re.findall(r'(?m)^"?(?:@[^@\s"/]+/)?[^@\s"]+@[^\n]*:\s*$', text))
+
+
+def _covered_by(folder: str, locks: set[str]) -> bool:
+    """A lockfile in the folder or one above it covers a manifest there (a workspace's root lockfile)."""
+    parts = folder.split("/") if folder else []
+    return any("/".join(parts[:i]) in locks for i in range(len(parts), -1, -1))
+
+
 def repo_deps(root: Path, ctx: ReadContext = ReadContext(), *, resolve_python: bool = True) -> RepoDeps:
     """Read a cloned repository's lockfiles. A lockfile counts as read only when it yields packages. Python projects are
     resolved from pyproject.toml as pip and uv do (each on its own), a lockfile beside it standing in when that fails;
-    resolve_python=False reads only the lockfiles (re-assessing needs where packages sit, not a new resolve)."""
+    resolve_python=False reads only the lockfiles (re-assessing needs where packages sit, not a new resolve).
+
+    Alongside the packages: each lockfile read (a scanned component) and each gap in the taxonomy: a manifest no
+    lockfile covers, a lockfile pickfit cannot read or that failed to parse, an ecosystem it has no reader for, C/C++
+    build files, a pyproject.toml that did not resolve, or nothing recognizable at all."""
     deps: list[Dep] = []
     read: list[str] = []
+    components: list[dict[str, Any]] = []
+    gaps: list[dict[str, Any]] = []
     main_read = unsupported = root_unreadable = root_unresolved = False
     pyprojects: list[Path] = []
     py_locks: dict[Path, list[Path]] = {}
+    npm_lock_dirs: set[str] = set()
+    cargo_lock_dirs: set[str] = set()
+    manifests: list[tuple[str, str, int | None]] = []  # (ecosystem, path, packages listed) a lockfile may cover
+    adapter_seen: set[tuple[str, str]] = set()
+    recognized = False
 
-    def took(rel: str, got: list[Dep]) -> None:
+    def took(rel: str, got: list[Dep], eco: str) -> None:
         nonlocal main_read
         if got:
             deps.extend(got)
             read.append(rel)
             main_read |= _main(rel.split(" (", 1)[0])
+            components.append({"ecosystem": eco, "component": rel.split(" (", 1)[0][:200], "status": "scanned",
+                               "packages": len({d.node for d in got}), "gaps": []})
+
+    def missed(code: str, eco: str, rel: str, detail: str, found: int | None = None) -> None:
+        gaps.append(gap(code, eco, rel[:200], detail, found=found))
+        components.append({"ecosystem": eco, "component": rel[:200], "status": "not_scanned", "packages": found or 0,
+                           "gaps": [code]})
 
     def flat(nodes: list[Node], found_in: str) -> list[Dep]:
         return [Dep(*n, path=(found_in, n[1]), found_in=found_in) for n in nodes]
@@ -1299,26 +1466,92 @@ def repo_deps(root: Path, ctx: ReadContext = ReadContext(), *, resolve_python: b
         name = f.name
         folder = rel.rsplit("/", 1)[0] if "/" in rel else ""
         try:
-            if name == "package-lock.json":
+            if name in ("package-lock.json", "npm-shrinkwrap.json"):
+                recognized = True
+                npm_lock_dirs.add(folder)
                 lock = json.loads(f.read_text(encoding="utf-8"))
-                took(rel, npm_graph(lock, found_in=rel, own=set(ctx.own), kind=ctx.kind).deps(ctx.supported))
+                took(rel, npm_graph(lock, found_in=rel, own=set(ctx.own), kind=ctx.kind).deps(ctx.supported), "npm")
             elif name == "pnpm-lock.yaml":
-                took(rel, pnpm_graph(f.read_text(encoding="utf-8"), found_in=rel, repo=root, base=folder,
-                                     own=set(ctx.own), kind=ctx.kind).deps(ctx.supported))
+                recognized = True
+                npm_lock_dirs.add(folder)
+                text = f.read_text(encoding="utf-8")
+                try:
+                    graph = pnpm_graph(text, found_in=rel, repo=root, base=folder, own=set(ctx.own), kind=ctx.kind)
+                except ValueError as err:
+                    if "not supported" not in str(err):
+                        raise
+                    missed("lockfile.unsupported_format", "npm", rel, f"pnpm_lock_v5 {err}",
+                           len(re.findall(r"(?m)^  /", text)))
+                    root_unreadable |= "/" not in rel
+                    continue
+                took(rel, graph.deps(ctx.supported), "npm")
             elif name == "Cargo.lock":
+                recognized = True
+                cargo_lock_dirs.add(folder)
                 took(rel, cargo_graph(f.read_text(encoding="utf-8"), found_in=rel, repo=root, base=folder,
-                                      supported=ctx.supported, index=ctx.crate_index).deps(ctx.supported))
+                                      supported=ctx.supported, index=ctx.crate_index).deps(ctx.supported), "crates")
             elif name == "go.mod":
-                took(rel, go_deps(f.read_text(encoding="utf-8"), found_in=rel))
+                recognized = True
+                took(rel, go_deps(f.read_text(encoding="utf-8"), found_in=rel), "go")
             elif name == "pyproject.toml" and _main(rel):
+                recognized = True
                 pyprojects.append(f)
             elif name in ("uv.lock", "poetry.lock") or re.fullmatch(r"requirements(-lock)?\.txt", name):
+                recognized = True
                 py_locks.setdefault(f.parent, []).append(f)
             elif name in UNSUPPORTED_LOCKS:
+                recognized = True
                 unsupported = True
                 root_unreadable |= "/" not in rel
-        except (ValueError, UnicodeDecodeError, tomllib.TOMLDecodeError):
+                npm_lock_dirs.add(folder)
+                text = f.read_text(encoding="utf-8", errors="replace") if name != "bun.lockb" else ""
+                found = (_yarn_entries(text) if name == "yarn.lock" else
+                         len(re.findall(r'(?m)^\s{4}"[^"]+":\s*\["', text)) if name == "bun.lock" else None)
+                missed("lockfile.unsupported_format", "npm", rel, f"{name.replace('.', '_')} is not read yet", found)
+            elif name == "package.json":
+                pkg = _package_json(f)
+                listed = len(pkg.get("dependencies") or {}) + len(pkg.get("optionalDependencies") or {})
+                if listed:
+                    recognized = True
+                    manifests.append(("npm", rel, listed))
+            elif name == "Cargo.toml":
+                recognized = True
+                try:
+                    listed = len((tomllib.loads(f.read_text(encoding="utf-8")).get("dependencies")) or {})
+                except tomllib.TOMLDecodeError:
+                    listed = 0
+                if listed:
+                    manifests.append(("crates", rel, listed))
+            elif name in ("setup.py", "setup.cfg") and _main(rel):
+                recognized = True
+                manifests.append(("pypi", rel, None))
+            elif name in ADAPTER_MANIFESTS or name in ADAPTER_SOURCES or name.endswith(".csproj"):
+                recognized = True
+                eco, pattern = ADAPTER_MANIFESTS.get(name, (ADAPTER_SOURCES.get(name, "nuget"), None))
+                if name.endswith(".csproj"):
+                    pattern = r"<PackageReference\b"
+                if (eco, folder) in adapter_seen:
+                    continue
+                adapter_seen.add((eco, folder))
+                text = f.read_text(encoding="utf-8", errors="replace")
+                missed("adapter.missing", eco, rel, f"no reader for {name}", _count(pattern, text))
+            elif name in C_BUILD_FILES and _main(rel):
+                recognized = True
+                if ("c/c++", folder) not in adapter_seen:
+                    adapter_seen.add(("c/c++", folder))
+                    missed("advisory_db.no_ecosystem", "c/c++", rel, f"{name}: no advisory ecosystem for C/C++ libraries")
+        except (ValueError, UnicodeDecodeError, tomllib.TOMLDecodeError) as err:
             root_unreadable |= "/" not in rel
+            missed("lockfile.parse_error", _eco_of_file(name), rel, f"{type(err).__name__}: {str(err)[:150]}")
+    for eco, rel, listed in manifests:
+        folder = rel.rsplit("/", 1)[0] if "/" in rel else ""
+        locks = npm_lock_dirs if eco == "npm" else cargo_lock_dirs if eco == "crates" else set()
+        if eco == "pypi":
+            if any(p.parent == (root / folder) for p in pyprojects) or (root / folder) in py_locks:
+                continue
+        elif _covered_by(folder, locks):
+            continue
+        missed("lockfile.missing", eco, rel, f"{rel.rsplit('/', 1)[-1]} without a lockfile", listed)
     py_dirs = {p.parent for p in pyprojects}
     for p in pyprojects:
         rel = p.relative_to(root).as_posix()
@@ -1327,7 +1560,7 @@ def repo_deps(root: Path, ctx: ReadContext = ReadContext(), *, resolve_python: b
         except (RuntimeError, subprocess.TimeoutExpired):
             got = []
         if got:
-            took(f"{rel} (resolved today)", flat(got, rel))
+            took(f"{rel} (resolved today)", flat(got, rel), "pypi")
             continue
         fallback: list[Node] = []
         for f in py_locks.get(p.parent, []):
@@ -1338,9 +1571,12 @@ def repo_deps(root: Path, ctx: ReadContext = ReadContext(), *, resolve_python: b
                 continue
         if fallback:
             label = " + ".join(f.relative_to(root).as_posix() for f in py_locks[p.parent])
-            took(label, flat(fallback, label))
-        elif "/" not in rel:
-            root_unresolved = True  # the Python project at the root: its dependencies could not be read
+            took(label, flat(fallback, label), "pypi")
+        else:
+            if "/" not in rel:
+                root_unresolved = True  # the Python project at the root: its dependencies could not be read
+            if resolve_python:
+                missed("resolve.pyproject_failed", "pypi", rel, "uv pip compile --no-build did not resolve it")
     for folder, files in py_locks.items():  # Python lockfiles with no pyproject.toml beside them
         if folder in py_dirs:
             continue
@@ -1348,12 +1584,24 @@ def repo_deps(root: Path, ctx: ReadContext = ReadContext(), *, resolve_python: b
             rel = f.relative_to(root).as_posix()
             try:
                 text = f.read_text(encoding="utf-8")
-                took(rel, flat(_uv_lock_nodes(tomllib.loads(text)) if f.suffix == ".lock" else _pins(text), rel))
-            except (ValueError, UnicodeDecodeError, tomllib.TOMLDecodeError):
+                got = flat(_uv_lock_nodes(tomllib.loads(text)) if f.suffix == ".lock" else _pins(text), rel)
+                took(rel, got, "pypi")
+                listed = len([ln for ln in text.splitlines() if ln.strip() and not ln.lstrip().startswith(("#", "-"))])
+                if not got and f.suffix == ".txt" and listed:
+                    missed("lockfile.missing", "pypi", rel, "requirements without pinned versions", listed)
+            except (ValueError, UnicodeDecodeError, tomllib.TOMLDecodeError) as err:
                 root_unreadable |= "/" not in rel
+                missed("lockfile.parse_error", "pypi", rel, f"{type(err).__name__}: {str(err)[:150]}")
+    if not recognized and not read:
+        gaps.append(gap("lockfile.none_found", "unknown", None, "no manifest or lockfile pickfit recognizes"))
     reason = ("lockfile_not_supported" if root_unreadable else "resolve_failed" if root_unresolved
               else None if main_read else "lockfile_not_supported" if unsupported and not read else "no_lockfile")
-    return RepoDeps(merge_deps(deps), read, reason is None, reason)
+    return RepoDeps(merge_deps(deps), read, reason is None, reason, components, gaps)
+
+
+def _eco_of_file(name: str) -> str:
+    return ("npm" if name in NPM_LOCKS or name == "package.json" else "crates" if name.startswith("Cargo")
+            else "go" if name == "go.mod" else "pypi" if name.endswith((".lock", ".txt", ".toml")) else "unknown")
 
 
 def repo_nodes(root: Path) -> RepoRead:
@@ -1787,29 +2035,41 @@ def _rank(f: dict[str, Any]) -> tuple[Any, ...]:
             SEVERITY_RANK.get(f.get("severity", "UNKNOWN"), 5), f["package"], f["version"], f["advisory"])
 
 
-def assess(findings: list[dict[str, Any]], *, complete: bool, packages: int, now: datetime,
-           reason: str | None = None) -> dict[str, Any]:
-    """The record's assessment: its level, why, and the counted findings per level. Pure."""
+def assess(findings: list[dict[str, Any]], *, now: datetime) -> dict[str, Any]:
+    """The record's assessment of its known findings: the worst counted finding's level (or none), why, and the counted
+    findings per level. What could not be checked is not here (coverage()). Pure."""
     kept = sorted((f for f in findings if f.get("counted")), key=_rank)
     counts = Counter(f["level"] for f in kept)
-    present = [lvl for lvl in FINDING_LEVELS if counts[lvl]]
-    worst = present[0] if present else None
-    if worst in WARN_LEVELS:
-        level = worst
-    elif not complete:
-        level = "unchecked" if packages == 0 and not present else "partial"
-    else:
-        level = worst or "clean"
-    reasons = []
-    for f in kept[:3]:
-        reasons.append(f"{'malicious' if f.get('malicious') else 'kev' if f.get('kev') else 'worst'}:{f['advisory']} "
-                       f"{f['package']}@{f['version']} ({f['level']})"[:200])
-    if not complete:
-        reasons.append(f"incomplete:{reason or 'resolve_failed'}")
-    return {"level": level, "policy_version": POLICY, "reasons": reasons[:10],
+    level = next((lvl for lvl in FINDING_LEVELS if counts[lvl]), "none")
+    reasons = [f"{'malicious' if f.get('malicious') else 'kev' if f.get('kev') else 'worst'}:{f['advisory']} "
+               f"{f['package']}@{f['version']} ({f['level']})"[:200] for f in kept[:3]]
+    return {"level": level, "policy_version": POLICY, "reasons": reasons,
             "counts": {lvl: counts[lvl] for lvl in FINDING_LEVELS if counts[lvl]},
-            "uncounted": len(findings) - len(kept), "complete": complete,
-            "assessed_at": now.isoformat(timespec="seconds")}
+            "uncounted": len(findings) - len(kept), "assessed_at": now.isoformat(timespec="seconds")}
+
+
+def coverage(target: str | None, checked: int, components: list[dict[str, Any]], gaps: list[dict[str, Any]], *,
+             previous: list[dict[str, Any]] | None = None, now: datetime) -> dict[str, Any]:
+    """How much could be checked: complete (something checked, no gap), partial (something checked, gaps) or
+    unchecked (nothing checked); packages found (checked plus what each gap is known to hide) against checked. A gap
+    seen before keeps its first_seen (same code, ecosystem and component; a sec.v1 reason's, by code). Pure."""
+    day = now.date().isoformat()
+    first = {}
+    for g in previous or []:
+        first.setdefault((g.get("code"), g.get("ecosystem"), g.get("component")), g.get("first_seen"))
+        first.setdefault((g.get("code"), None, None), g.get("first_seen"))
+    seen: set[tuple[Any, ...]] = set()
+    kept = []
+    for g in gaps:
+        key = (g["code"], g["ecosystem"], g["component"])
+        if key in seen:
+            continue
+        seen.add(key)
+        kept.append(g | {"first_seen": first.get(key) or first.get((g["code"], None, None)) or day, "last_seen": day})
+    state = "unchecked" if checked == 0 else "partial" if kept else "complete"
+    found = checked + sum(g.get("found") or 0 for g in kept)
+    return {"state": state, "target": target, "packages_found": found, "packages_checked": checked,
+            "components": components, "gaps": kept}
 
 
 # --- what to check for a record ---------------------------------------------------------------------------------------
@@ -2041,6 +2301,8 @@ class Installed:
     artifacts: list[str]
     govuln: dict[str, tuple[str, str]]
     govuln_ran: bool
+    errors: list[str] = field(default_factory=list)
+    other: int = 0  # packages in ecosystems OSV.dev has no data for (deb, binary, ...)
 
 
 def latest_passed_run(raw: dict[str, Any]) -> dict[str, Any] | None:
@@ -2082,7 +2344,7 @@ def installed_of(raw: dict[str, Any], sbom: Any = "auto", details_dir: Path | No
                     doc = {"run_id": run["id"], "tool_version": old["observation"].get("tool_version"),
                            "packages": old["installed"],
                            "artifacts": [{"sha256": s} for s in old["observation"].get("artifact_sha256") or []]}
-    if not doc or not doc.get("packages"):
+    if not doc or not (doc.get("packages") or doc.get("errors") or doc.get("artifacts")):
         return None
     own = {_norm(n) for n in read_context(raw).own}
     packages = [p for p in doc.get("packages") or [] if p.get("ecosystem") in ECOSYSTEM and p.get("name")
@@ -2106,7 +2368,8 @@ def installed_of(raw: dict[str, Any], sbom: Any = "auto", details_dir: Path | No
                 govuln[osv] = (lvl, f"govulncheck -mode=binary {lvl} level, {where}"[:300])
     return Installed(doc.get("run_id") or (run or {}).get("id"), doc.get("tool_version"), packages, frozenset(covered),
                      [a["sha256"] for a in doc.get("artifacts") or [] if re.fullmatch(r"[0-9a-f]{64}", str(a.get("sha256")))],
-                     govuln, bool(doc.get("govulncheck_ran")))
+                     govuln, bool(doc.get("govulncheck_ran")), [str(e)[:200] for e in doc.get("errors") or []][:5],
+                     sum(1 for p in doc.get("packages") or [] if p.get("ecosystem") not in (*ECOSYSTEM, "binary", None)))
 
 
 def with_installed(deps: list[Dep], inv: Installed) -> list[Dep]:
@@ -2181,19 +2444,28 @@ def check(raw: dict[str, Any], advisories: Advisories, *, now: datetime, clones:
     all_resolved, wrapper = True, False
     commit: str | None = None
     repo_root: Path | None = None
+    components: list[dict[str, Any]] = []
+    registry_gaps: list[dict[str, Any]] = []
+    gaps: list[dict[str, Any]] = []
     for pkg in own:
         eco, name = pkg.split(":", 1)
         try:
             got, n = RESOLVERS[eco](name)
-        except (RuntimeError, subprocess.TimeoutExpired, urllib.error.URLError):
+        except (RuntimeError, subprocess.TimeoutExpired, urllib.error.URLError) as err:
             all_resolved = False
+            registry_gaps.append(gap("resolve.registry_failed", eco, pkg, f"{type(err).__name__}: {str(err)[:150]}"))
             continue
         if not got:
             all_resolved = False
+            registry_gaps.append(gap("resolve.registry_failed", eco, pkg, "resolved to nothing"))
             continue
         wrapper |= n == 0
         deps += [as_dep(x, found_in=f"registry:{pkg}") for x in got]
         sources.append(f"{pkg} (fresh install, {len(got)} packages)")
+        components.append({"ecosystem": eco, "component": f"registry:{pkg}", "status": "partial" if n == 0 else
+                           "scanned", "packages": len(got), "gaps": ["binary.prebuilt_package"] if n == 0 else []})
+        if n == 0:
+            registry_gaps.append(gap("binary.prebuilt_package", eco, pkg, "the package wraps a compiled binary"))
     complete = bool(own) and all_resolved and not wrapper
     target = "registry_resolve" if complete else None
     reason: str | None = None
@@ -2202,17 +2474,25 @@ def check(raw: dict[str, Any], advisories: Advisories, *, now: datetime, clones:
         url = _repo_url(raw)
         if url is None:
             reason = "resolve_failed" if own else "no_source"
+            gaps += registry_gaps or [gap("source.none", "unknown", None, "no repository and no package to read")]
         else:
             try:
                 repo_root, commit = clone(url, raw["slug"], clones)
-            except (RuntimeError, subprocess.TimeoutExpired):
+            except (RuntimeError, subprocess.TimeoutExpired) as err:
                 reason = "resolve_failed"
+                gaps += registry_gaps + [gap("source.clone_failed", "unknown", url, str(err)[:200])]
             else:
                 repo = repo_deps(repo_root, ctx)
                 deps += repo.deps
                 sources += ([f"{url.removeprefix('https://')}@{commit[:12]}"] + repo.read) if repo.read else []
                 complete, reason = repo.complete, repo.reason
                 target = "repo_lockfile" if repo.read else target
+                components += repo.components
+                repo_gaps = repo.gaps or ([] if repo.complete else
+                                          [gap(LEGACY_GAP.get(repo.reason or "", "lockfile.missing"), "unknown",
+                                               None, f"sec.v1 reason: {repo.reason}")])
+                # The registry's trouble is a gap only when the repository did not cover the software either.
+                gaps += repo_gaps + ([] if repo.read and not repo_gaps else registry_gaps)
                 if not complete and own and reason == "no_lockfile":
                     reason = "resolve_failed"  # its own package did not resolve to its dependencies either
     if target is None and deps:
@@ -2223,6 +2503,21 @@ def check(raw: dict[str, Any], advisories: Advisories, *, now: datetime, clones:
         sources.append(f"sbom:{inv.run_id} ({len(inv.packages)} packages installed)")
         target = "installed_artifact"
         complete, reason = True, None
+        for eco in sorted(inv.covered):
+            components.append({"ecosystem": eco, "component": f"sbom:{inv.run_id}", "status": "scanned",
+                               "packages": sum(1 for p in inv.packages if p["ecosystem"] == eco), "gaps": []})
+        gaps = [g for g in gaps if g["ecosystem"] not in inv.covered]  # what the installed artifact covers is read
+    elif inv is not None and not deps:
+        if inv.errors:
+            gaps.append(gap("tool.sbom_error", "unknown", f"sbom:{inv.run_id}", "; ".join(inv.errors)[:300]))
+        elif inv.artifacts:
+            gaps.append(gap("binary.no_build_info", "unknown", f"sbom:{inv.run_id}",
+                            f"{len(inv.artifacts)} installed executables list no dependencies"))
+    if inv is not None and inv.other:
+        gaps.append(gap("advisory_db.no_ecosystem", "other", f"sbom:{inv.run_id}",
+                        "installed packages of ecosystems OSV.dev has no data for", found=inv.other))
+    if not deps or gaps:
+        gaps += platform_gaps(raw, inv)
     deps = merge_deps(deps)
     observed = observe(deps, advisories, unrated) if deps else []
     if intel is None:
@@ -2231,20 +2526,42 @@ def check(raw: dict[str, Any], advisories: Advisories, *, now: datetime, clones:
                   bool(inv and inv.govuln_ran), _go_vendor(repo_root))
     findings = judge(observed, reach, intel=intel, fix_dates=fix_dates if fix_dates is not None else FixDates(),
                      advisories=advisories)
-    assessment = assess(findings, complete=complete, packages=len(deps), now=now, reason=reason)
-    return compose(raw, deps, findings, assessment, sources=sources, target=target or "repo_lockfile", commit=commit,
-                   inv=inv, intel=intel, now=now, reason=reason)
+    assessment = assess(findings, now=now)
+    previous = gaps_of(raw)
+    cover = coverage(target if deps else None, len(deps), components, gaps, previous=previous, now=now)
+    return compose(raw, deps, findings, assessment, cover, sources=sources, target=target or "repo_lockfile",
+                   commit=commit, inv=inv, intel=intel, now=now, reason=reason)
 
 
-def compose(raw: dict[str, Any], deps: list[Dep], findings: list[dict[str, Any]], assessment: dict[str, Any], *,
-            sources: list[str], target: str, commit: str | None, inv: Installed | None, intel: Intel | None,
-            now: datetime, reason: str | None) -> CheckResult:
-    """The record's sec.v2 check and its details from judged findings."""
+def platform_gaps(raw: dict[str, Any], inv: Installed | None) -> list[dict[str, Any]]:
+    """platform.sbom_unsupported, when no SBOM was taken and every passed run is on macOS or Windows, where none is
+    taken yet: an SBOM there would have closed the other gaps."""
+    if inv is not None:
+        return []
+    from pickfit.schema import is_passed
+
+    oses = {str(r.get("os")) for r in (raw.get("verification") or {}).get("runs") or []
+            if is_passed(str(r.get("level"))) and r.get("os")}
+    if oses and oses <= {"macos", "windows"}:
+        return [gap("platform.sbom_unsupported", "unknown", None, f"{'_'.join(sorted(oses))} no SBOM is taken there yet")]
+    return []
+
+
+def compose(raw: dict[str, Any], deps: list[Dep], findings: list[dict[str, Any]], assessment: dict[str, Any],
+            cover: dict[str, Any], *, sources: list[str], target: str, commit: str | None, inv: Installed | None,
+            intel: Intel | None, now: datetime, reason: str | None = None) -> CheckResult:
+    """The record's sec.v2 check and its details from judged findings and the coverage. An unchecked status keeps
+    sec.v1's reason for readers of unchecked_reason: the read's own, else its first gap's category's."""
     level = assessment["level"]
-    status = status_for(level)
+    status = status_for(level, cover["state"])
     warn = [f for f in findings if f["counted"] and f["level"] in WARN_LEVELS]
     unreachable = [f for f in findings if f["counted"] and f["level"] == "present_unreachable"]
-    if level == "unchecked":
+    if status == "unchecked":
+        first = cover["gaps"][0]["category"] if cover["gaps"] else "resolve_failed"
+        reason = reason or LEGACY_REASON.get(first, "resolve_failed")
+    else:
+        reason = None
+    if cover["state"] == "unchecked":
         deps, sources = [], []
     observation = {
         "scanner": "pickfit-security", "scanner_version": VERSION, "target": target,
@@ -2259,15 +2576,16 @@ def compose(raw: dict[str, Any], deps: list[Dep], findings: list[dict[str, Any]]
         "findings_total": len(findings)}
     if observation["tool_version"]:
         observation["tool_version"] = str(observation["tool_version"])[:60]
+    record_cover = cover | {"components": cover["components"][:RECORD_COVERAGE], "gaps": cover["gaps"][:RECORD_COVERAGE]}
     security = CheckResult({
-        "version": VERSION, "status": status, "unchecked_reason": (reason or "resolve_failed") if status == "unchecked"
-        else None, "sources": sources[:20], "packages_checked": len(deps), "findings_total": len(warn),
+        "version": VERSION, "status": status, "unchecked_reason": reason, "sources": sources[:20],
+        "packages_checked": len(deps), "findings_total": len(warn),
         "advisories_total": advisory_count([{f["advisory"], *f.get("aliases", [])} for f in warn]),
         "findings": [_compact(f) for f in warn[:RECORD_WARN] + unreachable[:RECORD_UNREACHABLE]],
         "database": "OSV.dev", "checked_at": now.isoformat(timespec="seconds"),
-        "observation": observation, "assessment": assessment})
+        "observation": observation, "assessment": assessment, "coverage": record_cover})
     security.details = {"slug": raw["slug"], "version": VERSION, "observation": observation, "assessment": assessment,
-                        "sources": sources[:200], "installed": inv.packages if inv else [],
+                        "coverage": cover, "sources": sources[:200], "installed": inv.packages if inv else [],
                         "findings": [_full(f) for f in findings]}
     return security
 
@@ -2328,13 +2646,15 @@ def write_security(path: Path, result: dict[str, Any], now: datetime) -> dict[st
 
 def reassess(raw: dict[str, Any], advisories: Advisories, *, now: datetime, clones: Path = CLONES,
              intel: Intel | None = None, details_dir: Path | None = None,
-             crate_index: CrateIndex | None = None) -> dict[str, Any]:
+             crate_index: CrateIndex | None = None, resolve_python: bool = False) -> dict[str, Any]:
     """The level a record's stored check gets under sec.v2, without resolving or looking up packages again.
 
     A sec.v2 record is re-judged from data/security/<slug>.json. A sec.v1 record is estimated from the findings it
     kept (at most 60, high and critical only), each advisory read again from OSV.dev (advisories may cache them), the
     graph of a cached clone (read as it is, never fetched) and the record's own SBOM if one is on this machine.
-    Returns {"level", "assessment", "matched", "truncated", "findings"}; writes nothing."""
+    Coverage is estimated the same way: sec.v1's fresh-install sources as scanned components, the cached clone's
+    lockfiles and gaps (resolve_python=True also re-resolves pyproject.toml, as a scan does), else the gap sec.v1's
+    reason stands for. Returns {"level", "assessment", "coverage", "matched", "truncated", "findings"}; writes nothing."""
     sec = raw.get("security") or {}
     if sec.get("version") == VERSION and details_dir is not None and (details_dir / f"{raw['slug']}.json").exists():
         details = json.loads((details_dir / f"{raw['slug']}.json").read_text(encoding="utf-8"))
@@ -2344,23 +2664,41 @@ def reassess(raw: dict[str, Any], advisories: Advisories, *, now: datetime, clon
             f["counted"] = counted(f)
             f["level"] = finding_level(f)
             findings.append(f)
-        a = assess(findings, complete=details["assessment"]["complete"], packages=sec.get("packages_checked", 0),
-                   now=now, reason=sec.get("unchecked_reason"))
-        return {"level": a["level"], "assessment": a, "matched": len(findings), "truncated": False, "findings": findings}
+        a = assess(findings, now=now)
+        return {"level": a["level"], "assessment": a, "coverage": details.get("coverage") or sec.get("coverage"),
+                "matched": len(findings), "truncated": False, "findings": findings}
     stored = sec.get("findings") or []
     ctx = read_context(raw, crate_index)
     root: Path | None = clones / raw["slug"]
-    from_repo = any(str(s).startswith("github.com/") for s in sec.get("sources") or [])
+    sources = [str(s) for s in sec.get("sources") or []]
+    from_repo = any(s.startswith("github.com/") for s in sources)
+    registry = [re.match(r"^(\w+):(\S+) \(fresh install, (\d+) packages\)$", s) for s in sources]
+    components = [{"ecosystem": m.group(1), "component": f"registry:{m.group(1)}:{m.group(2)}", "status": "scanned",
+                   "packages": int(m.group(3)), "gaps": []} for m in registry if m]
     deps: dict[Node, Dep] = {}
-    complete = sec.get("status") != "unchecked"
-    if stored and from_repo and root is not None and (root / ".git").is_dir():
-        repo = repo_deps(root, ctx, resolve_python=False)
+    gaps: list[dict[str, Any]] = []
+    checked = int(sec.get("packages_checked") or 0)
+    via_registry_only = bool(components) and not from_repo and sec.get("status") != "unchecked"
+    if not via_registry_only and _repo_url(raw) and root is not None and (root / ".git").is_dir():
+        repo = repo_deps(root, ctx, resolve_python=resolve_python)
         deps = {d.node: d for d in repo.deps}
-        # Read without resolving Python: when sec.v1 resolved a pyproject.toml, that part was read in full then.
-        resolved_then = any(str(s).endswith("(resolved today)") for s in sec.get("sources") or [])
-        complete = repo.complete or (complete and resolved_then and repo.reason in ("no_lockfile", "resolve_failed"))
+        components += repo.components
+        if not resolve_python:  # sec.v1 resolved these then; without a resolve they count as it read them
+            components += [{"ecosystem": "pypi", "component": s.split(" (", 1)[0], "status": "scanned", "packages": 0,
+                            "gaps": []} for s in sources if s.endswith("(resolved today)")]
+        gaps = repo.gaps
+        checked = len(deps) + sum(c["packages"] for c in components if c["component"].startswith("registry:"))
+        checked = checked or (int(sec.get("packages_checked") or 0) if components else 0)
+    elif not via_registry_only:
+        root = None
+        gaps = legacy_gaps(sec) or ([] if checked else [gap("source.none", detail="nothing sec.v1 could read")])
     else:
         root = None
+    if not (deps or components):
+        checked = 0
+    cover = coverage((("repo_lockfile" if deps else "registry_resolve") if checked else None), checked, components,
+                     gaps + (platform_gaps(raw, None) if gaps or not checked else []), previous=legacy_gaps(sec),
+                     now=now)
     inv = installed_of(raw, "auto", details_dir)
     reach = Reach(Sources(root), next_static_export(root), inv.govuln if inv else {}, bool(inv and inv.govuln_ran),
                   _go_vendor(root))
@@ -2379,9 +2717,8 @@ def reassess(raw: dict[str, Any], advisories: Advisories, *, now: datetime, clon
         f["malicious"] = bool(s.get("malicious"))
         observed.append((dep, v, f))
     findings = judge(observed, reach, intel=intel or Intel.offline(), fix_dates=None, advisories=advisories)
-    a = assess(findings, complete=complete, packages=sec.get("packages_checked", 0), now=now,
-               reason=sec.get("unchecked_reason"))
-    return {"level": a["level"], "assessment": a, "matched": matched,
+    a = assess(findings, now=now)
+    return {"level": a["level"], "assessment": a, "coverage": cover, "matched": matched,
             "truncated": (sec.get("findings_total") or 0) > len(stored), "findings": findings}
 
 
@@ -2408,6 +2745,12 @@ def main_security(args: Any) -> int:
     paths = sorted(data_dir.glob("*.json"))
     now = taipei_now()
     stale_days = getattr(args, "stale_days", None)
+    if getattr(args, "gaps", False) and not (args.slug or args.all or args.unchecked or stale_days is not None):
+        report = main_gaps(data_dir)
+        if args.report:
+            Path(args.report).write_text(json.dumps(report, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        print(json.dumps(report, ensure_ascii=False, indent=1))
+        return 0
     if args.slug:
         paths = [p for p in paths if p.stem in set(args.slug)]
     elif args.all or args.unchecked or stale_days is not None:
@@ -2418,6 +2761,12 @@ def main_security(args: Any) -> int:
     else:
         print("pickfit security: name --slug, --all, --unchecked or --stale-days", file=sys.stderr)
         return 2
+    if getattr(args, "gaps", False):
+        report = gap_report(json.loads(p.read_text(encoding="utf-8")) for p in paths)
+        if args.report:
+            Path(args.report).write_text(json.dumps(report, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+        print(json.dumps(report, ensure_ascii=False, indent=1))
+        return 0
     if getattr(args, "reassess", False):
         return _main_reassess(args, paths, now, details_dir)
     advisories = Advisories()
@@ -2442,7 +2791,11 @@ def main_security(args: Any) -> int:
         written = write_security(path, result, now) if args.write else raw
         scores = written.get("scores") or {}
         level = result["assessment"]["level"]
+        cover = result["coverage"]
         row = {"status": result["status"], "level": level, "level_before": level_before,
+               "coverage": cover["state"], "coverage_before": coverage_of(raw),
+               "packages": [cover["packages_checked"], cover["packages_found"]],
+               "gaps": [g["code"] for g in cover["gaps"]],
                "reason": result["unchecked_reason"], "findings": result["findings_total"],
                "counts": result["assessment"]["counts"], "target": result["observation"]["target"],
                "malicious": any(f["malicious"] for f in result["findings"]), "quality_before": before[0],
@@ -2460,11 +2813,57 @@ def main_security(args: Any) -> int:
                "status": {s: sum(1 for r in rows.values() if r.get("status") == s)
                           for s in ("vulnerable", "clean", "unchecked")},
                "level": {lvl: sum(1 for r in rows.values() if r.get("level") == lvl) for lvl in LEVELS},
+               "coverage": {s: sum(1 for r in rows.values() if r.get("coverage") == s) for s in COVERAGE_STATES},
+               "gaps": dict(Counter(c for r in rows.values() for c in r.get("gaps", [])).most_common()),
                "errors": {k: r["error"] for k, r in rows.items() if "error" in r}, "rows": rows}
     if args.report:
         Path(args.report).write_text(json.dumps(summary, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print(json.dumps({k: v for k, v in summary.items() if k != "rows"}, ensure_ascii=False, indent=1))
     return 0
+
+
+def gap_report(records: Iterable[dict[str, Any]], gaps: Any = None) -> dict[str, Any]:
+    """Every listed record's gaps, grouped by code, category, ecosystem, software category and platform, with the
+    capabilities that would close them and how many records each leaves partial or unchecked. `gaps(raw)` defaults
+    to gaps_of(). Pure: reads only the records given."""
+    gaps = gaps or gaps_of
+    out: dict[str, Any] = {"records": 0, "not_run": 0, "coverage": Counter(), "records_with_gaps": 0,
+                           "by_code": Counter(), "by_category": Counter(), "by_ecosystem": Counter(),
+                           "by_capability": Counter(), "by_software_category": Counter(), "by_platform": Counter(),
+                           "by_code_and_ecosystem": Counter(), "packages_hidden": Counter()}
+    for raw in records:
+        out["records"] += 1
+        if raw.get("security") is None:
+            out["not_run"] += 1
+            continue
+        out["coverage"][coverage_of(raw)] += 1
+        got = gaps(raw)
+        if got:
+            out["records_with_gaps"] += 1
+        platforms = sorted({str(r.get("os")) for r in (raw.get("verification") or {}).get("runs") or [] if r.get("os")}
+                           ) or ["none"]
+        for code in {g["code"] for g in got}:  # a record counts once per code
+            out["by_code"][code] += 1
+            out["by_category"][GAP_CODES[code][0]] += 1
+            out["by_software_category"][f"{raw.get('category') or 'unknown'}:{code}"] += 1
+            for os_name in platforms:
+                out["by_platform"][f"{os_name}:{code}"] += 1
+        for g in got:
+            out["by_ecosystem"][g.get("ecosystem") or "unknown"] += 1
+            out["by_capability"][g.get("capability") or "unknown"] += 1
+            out["by_code_and_ecosystem"][f"{g['code']}:{g.get('ecosystem') or 'unknown'}"] += 1
+            out["packages_hidden"][g["code"]] += g.get("found") or 0
+    return {k: dict(v.most_common()) if isinstance(v, Counter) else v for k, v in out.items()}
+
+
+def main_gaps(data_dir: Path) -> dict[str, Any]:
+    """`pickfit security --gaps` and scripts/security_gaps.py: gap_report() over the listed records. Read only."""
+    records = []
+    for path in sorted(data_dir.glob("*.json")):
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        if raw.get("status") == "listed":
+            records.append(raw)
+    return gap_report(records)
 
 
 def _main_reassess(args: Any, paths: list[Path], now: datetime, details_dir: Path) -> int:
@@ -2488,6 +2887,8 @@ def _main_reassess(args: Any, paths: list[Path], now: datetime, details_dir: Pat
             return
         with lock:
             rows[path.stem] = {"before": level_of(raw) or legacy_level(raw.get("security")), "level": got["level"],
+                               "coverage": (got["coverage"] or {}).get("state"),
+                               "gaps": [g["code"] for g in (got["coverage"] or {}).get("gaps") or []],
                                "counts": got["assessment"]["counts"], "matched": got["matched"],
                                "stored": len((raw.get("security") or {}).get("findings") or []),
                                "truncated": got["truncated"]}
@@ -2496,6 +2897,8 @@ def _main_reassess(args: Any, paths: list[Path], now: datetime, details_dir: Pat
         list(pool.map(one, paths))
     summary = {"reassessed_at": now.isoformat(timespec="seconds"), "records": len(paths), "written": False,
                "level": {lvl: sum(1 for r in rows.values() if r.get("level") == lvl) for lvl in LEVELS},
+               "coverage": {s: sum(1 for r in rows.values() if r.get("coverage") == s) for s in COVERAGE_STATES},
+               "gaps": dict(Counter(c for r in rows.values() for c in r.get("gaps", [])).most_common()),
                "truncated": sum(1 for r in rows.values() if r.get("truncated")),
                "errors": {k: r["error"] for k, r in rows.items() if "error" in r}, "rows": rows}
     if args.report:

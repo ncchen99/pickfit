@@ -98,10 +98,18 @@ const security = z
       .enum(SECURITY_LEVELS)
       .nullable()
       .describe(
-        'blocked = a malicious package or an exploited hole: do not recommend it; exposed = reached in normal use: warn first; ' +
-          'conditional = only in some uses: say when in one line; partial = only part could be checked; present_unreachable = in what installs, ' +
-          'code not used; not_shipped = only in development or build tools; null = checked before levels existed: read status',
+        'Known findings only. blocked = a malicious package or an exploited hole: do not recommend it; exposed = reached in normal use: warn first; ' +
+          'conditional = only in some uses: say when in one line; present_unreachable = in what installs, code not used; ' +
+          'not_shipped = only in development or build tools; none = none known; null = checked before levels existed: read status',
       ),
+    coverage: z
+      .object({
+        state: z.enum(['complete', 'partial', 'unchecked']),
+        packages_checked: z.number().int(),
+        packages_found: z.number().int(),
+      })
+      .nullable()
+      .describe('How much could be checked, apart from level: partial or unchecked is not a vulnerability, and not safe either'),
     reason: z
       .enum(['no_source', 'no_lockfile', 'lockfile_not_supported', 'resolve_failed', 'not_run'])
       .nullable()

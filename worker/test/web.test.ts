@@ -559,7 +559,7 @@ function pick(overrides: Partial<PickOut> = {}): PickOut {
     evidence_url: null,
     features: { recorded: false, checked: [], not_checked: [] },
     scores: { quality: 80, popularity: 10, treasure: false },
-    security: { status: 'unchecked', level: null, reason: 'not_run', checked_at: null, count: 0, advisories: 0, findings: [] },
+    security: { status: 'unchecked', level: null, coverage: null, reason: 'not_run', checked_at: null, count: 0, advisories: 0, findings: [] },
     repo: 'https://github.com/a/tool',
     homepage: null,
     web_app: null,

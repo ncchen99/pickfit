@@ -407,8 +407,9 @@ def test_without_findings_an_incomplete_read_is_unchecked_not_clean(monkeypatch:
                                 "lockfile_not_supported")
     result, _ = check_with(monkeypatch, tmp_path, RECORD, {"rtool": RuntimeError("no graph")}, partial)
     assert (result["status"], result["unchecked_reason"]) == ("unchecked", "lockfile_not_supported")
-    # sec.v2: something was read, so the level is partial (the status stays unchecked: never called safe).
-    assert result["assessment"]["level"] == "partial" and result["packages_checked"] == 1
+    # sec.v2: no known finding (level none), but only part was read: coverage partial, so never called safe.
+    assert (result["assessment"]["level"], result["coverage"]["state"]) == ("none", "partial")
+    assert result["packages_checked"] == 1 and result["coverage"]["gaps"][0]["code"] == "lockfile.unsupported_format"
     no_repo = {**RECORD, "repo": None}
     result, _ = check_with(monkeypatch, tmp_path, no_repo, {"rtool": ([("crates", "rtool", "1.0.0")], 0)}, None)
     assert (result["status"], result["unchecked_reason"]) == ("unchecked", "resolve_failed")
@@ -509,6 +510,7 @@ def test_a_record_with_nothing_to_read_is_unchecked() -> None:
     raw = {"slug": "x", "verification": {"runs": []}, "scores": None, "repo": None}
     result = security.check(raw, security.Advisories(), now=NOW)
     assert (result["status"], result["unchecked_reason"]) == ("unchecked", "no_source")
-    assert result["assessment"]["level"] == "unchecked" and result["packages_checked"] == 0
+    assert (result["assessment"]["level"], result["coverage"]["state"]) == ("none", "unchecked")
+    assert result["packages_checked"] == 0 and [g["code"] for g in result["coverage"]["gaps"]] == ["source.none"]
     if SEC_V2_SCHEMA:
         SecurityCheck.model_validate(result)
