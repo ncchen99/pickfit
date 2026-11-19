@@ -1,0 +1,677 @@
+{
+  "schema_version": "software.v1",
+  "slug": "lsd",
+  "repo_id": "gh:158927812",
+  "name": "LSD (LSDeluxe)",
+  "summary": "A rewrite of the GNU ls command that adds colors, icons, a tree view and more formatting options.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "color",
+    "hacktoberfest",
+    "icons",
+    "ls",
+    "nerd-fonts",
+    "rust"
+  ],
+  "use_cases": [
+    "list directory contents with colors and icons",
+    "show a directory as a tree",
+    "replace the stock ls command through a shell alias"
+  ],
+  "alternatives_to": [
+    "GNU ls",
+    "colorls"
+  ],
+  "features": [
+    "colored file listings",
+    "file type icons",
+    "tree view of directories",
+    "customize colors and icons through YAML files"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/lsd-rs/lsd",
+    "full_name": "lsd-rs/lsd",
+    "created_at": "2018-11-24T11:04:12Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "a patched font such as Nerd Fonts or Font Awesome, needed for icons"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install lsd",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Install a patched Nerd Font and configure the terminal to use it so icons display"
+      ],
+      "check": null,
+      "first_task": "lsd -la"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-lsd-20261119-170843-5b57",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/opt ~/.local/bin && curl -fsSL -o /tmp/lsd.tar.gz https://github.com/lsd-rs/lsd/releases/download/v1.2.0/lsd-v1.2.0-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/lsd.tar.gz -C ~/opt && ln -sf ~/opt/lsd-v1.2.0-x86_64-unknown-linux-gnu/lsd ~/.local/bin/lsd",
+          "purpose": "Download the v1.2.0 x86_64-linux-gnu release tarball, extract it to ~/opt and link it into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "lsd --version",
+        "expected_signal": "lsd 1.2.0"
+      },
+      "first_task": "lsd -la --color always demo > /tmp/f1.txt && cat -v /tmp/f1.txt"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install lsd",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Install a patched Nerd Font and configure the terminal to use it so icons display"
+      ],
+      "check": null,
+      "first_task": "lsd -la"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v1.2.0",
+    "published_at": "2025-10-12T08:31:53Z",
+    "url": "https://github.com/lsd-rs/lsd/releases/tag/v1.2.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T17:09:36.671436+08:00",
+    "runs": [
+      {
+        "id": "verify-lsd-20261119-170843-5b57",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T17:09:36.671436+08:00",
+        "tool_version": "lsd 1.2.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/opt ~/.local/bin && curl -fsSL -o /tmp/lsd.tar.gz https://github.com/lsd-rs/lsd/releases/download/v1.2.0/lsd-v1.2.0-x86_64-unknown-linux-gnu.tar.gz && tar -xzf /tmp/lsd.tar.gz -C ~/opt && ln -sf ~/opt/lsd-v1.2.0-x86_64-unknown-linux-gnu/lsd ~/.local/bin/lsd",
+            "purpose": "Download the v1.2.0 x86_64-linux-gnu release tarball, extract it to ~/opt and link it into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "lsd --version",
+            "expected_signal": "lsd 1.2.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lsd 1.2.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "lsd -la --color always demo > /tmp/f1.txt && cat -v /tmp/f1.txt",
+            "expected_signal": "^[[38;5;2m^[[1mrun.sh^[[0m",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "^[[38;5;2m^[[1m.^[[0m^[[38;5;2mr^[[39m^[[38;5;3mw^[[39m^[[38;5;1mx^[[39m^[[38;5;2mr^[[39m^[[38;5;245m-^[[39m^[[38;5;1mx^[[39m^[[38;5;2mr^[[39m^[[38;5;245m-^[[39m^[[38;5;1mx^[[39m^[[38;5;6m^[[39m ^[[38;5;230msbx^[[39m ^[[38;5;187msbx^[[39m ^[[38;5;229m10^[[39m ^[[38;5;229mB^[[39m ^[[38;5;40mThu Nov …",
+            "setup": [
+              {
+                "command": "mkdir -p demo/src/sub && echo 'fn main(){}' > demo/src/main.rs && echo hi > demo/notes.txt && echo '#!/bin/sh' > demo/run.sh && chmod +x demo/run.sh && echo x > demo/src/sub/data.json && mkdir -p cfg && printf 'color:\\n  when: always\\n  theme: custom\\nicons:\\n  when: always\\n' > cfg/config.yaml && printf 'user: 196\\ngroup: 46\\ndate:\\n  hour-old: 40\\n  day-old: 42\\n  older: 36\\n' > cfg/colors.yaml && printf 'extension:\\n  rs: \"R!\"\\nfiletype:\\n  dir: \"D>\"\\n' > cfg/icons.yaml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "lsd --icon always --color never demo/src",
+            "expected_signal": "main.rs",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": " main.rs",
+            "setup": [
+              {
+                "command": "mkdir -p demo/src/sub && echo 'fn main(){}' > demo/src/main.rs && echo hi > demo/notes.txt && echo '#!/bin/sh' > demo/run.sh && chmod +x demo/run.sh && echo x > demo/src/sub/data.json && mkdir -p cfg && printf 'color:\\n  when: always\\n  theme: custom\\nicons:\\n  when: always\\n' > cfg/config.yaml && printf 'user: 196\\ngroup: 46\\ndate:\\n  hour-old: 40\\n  day-old: 42\\n  older: 36\\n' > cfg/colors.yaml && printf 'extension:\\n  rs: \"R!\"\\nfiletype:\\n  dir: \"D>\"\\n' > cfg/icons.yaml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "lsd --tree --color never --icon never demo",
+            "expected_signal": "└── src",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "└── src",
+            "setup": [
+              {
+                "command": "mkdir -p demo/src/sub && echo 'fn main(){}' > demo/src/main.rs && echo hi > demo/notes.txt && echo '#!/bin/sh' > demo/run.sh && chmod +x demo/run.sh && echo x > demo/src/sub/data.json && mkdir -p cfg && printf 'color:\\n  when: always\\n  theme: custom\\nicons:\\n  when: always\\n' > cfg/config.yaml && printf 'user: 196\\ngroup: 46\\ndate:\\n  hour-old: 40\\n  day-old: 42\\n  older: 36\\n' > cfg/colors.yaml && printf 'extension:\\n  rs: \"R!\"\\nfiletype:\\n  dir: \"D>\"\\n' > cfg/icons.yaml",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "XDG_CONFIG_HOME=$PWD/xdg lsd -l demo/src > /tmp/f4.txt && cat -v /tmp/f4.txt",
+            "expected_signal": "R! main.rs",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": ".^[[38;5;2mr^[[39m^[[38;5;3mw^[[39m^[[38;5;245m-^[[39m^[[38;5;2mr^[[39m^[[38;5;245m-^[[39m^[[38;5;245m-^[[39m^[[38;5;2mr^[[39m^[[38;5;245m-^[[39m^[[38;5;245m-^[[39m^[[38;5;6m^[[39m ^[[38;5;196msbx^[[39m ^[[38;5;46msbx^[[39m ^[[38;5;229m12^[[39m ^[[38;5;229mB^[[39m ^[[38;5;40mThu Nov 19 09:09:27 202…",
+            "setup": [
+              {
+                "command": "mkdir -p demo/src/sub && echo 'fn main(){}' > demo/src/main.rs && echo hi > demo/notes.txt && echo '#!/bin/sh' > demo/run.sh && chmod +x demo/run.sh && echo x > demo/src/sub/data.json && mkdir -p cfg && printf 'color:\\n  when: always\\n  theme: custom\\nicons:\\n  when: always\\n' > cfg/config.yaml && printf 'user: 196\\ngroup: 46\\ndate:\\n  hour-old: 40\\n  day-old: 42\\n  older: 36\\n' > cfg/colors.yaml && printf 'extension:\\n  rs: \"R!\"\\nfiletype:\\n  dir: \"D>\"\\n' > cfg/icons.yaml",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p xdg/lsd && cp cfg/config.yaml cfg/colors.yaml cfg/icons.yaml xdg/lsd/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Install with cargo install lsd, or with pacman, dnf or apt",
+            "actually_needed": "The box has no Rust toolchain and no root, so I used the README's 'Installing binaries directly' option: the v1.2.0 release tarball lsd-v1.2.0-x86_64-unknown-linux-gnu.tar.gz",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Icons need a patched Nerd Font installed",
+            "actually_needed": "lsd prints the icon glyphs whatever the font is; the font only matters for how they look in a terminal, which this box cannot show",
+            "kind": "note"
+          },
+          {
+            "readme_said": "lsd --config-file [YOUR_CUSTOM_PATH] for testing configs",
+            "actually_needed": "With --config-file pointing at a config.yaml in another folder, the custom icons in that folder's icons.yaml were not applied (command 7). Putting the files in $XDG_CONFIG_HOME/lsd did apply them.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "lsd lists demo with ANSI colors including the green bold run.sh, lists main.rs and sub with icons, and prints version lsd 1.2.0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-lsd-20261119-170843-5b57/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-lsd-20261119-170843-5b57/check-1-cmd9.judged.png",
+            "runs/verify/verify-lsd-20261119-170843-5b57/check-2-cmd5.judged.png",
+            "runs/verify/verify-lsd-20261119-170843-5b57/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.200104,
+        "features": [
+          {
+            "feature": "colored file listings",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "file type icons",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "tree view of directories",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "customize colors and icons through YAML files",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T17:09:42+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/lsd-rs/lsd@4b6c14a110fe",
+      "Cargo.lock"
+    ],
+    "packages_checked": 239,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T17:09:36+08:00",
+    "quality": {
+      "total": 73.9,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.315,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.2629,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 92.9,
+      "signals": {
+        "stars": 16292,
+        "monthly_downloads": 2306,
+        "forks": 616,
+        "dependents": null,
+        "release_downloads": 514651,
+        "hn_top_score": 2,
+        "registries_count": 2
+      },
+      "age_days": 2916,
+      "packages": [
+        "crates:lsd",
+        "homebrew:lsd"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 5.25
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:09:36.679908+08:00",
+      "sources_sha": "b9c689c7f0e616d19010eef3a65d939ec6dd8da1545f2c513f3bdade3c955a88",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "This project is a rewrite of GNU `ls` with lots of added features like colors, icons, tree-view, more formatting options etc."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "In order to use lsd instead of entering the `ls` command, you need to create an alias for ls in to your shell configuration file"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "If you intend to install `lsd` from source you need to have a working Rust toolchain (obviously) on your machine."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "| Windows                         | `scoop install lsd` or `winget install --id lsd-rs.lsd` or `choco install lsd`                                       |"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "alias lt='lsd --tree'"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "1. `config.yaml` → [config sample file here](./doc/samples/config-sample.yaml)"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "## F.A.Q and troubleshooting"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "The [release page](https://github.com/lsd-rs/lsd/releases) includes precompiled binaries for Linux, macOS, and Windows for every release."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/lsd-rs/lsd",
+      "fetched_at": "2026-11-19T17:08:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/lsd-rs/lsd/blob/main/README.md",
+      "fetched_at": "2026-11-19T17:08:26+08:00"
+    },
+    {
+      "id": "release:v1.2.0",
+      "kind": "release",
+      "url": "https://github.com/lsd-rs/lsd/releases/tag/v1.2.0",
+      "fetched_at": "2026-11-19T17:08:26+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "The next gen ls command",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:08:38+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "github_api",
+      "quote": "The next gen ls command",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:08:38+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "The next gen ls command",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:08:38+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "This project is a rewrite of GNU `ls` with lots of added features like colors, icons, tree-view, more formatting options etc.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:08:38+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# LSD (LSDeluxe)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:08:38+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "includes precompiled binaries for Linux, macOS, and Windows for every release",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:08:38+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "In order for icons to work you need to have a patched font like [nerd-font](https://www.nerdfonts.com) or [font-awesome](https://fontawesome.com) installed",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:08:38+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:08:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:08:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T17:08:29+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:08:29+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.2.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:08:26+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "lots of added features like colors, icons, tree-view",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:08:38+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "alias lt='lsd --tree'",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:08:38+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "alias ls='lsd'",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:08:38+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "This project is a rewrite of GNU `ls`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:08:38+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "The project is heavily inspired by the super [colorls](https://github.com/athityakumar/colorls) project.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:08:38+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "lots of added features like colors, icons, tree-view",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:08:38+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "lots of added features like colors, icons, tree-view",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:08:38+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "alias lt='lsd --tree'",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:08:38+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "2. `colors.yaml` → [colors sample file here](./doc/samples/colors-sample.yaml)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:08:38+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install lsd",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:08:38+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install lsd",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:08:38+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install lsd",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:08:38+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T17:08:26+08:00",
+  "updated_at": "2026-11-19T17:09:42+08:00"
+}
