@@ -741,6 +741,10 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
                         "this box, run the same command on the smallest model it accepts.")
     if big_box(box):
         lines.insert(3, big_box(box).strip())
+    if getattr(box, "services", False):
+        from pickfit.verify.services import PROMPT as SERVICES_PROMPT
+
+        lines.insert(3, SERVICES_PROMPT)
     if box.display and ex.kind.value == "desktop_app" and box.os == "macos":
         lines.insert(3, "This is a desktop (GUI) app: install the app itself (its macOS build: a Homebrew cask, "
                         "or the release .dmg or .zip), then start it with launch_gui and cite that launch, then "

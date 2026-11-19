@@ -259,14 +259,18 @@ class ImageRecipe:
 
 
 def image_recipe(runtime: str = "gvisor", display: bool = False, audio: bool = False,
-                 toolchain: bool = False) -> ImageRecipe:
-    """The packages and commands a kind of box needs on top of sandbox.Dockerfile."""
+                 toolchain: bool = False, services: bool = False) -> ImageRecipe:
+    """The packages and commands a kind of box needs on top of sandbox.Dockerfile. services: PostgreSQL, Redis
+    and the pickfit-services helper (services.py), started by the box user on 127.0.0.1 only."""
+    from pickfit.verify.services import SERVICE_PACKAGES, SERVICES_INSTALL
+
     packages = (*(VM_PACKAGES if runtime == "vm" else ()), *(GUI_PACKAGES if display else ()),
                 *(FLATPAK_PACKAGES if display else ()), *(AUDIO_PACKAGES if audio else ()),
-                *(TOOLCHAIN_PACKAGES if toolchain else ()))
+                *(TOOLCHAIN_PACKAGES if toolchain else ()), *(SERVICE_PACKAGES if services else ()))
     kinds = tuple(k for k, on in (("vm", runtime == "vm"), ("gui", display), ("audio", audio),
-                                  ("build", toolchain)) if on)
-    commands = (*((VGL_INSTALL,) if display else ()), *((TOOLCHAIN_INSTALL,) if toolchain else ()))
+                                  ("build", toolchain), ("svc", services)) if on)
+    commands = (*((VGL_INSTALL,) if display else ()), *((TOOLCHAIN_INSTALL,) if toolchain else ()),
+                *((SERVICES_INSTALL,) if services else ()))
     return ImageRecipe(kinds, packages, commands)
 
 
@@ -388,7 +392,8 @@ class LinuxBox(Box):
     read_timeout_s = READ_TIMEOUT_S
 
     def __init__(self, machine: Machine, *, limits: BoxLimits = BoxLimits(), display: bool = False,
-                 audio: bool = False, toolchain: bool = False, log: Callable[[str], None] = print) -> None:
+                 audio: bool = False, toolchain: bool = False, services: bool = False,
+                 log: Callable[[str], None] = print) -> None:
         if machine.runtime not in RUNTIMES:
             raise ValueError(f"runtime must be one of {RUNTIMES}, got {machine.runtime!r}")
         self.machine = machine
@@ -398,6 +403,7 @@ class LinuxBox(Box):
         self.display = DISPLAY if display else None
         self.audio = audio
         self.toolchain = toolchain
+        self.services = services  # PostgreSQL, Redis and an HTTP mock the box user can start (services.py)
         self.image = machine.image
         self.log = log
         self.started = False

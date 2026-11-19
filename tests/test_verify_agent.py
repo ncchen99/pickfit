@@ -555,6 +555,14 @@ def test_prompt_names_the_gpu_only_when_the_box_has_one(task):
     assert "GPU: one NVIDIA T4" in render_task(task, plan_for(task.extraction), box, AgentLimits())
 
 
+def test_prompt_names_the_services_only_in_a_services_box(task):
+    assert "pickfit-services" not in render_task(task, plan_for(task.extraction), FakeBox(), AgentLimits())
+    box = FakeBox()
+    box.services = True
+    text = render_task(task, plan_for(task.extraction), box, AgentLimits())
+    assert "pickfit-services start postgres" in text and "as its own install step" in text
+
+
 def test_finish_accepts_the_string_null_for_nullable_fields():
     raw = finish(level="function", steps=[1],
                  smoke=[{**SMOKE[0], "observed_excerpt": "null", "expected_exit_code": "null"}])[1]

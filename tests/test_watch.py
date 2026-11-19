@@ -778,8 +778,9 @@ def test_a_speech_tool_gets_the_simulated_microphone() -> None:
                     install_methods=[{"method": "pipx", "command": "pipx install tool", "platforms": []}])
     lines: list[str] = []
     verify(task_of(ex), Path("."), lines.append)
-    assert made == [{"lifetime": 20 * 60 + 120, "display": False, "gpu": None, "audio": True, "toolchain": False}]
-    assert published == ['{"audio": true, "display": false, "toolchain": false}']
+    assert made == [{"lifetime": 20 * 60 + 120, "display": False, "gpu": None, "audio": True, "toolchain": False,
+                     "services": False}]
+    assert published == ['{"audio": true, "display": false, "services": false, "toolchain": false}']
     assert any("simulated microphone" in line for line in lines)
 
 
@@ -807,6 +808,22 @@ def test_a_gpu_record_gets_a_card_sized_to_its_stated_memory() -> None:
     verify, made, _, _ = routed("ec2")
     verify(task_of(gpu_extraction()), Path("."), lambda s: None)
     assert made[0]["gpu"] is None
+
+
+def test_a_tool_that_needs_a_database_or_a_server_gets_the_services_box() -> None:
+    verify, made, _, published = routed()
+    pg = extraction(summary=cited("Migrations for PostgreSQL from the terminal.", "schema migrations for PostgreSQL"),
+                    install_methods=[{"method": "pipx", "command": "pipx install tool", "platforms": []}])
+    client = extraction(summary=cited("A terminal REST client.", "A simple API client (postman like)"),
+                        install_methods=[{"method": "pipx", "command": "pipx install tool", "platforms": []}])
+    verify(task_of(pg), Path("."), lambda s: None)
+    verify(task_of(client), Path("."), lambda s: None)
+    assert [m["services"] for m in made] == [True]  # one factory for both: the same kind of box
+    assert published == ['{"audio": false, "display": false, "services": true, "toolchain": false}']
+    # Docker has no services box; the record is verified in the plain box as before.
+    verify, made, _, _ = routed("docker")
+    verify(task_of(pg), Path("."), lambda s: None)
+    assert made[0]["services"] is False
 
 
 def test_the_lane_lets_a_gpu_record_in_only_within_the_cost_cap(env, tmp_path: Path, monkeypatch) -> None:

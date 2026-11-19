@@ -69,3 +69,27 @@ def test_toolchain_when_the_first_install_path_builds() -> None:
                                                 "platforms": []}]))
     assert not needs_toolchain(ex())
     assert not needs_toolchain(ex(install_methods=[]))
+
+
+def test_services_for_a_database_or_an_http_client() -> None:
+    from pickfit.verify.services import needs_services
+
+    assert needs_services(ex(pre={"runtimes": [cited("PostgreSQL 14+", "Requires PostgreSQL 14+")]}))
+    assert needs_services(ex(summary=cited("A REST client for the terminal.", "a terminal HTTP client")))
+    assert not needs_services(ex())
+    assert not needs_services(ex(), "Exports to Postgres if you want.")  # one passing mention in a README
+    assert box_needs(ex(summary=cited("Redis TUI", "browse Redis keys"))).describe() == "services"
+
+
+def test_the_services_image_and_helper() -> None:
+    from pickfit.verify.linux_box import image_recipe
+    from pickfit.verify.services import HELPER, HELPER_PATH, MOCK_PATH, SERVICE_PACKAGES, SERVICES_INSTALL
+
+    recipe = image_recipe(services=True)
+    assert recipe.kinds == ("svc",) and set(SERVICE_PACKAGES) <= set(recipe.packages)
+    assert recipe.commands == (SERVICES_INSTALL,) and recipe.tag("plain").startswith("pickfit-sbx-svc:")
+    assert image_recipe().tag("plain") == "plain"  # the plain box is unchanged
+    assert HELPER_PATH in SERVICES_INSTALL and MOCK_PATH in SERVICES_INSTALL
+    # Every service binds to loopback only, and nothing in the helper asks for root.
+    assert "--bind 127.0.0.1" in HELPER and "-h 127.0.0.1" in HELPER and "127.0.0.1 8080" in HELPER
+    assert "sudo" not in HELPER and "su " not in HELPER and "0.0.0.0" not in HELPER

@@ -13,6 +13,8 @@ caller has it; nothing is fetched and no model is asked.
 - Audio: the sources describe recording, a microphone, speech to text, dictation or voice input, or the tool needs
   an audio capture library (PortAudio, ALSA, PulseAudio). The box gets audio.py's simulated microphone, which
   limits.py's audio checks already cover.
+- Services: the tool needs PostgreSQL or Redis, or it is an HTTP/API client with nothing to talk to: the box gets
+  services.py's PostgreSQL, Redis and HTTP mock, which the box user starts on 127.0.0.1 only.
 - Toolchain: the install step pickfit would run first builds from source (cargo or go install/build, make, cmake,
   meson, ./configure), or every install path does. A prebuilt binary or a package manager path ranked first needs
   no build box.
@@ -57,12 +59,13 @@ class BoxNeeds:
     gpu: str | None = None  # "T4" or "L4"
     audio: bool = False
     toolchain: bool = False
+    services: bool = False
     blocked: str | None = None  # why no box pickfit can give runs it (a GPU it cannot have), or None
     why: tuple[str, ...] = field(default_factory=tuple)  # one short reason per need, for the log
 
     def describe(self) -> str:
         parts = [p for p, on in ((f"GPU {self.gpu}", self.gpu), ("microphone", self.audio),
-                                 ("toolchain", self.toolchain)) if on]
+                                 ("toolchain", self.toolchain), ("services", self.services)) if on]
         return ", ".join(parts) or "plain box"
 
 
@@ -168,6 +171,11 @@ def box_needs(ex: Any, *, readme: str | None = None, lifetime_s: float = 22 * 60
     toolchain = needs_toolchain(ex)
     if toolchain:
         why.append("builds from source -> toolchain")
+    from pickfit.verify.services import needs_services
+
+    services = needs_services(ex, readme)
+    if services:
+        why.append("needs a database or a server to talk to -> PostgreSQL, Redis, HTTP mock")
     lifetime = max(lifetime_s, toolchain_lifetime_s or 0) if toolchain else lifetime_s
     gpu = None
     blocked = None
@@ -186,4 +194,4 @@ def box_needs(ex: Any, *, readme: str | None = None, lifetime_s: float = 22 * 60
         else:
             gpu = card
             why.insert(0, f"GPU required{f' ({need:g} GB stated)' if need else ''} -> {card}")
-    return BoxNeeds(gpu=gpu, audio=audio, toolchain=toolchain, blocked=blocked, why=tuple(why))
+    return BoxNeeds(gpu=gpu, audio=audio, toolchain=toolchain, services=services, blocked=blocked, why=tuple(why))

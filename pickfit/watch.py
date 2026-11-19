@@ -471,7 +471,8 @@ def routed_verify(runner: str, *, limits: Any, make_factory: Callable[..., Any],
     runner bound); run(task, factory, limits=, log=, data_dir=) -> the outcome (verify_task); publish(display=,
     audio=, toolchain=) builds or finds the image once per kind (Modal, EC2). A desktop app gets a display (Modal,
     EC2), a speech tool the simulated microphone (Modal, EC2), a build from source the toolchain box with a longer
-    agent time (Modal, EC2), a record that requires a GPU a T4 or L4 (Modal only, within the per-record cap).
+    agent time (Modal, EC2), a record that needs PostgreSQL, Redis or a server to talk to the services box (Modal,
+    EC2), a record that requires a GPU a T4 or L4 (Modal only, within the per-record cap).
     """
     from dataclasses import replace
 
@@ -482,7 +483,7 @@ def routed_verify(runner: str, *, limits: Any, make_factory: Callable[..., Any],
     extras_ok = runner in ("modal", "ec2")  # audio and toolchain boxes
     lock = threading.Lock()
     factories: dict[tuple[Any, ...], Any] = {}
-    images: set[tuple[bool, bool, bool]] = set()
+    images: set[tuple[bool, bool, bool, bool]] = set()
 
     def verify(task: VerifyTask, data_dir: Path, log: Callable[[str], None]) -> Any:
         base = int(limits.max_seconds) + margin_s
@@ -492,20 +493,21 @@ def routed_verify(runner: str, *, limits: Any, make_factory: Callable[..., Any],
         gui = display_ok and task.extraction.kind.value == "desktop_app"
         audio = extras_ok and needs.audio
         toolchain = extras_ok and needs.toolchain
+        services = extras_ok and needs.services
         gpu = needs.gpu if runner == "modal" else None
         run_limits = replace(limits, max_seconds=max(limits.max_seconds, toolchain_agent_s)) if toolchain else limits
         if needs.why:
             log(f"box: {', '.join(needs.why)}")
         if needs.blocked:  # the README states more than the extraction did; the lane let it through on the latter
             log(f"box: no GPU: {needs.blocked}")
-        key = (gui, gpu, audio, toolchain)
+        key = (gui, gpu, audio, toolchain, services)
         with lock:  # build or fetch each image once, not in every thread
-            if publish is not None and (gui, audio, toolchain) not in images:
-                publish(display=gui, audio=audio, toolchain=toolchain)
-                images.add((gui, audio, toolchain))
+            if publish is not None and (gui, audio, toolchain, services) not in images:
+                publish(display=gui, audio=audio, toolchain=toolchain, services=services)
+                images.add((gui, audio, toolchain, services))
             if key not in factories:
                 factories[key] = make_factory(int(run_limits.max_seconds) + margin_s, display=gui, gpu=gpu,
-                                              audio=audio, toolchain=toolchain)
+                                              audio=audio, toolchain=toolchain, services=services)
         return run(task, sized_for_build(factories[key], task), limits=run_limits, log=log, data_dir=data_dir)
 
     return verify
@@ -526,16 +528,16 @@ def live_steps(*, runner: str = "modal") -> Steps:
     limits = AgentLimits()
     display = runner in ("modal", "ec2")
 
-    def publish(*, display: bool, audio: bool, toolchain: bool) -> None:
+    def publish(*, display: bool, audio: bool, toolchain: bool, services: bool) -> None:
         if runner == "modal":
             from pickfit.verify.modal_box import ensure_published_image
 
-            ensure_published_image(display=display, audio=audio, toolchain=toolchain)
+            ensure_published_image(display=display, audio=audio, toolchain=toolchain, services=services)
         elif runner == "ec2":  # bake or find the AMI
             from pickfit.verify.ec2_machine import ensure_image
             from pickfit.verify.linux_box import image_recipe
 
-            ensure_image(recipe=image_recipe("vm", display, audio, toolchain))
+            ensure_image(recipe=image_recipe("vm", display, audio, toolchain, services))
 
     verify = routed_verify(
         runner, limits=limits, margin_s=LIFETIME_MARGIN_S, toolchain_agent_s=TOOLCHAIN_AGENT_S,
