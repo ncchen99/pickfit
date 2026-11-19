@@ -1,0 +1,825 @@
+{
+  "schema_version": "software.v1",
+  "slug": "goose",
+  "repo_id": "gh:846698999",
+  "name": "goose",
+  "summary": "A general-purpose AI agent with desktop app, CLI and API that works with many LLM providers and connects to MCP extensions.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "acp",
+    "ai",
+    "ai-agents",
+    "mcp"
+  ],
+  "use_cases": [
+    "automate coding tasks such as installing, executing, editing and testing code",
+    "research, writing and data analysis with an AI agent"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "run an AI agent that executes, edits and tests code",
+    "use 15+ LLM providers including Ollama",
+    "connect to 70+ MCP extensions",
+    "embed the agent via an API"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://goose-docs.ai/",
+  "repo": {
+    "url": "https://github.com/aaif-goose/goose",
+    "full_name": "aaif-goose/goose",
+    "created_at": "2024-08-23T19:03:36Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": [
+      "API key or subscription for an LLM provider such as Anthropic, OpenAI or Google"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh | bash",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-goose-20261119-151040-1715",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/download_cli.sh https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh",
+          "purpose": "download download_cli.sh (read before running)"
+        },
+        {
+          "command": "cd /tmp && CONFIGURE=false bash /tmp/download_cli.sh",
+          "purpose": "run install script non-interactively (CONFIGURE=false) to put goose in ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "goose --version",
+        "expected_signal": "1.60.1"
+      },
+      "first_task": "(cat mcp_in.jsonl; sleep 3) | timeout 20 goose mcp memory"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v1.60.1",
+    "published_at": "2026-11-18T01:21:19Z",
+    "url": "https://github.com/aaif-goose/goose/releases/tag/v1.60.1"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T15:12:15.650912+08:00",
+    "runs": [
+      {
+        "id": "verify-goose-20261119-151040-1715",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T15:12:15.650912+08:00",
+        "tool_version": "1.60.1",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/download_cli.sh https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh",
+            "purpose": "download download_cli.sh (read before running)"
+          },
+          {
+            "command": "cd /tmp && CONFIGURE=false bash /tmp/download_cli.sh",
+            "purpose": "run install script non-interactively (CONFIGURE=false) to put goose in ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "goose --version",
+            "expected_signal": "1.60.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "1.60.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "(cat mcp_in.jsonl; sleep 3) | timeout 20 goose mcp memory",
+            "expected_signal": "\"serverInfo\":{\"name\":\"goose-memory\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"jsonrpc\":\"2.0\",\"id\":1,\"result\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{\"tools\":{}},\"serverInfo\":{\"name\":\"goose-memory\",\"version\":\"1.60.1\"},\"instructions\":\"This extension stores and retrieves categorized information with tagging support.\\n\\nStorage:\\n- Local: .goose/memory/ (project-specif…",
+            "setup": [
+              {
+                "command": "cat > /home/sbx/work/mcp_in.jsonl <<'EOF'\n{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},\"clientInfo\":{\"name\":\"t\",\"version\":\"0\"}}}\n{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}\n{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\"}\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -sS -i http://127.0.0.1:3284/health",
+            "expected_signal": "HTTP/1.1 200 OK",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "HTTP/1.1 200 OK",
+            "setup": [
+              {
+                "command": "GOOSE_SERVER__SECRET_KEY=qX7vLp29RtZk4mWn goose serve --port 3284",
+                "background": true,
+                "port": 3284
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -fsSL .../download_cli.sh | bash",
+            "actually_needed": "In a non-interactive shell, set CONFIGURE=false so the script skips the interactive 'goose configure' and PATH prompts",
+            "kind": "note"
+          },
+          {
+            "readme_said": "An API to embed it anywhere.",
+            "actually_needed": "`goose serve` won't start unless GOOSE_SERVER__SECRET_KEY is set (or you pass --dangerously-unauthenticated); the README doesn't mention this",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "(not stated)",
+            "actually_needed": "The install script downloads a prebuilt binary tarball (goose-x86_64-unknown-linux-gnu.tar.bz2) that can't be read before it runs",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The MCP memory server returned initialize serverInfo goose-memory and a tools list, the health endpoint returned HTTP/1.1 200 OK with body ok, and goose --version printed 1.60.1.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-goose-20261119-151040-1715/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-goose-20261119-151040-1715/check-1-cmd7.judged.png",
+            "runs/verify/verify-goose-20261119-151040-1715/check-2-cmd12.judged.png",
+            "runs/verify/verify-goose-20261119-151040-1715/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.242556,
+        "features": [
+          {
+            "feature": "run an AI agent that executes, edits and tests code",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Running the agent needs an LLM provider API key; none is available here."
+          },
+          {
+            "feature": "use 15+ LLM providers including Ollama",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Providers need an API key or a running Ollama server; neither is available here."
+          },
+          {
+            "feature": "connect to 70+ MCP extensions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output is only a tools/list response listing the memory extension's tools, not any extension actually being used."
+          },
+          {
+            "feature": "embed the agent via an API",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Only a health endpoint returning 'ok' is shown, not the agent being driven through the API."
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T15:12:22+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/aaif-goose/goose@e19678113105",
+      "Cargo.lock",
+      "documentation/package-lock.json",
+      "ui/pnpm-lock.yaml"
+    ],
+    "packages_checked": 2551,
+    "findings_total": 19,
+    "advisories_total": 18,
+    "findings": [
+      {
+        "package": "crates:zip",
+        "version": "8.6.0",
+        "advisory": "GHSA-m665-v7pm-7grj",
+        "cves": [
+          "CVE-2026-115905"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.5",
+        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "8.6.0",
+        "advisory": "RUSTSEC-2026-0369",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.0",
+        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+        "malicious": false
+      },
+      {
+        "package": "npm:proxy-addr",
+        "version": "2.0.7",
+        "advisory": "GHSA-jqcg-44mw-7w3h",
+        "cves": [
+          "CVE-2026-90711"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "2.0.8",
+        "summary": "proxy-addr vulnerable to IP spoofing via IPv4-mapped IPv6 trust subnet",
+        "malicious": false
+      },
+      {
+        "package": "npm:tinypool",
+        "version": "1.1.1",
+        "advisory": "GHSA-5gmw-xhrv-c9v3",
+        "cves": [
+          "CVE-2026-104848"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "2.1.1",
+        "summary": "Tinypool: Prototype Pollution gadget in worker options leads to Remote Code Execution",
+        "malicious": false
+      },
+      {
+        "package": "npm:tinypool",
+        "version": "1.1.1",
+        "advisory": "GHSA-85c8-ppgw-ccpr",
+        "cves": [
+          "CVE-2026-104849"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "2.1.2",
+        "summary": "Tinypool: Prototype Pollution Gadget to RCE in run() options",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "8.6.0",
+        "advisory": "GHSA-9hj8-73fh-9963",
+        "cves": [
+          "CVE-2026-115907"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: legacy Shrink/Reduce/Implode decoder: denial of service from attacker-controlled ZIP64 uncompressed size",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "8.6.0",
+        "advisory": "GHSA-hjqx-j4rw-g7xv",
+        "cves": [
+          "CVE-2026-115908"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "8.6.0",
+        "advisory": "GHSA-q7v9-x93c-xqv3",
+        "cves": [
+          "CVE-2026-115909"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "8.6.0",
+        "advisory": "RUSTSEC-2026-0367",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+        "malicious": false
+      },
+      {
+        "package": "npm:body-parser",
+        "version": "1.20.6",
+        "advisory": "GHSA-27r3-jxmh-p828",
+        "cves": [
+          "CVE-2026-111181"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.9",
+        "summary": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
+        "malicious": false
+      },
+      {
+        "package": "npm:compression",
+        "version": "1.8.1",
+        "advisory": "GHSA-vc2v-76pw-4v95",
+        "cves": [
+          "CVE-2026-87776"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.8.2",
+        "summary": "compression vulnerable to Denial of Service via memory leak on premature response close",
+        "malicious": false
+      },
+      {
+        "package": "npm:js-yaml",
+        "version": "4.3.1",
+        "advisory": "GHSA-2883-xcg3-v3hh",
+        "cves": [
+          "CVE-2026-84375"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.3.2",
+        "summary": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
+        "malicious": false
+      },
+      {
+        "package": "npm:launch-editor",
+        "version": "2.14.1",
+        "advisory": "GHSA-587h-7wmj-h5pm",
+        "cves": [
+          "CVE-2026-112942"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.14.2",
+        "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+        "malicious": false
+      },
+      {
+        "package": "npm:nanoid",
+        "version": "3.3.16",
+        "advisory": "GHSA-2v37-7h3g-55p8",
+        "cves": [
+          "CVE-2026-67213"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.3.18",
+        "summary": "nanoid: custom generators can loop indefinitely when size is zero",
+        "malicious": false
+      },
+      {
+        "package": "npm:path-to-regexp",
+        "version": "8.3.0",
+        "advisory": "GHSA-j3q9-mxjg-w52f",
+        "cves": [
+          "CVE-2026-4926"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "8.4.0",
+        "summary": "path-to-regexp vulnerable to Denial of Service via sequential optional groups",
+        "malicious": false
+      },
+      {
+        "package": "npm:serialize-javascript",
+        "version": "6.0.2",
+        "advisory": "GHSA-5c6j-r48x-rmvq",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "7.0.3",
+        "summary": "Serialize JavaScript is Vulnerable to RCE via RegExp.flags and Date.prototype.toISOString()",
+        "malicious": false
+      },
+      {
+        "package": "npm:webpack-dev-middleware",
+        "version": "7.4.5",
+        "advisory": "GHSA-g84c-rxfj-3j2c",
+        "cves": [
+          "CVE-2026-76844"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.4.6",
+        "summary": "webpack-dev-middleware vulnerable to Path Traversal via non-slash-terminated publicPath",
+        "malicious": false
+      },
+      {
+        "package": "npm:zod",
+        "version": "4.1.12",
+        "advisory": "GHSA-mrhx-c7xc-m3w5",
+        "cves": [
+          "CVE-2023-54404"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.6.6",
+        "summary": "Zod can exhaust memory while validating oversized constrained collections",
+        "malicious": false
+      },
+      {
+        "package": "npm:zod",
+        "version": "3.25.76",
+        "advisory": "GHSA-mrhx-c7xc-m3w5",
+        "cves": [
+          "CVE-2023-54404"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.6.6",
+        "summary": "Zod can exhaust memory while validating oversized constrained collections",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T15:12:22+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.7,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 84.6,
+      "signals": {
+        "stars": 56777,
+        "monthly_downloads": null,
+        "forks": 6622,
+        "dependents": null,
+        "release_downloads": 350661,
+        "hn_top_score": 2,
+        "registries_count": 0
+      },
+      "age_days": 817,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 12.17
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:12:15.679137+08:00",
+      "sources_sha": "2e4f2f61557cc887dd633cd27447fb2792ac410c51e760e54240582d83005a8d",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "goose is a general-purpose AI agent that runs on your machine. Not just for code — use it for research, writing, automation, data analysis, or anything you need to get done."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "use it for research, writing, automation, data analysis, or anything you need to get done."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Use API keys or your existing Claude, ChatGPT, or Gemini subscriptions"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "curl -fsSL https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh | bash"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "goose works with 15+ providers — Anthropic, OpenAI, Google, Ollama, OpenRouter, Azure, Bedrock, and more. Use API keys"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "- [Known Issues](https://goose-docs.ai/docs/troubleshooting/known-issues)"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "A native desktop app for macOS, Linux, and Windows."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/aaif-goose/goose",
+      "fetched_at": "2026-11-19T15:10:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/aaif-goose/goose/blob/main/README.md",
+      "fetched_at": "2026-11-19T15:10:27+08:00"
+    },
+    {
+      "id": "release:v1.60.1",
+      "kind": "release",
+      "url": "https://github.com/aaif-goose/goose/releases/tag/v1.60.1",
+      "fetched_at": "2026-11-19T15:10:27+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A full CLI for terminal workflows.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:10:36+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "your native open source AI agent — desktop app, CLI, and API",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:10:36+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "extensible AI agent that goes beyond code suggestions - install, execute, edit, and test with any LLM",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:10:36+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "goose is a general-purpose AI agent that runs on your machine. Not just for code — use it for research, writing, automation, data analysis, or anything you need to get done.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:10:36+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# goose",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:10:36+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "A native desktop app for macOS, Linux, and Windows.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:10:36+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "Use API keys or your existing Claude, ChatGPT, or Gemini subscriptions",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:10:36+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:10:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:10:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T15:10:29+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:10:29+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:10:29+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.60.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:10:27+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "github_api",
+      "quote": "install, execute, edit, and test with any LLM",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:10:36+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "use it for research, writing, automation, data analysis",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:10:36+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "github_api",
+      "quote": "install, execute, edit, and test with any LLM",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:10:36+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "goose works with 15+ providers — Anthropic, OpenAI, Google, Ollama, OpenRouter, Azure, Bedrock, and more.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:10:36+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Connect to 70+ extensions via the [Model Context Protocol]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:10:36+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "An API to embed it anywhere.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:10:36+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh | bash",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:10:36+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://github.com/aaif-goose/goose/releases/download/stable/download_cli.sh | bash",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:10:36+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "goose works with 15+ providers — Anthropic, OpenAI, Google, Ollama, OpenRouter, Azure, Bedrock, and more.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:10:36+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T15:10:27+08:00",
+  "updated_at": "2026-11-19T15:12:22+08:00"
+}
