@@ -254,7 +254,7 @@ def _add_pipeline_commands(sub: argparse._SubParsersAction) -> None:
 
     e = sub.add_parser("extract", help="read candidates with a model into ExtractionResult (paid)")
     e.add_argument("--limit", type=int, required=True, help="candidates to extract in this run")
-    e.add_argument("--model", default="dev", help='"dev" (Claude Haiku, default), "prod" (Claude Opus), "open" (the bulk model) or a model id')
+    e.add_argument("--model", default="prod", help='"prod" (Claude Opus, default), "dev" (Claude Haiku), "open" (the bulk model) or a model id')
     e.add_argument("--effort", default="minimal", help="reasoning effort (default minimal)")
     e.add_argument("--repo", action="append", help="extract this repo id (gh:<id>) or owner/name")
     e.add_argument("--force", action="store_true", help="extract again even if already extracted")
@@ -832,7 +832,7 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("ping", help="make the smallest possible model call through call_meta")
     p.add_argument("--provider", default="anthropic", choices=["anthropic", "meta", "baseten"],
                    help="anthropic (default); meta and baseten are the hackathon's providers")
-    p.add_argument("--model", default=None, help='"dev", "prod", or a model id (default: PICKFIT_MODE)')
+    p.add_argument("--model", default=None, help='"dev", "prod", or a model id (default: PICKFIT_MODE, else prod)')
     p.set_defaults(func=_ping)
 
     s = sub.add_parser("spend", help="show spending from the shared ledger")

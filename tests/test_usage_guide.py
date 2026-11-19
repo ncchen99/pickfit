@@ -98,3 +98,29 @@ def test_to_guide_keeps_the_records_features_and_drops_steps_the_run_cannot_back
     keys = list(json.loads(text))
     assert keys.index("usage_guide") == keys.index("why_worth_it") + 1
     assert "CHECKED" in render_input(record, run) and f"- {UNCHECKED}: not checked" in render_input(record, run)
+
+
+def test_a_run_sends_its_guides_as_one_message_batch_and_writes_each_record(tmp_path: Path,
+                                                                            monkeypatch: pytest.MonkeyPatch):
+    from pickfit import msg_batch, usage_guide
+    from batch_fakes import FakeBatches, fake_client, succeeded
+
+    data_dir = tmp_path / "software"
+    data_dir.mkdir()
+    data = raw()
+    del data["usage_guide"]
+    (data_dir / "fixture-llm-runner.json").write_text(json.dumps(data, indent=2) + "\n")
+    out = {"open_hint": "Run `fixture-llm-runner serve`.", "features": [
+        {"feature": CHECKED, "title": "Serve models", "steps": ["Run `fixture-llm-runner serve`."]},
+        {"feature": UNCHECKED, "title": "Download models", "steps": []}]}
+    batches = FakeBatches(lambda params: succeeded(json.dumps(out)), statuses=["ended"])
+    monkeypatch.setattr(msg_batch, "batch_client", lambda: fake_client(batches))
+    monkeypatch.chdir(tmp_path)  # the run's log goes to runs/usage-guide here
+
+    assert usage_guide.main(["--data-dir", str(data_dir)]) == 0
+    sent = batches.created[0]
+    assert len(sent) == 1 and sent[0]["params"]["model"] == "claude-opus-5-5"
+    assert sent[0]["params"]["output_config"]["effort"] == "low"
+    record = SoftwareRecord.model_validate_json((data_dir / "fixture-llm-runner.json").read_text())
+    assert record.usage_guide is not None and record.usage_guide.model == "claude-opus-5-5"
+    assert [f.title for f in record.usage_guide.features] == ["Serve models", "Download models"]

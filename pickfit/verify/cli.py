@@ -43,7 +43,7 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
                         "(Windows 11 VM in VirtualBox on this PC)")
     v.add_argument("--model", default=None,
                    help='agent model: "prod" (Claude Opus), "dev" or "open" (Claude Haiku) or a model id '
-                        '(default: PICKFIT_MODE); the judges stay on the prod model when it is a cheaper tier')
+                        '(default: PICKFIT_MODE, else prod); the judges stay on the prod model when it is a cheaper tier')
     v.add_argument("--extraction-model", default=None,
                    help='batch: verify only extractions by this model ("prod", "open" or an id)')
     v.add_argument("--mode", choices=["chain", "replay"], default=None,

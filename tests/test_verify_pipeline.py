@@ -45,7 +45,9 @@ def judge_answer(verdict: str) -> dict[str, Any]:
     text = json.dumps({"verdict": verdict, "observed": "An arrow from a to b.", "error_text": None,
                        "matches_expected_signal": verdict == "working",
                        "evidence_regions": [{"image": 1, "label": "edge", "box": {
-                           "x_min": 0, "y_min": 500, "x_max": 400, "y_max": 800}}]})
+                           "x_min": 0, "y_min": 500, "x_max": 400, "y_max": 800}}],
+                       # The same evidence when the outputs went as text alone (judge.TextJudgeOutput).
+                       "evidence": [{"check": 1, "label": "edge", "quote": "a ──▶ b"}]})
     return {"id": "judge", "object": "response", "created_at": 0, "model": "muse-spark-1.3-contributor",
             "status": "completed", "output": [{"type": "message", "id": "m", "role": "assistant",
                                                "status": "completed",
@@ -95,7 +97,7 @@ def test_full_pass_is_replayed_offline_and_judged(tmp_path: Path):
     outcome, lines = verify(tmp_path, server, boxes)
     run = outcome.run
     assert outcome.passed and run.level == "function" and run.replayed
-    assert run.judge.verdict == "working" and run.judge.model == PROD_MODEL  # the agent ran on the dev model
+    assert run.judge.verdict == "working" and run.judge.model == run.actor_model == PROD_MODEL  # no model named
     assert [s.command for s in run.steps] == ["uv tool install graphtty"]
     assert [(t.command, t.passed, t.exit_code, t.offline) for t in run.smoke_tests] == [
         ("graphtty --version", True, 0, True), ("graphtty graph.json", True, 0, True)]
@@ -121,13 +123,15 @@ def test_full_pass_is_replayed_offline_and_judged(tmp_path: Path):
                                 "offline True")
 
 
-def test_an_agent_on_a_cheaper_tier_keeps_the_judge_on_the_prod_model(tmp_path: Path):
+def test_an_agent_on_a_cheaper_tier_keeps_the_judge_on_the_prod_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     server = FakeServer(*agent_turns(), judge_answer("working"))
     outcome, _ = verify(tmp_path, server, Boxes({}), model="open")
     run = outcome.run
     assert outcome.passed and run.actor_model == BULK_MODEL and run.judge.model == PROD_MODEL
     assert [r["model"] for r in server.requests] == [BULK_MODEL] * 5 + [PROD_MODEL]
+    assert judge_model_for(None) is None  # no model named: the agent is on prod, and so are the judges
     # However the cheaper tier is named: the alias, the id, dev, dev by PICKFIT_MODE, or Muse Spark Open.
+    monkeypatch.setenv("PICKFIT_MODE", "dev")
     assert {judge_model_for(m) for m in ("open", "dev", None, BULK_MODEL, OPEN_MODEL, "open-modal")} == {"prod"}
     assert judge_model_for("prod") == "prod" and judge_model_for("muse-spark-1.3") == "muse-spark-1.3"
 

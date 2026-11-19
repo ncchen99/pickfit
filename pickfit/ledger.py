@@ -157,6 +157,7 @@ class Ledger:
         try:
             conn.execute("PRAGMA journal_mode=WAL")
             conn.executescript(_SCHEMA)
+            _add_batch_column(conn)
         finally:
             conn.close()
 
@@ -195,11 +196,13 @@ class Ledger:
         model: str | None = None,
         attempt: int = 1,
         scope_cap_usd: float | None = None,
+        batch: bool = False,
     ) -> int:
         """Check every cap and hold `estimate_usd`; return the row id to settle later.
 
         `scope_cap_usd` limits what `scope` may spend within this `run_id`, so the same
-        scope (e.g. "verify:<slug>") gets the full cap again in a later run.
+        scope (e.g. "verify:<slug>") gets the full cap again in a later run. `batch` marks a request sent
+        through the Message Batches API (pickfit.msg_batch), billed at half price.
         """
         if estimate_usd < 0:
             raise ValueError("estimate_usd must not be negative")
@@ -220,9 +223,9 @@ class Ledger:
                     raise BudgetExceeded(name, limit, spent, estimate_usd)
             cur = conn.execute(
                 "INSERT INTO calls (ts, day, budget, run_id, stage, scope, provider, model,"
-                " attempt, status, reserved_usd) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'reserved', ?)",
+                " attempt, status, reserved_usd, batch) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'reserved', ?, ?)",
                 (now.isoformat(), day.isoformat(), self.budget, run_id, stage, scope, provider,
-                 model, attempt, estimate_usd),
+                 model, attempt, estimate_usd, int(batch)),
             )
             return int(cur.lastrowid)
 
@@ -333,6 +336,18 @@ class Ledger:
             }
         finally:
             conn.close()
+
+
+def _add_batch_column(conn: sqlite3.Connection) -> None:
+    """calls.batch (1: sent through the Message Batches API, 2026-11-19 on), added to a file made before it.
+    Every row written before then was a plain call, which the default 0 says."""
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(calls)")}
+    if "batch" not in columns:
+        try:
+            conn.execute("ALTER TABLE calls ADD COLUMN batch INTEGER NOT NULL DEFAULT 0")
+        except sqlite3.OperationalError as err:  # another process added it first
+            if "duplicate column" not in str(err):
+                raise
 
 
 def default_ledger() -> Ledger:

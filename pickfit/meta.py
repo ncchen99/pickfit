@@ -9,7 +9,7 @@ still the only one that takes video ("open-modal").
 
 Every call goes through the same steps:
 
-1. Route the model ("dev" and "open" -> Claude Haiku, "prod" -> Claude Opus) and refuse models
+1. Route the model ("dev" and "open" -> Claude Haiku, "prod" or nothing -> Claude Opus) and refuse models
    without a known price, a contributor model for non-public data, and body
    keys that would get around these checks or the cost bound.
 2. Serve from the response cache when possible (free, still traced). The cache
@@ -34,6 +34,7 @@ import json
 import os
 import random
 import re
+import sys
 import threading
 import time
 from dataclasses import asdict, dataclass
@@ -92,9 +93,11 @@ OPENROUTER_MODELS = {"muse-spark-1.3": "meta/muse-spark-1.3", "muse-spark-1.3-co
                      "muse-wonder-1.0": "meta/muse-wonder"}
 OPENROUTER_PIN = {"order": ["meta"], "allow_fallbacks": False, "data_collection": "deny"}
 
-# The tiers the pipeline asks for by name. PICKFIT_MODE (default dev) picks one when a caller passes none.
+# The tiers the pipeline asks for by name. PICKFIT_MODE picks one when a caller passes none, and prod when it is
+# unset (since 11/19; it was dev, so a `verify --batch` without --model ran its agent on Haiku on 11/16-11/17).
 # - prod: the model behind every product decision (extraction, verification agent, judges, scoring).
-# - dev: the cheap model for trying a prompt; its answers are cached by default.
+# - dev: the cheap model for trying a prompt; its answers are cached by default. Asked for by name only
+#   (`--model dev`, PICKFIT_MODE=dev), and said on stderr when it is.
 # - open: the bulk model for screens over thousands of candidates. The name is from the hackathon, when this
 #   tier was Muse Spark Open (open weights) on Baseten.
 PROD_MODEL = "claude-opus-5-5"
@@ -308,8 +311,20 @@ class MetaResult:
 # ---------------------------------------------------------------- routing and pricing
 
 
+DEFAULT_MODE = "prod"
+_dev_noted: set[str] = set()  # where the dev tier came from, once said on stderr in this process
+
+
+def _note_dev(source: str, model: str) -> None:
+    """One stderr line per process when the dev tier is in use: it is never the default any more."""
+    if source in _dev_noted:
+        return
+    _dev_noted.add(source)
+    print(f"pickfit: model tier dev ({model}) from {source}; product runs use prod (Claude Opus)", file=sys.stderr)
+
+
 def resolve_model(model: str | None, provider: str = DEFAULT_PROVIDER) -> str:
-    """Map "dev"/"prod" (or PICKFIT_MODE when None), "open" and "open-modal" to a model id."""
+    """Map "dev"/"prod" (or PICKFIT_MODE when None, else prod), "open" and "open-modal" to a model id."""
     if provider not in PROVIDERS:
         raise ValueError(f"unknown provider {provider!r}; expected one of {sorted(PROVIDERS)}")
     if model in OPEN_ALIASES:
@@ -318,12 +333,17 @@ def resolve_model(model: str | None, provider: str = DEFAULT_PROVIDER) -> str:
         if model is None or model in MODE_ALIASES:
             raise ModelRefused(f"{provider} calls need an explicit model id, e.g. meta-models/muse-spark-open")
         return model
+    source = "the caller"
     if model is None:
-        model = get_env("PICKFIT_MODE") or "dev"
+        mode = get_env("PICKFIT_MODE")
+        model, source = (mode, "PICKFIT_MODE") if mode else (DEFAULT_MODE, "the default")
         if model not in MODE_ALIASES:
             raise ValueError(f"PICKFIT_MODE must be one of {sorted(MODE_ALIASES)}, got {model!r}")
     aliases = META_MODE_ALIASES if provider == "meta" else MODE_ALIASES
-    return aliases.get(model, model)
+    resolved = aliases.get(model, model)
+    if model == "dev":
+        _note_dev(source, resolved)
+    return resolved
 
 
 def provider_for(model: str) -> str:
@@ -569,11 +589,13 @@ def _anthropic_fallbacks() -> bool:
     return (get_env("PICKFIT_ANTHROPIC_FALLBACKS") or "1").strip().lower() not in {"0", "false", "no", "off"}
 
 
-def _send(client: Any, endpoint: Endpoint, request: dict[str, Any], stream: bool) -> dict[str, Any]:
+def _send(client: Any, endpoint: Endpoint, request: dict[str, Any], stream: bool,
+          conversation: bool = False) -> dict[str, Any]:
     create = client.chat.completions.create if endpoint == "chat" else client.responses.create
     kwargs = _sdk_kwargs(create, request)
     if getattr(client, "returns_whole_response", False):  # pickfit's Anthropic client streams inside
-        return _to_dict(create(**kwargs, stream=stream))
+        hint = {"conversation": True} if conversation else {}  # where the prompt cache's breakpoint goes
+        return _to_dict(create(**kwargs, stream=stream, **hint))
     if not stream:
         return _to_dict(create(**kwargs))
     kwargs["stream"] = True
@@ -872,6 +894,7 @@ def call_meta(
     ledger: Ledger | None = None,
     runs_dir: Path | str | None = None,
     video_seconds: float | None = None,
+    conversation: bool = False,
 ) -> MetaResult:
     """Call a model with a Chat Completions (`chat`) or Responses (`responses`) request.
 
@@ -887,7 +910,9 @@ def call_meta(
     `cache` defaults to PICKFIT_CACHE, else on for the dev model only.
     `provider` defaults to the one serving the model, and `ledger` to that provider's budget in the shared
     ledger (Claude calls: "pipeline"). `video_seconds`: the videos' total length, so they are reserved at
-    their size rather than at VIDEO_TOKENS each.
+    their size rather than at VIDEO_TOKENS each. `conversation`: the caller sends this request's history again
+    on its next turn (an agent loop), so a Claude call caches it from the first turn on; a single call leaves
+    it out, since a cache write nothing reads back costs more than plain input.
     """
     model = resolve_model(model, provider or DEFAULT_PROVIDER)
     provider, wire_model = route(provider or provider_for(model), model)
@@ -938,7 +963,7 @@ def call_meta(
     secrets = [client.api_key] if isinstance(getattr(client, "api_key", None), str) else []
     raw, usage, cost, attempts = _send_with_retries(
         client, endpoint, request, price, max_output_tokens, ledger, runs, base, secrets,
-        scope_cap_usd=scope_cap_usd, video_seconds=video_seconds)
+        scope_cap_usd=scope_cap_usd, video_seconds=video_seconds, conversation=conversation)
     result = make_result(raw, usage, cost, cache_hit=False, attempts=attempts)
     if use_cache and _cacheable(result):
         _cache_write(runs, key, provider, endpoint, raw)
@@ -971,7 +996,7 @@ def _trace_error(runs: Path, trace: dict[str, Any], secrets: list[str], err: Bas
 def _send_with_retries(
     client: Any, endpoint: Endpoint, request: dict[str, Any], price: Price, max_output_tokens: int,
     ledger: Ledger, runs: Path, base: dict[str, Any], secrets: list[str], *, scope_cap_usd: float | None,
-    video_seconds: float | None = None,
+    video_seconds: float | None = None, conversation: bool = False,
 ) -> tuple[dict[str, Any], Usage | None, float, int]:
     """Send one request with visible retries; every attempt is reserved, settled and traced.
 
@@ -995,7 +1020,7 @@ def _send_with_retries(
             raise
         started = time.monotonic()
         try:
-            raw = _send(client, endpoint, request, retry.stream)
+            raw = _send(client, endpoint, request, retry.stream, conversation)
         except _STATUS_ERRORS as err:
             # A 4xx (429 included) is refused before generation. A 5xx may come after the
             # upstream generated (504 gateway timeout, 503 persistence error): keep the estimate.

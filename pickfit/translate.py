@@ -14,6 +14,10 @@ the first full translation (856 tools) too. During the hackathon the default was
 on Modal's endpoint ("open-modal", the modal-llm budget, Modal credits), which stays available:
 on 11/2 a blind comparison on 20 held-out tools (246 sentences, judged by Claude) found meaning
 errors in about 1-2% of its sentences at effort medium, against under 1% for Claude Opus 5.5.
+
+A backfill can wait for its answers: run(batch=True) sends Claude's requests as one Message Batch
+(pickfit.msg_batch), at half price, and saves the answers once the batch has ended (usually within the hour).
+`pickfit publish` still asks the plain API, since it commits the answers before it deploys.
 """
 
 from __future__ import annotations
@@ -113,6 +117,13 @@ def answers(text: str, size: int) -> dict[int, str]:
     return {item["i"]: item["zh"].strip() for item in items if 0 <= item["i"] < size and item["zh"].strip()}
 
 
+def request_body(batch: list[tuple[str, str]]) -> dict[str, Any]:
+    return {
+        "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": request_text(batch)}],
+        "response_format": {"type": "json_schema", "json_schema": {"name": "translations", "schema": SCHEMA, "strict": True}},
+    }
+
+
 def translate_batch(batch: list[tuple[str, str]], run_id: str, max_usd: float, effort: str,
                     model: str = DEFAULT_MODEL) -> tuple[dict[int, str], float]:
     """One request through call_meta, `max_usd` per run: Claude Opus (the pipeline budget) or, for
@@ -120,10 +131,7 @@ def translate_batch(batch: list[tuple[str, str]], run_id: str, max_usd: float, e
     from pickfit.ledger import modal_llm_ledger
     from pickfit.meta import PROD_MODEL, call_meta
 
-    body = {
-        "messages": [{"role": "system", "content": SYSTEM}, {"role": "user", "content": request_text(batch)}],
-        "response_format": {"type": "json_schema", "json_schema": {"name": "translations", "schema": SCHEMA, "strict": True}},
-    }
+    body = request_body(batch)
     where: dict[str, Any] = (dict(model="open-modal", provider="modal", ledger=modal_llm_ledger())
                              if model == "open-modal" else dict(model=PROD_MODEL))
     result = call_meta("chat", body, stage=STAGE, public_data_only=True, max_output_tokens=MAX_OUTPUT_TOKENS,
@@ -152,44 +160,88 @@ def run(
     max_usd: float = DEFAULT_MAX_USD,
     concurrency: int = 8,
     out: Callable[[str], None] = print,
+    batch: bool = False,
+    batch_options: dict[str, Any] | None = None,
 ) -> Totals:
     """Translate `groups` and save each tool's file as its answers arrive; a failed request is counted, not raised.
 
     effort: reasoning effort; unset, low for Claude and medium for Muse Spark Open (what each was measured at).
+    batch: Claude only: send every request as one Message Batch (half price) and wait for it; `max_usd` then
+    holds every request's worst case at once, and what it cannot hold goes in a next batch (pickfit.msg_batch).
+    batch_options: passed to msg_batch.run (a test's client, ledger and sleep).
     """
     from pickfit.ledger import taipei_now
 
     if model not in MODELS:
         raise ValueError(f"model must be one of {MODELS}")
+    if batch and model != "claude":
+        raise ValueError("only Claude's requests can be sent as a message batch")
     effort = effort or ("medium" if model == "open-modal" else "low")
     run_id = f"translate-{taipei_now():%Y%m%d-%H%M%S}"
     translate = lambda batch: translate_batch(batch, run_id, max_usd, effort, model)  # noqa: E731
     lock = threading.Lock()
     totals = Totals()
 
-    def one(batch: list[tuple[str, str]]) -> None:
-        try:
-            got, cost = translate(batch)
-        except Exception as err:  # noqa: BLE001 - one failed batch must not lose the others; a rerun picks it up
-            with lock:
-                totals.failed += 1
-            print(f"  translate: a request failed ({len(batch)} sentences): {str(err)[:300]}", file=sys.stderr)
-            return
+    def apply(group: list[tuple[str, str]], got: dict[int, str], cost: float) -> None:
         with lock:
             totals.usd += cost
             totals.requests += 1
             totals.sentences += len(got)
             touched: set[str] = set()
             for i, zh in got.items():
-                slug, en = batch[i]
+                slug, en = group[i]
                 known[slug][en] = zh
                 touched.add(slug)
             for slug in touched:
                 save(directory, slug, known[slug])
             out(f"  translate: {totals.requests + totals.failed}/{len(groups)} requests · "
-                f"{len(got)}/{len(batch)} sentences · ${totals.usd:.2f} so far")
+                f"{len(got)}/{len(group)} sentences · ${totals.usd:.2f} so far")
+
+    def failed(group: list[tuple[str, str]], why: str) -> None:
+        with lock:
+            totals.failed += 1
+        print(f"  translate: a request failed ({len(group)} sentences): {why[:300]}", file=sys.stderr)
+
+    if batch:
+        _run_batch(groups, run_id, max_usd, effort, apply, failed, out, batch_options or {})
+        return totals
+
+    def one(group: list[tuple[str, str]]) -> None:
+        try:
+            got, cost = translate(group)
+        except Exception as err:  # noqa: BLE001 - one failed batch must not lose the others; a rerun picks it up
+            failed(group, str(err))
+            return
+        apply(group, got, cost)
 
     with ThreadPoolExecutor(max_workers=concurrency) as pool:
         for future in as_completed([pool.submit(one, g) for g in groups]):
             future.result()
     return totals
+
+
+def _run_batch(groups: list[list[tuple[str, str]]], run_id: str, max_usd: float, effort: str,
+               apply: Callable[[list[tuple[str, str]], dict[int, str], float], None],
+               failed: Callable[[list[tuple[str, str]], str], None], out: Callable[[str], None],
+               options: dict[str, Any]) -> None:
+    """Every group as one request of a Message Batch, Claude Opus at the same effort and limits as one at a time."""
+    from pickfit import msg_batch
+    from pickfit.meta import PROD_MODEL
+
+    requests = [msg_batch.BatchRequest(key=str(i), endpoint="chat", body=request_body(group), stage=STAGE,
+                                       max_output_tokens=MAX_OUTPUT_TOKENS, model=PROD_MODEL,
+                                       reasoning_effort=effort, scope=f"{STAGE}:{run_id}", scope_cap_usd=max_usd)
+                for i, group in enumerate(groups)]
+    outcomes = msg_batch.run(requests, run_id=run_id, log=out, **options)
+    for i, group in enumerate(groups):
+        outcome = outcomes[str(i)]
+        result = outcome.result
+        if result is None:
+            failed(group, outcome.error or "no answer")
+        elif result.status not in (None, "stop"):
+            failed(group, f"finish_reason {result.status}")
+        else:
+            try:
+                apply(group, answers(result.text or "", len(group)), result.cost_usd)
+            except (ValueError, KeyError, TypeError) as err:  # an answer that is not the schema's JSON
+                failed(group, f"{type(err).__name__}: {err}")

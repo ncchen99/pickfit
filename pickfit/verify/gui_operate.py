@@ -12,7 +12,8 @@ A launch (gui.py) shows that the app draws its own UI. Operating it shows that a
 4. the check, made by pickfit, never reported by the app:
    - clipboard: the display uid reads the CLIPBOARD selection while the app still runs;
    - screen_text: the screen judge reads the last screenshot (the display uid's) and pickfit compares what
-     it read with the expected text;
+     it read with the expected text; where pickfit's own OCR (marks.py) finds every expected text on it, the
+     OCR's lines stand for the judge's reading and no model is asked;
    - file: after root has stopped every box-user process, root reads the file (no symlink on the way, a
      regular file of the box user's, written after the app started) and checks its text and format;
    - gone: a file the app deletes (a cleaner's job): root reads it before the app starts (a regular file of the
@@ -93,6 +94,29 @@ def operator_max_steps(value: str | None) -> int:
     return steps
 
 
+def operator_view_zoom(value: str | None) -> float:
+    """PICKFIT_OPERATOR_VIEW_ZOOM, 1 to 2: how far the operator's view of a small window is enlarged; unset keeps
+    2. The zoom came in on 11/1, when Muse Spark Open clicked 60 px below a 24 px text field on the full screen;
+    an enlarged image costs more input tokens (a 640x400 window shown at 2x is four times the pixels), and Claude
+    has not been compared on it (docs/proposals/tokens.md, T6)."""
+    if value is None or not value.strip():
+        return 2.0
+    zoom = float(value)  # a typo fails loudly instead of being ignored
+    if not 1.0 <= zoom <= 2.0:
+        raise ValueError("PICKFIT_OPERATOR_VIEW_ZOOM must be between 1 and 2")
+    return zoom
+
+
+def operator_aim(value: str | None) -> bool:
+    """PICKFIT_OPERATOR_AIM: "off" leaves out the second call that aims an x/y click again (AIM); unset keeps it on.
+    It fixed most misses on small controls for Muse Spark Open (11/3) and is 45 of 101 operator calls (11/16)."""
+    if value is None or not value.strip():
+        return True
+    if value.strip().lower() not in ("on", "off"):
+        raise ValueError(f"PICKFIT_OPERATOR_AIM must be on or off, got {value!r}")
+    return value.strip().lower() == "on"
+
+
 REASONING_EFFORT = operator_effort(get_env("PICKFIT_OPERATOR_EFFORT"))
 MAX_OUTPUT_TOKENS = 1_500
 # Actions per operation, done and give_up included (a first-run wizard alone can take 8).
@@ -104,14 +128,14 @@ TYPE_MAX = 300
 WAIT_MAX_S = 10
 SETTLE_MAX_S = 6.0  # a screenshot waits this long at most for two equal frames
 VIEW_MARGIN = 12  # pixels around what the app draws, in the operator's view
-VIEW_MAX_ZOOM = 2.0
+VIEW_MAX_ZOOM = operator_view_zoom(get_env("PICKFIT_OPERATOR_VIEW_ZOOM"))
 # A click by x and y is aimed again on a zoomed crop around it (a second call, the same model): the crop's size in
 # screen pixels and its zoom. An element click (marks.py) lands on OCR'd text and is not. On 14 saved MangoDisk clicks
 # on small controls (11/3), the first click hit 5 (median 30 px from the centre) and the aimed one 13 (median 4-6 px),
 # twice. Mapping is not the cause: on a synthetic 1280x800 screen the model's x was within 2 px; its y was up to 37 px
 # low mid-screen, which letterboxing the image to a square removed, but a square view hit fewer real controls (5 of
 # 18 against 7), and so did a square crop (12 of 14 against 13): neither is used.
-AIM = True
+AIM = operator_aim(get_env("PICKFIT_OPERATOR_AIM"))
 AIM_CROP = (200, 125)
 AIM_ZOOM = 4
 FILE_MAX_BYTES = 4_000_000
@@ -1617,14 +1641,33 @@ def check_clipboard(display: Any, spec: GuiCheckSpec, nonce: str, typed: list[st
 
 
 ScreenReader = Callable[[bytes, list[str]], "tuple[list[str], float, str]"]
+ScreenOcr = Callable[[bytes], "list[str] | None"]
+OCR_READER = "pickfit's own OCR"
+
+
+def screen_ocr() -> ScreenOcr | None:
+    """The OCR check_screen tries before the screen judge (PICKFIT_SCREEN_OCR): "auto" (default) is the host's own
+    (marks.py: macOS Vision, none elsewhere), "tesseract" that command where it is installed, "off" none."""
+    setting = (get_env("PICKFIT_SCREEN_OCR") or "auto").strip().lower()
+    if setting == "off":
+        return None
+    if setting not in ("auto", "tesseract"):
+        raise ValueError(f"PICKFIT_SCREEN_OCR must be auto, tesseract or off, got {setting!r}")
+    from pickfit.verify import marks
+
+    return lambda png: marks.ocr_lines(png, engine=setting)
 
 
 def check_screen(png: bytes | None, spec: GuiCheckSpec, nonce: str, typed: list[str],
-                 read: ScreenReader | None, before: bytes | None = None, words: list[str] | None = None
-                 ) -> dict[str, Any]:
+                 read: ScreenReader | None, before: bytes | None = None, words: list[str] | None = None,
+                 ocr: ScreenOcr | None = None) -> dict[str, Any]:
     """The expected text on pickfit's last screenshot, and not on its first (`before`, the window as it opened):
     a result the operation made, never a label, heading or menu that was there anyway or text typed. Spoken words
-    count as whole words, in any case."""
+    count as whole words, in any case.
+
+    ocr: pickfit's own OCR of a screenshot, tried first: when one of its lines holds each expected text, that is
+    what the screen shows and no model is asked (free). Anything less, and the screen judge reads it as before, so
+    OCR can only spare a call, never decide that a text is missing. Spoken words always go to the screen judge."""
     words = words or []
     expected = [*expected_texts(spec, nonce), *words]
     typed_norm = [_norm(t) for t in typed]
@@ -1634,6 +1677,20 @@ def check_screen(png: bytes | None, spec: GuiCheckSpec, nonce: str, typed: list[
                 "line": "on screen: not checked (the expected text was typed by the operator)"}
     if png is None or read is None:
         return {"passed": False, "why": "no screenshot to read", "line": "on screen: no screenshot"}
+    reader = read
+
+    def look(shot: bytes, wanted: list[str]) -> tuple[list[str], float, str]:
+        if ocr is not None and not words:
+            try:
+                lines = ocr(shot) or []
+            except Exception:  # noqa: BLE001 - the OCR is a shortcut: without it the screen judge reads
+                lines = []
+            hits = [next((line for line in lines if _norm(e) in _norm(line)), None) for e in wanted]
+            if wanted and all(hit is not None for hit in hits):
+                return [hit for hit in hits if hit is not None], 0.0, OCR_READER
+        return reader(shot, wanted)
+
+    read = look
     try:
         texts, cost, model = read(png, expected)
     except Exception as err:  # budget or API failure: nothing is confirmed
@@ -1656,8 +1713,9 @@ def check_screen(png: bytes | None, spec: GuiCheckSpec, nonce: str, typed: list[
     ok = all(found) and not any(already) and listed is None
     marks = [("yes, but already there before the first action" if a else "yes") if f else "no"
              for f, a in zip(found, already)]
+    who = model if model == OCR_READER else f"the screen judge, {model}"
     result = {"passed": ok, "cost_usd": cost,
-              "line": f"on screen (read by the screen judge, {model}, from pickfit's last screenshot): "
+              "line": f"on screen (read by {who}, from pickfit's last screenshot): "
                       + "; ".join(f"{_quote(e)}: {m}" for e, m in zip(expected, marks)),
               "seen": {"read": [t[:200] for t in texts]}}
     if not ok:
@@ -1787,7 +1845,7 @@ def _operated(box: Box, args: OperateArgs, tag: str | int, op: Operation, nonce:
             op.result = check_clipboard(display, args.check, nonce, op.typed(), words)
         elif kind == "screen_text":
             op.result = check_screen(last_png, args.check, nonce, op.typed(), read_screen, before=first_png,
-                                     words=words)
+                                     words=words, ocr=screen_ocr())
             op.cost_usd += float(op.result.pop("cost_usd", 0.0) or 0.0)
     if recorder is not None:
         if recorder.recording:
