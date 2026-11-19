@@ -176,6 +176,11 @@ def test_replay_mode_marks_every_turn_a_conversation_so_the_first_is_cached(task
                 log=lambda line: None, run_id="verify-evnx-test", mode="replay").run()
     assert len(client.calls) >= 2 and all(c["conversation"] for c in client.calls)
     assert [m["role"] for m in client.calls[0]["input"]] == ["user"]  # the first turn: the task alone
+    # The conversation as sent is kept beside the report: every turn's input is a prefix of it.
+    saved = json.loads((tmp_path / "runs" / "verify" / "verify-evnx-test" / "history.json").read_text())
+    assert saved["instructions"] == client.calls[0]["instructions"] and saved["tools"] == client.calls[0]["tools"]
+    assert all(saved["input"][:len(c["input"])] == c["input"] for c in client.calls)
+    assert saved["model"] == "claude-opus-5-5" and saved["reasoning_effort"] == "medium"
 
 
 def test_command_budget_forces_a_finish_only_turn(task, ledger, tmp_path):

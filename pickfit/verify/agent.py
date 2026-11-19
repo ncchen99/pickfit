@@ -993,6 +993,7 @@ class VerifyAgent:
         lim = self.limits
         pending: list[dict[str, Any]] = [_user(render_task(self.task, self.plan, self.box, lim))]
         history: list[dict[str, Any]] = []
+        self.history = history  # saved with the report (history.json): every turn's input is a prefix of it
         previous_id: str | None = None
         wrap_up: str | None = None
         grace = 1  # turns after the wrap-up turn when the model has not called finish yet
@@ -1454,4 +1455,10 @@ class VerifyAgent:
         out.parent.mkdir(parents=True, exist_ok=True)
         self.report.report_path = str(out)
         out.write_text(json.dumps(self.report.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
+        if self.mode == "replay" and getattr(self, "history", None):
+            # The conversation as sent (thinking blocks as they came), so a decision point can be asked again
+            # offline: scripts/effort_compare.py. Turn n's input is the history up to its n-th answer.
+            (out.parent / "history.json").write_text(json.dumps(
+                {"model": self.model, "reasoning_effort": REASONING_EFFORT, "instructions": self.instructions,
+                 "tools": self.tools, "input": self.history}, ensure_ascii=False), encoding="utf-8")
         self._say(f"report: {out}")
