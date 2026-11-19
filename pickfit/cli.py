@@ -713,6 +713,72 @@ def _add_publish_command(sub: argparse._SubParsersAction) -> None:
     p.set_defaults(func=_publish)
 
 
+
+# --- harvest: leads from many sources -----------------------------------------------
+
+
+def _add_harvest_command(sub: argparse._SubParsersAction) -> None:
+    from pickfit.harvest.leads import KINDS, PLATFORMS
+    from pickfit.harvest.sources import DEFAULT_SOURCES, SOURCES
+
+    h = sub.add_parser("harvest", help="collect leads from package registries, the MCP Registry, awesome lists, "
+                                       "GitHub, HN and (with keys) Bluesky and X into runs/harvest.db ($0 except X)")
+    h.add_argument("action", choices=["run", "summary", "top", "export", "feed"],
+                   help="run: read the sources; summary: counts; top: best new leads; export: JSON lines; "
+                        "feed: queue the best new leads as submit_software rows for `pickfit watch`")
+    h.add_argument("--source", action="append", choices=sorted(SOURCES),
+                   help=f"run: one source (repeatable; default {', '.join(DEFAULT_SOURCES)})")
+    h.add_argument("--limit", type=int, default=5000, help="run: hits per source (default 5000)")
+    h.add_argument("--days", type=int, default=7, help="run: look-back days of HN, winget, Bluesky (default 7)")
+    h.add_argument("--x-max-reads", type=int, default=100,
+                   help="run: paid X post reads per run, $0.005 each (default 100)")
+    h.add_argument("-n", type=int, default=20, help="top, export, feed: how many (default 20)")
+    h.add_argument("--kind", action="append", choices=KINDS, help="top, export, feed: only this kind hint")
+    h.add_argument("--platform", action="append", choices=PLATFORMS, help="top, feed: only this platform")
+    h.add_argument("--out", type=Path, default=None, help="export: file (default runs/harvest/leads-<date>.jsonl)")
+    h.add_argument("--apply", action="store_true", help="feed: write to D1 (default: show what would be queued)")
+    h.add_argument("--local", action="store_true", help="feed: the local D1 of `wrangler dev`")
+    h.add_argument("--worker", type=Path, default=Path("worker"), help="feed: the Worker directory")
+    h.set_defaults(func=_harvest)
+
+
+def _harvest(args: argparse.Namespace) -> int:
+    from pickfit.harvest.leads import LeadsDB
+    from pickfit.harvest.run import export, feed, harvest_db_path, run_harvest
+    from pickfit.ledger import taipei_now
+
+    kinds = set(args.kind) if args.kind else None
+    platforms = set(args.platform) if args.platform else None
+    if args.action == "run":
+        report = run_harvest(args.source, limit=args.limit, days=args.days, x_max_reads=args.x_max_reads,
+                             log=lambda line: print(line, file=sys.stderr))
+        print(json.dumps(report, indent=2, ensure_ascii=False))
+        return 0 if not all(s["error"] for s in report["sources"].values()) else 1
+    if args.action == "feed":
+        from pickfit.d1 import D1
+        from pickfit.watch import hourly_cap
+
+        rows = feed(D1(remote=not args.local, worker_dir=args.worker), n=args.n, hourly_cap=hourly_cap(args.worker),
+                    apply=args.apply, kinds=kinds, platforms=platforms, log=lambda line: print(line, file=sys.stderr))
+        print(json.dumps({"applied": args.apply, "rows": rows}, indent=2, ensure_ascii=False))
+        return 0
+    if args.action == "export":
+        out = args.out or harvest_db_path().parent / "harvest" / f"leads-{taipei_now().date().isoformat()}.jsonl"
+        print(f"{export(out, limit=args.n or None)} leads -> {out}")
+        return 0
+    db = LeadsDB(harvest_db_path())
+    try:
+        if args.action == "summary":
+            print(json.dumps(db.summary(), indent=2, ensure_ascii=False))
+        else:
+            for lead in db.ranked(kinds=kinds, platforms=platforms, limit=args.n):
+                print(f"{lead['priority']:6.2f}  {lead['kind_hint']:<20} {lead['url']}  "
+                      f"[{'+'.join(lead['sources'])}; signal {lead['best_signal']}]")
+    finally:
+        db.close()
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="pickfit")
     parser.add_argument("--version", action="version", version=f"pickfit {__version__}")
@@ -735,6 +801,7 @@ def main(argv: list[str] | None = None) -> int:
     _add_queue_commands(sub)
     _add_outcomes_command(sub)
     _add_publish_command(sub)
+    _add_harvest_command(sub)
 
     from pickfit.verify.cli import add_parser as add_verify_parser
     add_verify_parser(sub)

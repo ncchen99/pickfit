@@ -1,0 +1,20 @@
+# pickfit harvest feed: queue the best new leads as submit_software rows, which pickfit-watch then verifies.
+# Each queued lead costs model calls and a sandbox run, inside PICKFIT_PIPELINE_DAILY_CAP_USD. It never takes more
+# than SUBMIT_HOURLY_CAP minus 5 rows in an hour, so people's submissions still get in.
+[Unit]
+Description=pickfit harvest feed (best new leads -> D1 submissions)
+After=network-online.target pickfit-watch.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=pickfit
+Group=pickfit
+WorkingDirectory=/var/lib/pickfit/pickfit
+EnvironmentFile=/etc/pickfit/watch.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/bin/sh -c '/usr/local/bin/uv run pickfit harvest feed -n $${HARVEST_FEED_PER_HOUR:-10} --apply'
+TimeoutStartSec=20m
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true

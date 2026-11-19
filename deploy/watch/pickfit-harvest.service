@@ -1,0 +1,21 @@
+# pickfit harvest (pickfit/harvest/): read the lead sources into runs/harvest.db, no model calls, no D1 writes.
+# Started daily by pickfit-harvest.timer; Bluesky and X run only when their keys are in watch.env.
+[Unit]
+Description=pickfit harvest (leads from registries, awesome lists, GitHub, HN, Bluesky, X)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=pickfit
+Group=pickfit
+WorkingDirectory=/var/lib/pickfit/pickfit
+EnvironmentFile=/etc/pickfit/watch.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/bin/sh -c '/usr/local/bin/uv run pickfit harvest run $${HARVEST_SOURCES} > runs/harvest/last-run.json'
+ExecStartPre=/bin/mkdir -p runs/harvest
+TimeoutStartSec=3h
+Nice=10
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true
