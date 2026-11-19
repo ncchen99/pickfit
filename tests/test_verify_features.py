@@ -77,7 +77,7 @@ def graphtty(features: list[tuple[str, str]] = FEATURES) -> VerifyTask:
 
 def judge_answer() -> dict[str, Any]:
     text = json.dumps({"verdict": "working", "observed": "An arrow from a to b.", "error_text": None,
-                       "matches_expected_signal": True, "evidence_regions": []})
+                       "matches_expected_signal": True, "evidence_regions": [], "evidence": []})
     return {"id": "judge", "object": "response", "created_at": 0, "model": "muse-spark-1.3-contributor",
             "status": "completed", "output": [{"type": "message", "id": "m", "role": "assistant",
                                                "status": "completed",

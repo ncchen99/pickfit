@@ -45,7 +45,9 @@ def judge_answer(verdict: str) -> dict[str, Any]:
     text = json.dumps({"verdict": verdict, "observed": "An arrow from a to b.", "error_text": None,
                        "matches_expected_signal": verdict == "working",
                        "evidence_regions": [{"image": 1, "label": "edge", "box": {
-                           "x_min": 0, "y_min": 500, "x_max": 400, "y_max": 800}}]})
+                           "x_min": 0, "y_min": 500, "x_max": 400, "y_max": 800}}],
+                       # The same evidence when the outputs went as text alone (judge.TextJudgeOutput).
+                       "evidence": [{"check": 1, "label": "edge", "quote": "a ──▶ b"}]})
     return {"id": "judge", "object": "response", "created_at": 0, "model": "muse-spark-1.3-contributor",
             "status": "completed", "output": [{"type": "message", "id": "m", "role": "assistant",
                                                "status": "completed",
