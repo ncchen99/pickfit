@@ -1,0 +1,630 @@
+{
+  "schema_version": "software.v1",
+  "slug": "try-rs",
+  "repo_id": "gh:1117923796",
+  "name": "try-rs",
+  "summary": "A terminal tool that organizes temporary experiment projects into date-prefixed directories with a TUI to create, navigate and clean them up.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "ratatui",
+    "rust",
+    "try"
+  ],
+  "use_cases": [
+    "create a dated folder for a quick experiment",
+    "clone a git repository into a dated folder",
+    "create a git worktree from the current repository"
+  ],
+  "alternatives_to": [
+    "try"
+  ],
+  "features": [
+    "fuzzy search old experiments",
+    "preview folder contents before entering",
+    "delete old experiments with confirmation"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://try-rs.org",
+  "repo": {
+    "url": "https://github.com/tassiovirginio/try-rs",
+    "full_name": "tassiovirginio/try-rs",
+    "created_at": "2025-12-17T02:34:47Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install try-rs",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Set up shell integration so the tool can change the current directory"
+      ],
+      "check": null,
+      "first_task": "try-rs --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-try-rs-20261120-000843-c979",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p /tmp/tryrs ~/.local/bin && cd /tmp/tryrs && curl -fsSLO https://github.com/tassiovirginio/try-rs/releases/download/v1.7.14/try-rs-v1.7.14-linux-x86_64.tar.gz && curl -fsSLO https://github.com/tassiovirginio/try-rs/releases/download/v1.7.14/try-rs-v1.7.14-linux-x86_64.tar.gz.sha256 && tar xzvf try-rs-v1.7.14-linux-x86_64.tar.gz",
+          "purpose": "Download v1.7.14 linux-x86_64 release tarball + sha256 (same asset eget would fetch), verify, extract"
+        },
+        {
+          "command": "install -m 755 /tmp/tryrs/try-rs ~/.local/bin/try-rs",
+          "purpose": "Install binary into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "try-rs --version",
+        "expected_signal": "try-rs 1.7.14"
+      },
+      "first_task": "python3 /tmp/drive2.py 'n\\r' 'rust'"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install try-rs",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Set up shell integration so the tool can change the current directory"
+      ],
+      "check": null,
+      "first_task": "try-rs --version"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v1.7.14",
+    "published_at": "2026-11-10T20:30:35Z",
+    "url": "https://github.com/tassiovirginio/try-rs/releases/tag/v1.7.14"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-20T00:10:14.699760+08:00",
+    "runs": [
+      {
+        "id": "verify-try-rs-20261120-000843-c979",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:01363ad5a469",
+        "checked_at": "2026-11-20T00:10:14.699760+08:00",
+        "tool_version": "try-rs 1.7.14",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p /tmp/tryrs ~/.local/bin && cd /tmp/tryrs && curl -fsSLO https://github.com/tassiovirginio/try-rs/releases/download/v1.7.14/try-rs-v1.7.14-linux-x86_64.tar.gz && curl -fsSLO https://github.com/tassiovirginio/try-rs/releases/download/v1.7.14/try-rs-v1.7.14-linux-x86_64.tar.gz.sha256 && tar xzvf try-rs-v1.7.14-linux-x86_64.tar.gz",
+            "purpose": "Download v1.7.14 linux-x86_64 release tarball + sha256 (same asset eget would fetch), verify, extract"
+          },
+          {
+            "command": "install -m 755 /tmp/tryrs/try-rs ~/.local/bin/try-rs",
+            "purpose": "Install binary into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "try-rs --version",
+            "expected_signal": "try-rs 1.7.14",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "try-rs 1.7.14",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 /tmp/drive2.py 'n\\r' 'rust'",
+            "expected_signal": "Create new: rus",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "r r ust-test _rs_file.rs go-playg r ound 󰈙 NOTES_marker.txt Create new: r u u u u s s Create new: rus t t t",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/tries/rust-test /tmp/tries/go-playground /tmp/tries/python-ml /tmp/cfg && echo 'fn main() {}' > /tmp/tries/rust-test/main_rs_file.rs && echo hello > /tmp/tries/rust-test/NOTES_marker.txt && echo x > /tmp/tries/go-playground/main.go && echo 'tries_path = \"/tmp/tries\"' > /tmp/cfg/config.toml && cat > /tmp/drive.py <<'EOF'\nimport os, pty, sys, time, select, re, fcntl, termios, struct\nkeys = [k.encode().decode('unicode_escape').encode() for k in sys.argv[1:]]\npid, fd = pty.fork()\nif pid == 0:\n    os.environ.update(TERM='xterm-256color', TRY_PATH='/tmp/tries', TRY_CONFIG_DIR='/tmp/cfg', SHELL='/bin/bash')\n    os.execvp('try-rs', ['try-rs'])\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 40, 140, 0, 0))\ndef read(t):\n    out=b''; end=time.time()+t\n    while time.time()<end:\n        r,_,_=select.select([fd],[],[],0.1)\n        if r:\n            try: d=os.read(fd,65536)\n            except OSError: break\n            if not d: break\n            out+=d\n    return out\nread(2.0)\nlast=b''\nfor k in keys:\n    os.write(fd,k); last=read(1.0)\ntxt=re.sub(rb'\\x1b\\[[0-9;?]*[A-Za-z]|\\x1b[()][A-Z0-9]|\\x1b[=>]',b' ',last).decode('utf-8','replace')\nprint(re.sub(r' {2,}',' ',txt))\nos.kill(pid,9)\nprint('DIRS:', sorted(os.listdir('/tmp/tries')))\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp && sed -e 's/^    os.write(fd,k); last=read(1.0)/    os.write(fd,k); last+=b\"\\\\n=====KEY=====\\\\n\"+read(1.0)/' -e 's/^read(2.0)$/first=read(2.0)/' -e 's/^last=b..$/last=first/' drive.py > drive2.py && grep -n 'last\\|first' drive2.py",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 /tmp/drive2.py 'n\\r' 'rust' '\\x04' 'y'",
+            "expected_signal": "Deleted: /tmp/tries/rust-test",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "→ Create new: rust (new folder) Deleted: /tmp/tries/rust-test",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/tries/rust-test /tmp/tries/go-playground /tmp/tries/python-ml /tmp/cfg && echo 'fn main() {}' > /tmp/tries/rust-test/main_rs_file.rs && echo hello > /tmp/tries/rust-test/NOTES_marker.txt && echo x > /tmp/tries/go-playground/main.go && echo 'tries_path = \"/tmp/tries\"' > /tmp/cfg/config.toml && cat > /tmp/drive.py <<'EOF'\nimport os, pty, sys, time, select, re, fcntl, termios, struct\nkeys = [k.encode().decode('unicode_escape').encode() for k in sys.argv[1:]]\npid, fd = pty.fork()\nif pid == 0:\n    os.environ.update(TERM='xterm-256color', TRY_PATH='/tmp/tries', TRY_CONFIG_DIR='/tmp/cfg', SHELL='/bin/bash')\n    os.execvp('try-rs', ['try-rs'])\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 40, 140, 0, 0))\ndef read(t):\n    out=b''; end=time.time()+t\n    while time.time()<end:\n        r,_,_=select.select([fd],[],[],0.1)\n        if r:\n            try: d=os.read(fd,65536)\n            except OSError: break\n            if not d: break\n            out+=d\n    return out\nread(2.0)\nlast=b''\nfor k in keys:\n    os.write(fd,k); last=read(1.0)\ntxt=re.sub(rb'\\x1b\\[[0-9;?]*[A-Za-z]|\\x1b[()][A-Z0-9]|\\x1b[=>]',b' ',last).decode('utf-8','replace')\nprint(re.sub(r' {2,}',' ',txt))\nos.kill(pid,9)\nprint('DIRS:', sorted(os.listdir('/tmp/tries')))\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp && sed -e 's/^    os.write(fd,k); last=read(1.0)/    os.write(fd,k); last+=b\"\\\\n=====KEY=====\\\\n\"+read(1.0)/' -e 's/^read(2.0)$/first=read(2.0)/' -e 's/^last=b..$/last=first/' drive.py > drive2.py && grep -n 'last\\|first' drive2.py",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install try-rs / eget tassiovirginio/try-rs",
+            "actually_needed": "No Rust toolchain or eget in the box; downloaded the GitHub release tarball try-rs-v1.7.14-linux-x86_64.tar.gz directly (sha256 matched) and copied the binary to ~/.local/bin",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "On the first run, try-rs will attempt to detect your shell and ask to configure shell integration",
+            "actually_needed": "Every TUI launch without shell integration shows a '[Y/n]' prompt that has to be answered ('n') before the TUI opens; automated runs must send that answer first",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Simply type try-rs in your terminal",
+            "actually_needed": "The TUI needs a real terminal; here it ran under a Python pty driver with keys sent in, and the screen output was read with ANSI codes stripped",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The TUI filtered folders and showed 'Create new: rus' while typing, the delete confirmation removed rust-test (DIRS list confirms it), and --version printed 'try-rs 1.7.14'.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-try-rs-20261120-000843-c979/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-try-rs-20261120-000843-c979/check-1-cmd9.judged.png",
+            "runs/verify/verify-try-rs-20261120-000843-c979/check-2-cmd10.judged.png",
+            "runs/verify/verify-try-rs-20261120-000843-c979/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.257081,
+        "features": [
+          {
+            "feature": "fuzzy search old experiments",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "preview folder contents before entering",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "delete old experiments with confirmation",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:10:21+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/tassiovirginio/try-rs@03a04f4ed2fa",
+      "Cargo.lock"
+    ],
+    "packages_checked": 211,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-20T00:10:14+08:00",
+    "quality": {
+      "total": 82.1,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.7853,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 83.5,
+      "signals": {
+        "stars": 293,
+        "monthly_downloads": 157,
+        "forks": 18,
+        "dependents": null,
+        "release_downloads": 2663,
+        "hn_top_score": 0,
+        "registries_count": 2
+      },
+      "age_days": 337,
+      "packages": [
+        "crates:try-rs",
+        "homebrew:try-rs"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 13.55
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:10:14.716576+08:00",
+      "sources_sha": "47efdc25a3de78c31533994d625891f1bcacd14fcb3c30fd4c9007e47ae9c093",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "`try-rs` organizes them into date-prefixed directories, offering a robust TUI (Terminal User Interface) to create, navigate, and clean up your experiments."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "**try-rs** is a CLI tool designed to manage the chaos of temporary projects."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "brew install try-rs"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Simply type try-rs (or your alias) in your terminal."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| `TRY_PATH`          | Overrides the path where experiments are stored.           |"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "| **Multi-OS Support**     | Supports Linux, macOS and Windows.                                                     |"
+        }
+      },
+      "unquoted": [
+        "prerequisites"
+      ]
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/tassiovirginio/try-rs",
+      "fetched_at": "2026-11-20T00:08:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/tassiovirginio/try-rs/blob/main/README.md",
+      "fetched_at": "2026-11-20T00:08:27+08:00"
+    },
+    {
+      "id": "release:v1.7.14",
+      "kind": "release",
+      "url": "https://github.com/tassiovirginio/try-rs/releases/tag/v1.7.14",
+      "fetched_at": "2026-11-20T00:08:27+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "offering a robust TUI (Terminal User Interface) to create, navigate, and clean up your experiments.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:08:38+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Simply type try-rs (or your alias) in your terminal.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:08:38+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "**try-rs** is a CLI tool designed to manage the chaos of temporary projects.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:08:38+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "`try-rs` organizes them into date-prefixed directories, offering a robust TUI (Terminal User Interface) to create, navigate, and clean up your experiments.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:08:38+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "**try-rs** is a CLI tool designed to manage the chaos of temporary projects.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:08:38+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Supports Linux, macOS and Windows.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:08:38+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T00:08:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T00:08:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-20T00:08:29+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T00:08:29+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T00:08:29+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.7.14",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T00:08:27+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "`try-rs <name>`                                | Create (or jump to) a named experiment",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:08:38+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Clones a repository into a dated folder",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:08:38+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Create a git worktree from current repository (must be inside repo)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:08:38+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "This project is a Rust port and re-imagination of the excellent [try](https://github.com/tobi/try) tool by **Tobi Lütke**.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:08:38+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Instantly find old experiments with smart matching.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:08:38+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Inspect files inside a folder before entering it.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:08:38+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Delete old experiments via UI with confirmation (`Ctrl+D`).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:08:38+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install try-rs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:08:38+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install try-rs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:08:38+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install try-rs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T00:08:38+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-20T00:08:27+08:00",
+  "updated_at": "2026-11-20T00:10:21+08:00"
+}
