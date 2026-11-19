@@ -3,7 +3,9 @@
 1. The agent installs and smoke-tests the tool in one box (network on).
 2. The command log decides the claimed level (verdict.py).
 3. If that level passed, a fresh box replays the steps online and the smoke
-   tests offline, then reruns failed feature checks once (replay.py).
+   tests offline, then reruns failed feature checks once (replay.py). A
+   passed replay's box gives the SBOM of what it installed before it closes
+   (sbom.py, evidence only).
 4. If the replay passed, the screen judge reads its outputs (judge.py); a GUI
    launch's real screenshot goes to the GUI judge, and the worse verdict wins.
    A GUI operation (gui_operate.py) runs its operator on Muse Spark Open in the
@@ -31,6 +33,7 @@ from pathlib import Path
 from typing import Any
 
 from pickfit.meta import resolve_model
+from pickfit.sbom import collect as collect_sbom
 from pickfit.schema import VerificationRun, is_passed
 from pickfit.verify.agent import DEFAULT_MODE, AgentLimits, HistoryMode, VerifyAgent, VerifyReport, new_run_id
 from pickfit.verify.box import Box, BoxError
@@ -237,6 +240,9 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
         try:
             phases["replay_box_start"] = _start(replay_box)
             replay = Replayer(replay_box, log=log, evidence_dir=evidence_dir, operator=operator).run(plan, task)
+            if replay.passed:  # what the person gets, read before the box is gone (pickfit/sbom.py; never raises)
+                collect_sbom(replay_box, evidence_dir, run_id=run_id, tool_version=(report.finish or {}).get(
+                    "tool_version"), log=log)
         except BoxError as err:
             replay = ReplayResult(passed=False, level=None, offline=False, error=f"box error: {err}")
             log(f"replay box failed: {err}")
