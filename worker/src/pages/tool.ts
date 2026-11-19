@@ -6,7 +6,7 @@
  * here calls a model. The plain feature titles, steps and open hint come from the record's usage_guide,
  * which names the model that wrote them.
  */
-import { bestGuide, isVerified, isWebApp, OSES, securityOf, verifiedOn, webCheck, type Catalog, type Entry, type InstallGuide, type OS, type RunVideo, type SecurityFinding } from '../catalog.ts';
+import { bestGuide, isVerified, isWebApp, OSES, securityOf, verifiedOn, webCheck, type Catalog, type Entry, type InstallGuide, type OS, type RunVideo, type SecurityCheck, type SecurityFinding } from '../catalog.ts';
 import { featuresOut, type FeaturesOut, type NotCheckedReason } from '../features.ts';
 import { advisoriesOf } from '../security.ts';
 import { L } from '../i18n.ts';
@@ -193,12 +193,70 @@ const securityReason = (reason: string | undefined): string => {
   }
 };
 
-/** Every tool: known high or critical vulnerabilities (OSV.dev) in what a fresh install brings, as a shield. A vulnerable
- * one carries the count and jumps to the warning before the install steps, where the list is; one pickfit could not
- * check says so (a grey, dashed shield), never clean. */
+/** How pickfit knows a finding's code is not used, as the end of a sentence (sec.v2's reachability methods). */
+const unusedBecause = (method: string | null): string => {
+  switch (method) {
+    case 'entry_point_grep':
+      return L('it never loads that part of the package', '程式沒有載入套件的這個部分');
+    case 'option_grep':
+      return L('it never turns on the option the hole needs', '程式沒有開啟漏洞需要的選項');
+    case 'symbol_grep':
+      return L('it never calls the affected code', '程式沒有呼叫受影響的程式碼');
+    case 'import_grep':
+      return L('it never imports the affected package', '程式沒有匯入受影響的套件');
+    case 'govulncheck_binary':
+    case 'govulncheck_source':
+      return L('govulncheck found the affected code is never called', 'govulncheck 確認受影響的程式碼沒被呼叫');
+    default:
+      return L('pickfit found it is not used', 'pickfit 確認沒有用到');
+  }
+};
+
+/** A finding's preconditions (pickfit/security.py's codes) as what follows "only when"; '' when it names none. */
+export function whenItMatters(codes: string[] = []): string {
+  const words = codes
+    .map((c) => {
+      const value = esc(c.slice(c.indexOf(':') + 1));
+      if (c.startsWith('option:')) return L(`${value} is turned on`, `開啟了 ${value}`);
+      if (c.startsWith('symbol:')) return L(`its code calls ${value}`, `程式呼叫了 ${value}`);
+      if (c.startsWith('entry:')) return L(`it uses ${value}`, `用到 ${value}`);
+      switch (c) {
+        case 'local_access':
+          return L('someone already has access to the machine', '對方已經能操作這台電腦');
+        case 'adjacent_network':
+          return L('the attacker is on the same network', '攻擊者和你在同一個網路');
+        case 'physical_access':
+          return L('someone has the device in hand', '對方拿得到這台裝置');
+        case 'user_interaction':
+          return L('you open a crafted file or link', '你打開特製的檔案或連結');
+        case 'high_privileges':
+          return L('the attacker already has high privileges', '攻擊者已經拿到高權限');
+        case 'high_complexity':
+          return L('specific conditions line up', '特定條件同時成立');
+        case 'denial_of_service':
+          return L('it gets crafted input (it can crash or hang, nothing leaks)', '收到特製的輸入（只會讓它當掉或卡住，不會外洩資料）');
+        case 'server_side':
+          return L('it runs as a server', '它以伺服器模式執行');
+        default:
+          return '';
+      }
+    })
+    .filter(Boolean);
+  return [...new Set(words)].slice(0, 3).join(L(', or ', '或'));
+}
+
+/** Every tool: known vulnerabilities (OSV.dev) in what it brings, as a shield. A check from before levels (sec.v1) reads
+ * by its status: a vulnerable one carries the count and jumps to the warning before the install steps, where the list
+ * is; one pickfit could not check says so (a grey, dashed shield), never clean. A sec.v2 check reads by its level:
+ * blocked and exposed are red, conditional amber (both jump to the list); present_unreachable and not_shipped are green
+ * and say what was found where it does not run; partial is grey like unchecked, never clean. */
 export function securityMark(entry: Entry): string {
   const s = securityOf(entry);
   const date = s.checked_at ? day(s.checked_at) : '';
+  if (s.level) {
+    const marked = securityLevelMark(entry, s, date);
+    if (marked) return marked;
+  }
   if (s.status === 'clean') {
     const n = s.packages_checked ?? 0;
     return checkMark(
@@ -233,6 +291,67 @@ export function securityMark(entry: Entry): string {
   );
 }
 
+/** The shield of a sec.v2 check by its level; '' for clean and unchecked, which read as sec.v1's do. */
+function securityLevelMark(entry: Entry, s: SecurityCheck, date: string): string {
+  const web = isWebApp(entry);
+  const where = web ? L('the packages the site is built from', '這個網站用到的套件') : L('packages it installs', '它安裝的套件');
+  const n = s.packages_checked ?? 0;
+  const counts = s.counts ?? {};
+  if (s.level === 'blocked' || s.level === 'exposed' || s.level === 'conditional') {
+    const vulns = advisoriesOf(s, Math.max(s.count ?? 0, s.findings?.length ?? 0, 1));
+    const plural = vulns === 1 ? 'vulnerability' : 'vulnerabilities';
+    const say =
+      s.level === 'blocked'
+        ? L(
+            `${vulns} known ${plural} in ${where}, with a malicious package or a hole attackers already exploit (OSV.dev, CISA${date ? `, ${date}` : ''}). See the list`,
+            `${where}有 ${vulns} 個已知漏洞，其中有惡意套件或已遭實際利用的漏洞（OSV.dev、CISA${date ? `，${date}` : ''}）。看清單`,
+          )
+        : s.level === 'exposed'
+          ? L(
+              `${vulns} known high or critical ${plural} in ${where}, reached in normal use (OSV.dev${date ? `, ${date}` : ''}). See the list`,
+              `${where}有 ${vulns} 個已知的高風險或嚴重漏洞，一般使用就會碰到（OSV.dev${date ? `，${date}` : ''}）。看清單`,
+            )
+          : L(
+              `${vulns} known high or critical ${plural} in ${where} that matter only in some uses (OSV.dev${date ? `, ${date}` : ''}). See when`,
+              `${where}有 ${vulns} 個已知的高風險或嚴重漏洞，只在某些用法下才會碰到（OSV.dev${date ? `，${date}` : ''}）。看是哪些情況`,
+            );
+    return checkMark(s.level === 'conditional' ? 'caution' : 'fail', 'shield-alert', SECURITY(), say, { count: vulns, href: '#security' });
+  }
+  const clean = L(
+    `No known high or critical vulnerabilities in what it runs (OSV.dev${date ? `, checked ${date}` : ''}, ${n} ${n === 1 ? 'package' : 'packages'})`,
+    `執行到的部分沒有已知的高風險或嚴重漏洞（OSV.dev${date ? `，${date} 檢查` : ''}，共 ${n} 個套件）`,
+  );
+  if (s.level === 'present_unreachable') {
+    const unused = s.unreachable ?? [];
+    const m = Math.max(counts.present_unreachable ?? 0, unused.length);
+    const say = `${clean}${L(`. ${m} more in code it installs but does not use: open to see`, `。另有 ${m} 個在裝了但沒用到的程式碼裡，點開看`)}`;
+    const body =
+      `<ul class="vuln-list small">${unused
+        .map((f) => {
+          const cite = f.evidence.find((e) => /^\S+:\d+:/.test(e));
+          return `<li><code>${esc(f.package)} ${esc(f.version)}</code> — ${advisoryLink(f)}${L(`: ${unusedBecause(f.method)}`, `：${unusedBecause(f.method)}`)}${cite ? ` <code>${esc(cite)}</code>` : ''}</li>`;
+        })
+        .join('')}</ul>` + (m > unused.length ? `<p class="quiet">${L(`${m - unused.length} more not listed here.`, `另有 ${m - unused.length} 筆未列出。`)}</p>` : '');
+    return checkMark('pass', 'shield-check', SECURITY(), say, { pop: 'pop-security' }) + popover('pop-security', L('Found, but not in code it runs', '有找到，但不在執行到的程式碼裡'), body);
+  }
+  if (s.level === 'not_shipped') {
+    const m = counts.not_shipped ?? 0;
+    return checkMark('pass', 'shield-check', SECURITY(), m ? `${clean}${L(`. ${m} more only in development or build tools`, `。另有 ${m} 個只在開發或建置工具裡`)}` : clean);
+  }
+  if (s.level === 'partial') {
+    const why = securityReason(s.reason);
+    return checkMark(
+      'open',
+      'shield',
+      SECURITY(),
+      why
+        ? L(`Only partly checked for known vulnerabilities: ${why}. None found in the part pickfit could read`, `已知漏洞只檢查了一部分：${why}。讀得到的部分沒有發現`)
+        : L('Only partly checked for known vulnerabilities. None found in the part pickfit could read', '已知漏洞只檢查了一部分，讀得到的部分沒有發現'),
+    );
+  }
+  return '';
+}
+
 /** At a glance's checks: the visual check (desktop and web apps) and known vulnerabilities, one mark each. */
 const checkMarks = (entry: Entry) =>
   `<ul class="check-marks" aria-label="${L('Checks', '檢查')}">${[visualMark(entry), securityMark(entry)]
@@ -240,13 +359,33 @@ const checkMarks = (entry: Entry) =>
     .map((m) => `<li>${m}</li>`)
     .join('')}</ul>`;
 
-const severityOf = (f: SecurityFinding) => (f.malicious ? L('malicious package', '惡意套件') : f.severity === 'CRITICAL' ? L('critical', '嚴重') : L('high', '高風險'));
+const severityOf = (f: SecurityFinding) =>
+  f.malicious
+    ? L('malicious package', '惡意套件')
+    : f.severity === 'CRITICAL'
+      ? L('critical', '嚴重')
+      : f.severity === 'HIGH'
+        ? L('high', '高風險')
+        : f.severity === 'MODERATE'
+          ? L('moderate', '中風險')
+          : f.severity === 'LOW'
+            ? L('low', '低風險')
+            : L('unrated', '未評等');
 const fixOf = (f: SecurityFinding) => (f.malicious ? '' : f.fixed_in ? L(`, fixed in ${esc(f.fixed_in)}`, `，${esc(f.fixed_in)} 已修正`) : L(', no fix yet', '，尚無修正版本'));
-const advisoryLink = (f: SecurityFinding) => link(`https://osv.dev/vulnerability/${encodeURIComponent(f.advisory)}`, esc(f.advisory));
+const advisoryLink = (f: Pick<SecurityFinding, 'advisory'>) => link(`https://osv.dev/vulnerability/${encodeURIComponent(f.advisory)}`, esc(f.advisory));
+/** sec.v2, a finding that matters only in some uses: when, in one line (nothing when the check could not tell). */
+const onlyWhen = (s: SecurityCheck, f: SecurityFinding) => {
+  if (s.level !== 'conditional' || f.level !== 'conditional') return '';
+  const when = whenItMatters(f.preconditions);
+  return when
+    ? ` <span class="quiet">${L(`Only when ${when}.`, `只在${when}時才會碰到。`)}</span>`
+    : ` <span class="quiet">${L('pickfit could not tell when it applies.', 'pickfit 判斷不出在什麼情況下會碰到。')}</span>`;
+};
 
 /** Before the first install step, or beside the site's address: a known vulnerability, so a person reading the page
  * weighs it before installing, as an agent is told to through the install guide's warning. The worst two packages, then
- * the rest the check kept in a fold. Nothing for clean or unchecked. */
+ * the rest the check kept in a fold. Nothing for clean or unchecked. A sec.v2 check that matters only in some uses
+ * (conditional) is amber and says when for each; blocked says not to install it. */
 export function securityNotice(entry: Entry): string {
   const s = securityOf(entry);
   if (s.status !== 'vulnerable') return '';
@@ -257,7 +396,7 @@ export function securityNotice(entry: Entry): string {
   // The worst of the first two packages (findings come worst first), so two advisories on one package do not hide a second.
   const worst = all.filter((f, i) => all.findIndex((g) => g.package === f.package) === i).slice(0, 2);
   const items = worst
-    .map((f) => `<li><code>${esc(f.package)} ${esc(f.version)}</code>${f.summary ? ` ${esc(f.summary)}` : ''} ${L(`(${advisoryLink(f)}, ${severityOf(f)}${fixOf(f)})`, `（${advisoryLink(f)}，${severityOf(f)}${fixOf(f)}）`)}</li>`)
+    .map((f) => `<li><code>${esc(f.package)} ${esc(f.version)}</code>${f.summary ? ` ${esc(f.summary)}` : ''} ${L(`(${advisoryLink(f)}, ${severityOf(f)}${fixOf(f)})`, `（${advisoryLink(f)}，${severityOf(f)}${fixOf(f)}）`)}${onlyWhen(s, f)}</li>`)
     .join('');
   // The rest the check kept (at most 10 in all), and how many more it counted: the count above stays the full one.
   const rest = count - all.length;
@@ -267,16 +406,36 @@ export function securityNotice(entry: Entry): string {
   const others = all.filter((f) => !worst.includes(f));
   const list = others.length
     ? `<details class="vuln-list small"><summary>${L(`See ${others.length} more`, `再看 ${others.length} 個`)}</summary><ul>` +
-      others.map((f) => `<li><code>${esc(f.package)} ${esc(f.version)}</code> — ${advisoryLink(f)}${L(` (${severityOf(f)})`, `（${severityOf(f)}）`)}${fixOf(f)}</li>`).join('') +
+      others.map((f) => `<li><code>${esc(f.package)} ${esc(f.version)}</code> — ${advisoryLink(f)}${L(` (${severityOf(f)})`, `（${severityOf(f)}）`)}${fixOf(f)}${onlyWhen(s, f)}</li>`).join('') +
       `</ul>${more('quiet')}</details>`
     : more('small quiet');
   const date = s.checked_at ? day(s.checked_at) : '';
+  const conditional = s.level === 'conditional';
+  const heading =
+    s.level === 'blocked'
+      ? web
+        ? L('Do not use it: a malicious package or an exploited hole', '不要使用：有惡意套件或已遭利用的漏洞')
+        : L('Do not install it: a malicious package or an exploited hole', '不要安裝：有惡意套件或已遭利用的漏洞')
+      : conditional
+        ? web
+          ? L('Before you use it: known vulnerabilities in some uses', '使用前先知道：某些用法下有已知漏洞')
+          : L('Before you install: known vulnerabilities in some uses', '安裝前先知道：某些用法下有已知漏洞')
+        : web
+          ? L('Before you use it: known vulnerabilities', '使用前先知道：有已知漏洞')
+          : L('Before you install: known vulnerabilities', '安裝前先知道：有已知漏洞');
+  const reached = s.level === 'exposed' ? L(' Normal use reaches them.', '一般使用就會碰到。') : '';
+  const lead = conditional
+    ? L(
+        ` Each matters only in some uses, which pickfit could not rule out. See when below before you ${web ? 'use it' : 'install it'}.`,
+        `這些漏洞只在某些用法下才會碰到，pickfit 無法排除。${web ? '使用' : '安裝'}前先看看下面列的情況。`,
+      )
+    : L(` Weigh this before you ${web ? 'use it' : 'install it'}.`, `${web ? '使用' : '安裝'}前請先考慮。`);
   return (
-    `<div class="notice error security-notice" role="note" id="security">${fitz('sorry', 64)}<div>` +
-    `<h3>${web ? L('Before you use it: known vulnerabilities', '使用前先知道：有已知漏洞') : L('Before you install: known vulnerabilities', '安裝前先知道：有已知漏洞')}</h3>` +
+    `<div class="notice ${conditional ? 'busy' : 'error'} security-notice" role="note" id="security">${fitz(conditional ? 'thinking' : 'sorry', 64)}<div>` +
+    `<h3>${heading}</h3>` +
     `<p>${L(
-      `pickfit found ${vulns} known high or critical ${vulns === 1 ? 'vulnerability' : 'vulnerabilities'}${count > vulns ? ` (${count} findings, one per affected package version)` : ''} in ${web ? 'the packages this site is built with' : 'the packages a fresh install brings'}${date ? ` (OSV.dev, ${esc(date)})` : ''}. Weigh this before you ${web ? 'use it' : 'install it'}.`,
-      `pickfit 在${web ? '這個網站用到的套件' : '安裝時會一併裝上的套件'}裡找到 ${vulns} 個已知的高風險或嚴重漏洞${count > vulns ? `（共 ${count} 筆，每個受影響的套件版本一筆）` : ''}${date ? `（OSV.dev，${esc(date)}）` : ''}，${web ? '使用' : '安裝'}前請先考慮。`,
+      `pickfit found ${vulns} known high or critical ${vulns === 1 ? 'vulnerability' : 'vulnerabilities'}${count > vulns ? ` (${count} findings, one per affected package version)` : ''} in ${web ? 'the packages this site is built with' : 'the packages a fresh install brings'}${date ? ` (OSV.dev, ${esc(date)})` : ''}.${reached}${lead}`,
+      `pickfit 在${web ? '這個網站用到的套件' : '安裝時會一併裝上的套件'}裡找到 ${vulns} 個已知的高風險或嚴重漏洞${count > vulns ? `（共 ${count} 筆，每個受影響的套件版本一筆）` : ''}${date ? `（OSV.dev，${esc(date)}）` : ''}，${reached ? reached : ''}${lead}`,
     )}</p>` +
     (items ? `<ul class="small">${items}</ul>` : '') +
     list +
@@ -747,7 +906,11 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string): strin
           })
         : badge('quiet', L('Not verified yet', '尚未驗證'), { icon: 'circle-dashed' }),
     securityOf(entry).status === 'vulnerable'
-      ? `<a class="badge-link" href="#security">${badge('fail', L('Known vulnerabilities', '有已知漏洞'), { icon: 'triangle-alert' })}</a>`
+      ? `<a class="badge-link" href="#security">${
+          securityOf(entry).level === 'conditional'
+            ? badge('caution', L('Known vulnerabilities in some uses', '某些用法下有已知漏洞'), { icon: 'triangle-alert' })
+            : badge('fail', L('Known vulnerabilities', '有已知漏洞'), { icon: 'triangle-alert' })
+        }</a>`
       : '',
     entry.scores?.treasure ? badge('gem', L('Hidden gem', '寶藏'), { icon: 'gem', pop: 'pop-gem' }) : '',
   ].join('');

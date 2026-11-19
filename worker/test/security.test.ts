@@ -175,13 +175,14 @@ test('get_install_guide: the security field, and a warning to tell the user befo
   const out = installGuide(loadCatalog(indexWith(VULNERABLE)), { slug: SLUG, os: 'macos', arch: 'arm64' });
   assert.deepEqual(out.security, {
     status: 'vulnerable',
+    level: null,
     reason: null,
     checked_at: '2026-11-03',
     count: 7,
     advisories: 7,
     findings: [
-      { package: 'npm:undici', version: '8.9.0', advisory: 'GHSA-abcd-1234-wxyz', severity: 'HIGH', fixed_in: '8.12.2', malicious: false },
-      { package: 'crates.io:time', version: '0.1.0', advisory: 'RUSTSEC-2020-0071', severity: 'CRITICAL', fixed_in: null, malicious: false },
+      { package: 'npm:undici', version: '8.9.0', advisory: 'GHSA-abcd-1234-wxyz', severity: 'HIGH', fixed_in: '8.12.2', malicious: false, level: null, preconditions: [] },
+      { package: 'crates.io:time', version: '0.1.0', advisory: 'RUSTSEC-2020-0071', severity: 'CRITICAL', fixed_in: null, malicious: false, level: null, preconditions: [] },
     ],
   });
   assert.deepEqual(out.warnings, [
@@ -207,11 +208,11 @@ test('get_install_guide: the security field, and a warning to tell the user befo
   assert.equal(installGuide(loadCatalog(indexWith(many)), { slug: SLUG, os: 'macos' }).security.findings.length, 5);
 
   const clean = installGuide(loadCatalog(indexWith(CLEAN)), { slug: SLUG, os: 'macos', arch: 'arm64' });
-  assert.deepEqual(clean.security, { status: 'clean', reason: null, checked_at: '2026-11-03', count: 0, advisories: 0, findings: [] });
+  assert.deepEqual(clean.security, { status: 'clean', level: null, reason: null, checked_at: '2026-11-03', count: 0, advisories: 0, findings: [] });
   assert.deepEqual(clean.warnings, []);
 
   const unchecked = installGuide(loadCatalog(indexWith(undefined)), { slug: SLUG, os: 'macos', arch: 'arm64' });
-  assert.deepEqual(unchecked.security, { status: 'unchecked', reason: 'not_run', checked_at: null, count: 0, advisories: 0, findings: [] });
+  assert.deepEqual(unchecked.security, { status: 'unchecked', level: null, reason: 'not_run', checked_at: null, count: 0, advisories: 0, findings: [] });
   assert.deepEqual(unchecked.warnings, []);
 
   // A web app's guide carries it too.
@@ -237,10 +238,12 @@ test('find_software: each pick carries its security check', async () => {
     severity: 'HIGH',
     fixed_in: '8.12.2',
     malicious: false,
+    level: null,
+    preconditions: [],
   });
   assert.ok(!('summary' in runner.security.findings[0]));
   const other = out.picks.find((p) => p.slug !== SLUG)!;
-  assert.deepEqual(other.security, { status: 'unchecked', reason: 'not_run', checked_at: null, count: 0, advisories: 0, findings: [] });
+  assert.deepEqual(other.security, { status: 'unchecked', level: null, reason: 'not_run', checked_at: null, count: 0, advisories: 0, findings: [] });
 });
 
 test('results: a vulnerable pick is flagged before its commands, with the count, the source and the list; others are not', async () => {
@@ -354,4 +357,136 @@ test('tool page: one advisory on several packages counts once, and the notice sa
   assert.match(noticeFor(shared, 'zh-TW'), /找到 5 個已知的高風險或嚴重漏洞（共 7 筆，每個受影響的套件版本一筆）/);
   // A check from before the count of distinct advisories reads as its findings.
   assert.match(noticeFor(VULNERABLE), /pickfit found 7 known high or critical vulnerabilities in the packages/);
+});
+
+// ---------------------------------------------------------------- sec.v2: a level per check (pickfit/security.py)
+
+/** An OpenPets-like check: two findings that matter only in some uses, the MCP SDK's HTTP deps present but unused,
+ * build and peer packages counted only. */
+const CONDITIONAL: SecurityCheck = {
+  status: 'vulnerable',
+  level: 'conditional',
+  policy_version: 'sec.v2',
+  checked_at: '2026-11-19',
+  packages_checked: 755,
+  count: 2,
+  advisories: 2,
+  counts: { conditional: 2, present_unreachable: 3, not_shipped: 9 },
+  target: 'repo_lockfile',
+  findings: [
+    { package: 'npm:sharp', version: '0.34.5', advisory: 'GHSA-f88m-g3jw-g9cj', severity: 'HIGH', fixed_in: '0.35.0', summary: 'libvips holes.', malicious: false, level: 'conditional', scope: 'runtime', kev: false, preconditions: ['user_interaction'] },
+    { package: 'npm:undici', version: '7.29.0', advisory: 'GHSA-2m5v-pch6-74hx', severity: 'HIGH', fixed_in: '7.30.1', summary: 'TLS bypass.', malicious: false, level: 'conditional', scope: 'runtime', kev: false, preconditions: [] },
+  ],
+  unreachable: [
+    { package: 'npm:proxy-addr', version: '2.0.7', advisory: 'GHSA-jqcg-44mw-7w3h', severity: 'CRITICAL', method: 'entry_point_grep', evidence: ["no source file imports the MCP SDK's HTTP transports"] },
+  ],
+};
+const UNREACHABLE: SecurityCheck = {
+  status: 'clean',
+  level: 'present_unreachable',
+  policy_version: 'sec.v2',
+  checked_at: '2026-11-19',
+  packages_checked: 40,
+  counts: { present_unreachable: 1, not_shipped: 2 },
+  target: 'repo_lockfile',
+  unreachable: [
+    { package: 'crates:pulldown-cmark', version: '0.13.0', advisory: 'RUSTSEC-2026-0433', severity: 'HIGH', method: 'option_grep', evidence: ['no source file uses ENABLE_WIKILINKS'] },
+  ],
+};
+
+test('sec.v2 tool page, conditional: an amber shield and notice that say, for each, when it applies', () => {
+  const mark = markFor(CONDITIONAL);
+  assert.match(mark, /^<a class="check-mark mark-caution" href="#security" data-tip="2 known high or critical vulnerabilities in packages it installs that matter only in some uses \(OSV\.dev, 19 Nov 2026\)\. See when"/);
+  assert.match(markFor(CONDITIONAL, 'zh-TW'), /data-tip="它安裝的套件有 2 個已知的高風險或嚴重漏洞，只在某些用法下才會碰到（OSV\.dev，2026年11月19日）。看是哪些情況"/);
+  const notice = noticeFor(CONDITIONAL);
+  assert.match(notice, /^<div class="notice busy security-notice" role="note" id="security">/);
+  assert.match(notice, /<h3>Before you install: known vulnerabilities in some uses<\/h3>/);
+  assert.match(notice, /Each matters only in some uses, which pickfit could not rule out\./);
+  assert.match(notice, /GHSA-f88m-g3jw-g9cj<\/a>, high, fixed in 0\.35\.0\) <span class="quiet">Only when you open a crafted file or link\.<\/span><\/li>/);
+  assert.match(notice, /GHSA-2m5v-pch6-74hx<\/a>, high, fixed in 7\.30\.1\) <span class="quiet">pickfit could not tell when it applies\.<\/span>/);
+  const zh = noticeFor(CONDITIONAL, 'zh-TW');
+  assert.match(zh, /<h3>安裝前先知道：某些用法下有已知漏洞<\/h3>/);
+  assert.match(zh, /這些漏洞只在某些用法下才會碰到，pickfit 無法排除。安裝前先看看下面列的情況。/);
+  assert.match(zh, /<span class="quiet">只在你打開特製的檔案或連結時才會碰到。<\/span>/);
+});
+
+test('sec.v2 tool page: exposed is red and says normal use reaches it; blocked says not to install it', () => {
+  const exposed = { ...CONDITIONAL, level: 'exposed' as const, findings: CONDITIONAL.findings!.map((f) => ({ ...f, level: 'exposed' as const })) };
+  assert.match(markFor(exposed), /mark-fail" href="#security" data-tip="2 known high or critical vulnerabilities in packages it installs, reached in normal use/);
+  assert.match(noticeFor(exposed), /^<div class="notice error security-notice"[^]*\. Normal use reaches them\. Weigh this before you install it\./);
+  assert.doesNotMatch(noticeFor(exposed), /Only when/);
+  const blocked = { ...exposed, level: 'blocked' as const };
+  assert.match(noticeFor(blocked), /<h3>Do not install it: a malicious package or an exploited hole<\/h3>/);
+  assert.match(noticeFor(blocked, 'zh-TW'), /<h3>不要安裝：有惡意套件或已遭利用的漏洞<\/h3>/);
+});
+
+test('sec.v2 tool page: present_unreachable and not_shipped are green, partial is grey, none has a notice', () => {
+  const unused = markFor(UNREACHABLE);
+  assert.match(unused, /^<button type="button" class="check-mark mark-pass" popovertarget="pop-security" data-tip="No known high or critical vulnerabilities in what it runs \(OSV\.dev, checked 19 Nov 2026, 40 packages\)\. 1 more in code it installs but does not use: open to see"/);
+  assert.match(unused, /<code>crates:pulldown-cmark 0\.13\.0<\/code> — <a [^>]*>RUSTSEC-2026-0433<\/a>: it never turns on the option the hole needs<\/li>/);
+  assert.match(markFor(UNREACHABLE, 'zh-TW'), /程式沒有開啟漏洞需要的選項/);
+  assert.equal(noticeFor(UNREACHABLE), '');
+  const notShipped: SecurityCheck = { ...UNREACHABLE, level: 'not_shipped', counts: { not_shipped: 9 }, unreachable: undefined };
+  assert.match(markFor(notShipped), /mark-pass" tabindex="0" data-tip="No known high or critical vulnerabilities in what it runs \(OSV\.dev, checked 19 Nov 2026, 40 packages\)\. 9 more only in development or build tools"/);
+  assert.match(markFor(notShipped, 'zh-TW'), /另有 9 個只在開發或建置工具裡/);
+  const partial: SecurityCheck = { status: 'unchecked', level: 'partial', reason: 'no_lockfile', checked_at: '2026-11-19', packages_checked: 12 };
+  const grey = markFor(partial);
+  assert.match(grey, /^<span class="check-mark mark-open" tabindex="0" data-tip="Only partly checked for known vulnerabilities: there is no lockfile to read\. None found in the part pickfit could read"/);
+  assert.doesNotMatch(grey, /mark-pass|No known/);
+  assert.equal(noticeFor(partial), '');
+});
+
+test('sec.v2 head badge: conditional is amber, the rest that warn stay red', async () => {
+  const html = await (await site(indexWith(CONDITIONAL))(`/tool/${SLUG}`)).text();
+  const head = html.slice(0, html.indexOf('class="wrap layout"'));
+  assert.match(head, /<a class="badge-link" href="#security"><span class="badge badge-caution"><svg[^>]*>.*?<\/svg>Known vulnerabilities in some uses<\/span><\/a>/);
+  const clean = await (await site(indexWith(UNREACHABLE))(`/tool/${SLUG}`)).text();
+  assert.doesNotMatch(clean, /class="badge-link" href="#security"|class="notice \w+ security-notice"/);
+});
+
+test('sec.v2 get_install_guide: the level in the security field, and the warning by level', () => {
+  const guide = (security: SecurityCheck) => installGuide(loadCatalog(indexWith(security)), { slug: SLUG, os: 'macos', arch: 'arm64' });
+  const conditional = guide(CONDITIONAL);
+  assert.equal(conditional.security.level, 'conditional');
+  assert.deepEqual(conditional.security.findings[0].preconditions, ['user_interaction']);
+  assert.deepEqual(conditional.warnings, [
+    'Known vulnerabilities (2 high or critical) that pickfit could not rule out in normal use: ' +
+      'npm:sharp 0.34.5 GHSA-f88m-g3jw-g9cj (HIGH; only when the user opens crafted input), fixed in 0.35.0; ' +
+      'npm:undici 7.29.0 GHSA-2m5v-pch6-74hx (HIGH), fixed in 7.30.1. Mention it to the user in one line before installing.',
+  ]);
+  const exposed = guide({ ...CONDITIONAL, level: 'exposed' });
+  assert.match(exposed.warnings[0], /^Known vulnerabilities \(2 high or critical\) reached in normal use: npm:sharp .*Tell the user before installing\.$/);
+  const kev = { ...CONDITIONAL.findings![1], level: 'blocked' as const, kev: true };
+  const blocked = guide({ ...CONDITIONAL, level: 'blocked', count: 1, advisories: 1, findings: [kev] });
+  assert.deepEqual(blocked.warnings, ['Known exploited vulnerability (CISA KEV): npm:undici 7.29.0 GHSA-2m5v-pch6-74hx, fixed in 7.30.1. Do not recommend it; tell the user.']);
+  const quiet: SecurityCheck[] = [UNREACHABLE, { ...UNREACHABLE, level: 'not_shipped' }, { status: 'unchecked', level: 'partial', reason: 'no_lockfile' }];
+  for (const security of quiet) {
+    const out = guide(security);
+    assert.deepEqual(out.warnings, []);
+    assert.equal(out.security.level, security.level);
+    assert.deepEqual(out.security.findings, []);
+  }
+});
+
+test('over MCP, a sec.v2 conditional tool passes the output schemas', async () => {
+  const { db } = makeD1();
+  const worker = makeWorker(indexWith(CONDITIONAL), {
+    fetch: (async () => Response.json({}, { status: 500 })) as unknown as typeof fetch,
+  });
+  const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
+  const res = await worker.fetch(
+    new Request('http://127.0.0.1:8787/mcp', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', accept: 'application/json, text/event-stream', 'mcp-protocol-version': '2025-11-25' },
+      body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'tools/call', params: { name: 'get_install_guide', arguments: { slug: SLUG, os: 'macos' } } }),
+    }),
+    { DB: db, MATCH_MODE: 'off' } as Env,
+    ctx,
+  );
+  const text = await res.text();
+  const data = res.headers.get('content-type')?.includes('text/event-stream') ? text.split('\n').find((l) => l.startsWith('data: '))!.slice(6) : text;
+  const guide = JSON.parse(data).result;
+  assert.ok(!guide.isError, JSON.stringify(guide).slice(0, 300));
+  assert.equal(guide.structuredContent.security.level, 'conditional');
+  assert.match(guide.structuredContent.warnings[0], /only when the user opens crafted input/);
 });

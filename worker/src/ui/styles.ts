@@ -334,6 +334,7 @@ font:600 .85rem/1.6 var(--sans);text-decoration:underline;text-decoration-color:
 .notice.error h2{color:var(--fail)}
 .notice h3{font-size:var(--t-head);margin-bottom:4px}
 .notice.error h3{color:var(--fail)}
+.notice.busy h3{color:var(--caution)}
 .security-notice{margin:0 0 20px}
 .security-notice ul{margin:8px 0 0;padding-left:1.2em}
 .security-notice li+li{margin-top:4px}
