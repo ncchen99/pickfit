@@ -501,6 +501,7 @@ def test_capabilities_only_sets_capabilities_and_cites_the_help(db: PipelineDB, 
     labels = [c["label"] for c in after["capabilities"]]
     assert labels == ["re-indent JSON Lines", "write results as CSV or TSV", "query JSON Lines from the terminal"]
     assert after["capabilities"][1]["items"] == ["csv", "tsv"]
+    assert [c.get("area") for c in after["capabilities"]] == ["subcommands", "formats", None]  # Capability.area
     evidence = {e["field"]: e["source_id"] for e in after["evidence"] if e["field"].startswith("/capabilities/")}
     assert evidence == {"/capabilities/0/label": "help:verify-tinyq-1:1", "/capabilities/1/label": "help:verify-tinyq-1:1",
                         "/capabilities/2/label": "readme"}

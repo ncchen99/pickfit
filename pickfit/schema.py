@@ -215,6 +215,7 @@ FEATURE_MAX = 80
 CAPABILITIES_MAX = 40
 CAPABILITY_ITEMS_MAX = 60
 CAPABILITY_ITEM_MAX = 40
+CAPABILITY_AREA_MAX = 30
 # An MCP client config snippet (a `claude mcp add` line or an mcpServers JSON entry).
 MCP_SNIPPET_MAX = 1500
 MCP_TOOLS_MAX = 200
@@ -576,7 +577,8 @@ class ExtractedMcp(_Model):
 _NO_MCP = {"transports": {"value": None, "quote": None}, "launch_command": {"value": None, "quote": None},
            "client_configs": [], "env_vars": [], "tools": []}
 FEATURES_DESCRIPTION = (
-    "The 2-4 main features the sources advertise, most prominent first: what a user can do with it, "
+    "The 1-6 main features the sources advertise, as many as they put forward (one for a tool that does one "
+    "thing), most prominent first: what a user can do with it, "
     "each a short English label (at most 8 words, e.g. 'convert CSV files to JSON') quoting the passage "
     "that advertises it. Not install methods, platforms, license or speed claims."
 )
@@ -2418,6 +2420,9 @@ class Capability(_Model):
         default=[], max_length=CAPABILITY_ITEMS_MAX, exclude_if=lambda value: not value,
         description=("When the capability is a list the docs give (formats, protocols, services, subcommands): its "
                      "members, so a long list takes one entry ('docx', 'epub', 'odt')."))
+    area: str | None = Field(
+        default=None, min_length=1, max_length=CAPABILITY_AREA_MAX, exclude_if=lambda value: value is None,
+        description="One or two lowercase words that group it on a page, such as formats or subcommands.")
 
 
 class SoftwareRecord(_Model):
