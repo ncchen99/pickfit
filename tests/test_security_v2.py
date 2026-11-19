@@ -808,6 +808,10 @@ def test_gaps_follow_the_taxonomy_and_sec_v1_reasons_map_onto_it() -> None:
     v1 = {"version": "sec.v1", "status": "unchecked", "unchecked_reason": "no_lockfile", "checked_at": "2026-11-03T21:00:00+08:00"}
     assert [(g["code"], g["ecosystem"], g["first_seen"]) for g in security.gaps_of({"security": v1})] == [
         ("lockfile.missing", "unknown", "2026-11-03")]
+    # sec.v1 did not name the format it could not read: the capability is the unnamed reader, not "sec.v1:".
+    v1_format = v1 | {"unchecked_reason": "lockfile_not_supported"}
+    assert [(g["capability"], g["detail"]) for g in security.gaps_of({"security": v1_format})] == [
+        ("read_lockfile:unknown", "sec.v1: lockfile_not_supported")]
     assert {r: security.LEGACY_GAP[r] for r in ("resolve_failed", "no_source", "lockfile_not_supported")} == {
         "resolve_failed": "resolve.registry_failed", "no_source": "source.none",
         "lockfile_not_supported": "lockfile.unsupported_format"}

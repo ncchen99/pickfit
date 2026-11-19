@@ -234,7 +234,9 @@ def legacy_gaps(check: dict[str, Any] | None) -> list[dict[str, Any]]:
     if check.get("status") != "unchecked" or reason not in LEGACY_GAP:
         return []
     day = str(check.get("checked_at") or "")[:10] or None
-    return [gap(LEGACY_GAP[reason], detail=f"sec.v1: {reason}") | {"first_seen": day, "last_seen": day}]
+    # sec.v1 never said which format it could not read, so the capability is the unnamed one (read_lockfile:unknown);
+    # its note goes in detail only, after the capability is filled in, or "sec.v1:" would be read as the format.
+    return [gap(LEGACY_GAP[reason]) | {"detail": f"sec.v1: {reason}", "first_seen": day, "last_seen": day}]
 
 
 def gaps_of(record: Any) -> list[dict[str, Any]]:
