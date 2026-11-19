@@ -1,0 +1,674 @@
+{
+  "schema_version": "software.v1",
+  "slug": "elio",
+  "repo_id": "gh:1177113373",
+  "name": "elio",
+  "summary": "A terminal file manager with a three-pane layout, file previews, fuzzy find, trash and archive management.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "media_files",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "cross-platform",
+    "file-browser",
+    "file-manager",
+    "file-preview",
+    "filesystem",
+    "freebsd",
+    "fuzzy-finder",
+    "image-preview",
+    "kitty-graphics"
+  ],
+  "use_cases": [
+    "find duplicate files by content",
+    "extract and create archives",
+    "browse files on a remote host over SSH",
+    "use as the desktop file chooser on Linux"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "three-pane layout with places, files and preview",
+    "preview text, documents, archives and media",
+    "fuzzy find folders and files",
+    "trash, restore or permanently delete files"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://elio-fm.github.io/",
+  "repo": {
+    "url": "https://github.com/elio-fm/elio",
+    "full_name": "elio-fm/elio",
+    "created_at": "2026-03-09T17:53:05Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "poppler (optional, for PDF previews)",
+      "ffmpeg (optional, for media metadata and thumbnails)",
+      "resvg (optional, for SVG previews)",
+      "7-Zip (optional, for more archive types)"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-elio-20261119-220442-d9e2",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/elio.tgz https://github.com/elio-fm/elio/releases/download/v1.15.0/elio-1.15.0-x86_64-unknown-linux-gnu.tar.gz && mkdir -p /tmp/elio && tar -xzf /tmp/elio.tgz -C /tmp/elio",
+          "purpose": "Download and extract the v1.15.0 x86_64 Linux release tarball"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && install -m 755 /tmp/elio/elio-1.15.0-x86_64-unknown-linux-gnu/elio ~/.local/bin/elio",
+          "purpose": "Install the elio binary into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "elio --help",
+        "expected_signal": "Usage: elio [OPTIONS] [PATH]"
+      },
+      "first_task": "python3 ~/work/drive.py ~/work/demo/notes.txt"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.15.0",
+    "published_at": "2026-11-02T10:09:21Z",
+    "url": "https://github.com/elio-fm/elio/releases/tag/v1.15.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T22:07:01.916837+08:00",
+    "runs": [
+      {
+        "id": "verify-elio-20261119-220442-d9e2",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T22:07:01.916837+08:00",
+        "tool_version": "1.15.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/elio.tgz https://github.com/elio-fm/elio/releases/download/v1.15.0/elio-1.15.0-x86_64-unknown-linux-gnu.tar.gz && mkdir -p /tmp/elio && tar -xzf /tmp/elio.tgz -C /tmp/elio",
+            "purpose": "Download and extract the v1.15.0 x86_64 Linux release tarball"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && install -m 755 /tmp/elio/elio-1.15.0-x86_64-unknown-linux-gnu/elio ~/.local/bin/elio",
+            "purpose": "Install the elio binary into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "elio --help",
+            "expected_signal": "Usage: elio [OPTIONS] [PATH]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: elio [OPTIONS] [PATH]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/work/drive.py ~/work/demo/notes.txt",
+            "expected_signal": "hello from elio preview",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": ">4;1m ╭ Places ──────────╮ ╭ 󰉖 ~/work/demo ───────────────────────────────────────────────────────────╮ ╭  notes.txt ─────────────────────────────────────────────────╮ │ 󰋜 Home │ │ ▌  notes.txt 36 B 2s ago │ │ Text 2 lines │ │ 󰋊 Root │ │ │ │ hello from elio preview │ │ │ │ │ │ second line │ │ │ │…",
+            "setup": [
+              {
+                "command": "mkdir -p ~/work/demo/projects/alpha ~/work/demo/docs && cd ~/work/demo && printf 'hello from elio preview\\nsecond line\\n' > notes.txt && printf 'archived content\\n' > docs/inside.txt && python3 -c \"import zipfile;z=zipfile.ZipFile('bundle.zip','w');z.write('docs/inside.txt');z.close()\" && printf 'trash me\\n' > junk.txt && printf 'x\\n' > projects/alpha/deepfile.md && cat > ~/work/drive.py <<'EOF'\nimport os, pty, sys, time, re, select\n# usage: drive.py START_PATH key1 key2 ...  (keys: literal text, or names ESC ENTER CTRLF DOWN UP TAB)\nnames={'ESC':'\\x1b','ENTER':'\\r','CTRLF':'\\x06','DOWN':'\\x1b[B','UP':'\\x1b[A','TAB':'\\t'}\npid,fd=pty.fork()\nif pid==0:\n    os.environ['TERM']='xterm-256color'; os.environ['COLUMNS']='160'; os.environ['LINES']='40'\n    os.execvp('elio',['elio',sys.argv[1]])\nimport fcntl,termios,struct\nfcntl.ioctl(fd,termios.TIOCSWINSZ,struct.pack('HHHH',40,160,0,0))\nbuf=b''\ndef pump(t):\n    global buf\n    end=time.time()+t\n    while time.time()<end:\n        r,_,_=select.select([fd],[],[],0.1)\n        if r:\n            try: d=os.read(fd,65536)\n            except OSError: return\n            if not d: return\n            buf+=d\n            if b'\\x1b[6n' in d: os.write(fd,b'\\x1b[1;1R')\n            if b'\\x1b[c' in d: os.write(fd,b'\\x1b[?62;c')\npump(2.5)\nfor k in sys.argv[2:]:\n    mark=len(buf)\n    os.write(fd,names.get(k,k).encode()); pump(1.5)\nos.write(fd,b'Q'); pump(1.0)\ntry: os.kill(pid,9)\nexcept Exception: pass\ntxt=buf.decode('utf8','replace')\ntxt=re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]',' ',txt); txt=re.sub(r'\\x1b[\\]P_][^\\x07\\x1b]*(\\x07|\\x1b\\\\)?',' ',txt); txt=re.sub(r'\\x1b.',' ',txt)\ntxt=re.sub(r'[ \\t]{2,}',' ',txt)\nprint(txt[-6000:])\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/work/drive.py ~/work/demo/bundle.zip",
+            "expected_signal": "Format ZIP",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": ">4;1m ╭ Places ──────────╮ ╭ 󰉖 ~/work/demo ───────────────────────────────────────────────────────────╮ ╭ 󰀼 bundle.zip ────────────────────────────────────────────────╮ │ 󰋜 Home │ │ ▌ 󰀼 bundle.zip 145 B 4s ago │ │ Archive ZIP │ │ 󰋊 Root │ │  junk.txt 9 B 4s ago │ │ Loading preview │ │ │ │  notes.…",
+            "setup": [
+              {
+                "command": "mkdir -p ~/work/demo/projects/alpha ~/work/demo/docs && cd ~/work/demo && printf 'hello from elio preview\\nsecond line\\n' > notes.txt && printf 'archived content\\n' > docs/inside.txt && python3 -c \"import zipfile;z=zipfile.ZipFile('bundle.zip','w');z.write('docs/inside.txt');z.close()\" && printf 'trash me\\n' > junk.txt && printf 'x\\n' > projects/alpha/deepfile.md && cat > ~/work/drive.py <<'EOF'\nimport os, pty, sys, time, re, select\n# usage: drive.py START_PATH key1 key2 ...  (keys: literal text, or names ESC ENTER CTRLF DOWN UP TAB)\nnames={'ESC':'\\x1b','ENTER':'\\r','CTRLF':'\\x06','DOWN':'\\x1b[B','UP':'\\x1b[A','TAB':'\\t'}\npid,fd=pty.fork()\nif pid==0:\n    os.environ['TERM']='xterm-256color'; os.environ['COLUMNS']='160'; os.environ['LINES']='40'\n    os.execvp('elio',['elio',sys.argv[1]])\nimport fcntl,termios,struct\nfcntl.ioctl(fd,termios.TIOCSWINSZ,struct.pack('HHHH',40,160,0,0))\nbuf=b''\ndef pump(t):\n    global buf\n    end=time.time()+t\n    while time.time()<end:\n        r,_,_=select.select([fd],[],[],0.1)\n        if r:\n            try: d=os.read(fd,65536)\n            except OSError: return\n            if not d: return\n            buf+=d\n            if b'\\x1b[6n' in d: os.write(fd,b'\\x1b[1;1R')\n            if b'\\x1b[c' in d: os.write(fd,b'\\x1b[?62;c')\npump(2.5)\nfor k in sys.argv[2:]:\n    mark=len(buf)\n    os.write(fd,names.get(k,k).encode()); pump(1.5)\nos.write(fd,b'Q'); pump(1.0)\ntry: os.kill(pid,9)\nexcept Exception: pass\ntxt=buf.decode('utf8','replace')\ntxt=re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]',' ',txt); txt=re.sub(r'\\x1b[\\]P_][^\\x07\\x1b]*(\\x07|\\x1b\\\\)?',' ',txt); txt=re.sub(r'\\x1b.',' ',txt)\ntxt=re.sub(r'[ \\t]{2,}',' ',txt)\nprint(txt[-6000:])\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/work/drive.py ~/work/demo CTRLF d e e p f",
+            "expected_signal": "projects/alpha/deepfile.md",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": ">4;1m ╭ Places ──────────╮ ╭ 󰉖 ~/work/demo ───────────────────────────────────────────────────────────╮ ╭ 󱧷 docs ──────────────────────────────────────────────────────╮ │ 󰋜 Home │ │ ▌ 󱧷 docs 7s ago │ │ 1 items │ │ 󰋊 Root │ │ 󰉋 projects 7s ago │ │  inside.txt │ │ │ │ 󰀼 bundle.zip 145 B 7s ago │ │ │…",
+            "setup": [
+              {
+                "command": "mkdir -p ~/work/demo/projects/alpha ~/work/demo/docs && cd ~/work/demo && printf 'hello from elio preview\\nsecond line\\n' > notes.txt && printf 'archived content\\n' > docs/inside.txt && python3 -c \"import zipfile;z=zipfile.ZipFile('bundle.zip','w');z.write('docs/inside.txt');z.close()\" && printf 'trash me\\n' > junk.txt && printf 'x\\n' > projects/alpha/deepfile.md && cat > ~/work/drive.py <<'EOF'\nimport os, pty, sys, time, re, select\n# usage: drive.py START_PATH key1 key2 ...  (keys: literal text, or names ESC ENTER CTRLF DOWN UP TAB)\nnames={'ESC':'\\x1b','ENTER':'\\r','CTRLF':'\\x06','DOWN':'\\x1b[B','UP':'\\x1b[A','TAB':'\\t'}\npid,fd=pty.fork()\nif pid==0:\n    os.environ['TERM']='xterm-256color'; os.environ['COLUMNS']='160'; os.environ['LINES']='40'\n    os.execvp('elio',['elio',sys.argv[1]])\nimport fcntl,termios,struct\nfcntl.ioctl(fd,termios.TIOCSWINSZ,struct.pack('HHHH',40,160,0,0))\nbuf=b''\ndef pump(t):\n    global buf\n    end=time.time()+t\n    while time.time()<end:\n        r,_,_=select.select([fd],[],[],0.1)\n        if r:\n            try: d=os.read(fd,65536)\n            except OSError: return\n            if not d: return\n            buf+=d\n            if b'\\x1b[6n' in d: os.write(fd,b'\\x1b[1;1R')\n            if b'\\x1b[c' in d: os.write(fd,b'\\x1b[?62;c')\npump(2.5)\nfor k in sys.argv[2:]:\n    mark=len(buf)\n    os.write(fd,names.get(k,k).encode()); pump(1.5)\nos.write(fd,b'Q'); pump(1.0)\ntry: os.kill(pid,9)\nexcept Exception: pass\ntxt=buf.decode('utf8','replace')\ntxt=re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]',' ',txt); txt=re.sub(r'\\x1b[\\]P_][^\\x07\\x1b]*(\\x07|\\x1b\\\\)?',' ',txt); txt=re.sub(r'\\x1b.',' ',txt)\ntxt=re.sub(r'[ \\t]{2,}',' ',txt)\nprint(txt[-6000:])\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/work/drive.py ~/work/demo/junk.txt d ENTER && ls -R ~/.local/share/Trash",
+            "expected_signal": "junk.txt.trashinfo",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "junk.txt.trashinfo",
+            "setup": [
+              {
+                "command": "mkdir -p ~/work/demo/projects/alpha ~/work/demo/docs && cd ~/work/demo && printf 'hello from elio preview\\nsecond line\\n' > notes.txt && printf 'archived content\\n' > docs/inside.txt && python3 -c \"import zipfile;z=zipfile.ZipFile('bundle.zip','w');z.write('docs/inside.txt');z.close()\" && printf 'trash me\\n' > junk.txt && printf 'x\\n' > projects/alpha/deepfile.md && cat > ~/work/drive.py <<'EOF'\nimport os, pty, sys, time, re, select\n# usage: drive.py START_PATH key1 key2 ...  (keys: literal text, or names ESC ENTER CTRLF DOWN UP TAB)\nnames={'ESC':'\\x1b','ENTER':'\\r','CTRLF':'\\x06','DOWN':'\\x1b[B','UP':'\\x1b[A','TAB':'\\t'}\npid,fd=pty.fork()\nif pid==0:\n    os.environ['TERM']='xterm-256color'; os.environ['COLUMNS']='160'; os.environ['LINES']='40'\n    os.execvp('elio',['elio',sys.argv[1]])\nimport fcntl,termios,struct\nfcntl.ioctl(fd,termios.TIOCSWINSZ,struct.pack('HHHH',40,160,0,0))\nbuf=b''\ndef pump(t):\n    global buf\n    end=time.time()+t\n    while time.time()<end:\n        r,_,_=select.select([fd],[],[],0.1)\n        if r:\n            try: d=os.read(fd,65536)\n            except OSError: return\n            if not d: return\n            buf+=d\n            if b'\\x1b[6n' in d: os.write(fd,b'\\x1b[1;1R')\n            if b'\\x1b[c' in d: os.write(fd,b'\\x1b[?62;c')\npump(2.5)\nfor k in sys.argv[2:]:\n    mark=len(buf)\n    os.write(fd,names.get(k,k).encode()); pump(1.5)\nos.write(fd,b'Q'); pump(1.0)\ntry: os.kill(pid,9)\nexcept Exception: pass\ntxt=buf.decode('utf8','replace')\ntxt=re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]',' ',txt); txt=re.sub(r'\\x1b[\\]P_][^\\x07\\x1b]*(\\x07|\\x1b\\\\)?',' ',txt); txt=re.sub(r'\\x1b.',' ',txt)\ntxt=re.sub(r'[ \\t]{2,}',' ',txt)\nprint(txt[-6000:])\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/work/drive.py ~/work/demo g t r ENTER && ls ~/work/demo ~/.local/share/Trash/files",
+            "expected_signal": "Restored \"junk.txt\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": ">4;1m ╭ Places ──────────╮ ╭ 󰉖 ~/work/demo ───────────────────────────────────────────────────────────╮ ╭ 󱧷 docs ──────────────────────────────────────────────────────╮ │ 󰋜 Home │ │ ▌ 󱧷 docs 26s ago │ │ 1 items │ │ 󰋊 Root │ │ 󰉋 projects 26s ago │ │  inside.txt │ │ 󰩺 Trash │ │ 󰀼 bundle.zip 145 B 26…",
+            "setup": [
+              {
+                "command": "mkdir -p ~/work/demo/projects/alpha ~/work/demo/docs && cd ~/work/demo && printf 'hello from elio preview\\nsecond line\\n' > notes.txt && printf 'archived content\\n' > docs/inside.txt && python3 -c \"import zipfile;z=zipfile.ZipFile('bundle.zip','w');z.write('docs/inside.txt');z.close()\" && printf 'trash me\\n' > junk.txt && printf 'x\\n' > projects/alpha/deepfile.md && cat > ~/work/drive.py <<'EOF'\nimport os, pty, sys, time, re, select\n# usage: drive.py START_PATH key1 key2 ...  (keys: literal text, or names ESC ENTER CTRLF DOWN UP TAB)\nnames={'ESC':'\\x1b','ENTER':'\\r','CTRLF':'\\x06','DOWN':'\\x1b[B','UP':'\\x1b[A','TAB':'\\t'}\npid,fd=pty.fork()\nif pid==0:\n    os.environ['TERM']='xterm-256color'; os.environ['COLUMNS']='160'; os.environ['LINES']='40'\n    os.execvp('elio',['elio',sys.argv[1]])\nimport fcntl,termios,struct\nfcntl.ioctl(fd,termios.TIOCSWINSZ,struct.pack('HHHH',40,160,0,0))\nbuf=b''\ndef pump(t):\n    global buf\n    end=time.time()+t\n    while time.time()<end:\n        r,_,_=select.select([fd],[],[],0.1)\n        if r:\n            try: d=os.read(fd,65536)\n            except OSError: return\n            if not d: return\n            buf+=d\n            if b'\\x1b[6n' in d: os.write(fd,b'\\x1b[1;1R')\n            if b'\\x1b[c' in d: os.write(fd,b'\\x1b[?62;c')\npump(2.5)\nfor k in sys.argv[2:]:\n    mark=len(buf)\n    os.write(fd,names.get(k,k).encode()); pump(1.5)\nos.write(fd,b'Q'); pump(1.0)\ntry: os.kill(pid,9)\nexcept Exception: pass\ntxt=buf.decode('utf8','replace')\ntxt=re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]',' ',txt); txt=re.sub(r'\\x1b[\\]P_][^\\x07\\x1b]*(\\x07|\\x1b\\\\)?',' ',txt); txt=re.sub(r'\\x1b.',' ',txt)\ntxt=re.sub(r'[ \\t]{2,}',' ',txt)\nprint(txt[-6000:])\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 ~/work/drive.py ~/work/demo/junk.txt d ENTER && ls -R ~/.local/share/Trash",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Debian/Ubuntu: curl -fsSL https://elio-fm.github.io/elio-apt/install.sh | sudo sh; sudo apt install elio",
+            "actually_needed": "Without root, the prebuilt release tarball elio-1.15.0-x86_64-unknown-linux-gnu.tar.gz works. Extract it and copy the elio binary into ~/.local/bin.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "elio is an interactive TUI",
+            "actually_needed": "To exercise it non-interactively, a Python pty harness (drive.py) sends keystrokes and captures the screen output.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Elio's TUI previews notes.txt showing 'hello from elio preview', shows the ZIP archive details with 'Format ZIP', and --help prints the usage text, all with exit code 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-elio-20261119-220442-d9e2/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-elio-20261119-220442-d9e2/check-1-cmd6.judged.png",
+            "runs/verify/verify-elio-20261119-220442-d9e2/check-2-cmd7.judged.png",
+            "runs/verify/verify-elio-20261119-220442-d9e2/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.322996,
+        "features": [
+          {
+            "feature": "three-pane layout with places, files and preview",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "preview text, documents, archives and media",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "fuzzy find folders and files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Typing 'deepf' ends with 'No matching files in this tree' even though deepfile.md was listed, so the final search result is unclear or a failure."
+          },
+          {
+            "feature": "trash, restore or permanently delete files",
+            "status": "checked",
+            "smoke_tests": [
+              4,
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T22:07:08+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/elio-fm/elio@f88fcea7c764",
+      "Cargo.lock"
+    ],
+    "packages_checked": 334,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T22:07:01+08:00",
+    "quality": {
+      "total": 87.2,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.931,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.2,
+      "signals": {
+        "stars": 919,
+        "monthly_downloads": 317,
+        "forks": 31,
+        "dependents": null,
+        "release_downloads": 5045,
+        "hn_top_score": 2,
+        "registries_count": 2
+      },
+      "age_days": 254,
+      "packages": [
+        "crates:elio",
+        "homebrew:elio"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 8.55
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:07:01.935314+08:00",
+      "sources_sha": "c23469d0d91094db4f40db9acbaa814368f08d4da1f71e24022e8cbcbaf8f960",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "- **Three-pane layout** — Places, Files, and Preview side by side"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Snappy, batteries-included terminal file manager."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "elio works out of the box. Optional tools unlock richer previews:"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "brew install elio"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "`elio` starts in your current working directory by default. Pass a file or directory path to open it instead."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| Windows | `%APPDATA%\\elio\\config.toml` |"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[MIT](LICENSE-MIT)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/elio-fm/elio",
+      "fetched_at": "2026-11-19T22:04:26+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/elio-fm/elio/blob/main/README.md",
+      "fetched_at": "2026-11-19T22:04:26+08:00"
+    },
+    {
+      "id": "release:v1.15.0",
+      "kind": "release",
+      "url": "https://github.com/elio-fm/elio/releases/tag/v1.15.0",
+      "fetched_at": "2026-11-19T22:04:26+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Snappy, batteries-included terminal file manager.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:38+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Restart your shell, then run `elio` normally.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:38+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "terminal file manager",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:38+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Snappy, batteries-included terminal file manager.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:38+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "github_api",
+      "quote": "name: elio-fm/elio",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:38+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "`poppler` for PDFs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:38+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "`ffmpeg` / `ffprobe` for media metadata and thumbnails",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:38+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/2",
+      "source_id": "readme",
+      "quote": "`resvg` for SVG previews",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:38+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/3",
+      "source_id": "readme",
+      "quote": "7-Zip for more archive types, comic archives, and RAR support",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:38+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T22:04:26+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T22:04:26+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T22:04:26+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T22:04:26+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T22:04:26+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.15.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T22:04:26+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "**Duplicate Finder** — find and safely manage files with identical contents",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:38+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "**Archive management** — extract and create common archive formats",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:38+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "elio works over SSH.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:38+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "You can make elio your file chooser on Linux and FreeBSD:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:38+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**Three-pane layout** — Places, Files, and Preview side by side",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:38+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**Rich previews** — text, code, documents, archives, media, and more",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:38+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**Fuzzy find** — find folders and files quickly",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:38+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "**Trash management** — trash, restore, or permanently delete files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:38+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -fsSL https://elio-fm.github.io/elio-apt/install.sh | sudo sh",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:38+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "elio works out of the box.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:38+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T22:04:26+08:00",
+  "updated_at": "2026-11-19T22:07:08+08:00"
+}
