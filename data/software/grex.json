@@ -1,0 +1,634 @@
+{
+  "schema_version": "software.v1",
+  "slug": "grex",
+  "repo_id": "gh:213043312",
+  "name": "grex",
+  "summary": "Command-line tool and Rust library (with Python bindings) that generates a single regular expression matching user-provided test cases.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "command-line-tool",
+    "python",
+    "python-library",
+    "regex",
+    "regex-pattern",
+    "regexp",
+    "regular-expression",
+    "regular-expressions",
+    "rust"
+  ],
+  "use_cases": [
+    "find an initial regex from example strings for later manual refinement"
+  ],
+  "alternatives_to": [
+    "regexgen"
+  ],
+  "features": [
+    "generate a regex from test cases",
+    "convert repeated substrings to quantifiers",
+    "convert characters to shorthand classes",
+    "read test cases from a file"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://pemistahl.github.io/grex-js/",
+  "repo": {
+    "url": "https://github.com/pemistahl/grex",
+    "full_name": "pemistahl/grex",
+    "created_at": "2019-10-05T17:38:23Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install grex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "grex a b c",
+        "expected_signal": "^[a-c]$"
+      },
+      "first_task": "grex a b c"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-grex-20261119-170448-07cb",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/grex.tar.gz https://github.com/pemistahl/grex/releases/download/v1.4.6/grex-v1.4.6-x86_64-unknown-linux-musl.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/grex.tar.gz -C ~/.local/bin && chmod +x ~/.local/bin/grex",
+          "purpose": "Download the v1.4.6 x86_64 musl release tarball and extract grex into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "grex --version",
+        "expected_signal": "grex 1.4.6"
+      },
+      "first_task": "grex a b c"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pip",
+      "steps": [
+        {
+          "command": "pip install grex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "grex a b c",
+        "expected_signal": "^[a-c]$"
+      },
+      "first_task": "grex a b c"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v1.4.6",
+    "published_at": "2025-11-14T12:22:19Z",
+    "url": "https://github.com/pemistahl/grex/releases/tag/v1.4.6"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T17:05:28.113959+08:00",
+    "runs": [
+      {
+        "id": "verify-grex-20261119-170448-07cb",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T17:05:28.113959+08:00",
+        "tool_version": "grex 1.4.6",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/grex.tar.gz https://github.com/pemistahl/grex/releases/download/v1.4.6/grex-v1.4.6-x86_64-unknown-linux-musl.tar.gz && mkdir -p ~/.local/bin && tar -xzf /tmp/grex.tar.gz -C ~/.local/bin && chmod +x ~/.local/bin/grex",
+            "purpose": "Download the v1.4.6 x86_64 musl release tarball and extract grex into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "grex --version",
+            "expected_signal": "grex 1.4.6",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "grex 1.4.6",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "grex a b c",
+            "expected_signal": "^[a-c]$",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "^[a-c]$",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "grex -r b ba baa baaa",
+            "expected_signal": "^b(?:a{1,3})?$",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "^b(?:a{1,3})?$",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "grex -d \"I ♥♥♥ 36 and ٣ and 💩💩.\"",
+            "expected_signal": "^I ♥♥♥ \\d\\d and \\d and 💩💩\\.$",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "^I ♥♥♥ \\d\\d and \\d and 💩💩\\.$",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "grex -f test_cases.txt",
+            "expected_signal": "^a?bc$",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "^a?bc$",
+            "setup": [
+              {
+                "command": "printf 'abc\\nbc\\n' > test_cases.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install grex (candidates: uv tool install / pipx install grex)",
+            "actually_needed": "The PyPI package grex 1.0.2 is only the Python library (from grex import RegExpBuilder). It has no executable, so `uv tool install grex` fails with 'No executables are provided by package grex'. For the CLI, use the release binary linked at the top of the README.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exited 0 and printed the expected outputs: ^[a-c]$, ^b(?:a{1,3})?$, and grex 1.4.6.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-grex-20261119-170448-07cb/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-grex-20261119-170448-07cb/check-1-cmd4.judged.png",
+            "runs/verify/verify-grex-20261119-170448-07cb/check-2-cmd5.judged.png",
+            "runs/verify/verify-grex-20261119-170448-07cb/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.176264,
+        "features": [
+          {
+            "feature": "generate a regex from test cases",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "convert repeated substrings to quantifiers",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "convert characters to shorthand classes",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "read test cases from a file",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T17:05:35+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "pypi:grex (fresh install, 1 packages)",
+      "github.com/pemistahl/grex@99cc34770737",
+      "Cargo.lock"
+    ],
+    "packages_checked": 167,
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "crates:pyo3",
+        "version": "0.27.1",
+        "advisory": "GHSA-36hh-v3qg-5jq4",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.29.0",
+        "summary": "PyO3 has an Out-of-bounds Read in `nth` / `nth_back` for `PyList` and `PyTuple` iterators",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T17:05:35+08:00",
+    "quality": {
+      "total": 72.0,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.21,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.35,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 99.6,
+      "signals": {
+        "stars": 8311,
+        "monthly_downloads": 13208,
+        "forks": 196,
+        "dependents": null,
+        "release_downloads": 94670,
+        "hn_top_score": 13,
+        "registries_count": 3
+      },
+      "age_days": 2601,
+      "packages": [
+        "pypi:grex",
+        "crates:grex",
+        "homebrew:grex"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.29
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:05:28.125915+08:00",
+      "sources_sha": "e3a7fae35891cc7fc633aaa75fb4e094242ba41e95237e89be1a8c55a87c8add",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "It does so by automatically \ngenerating a single regular expression from user-provided test cases."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "The currently best use case for *grex* is to find\nan initial correct regex which should be inspected by hand if further optimizations are possible."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "**Please note**: Rust >= 1.70.0 is required to build the CLI. For the library part, Rust < 1.70.0 is sufficient."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "( brew | cargo | choco | huber | port | scoop ) install grex"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "$ grex a b c\n^[a-c]$"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "pre-compiled 64-Bit binaries are available within the package managers [Scoop](https://scoop.sh) \n(for Windows), [Homebrew](https://brew.sh) (for macOS and Linux)"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/pemistahl/grex",
+      "fetched_at": "2026-11-19T17:04:35+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/pemistahl/grex/blob/main/README.md",
+      "fetched_at": "2026-11-19T17:04:32+08:00"
+    },
+    {
+      "id": "release:v1.4.6",
+      "kind": "release",
+      "url": "https://github.com/pemistahl/grex/releases/tag/v1.4.6",
+      "fetched_at": "2026-11-19T17:04:32+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "*grex* is a library as well as a command-line utility",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:42+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "You can download the self-contained executable for your platform above",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:42+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "simplify the often \ncomplicated and tedious task of creating regular expressions",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:42+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A command-line tool and Rust library with Python bindings for generating regular expressions from user-provided test cases",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:42+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "*grex* is a library as well as a command-line utility",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:42+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "[Huber](https://github.com/innobead/huber) (for macOS, Linux and Windows)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:42+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:04:35+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:04:35+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T17:04:35+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:04:35+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:04:35+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.4.6",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T17:04:32+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "The currently best use case for *grex* is to find\nan initial correct regex which should be inspected by hand",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:42+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "*grex* offers all features that *regexgen* provides, and more.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:42+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "automatically \ngenerating a single regular expression from user-provided test cases",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:42+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "detection of repeated substrings and conversion to `{min,max}` quantifier notation",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:42+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "-d, --digits      Converts any Unicode decimal digit to \\d",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:42+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "reads input strings from the command-line or from a file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:42+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "pip install grex",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:42+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "pip install grex",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:42+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "pip install grex",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T17:04:42+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T17:04:32+08:00",
+  "updated_at": "2026-11-19T17:05:35+08:00"
+}
