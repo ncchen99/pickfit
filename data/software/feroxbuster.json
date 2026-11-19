@@ -1,0 +1,706 @@
+{
+  "schema_version": "software.v1",
+  "slug": "feroxbuster",
+  "repo_id": "gh:289516116",
+  "name": "feroxbuster",
+  "summary": "A recursive content discovery tool that brute-forces web paths with a wordlist to find unlinked resources on web servers.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "security_net",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "content-discovery",
+    "enumeration",
+    "hacktoberfest",
+    "pentest",
+    "pentesting-tool",
+    "rust",
+    "url-bruteforcer",
+    "web"
+  ],
+  "use_cases": [
+    "enumerate hidden directories and files on a web application",
+    "proxy scan traffic through Burp",
+    "scan URLs read from stdin and pipe results to another tool"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "recursive forced browsing with wordlists",
+    "append file extensions to each URL",
+    "route traffic through HTTP or SOCKS proxies",
+    "send custom headers and request bodies"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://epi052.github.io/feroxbuster-docs/overview/",
+  "repo": {
+    "url": "https://github.com/epi052/feroxbuster",
+    "full_name": "epi052/feroxbuster",
+    "created_at": "2020-08-22T15:36:19Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install feroxbuster",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "./feroxbuster -u http://[::1] --no-recursion -vv"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-feroxbuster-20261119-180747-4fdc",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -sL -o /tmp/install-nix.sh https://raw.githubusercontent.com/epi052/feroxbuster/main/install-nix.sh",
+          "purpose": "download install-nix.sh"
+        },
+        {
+          "command": "mkdir -p $HOME/.local/bin && bash /tmp/install-nix.sh $HOME/.local/bin",
+          "purpose": "run install script into ~/.local/bin (downloads x86_64-linux release zip)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "feroxbuster -V",
+        "expected_signal": "feroxbuster 2.14.0"
+      },
+      "first_task": "feroxbuster -u http://127.0.0.1:8000 -w /tmp/ft/words.txt --no-state"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "winget install epi052.feroxbuster",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "./feroxbuster -u http://[::1] --no-recursion -vv"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v2.14.0",
+    "published_at": "2026-11-12T19:32:19Z",
+    "url": "https://github.com/epi052/feroxbuster/releases/tag/v2.14.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T18:09:56.927271+08:00",
+    "runs": [
+      {
+        "id": "verify-feroxbuster-20261119-180747-4fdc",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T18:09:56.927271+08:00",
+        "tool_version": "2.14.0",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -sL -o /tmp/install-nix.sh https://raw.githubusercontent.com/epi052/feroxbuster/main/install-nix.sh",
+            "purpose": "download install-nix.sh"
+          },
+          {
+            "command": "mkdir -p $HOME/.local/bin && bash /tmp/install-nix.sh $HOME/.local/bin",
+            "purpose": "run install script into ~/.local/bin (downloads x86_64-linux release zip)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "feroxbuster -V",
+            "expected_signal": "feroxbuster 2.14.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "feroxbuster 2.14.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "feroxbuster -u http://127.0.0.1:8000 -w /tmp/ft/words.txt --no-state",
+            "expected_signal": "http://127.0.0.1:8000/admin/secret",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "200 GET 1l 2w 10c http://127.0.0.1:8000/admin/secret",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/ft && cd /tmp/ft && printf 'admin\\nsecret\\nbackup\\nhdrcheck\\ndatacheck\\nviaproxy\\nnothing\\n' > words.txt && cat > srv.py <<'EOF'\nimport socket, threading, select, json\nfrom http.server import ThreadingHTTPServer, BaseHTTPRequestHandler\nFILES = {'/admin': None, '/admin/': b'admin dir', '/admin/secret': b'top secret', '/backup.php': b'php backup file'}\nclass H(BaseHTTPRequestHandler):\n    def send(self, code, body=b'nf'):\n        self.send_response(code)\n        if code == 301:\n            self.send_header('Location', self.path + '/')\n        self.send_header('Content-Length', str(len(body))); self.end_headers(); self.wfile.write(body)\n    def handle_any(self):\n        n = int(self.headers.get('Content-Length') or 0)\n        data = self.rfile.read(n) if n else b''\n        p = self.path.split('?')[0]\n        if p.startswith('http://'):\n            p = '/' + p.split('/', 3)[3] if p.count('/') >= 3 else '/'\n        if p == '/hdrcheck':\n            return self.send(200 if 'Bearer' in (self.headers.get('Authorization') or '') else 404, b'header ok')\n        if p == '/datacheck':\n            ok = 'application/json' in (self.headers.get('Content-Type') or '') and b'payload' in data\n            return self.send(200 if ok else 404, b'data ok!!')\n        if p == '/':\n            return self.send(200, b'home')\n        if p in FILES:\n            return self.send(301) if FILES[p] is None else self.send(200, FILES[p])\n        self.send(404)\n    do_GET = do_POST = do_HEAD = handle_any\nclass P(BaseHTTPRequestHandler):\n    def do_GET(self):\n        if self.path.split('?')[0].endswith('/viaproxy'):\n            b = b'served by http proxy'\n            self.send_response(200); self.send_header('Content-Length', str(len(b))); self.end_headers(); self.wfile.write(b); return\n        self.send_response(404); self.send_header('Content-Length', '2'); self.end_headers(); self.wfile.write(b'nf')\ndef socks(c):\n    try:\n        c.recv(262); c.sendall(b'\\x05\\x00')\n        h = c.recv(4); at = h[3]\n        if at == 1: host = socket.inet_ntoa(c.recv(4))\n        elif at == 3: host = c.recv(c.recv(1)[0]).decode()\n        else: host = socket.inet_ntop(socket.AF_INET6, c.recv(16))\n        port = int.from_bytes(c.recv(2), 'big')\n        print('SOCKS CONNECT', host, port, flush=True)\n        r = socket.create_connection((host, port))\n        c.sendall(b'\\x05\\x00\\x00\\x01' + b'\\x00' * 6)\n        while True:\n            rr, _, _ = select.select([c, r], [], [])\n            for s in rr:\n                d = s.recv(65536)\n                if not d: return\n                (r if s is c else c).sendall(d)\n    except Exception as e:\n        print('socks err', e, flush=True)\ndef socks_main():\n    s = socket.socket(); s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1); s.bind(('127.0.0.1', 9050)); s.listen(50)\n    while True:\n        c, _ = s.accept(); threading.Thread(target=socks, args=(c,), daemon=True).start()\nthreading.Thread(target=socks_main, daemon=True).start()\nthreading.Thread(target=ThreadingHTTPServer(('127.0.0.1', 8080), P).serve_forever, daemon=True).start()\nThreadingHTTPServer(('127.0.0.1', 8000), H).serve_forever()\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 /tmp/ft/srv.py",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "feroxbuster -u http://127.0.0.1:8000 -w /tmp/ft/words.txt --no-state --no-recursion -x pdf -x js,html -x php txt json,docx",
+            "expected_signal": "http://127.0.0.1:8000/backup.php",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "200 GET 1l 3w 15c http://127.0.0.1:8000/backup.php",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/ft && cd /tmp/ft && printf 'admin\\nsecret\\nbackup\\nhdrcheck\\ndatacheck\\nviaproxy\\nnothing\\n' > words.txt && cat > srv.py <<'EOF'\nimport socket, threading, select, json\nfrom http.server import ThreadingHTTPServer, BaseHTTPRequestHandler\nFILES = {'/admin': None, '/admin/': b'admin dir', '/admin/secret': b'top secret', '/backup.php': b'php backup file'}\nclass H(BaseHTTPRequestHandler):\n    def send(self, code, body=b'nf'):\n        self.send_response(code)\n        if code == 301:\n            self.send_header('Location', self.path + '/')\n        self.send_header('Content-Length', str(len(body))); self.end_headers(); self.wfile.write(body)\n    def handle_any(self):\n        n = int(self.headers.get('Content-Length') or 0)\n        data = self.rfile.read(n) if n else b''\n        p = self.path.split('?')[0]\n        if p.startswith('http://'):\n            p = '/' + p.split('/', 3)[3] if p.count('/') >= 3 else '/'\n        if p == '/hdrcheck':\n            return self.send(200 if 'Bearer' in (self.headers.get('Authorization') or '') else 404, b'header ok')\n        if p == '/datacheck':\n            ok = 'application/json' in (self.headers.get('Content-Type') or '') and b'payload' in data\n            return self.send(200 if ok else 404, b'data ok!!')\n        if p == '/':\n            return self.send(200, b'home')\n        if p in FILES:\n            return self.send(301) if FILES[p] is None else self.send(200, FILES[p])\n        self.send(404)\n    do_GET = do_POST = do_HEAD = handle_any\nclass P(BaseHTTPRequestHandler):\n    def do_GET(self):\n        if self.path.split('?')[0].endswith('/viaproxy'):\n            b = b'served by http proxy'\n            self.send_response(200); self.send_header('Content-Length', str(len(b))); self.end_headers(); self.wfile.write(b); return\n        self.send_response(404); self.send_header('Content-Length', '2'); self.end_headers(); self.wfile.write(b'nf')\ndef socks(c):\n    try:\n        c.recv(262); c.sendall(b'\\x05\\x00')\n        h = c.recv(4); at = h[3]\n        if at == 1: host = socket.inet_ntoa(c.recv(4))\n        elif at == 3: host = c.recv(c.recv(1)[0]).decode()\n        else: host = socket.inet_ntop(socket.AF_INET6, c.recv(16))\n        port = int.from_bytes(c.recv(2), 'big')\n        print('SOCKS CONNECT', host, port, flush=True)\n        r = socket.create_connection((host, port))\n        c.sendall(b'\\x05\\x00\\x00\\x01' + b'\\x00' * 6)\n        while True:\n            rr, _, _ = select.select([c, r], [], [])\n            for s in rr:\n                d = s.recv(65536)\n                if not d: return\n                (r if s is c else c).sendall(d)\n    except Exception as e:\n        print('socks err', e, flush=True)\ndef socks_main():\n    s = socket.socket(); s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1); s.bind(('127.0.0.1', 9050)); s.listen(50)\n    while True:\n        c, _ = s.accept(); threading.Thread(target=socks, args=(c,), daemon=True).start()\nthreading.Thread(target=socks_main, daemon=True).start()\nthreading.Thread(target=ThreadingHTTPServer(('127.0.0.1', 8080), P).serve_forever, daemon=True).start()\nThreadingHTTPServer(('127.0.0.1', 8000), H).serve_forever()\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 /tmp/ft/srv.py",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "feroxbuster -u http://127.0.0.1:8000 -w /tmp/ft/words.txt --no-state --no-recursion -H Accept:application/json \"Authorization: Bearer abc123\" --data-json '{\"some\": \"payload\"}'",
+            "expected_signal": "200 POST 1l 2w 9c http://127.0.0.1:8000/datacheck",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "200 POST 1l 2w 9c http://127.0.0.1:8000/datacheck",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/ft && cd /tmp/ft && printf 'admin\\nsecret\\nbackup\\nhdrcheck\\ndatacheck\\nviaproxy\\nnothing\\n' > words.txt && cat > srv.py <<'EOF'\nimport socket, threading, select, json\nfrom http.server import ThreadingHTTPServer, BaseHTTPRequestHandler\nFILES = {'/admin': None, '/admin/': b'admin dir', '/admin/secret': b'top secret', '/backup.php': b'php backup file'}\nclass H(BaseHTTPRequestHandler):\n    def send(self, code, body=b'nf'):\n        self.send_response(code)\n        if code == 301:\n            self.send_header('Location', self.path + '/')\n        self.send_header('Content-Length', str(len(body))); self.end_headers(); self.wfile.write(body)\n    def handle_any(self):\n        n = int(self.headers.get('Content-Length') or 0)\n        data = self.rfile.read(n) if n else b''\n        p = self.path.split('?')[0]\n        if p.startswith('http://'):\n            p = '/' + p.split('/', 3)[3] if p.count('/') >= 3 else '/'\n        if p == '/hdrcheck':\n            return self.send(200 if 'Bearer' in (self.headers.get('Authorization') or '') else 404, b'header ok')\n        if p == '/datacheck':\n            ok = 'application/json' in (self.headers.get('Content-Type') or '') and b'payload' in data\n            return self.send(200 if ok else 404, b'data ok!!')\n        if p == '/':\n            return self.send(200, b'home')\n        if p in FILES:\n            return self.send(301) if FILES[p] is None else self.send(200, FILES[p])\n        self.send(404)\n    do_GET = do_POST = do_HEAD = handle_any\nclass P(BaseHTTPRequestHandler):\n    def do_GET(self):\n        if self.path.split('?')[0].endswith('/viaproxy'):\n            b = b'served by http proxy'\n            self.send_response(200); self.send_header('Content-Length', str(len(b))); self.end_headers(); self.wfile.write(b); return\n        self.send_response(404); self.send_header('Content-Length', '2'); self.end_headers(); self.wfile.write(b'nf')\ndef socks(c):\n    try:\n        c.recv(262); c.sendall(b'\\x05\\x00')\n        h = c.recv(4); at = h[3]\n        if at == 1: host = socket.inet_ntoa(c.recv(4))\n        elif at == 3: host = c.recv(c.recv(1)[0]).decode()\n        else: host = socket.inet_ntop(socket.AF_INET6, c.recv(16))\n        port = int.from_bytes(c.recv(2), 'big')\n        print('SOCKS CONNECT', host, port, flush=True)\n        r = socket.create_connection((host, port))\n        c.sendall(b'\\x05\\x00\\x00\\x01' + b'\\x00' * 6)\n        while True:\n            rr, _, _ = select.select([c, r], [], [])\n            for s in rr:\n                d = s.recv(65536)\n                if not d: return\n                (r if s is c else c).sendall(d)\n    except Exception as e:\n        print('socks err', e, flush=True)\ndef socks_main():\n    s = socket.socket(); s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1); s.bind(('127.0.0.1', 9050)); s.listen(50)\n    while True:\n        c, _ = s.accept(); threading.Thread(target=socks, args=(c,), daemon=True).start()\nthreading.Thread(target=socks_main, daemon=True).start()\nthreading.Thread(target=ThreadingHTTPServer(('127.0.0.1', 8080), P).serve_forever, daemon=True).start()\nThreadingHTTPServer(('127.0.0.1', 8000), H).serve_forever()\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 /tmp/ft/srv.py",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "feroxbuster -u http://127.0.0.1:8000 -w /tmp/ft/words.txt --no-state --no-recursion --insecure --proxy http://127.0.0.1:8080",
+            "expected_signal": "http://127.0.0.1:8000/viaproxy",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "200 GET 1l 4w 20c http://127.0.0.1:8000/viaproxy",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/ft && cd /tmp/ft && printf 'admin\\nsecret\\nbackup\\nhdrcheck\\ndatacheck\\nviaproxy\\nnothing\\n' > words.txt && cat > srv.py <<'EOF'\nimport socket, threading, select, json\nfrom http.server import ThreadingHTTPServer, BaseHTTPRequestHandler\nFILES = {'/admin': None, '/admin/': b'admin dir', '/admin/secret': b'top secret', '/backup.php': b'php backup file'}\nclass H(BaseHTTPRequestHandler):\n    def send(self, code, body=b'nf'):\n        self.send_response(code)\n        if code == 301:\n            self.send_header('Location', self.path + '/')\n        self.send_header('Content-Length', str(len(body))); self.end_headers(); self.wfile.write(body)\n    def handle_any(self):\n        n = int(self.headers.get('Content-Length') or 0)\n        data = self.rfile.read(n) if n else b''\n        p = self.path.split('?')[0]\n        if p.startswith('http://'):\n            p = '/' + p.split('/', 3)[3] if p.count('/') >= 3 else '/'\n        if p == '/hdrcheck':\n            return self.send(200 if 'Bearer' in (self.headers.get('Authorization') or '') else 404, b'header ok')\n        if p == '/datacheck':\n            ok = 'application/json' in (self.headers.get('Content-Type') or '') and b'payload' in data\n            return self.send(200 if ok else 404, b'data ok!!')\n        if p == '/':\n            return self.send(200, b'home')\n        if p in FILES:\n            return self.send(301) if FILES[p] is None else self.send(200, FILES[p])\n        self.send(404)\n    do_GET = do_POST = do_HEAD = handle_any\nclass P(BaseHTTPRequestHandler):\n    def do_GET(self):\n        if self.path.split('?')[0].endswith('/viaproxy'):\n            b = b'served by http proxy'\n            self.send_response(200); self.send_header('Content-Length', str(len(b))); self.end_headers(); self.wfile.write(b); return\n        self.send_response(404); self.send_header('Content-Length', '2'); self.end_headers(); self.wfile.write(b'nf')\ndef socks(c):\n    try:\n        c.recv(262); c.sendall(b'\\x05\\x00')\n        h = c.recv(4); at = h[3]\n        if at == 1: host = socket.inet_ntoa(c.recv(4))\n        elif at == 3: host = c.recv(c.recv(1)[0]).decode()\n        else: host = socket.inet_ntop(socket.AF_INET6, c.recv(16))\n        port = int.from_bytes(c.recv(2), 'big')\n        print('SOCKS CONNECT', host, port, flush=True)\n        r = socket.create_connection((host, port))\n        c.sendall(b'\\x05\\x00\\x00\\x01' + b'\\x00' * 6)\n        while True:\n            rr, _, _ = select.select([c, r], [], [])\n            for s in rr:\n                d = s.recv(65536)\n                if not d: return\n                (r if s is c else c).sendall(d)\n    except Exception as e:\n        print('socks err', e, flush=True)\ndef socks_main():\n    s = socket.socket(); s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1); s.bind(('127.0.0.1', 9050)); s.listen(50)\n    while True:\n        c, _ = s.accept(); threading.Thread(target=socks, args=(c,), daemon=True).start()\nthreading.Thread(target=socks_main, daemon=True).start()\nthreading.Thread(target=ThreadingHTTPServer(('127.0.0.1', 8080), P).serve_forever, daemon=True).start()\nThreadingHTTPServer(('127.0.0.1', 8000), H).serve_forever()\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 /tmp/ft/srv.py",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "feroxbuster -u http://127.0.0.1:8000 -w /tmp/ft/words.txt --no-state --no-recursion --proxy socks5h://127.0.0.1:9050",
+            "expected_signal": "socks5h://127.0.0.1:9050",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "💎 Proxy │ socks5h://127.0.0.1:9050",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/ft && cd /tmp/ft && printf 'admin\\nsecret\\nbackup\\nhdrcheck\\ndatacheck\\nviaproxy\\nnothing\\n' > words.txt && cat > srv.py <<'EOF'\nimport socket, threading, select, json\nfrom http.server import ThreadingHTTPServer, BaseHTTPRequestHandler\nFILES = {'/admin': None, '/admin/': b'admin dir', '/admin/secret': b'top secret', '/backup.php': b'php backup file'}\nclass H(BaseHTTPRequestHandler):\n    def send(self, code, body=b'nf'):\n        self.send_response(code)\n        if code == 301:\n            self.send_header('Location', self.path + '/')\n        self.send_header('Content-Length', str(len(body))); self.end_headers(); self.wfile.write(body)\n    def handle_any(self):\n        n = int(self.headers.get('Content-Length') or 0)\n        data = self.rfile.read(n) if n else b''\n        p = self.path.split('?')[0]\n        if p.startswith('http://'):\n            p = '/' + p.split('/', 3)[3] if p.count('/') >= 3 else '/'\n        if p == '/hdrcheck':\n            return self.send(200 if 'Bearer' in (self.headers.get('Authorization') or '') else 404, b'header ok')\n        if p == '/datacheck':\n            ok = 'application/json' in (self.headers.get('Content-Type') or '') and b'payload' in data\n            return self.send(200 if ok else 404, b'data ok!!')\n        if p == '/':\n            return self.send(200, b'home')\n        if p in FILES:\n            return self.send(301) if FILES[p] is None else self.send(200, FILES[p])\n        self.send(404)\n    do_GET = do_POST = do_HEAD = handle_any\nclass P(BaseHTTPRequestHandler):\n    def do_GET(self):\n        if self.path.split('?')[0].endswith('/viaproxy'):\n            b = b'served by http proxy'\n            self.send_response(200); self.send_header('Content-Length', str(len(b))); self.end_headers(); self.wfile.write(b); return\n        self.send_response(404); self.send_header('Content-Length', '2'); self.end_headers(); self.wfile.write(b'nf')\ndef socks(c):\n    try:\n        c.recv(262); c.sendall(b'\\x05\\x00')\n        h = c.recv(4); at = h[3]\n        if at == 1: host = socket.inet_ntoa(c.recv(4))\n        elif at == 3: host = c.recv(c.recv(1)[0]).decode()\n        else: host = socket.inet_ntop(socket.AF_INET6, c.recv(16))\n        port = int.from_bytes(c.recv(2), 'big')\n        print('SOCKS CONNECT', host, port, flush=True)\n        r = socket.create_connection((host, port))\n        c.sendall(b'\\x05\\x00\\x00\\x01' + b'\\x00' * 6)\n        while True:\n            rr, _, _ = select.select([c, r], [], [])\n            for s in rr:\n                d = s.recv(65536)\n                if not d: return\n                (r if s is c else c).sendall(d)\n    except Exception as e:\n        print('socks err', e, flush=True)\ndef socks_main():\n    s = socket.socket(); s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1); s.bind(('127.0.0.1', 9050)); s.listen(50)\n    while True:\n        c, _ = s.accept(); threading.Thread(target=socks, args=(c,), daemon=True).start()\nthreading.Thread(target=socks_main, daemon=True).start()\nthreading.Thread(target=ThreadingHTTPServer(('127.0.0.1', 8080), P).serve_forever, daemon=True).start()\nThreadingHTTPServer(('127.0.0.1', 8000), H).serve_forever()\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "python3 /tmp/ft/srv.py",
+                "background": true,
+                "port": 8000
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "install-nix.sh installs feroxbuster",
+            "actually_needed": "Script also tries fc-list/fc-cache to install an emoji font; they are absent here and print 'command not found', but the install still succeeds (font file is dropped in ~/.fonts)",
+            "kind": "note"
+          },
+          {
+            "readme_said": "./feroxbuster -u http://127.1 ... (no wordlist given)",
+            "actually_needed": "Default wordlist is a SecLists path not present outside Kali; pass -w <wordlist> explicitly",
+            "kind": "note"
+          },
+          {
+            "readme_said": "curl ... | bash -s $HOME/.local/bin",
+            "actually_needed": "The target directory must exist first (mkdir -p $HOME/.local/bin); the script unzips into it",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exited 0 with their expected signals: the first scan found /admin/secret (200), the extension scan found /backup.php (200), and -V printed 'feroxbuster 2.14.0'.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-feroxbuster-20261119-180747-4fdc/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-feroxbuster-20261119-180747-4fdc/check-1-cmd6.judged.png",
+            "runs/verify/verify-feroxbuster-20261119-180747-4fdc/check-2-cmd7.judged.png",
+            "runs/verify/verify-feroxbuster-20261119-180747-4fdc/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.275809,
+        "features": [
+          {
+            "feature": "recursive forced browsing with wordlists",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "append file extensions to each URL",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "route traffic through HTTP or SOCKS proxies",
+            "status": "checked",
+            "smoke_tests": [
+              4,
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "send custom headers and request bodies",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T18:10:05+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/epi052/feroxbuster@f89b6c6d3054",
+      "Cargo.lock"
+    ],
+    "packages_checked": 464,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T18:09:56+08:00",
+    "quality": {
+      "total": 83.2,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5833,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 93.7,
+      "signals": {
+        "stars": 8185,
+        "monthly_downloads": 4225,
+        "forks": 638,
+        "dependents": null,
+        "release_downloads": 434501,
+        "hn_top_score": 2,
+        "registries_count": 2
+      },
+      "age_days": 2279,
+      "packages": [
+        "crates:feroxbuster",
+        "homebrew:feroxbuster"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 5.24
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:09:56.945186+08:00",
+      "sources_sha": "33f69e14e885208b8670bbf9cfe1d82be596cb2b16a5af2d535bdab2f2467aa5",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "`feroxbuster` uses brute force combined with a wordlist to search for unlinked content in target directories."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "`feroxbuster` is a tool designed to perform [Forced Browsing](https://owasp.org/www-community/attacks/Forced_browsing)."
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "winget install epi052.feroxbuster"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "./feroxbuster -u http://[::1] --no-recursion -vv"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Installing from the repos adds a [**ferox-config.toml**](https://epi052.github.io/feroxbuster-docs/configuration/ferox-config-toml/) in `/etc/feroxbuster/`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "./feroxbuster --update"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "#### Linux (32 and 64-bit) & MacOS"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/epi052/feroxbuster",
+      "fetched_at": "2026-11-19T18:07:32+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/epi052/feroxbuster/blob/main/README.md",
+      "fetched_at": "2026-11-19T18:07:27+08:00"
+    },
+    {
+      "id": "release:v2.14.0",
+      "kind": "release",
+      "url": "https://github.com/epi052/feroxbuster/releases/tag/v2.14.0",
+      "fetched_at": "2026-11-19T18:07:27+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A simple, fast, recursive content discovery tool written in Rust",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:07:43+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "sudo apt update && sudo apt install -y feroxbuster",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:07:43+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "topics: content-discovery, enumeration, hacktoberfest, pentest, pentesting-tool",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:07:43+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "`feroxbuster` uses brute force combined with a wordlist to search for unlinked content in target directories.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:07:43+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "`feroxbuster` is a tool designed to perform [Forced Browsing]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:07:43+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "#### Linux (32 and 64-bit) & MacOS",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:07:43+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "search for unlinked content in target directories",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:07:43+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T18:07:32+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T18:07:32+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T18:07:32+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T18:07:32+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T18:07:32+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.14.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T18:07:27+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "enumerate and access resources that are not referenced by the web\napplication",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:07:43+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "./feroxbuster -u http://127.1 --insecure --proxy http://127.0.0.1:8080",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:07:43+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Read urls from STDIN; pipe only resulting urls out to another tool",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:07:43+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "`feroxbuster` uses brute force combined with a wordlist to search for unlinked content in target directories.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:07:43+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "The command above adds .pdf, .js, .html, .php, .txt, .json, and .docx to each url",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:07:43+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Proxy traffic through a SOCKS proxy (including DNS lookups)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:07:43+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Set the Content-Type of the body automatically with --data-json --data-urlencoded",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:07:43+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install feroxbuster",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:07:43+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -sL https://raw.githubusercontent.com/epi052/feroxbuster/main/install-nix.sh | bash -s $HOME/.local/bin",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:07:43+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "winget install epi052.feroxbuster",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T18:07:43+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T18:07:27+08:00",
+  "updated_at": "2026-11-19T18:10:05+08:00"
+}
