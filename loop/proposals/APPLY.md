@@ -50,3 +50,26 @@ each would do): schema.SECURITY_CAP_LEVELS, SECURITY_NO_TREASURE_LEVELS, UNCHECK
 TREASURE_MIN_SECURITY_COVERAGE, TREASURE_MIN_FUNCTION_COVERAGE, and score.SECURITY_EXPOSED_DEDUCTION and
 STALE_FIX_PENALTY. Switching one is a one-line change in a guarded file, then `pickfit score --refresh`. Before turning
 on a coverage threshold, add pickfit/coverage.py to PROTECTED: its measures would then decide treasures.
+
+## 6. capabilities-area-features-1-6.patch (capabilities step 3, 11/19)
+
+On feat/capabilities-step2 (from 2f982b20 on), from the repository root:
+
+```sh
+git apply loop/proposals/capabilities-area-features-1-6.patch
+uv run python scripts/export_schema.py --check
+uv run pytest -q
+```
+
+It changes pickfit/schema.py and schema/ only in two places, plus one test line:
+
+- FEATURES_DESCRIPTION asks for the 1-6 main features the sources put forward instead of 2-4, matching rule 8 of the
+  extraction prompt (pickfit/extract.py, already changed). Until it is applied the schema the model reads still says
+  2-4 while the prompt says 1-6.
+- Capability gets an optional `area` (at most 30 characters): the group a capabilities-only extraction gives each
+  capability (formats, subcommands). pickfit/profiles.py writes it as soon as the field exists; before that, records
+  keep label and items and the extraction rows keep the area.
+
+Checked on a clean checkout of 2f982b20 with the patch applied: export_schema --check passes, pytest 2365 passed and 7
+skipped (the added line checks that a record keeps the area), worker 330 passed, typecheck clean. No score moves:
+neither field is read by pickfit/score.py.
