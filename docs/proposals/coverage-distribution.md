@@ -6,6 +6,10 @@
 
 先上規則 6：未驗證的紀錄不再封頂 69 分，但不能當寶藏。規則 3 到 5 不上。規則 1 等 sec.v2 重掃後看 conditional 的分布再定。規則 6 是 `loop/proposals/coverage-rule6-unverified.patch`，接在第四份 patch 後面套，套完馬上跑 `pickfit score --refresh`。
 
+## 11/20 的決定
+
+sec.v2 全量重掃後，conditional 有 236 筆（主要那一輪的 905 筆裡）。決定開規則 1：conditional 不再封頂 79 分，blocked 和 exposed 照樣封頂。conditional 的 `security.status` 還是 vulnerable，MCP 和頁面照樣會警告，只是不壓分數。How 頁的說明一起改。實測：寶藏 165 → 203，剛好 79.0 分的 186 → 5。patch 是 `loop/proposals/coverage-rule1-conditional.patch`，套完馬上跑 `pickfit score --refresh`。
+
 ## 重點
 
 - **預設設定不改分數。** 四份 patch 全部套上、設定都用預設值時，1,150 筆的品質總分、confidence、封頂和寶藏一筆都沒變。會動的只有 R8：`other` 和五個新類別共 124 筆的熱門度改用合併的基準，差距在 −1.3 到 +0.7 分之間，沒有一筆因此得到或失去寶藏。

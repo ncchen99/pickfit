@@ -26,6 +26,7 @@ before a, so it fails on every file both touch (pickfit/schema.py, schema/softwa
 | 3 | tokens-t5-2-cli-judge-text-only.patch | the CLI judge sends a check's output once (judge.py and its test) |
 | 4 | coverage-scoring-b3v7.patch | b3.v7 reworked for Verification Coverage (score.py, schema.py, schema/, scripts, tests); replaces scoring-b3v7.patch |
 | 5 | coverage-rule6-unverified.patch | treasure rule 6 on (念誠 11/19): an unverified record loses the 69 cap and cannot be a treasure (schema.py, a score.py docstring, tests) |
+| 6 | coverage-rule1-conditional.patch | treasure rule 1 on (decided 11/20, after the sec.v2 rescan): conditional loses the 79 cap, blocked and exposed keep it (schema.py, a score.py docstring, tests, the How page and its worker test) |
 
 The fourth patch's schema/software.v1.json is scripts/export_schema.py's output with all four applied, so the JSON is
 never merged by hand. video-captions.patch was rebased onto security-schema.patch with no change in what it does:
@@ -73,3 +74,21 @@ It changes pickfit/schema.py and schema/ only in two places, plus one test line:
 Checked on a clean checkout of 2f982b20 with the patch applied: export_schema --check passes, pytest 2365 passed and 7
 skipped (the added line checks that a record keeps the area), worker 330 passed, typecheck clean. No score moves:
 neither field is read by pickfit/score.py.
+
+## 11/20: rule 1 (coverage-rule1-conditional.patch)
+
+Patches 1-5 are on main since 11/19, and the sec.v2 rescan is on postlaunch/20261120. On that branch, from the
+repository root, apply the sixth on its own and refresh at once (the stored scores still carry the conditional cap,
+and the records do not validate until they are rewritten):
+
+```sh
+git apply loop/proposals/coverage-rule1-conditional.patch
+uv run pickfit score --refresh
+uv run python scripts/export_schema.py --check
+uv run pytest -q
+```
+
+Checked on 11/20 in a copy outside every checkout: the refresh rewrites 305 records, treasures 165 -> 203, records at
+exactly 79.0 186 -> 5, the schema check passes (the JSON schema does not change), 2369 passed; the Worker builds,
+typechecks and passes its tests but test/cloudrun.test.ts (aws4fetch missing there). A conditional record's
+security.status still reads vulnerable, so the MCP server and the page still warn about it.

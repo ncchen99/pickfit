@@ -1,0 +1,147 @@
+Treasure rule 1, decided 11/20 after the sec.v2 rescan (docs/proposals/coverage-distribution.md)
+
+A sec.v2 record whose strongest finding is conditional (it matters only in some uses, or pickfit could not settle
+whether the code reaches it) loses the 79 cap (known_vulnerability) and gets a line on the page instead; blocked and
+exposed stay capped, and a sec.v1 check with status vulnerable keeps its own cap. Its security.status still reads
+vulnerable, so the MCP server and the page still warn. This changes schema.SECURITY_CAP_LEVELS from WARN_LEVELS to
+{"blocked", "exposed"} (and the score.py docstring line), the tests that pinned the conditional cap (reworded, none
+removed), and the How page's sentence on the cap with its worker test, so the page says the same as the rule.
+
+Apply on main as it is after the five 11/19 patches and the 11/20 rescan (postlaunch/20261120), then refresh at once:
+the stored scores still carry the cap and the records do not validate until `uv run pickfit score --refresh`
+rewrites them (offline, no model call). Checked on 11/20 in a copy outside every checkout: the refresh rewrites 305
+records; treasures 165 -> 203; records at exactly 79.0 186 -> 5; export_schema.py --check passes (the JSON schema
+does not change); the full Python suite passes (2369 passed); the Worker builds its index (1211 entries), typechecks,
+and its tests pass but test/cloudrun.test.ts, which needs aws4fetch, missing from that environment's node_modules.
+
+diff --git a/pickfit/schema.py b/pickfit/schema.py
+index f68d41b..beaecbd 100644
+--- a/pickfit/schema.py
++++ b/pickfit/schema.py
+@@ -272,12 +272,12 @@ def treasure_value(quality: float, popularity: float) -> float:
+ # and switching one needs `pickfit score --refresh` over the records and nothing else; `pickfit coverage rules` shows
+ # what each would do.
+ 
+-# The sec.v2 levels (security.assessment.level) the known_vulnerability cap (79) applies to. Default, today's rule:
+-# every level that warns (blocked, exposed, conditional), which is exactly where sec.v2's status reads vulnerable
+-# (security_status_for), so status vulnerable caps under sec.v1 and sec.v2 alike. A check without an assessment
+-# (sec.v1) keeps its own rule: status vulnerable caps. Candidate: {"blocked", "exposed"} (conditional, a finding that
+-# matters only in some uses, loses the cap).
+-SECURITY_CAP_LEVELS: frozenset[str] = frozenset({"blocked", "exposed", "conditional"})
++# The sec.v2 levels (security.assessment.level) the known_vulnerability cap (79) applies to. Since 11/20 (rule 1 of
++# docs/proposals/coverage-distribution.md, decided after the sec.v2 rescan): blocked and exposed. Conditional, a
++# finding that matters only in some uses or whose reach pickfit could not settle, loses the cap and gets a line on the
++# page; its status still reads vulnerable. Before 11/20 it was every level that warns (WARN_LEVELS). A check without
++# an assessment (sec.v1) keeps its own rule: status vulnerable caps.
++SECURITY_CAP_LEVELS: frozenset[str] = frozenset({"blocked", "exposed"})
+ # Levels that cannot be a treasure whatever the score (treasure.blocked_by "security_<level>"). Default: none beyond
+ # the cap. Candidate (R5 as docs/proposals/scoring.md put it): {"blocked", "exposed"}, with no cap and
+ # pickfit/score.py's SECURITY_EXPOSED_DEDUCTION.
+diff --git a/pickfit/score.py b/pickfit/score.py
+index 123610c..0a64687 100644
+--- a/pickfit/score.py
++++ b/pickfit/score.py
+@@ -112,7 +112,7 @@ Known vulnerabilities (record field security, pickfit/security.py; 念誠 11/3 a
+ scores; what a scan could not read never does (it is the coverage's security dimension). A check with an assessment
+ (sec.v2) acts by its level (security_effect), under schema's settings, each a candidate rule whose default is today's
+ rule (docs/proposals/coverage-distribution.md has what each would do):
+-- schema.SECURITY_CAP_LEVELS (default blocked, exposed, conditional: where sec.v2's status reads vulnerable) caps
++- schema.SECURITY_CAP_LEVELS (blocked and exposed since 11/20, rule 1; conditional before, as WARN_LEVELS) caps
+   quality at 79 (known_vulnerability), so such a record cannot be a treasure; a sec.v1 check, with no assessment,
+   keeps its rule: status vulnerable caps. present_unreachable and not_shipped change nothing;
+ - blocked is also not listed (pickfit security --write hides it);
+diff --git a/tests/test_score_v7.py b/tests/test_score_v7.py
+index ab50b90..a823326 100644
+--- a/tests/test_score_v7.py
++++ b/tests/test_score_v7.py
+@@ -103,7 +103,7 @@ def sec(level: str | None = None, status: str = "vulnerable", state: str | None
+ @pytest.mark.parametrize(("security", "effect", "cap"), [
+     (sec("blocked"), "unlisted", "known_vulnerability"),
+     (sec("exposed"), "capped", "known_vulnerability"),
+-    (sec("conditional"), "capped", "known_vulnerability"),  # today: every level that warns is capped at 79
++    (sec("conditional"), "note", None),  # rule 1 (11/20): conditional is not capped, it gets a line on the page
+     (sec("present_unreachable", status="clean"), "none", None),
+     (sec("not_shipped", status="clean"), "none", None),
+     (sec("none", status="unchecked", state="partial"), "none", None),  # an unknown is never a problem
+@@ -118,7 +118,8 @@ def test_by_default_the_cap_is_todays_and_no_unknown_deducts(security: Any, effe
+     assert got["effect"] == effect and got["deduction"] == 0.0
+     assert schema.binding_cap("cli_tool", False, "function", security) == cap
+     assert required_treasure_block(security, "function") is None
+-    assert schema.SECURITY_CAP_LEVELS == schema.WARN_LEVELS  # where sec.v2's status reads vulnerable
++    # Rule 1 (11/20): blocked and exposed are capped; conditional still reads vulnerable but is not capped.
++    assert schema.SECURITY_CAP_LEVELS == schema.WARN_LEVELS - {"conditional"}
+ 
+ 
+ def test_the_r5_candidates_are_settings(monkeypatch: pytest.MonkeyPatch) -> None:
+@@ -149,17 +150,18 @@ def test_a_scored_record_follows_its_assessment_and_the_settings(tmp_path: Path,
+                                                                  monkeypatch: pytest.MonkeyPatch) -> None:
+     _, _, data = scored(tmp_path)
+     data["scores"]["popularity"]["signals"]["stars"] = 1  # keep it under the popularity line
+-    for level, capped in (("conditional", True), ("exposed", True), ("blocked", True), ("not_shipped", False)):
++    for level, capped in (("conditional", False), ("exposed", True), ("blocked", True), ("not_shipped", False)):
+         data["security"] = sec(level)
+         refresh_scores(data, LATER)
+         q, t = data["scores"]["quality"], data["scores"]["treasure"]
+         assert (q["cap_reason"] == "known_vulnerability") is capped and q["security"]["level"] == level
+         assert "blocked_by" not in t
+         Scores.model_validate(data["scores"])  # the record's security field is sec.v1's until S1 lands
+-    monkeypatch.setattr(schema, "SECURITY_CAP_LEVELS", frozenset({"blocked", "exposed"}))
++    monkeypatch.setattr(schema, "SECURITY_CAP_LEVELS", schema.WARN_LEVELS)  # the rule before 11/20
+     data["security"] = sec("conditional")
+     refresh_scores(data, LATER)
+-    assert data["scores"]["quality"]["cap_reason"] is None and data["scores"]["quality"]["security"]["effect"] == "note"
++    assert data["scores"]["quality"]["cap_reason"] == "known_vulnerability"
++    assert data["scores"]["quality"]["security"]["effect"] == "capped"
+ 
+ 
+ def test_a_fix_out_for_ninety_days_comes_off_maintenance_only_when_switched_on(monkeypatch: pytest.MonkeyPatch
+diff --git a/tests/test_security_v2.py b/tests/test_security_v2.py
+index 9df5f14..bd10348 100644
+--- a/tests/test_security_v2.py
++++ b/tests/test_security_v2.py
+@@ -935,7 +935,8 @@ def test_write_security_stores_the_details_beside_the_record(monkeypatch: pytest
+     assert len(full.findings) == 13 and full.assessment.level == "conditional"
+     stored = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8"))
+     assert stored.security.assessment.level == "conditional" and stored.security.status == "vulnerable"
+-    assert stored.scores.quality.cap_reason == "known_vulnerability"  # status vulnerable: sec.v1's cap still reads it
++    # Rule 1 (11/20): conditional reads vulnerable but is not capped; the page gives it a line.
++    assert stored.scores.quality.cap_reason is None and stored.scores.quality.security.effect == "note"
+     # Re-judging offline from the stored details gives the same level, with no lookups.
+     monkeypatch.setattr(security, "_http", lambda *a, **k: (_ for _ in ()).throw(AssertionError("no network")))
+     again = security.reassess(json.loads(path.read_text(encoding="utf-8")), security.Advisories(), now=NOW,
+diff --git a/worker/src/pages/info.ts b/worker/src/pages/info.ts
+index 071ce5b..a035889 100644
+--- a/worker/src/pages/info.ts
++++ b/worker/src/pages/info.ts
+@@ -44,7 +44,7 @@ export function renderHow(catalog: Catalog, nonce: string): string {
+     `<p>${L('Two scores out of 100, computed apart. <b>Quality</b> is a weighted mean: whether it installed (how many install actions, how many README fixes it needed) 20%, feature results (of the features with a verdict, the share that worked) 20%, how complete the install docs are 25% (a model grades them, quoting the README), maintenance 10%, issue responsiveness 10%, engineering hygiene 5%; reports from real use join as they accumulate. A part with no data drops out instead of counting as zero: a feature pickfit could not try does not lower the score, and only a failure caused by the tool itself does. What drops out lowers <b>confidence</b>, the share of the score that had data, shown beside it with what is missing. <b>Popularity</b> compares stars, forks, downloads and Hacker News points with other tools of the same kind. The example tapes above are illustrative.', '兩個滿分 100 的分數，分開計算。<b>品質</b>是加權平均：能否安裝（需要多少安裝動作、需要幾處 README 修正）占 20%，功能結果（有結論的功能裡，能用的比例）占 20%，安裝文件的完整度占 25%（由模型引用 README 評分），維護狀況占 10%，issue 回應速度占 10%，工程品質占 5%；實際使用的回報累積後也會納入。沒有資料的項目不計入，而不是算零分：pickfit 測不到的功能不會讓分數變低，只有軟體本身造成的失敗才會。不計入的項目會降低<b>信心度</b>，也就是分數裡有資料的比例，它顯示在分數旁邊，並寫出缺了什麼。<b>知名度</b>則把星數、fork 數、下載數和 Hacker News 分數與同類工具比較。上方的範例量尺僅供示意。')}</p>` +
+     `<p>${L('A web app has no README to install from, so its quality is the browser run 50% (it loaded, or it worked when used) and what the browser saw 40% (no account needed, nothing you type sent off your device, no ads, works offline), with real use joining the same way. Its popularity is its GitHub stars, or the points of its Show HN post when it has no public code.', '網頁應用沒有用來安裝的 README，所以它的品質由瀏覽器測試占 50%（能載入，或實際使用時能用），以及瀏覽器觀察到的情況占 40%（不需帳號、輸入內容不會離開裝置、沒有廣告、能離線使用），實際使用的回報也以同樣方式納入。它的知名度是 GitHub 星數；沒有公開原始碼時，則是它 Show HN 貼文的分數。')}</p>` +
+     `<p>${L('Desktop and web apps that pickfit opened also get a visual check: a model looks at pickfit’s own screenshots and lists defects you could point to, such as text cut off, something covering content, a clipped control, a word broken mid-word, low contrast, tiny text, raw code like &amp;gt;, a broken image, misalignment or crowding. Taste and style don’t count. If it finds a defect the app causes, the quality score drops by 5%; finding none adds nothing. An app not checked yet is shown as not visually checked and keeps its score. How serious each defect is doesn’t count yet: in a review by two independent checkers, about one listed defect in four was not real, and most defects called serious were minor.', 'pickfit 打開過的桌面和網頁應用，還會做一次視覺檢查：模型看 pickfit 自己拍的截圖，列出指得出來的缺陷，例如文字被截斷、有東西蓋住內容、控制項被切掉、字在中間斷行、對比太低、字太小、顯示原始碼（像 &amp;gt;）、圖片壞掉、沒對齊或太擠，不評品味和風格。只要找到應用本身造成的缺陷，品質分就扣 5%；沒找到不加分。還沒做視覺檢查的應用會標示「尚未做視覺檢查」，分數不變。缺陷的嚴重程度暫時不算：兩位獨立複查者的檢查中，大約每四個列出的缺陷就有一個不是真的，標成嚴重的大多其實是輕微。')}</p>` +
+-    `<p>${L('pickfit also checks the packages a tool brings against OSV.dev, the public database of known vulnerabilities: what its own install left in the sandbox when pickfit can read that, else what a fresh install or the repository’s lockfiles bring. A known high or critical vulnerability among them caps quality at 79, so the tool can’t be a hidden gem: we would rather miss a gem than recommend software with a known hole. One that pickfit shows is not in what you get (development and build tools, parts for another platform), or sits in code the tool never uses, is listed and changes nothing. Software pickfit could not check (no lockfile to read, for example) keeps its score, and its page says it was not checked: not checked is neither a known hole nor safe.', 'pickfit 也會拿軟體帶進來的套件，比對公開的已知漏洞資料庫 OSV.dev：讀得到 pickfit 在沙盒裡實際裝好的東西就讀它，否則讀全新安裝或 repo 的 lockfile 會帶進來的套件。只要其中有已知的高風險或嚴重漏洞，品質最高只算 79 分，因此不會列為寶藏：寧可錯過寶藏，也不推薦有已知漏洞的軟體。pickfit 證明不在你拿到的東西裡（開發或建置用的工具、其他平台才用的部分），或在軟體從不執行的程式碼裡的漏洞，會列出來，但不影響分數。pickfit 無法檢查的軟體（例如沒有可讀取的 lockfile）分數不變，頁面上會標明沒有檢查。沒有檢查不代表有漏洞，也不代表安全。')}</p>` +
++    `<p>${L('pickfit also checks the packages a tool brings against OSV.dev, the public database of known vulnerabilities: what its own install left in the sandbox when pickfit can read that, else what a fresh install or the repository’s lockfiles bring. A known high or critical vulnerability among them that pickfit shows the tool reaches as it runs, or a malicious package, caps quality at 79, so the tool can’t be a hidden gem: we would rather miss a gem than recommend software with a known hole. One that matters only in some uses, or whose reach pickfit could not settle, is shown with a warning and does not cap the score. One that pickfit shows is not in what you get (development and build tools, parts for another platform), or sits in code the tool never uses, is listed and changes nothing. Software pickfit could not check (no lockfile to read, for example) keeps its score, and its page says it was not checked: not checked is neither a known hole nor safe.', 'pickfit 也會拿軟體帶進來的套件，比對公開的已知漏洞資料庫 OSV.dev：讀得到 pickfit 在沙盒裡實際裝好的東西就讀它，否則讀全新安裝或 repo 的 lockfile 會帶進來的套件。其中有已知的高風險或嚴重漏洞，而且 pickfit 證明軟體執行時會碰到，或有惡意套件時，品質最高只算 79 分，因此不會列為寶藏：寧可錯過寶藏，也不推薦有已知漏洞的軟體。只在特定用法下才碰得到、或 pickfit 判斷不出會不會碰到的漏洞，頁面會標出警告，但不封頂分數。pickfit 證明不在你拿到的東西裡（開發或建置用的工具、其他平台才用的部分），或在軟體從不執行的程式碼裡的漏洞，會列出來，但不影響分數。pickfit 無法檢查的軟體（例如沒有可讀取的 lockfile）分數不變，頁面上會標明沒有檢查。沒有檢查不代表有漏洞，也不代表安全。')}</p>` +
+     `<p>${badge('gem', L('Hidden gem', '寶藏'), { icon: 'gem' })}${L(` marks a verified tool with quality 80 or more and popularity 45 or less: ${s.gems} tools today. Fitz ranks by fit to your need, not by either score.`, ` 標示品質 80 以上、知名度 45 以下的已驗證工具：目前共 ${s.gems} 款。Fitz 看合不合你的需求排序，不看分數。`)}</p>` +
+     `<h3>${L('Features checked', '已檢查的功能')}</h3><p>${L('The run tries each main feature the README advertises. Some need an account, a GPU, a display or hardware the sandbox doesn’t have; those stay unchecked, and the card gives the reason. A feature whose test failed with the tool’s own error is marked as failed.', '測試會試用 README 宣傳的每項主要功能。有些功能需要帳號、GPU、螢幕或沙盒沒有的硬體；這些就保持未檢查，工具卡會說明原因。測試時出現工具本身錯誤的功能，會標示為失敗。')}</p>` +
+     `<h3>${L('Match labels', '符合度標籤')}</h3><p>${L('When the model is paused, pickfit ranks by rules and labels each pick ', '模型暫停時，pickfit 改用規則排序，並看簡介提到你的哪些字詞，把每個選項標為 ')}${badge('pass', L('Good match', '高度符合'))} ${badge('caution', L('Partial match', '部分符合'))}${L(' or ', ' 或 ')}${badge('caution', L('Weak match', '勉強符合'))}${L(' by which of your words its profile mentions. With the model, Claude writes the fit sentence and code checks each of its reasons.', '。使用模型時，由 Claude 寫出符合原因，再由程式核對每個理由。')}</p>` +
+diff --git a/worker/test/security.test.ts b/worker/test/security.test.ts
+index 9351ae8..72ec73f 100644
+--- a/worker/test/security.test.ts
++++ b/worker/test/security.test.ts
+@@ -164,7 +164,9 @@ test('the tool page shows the mark from the index, and the How page explains the
+   assert.match(how, /caps quality at 79, so the tool can’t be a hidden gem/);
+   assert.match(how, /keeps its score, and its page says it was not checked/);
+   // The cap is the How page's to explain: the quality popover every page carries no longer states it.
+-  assert.match(how, /A known high or critical vulnerability among them caps quality at 79/);
++  assert.match(how, /that pickfit shows the tool reaches as it runs, or a malicious package, caps quality at 79/);
++  // Rule 1 (11/20): a conditional finding is warned about but does not cap.
++  assert.match(how, /whose reach pickfit could not settle, is shown with a warning and does not cap the score/);
+   // sec.v2: a finding shown not shipped or never reached changes nothing; not checked is no verdict (11/19).
+   assert.match(how, /is not in what you get \(development and build tools, parts for another platform\)/);
+   assert.match(how, /not checked is neither a known hole nor safe/);
+@@ -173,6 +175,7 @@ test('the tool page shows the mark from the index, and the How page explains the
+   assert.match(howZh, /比對公開的已知漏洞資料庫 OSV\.dev/);
+   assert.match(howZh, /品質最高只算 79 分，因此不會列為寶藏/);
+   assert.match(howZh, /沒有檢查不代表有漏洞，也不代表安全/);
++  assert.match(howZh, /頁面會標出警告，但不封頂分數/);
+ });
+ 
+ test('get_install_guide: the security field, and a warning to tell the user before installing', () => {
