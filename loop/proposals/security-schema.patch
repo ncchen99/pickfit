@@ -1,6 +1,6 @@
 --- a/pickfit/schema.py
 +++ b/pickfit/schema.py
-@@ -1671,32 +1671,259 @@
+@@ -1671,32 +1671,269 @@
      if score is None or run_id not in runs:
          return None
      return 1.0 if score == 2 else VISUAL_FACTOR
@@ -48,14 +48,19 @@
 +type ReachMethod = Literal[
 +    "none", "lockfile_scope", "manifest_scope", "installed_artifact", "entry_point_grep", "option_grep",
 +    "symbol_grep", "import_grep", "govulncheck_binary", "govulncheck_source", "next_static_export", "model_triage"]
- 
- 
++
++
 +def security_status_for(level: str, coverage: str = "complete") -> str:
 +    """The sec.v1 status a level and a coverage state read as: vulnerable only for a level that warns; an unknown is
 +    unchecked, never vulnerable and never clean."""
 +    if level in WARN_LEVELS:
 +        return "vulnerable"
 +    return "clean" if coverage == "complete" else "unchecked"
++
++
++def _empty(value: Any) -> bool:
++    """A sec.v2-only field left out of a dump when it holds nothing, so a sec.v1 finding dumps as it was written."""
++    return value is None or value == []
 +
 +
 +class SecurityReachability(_Model):
@@ -86,8 +91,8 @@
 +    verdict: Literal["exposed", "conditional", "not_exposed"]
 +    evidence: list[Annotated[str, StringConstraints(max_length=300)]] = Field(default=[], max_length=5)
 +    at: AwareDatetime
-+
-+
+ 
+ 
  class SecurityFinding(_Model):
 -    """One high or critical OSV advisory (or a malicious-package report) on a package a fresh install brings."""
 +    """One OSV advisory (or a malicious-package report) on one version of a package the software brings.
@@ -107,43 +112,48 @@
      summary: str = Field(max_length=200)
      malicious: bool = False
 +    # sec.v2 only
-+    aliases: list[str] = Field(default=[], max_length=20)
-+    published: AwareDatetime | None = None
-+    modified: AwareDatetime | None = None
-+    purl: str | None = Field(default=None, max_length=300)
-+    cvss_v3: str | None = Field(default=None, max_length=200)
-+    cvss_v4: str | None = Field(default=None, max_length=300)
-+    attack_vector: Literal["network", "adjacent", "local", "physical"] | None = None
-+    cwes: list[str] = Field(default=[], max_length=10)
-+    dos_only: bool | None = Field(default=None, description="Only availability is hit (CVSS C:N/I:N, else the words).")
++    aliases: list[str] = Field(exclude_if=_empty, default=[], max_length=20)
++    published: AwareDatetime | None = Field(default=None, exclude_if=_empty)
++    modified: AwareDatetime | None = Field(default=None, exclude_if=_empty)
++    purl: str | None = Field(exclude_if=_empty, default=None, max_length=300)
++    cvss_v3: str | None = Field(exclude_if=_empty, default=None, max_length=200)
++    cvss_v4: str | None = Field(exclude_if=_empty, default=None, max_length=300)
++    attack_vector: Literal["network", "adjacent", "local", "physical"] | None = Field(default=None, exclude_if=_empty)
++    cwes: list[str] = Field(exclude_if=_empty, default=[], max_length=10)
++    dos_only: bool | None = Field(exclude_if=_empty, default=None,
++                                  description="Only availability is hit (CVSS C:N/I:N, else the words).")
 +    fix_published_at: AwareDatetime | None = Field(
-+        default=None, description="When fixed_in came out (deps.dev): a maintenance signal for scoring, not a cap.")
-+    scope: DependencyScope | None = None
++        exclude_if=_empty, default=None,
++        description="When fixed_in came out (deps.dev): a maintenance signal for scoring, not a cap.")
++    scope: DependencyScope | None = Field(default=None, exclude_if=_empty)
 +    paths: list[Annotated[str, StringConstraints(max_length=400)]] = Field(
-+        default=[], max_length=3, description="Shortest dependency paths, 'root > a > b'.")
-+    workspace: str | None = Field(default=None, max_length=200)
-+    platform: list[str] = Field(default=[], max_length=6, description="Only on these OSes (os fields, cfg()).")
-+    found_in: str | None = Field(default=None, max_length=300,
++        exclude_if=_empty, default=[], max_length=3, description="Shortest dependency paths, 'root > a > b'.")
++    workspace: str | None = Field(exclude_if=_empty, default=None, max_length=200)
++    platform: list[str] = Field(exclude_if=_empty, default=[], max_length=6,
++                                description="Only on these OSes (os fields, cfg()).")
++    found_in: str | None = Field(exclude_if=_empty, default=None, max_length=300,
 +                                 description="The lockfile path, 'registry:<pkg>' or 'sbom:<run id>'.")
-+    in_artifact: bool | None = Field(default=None, description="Seen in the installed artifact's SBOM; null when no "
-+                                                               "SBOM covers its ecosystem.")
-+    kev: bool | None = None
-+    epss: float | None = Field(default=None, ge=0, le=1)
-+    epss_percentile: float | None = Field(default=None, ge=0, le=1)
-+    intel_checked_at: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$",
++    in_artifact: bool | None = Field(exclude_if=_empty, default=None,
++                                     description="Seen in the installed artifact's SBOM; null when no SBOM covers its "
++                                                 "ecosystem.")
++    kev: bool | None = Field(default=None, exclude_if=_empty)
++    epss: float | None = Field(exclude_if=_empty, default=None, ge=0, le=1)
++    epss_percentile: float | None = Field(exclude_if=_empty, default=None, ge=0, le=1)
++    intel_checked_at: str | None = Field(exclude_if=_empty, default=None, pattern=r"^\d{4}-\d{2}-\d{2}$",
 +                                         description="The day KEV and EPSS were read.")
 +    preconditions: list[Annotated[str, StringConstraints(max_length=120)]] = Field(
-+        default=[], max_length=8, description="What must hold for it to matter, as codes: local_access, adjacent_network, "
-+                                              "user_interaction, high_privileges, high_complexity, denial_of_service, "
-+                                              "server_side, option:<NAME>, symbol:<name>, entry:<module>.")
-+    reachability: SecurityReachability | None = None
-+    vex: SecurityVex | None = None
-+    triage: SecurityTriage | None = None
-+    counted: bool | None = Field(default=None, description=(
++        exclude_if=_empty, default=[], max_length=8, description=(
++            "What must hold for it to matter, as codes: local_access, adjacent_network, user_interaction, "
++            "high_privileges, high_complexity, denial_of_service, server_side, option:<NAME>, symbol:<name>, "
++            "entry:<module>."))
++    reachability: SecurityReachability | None = Field(default=None, exclude_if=_empty)
++    vex: SecurityVex | None = Field(default=None, exclude_if=_empty)
++    triage: SecurityTriage | None = Field(default=None, exclude_if=_empty)
++    counted: bool | None = Field(exclude_if=_empty, default=None, description=(
 +        "Counts toward the record's level: high or critical, malicious, or on KEV. Moderate, low and unrated ones are "
 +        "observed only."))
-+    level: FindingLevel | None = None
-+    policy_version: Literal["sec.v2"] | None = None
++    level: FindingLevel | None = Field(default=None, exclude_if=_empty)
++    policy_version: Literal["sec.v2"] | None = Field(default=None, exclude_if=_empty)
  
  
 -class SecurityCheck(_Model):
@@ -270,7 +280,7 @@
      status: Literal["vulnerable", "clean", "unchecked"]
      unchecked_reason: Literal["no_source", "no_lockfile", "lockfile_not_supported", "resolve_failed"] | None = None
      sources: list[str] = Field(default=[], max_length=20, description="What was resolved, e.g. 'npm:x@1.2.0' or a lockfile path.")
-@@ -1709,23 +1936,66 @@
+@@ -1709,25 +1946,68 @@
      findings: list[SecurityFinding] = Field(default=[], max_length=60)
      database: Literal["OSV.dev"] = "OSV.dev"
      checked_at: AwareDatetime
@@ -312,7 +322,7 @@
 +        if state == "unchecked" and self.findings:
 +            raise ValueError("nothing checked, nothing found")
          return self
-+
+ 
 +    def _v1(self) -> SecurityCheck:
 +        if self.observation is not None or self.assessment is not None or self.coverage is not None:
 +            raise ValueError("observation, assessment and coverage are sec.v2")
@@ -325,7 +335,7 @@
 +        if self.findings_total < len(self.findings) or (self.status != "vulnerable") != (self.findings_total == 0):
 +            raise ValueError("findings_total counts every finding kept, and is 0 exactly when not vulnerable")
 +        return self
-+
+ 
 +
 +class SecurityDetails(_Model):
 +    """data/security/<slug>.json: the full observation behind a record's sec.v2 check (every finding, every severity,
@@ -340,10 +350,12 @@
 +    installed: list[dict[str, Any]] = Field(default=[], description=(
 +        "The SBOM's packages (pickfit/sbom.py), so a rescan can look them up again without a box."))
 +    findings: list[SecurityFinding] = []
- 
- 
++
++
  class VisualCheck(_Model):
-@@ -1893,7 +2163,8 @@
+     """Measurable visual defects on the first screens of one passed GUI or web run (comfort.v1, pickfit/usability.py).
+ 
+@@ -1893,7 +2173,8 @@
      security: SecurityCheck | None = Field(
          default=None,
          exclude_if=lambda value: value is None,
@@ -353,7 +365,7 @@
      )
      scores: Scores | None = None
      outcomes: Outcomes = Field(default_factory=Outcomes)
-@@ -2053,6 +2324,11 @@
+@@ -2053,6 +2334,11 @@
      return {"$schema": JSON_SCHEMA_DIALECT, **_model_schema(ExtractionResult)}
  
  
@@ -365,7 +377,7 @@
  # --- Meta strict structured output -------------------------------------------
  # Per notes/meta-model-api.md: strict needs additionalProperties false and every
  # key required on every object; recursive schemas are rejected; limits are 10
-@@ -2186,6 +2462,7 @@
+@@ -2186,6 +2472,7 @@
  SCHEMA_FILES: dict[str, Callable[[], dict[str, Any]]] = {
      "software.v1.json": record_json_schema,
      "extraction.v1.json": extraction_json_schema,
