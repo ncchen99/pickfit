@@ -747,6 +747,9 @@ class Cut:
     # Seconds of the recording left out just before this segment (since the segment before it, or since the
     # recording first showed anything): marked on the segment with its waits ("−11 s").
     gap_before: float = 0.0
+    # The rules' captions within the segment, one per action from pickfit's log: [time in the recording, words]. A
+    # segment without them is captioned whole by `caption`.
+    cues: list[tuple[float, str]] = field(default_factory=list)
 
     @property
     def speed(self) -> int:
@@ -971,14 +974,35 @@ def _drawn_box(path: str | None) -> list[int] | None:
     return [box[0], box[1], box[2] - box[0], box[3] - box[1]] if box else None
 
 
+def ocr_target(screenshot: str | None, x: int, y: int, tool: Any) -> dict[str, Any] | None:
+    """The words pickfit's OCR reads where a click landed, on its own screenshot from just before the click: the text
+    whose box holds the point, else the nearest within 24 pixels. None without OCR (marks.ocr_tool: a Mac host)."""
+    if tool is None or not screenshot or not Path(screenshot).is_file():
+        return None
+    from pickfit.verify import marks
+
+    try:
+        found = [m for m in marks.text_marks(Path(screenshot).read_bytes(), tool) if m.text.strip()]
+    except Exception:  # no OCR answer: the click keeps no name
+        return None
+
+    def apart(m: Any) -> float:
+        dx, dy = max(m.x - x, 0, x - (m.x + m.width)), max(m.y - y, 0, y - (m.y + m.height))
+        return (dx * dx + dy * dy) ** 0.5
+
+    best = min(found, key=apart, default=None)
+    return {"name": " ".join(best.text.split())[:120], "source": "ocr"} if best and apart(best) <= 24 else None
+
+
 def action_rows(op: dict[str, Any], events: list[Event] = (), notes: list[dict[str, Any] | None] = (),
-                os: str = "linux") -> tuple[list[dict[str, Any]], list[str]]:
+                os: str = "linux", ocr: Any = None) -> tuple[list[dict[str, Any]], list[str]]:
     """Every action of one operation as actions.json keeps it, and the texts it masked. A row: its step, its time in
     the recording (start_s, end_s), kind, the keys or the text (masked when the field takes a secret: SECRET_FIELD on
     the field's words or the operator's), place (x, y), what it went for (target: name and where the name came from,
-    and a role where the page said it), the operator's why and what it saw, whether the screen changed after it and
-    when the recording first shows pickfit's screenshot after it (from `events`), and on Linux the part of the screen
-    the app drew on when pickfit chose it (window)."""
+    and a role where the page said it; a click with none is named by `ocr`, the OCR tool, where there is one), the
+    operator's why and what it saw, whether the screen changed after it and when the recording first shows pickfit's
+    screenshot after it (from `events`), and on Linux the part of the screen the app drew on when pickfit chose it
+    (window)."""
     video = op.get("video") or {}
     t0 = video.get("started_at")
     by_step = {e.step: e for e in events if e.step is not None}
@@ -1002,6 +1026,8 @@ def action_rows(op: dict[str, Any], events: list[Event] = (), notes: list[dict[s
                 row[key] = act[key]
         target = step.get("target") or note.get("target") or (
             {"name": act["label"], "source": "dom"} if act.get("label") else None)
+        if target is None and act["kind"] == "click" and "x" in act:
+            target = ocr_target(step.get("screenshot"), act["x"], act["y"], ocr)
         why, saw = step.get("why") or note.get("why") or "", step.get("observation") or note.get("saw") or ""
         if act["kind"] == "key":
             row["key"] = act["name"]
@@ -1135,9 +1161,16 @@ def rule_cuts(events: list[Event], rows: list[dict[str, Any]], duration: float, 
         if faster and result:  # the result's hold is in the clip's time: twice as long in the recording at 2x
             end = min(duration, max(end, acts[-1].end + RESULT_HOLD_S * 2))
         numbers = [e.number for e in inside] or [1]
+        # A caption for each action as it comes (the segment's whole caption is for its review), the opening first.
+        cues = [(start, opening)] if opens else []
+        for e in inside:
+            words = action_caption([r for r in rows if r["step"] - 1 == e.step], os) if e.kind in ACTIONS else None
+            if words and not (cues and cues[-1][1] == words):
+                cues.append((round(max(start, e.t - LEAD_S / 2), 2), words))
         cuts.append(Cut(raw, round(start, 2), round(min(end, duration), 2), label, caption, result, faster,
                         (min(numbers), max(numbers)), "pickfit's rules" + ("; 2x: a long stretch with no change on "
-                                                                          "screen" if faster else "")))
+                                                                          "screen" if faster else ""),
+                        cues=cues if len(cues) > 1 else []))
     return cuts
 
 
@@ -1843,12 +1876,19 @@ def caption_cues(cuts: list[Cut], starts: list[float], lengths: list[float]) -> 
     that say the same), and an action left in a cut gap named on the piece after it."""
     cues: list[dict[str, Any]] = []
     for cut, start, length in zip(cuts, starts, lengths):
-        text = " ".join((cut.caption + (f" (skipped before: {cut.skipped})" if cut.skipped else "")).split())
-        text = text if len(text) <= CAPTION_CUE_MAX else text[:CAPTION_CUE_MAX - 3].rstrip() + "..."
-        if cues and cues[-1]["text"] == text and abs(cues[-1]["end_s"] - start) < 0.05:
-            cues[-1]["end_s"] = round(start + length, 2)
-        elif text:
-            cues.append({"start_s": round(start, 2), "end_s": round(start + length, 2), "text": text})
+        # the rules' own cues: each from where its action shows in the piece until the next (the first from the start)
+        timed = [(0.0 if k == 0 else min(length, max(0.0, cut.clip_at(t))), words) for k, (t, words) in
+                 enumerate(cut.cues)] or [(0.0, cut.caption)]
+        for k, (at, words) in enumerate(timed):
+            text = " ".join((words + (f" (skipped before: {cut.skipped})" if cut.skipped and k == 0 else "")).split())
+            text = text if len(text) <= CAPTION_CUE_MAX else text[:CAPTION_CUE_MAX - 3].rstrip() + "..."
+            a, b = start + at, start + (timed[k + 1][0] if k + 1 < len(timed) else length)
+            if not text or b - a < 0.05:
+                continue
+            if cues and cues[-1]["text"] == text and abs(cues[-1]["end_s"] - a) < 0.05:
+                cues[-1]["end_s"] = round(b, 2)
+            else:
+                cues.append({"start_s": round(a, 2), "end_s": round(b, 2), "text": text})
     return cues
 
 
@@ -1995,6 +2035,9 @@ def _make_clip(video_dir: Path, data_dir: Path, log: Any, earlier: dict[str, Any
                      os=meta["os"])
              for path, _, op, _ in raws]
     source = Path(meta["source"]) if meta.get("source") else None
+    from pickfit.verify import marks as ocr_marks
+
+    ocr = ocr_marks.ocr_tool()  # names a click pickfit's log does not (a Mac host's own OCR; None elsewhere)
     opened: dict[int, float] = {}  # by recording: when it first shows anything (its start event)
     action_lists: list[list[dict[str, Any]]] = []  # by recording: actions.json's rows
     recordings: list[dict[str, Any]] = []
@@ -2011,7 +2054,7 @@ def _make_clip(video_dir: Path, data_dir: Path, log: Any, earlier: dict[str, Any
                            action_changed(path, duration, meta["os"]), shown_times(path, op, duration, meta["os"]))
         out.events.append({"raw": name, "events": [asdict(e) for e in events]})
         opened[k - 1] = events[0].t
-        rows, typed = action_rows(op, events, operator_notes(source, op.get("actions") or []), meta["os"])
+        rows, typed = action_rows(op, events, operator_notes(source, op.get("actions") or []), meta["os"], ocr)
         secrets += typed
         action_lists.append(rows)
         video = op.get("video") or {}
@@ -2030,9 +2073,11 @@ def _make_clip(video_dir: Path, data_dir: Path, log: Any, earlier: dict[str, Any
             mine = rule_cuts(events, rows, duration, k - 1, label, opening, meta["os"])
             for cut in mine:  # its words are pickfit's log's; the same check as a model's caption, all the same
                 problem = caption_problem(cut.caption, evidence)
+                problem = problem or next((caption_problem(w, evidence) for _, w in cut.cues
+                                           if caption_problem(w, evidence)), None)
                 if problem:
                     cut.note = "; ".join(filter(None, [cut.note, f"caption {cut.caption!r} replaced: {problem}"]))
-                    cut.caption = label[:1].upper() + label[1:]
+                    cut.caption, cut.cues = label[:1].upper() + label[1:], []
         else:
             if name in earlier:
                 answer, cost, error = EditList.model_validate({k: v for k, v in earlier[name].items() if k != "raw"}), 0.0, ""
@@ -2228,6 +2273,7 @@ def cut_of(row: dict[str, Any]) -> Cut:
     cut = Cut(**{k: v for k, v in row.items() if k in names})
     cut.events = tuple(cut.events)  # type: ignore[assignment]
     cut.waits = [(float(a), float(b)) for a, b in cut.waits]
+    cut.cues = [(float(t), str(words)) for t, words in cut.cues]
     return cut
 
 

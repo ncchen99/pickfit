@@ -125,6 +125,22 @@ def test_the_rules_cut_the_opening_and_each_action_that_changed_the_screen():
     assert len(one) == 1 and one[0].caption == "Start App, then click, then press Enter" and one[0].result_visible
 
 
+def test_a_long_rules_segment_is_captioned_action_by_action():
+    events = [Event(1, 0.0, 0.0, "start", "s"), Event(2, 0.3, 0.3, "change", "c"),
+              Event(3, 1.0, 1.1, "click", "c", True, (1, 1), 1.3, step=0),
+              Event(4, 2.5, 2.6, "key", "k", True, None, 2.8, step=1),
+              Event(5, 3.5, 4.0, "type", "t", True, None, 4.2, step=2)]
+    rows = [{"step": 1, "kind": "click", "target": {"name": "Open", "source": "ocr"}},
+            {"step": 2, "kind": "key", "key": "cmd+shift+g"}, {"step": 3, "kind": "type", "text": "~/in"}]
+    [cut] = video.rule_cuts(events, rows, 9.0, 0, "f", "Start App", "macos")
+    assert cut.caption == 'Start App, then click “Open”, then press ⇧⌘G, then type "~/in"'  # for its review
+    assert cut.cues == [(0.0, "Start App"), (0.7, "Click “Open”"), (2.2, "Press ⇧⌘G"), (3.2, 'Type "~/in"')]
+    cues = video.caption_cues([cut], [10.0], [cut.seconds])
+    assert [(c["start_s"], c["text"]) for c in cues] == [(10.0, "Start App"), (10.7, "Click “Open”"),
+                                                          (12.2, "Press ⇧⌘G"), (13.2, 'Type "~/in"')]
+    assert cues[-1]["end_s"] == pytest.approx(10.0 + cut.seconds) and cues[0]["end_s"] == 10.7
+
+
 def test_a_rules_segment_passes_when_the_recording_shows_pickfits_screenshot_after_each_action():
     events = _events()
     cut = video.Cut(0, 1.4, 6.5, "f", "c", True, False)
