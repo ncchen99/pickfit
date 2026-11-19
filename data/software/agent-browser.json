@@ -1,0 +1,1343 @@
+{
+  "schema_version": "software.v1",
+  "slug": "agent-browser",
+  "repo_id": "gh:1132001614",
+  "name": "agent-browser",
+  "summary": "A Rust command-line tool that lets AI agents open web pages, read them as an accessibility tree with element refs, and act on elements.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [
+    "let an AI agent click elements on a web page from the shell",
+    "capture screenshots or PDFs of web pages",
+    "drive Mobile Safari in the iOS Simulator"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "snapshot pages as text with element refs",
+    "click, fill and type on page elements",
+    "attach to running Chrome via CDP",
+    "run as an MCP server over stdio"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://agent-browser.dev",
+  "repo": {
+    "url": "https://github.com/vercel-labs/agent-browser",
+    "full_name": "vercel-labs/agent-browser",
+    "created_at": "2026-01-11T05:38:15Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": false,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install agent-browser",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "agent-browser snapshot -i",
+        "expected_signal": "- link \"Learn more\" [ref=e1]"
+      },
+      "first_task": "agent-browser open example.com"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-agent-browser-20261119-143037-2c87",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g agent-browser",
+          "purpose": "npm install -g agent-browser"
+        },
+        {
+          "command": "agent-browser install",
+          "purpose": "agent-browser install (Chrome for Testing download; cannot launch without system libs)"
+        },
+        {
+          "command": "curl -fsSL -o ~/.local/bin/lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux && chmod +x ~/.local/bin/lightpanda && ldd ~/.local/bin/lightpanda",
+          "purpose": "download the static Lightpanda engine binary to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "agent-browser --version",
+        "expected_signal": "agent-browser 0.43.0"
+      },
+      "first_task": "agent-browser --session lp --engine lightpanda open http://127.0.0.1:8765/test.html && agent-browser --session lp snapshot -i"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g agent-browser",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "agent-browser snapshot -i",
+        "expected_signal": "- link \"Learn more\" [ref=e1]"
+      },
+      "first_task": "agent-browser open example.com"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "hybrid",
+  "last_release": {
+    "tag": "v0.43.0",
+    "published_at": "2026-11-12T23:09:31Z",
+    "url": "https://github.com/vercel-labs/agent-browser/releases/tag/v0.43.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T14:32:08.655164+08:00",
+    "runs": [
+      {
+        "id": "verify-agent-browser-20261119-143037-2c87",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T14:32:08.655164+08:00",
+        "tool_version": "agent-browser 0.43.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g agent-browser",
+            "purpose": "npm install -g agent-browser"
+          },
+          {
+            "command": "agent-browser install",
+            "purpose": "agent-browser install (Chrome for Testing download; cannot launch without system libs)"
+          },
+          {
+            "command": "curl -fsSL -o ~/.local/bin/lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux && chmod +x ~/.local/bin/lightpanda && ldd ~/.local/bin/lightpanda",
+            "purpose": "download the static Lightpanda engine binary to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "agent-browser --version",
+            "expected_signal": "agent-browser 0.43.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "agent-browser 0.43.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "agent-browser --session lp --engine lightpanda open http://127.0.0.1:8765/test.html && agent-browser --session lp snapshot -i",
+            "expected_signal": "- link \"Learn more\" [ref=",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "- link \"Learn more\" [ref=e2]",
+            "setup": [
+              {
+                "command": "cat > /home/sbx/work/test.html <<'EOF'\n<!doctype html>\n<html><head><title>Test Page</title></head>\n<body>\n<h1>Hello agent</h1>\n<a href=\"#more\">Learn more</a>\n<input id=\"name\" type=\"text\" aria-label=\"Name\">\n<button id=\"btn\" onclick=\"document.getElementById('out').textContent='clicked:'+document.getElementById('name').value\">Submit</button>\n<p id=\"out\">waiting</p>\n</body></html>\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /home/sbx/work && python3 -m http.server 8765 --bind 127.0.0.1",
+                "background": true,
+                "port": 8765
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "agent-browser --session lp fill \"#name\" \"Ada\" && agent-browser --session lp click \"#btn\" && agent-browser --session lp get text \"#out\" && agent-browser --session cdp --cdp 9222 open http://127.0.0.1:8765/test.html && agent-browser --session cdp get title",
+            "expected_signal": "clicked:Ada",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "clicked:Ada",
+            "setup": [
+              {
+                "command": "cat > /home/sbx/work/test.html <<'EOF'\n<!doctype html>\n<html><head><title>Test Page</title></head>\n<body>\n<h1>Hello agent</h1>\n<a href=\"#more\">Learn more</a>\n<input id=\"name\" type=\"text\" aria-label=\"Name\">\n<button id=\"btn\" onclick=\"document.getElementById('out').textContent='clicked:'+document.getElementById('name').value\">Submit</button>\n<p id=\"out\">waiting</p>\n</body></html>\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /home/sbx/work && python3 -m http.server 8765 --bind 127.0.0.1",
+                "background": true,
+                "port": 8765
+              },
+              {
+                "command": "agent-browser --session lp --engine lightpanda open http://127.0.0.1:8765/test.html && agent-browser --session lp snapshot -i",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "lightpanda serve --host 127.0.0.1 --port 9222",
+                "background": true,
+                "port": 9222
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "printf '%s\\n' '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},\"clientInfo\":{\"name\":\"t\",\"version\":\"1\"}}}' '{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}' '{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\"}' | timeout 20 agent-browser mcp",
+            "expected_signal": "\"name\":\"agent_browser_tab_list\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"id\":2,\"jsonrpc\":\"2.0\",\"result\":{\"tools\":[{\"annotations\":{\"openWorldHint\":true,\"readOnlyHint\":false},\"description\":\"List MCP startup tool profiles and how to enable them.\",\"inputSchema\":{\"properties\":{\"session\":{\"description\":\"Isolated browser session name: Unicode letters, numbers, hyphens, and u…",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "agent-browser install downloads Chrome for Testing; on Linux use agent-browser install --with-deps",
+            "actually_needed": "The Chrome it downloaded failed with exit 127 because libnspr4.so, libnss3.so, libX11.so.6 and about 18 other system libraries were missing. --with-deps runs the package manager through sudo, so without root I used the Lightpanda engine (a static binary from the lightpanda-io nightly release, place…",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "agent-browser open example.com",
+            "actually_needed": "The Lightpanda engine rejects file:// URLs ('Navigation failed: UnsupportedProtocol'), so the test page was served by a local python http.server.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Snapshot refs such as @e1",
+            "actually_needed": "Ref numbers keep counting up within a session (a second snapshot gave e5..e8), so a later command cannot hard-code a ref; I used CSS selectors for fill and click.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "(none)",
+            "actually_needed": "The Lightpanda nightly binary is a downloaded executable I could not read before running it.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exit 0 and show their expected signals: the snapshot lists the link \"Learn more\" [ref=e2], the fill/click flow prints clicked:Ada and the title Test Page, and the version check prints agent-browser 0.43.0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-agent-browser-20261119-143037-2c87/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-agent-browser-20261119-143037-2c87/check-1-cmd12.judged.png",
+            "runs/verify/verify-agent-browser-20261119-143037-2c87/check-2-cmd15.judged.png",
+            "runs/verify/verify-agent-browser-20261119-143037-2c87/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.243208,
+        "features": [
+          {
+            "feature": "snapshot pages as text with element refs",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "click, fill and type on page elements",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "attach to running Chrome via CDP",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "run as an MCP server over stdio",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T14:32:16+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "npm:agent-browser (fresh install, 8 packages)",
+      "github.com/vercel-labs/agent-browser@25b5d76f2843",
+      "cli/Cargo.lock",
+      "pnpm-lock.yaml"
+    ],
+    "packages_checked": 1104,
+    "findings_total": 57,
+    "advisories_total": 54,
+    "findings": [
+      {
+        "package": "crates:zip",
+        "version": "8.2.0",
+        "advisory": "GHSA-m665-v7pm-7grj",
+        "cves": [
+          "CVE-2026-115905"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.5",
+        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "8.2.0",
+        "advisory": "RUSTSEC-2026-0369",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.0",
+        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+        "malicious": false
+      },
+      {
+        "package": "npm:next",
+        "version": "16.3.4",
+        "advisory": "GHSA-2464-fhr4-w9xw",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "16.4.1",
+        "summary": "Next.js: Unauthenticated Remote Code Execution in Image Optimization API when SVG files are used",
+        "malicious": false
+      },
+      {
+        "package": "npm:next",
+        "version": "16.3.4",
+        "advisory": "GHSA-673q-mjm6-r5xr",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "16.4.1",
+        "summary": "Next.js: Unauthenticated Remote Code Execution in `use cache` functions returning typed arrays",
+        "malicious": false
+      },
+      {
+        "package": "npm:next",
+        "version": "16.3.4",
+        "advisory": "GHSA-vcvr-r3jv-pc5j",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "16.3.6",
+        "summary": "Next.js: Remote Code Execution in next/og ImageResponse",
+        "malicious": false
+      },
+      {
+        "package": "npm:proxy-addr",
+        "version": "2.0.7",
+        "advisory": "GHSA-jqcg-44mw-7w3h",
+        "cves": [
+          "CVE-2026-90711"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "2.0.8",
+        "summary": "proxy-addr vulnerable to IP spoofing via IPv4-mapped IPv6 trust subnet",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.17",
+        "advisory": "RUSTSEC-2026-0340",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.18",
+        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.17",
+        "advisory": "RUSTSEC-2026-0343",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.18",
+        "summary": "Outgoing datagram buffer accounting can panic the sender in quinn-proto",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "8.2.0",
+        "advisory": "GHSA-9hj8-73fh-9963",
+        "cves": [
+          "CVE-2026-115907"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: legacy Shrink/Reduce/Implode decoder: denial of service from attacker-controlled ZIP64 uncompressed size",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "8.2.0",
+        "advisory": "GHSA-hjqx-j4rw-g7xv",
+        "cves": [
+          "CVE-2026-115908"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "8.2.0",
+        "advisory": "GHSA-q7v9-x93c-xqv3",
+        "cves": [
+          "CVE-2026-115909"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "8.2.0",
+        "advisory": "RUSTSEC-2026-0367",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+        "malicious": false
+      },
+      {
+        "package": "npm:@modelcontextprotocol/sdk",
+        "version": "1.28.0",
+        "advisory": "GHSA-22jm-h49p-29qw",
+        "cves": [
+          "CVE-2026-111767"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.32.0",
+        "summary": "MCP TypeScript SDK: Experimental tasks were not tied to the session that created them",
+        "malicious": false
+      },
+      {
+        "package": "npm:@modelcontextprotocol/sdk",
+        "version": "1.28.0",
+        "advisory": "GHSA-46jr-4wx8-v453",
+        "cves": [
+          "CVE-2026-111768"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.32.0",
+        "summary": "MCP TypeScript SDK: One HTTP request within the default size limit could exhaust server memory during validation",
+        "malicious": false
+      },
+      {
+        "package": "npm:@modelcontextprotocol/sdk",
+        "version": "1.28.0",
+        "advisory": "GHSA-6qxp-vccf-f47h",
+        "cves": [
+          "CVE-2026-104850"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.31.0",
+        "summary": "MCP TypeScript SDK: OAuth client could send credentials to an authorization server chosen by the MCP server",
+        "malicious": false
+      },
+      {
+        "package": "npm:@modelcontextprotocol/sdk",
+        "version": "1.28.0",
+        "advisory": "GHSA-f897-62hf-6gxq",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "1.30.1",
+        "summary": "MCP TypeScript SDK: HTTP server transports and handlers did not limit request body size or JSON-RPC batch length",
+        "malicious": false
+      },
+      {
+        "package": "npm:body-parser",
+        "version": "2.2.2",
+        "advisory": "GHSA-27r3-jxmh-p828",
+        "cves": [
+          "CVE-2026-111181"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.4.0",
+        "summary": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "5.0.9",
+        "advisory": "GHSA-6j4f-fj2g-mc7p",
+        "cves": [
+          "CVE-2026-102276"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.10",
+        "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "5.0.9",
+        "advisory": "GHSA-qhr7-859c-m2p7",
+        "cves": [
+          "CVE-2026-102278"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.11",
+        "summary": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+        "malicious": false
+      },
+      {
+        "package": "npm:browserslist",
+        "version": "4.28.1",
+        "advisory": "GHSA-73wf-gq98-2v4g",
+        "cves": [
+          "CVE-2026-73088"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.28.7",
+        "summary": "Browserslist: Uncaught crash / prototype write via untrusted browserslist-stats.json custom stats (normalizeStats)",
+        "malicious": false
+      },
+      {
+        "package": "npm:browserslist",
+        "version": "4.28.1",
+        "advisory": "GHSA-c83g-rgw3-j3cx",
+        "cves": [
+          "CVE-2026-73089"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.28.7",
+        "summary": "Browserslist: Unbounded memory growth (no cache eviction) via distinct query results, leading to eventual OOM",
+        "malicious": false
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.0",
+        "advisory": "GHSA-4c8g-83qw-93j6",
+        "cves": [
+          "CVE-2026-13676"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.3",
+        "summary": "fast-uri vulnerable to host confusion via failed IDN canonicalization",
+        "malicious": false
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.0",
+        "advisory": "GHSA-7p8r-x3mc-p8w7",
+        "cves": [
+          "CVE-2026-18446"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.5",
+        "summary": "fast-uri vulnerable to host confusion via backslash authority introducer",
+        "malicious": false
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.0",
+        "advisory": "GHSA-f65p-4m7j-42xc",
+        "cves": [
+          "CVE-2026-75975"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.6",
+        "summary": "fast-uri vulnerable to server-side request forgery via malformed IPv6 normalization",
+        "malicious": false
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.0",
+        "advisory": "GHSA-jqff-g426-hqxp",
+        "cves": [
+          "CVE-2026-76172"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.6",
+        "summary": "fast-uri vulnerable to host confusion via percent-encoded scheme normalization",
+        "malicious": false
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.0",
+        "advisory": "GHSA-q3j6-qgpj-74h6",
+        "cves": [
+          "CVE-2026-6321"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.1",
+        "summary": "fast-uri vulnerable to path traversal via percent-encoded dot segments",
+        "malicious": false
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.0",
+        "advisory": "GHSA-qw65-cvwx-89v3",
+        "cves": [
+          "CVE-2026-84292"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.7",
+        "summary": "fast-uri vulnerable to authority injection via an unvalidated port in serialize",
+        "malicious": false
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.0",
+        "advisory": "GHSA-v2hh-gcrm-f6hx",
+        "cves": [
+          "CVE-2026-16221"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.4",
+        "summary": "fast-uri vulnerable to host confusion via literal backslash authority delimiter",
+        "malicious": false
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.0",
+        "advisory": "GHSA-v39h-62p7-jpjc",
+        "cves": [
+          "CVE-2026-6322"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.2",
+        "summary": "fast-uri vulnerable to host confusion via percent-encoded authority delimiters",
+        "malicious": false
+      },
+      {
+        "package": "npm:hono",
+        "version": "4.12.9",
+        "advisory": "GHSA-88fw-hqm2-52qc",
+        "cves": [
+          "CVE-2026-54290"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.12.25",
+        "summary": "hono: CORS Middleware reflects any Origin with credentials when `origin` defaults to the wildcard",
+        "malicious": false
+      },
+      {
+        "package": "npm:ip-address",
+        "version": "10.1.0",
+        "advisory": "GHSA-mwp4-54f8-5fhr",
+        "cves": [
+          "CVE-2026-69192"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "10.3.1",
+        "summary": "ip-address: Address4 decodes leading-zero octets as decimal while resolvers decode them as octal, allowing SSRF and trust-boundary bypass",
+        "malicious": false
+      },
+      {
+        "package": "npm:js-yaml",
+        "version": "4.1.1",
+        "advisory": "GHSA-2883-xcg3-v3hh",
+        "cves": [
+          "CVE-2026-84375"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.3.2",
+        "summary": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
+        "malicious": false
+      },
+      {
+        "package": "npm:js-yaml",
+        "version": "4.1.1",
+        "advisory": "GHSA-52cp-r559-cp3m",
+        "cves": [
+          "CVE-2026-59869"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.3.0",
+        "summary": "js-yaml: YAML merge-key chains can force quadratic CPU consumption",
+        "malicious": false
+      },
+      {
+        "package": "npm:js-yaml",
+        "version": "4.1.1",
+        "advisory": "GHSA-5p4m-2wfm-xmqj",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "4.3.1",
+        "summary": "JS-YAML: Quadratic CPU consumption in !!omap resolution (3.x and 4.x) — CVE-2026-59870 fix not backported",
+        "malicious": false
+      },
+      {
+        "package": "npm:lodash-es",
+        "version": "4.17.23",
+        "advisory": "GHSA-r5fr-rjxr-66jc",
+        "cves": [
+          "CVE-2026-4800"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.18.0",
+        "summary": "lodash vulnerable to Code Injection via `_.template` imports key names",
+        "malicious": false
+      },
+      {
+        "package": "npm:nanoid",
+        "version": "3.3.11",
+        "advisory": "GHSA-28wg-ghj8-5hjv",
+        "cves": [
+          "CVE-2026-67214"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.3.16",
+        "summary": "nanoid: non-secure generators can loop indefinitely with negative size",
+        "malicious": false
+      },
+      {
+        "package": "npm:nanoid",
+        "version": "3.3.11",
+        "advisory": "GHSA-2v37-7h3g-55p8",
+        "cves": [
+          "CVE-2026-67213"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.3.18",
+        "summary": "nanoid: custom generators can loop indefinitely when size is zero",
+        "malicious": false
+      },
+      {
+        "package": "npm:nanoid",
+        "version": "3.3.11",
+        "advisory": "GHSA-xwg4-73v4-xw9w",
+        "cves": [
+          "CVE-2026-73086"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.3.12",
+        "summary": "nanoid: Integer Overflow or Wraparound",
+        "malicious": false
+      },
+      {
+        "package": "npm:next",
+        "version": "16.3.4",
+        "advisory": "GHSA-cjq9-62q9-8jv4",
+        "cves": [
+          "CVE-2026-94483"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "16.3.8",
+        "summary": "Next.js has Server-Side Request Forgery in Image Optimization",
+        "malicious": false
+      },
+      {
+        "package": "npm:next",
+        "version": "16.3.4",
+        "advisory": "GHSA-p3m5-59mp-jv5r",
+        "cves": [
+          "CVE-2026-94482"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "16.4.1",
+        "summary": "Next.js: Denial of Service in App Router using Server Actions",
+        "malicious": false
+      },
+      {
+        "package": "npm:path-to-regexp",
+        "version": "8.3.0",
+        "advisory": "GHSA-j3q9-mxjg-w52f",
+        "cves": [
+          "CVE-2026-4926"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "8.4.0",
+        "summary": "path-to-regexp vulnerable to Denial of Service via sequential optional groups",
+        "malicious": false
+      },
+      {
+        "package": "npm:picomatch",
+        "version": "2.3.1",
+        "advisory": "GHSA-c2c7-rcm5-vvqj",
+        "cves": [
+          "CVE-2026-33671"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.3.2",
+        "summary": "Picomatch has a ReDoS vulnerability via extglob quantifiers",
+        "malicious": false
+      },
+      {
+        "package": "npm:postcss",
+        "version": "8.5.8",
+        "advisory": "GHSA-6g55-p6wh-862q",
+        "cves": [
+          "CVE-2026-45623"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "8.5.12",
+        "summary": "PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments",
+        "malicious": false
+      },
+      {
+        "package": "npm:postcss",
+        "version": "8.5.8",
+        "advisory": "GHSA-r28c-9q8g-f849",
+        "cves": [
+          "CVE-2026-73646"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "8.5.18",
+        "summary": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+        "malicious": false
+      },
+      {
+        "package": "npm:sharp",
+        "version": "0.35.4",
+        "advisory": "GHSA-wq5f-xc86-pv6w",
+        "cves": [
+          "CVE-2026-114111"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.35.5",
+        "summary": "sharp : Vulnerability in librsvg dependency CVE-2026-96889",
+        "malicious": false
+      },
+      {
+        "package": "npm:source-map-js",
+        "version": "1.2.1",
+        "advisory": "GHSA-68fv-2mgg-jv7q",
+        "cves": [
+          "CVE-2026-93749"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.2.2",
+        "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+        "malicious": false
+      },
+      {
+        "package": "npm:undici",
+        "version": "7.28.0",
+        "advisory": "GHSA-2m5v-pch6-74hx",
+        "cves": [
+          "CVE-2026-109383"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.30.1",
+        "summary": "undici vulnerable to TLS certificate validation bypass via dropped tls options in Agent",
+        "malicious": false
+      },
+      {
+        "package": "npm:undici",
+        "version": "7.28.0",
+        "advisory": "GHSA-4cwx-7wf7-3272",
+        "cves": [
+          "CVE-2026-13697"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.29.0",
+        "summary": "undici vulnerable to cross-user information disclosure and parse-time crash via degenerate private cache directives",
+        "malicious": false
+      },
+      {
+        "package": "npm:undici",
+        "version": "7.28.0",
+        "advisory": "GHSA-4w7w-5xrc-9h26",
+        "cves": [
+          "CVE-2026-109829"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.30.1",
+        "summary": "undici vulnerable to cache poisoning and cross-user disclosure via cross-origin redirects",
+        "malicious": false
+      },
+      {
+        "package": "npm:undici",
+        "version": "7.28.0",
+        "advisory": "GHSA-qrxm-fqhp-jwvm",
+        "cves": [
+          "CVE-2026-87018"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.30.1",
+        "summary": "undici vulnerable to Denial of Service via TLS 1.2 certificate-changing renegotiation",
+        "malicious": false
+      },
+      {
+        "package": "npm:undici",
+        "version": "7.28.0",
+        "advisory": "GHSA-rfgv-xxqx-mfg5",
+        "cves": [
+          "CVE-2026-19534"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.29.1",
+        "summary": "undici vulnerable to Denial of Service via unrequested WebSocket subprotocol",
+        "malicious": false
+      },
+      {
+        "package": "npm:undici",
+        "version": "7.28.0",
+        "advisory": "GHSA-w293-vg96-wgc3",
+        "cves": [
+          "CVE-2026-84961"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.29.1",
+        "summary": "undici vulnerable to TLS certificate validation bypass via dropped connect options in BalancedPool",
+        "malicious": false
+      },
+      {
+        "package": "npm:undici",
+        "version": "7.28.0",
+        "advisory": "GHSA-xjj6-f33q-929c",
+        "cves": [
+          "CVE-2026-109869"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "7.30.1",
+        "summary": "undici vulnerable to Denial of Service via unhandled error on excessive content-encodings",
+        "malicious": false
+      },
+      {
+        "package": "npm:zod",
+        "version": "3.25.76",
+        "advisory": "GHSA-mrhx-c7xc-m3w5",
+        "cves": [
+          "CVE-2023-54404"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.6.6",
+        "summary": "Zod can exhaust memory while validating oversized constrained collections",
+        "malicious": false
+      },
+      {
+        "package": "npm:zod",
+        "version": "4.6.5",
+        "advisory": "GHSA-mrhx-c7xc-m3w5",
+        "cves": [
+          "CVE-2023-54404"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.6.6",
+        "summary": "Zod can exhaust memory while validating oversized constrained collections",
+        "malicious": false
+      },
+      {
+        "package": "npm:zod",
+        "version": "4.3.6",
+        "advisory": "GHSA-mrhx-c7xc-m3w5",
+        "cves": [
+          "CVE-2023-54404"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.6.6",
+        "summary": "Zod can exhaust memory while validating oversized constrained collections",
+        "malicious": false
+      },
+      {
+        "package": "npm:zod",
+        "version": "4.4.3",
+        "advisory": "GHSA-mrhx-c7xc-m3w5",
+        "cves": [
+          "CVE-2023-54404"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.6.6",
+        "summary": "Zod can exhaust memory while validating oversized constrained collections",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T14:32:16+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.625,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 98.9,
+      "signals": {
+        "stars": 52708,
+        "monthly_downloads": 9964634,
+        "forks": 3689,
+        "dependents": null,
+        "release_downloads": 150505,
+        "hn_top_score": 7,
+        "registries_count": 2
+      },
+      "age_days": 312,
+      "packages": [
+        "npm:agent-browser",
+        "homebrew:agent-browser"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.87
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:32:08.688248+08:00",
+      "sources_sha": "7d98f021c857f750dee0347bcaf31218b7242c3e5053053569981eea942e563c",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Browser automation for AI agents: open pages, read them as an accessibility tree, and act on elements from the shell."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "agent-browser is a native Rust CLI that gives an AI agent a browser it can drive one command at a time."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "agent-browser install           # download Chrome for Testing (first time only)"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "npm install -g agent-browser"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "- link \"Learn more\" [ref=e1]"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Flags, environment variables, and `agent-browser.json` are documented in [Configuration](https://agent-browser.dev/configuration)."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Dismiss the covering element, take a new snapshot, and retry."
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Native binaries ship for macOS (ARM64, x64), Linux (ARM64, x64, glibc and musl), and Windows (x64)."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/vercel-labs/agent-browser",
+      "fetched_at": "2026-11-19T14:30:22+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/vercel-labs/agent-browser/blob/main/README.md",
+      "fetched_at": "2026-11-19T14:30:22+08:00"
+    },
+    {
+      "id": "release:v0.43.0",
+      "kind": "release",
+      "url": "https://github.com/vercel-labs/agent-browser/releases/tag/v0.43.0",
+      "fetched_at": "2026-11-19T14:30:22+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "agent-browser is a native Rust CLI that gives an AI agent a browser it can drive one command at a time.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:33+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "npm install -g agent-browser",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:33+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Browser automation CLI for AI agents",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:33+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Browser automation for AI agents: open pages, read them as an accessibility tree, and act on elements from the shell.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:33+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# agent-browser",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:33+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Native binaries ship for macOS (ARM64, x64), Linux (ARM64, x64, glibc and musl), and Windows (x64).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:33+08:00"
+    },
+    {
+      "field": "/prerequisites/apple_silicon_only",
+      "source_id": "readme",
+      "quote": "macOS (ARM64, x64)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:33+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T14:30:22+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T14:30:22+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T14:30:22+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T14:30:22+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.43.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T14:30:22+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "The agent acts on a ref, reads the page again to check the result, and repeats.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:33+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "`screenshot`, `pdf`, `record`, `download`, `diff`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:33+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "drive Mobile Safari in the [iOS Simulator](https://agent-browser.dev/ios)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:33+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "`snapshot` returns the page as compact text with a ref such as `@e1` for each element.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:33+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "`click`, `dblclick`, `fill`, `type`, `press`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:33+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "You can also attach to a running Chrome with `--cdp` or `--auto-connect`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:33+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "For MCP clients, `agent-browser mcp` starts an MCP server over stdio.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:33+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install agent-browser",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:33+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g agent-browser",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:33+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g agent-browser",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:33+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "or use a cloud browser provider such as [Browserbase]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:30:33+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T14:30:22+08:00",
+  "updated_at": "2026-11-19T14:32:16+08:00"
+}
