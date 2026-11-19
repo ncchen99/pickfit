@@ -58,8 +58,8 @@ test('cards carry what the guard checks, with verification on the user OS spelle
   assert.equal(runner.verified_on_user_os, true);
   assert.equal(runner.install_method_user_os, 'brew');
   assert.deepEqual(runner.verified_on, [
-    'macos arm64: installed by hand, function check passed, 2026-10-28',
-    'linux x86_64: sandbox install, replayed from scratch, service check passed, 2026-10-28',
+    'macos arm64: function check passed 2026-10-28, by hand',
+    'linux x86_64: service check passed 2026-10-28, sandbox, replayed',
   ]);
   const transcribe = toCard(catalog.bySlug.get('fixture-transcribe')!, 'macos');
   assert.equal(transcribe.verified_on_user_os, false);

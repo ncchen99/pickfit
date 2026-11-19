@@ -107,7 +107,7 @@ test('cards: only a web app carries the browser facts, and the model may cite th
     [true, false, false, 1, 'none', 'verified'],
   );
   assert.equal(card.verified_on_user_os, null);
-  assert.match((card.verified_on as string[])[0], /^any OS, in a browser: .* function check passed, 2026-11-02$/);
+  assert.match((card.verified_on as string[])[0], /^any OS, in a browser: function check passed 2026-11-02, sandboxed browser$/);
   const other = toCard(catalog.bySlug.get('fixture-json-query')!, 'macos');
   assert.ok(WEB_FIELDS.every((f) => !(f in other)), 'other cards stay as small as before');
   assert.ok(WEB_FIELDS.every((f) => (CARD_FIELDS as readonly string[]).includes(f)));
