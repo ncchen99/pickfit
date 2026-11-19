@@ -1,0 +1,623 @@
+{
+  "schema_version": "software.v1",
+  "slug": "wrkflw",
+  "repo_id": "gh:956947576",
+  "name": "WRKFLW",
+  "summary": "A command-line tool with a TUI for validating and running GitHub Actions workflows locally using Docker, Podman, Kubernetes or emulation.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "infra_devops",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ci",
+    "cli",
+    "devops",
+    "github",
+    "github-actions",
+    "hacktoberfest",
+    "ratatui",
+    "rust",
+    "tui"
+  ],
+  "use_cases": [
+    "validate GitHub Actions workflow files before pushing",
+    "run a GitHub Actions workflow locally in Docker or Podman",
+    "rerun workflows automatically when files change",
+    "validate and run GitLab CI pipelines locally"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "interactive terminal UI for workflows",
+    "validate workflow syntax and structure",
+    "run workflows locally with containers or emulation",
+    "rerun workflows on file changes"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://github.com/bahdotsh/wrkflw",
+  "repo": {
+    "url": "https://github.com/bahdotsh/wrkflw",
+    "full_name": "bahdotsh/wrkflw",
+    "created_at": "2025-03-29T07:25:48Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-wrkflw-20261119-231041-144c",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p /tmp/wk ~/.local/bin && curl -fsSL -o /tmp/wk/w.tar.gz https://github.com/bahdotsh/wrkflw/releases/download/v0.8.0/wrkflw-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/wk/w.tar.gz -C /tmp/wk",
+          "purpose": "Download and extract the v0.8.0 x86_64 musl release binary"
+        },
+        {
+          "command": "install -m 755 /tmp/wk/wrkflw ~/.local/bin/wrkflw && wrkflw --version",
+          "purpose": "Install the binary to ~/.local/bin and print the version"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "install -m 755 /tmp/wk/wrkflw ~/.local/bin/wrkflw && wrkflw --version",
+        "expected_signal": "wrkflw 0.8.0"
+      },
+      "first_task": "wrkflw validate"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.8.0",
+    "published_at": "2026-04-21T19:07:28Z",
+    "url": "https://github.com/bahdotsh/wrkflw/releases/tag/v0.8.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T23:13:14.911036+08:00",
+    "runs": [
+      {
+        "id": "verify-wrkflw-20261119-231041-144c",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T23:13:14.911036+08:00",
+        "tool_version": "wrkflw 0.8.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p /tmp/wk ~/.local/bin && curl -fsSL -o /tmp/wk/w.tar.gz https://github.com/bahdotsh/wrkflw/releases/download/v0.8.0/wrkflw-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/wk/w.tar.gz -C /tmp/wk",
+            "purpose": "Download and extract the v0.8.0 x86_64 musl release binary"
+          },
+          {
+            "command": "install -m 755 /tmp/wk/wrkflw ~/.local/bin/wrkflw && wrkflw --version",
+            "purpose": "Install the binary to ~/.local/bin and print the version"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "install -m 755 /tmp/wk/wrkflw ~/.local/bin/wrkflw && wrkflw --version",
+            "expected_signal": "wrkflw 0.8.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "wrkflw 0.8.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "wrkflw validate",
+            "expected_signal": "✔ Valid",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Validating GitHub workflow file: .github/workflows/ci.yml... ✔ Valid",
+            "setup": [
+              {
+                "command": "mkdir -p .github/workflows && cat > .github/workflows/ci.yml <<'EOF'\nname: CI\non:\n  push:\n    branches: [main]\n  workflow_dispatch:\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - name: Say hello\n        run: echo \"hello from wrkflw\"\n      - name: Second\n        run: echo \"step two done\"\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "wrkflw run --runtime emulation .github/workflows/ci.yml",
+            "expected_signal": "Workflow execution completed successfully!",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "✔ Workflow execution completed successfully!",
+            "setup": [
+              {
+                "command": "mkdir -p .github/workflows && cat > .github/workflows/ci.yml <<'EOF'\nname: CI\non:\n  push:\n    branches: [main]\n  workflow_dispatch:\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - name: Say hello\n        run: echo \"hello from wrkflw\"\n      - name: Second\n        run: echo \"step two done\"\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "(sleep 3 && echo \"# change\" >> .github/workflows/any.yml) & timeout -s INT 25 wrkflw watch",
+            "expected_signal": "TRIGGERED .github/workflows/any.yml",
+            "exit_code": 124,
+            "passed": true,
+            "observed_excerpt": "✔ TRIGGERED .github/workflows/any.yml",
+            "setup": [
+              {
+                "command": "mkdir -p .github/workflows && cat > .github/workflows/ci.yml <<'EOF'\nname: CI\non:\n  push:\n    branches: [main]\n  workflow_dispatch:\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - name: Say hello\n        run: echo \"hello from wrkflw\"\n      - name: Second\n        run: echo \"step two done\"\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "git init -q . && git -c user.email=a@b -c user.name=t add .github && git -c user.email=a@b -c user.name=t commit -qm init",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cat > .github/workflows/any.yml <<'EOF'\nname: Any\non: push\njobs:\n  hello:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo \"watch rerun ok\"\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install wrkflw / cargo build --release",
+            "actually_needed": "The box has no Rust toolchain, so I downloaded the prebuilt x86_64-unknown-linux-musl binary from the v0.8.0 GitHub release instead",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "wrkflw watch",
+            "actually_needed": "Watch mode only works inside a git repository. Outside one it fails with 'not inside a git repository (run `git init` first)', so I had to run git init and make a commit first",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "wrkflw watch runs until Ctrl+C",
+            "actually_needed": "Watch runs until stopped, so for a non-interactive check I ran it under `timeout -s INT`. The command then exits 124, and that exit code is expected",
+            "kind": "note"
+          },
+          {
+            "readme_said": "wrkflw run (auto-detects Docker, then Podman, then emulation)",
+            "actually_needed": "There is no Docker here, so it fell back to emulation. I used --runtime emulation for the run",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exited 0 with expected output: both workflows validated as Valid, the emulated run completed successfully with all steps passing, and the version printed wrkflw 0.8.0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-wrkflw-20261119-231041-144c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-wrkflw-20261119-231041-144c/check-1-cmd5.judged.png",
+            "runs/verify/verify-wrkflw-20261119-231041-144c/check-2-cmd6.judged.png",
+            "runs/verify/verify-wrkflw-20261119-231041-144c/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.229567,
+        "features": [
+          {
+            "feature": "interactive terminal UI for workflows",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "The interactive TUI needs a terminal you can type into, and this box has none"
+          },
+          {
+            "feature": "validate workflow syntax and structure",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "run workflows locally with containers or emulation",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "rerun workflows on file changes",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T23:13:21+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/bahdotsh/wrkflw@b0fdd8df3d8c",
+      "Cargo.lock"
+    ],
+    "packages_checked": 463,
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "crates:rustls-webpki",
+        "version": "0.101.7",
+        "advisory": "GHSA-82j2-j2ch-gfr8",
+        "cves": [
+          "CVE-2026-93599"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.103.13",
+        "summary": "rustls-webpki: Denial of service via panic on malformed CRL BIT STRING",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T23:13:21+08:00",
+    "quality": {
+      "total": 75.3,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7225,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.56,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.55,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 85.5,
+      "signals": {
+        "stars": 3344,
+        "monthly_downloads": 6,
+        "forks": 63,
+        "dependents": null,
+        "release_downloads": 21410,
+        "hn_top_score": 2,
+        "registries_count": 1
+      },
+      "age_days": 600,
+      "packages": [
+        "homebrew:wrkflw"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 10.92
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:13:14.936974+08:00",
+      "sources_sha": "e91e24b9d2773efb41fb7f2b7303b58abbd35781b4285c4f3cb82d69de283e82",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "A command-line tool for validating and executing GitHub Actions workflows locally. Test your workflows on your machine before pushing to GitHub."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "Test your workflows on your machine before pushing to GitHub."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "# Run with auto-detection (default: tries Docker, then Podman, then emulation)"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "cargo install wrkflw"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "# Validate workflows\nwrkflw validate"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "export WRKFLW_PLATFORM=ubuntu-latest=catthehacker/ubuntu:act-latest"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Whatever the action would have installed or checked is missing from the job, so later steps may fail with `command not found`."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "assets: wrkflw-aarch64-apple-darwin.tar.gz, wrkflw-aarch64-unknown-linux-gnu.tar.gz, wrkflw-x86_64-apple-darwin.tar.gz, wrkflw-x86_64-pc-windows-msvc.zip"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/bahdotsh/wrkflw",
+      "fetched_at": "2026-11-19T23:10:28+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/bahdotsh/wrkflw/blob/main/README.md",
+      "fetched_at": "2026-11-19T23:10:26+08:00"
+    },
+    {
+      "id": "release:v0.8.0",
+      "kind": "release",
+      "url": "https://github.com/bahdotsh/wrkflw/releases/tag/v0.8.0",
+      "fetched_at": "2026-11-19T23:10:26+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "A command-line tool for validating and executing GitHub Actions workflows locally.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:10:37+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Test your workflows on your machine before pushing to GitHub.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:10:37+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "topics: ci, cli, devops, github, github-actions",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:10:37+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A command-line tool for validating and executing GitHub Actions workflows locally. Test your workflows on your machine before pushing to GitHub.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:10:37+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# WRKFLW",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:10:37+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:10:28+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:10:28+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T23:10:28+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:10:28+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:10:28+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.8.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:10:26+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "# Validate workflows\nwrkflw validate",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:10:37+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "wrkflw run --runtime docker .github/workflows/ci.yml",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:10:37+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "# Rerun workflows automatically on file changes\nwrkflw watch",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:10:37+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "wrkflw validate .gitlab-ci.yml --gitlab",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:10:37+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**TUI interface** — interactive terminal UI with Workflows, Run (jobs, graph and log views), History, Dispatch and Setup tabs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:10:37+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**Workflow validation** — syntax checks, structural validation, and composite action input cross-checking with CI/CD-friendly exit codes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:10:37+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**Local execution** — Docker, Podman, emulation, or sandboxed **secure emulation** (no containers)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:10:37+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "**Watch mode** — rerun workflows automatically on file changes, with trigger-aware filtering",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:10:37+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "github_api",
+      "quote": "Validate and Run GitHub Actions locally.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:10:37+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T23:10:26+08:00",
+  "updated_at": "2026-11-19T23:13:21+08:00"
+}
