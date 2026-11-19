@@ -1,0 +1,754 @@
+{
+  "schema_version": "software.v1",
+  "slug": "ouch",
+  "repo_id": "gh:349334268",
+  "name": "ouch",
+  "summary": "Command-line tool for compressing, decompressing and listing archives in many formats such as zip, tar, 7z, gz, zst and xz.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "media_files",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "compression",
+    "decompression",
+    "hacktoberfest",
+    "rust"
+  ],
+  "use_cases": [
+    "decompress multiple archives with format detected from extensions",
+    "decompress an archive read from standard input",
+    "list archive contents as a tree"
+  ],
+  "alternatives_to": [
+    "tar",
+    "unzip",
+    "zip"
+  ],
+  "features": [
+    "compress files into archives by output extension",
+    "decompress archives with automatic format detection",
+    "list archive contents",
+    "chain multiple compression formats"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://crates.io/crates/ouch",
+  "repo": {
+    "url": "https://github.com/ouch-org/ouch",
+    "full_name": "ouch-org/ouch",
+    "created_at": "2021-03-19T07:17:27Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "clang (Ubuntu, when building from crates.io)"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install ouch",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "ouch compress one.txt two.txt archive.zip"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-ouch-20261119-210448-ee50",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p /tmp/ouch && curl -fsSL -o /tmp/ouch/ouch.tar.gz https://github.com/ouch-org/ouch/releases/download/0.8.3/ouch-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/ouch/ouch.tar.gz -C /tmp/ouch",
+          "purpose": "Download and extract the 0.8.3 x86_64 musl release bundle"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && install -m 755 /tmp/ouch/ouch-x86_64-unknown-linux-musl/ouch ~/.local/bin/ouch",
+          "purpose": "Install the ouch binary into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ouch --version",
+        "expected_signal": "ouch 0.8.3"
+      },
+      "first_task": "ouch compress one.txt two.txt archive.zip"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "scoop install ouch",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "ouch compress one.txt two.txt archive.zip"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": null,
+  "last_release": {
+    "tag": "0.8.3",
+    "published_at": "2026-09-13T15:53:15Z",
+    "url": "https://github.com/ouch-org/ouch/releases/tag/0.8.3"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T21:05:28.524346+08:00",
+    "runs": [
+      {
+        "id": "verify-ouch-20261119-210448-ee50",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T21:05:28.524346+08:00",
+        "tool_version": "ouch 0.8.3",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p /tmp/ouch && curl -fsSL -o /tmp/ouch/ouch.tar.gz https://github.com/ouch-org/ouch/releases/download/0.8.3/ouch-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/ouch/ouch.tar.gz -C /tmp/ouch",
+            "purpose": "Download and extract the 0.8.3 x86_64 musl release bundle"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && install -m 755 /tmp/ouch/ouch-x86_64-unknown-linux-musl/ouch ~/.local/bin/ouch",
+            "purpose": "Install the ouch binary into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ouch --version",
+            "expected_signal": "ouch 0.8.3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ouch 0.8.3",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "ouch compress one.txt two.txt archive.zip",
+            "expected_signal": "Successfully compressed to \"archive.zip\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "[INFO] Successfully compressed to \"archive.zip\"",
+            "setup": [
+              {
+                "command": "printf 'hello one\\n' > one.txt && printf 'hello two\\n' > two.txt && printf 'file text\\n' > file.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "ouch list archive.zip",
+            "expected_signal": "two.txt",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "two.txt",
+            "setup": [
+              {
+                "command": "printf 'hello one\\n' > one.txt && printf 'hello two\\n' > two.txt && printf 'file text\\n' > file.txt",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "ouch compress one.txt two.txt archive.zip",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "ouch decompress archive.zip --dir out && cat out/one.txt out/two.txt",
+            "expected_signal": "hello two",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hello two",
+            "setup": [
+              {
+                "command": "printf 'hello one\\n' > one.txt && printf 'hello two\\n' > two.txt && printf 'file text\\n' > file.txt",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "ouch compress one.txt two.txt archive.zip",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "ouch compress file.txt file.txt.lz4.zst && ouch decompress file.txt.lz4.zst --dir chained && cat chained/file.txt",
+            "expected_signal": "file text",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "file text",
+            "setup": [
+              {
+                "command": "printf 'hello one\\n' > one.txt && printf 'hello two\\n' > two.txt && printf 'file text\\n' > file.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install ouch / pacman -S ouch / sudo apt install ouch (via pkg.haus)",
+            "actually_needed": "No Rust toolchain, pacman or root was available, so I installed the prebuilt binary from the README's release page instead (ouch-x86_64-unknown-linux-musl.tar.gz, release 0.8.3).",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Verify release binaries with cosign",
+            "actually_needed": "Did not verify the Sigstore signature because cosign is not installed in this box.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "ouch compressed two files into archive.zip, listed both files from the archive, and printed version 0.8.3, all with exit code 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ouch-20261119-210448-ee50/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ouch-20261119-210448-ee50/check-1-cmd6.judged.png",
+            "runs/verify/verify-ouch-20261119-210448-ee50/check-2-cmd7.judged.png",
+            "runs/verify/verify-ouch-20261119-210448-ee50/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.178449,
+        "features": [
+          {
+            "feature": "compress files into archives by output extension",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "decompress archives with automatic format detection",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "list archive contents",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "chain multiple compression formats",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T21:05:33+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/ouch-org/ouch@6df14b05ea6d",
+      "Cargo.lock"
+    ],
+    "packages_checked": 235,
+    "findings_total": 6,
+    "advisories_total": 6,
+    "findings": [
+      {
+        "package": "crates:zip",
+        "version": "8.6.0",
+        "advisory": "GHSA-m665-v7pm-7grj",
+        "cves": [
+          "CVE-2026-115905"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.5",
+        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "8.6.0",
+        "advisory": "RUSTSEC-2026-0369",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.0",
+        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "8.6.0",
+        "advisory": "GHSA-9hj8-73fh-9963",
+        "cves": [
+          "CVE-2026-115907"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: legacy Shrink/Reduce/Implode decoder: denial of service from attacker-controlled ZIP64 uncompressed size",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "8.6.0",
+        "advisory": "GHSA-hjqx-j4rw-g7xv",
+        "cves": [
+          "CVE-2026-115908"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "8.6.0",
+        "advisory": "GHSA-q7v9-x93c-xqv3",
+        "cves": [
+          "CVE-2026-115909"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "8.6.0",
+        "advisory": "RUSTSEC-2026-0367",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T21:05:33+08:00",
+    "quality": {
+      "total": 77.2,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.4429,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 92.1,
+      "signals": {
+        "stars": 3825,
+        "monthly_downloads": 1241,
+        "forks": 162,
+        "dependents": null,
+        "release_downloads": 65267,
+        "hn_top_score": 2,
+        "registries_count": 2
+      },
+      "age_days": 2071,
+      "packages": [
+        "crates:ouch",
+        "homebrew:ouch"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.1
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:05:28.533880+08:00",
+      "sources_sha": "1ddae59ffd00846db94a167ee314dcf06e4728f677d51e6ad5831c209ebf7c0a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "It's a CLI tool for compressing and decompressing various formats."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Painless compression and decompression in the terminal"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "(If you're on Ubuntu, you might need to install `clang` to build it from crates.io.)"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install ouch"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "ouch list source-code.zip --tree"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "## On Windows via Scoop"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/ouch-org/ouch",
+      "fetched_at": "2026-11-19T21:04:36+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/ouch-org/ouch/blob/main/README.md",
+      "fetched_at": "2026-11-19T21:04:32+08:00"
+    },
+    {
+      "id": "release:0.8.3",
+      "kind": "release",
+      "url": "https://github.com/ouch-org/ouch/releases/tag/0.8.3",
+      "fetched_at": "2026-11-19T21:04:32+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "It's a CLI tool for compressing and decompressing various formats.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:04:44+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "It's a CLI tool for compressing and decompressing various formats.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:04:44+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Painless compression and decompression in the terminal",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:04:44+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "It's a CLI tool for compressing and decompressing various formats.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:04:44+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "`ouch` stands for **Obvious Unified Compression Helper**.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:04:44+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "(If you're on Ubuntu, you might need to install `clang` to build it from crates.io.)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:04:44+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T21:04:36+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T21:04:36+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T21:04:36+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T21:04:36+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T21:04:36+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:0.8.3",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T21:04:32+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Use the `decompress` subcommand, `ouch` will detect the extensions automatically.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:04:44+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "cat a.tar.gz | ouch decompress - --format tar.gz",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:04:44+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "ouch list source-code.zip --tree",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:04:44+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "- [`tar`] _1.34_",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:04:44+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "- [`unzip`][infozip] _6.00_",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:04:44+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "- [`zip`][infozip] _3.0_",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:04:44+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "`ouch` detects the extensions of the **output file** to decide what formats to use.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:04:44+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Use the `decompress` subcommand, `ouch` will detect the extensions automatically.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:04:44+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "`ouch list` (alias `l` or `ls`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:04:44+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Formats can be chained:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:04:44+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install ouch",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:04:44+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "pacman -S ouch",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:04:44+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "scoop install ouch",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:04:44+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T21:04:32+08:00",
+  "updated_at": "2026-11-19T21:05:33+08:00"
+}
