@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 import threading
+import time
 from pathlib import Path
 from typing import Any
 
@@ -13,7 +14,7 @@ import pytest
 from test_verify_pipeline import SCRIPT, agent_turns, failed_turns, judge_answer, verify
 from verify_fakes import FakeBox, FakeServer
 
-from pickfit.verify import early_box
+from pickfit.verify import early_box, pipeline
 from pickfit.verify.box import BoxError
 from pickfit.verify.early_box import EarlyBox
 
@@ -205,3 +206,83 @@ def test_the_box_of_an_early_start_is_given_back_when_it_is_discarded():
     assert early is not None
     cost: Any = early.discard()
     assert events == ["start", "unreserve"] and early.box.closed and cost >= 0
+    early.abandon()  # once closed, closed: nothing more
+    assert events == ["start", "unreserve"]
+
+
+# -- a run that ends some other way before the replay takes its box (review 11/19): the box is never left running
+
+
+def closed_soon(box: FakeBox, seconds: float = 5.0) -> bool:
+    """The box gets closed within `seconds` (an abandoned box still starting is closed from its start's thread)."""
+    deadline = time.monotonic() + seconds
+    while not box.closed and time.monotonic() < deadline:
+        time.sleep(0.01)
+    return box.closed
+
+
+def test_an_agent_that_raises_leaves_no_early_box_running(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    lane = Lane()
+
+    def broken(self: Any) -> Any:
+        lane.agent_ran.set()  # the agent got as far as working (so the early box's start goes on)
+        raise RuntimeError("the model API answered 529")
+
+    monkeypatch.setattr(pipeline.VerifyAgent, "run", broken)
+    with pytest.raises(RuntimeError, match="529"):  # the error still reaches the caller (watch's guard)
+        verify(tmp_path, FakeServer(), lane)
+    [agent], [replay] = boxes(lane, "agent"), boxes(lane, "replay")
+    assert agent.closed and closed_soon(replay)
+    assert replay.ran == [] and ("unreserve", "replay") in lane.events  # its place goes back
+
+
+@pytest.mark.parametrize("where", ["plan_from", "read_screen_text"])
+def test_something_that_raises_after_a_passed_agent_leaves_no_early_box_running(tmp_path: Path, where: str,
+                                                                               monkeypatch: pytest.MonkeyPatch):
+    lane = Lane()
+
+    def broken(*args: Any, **kwargs: Any) -> Any:
+        raise ValueError(f"{where} broke")
+
+    monkeypatch.setattr(pipeline, where, broken)  # before the replay box is taken, and between taking and starting
+    with pytest.raises(ValueError, match=f"{where} broke"):
+        verify(tmp_path, FakeServer(*agent_turns(), judge_answer("working")), lane)
+    [replay] = boxes(lane, "replay")
+    assert closed_soon(replay) and replay.ran == [] and ("unreserve", "replay") in lane.events
+
+
+def test_an_interrupt_does_not_wait_for_the_early_box_to_boot(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    class Interrupted(BaseException):  # as KeyboardInterrupt is: not an Exception
+        pass
+
+    booting = threading.Event()
+    lane = Lane()
+    original = SlowBox.start
+
+    def slow_start(self: SlowBox) -> None:
+        if self.role == "replay":
+            booting.wait(10)  # a Windows instance still booting
+        original(self)
+
+    def interrupted(self: Any) -> Any:
+        lane.agent_ran.set()
+        raise Interrupted()
+
+    monkeypatch.setattr(SlowBox, "start", slow_start)
+    monkeypatch.setattr(pipeline.VerifyAgent, "run", interrupted)
+    began = time.monotonic()
+    with pytest.raises(Interrupted):
+        verify(tmp_path, FakeServer(), lane)
+    assert time.monotonic() - began < 5  # the interrupt is not held up by the boot
+    [replay] = boxes(lane, "replay")
+    assert not replay.closed  # still starting: it cannot be closed yet
+    booting.set()
+    assert closed_soon(replay) and ("unreserve", "replay") in lane.events  # closed as soon as its start ended
+
+
+def test_a_run_that_ends_normally_leaves_nothing_to_abandon(tmp_path: Path):
+    lane = Lane()
+    outcome, _ = verify(tmp_path, FakeServer(*agent_turns(), judge_answer("working")), lane)
+    [replay] = boxes(lane, "replay")
+    assert outcome.run.replayed and replay.closed
+    assert lane.events.count(("close", "replay")) == 1 and ("unreserve", "replay") not in lane.events

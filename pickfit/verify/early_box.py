@@ -7,9 +7,12 @@ pipeline makes the replay's box as soon as the agent's has started and starts it
 - it is a box the factory made fresh for the replay, never the agent's and never touched by the agent; nothing
   about the replay changes but when its box started, and the fresh-box rule stands;
 - when the agent passed, the replay takes it (wait(): the start's own error, if it had one, is raised there, as a
-  start in the replay's place would raise it);
+  start in the replay's place would raise it), and the replay's own `finally` closes it from then on;
 - when the agent did not pass, it is closed (discard()); its time is billed and recorded all the same (the ledger's
-  boxes table, and the run's box_usd).
+  boxes table, and the run's box_usd);
+- when the run ends any other way before the replay took it (the agent's model call raised, something after the
+  agent did, an interrupt), `discarding` around verify_task closes it (abandon()): at once if its start is over,
+  else as soon as the start ends, without making the error wait for a boot.
 
 It starts only when the box's provider has room for it now (Box.reserve: EC2's lane limit, two machines in a
 region). The agent's box holds its own place already, so an early box never makes a box that is running wait, and
@@ -19,20 +22,45 @@ PICKFIT_EARLY_REPLAY=0 turns it off.
 
 from __future__ import annotations
 
+import contextvars
+import functools
 import os
 import threading
 import time
 from collections.abc import Callable
+from typing import Any, TypeVar
 
 from pickfit.verify.box import Box
 
 ENV = "PICKFIT_EARLY_REPLAY"
+F = TypeVar("F", bound=Callable[..., Any])
+# The early boxes begun in the current call of a `discarding` function (each thread has its own).
+_BEGUN: contextvars.ContextVar[list[EarlyBox] | None] = contextvars.ContextVar("pickfit_early_boxes", default=None)
 
 
 def wanted(agent_box: Box) -> bool:
     """Should this run start its replay box early: the box class boots slowly and it is not turned off."""
     off = os.environ.get(ENV, "").strip().lower() in ("0", "no", "off", "false")
     return bool(getattr(agent_box, "early_replay", False)) and not off
+
+
+def discarding(func: F) -> F:
+    """Around a function that begins early boxes (pipeline.verify_task): however it ends, a box it began and neither
+    handed to the replay nor discarded is closed (EarlyBox.abandon), so it never runs on, holding a machine's place,
+    after the run is gone."""
+
+    @functools.wraps(func)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        token = _BEGUN.set([])
+        try:
+            return func(*args, **kwargs)
+        finally:
+            begun = _BEGUN.get() or []
+            _BEGUN.reset(token)
+            for early in begun:
+                early.abandon()
+
+    return wrapper  # type: ignore[return-value]
 
 
 class EarlyBox:
@@ -43,7 +71,12 @@ class EarlyBox:
         self.log = log
         self.began = time.monotonic()  # the box is billed from here
         self.start_s: float | None = None
+        self.taken = False  # the replay has it, and closes it
         self._error: BaseException | None = None
+        self._lock = threading.Lock()
+        self._start_over = False
+        self._abandoned = False
+        self._closed = False
         self._thread = threading.Thread(target=self._start, name="early-replay-box", daemon=True)
 
     @classmethod
@@ -68,6 +101,9 @@ class EarlyBox:
             box.unreserve()
             log(f"replay box not started early: {err}")
             return None
+        begun = _BEGUN.get()
+        if begun is not None:
+            begun.append(early)
         log("replay box starting while the agent works")
         return early
 
@@ -78,10 +114,31 @@ class EarlyBox:
         except BaseException as err:  # raised again by wait(), as a start there would raise it
             self._error = err
         self.start_s = round(time.monotonic() - began, 1)
+        with self._lock:
+            self._start_over = True
+            abandoned = self._abandoned
+        if abandoned:  # the run ended while this box was starting: close it now that it can be
+            self._close("the run ended before the replay")
+
+    def _close(self, why: str) -> None:
+        with self._lock:
+            if self._closed:
+                return
+            self._closed = True
+        try:
+            self.box.close()
+        except Exception as err:  # noqa: BLE001 - its provider's lifetime cap ends it anyway
+            self.log(f"replay box close: {type(err).__name__}: {err}")
+        try:
+            self.box.unreserve()
+        except Exception as err:  # noqa: BLE001 - a slot also goes back when its machine's lifetime is over
+            self.log(f"replay box unreserve: {type(err).__name__}: {err}")
+        self.log(f"replay box closed unused after {time.monotonic() - self.began:.0f}s ({why})")
 
     def wait(self) -> float:
-        """Wait for the start to end; the seconds that took (0 when the box was up before the agent finished). Raises
-        what the start raised."""
+        """Hand the box to the replay: wait for its start to end and return the seconds that took (0 when the box was
+        up before the agent finished). Raises what the start raised. From here the replay closes the box."""
+        self.taken = True
         began = time.monotonic()
         self._thread.join()
         if self._error is not None:
@@ -91,14 +148,19 @@ class EarlyBox:
     def discard(self) -> float:
         """Close the box unused (the agent did not pass); what its time cost by its rate."""
         self._thread.join()
+        self._close("the agent did not pass")
         try:
-            self.box.close()
-        except Exception as err:  # noqa: BLE001 - its provider's lifetime cap ends it anyway
-            self.log(f"replay box close: {type(err).__name__}: {err}")
-        self.box.unreserve()
-        seconds = time.monotonic() - self.began
-        self.log(f"replay box closed unused after {seconds:.0f}s (the agent did not pass)")
-        try:
-            return self.box.usd_per_second() * seconds
+            return self.box.usd_per_second() * (time.monotonic() - self.began)
         except Exception:  # noqa: BLE001 - a box with no price on file
             return 0.0
+
+    def abandon(self) -> None:
+        """The run ended before the replay took the box: close it, at once when its start is over, else from the start's
+        thread as soon as the start ends. Never waits; nothing to do for a box the replay took."""
+        if self.taken:
+            return
+        with self._lock:
+            self._abandoned = True
+            over = self._start_over
+        if over:
+            self._close("the run ended before the replay")

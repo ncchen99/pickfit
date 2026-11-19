@@ -34,7 +34,7 @@ from pickfit.meta import resolve_model
 from pickfit.schema import VerificationRun, is_passed
 from pickfit.verify.agent import DEFAULT_MODE, AgentLimits, HistoryMode, VerifyAgent, VerifyReport, new_run_id
 from pickfit.verify.box import Box, BoxError
-from pickfit.verify.early_box import EarlyBox
+from pickfit.verify.early_box import EarlyBox, discarding
 from pickfit.verify.feature_judge import judge_features
 from pickfit.verify.features import failed_ids, judge_items
 from pickfit.verify.failure import (
@@ -163,6 +163,7 @@ def _judge_features(task: VerifyTask, report: VerifyReport, replay: ReplayResult
     return judged.verdicts, judged.cost_usd
 
 
+@discarding  # an early replay box this run did not hand to the replay is closed, however the run ends
 def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = None,
                 mode: HistoryMode = DEFAULT_MODE, limits: AgentLimits = AgentLimits(),
                 runs_dir: Path | str | None = None, log: Callable[[str], None] = print,
