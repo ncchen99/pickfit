@@ -1,0 +1,1484 @@
+{
+  "schema_version": "software.v1",
+  "slug": "dbx",
+  "repo_id": "gh:1224172037",
+  "name": "DBX",
+  "summary": "Cross-platform database client for 100+ databases with desktop, Docker, CLI, built-in AI SQL assistant and an MCP server.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "data_db",
+  "kind": "desktop_app",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ai",
+    "cli",
+    "clickhouse",
+    "database",
+    "database-client",
+    "database-management",
+    "docker",
+    "gui",
+    "mcp",
+    "mongodb"
+  ],
+  "use_cases": [
+    "generate SQL from a plain-language description",
+    "let AI coding agents query configured databases over MCP",
+    "preview Parquet, CSV or JSON files by drag and drop",
+    "migrate data between databases"
+  ],
+  "alternatives_to": [
+    "DBeaver",
+    "TablePlus"
+  ],
+  "features": [
+    "connect to 100+ databases in one tool",
+    "AI SQL assistant generating and explaining queries",
+    "MCP server for AI agents",
+    "edit and export query results in data grid"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://dbxio.com",
+  "repo": {
+    "url": "https://github.com/t8y2/dbx",
+    "full_name": "t8y2/dbx",
+    "created_at": "2026-04-29T03:00:36Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "windows",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install --cask dbx",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "dbx connections list --json"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-dbx-20261119-153035-8c16",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/apps && curl -fL -o ~/apps/DBX.AppImage https://github.com/t8y2/dbx/releases/download/v0.6.71/DBX_0.6.71_amd64.AppImage",
+          "purpose": "download DBX 0.6.71 amd64 AppImage to ~/apps"
+        },
+        {
+          "command": "chmod +x ~/apps/DBX.AppImage",
+          "purpose": "chmod +x the AppImage"
+        },
+        {
+          "command": "npm install -g @dbx-app/cli",
+          "purpose": "npm install -g @dbx-app/cli"
+        },
+        {
+          "command": "npm install -g @dbx-app/mcp-server@0.4.144",
+          "purpose": "npm install -g @dbx-app/mcp-server@0.4.144"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "dbx connections list --json",
+        "expected_signal": "\"connections\""
+      },
+      "first_task": "~/apps/DBX.AppImage --appimage-extract-and-run"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @dbx-app/cli",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "dbx connections list --json"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "packages-v0.4.144",
+    "published_at": "2026-11-16T04:49:32Z",
+    "url": "https://github.com/t8y2/dbx/releases/tag/packages-v0.4.144"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T15:44:05.380392+08:00",
+    "runs": [
+      {
+        "id": "verify-dbx-20261119-153035-8c16",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-19T15:44:05.380392+08:00",
+        "tool_version": "0.6.71",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/apps && curl -fL -o ~/apps/DBX.AppImage https://github.com/t8y2/dbx/releases/download/v0.6.71/DBX_0.6.71_amd64.AppImage",
+            "purpose": "download DBX 0.6.71 amd64 AppImage to ~/apps"
+          },
+          {
+            "command": "chmod +x ~/apps/DBX.AppImage",
+            "purpose": "chmod +x the AppImage"
+          },
+          {
+            "command": "npm install -g @dbx-app/cli",
+            "purpose": "npm install -g @dbx-app/cli"
+          },
+          {
+            "command": "npm install -g @dbx-app/mcp-server@0.4.144",
+            "purpose": "npm install -g @dbx-app/mcp-server@0.4.144"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "dbx connections list --json",
+            "expected_signal": "\"connections\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"connections\": []",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "printf '%s\\n' '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2024-11-05\",\"capabilities\":{},\"clientInfo\":{\"name\":\"t\",\"version\":\"1\"}}}' '{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}' '{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/list\"}' | timeout 30 dbx-mcp-server",
+            "expected_signal": "\"name\":\"dbx_list_tables\"",
+            "exit_code": 0,
+            "passed": false,
+            "observed_excerpt": "{\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"tools\":[{\"name\":\"dbx_add_connection\",\"description\":\"Add a new database connection to DBX\",\"inputSchema\":{\"$schema\":\"https://json-schema.org/draft/2020-12/schema\",\"required\":[\"name\",\"db_type\",\"host\"],\"type\":\"object\",\"properties\":{\"name\":{\"type\":\"string\"},\"db_type\":…",
+            "setup": [],
+            "offline": null
+          },
+          {
+            "command": "~/apps/DBX.AppImage --appimage-extract-and-run",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "~/apps/DBX.AppImage --appimage-extract-and-run",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: on screen (read by the screen judge, claude-opus-5-5, from pickfit's last screenshot): \"57900\": yes",
+            "setup": [
+              {
+                "command": "mkdir -p ~/pickfit-data && python3 -c \"import sqlite3;c=sqlite3.connect('/home/sbx/pickfit-data/test.db');c.execute('create table items(id integer primary key, name text, qty integer)');c.executemany('insert into items(name,qty) values(?,?)',[('apple',123),('pear',456)]);c.commit()\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "~/apps/DBX.AppImage --appimage-extract-and-run",
+            "expected_signal": "gui check: passed",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui result: clipboard (read by the display user): 19 characters; contains \"apple\": yes; contains \"861\": yes; contains \"3192\": yes",
+            "setup": [
+              {
+                "command": "mkdir -p ~/pickfit-data && python3 -c \"import sqlite3;c=sqlite3.connect('/home/sbx/pickfit-data/test.db');c.execute('create table items(id integer primary key, name text, qty integer)');c.executemany('insert into items(name,qty) values(?,?)',[('apple',123),('pear',456)]);c.commit()\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Download the latest release from the Releases page (Linux install shown only via Flatpak from FlatPark)",
+            "actually_needed": "The AppImage DBX_0.6.71_amd64.AppImage from GitHub releases runs without root via --appimage-extract-and-run",
+            "kind": "note"
+          },
+          {
+            "readme_said": "SQLite connection with a file path",
+            "actually_needed": "The SQLite file must already exist; DBX reports 'file does not exist' and does not create a new one (op 9)",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Export results as CSV",
+            "actually_needed": "The file-export path could not be completed by the operator here (op 13); Copy as CSV to the clipboard worked",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The command exited 0 and printed valid JSON with an empty \"connections\" array, which contains the expected signal. / DBX main window fully drawn with toolbar, empty connections sidebar, and a dashboard showing 0 connections, Quick Start, Shortcuts, Query History and AI Agent Integration panels.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-dbx-20261119-153035-8c16/report.json",
+          "log_path": "runs/verify/verify-dbx-20261119-153035-8c16/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-dbx-20261119-153035-8c16/check-1-cmd8.judged.png",
+            "runs/verify/verify-dbx-20261119-153035-8c16/replay-7-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 1.510343,
+        "gui": {
+          "tier": "action_checked",
+          "screen": "main_ui",
+          "command": "~/apps/DBX.AppImage --appimage-extract-and-run",
+          "window_title": "DBX",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU",
+          "operations": [
+            {
+              "feature": "connect to 100+ databases in one tool",
+              "goal": "In DBX, create a new connection: choose SQLite (under Lightweight), name it pk{nonce}, and in the File Path field type the existing file /home/sbx/pickfit-data/test.db, then save. Open a new SQL query editor for that connection, type: SELECT SUM(qty)*100 AS total FROM items; and run it (Run button). Leave the results grid visible showing the computed value.",
+              "check": "screen_text",
+              "target": null,
+              "expected": [
+                "57900"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "on screen (read by the screen judge, claude-opus-5-5, from pickfit's last screenshot): \"57900\": yes",
+              "smoke_test": 3,
+              "actions": 14,
+              "replay": "actions",
+              "operator_model": "claude-opus-5-5",
+              "screenshots": [
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-11-2-op-1.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-11-2-op-2.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-11-2-op-3.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-11-2-op-4.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-11-2-op-5.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-11-2-op-6.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-11-2-op-7.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-11-2-op-8.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-11-2-op-9.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-11-2-op-10.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-11-2-op-11.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-11-2-op-12.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-11-2-op-13.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-11-2-op-14.png"
+              ]
+            },
+            {
+              "feature": "edit and export query results in data grid",
+              "goal": "In DBX, create a new connection: choose SQLite (under Lightweight), name it pk{nonce}, File Path /home/sbx/pickfit-data/test.db, save. Open a new SQL query editor for that connection, type: SELECT name, qty*7 AS weekly FROM items; and click Run. In the results grid, select all result rows (click a cell then press Ctrl+A), then right-click a selected cell and choose the Copy as CSV option from the context menu (or use the results' Export menu's copy-to-clipboard option for CSV). The results must end up on the clipboard as CSV.",
+              "check": "clipboard",
+              "target": null,
+              "expected": [
+                "apple",
+                "861",
+                "3192"
+              ],
+              "format": null,
+              "passed": true,
+              "observed": "clipboard (read by the display user): 19 characters; contains \"apple\": yes; contains \"861\": yes; contains \"3192\": yes",
+              "smoke_test": 4,
+              "actions": 19,
+              "replay": "actions",
+              "operator_model": "claude-opus-5-5",
+              "screenshots": [
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-15-3-op-1.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-15-3-op-2.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-15-3-op-3.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-15-3-op-4.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-15-3-op-5.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-15-3-op-6.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-15-3-op-7.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-15-3-op-8.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-15-3-op-9.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-15-3-op-10.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-15-3-op-11.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-15-3-op-12.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-15-3-op-13.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-15-3-op-14.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-15-3-op-15.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-15-3-op-16.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-15-3-op-17.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-15-3-op-18.png",
+                "runs/verify/verify-dbx-20261119-153035-8c16/replay-15-3-op-19.png"
+              ]
+            }
+          ]
+        },
+        "features": [
+          {
+            "feature": "connect to 100+ databases in one tool",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "AI SQL assistant generating and explaining queries",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "The AI assistant needs an LLM provider API key"
+          },
+          {
+            "feature": "MCP server for AI agents",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but did not pass again in a fresh box"
+          },
+          {
+            "feature": "edit and export query results in data grid",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T15:44:13+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "npm:@dbx-app/cli (fresh install, 7 packages)",
+      "github.com/t8y2/dbx@20ac9fe8edd2",
+      "Cargo.lock",
+      "agents/drivers/argo-go/go.mod",
+      "agents/drivers/cassandra-go/go.mod",
+      "agents/drivers/duckdb/Cargo.lock",
+      "agents/drivers/etcd-go/go.mod",
+      "agents/drivers/hive-go/go.mod",
+      "agents/drivers/iotdb/go.mod",
+      "agents/drivers/kingbase-go/go.mod",
+      "agents/drivers/nebula-go/go.mod",
+      "agents/drivers/neo4j-go/go.mod",
+      "agents/drivers/oracle-go/go.mod",
+      "agents/drivers/rabbitmq/go.mod",
+      "agents/drivers/rocketmq/go.mod",
+      "agents/drivers/tdengine/Cargo.lock",
+      "agents/drivers/vastbase-go/go.mod",
+      "agents/drivers/xugu/go.mod",
+      "agents/drivers/zookeeper/go.mod",
+      "agents/go-common/go-gssapi/go.mod"
+    ],
+    "packages_checked": 1529,
+    "findings_total": 83,
+    "advisories_total": 41,
+    "findings": [
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "GHSA-m665-v7pm-7grj",
+        "cves": [
+          "CVE-2026-115905"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.5",
+        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "6.0.0",
+        "advisory": "GHSA-m665-v7pm-7grj",
+        "cves": [
+          "CVE-2026-115905"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.5",
+        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "RUSTSEC-2026-0369",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.0",
+        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "6.0.0",
+        "advisory": "RUSTSEC-2026-0369",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.0",
+        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.39.0",
+        "advisory": "GHSA-5cgq-3rg8-m6cv",
+        "cves": [
+          "CVE-2026-42508"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto vulnerable to auth bypass via unenforced @revoked status",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.11.0",
+        "advisory": "GHSA-5cgq-3rg8-m6cv",
+        "cves": [
+          "CVE-2026-42508"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto vulnerable to auth bypass via unenforced @revoked status",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20210711020723-a769d52b0f97",
+        "advisory": "GHSA-5cgq-3rg8-m6cv",
+        "cves": [
+          "CVE-2026-42508"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto vulnerable to auth bypass via unenforced @revoked status",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.6.0",
+        "advisory": "GHSA-5cgq-3rg8-m6cv",
+        "cves": [
+          "CVE-2026-42508"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto vulnerable to auth bypass via unenforced @revoked status",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.39.0",
+        "advisory": "GHSA-89gr-r52h-f8rx",
+        "cves": [
+          "CVE-2026-39831"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: FIDO/U2F security key physical presence check can be bypassed",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.11.0",
+        "advisory": "GHSA-89gr-r52h-f8rx",
+        "cves": [
+          "CVE-2026-39831"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: FIDO/U2F security key physical presence check can be bypassed",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20210711020723-a769d52b0f97",
+        "advisory": "GHSA-89gr-r52h-f8rx",
+        "cves": [
+          "CVE-2026-39831"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: FIDO/U2F security key physical presence check can be bypassed",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.6.0",
+        "advisory": "GHSA-89gr-r52h-f8rx",
+        "cves": [
+          "CVE-2026-39831"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: FIDO/U2F security key physical presence check can be bypassed",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.39.0",
+        "advisory": "GHSA-f5wc-c3c7-36mc",
+        "cves": [
+          "CVE-2026-39832"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto doesn't drop invoking agent constraints when forwarding keys",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.11.0",
+        "advisory": "GHSA-f5wc-c3c7-36mc",
+        "cves": [
+          "CVE-2026-39832"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto doesn't drop invoking agent constraints when forwarding keys",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20210711020723-a769d52b0f97",
+        "advisory": "GHSA-f5wc-c3c7-36mc",
+        "cves": [
+          "CVE-2026-39832"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto doesn't drop invoking agent constraints when forwarding keys",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.6.0",
+        "advisory": "GHSA-f5wc-c3c7-36mc",
+        "cves": [
+          "CVE-2026-39832"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto doesn't drop invoking agent constraints when forwarding keys",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.39.0",
+        "advisory": "GHSA-jppx-rxg9-jmrx",
+        "cves": [
+          "CVE-2026-39833"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto doesn't enforce invoking key constraints",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.11.0",
+        "advisory": "GHSA-jppx-rxg9-jmrx",
+        "cves": [
+          "CVE-2026-39833"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto doesn't enforce invoking key constraints",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20210711020723-a769d52b0f97",
+        "advisory": "GHSA-jppx-rxg9-jmrx",
+        "cves": [
+          "CVE-2026-39833"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto doesn't enforce invoking key constraints",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.6.0",
+        "advisory": "GHSA-jppx-rxg9-jmrx",
+        "cves": [
+          "CVE-2026-39833"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto doesn't enforce invoking key constraints",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.39.0",
+        "advisory": "GHSA-rm3j-f69w-wqmq",
+        "cves": [
+          "CVE-2026-39834"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto vulnerable to infinite loop on large channel writes",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.11.0",
+        "advisory": "GHSA-rm3j-f69w-wqmq",
+        "cves": [
+          "CVE-2026-39834"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto vulnerable to infinite loop on large channel writes",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20210711020723-a769d52b0f97",
+        "advisory": "GHSA-rm3j-f69w-wqmq",
+        "cves": [
+          "CVE-2026-39834"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto vulnerable to infinite loop on large channel writes",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.6.0",
+        "advisory": "GHSA-rm3j-f69w-wqmq",
+        "cves": [
+          "CVE-2026-39834"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto vulnerable to infinite loop on large channel writes",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.11.0",
+        "advisory": "GHSA-v778-237x-gjrc",
+        "cves": [
+          "CVE-2024-45337"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.31.0",
+        "summary": "Misuse of ServerConfig.PublicKeyCallback may cause authorization bypass in golang.org/x/crypto",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20210711020723-a769d52b0f97",
+        "advisory": "GHSA-v778-237x-gjrc",
+        "cves": [
+          "CVE-2024-45337"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.31.0",
+        "summary": "Misuse of ServerConfig.PublicKeyCallback may cause authorization bypass in golang.org/x/crypto",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.6.0",
+        "advisory": "GHSA-v778-237x-gjrc",
+        "cves": [
+          "CVE-2024-45337"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.31.0",
+        "summary": "Misuse of ServerConfig.PublicKeyCallback may cause authorization bypass in golang.org/x/crypto",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.39.0",
+        "advisory": "GHSA-vgwf-h737-ff37",
+        "cves": [
+          "CVE-2026-39830"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking client can cause server deadlock on unexpected responses",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.11.0",
+        "advisory": "GHSA-vgwf-h737-ff37",
+        "cves": [
+          "CVE-2026-39830"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking client can cause server deadlock on unexpected responses",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20210711020723-a769d52b0f97",
+        "advisory": "GHSA-vgwf-h737-ff37",
+        "cves": [
+          "CVE-2026-39830"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking client can cause server deadlock on unexpected responses",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.6.0",
+        "advisory": "GHSA-vgwf-h737-ff37",
+        "cves": [
+          "CVE-2026-39830"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking client can cause server deadlock on unexpected responses",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.39.0",
+        "advisory": "GHSA-x527-x647-q7gg",
+        "cves": [
+          "CVE-2026-46595"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking VerifiedPublicKeyCallback permissions skip enforcement",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.11.0",
+        "advisory": "GHSA-x527-x647-q7gg",
+        "cves": [
+          "CVE-2026-46595"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking VerifiedPublicKeyCallback permissions skip enforcement",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20210711020723-a769d52b0f97",
+        "advisory": "GHSA-x527-x647-q7gg",
+        "cves": [
+          "CVE-2026-46595"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking VerifiedPublicKeyCallback permissions skip enforcement",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.6.0",
+        "advisory": "GHSA-x527-x647-q7gg",
+        "cves": [
+          "CVE-2026-46595"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking VerifiedPublicKeyCallback permissions skip enforcement",
+        "malicious": false
+      },
+      {
+        "package": "crates:calamine",
+        "version": "0.30.1",
+        "advisory": "RUSTSEC-2026-0436",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.38.0",
+        "summary": "Panic and unbounded allocation (OOM) in the CFB/OLE2 parser on malformed input",
+        "malicious": false
+      },
+      {
+        "package": "crates:hickory-net",
+        "version": "0.26.1",
+        "advisory": "RUSTSEC-2026-0509",
+        "cves": [
+          "CVE-2026-123580"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.26.2",
+        "summary": "NSEC3 records from another zone were accepted in proofs of nonexistence",
+        "malicious": false
+      },
+      {
+        "package": "crates:hickory-resolver",
+        "version": "0.26.1",
+        "advisory": "GHSA-5j98-2g5x-46v6",
+        "cves": [
+          "CVE-2026-93657"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.26.2",
+        "summary": "hickory-resolver: Resolver::lookup() and Resolver::lookup_ip() APIs obscure DNSSEC validation failures",
+        "malicious": false
+      },
+      {
+        "package": "crates:hickory-resolver",
+        "version": "0.26.1",
+        "advisory": "GHSA-6w6g-hm98-mhgm",
+        "cves": [
+          "CVE-2026-123604"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.26.2",
+        "summary": "hickory-resolver: Unbounded TC-retry loop in `NameServerPool::try_send` (resource-exhaustion DoS)",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.37.5",
+        "advisory": "RUSTSEC-2026-0194",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+        "malicious": false
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.37.5",
+        "advisory": "RUSTSEC-2026-0195",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.16",
+        "advisory": "RUSTSEC-2026-0340",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.18",
+        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+        "malicious": false
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.16",
+        "advisory": "RUSTSEC-2026-0341",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.17",
+        "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
+        "malicious": false
+      },
+      {
+        "package": "crates:rmcp",
+        "version": "3.5.1",
+        "advisory": "RUSTSEC-2026-0461",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "3.6.0",
+        "summary": "Unbounded tool schema cache in Streamable HTTP server transport",
+        "malicious": false
+      },
+      {
+        "package": "crates:russh",
+        "version": "0.60.3",
+        "advisory": "GHSA-47hw-gvq5-r2gm",
+        "cves": [
+          "CVE-2026-102823"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.63.1",
+        "summary": "russh: Client-side channel-scoped Handler callbacks fire for channel IDs the client never opened",
+        "malicious": false
+      },
+      {
+        "package": "crates:russh",
+        "version": "0.60.3",
+        "advisory": "GHSA-4r3c-5hpg-58qr",
+        "cves": [
+          "CVE-2026-48110"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.61.0",
+        "summary": "Russh SSH message fields were decoded through allocation-first parsers before field-specific bounds",
+        "malicious": false
+      },
+      {
+        "package": "crates:russh",
+        "version": "0.60.3",
+        "advisory": "GHSA-vp5q-ff62-jwqv",
+        "cves": [
+          "CVE-2026-116794"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.65",
+        "summary": "russh: Agent server never calls `Agent::confirm`, so keys added with the confirm constraint (`ssh-add -c`) sign without confirmation",
+        "malicious": false
+      },
+      {
+        "package": "crates:russh",
+        "version": "0.60.3",
+        "advisory": "GHSA-wwx6-x28x-8259",
+        "cves": [
+          "CVE-2026-46702"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.61.1",
+        "summary": "russh: Post-decompression SSH packet size was not bounded, allowing remote oversized compressed packets",
+        "malicious": false
+      },
+      {
+        "package": "crates:rustls-webpki",
+        "version": "0.101.7",
+        "advisory": "GHSA-82j2-j2ch-gfr8",
+        "cves": [
+          "CVE-2026-93599"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.103.13",
+        "summary": "rustls-webpki: Denial of service via panic on malformed CRL BIT STRING",
+        "malicious": false
+      },
+      {
+        "package": "crates:rustls-webpki",
+        "version": "0.102.8",
+        "advisory": "GHSA-82j2-j2ch-gfr8",
+        "cves": [
+          "CVE-2026-93599"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.103.13",
+        "summary": "rustls-webpki: Denial of service via panic on malformed CRL BIT STRING",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "6.0.0",
+        "advisory": "GHSA-9hj8-73fh-9963",
+        "cves": [
+          "CVE-2026-115907"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: legacy Shrink/Reduce/Implode decoder: denial of service from attacker-controlled ZIP64 uncompressed size",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "GHSA-q7v9-x93c-xqv3",
+        "cves": [
+          "CVE-2026-115909"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "6.0.0",
+        "advisory": "GHSA-q7v9-x93c-xqv3",
+        "cves": [
+          "CVE-2026-115909"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "RUSTSEC-2026-0367",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+        "malicious": false
+      },
+      {
+        "package": "crates:zip",
+        "version": "6.0.0",
+        "advisory": "RUSTSEC-2026-0367",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/apache/thrift",
+        "version": "v0.22.0",
+        "advisory": "GHSA-8wv5-x4w7-5gww",
+        "cves": [
+          "CVE-2026-43871"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.24.0",
+        "summary": "Apache Thrift Python, Go, PHP and Java bindings have an Infinite Loop",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/apache/thrift",
+        "version": "v0.22.0",
+        "advisory": "GHSA-wf45-q9ch-q8gh",
+        "cves": [
+          "CVE-2026-41602"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.23.0",
+        "summary": "Apache Thrift TFramedTransport Go language implementation has an Integer Overflow or Wraparound vulnerability",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/klauspost/compress",
+        "version": "v1.18.0",
+        "advisory": "GHSA-259r-337f-4rfw",
+        "cves": [
+          "CVE-2026-63209"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.18.7",
+        "summary": "Compress/s2: Integer Overflow or Wraparound and Out-of-bounds Write in compress",
+        "malicious": false
+      },
+      {
+        "package": "go:github.com/klauspost/compress",
+        "version": "v1.18.0",
+        "advisory": "GO-2026-6865",
+        "cves": [
+          "CVE-2026-116591"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.2",
+        "summary": "Panic on two-block frames in github.com/klauspost/compress",
+        "malicious": false
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20210711020723-a769d52b0f97",
+        "advisory": "GHSA-8c26-wmh5-6g9v",
+        "cves": [
+          "CVE-2022-27191"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.0.0-20220314234659-1baeb1ce4c0b",
+        "summary": "golang.org/x/crypto/ssh Denial of service via crafted Signer",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T15:44:13+08:00",
+    "quality": {
+      "total": 79.0,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 93.9,
+      "signals": {
+        "stars": 30836,
+        "monthly_downloads": 5149,
+        "forks": 2810,
+        "dependents": null,
+        "release_downloads": 186570,
+        "hn_top_score": 2,
+        "registries_count": 1
+      },
+      "age_days": 204,
+      "packages": [
+        "npm:@dbx-app/cli"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 4.82
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:44:05.403922+08:00",
+      "sources_sha": "8455091dd3f44e6956671b7f44a58a2b1f058cd6c9b1e4429c1a6610fd28be6e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "25 MB lightweight cross-platform database client for 100+ databases, including MySQL, PostgreSQL, SQLite, Redis, MongoDB, DuckDB, SQL Server, and Dameng. Built-in AI, MCP Server, CLI, desktop and Docker."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "DBX also provides a dedicated CLI package for terminal, script, and Codex workflows:"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "No Java JRE. No Python venv. No bundled Chromium. DBX ships as a single small binary — download, install, connect."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "brew install --cask dbx"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "dbx query local \"select 1\" --json"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "If the Web login page requires a password, set `DBX_WEB_PASSWORD` to the same password used there:"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Native app on macOS, Windows, and Linux."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/t8y2/dbx",
+      "fetched_at": "2026-11-19T15:30:30+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/t8y2/dbx/blob/main/README.md",
+      "fetched_at": "2026-11-19T15:30:30+08:00"
+    },
+    {
+      "id": "release:packages-v0.4.144",
+      "kind": "release",
+      "url": "https://github.com/t8y2/dbx/releases/tag/packages-v0.4.144",
+      "fetched_at": "2026-11-19T15:30:30+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Native app on macOS, Windows, and Linux.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:29:35+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "download, install, connect",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:29:35+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "lightweight cross-platform database client",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:29:35+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "25 MB lightweight cross-platform database client for 100+ databases, including MySQL, PostgreSQL, SQLite, Redis, MongoDB, DuckDB, SQL Server, and Dameng. Built-in AI, MCP Server, CLI, desktop and Docker.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:29:35+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "DBX ships as a single small binary",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:29:35+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Native app on macOS, Windows, and Linux.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:29:35+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:30:30+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:30:30+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T15:30:30+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:30:30+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:30:30+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:packages-v0.4.144",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:30:30+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Describe what you want in plain language — get SQL back.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:29:35+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "lets AI coding agents query databases using connections configured in DBX",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:29:35+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "drag & drop Parquet, CSV, JSON to preview instantly",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:29:35+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "**Data transfer** — migrate between databases",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:29:35+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "DBeaver needs Java; TablePlus is Freemium.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:29:35+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "DBeaver needs Java; TablePlus is Freemium.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:29:35+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "100+ Databases, One Tool",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:29:35+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "DBX can explain queries, optimize SQL, fix errors",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:29:35+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "DBX speaks the Model Context Protocol.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:29:35+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Export or copy as CSV, JSON, Markdown, XLSX, or INSERT statements.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:29:35+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install --cask dbx",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:29:35+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g @dbx-app/cli",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:29:35+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g @dbx-app/cli",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T14:29:35+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T14:29:20+08:00",
+  "updated_at": "2026-11-19T15:44:13+08:00"
+}
