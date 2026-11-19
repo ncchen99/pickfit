@@ -857,6 +857,8 @@ def main(argv: list[str] | None = None) -> int:
     _add_usability_command(sub)
     _add_visual_command(sub)
     _add_security_command(sub)
+    from pickfit.coverage import add_parser as add_coverage_parser
+    add_coverage_parser(sub)
     _add_queue_commands(sub)
     _add_outcomes_command(sub)
     _add_publish_command(sub)

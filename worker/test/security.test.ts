@@ -164,11 +164,15 @@ test('the tool page shows the mark from the index, and the How page explains the
   assert.match(how, /caps quality at 79, so the tool can’t be a hidden gem/);
   assert.match(how, /keeps its score, and its page says it was not checked/);
   // The cap is the How page's to explain: the quality popover every page carries no longer states it.
-  assert.match(how, /A known high or critical vulnerability in any of them caps quality at 79/);
+  assert.match(how, /A known high or critical vulnerability among them caps quality at 79/);
+  // sec.v2: a finding shown not shipped or never reached changes nothing; not checked is no verdict (11/19).
+  assert.match(how, /is not in what you get \(development and build tools, parts for another platform\)/);
+  assert.match(how, /not checked is neither a known hole nor safe/);
   assert.doesNotMatch(how, /in what it installs caps quality at 79/);
   const howZh = await (await get('/how?lang=zh-TW')).text();
   assert.match(howZh, /比對公開的已知漏洞資料庫 OSV\.dev/);
   assert.match(howZh, /品質最高只算 79 分，因此不會列為寶藏/);
+  assert.match(howZh, /沒有檢查不代表有漏洞，也不代表安全/);
 });
 
 test('get_install_guide: the security field, and a warning to tell the user before installing', () => {
