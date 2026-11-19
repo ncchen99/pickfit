@@ -334,6 +334,13 @@ def test_the_throughput_settings_come_from_the_environment() -> None:
         env_defaults({"PICKFIT_WATCH_DAILY_USD": "-1"})
 
 
+def test_every_throughput_setting_is_in_the_services_env_example() -> None:
+    from pickfit.watch import WATCH_ENV
+
+    example = (Path(__file__).resolve().parent.parent / "deploy" / "watch" / "watch.env.example").read_text()
+    assert {name for name, _, _ in WATCH_ENV.values()} <= set(re.findall(r"^(PICKFIT_WATCH_\w+)=", example, re.M))
+
+
 def test_the_watch_command_leaves_unset_flags_to_the_environment() -> None:
     from test_watch_lanes import parse
 
