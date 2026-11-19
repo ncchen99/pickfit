@@ -2,6 +2,10 @@
 
 > 報告（2026-11-19），給念誠決定 treasure 規則用。方向在 [coverage.md](coverage.md)。資料是 `data/software/` 裡 1,150 筆上架紀錄，在本機只讀計算，沒有寫回。
 
+## 11/19 的決定
+
+先上規則 6：未驗證的紀錄不再封頂 69 分，但不能當寶藏。規則 3 到 5 不上。規則 1 等 sec.v2 重掃後看 conditional 的分布再定。規則 6 是 `loop/proposals/coverage-rule6-unverified.patch`，接在第四份 patch 後面套，套完馬上跑 `pickfit score --refresh`。
+
 ## 重點
 
 - **預設設定不改分數。** 四份 patch 全部套上、設定都用預設值時，1,150 筆的品質總分、confidence、封頂和寶藏一筆都沒變。會動的只有 R8：`other` 和五個新類別共 124 筆的熱門度改用合併的基準，差距在 −1.3 到 +0.7 分之間，沒有一筆因此得到或失去寶藏。

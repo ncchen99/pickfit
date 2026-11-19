@@ -9,6 +9,8 @@ git apply loop/proposals/security-schema.patch
 git apply loop/proposals/video-captions.patch
 git apply loop/proposals/tokens-t5-2-cli-judge-text-only.patch
 git apply loop/proposals/coverage-scoring-b3v7.patch
+git apply loop/proposals/coverage-rule6-unverified.patch
+uv run pickfit score --refresh
 uv run python scripts/export_schema.py --check
 uv run pytest -q
 ```
@@ -23,6 +25,7 @@ before a, so it fails on every file both touch (pickfit/schema.py, schema/softwa
 | 2 | video-captions.patch | RunVideo captions, card-less chapters and R2 keys (schema.py, schema/); rebased onto 1 |
 | 3 | tokens-t5-2-cli-judge-text-only.patch | the CLI judge sends a check's output once (judge.py and its test) |
 | 4 | coverage-scoring-b3v7.patch | b3.v7 reworked for Verification Coverage (score.py, schema.py, schema/, scripts, tests); replaces scoring-b3v7.patch |
+| 5 | coverage-rule6-unverified.patch | treasure rule 6 on (念誠 11/19): an unverified record loses the 69 cap and cannot be a treasure (schema.py, a score.py docstring, tests) |
 
 The fourth patch's schema/software.v1.json is scripts/export_schema.py's output with all four applied, so the JSON is
 never merged by hand. video-captions.patch was rebased onto security-schema.patch with no change in what it does:
@@ -31,7 +34,12 @@ place differently. Checked on 11/19 in a copy outside every checkout, applying t
 at its stated line (no offset, no fuzz), `export_schema.py --check` passes and the full Python suite passes;
 security-schema.patch also passes `git apply --check` on the branch.
 
-With the default settings nothing in a published quality total, confidence, cap or treasure moves. After the patches,
+Patch 5 must be followed at once by `pickfit score --refresh` (offline, no model call): the stored scores still carry
+the 69 cap, and records do not validate until they are rewritten. Checked on 11/19 the same way: treasures stay 161,
+the 217 records at exactly 69.0 spread out, 108 unverified records with a sec.v1 known vulnerability move to the 79
+cap (79.0: 150 -> 197), and the full suite passes after the refresh (2316 passed).
+
+Through patch 4, with its default settings, nothing in a published quality total, confidence, cap or treasure moves. After the patches,
 `pickfit score --refresh` moves the records to b3.v7 (formula version, scores.inputs, history, raw_total,
 quality.security) and gives 124 records of "other" and the subject categories their pooled popularity (R8; none
 gains or loses a treasure). The sec.v2 rescan (`pickfit security --all --write`) is the security patch's to run; its
