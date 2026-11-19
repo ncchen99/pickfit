@@ -116,6 +116,8 @@ type FeatureGap = Literal[
     "check_not_met",  # the operator finished, but pickfit's own check did not find the result
     "app_error",  # the app showed no window, crashed or showed an error
     "needs_desktop",  # a desktop piece the box's display lacks: a file-chooser portal, a URL handler, Wayland
+    # Set by pickfit, never by the agent: the feature is past the first VERIFY_FEATURES_MAX a run checks.
+    "beyond_budget",
     "other",
 ]
 # Who a failed feature test points at, as pitfall kinds do: only this box, or the tool itself.
@@ -204,9 +206,15 @@ QUOTE_MAX = 300
 COMMAND_MAX = 500
 # A smoke test's setup may write a whole input file with a heredoc.
 SETUP_MAX = 4000
-# Main advertised features: at most this many per tool, each a short label.
-FEATURES_MAX = 4
+# Main advertised features: at most this many per tool, each a short label. A run checks only the first
+# VERIFY_FEATURES_MAX one by one (sandbox time, tokens, video length); the rest are not_checked, beyond_budget.
+FEATURES_MAX = 6
+VERIFY_FEATURES_MAX = 4
 FEATURE_MAX = 80
+# Documented capabilities, for matching only (docs/proposals/capabilities.md): never checked one by one.
+CAPABILITIES_MAX = 40
+CAPABILITY_ITEMS_MAX = 60
+CAPABILITY_ITEM_MAX = 40
 # An MCP client config snippet (a `claude mcp add` line or an mcpServers JSON entry).
 MCP_SNIPPET_MAX = 1500
 MCP_TOOLS_MAX = 200
@@ -841,7 +849,7 @@ class GuiCheck(_Model):
     window_title: str | None = Field(default=None, max_length=200, description="Set by the app; data only.")
     display: str = Field(max_length=120, description="e.g. Xvfb 1280x800x24, no window manager, no GPU.")
     operations: list[GuiOperation] = Field(
-        default=[], max_length=FEATURES_MAX * 2, exclude_if=lambda value: not value,
+        default=[], max_length=VERIFY_FEATURES_MAX * 2, exclude_if=lambda value: not value,
         description="Goals pickfit operated the app toward, and what its checks found.")
 
     @model_validator(mode="after")
@@ -953,14 +961,14 @@ class RunVideo(_Model):
     clip: VideoFile
     clip_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
     seconds: float = Field(gt=0, le=VIDEO_MAX_S)
-    raw: list[VideoRaw] = Field(min_length=1, max_length=FEATURES_MAX * 2)
+    raw: list[VideoRaw] = Field(min_length=1, max_length=VERIFY_FEATURES_MAX * 2)
     recorded_at: AwareDatetime
     recording_run: RunId = Field(description="The recorded replay of this run's steps (its evidence id).")
     model: str = Field(min_length=1, max_length=80, description="Who picked the segments and checked the captions.")
     features: list[Annotated[str, StringConstraints(min_length=1, max_length=FEATURE_MAX)]] = Field(
-        min_length=1, max_length=FEATURES_MAX, description="The run's checked features the clip shows.")
+        min_length=1, max_length=VERIFY_FEATURES_MAX, description="The run's checked features the clip shows.")
     chapters: list[VideoChapter] = Field(
-        default=[], max_length=FEATURES_MAX * 2 + 2, exclude_if=lambda value: not value,
+        default=[], max_length=VERIFY_FEATURES_MAX * 2 + 2, exclude_if=lambda value: not value,
         description=("The clip's chapters in time order, covering it whole: the first card at 0, one chapter for each "
                      "run of segments of one feature, the last card."))
 
@@ -1040,7 +1048,7 @@ class WebCheck(_Model):
     offline: PwaOffline = Field(
         description="verified: a PWA reloaded with the network off and still worked; only PWAs are tested.")
     operations: list[WebOperation] = Field(
-        default=[], max_length=FEATURES_MAX * 2, exclude_if=lambda value: not value,
+        default=[], max_length=VERIFY_FEATURES_MAX * 2, exclude_if=lambda value: not value,
         description="Goals pickfit operated the site toward, and what its checks found.")
 
     @model_validator(mode="after")
@@ -1118,7 +1126,8 @@ class VerificationRun(_Model):
         max_length=FEATURES_MAX,
         exclude_if=lambda value: not value,
         description=(
-            "Which advertised features this run exercised. Empty: none recorded (the tool lists none, "
+            "Which advertised features this run exercised: the first VERIFY_FEATURES_MAX one by one, any "
+            "after them not_checked with reason beyond_budget. Empty: none recorded (the tool lists none, "
             "or it was verified before pickfit checked features)."
         ),
     )
@@ -1150,6 +1159,8 @@ class VerificationRun(_Model):
         """A feature is checked exactly when a passing smoke test of this run covers it."""
         if len({f.feature for f in self.features}) != len(self.features):
             raise ValueError("feature labels must be unique within a run")
+        if sum(f.reason != "beyond_budget" for f in self.features) > VERIFY_FEATURES_MAX:
+            raise ValueError(f"a run checks at most {VERIFY_FEATURES_MAX} features; the rest are beyond_budget")
         for f in self.features:
             if any(i >= len(self.smoke_tests) for i in f.smoke_tests):
                 raise ValueError(f"feature {f.feature!r} cites a smoke test the run does not have")
@@ -1818,6 +1829,21 @@ class UsageGuide(_Model):
     features: list[FeatureGuide] = Field(default=[], max_length=FEATURES_MAX)
 
 
+class Capability(_Model):
+    """One thing the software's own documentation says it does, for matching requests (docs/proposals/capabilities.md).
+
+    Unlike `features`, a capability is never checked one by one: it says only that a source documents it (its
+    quote is in evidence at /capabilities/<i>/label; a sandbox source is the tool's own --help or man page).
+    """
+
+    label: str = Field(min_length=1, max_length=FEATURE_MAX,
+                       description="What a person can do with it, a short English label: 'convert documents to EPUB'.")
+    items: list[Annotated[str, StringConstraints(min_length=1, max_length=CAPABILITY_ITEM_MAX)]] = Field(
+        default=[], max_length=CAPABILITY_ITEMS_MAX, exclude_if=lambda value: not value,
+        description=("When the capability is a list the docs give (formats, protocols, services, subcommands): its "
+                     "members, so a long list takes one entry ('docx', 'epub', 'odt')."))
+
+
 class SoftwareRecord(_Model):
     """One software entry: the canonical file data/software/<slug>.json (software.v1)."""
 
@@ -1847,6 +1873,15 @@ class SoftwareRecord(_Model):
         description=(
             "The main features the sources advertise (quotes in evidence); verification.runs[].features "
             "says which a run exercised."
+        ),
+    )
+    capabilities: list[Capability] = Field(
+        default=[],
+        max_length=CAPABILITIES_MAX,
+        exclude_if=lambda value: not value,
+        description=(
+            "What the sources document the software can do, beyond the main features, for matching only: "
+            "never checked one by one, and shown apart from features (quotes in evidence)."
         ),
     )
     why_worth_it: str | None = Field(default=None, max_length=200)
@@ -1920,6 +1955,13 @@ class SoftwareRecord(_Model):
             raise ValueError("usability belongs to kind desktop_app and web_app only")
         if self.visual_check is not None and self.kind not in ("desktop_app", "web_app"):
             raise ValueError("visual_check belongs to kind desktop_app and web_app only")
+        return self
+
+    @model_validator(mode="after")
+    def _check_capabilities(self) -> SoftwareRecord:
+        labels = [c.label.casefold() for c in self.capabilities]
+        if len(set(labels)) != len(labels):
+            raise ValueError("capability labels must be unique")
         return self
 
     @model_validator(mode="after")

@@ -39,8 +39,8 @@ from pydantic import BaseModel, Field, ValidationError, field_validator
 from pickfit.env import REPO_ROOT, get_env
 from pickfit.ledger import BudgetExceeded, taipei_now
 from pickfit.meta import MetaResult, ToolCall, call_meta, resolve_model
-from pickfit.schema import (COMMAND_MAX, SETUP_MAX, InstallMethod, PitfallKind, UnverifiedReason,
-                            VerificationLevel, is_passed)
+from pickfit.schema import (COMMAND_MAX, SETUP_MAX, VERIFY_FEATURES_MAX, InstallMethod, PitfallKind,
+                            UnverifiedReason, VerificationLevel, is_passed)
 from pickfit.verify import gui
 from pickfit.verify import gui_operate
 from pickfit.verify.audio import ListenArgs, run_listen
@@ -779,7 +779,7 @@ def render_task(task: VerifyTask, plan: InstallPlan, box: Box, limits: AgentLimi
         for t in ex.smoke_test_candidates:
             shown = f" (README shows: {t.expected_output})" if t.expected_output else ""
             lines.append(f"- {t.command}{shown}")
-    listed = feature_checks.render(ex.features, gui=box.display)
+    listed = feature_checks.render(ex.features[:VERIFY_FEATURES_MAX], gui=box.display)
     if listed:
         lines += ["", "Main features the README advertises:", *listed]
         if limits.max_operations > 0:
@@ -1153,9 +1153,9 @@ class VerifyAgent:
         self.verdict = verdict
         self.report.finish = args.model_dump()
         self.report.verdict = verdict.to_dict()
-        names = feature_checks.labels(self.task.extraction.features)
+        names, past = feature_checks.split_budget(feature_checks.labels(self.task.extraction.features))
         resolved = resolve_features(names, args.features, verdict, self.report.commands,
-                                    mcp=is_mcp(self.task))
+                                    mcp=is_mcp(self.task)) + feature_checks.beyond_budget(past, len(names))
         self.report.features = [f.to_dict() for f in resolved]
         said = "agrees" if verdict.agrees else f"lowered to {verdict.level}" if \
             verdict.level != args.level else "with problems"

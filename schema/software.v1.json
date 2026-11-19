@@ -63,6 +63,34 @@
       ],
       "type": "string"
     },
+    "Capability": {
+      "additionalProperties": false,
+      "description": "One thing the software's own documentation says it does, for matching requests (docs/proposals/capabilities.md).\n\nUnlike `features`, a capability is never checked one by one: it says only that a source documents it (its\nquote is in evidence at /capabilities/<i>/label; a sandbox source is the tool's own --help or man page).",
+      "properties": {
+        "items": {
+          "default": [],
+          "description": "When the capability is a list the docs give (formats, protocols, services, subcommands): its members, so a long list takes one entry ('docx', 'epub', 'odt').",
+          "items": {
+            "maxLength": 40,
+            "minLength": 1,
+            "type": "string"
+          },
+          "maxItems": 60,
+          "type": "array"
+        },
+        "label": {
+          "description": "What a person can do with it, a short English label: 'convert documents to EPUB'.",
+          "maxLength": 80,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "label"
+      ],
+      "title": "Capability",
+      "type": "object"
+    },
     "Category": {
       "enum": [
         "dev_cli",
@@ -498,6 +526,7 @@
         "check_not_met",
         "app_error",
         "needs_desktop",
+        "beyond_budget",
         "other"
       ],
       "type": "string"
@@ -2664,7 +2693,7 @@
           "items": {
             "$ref": "#/$defs/FeatureGuide"
           },
-          "maxItems": 4,
+          "maxItems": 6,
           "type": "array"
         },
         "generated_at": {
@@ -2830,11 +2859,11 @@
         },
         "features": {
           "default": [],
-          "description": "Which advertised features this run exercised. Empty: none recorded (the tool lists none, or it was verified before pickfit checked features).",
+          "description": "Which advertised features this run exercised: the first VERIFY_FEATURES_MAX one by one, any after them not_checked with reason beyond_budget. Empty: none recorded (the tool lists none, or it was verified before pickfit checked features).",
           "items": {
             "$ref": "#/$defs/FeatureCheck"
           },
-          "maxItems": 4,
+          "maxItems": 6,
           "type": "array"
         },
         "gpu": {
@@ -3510,6 +3539,15 @@
         }
       ]
     },
+    "capabilities": {
+      "default": [],
+      "description": "What the sources document the software can do, beyond the main features, for matching only: never checked one by one, and shown apart from features (quotes in evidence).",
+      "items": {
+        "$ref": "#/$defs/Capability"
+      },
+      "maxItems": 40,
+      "type": "array"
+    },
     "category": {
       "$ref": "#/$defs/Category"
     },
@@ -3527,7 +3565,7 @@
         "minLength": 1,
         "type": "string"
       },
-      "maxItems": 4,
+      "maxItems": 6,
       "type": "array"
     },
     "first_seen_at": {

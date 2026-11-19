@@ -479,6 +479,7 @@ const WHY_NOT: Record<NotCheckedReason, () => string> = {
   check_not_met: () => L('pickfit used it but didn’t see the result', 'pickfit 操作過，但沒有看到結果'),
   app_error: () => L('The app crashed or showed an error', '應用程式當掉或顯示錯誤'),
   needs_desktop: () => L('It needs a desktop part the test machine lacks', '需要測試機器沒有的桌面元件'),
+  beyond_budget: () => L('pickfit tests only the first four features one by one', 'pickfit 只逐項測試前四項功能'),
   test_failed_in_sandbox: () => L('Its test failed because of the test machine’s limits, not the tool', '測試沒通過，原因是測試機器的限制，不是工具本身'),
   test_failed: () => L('Its test failed with the tool’s own error; you may hit it too (not confirmed on a real machine)', '測試沒通過，是工具本身的錯誤，你也可能遇到（尚未在實體機器上確認）'),
   not_recorded: () => L('Not checked one by one', '沒有逐項檢查'),
@@ -486,7 +487,7 @@ const WHY_NOT: Record<NotCheckedReason, () => string> = {
 };
 
 /** A run note that only describes pickfit's own checker (its budget, its boxes, its record), in English or as translated. */
-const CHECKER_NOTE = /install-only run|budget|agent's box|too long for the record|僅安裝|僅執行安裝|預算|額度已用盡|agent 的(?:沙盒|環境)|過長/i;
+const CHECKER_NOTE = /install-only run|budget|first \d+ listed features|agent's box|too long for the record|僅安裝|僅執行安裝|預算|額度已用盡|agent 的(?:沙盒|環境)|過長/i;
 
 /** features.ts writes "<reason>: <the run's note>". The note says what the run saw, so it is kept when there is one,
  * without the checker's own lead-in; otherwise, or when the note is only about the checker, the reason in plain words. */
