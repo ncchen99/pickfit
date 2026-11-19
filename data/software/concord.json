@@ -1,0 +1,933 @@
+{
+  "schema_version": "software.v1",
+  "slug": "concord",
+  "repo_id": "gh:1233111215",
+  "name": "Concord",
+  "summary": "A terminal user interface client for Discord with messaging, voice calls, screen sharing and inline image rendering.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "other",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "chat-client",
+    "cli",
+    "discord",
+    "discord-client",
+    "ratatui",
+    "rust",
+    "terminal",
+    "terminal-ui",
+    "tui"
+  ],
+  "use_cases": [
+    "chat on Discord servers from the terminal",
+    "join Discord voice calls with push-to-talk",
+    "translate Discord messages and drafts"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "join voice calls with push-to-talk",
+    "watch and broadcast screen shares",
+    "search messages with filters",
+    "render images inline in the terminal"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://github.com/chojs23/concord",
+  "repo": {
+    "url": "https://github.com/chojs23/concord",
+    "full_name": "chojs23/concord",
+    "created_at": "2026-05-08T15:51:03Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "mpv (for video and audio playback)",
+      "xdg-desktop-portal (Linux)"
+    ],
+    "gpu": "optional",
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": [
+      "Discord account token",
+      "KLIPY API key (optional, GIF picker)",
+      "DeepL API key (optional, translation)"
+    ]
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install concord",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Log in with a Discord account (token, email/password or QR code)",
+        "Grant macOS Input Monitoring permission for push-to-talk"
+      ],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-concord-20261119-221144-724a",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @chojs23/concord",
+          "purpose": "npm install -g @chojs23/concord"
+        },
+        {
+          "command": "mkdir -p ~/debs ~/.local/concord-libs && cd ~/debs && B=https://deb.debian.org/debian/pool/main && curl -fsSLO $B/a/alsa-lib/libasound2t64_1.2.14-1+deb13u1_amd64.deb -O $B/libv/libva/libva-drm2_2.22.0-3_amd64.deb -O $B/libv/libva/libva2_2.22.0-3_amd64.deb -O $B/p/pipewire/libpipewire-0.3-0t64_1.4.2-1_amd64.deb -O $B/libd/libdrm/libdrm2_2.4.124-2_amd64.deb",
+          "purpose": "download Debian runtime lib debs (libasound2t64, libva2, libva-drm2, libpipewire-0.3-0t64, libdrm2) without root"
+        },
+        {
+          "command": "cd ~/debs && L=~/.local/concord-libs && dpkg-deb -x libasound2t64_1.2.14-1+deb13u1_amd64.deb $L && dpkg-deb -x libva-drm2_2.22.0-3_amd64.deb $L && dpkg-deb -x libva2_2.22.0-3_amd64.deb $L && dpkg-deb -x libpipewire-0.3-0t64_1.4.2-1_amd64.deb $L && dpkg-deb -x libdrm2_2.4.124-2_amd64.deb $L",
+          "purpose": "extract the libs into ~/.local/concord-libs"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "LD_LIBRARY_PATH=$HOME/.local/concord-libs/usr/lib/x86_64-linux-gnu concord --version",
+        "expected_signal": "concord 2.7.1"
+      },
+      "first_task": null
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @chojs23/concord",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Log in with a Discord account (token, email/password or QR code)",
+        "Grant macOS Input Monitoring permission for push-to-talk"
+      ],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": null,
+  "license": null,
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v2.7.1",
+    "published_at": "2026-11-16T15:32:25Z",
+    "url": "https://github.com/chojs23/concord/releases/tag/v2.7.1"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T22:12:48.742613+08:00",
+    "runs": [
+      {
+        "id": "verify-concord-20261119-221144-724a",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T22:12:48.742613+08:00",
+        "tool_version": "concord 2.7.1",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @chojs23/concord",
+            "purpose": "npm install -g @chojs23/concord"
+          },
+          {
+            "command": "mkdir -p ~/debs ~/.local/concord-libs && cd ~/debs && B=https://deb.debian.org/debian/pool/main && curl -fsSLO $B/a/alsa-lib/libasound2t64_1.2.14-1+deb13u1_amd64.deb -O $B/libv/libva/libva-drm2_2.22.0-3_amd64.deb -O $B/libv/libva/libva2_2.22.0-3_amd64.deb -O $B/p/pipewire/libpipewire-0.3-0t64_1.4.2-1_amd64.deb -O $B/libd/libdrm/libdrm2_2.4.124-2_amd64.deb",
+            "purpose": "download Debian runtime lib debs (libasound2t64, libva2, libva-drm2, libpipewire-0.3-0t64, libdrm2) without root"
+          },
+          {
+            "command": "cd ~/debs && L=~/.local/concord-libs && dpkg-deb -x libasound2t64_1.2.14-1+deb13u1_amd64.deb $L && dpkg-deb -x libva-drm2_2.22.0-3_amd64.deb $L && dpkg-deb -x libva2_2.22.0-3_amd64.deb $L && dpkg-deb -x libpipewire-0.3-0t64_1.4.2-1_amd64.deb $L && dpkg-deb -x libdrm2_2.4.124-2_amd64.deb $L",
+            "purpose": "extract the libs into ~/.local/concord-libs"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "LD_LIBRARY_PATH=$HOME/.local/concord-libs/usr/lib/x86_64-linux-gnu concord --version",
+            "expected_signal": "concord 2.7.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "concord 2.7.1",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Linux release builds need: sudo apt install libasound2 libegl1 libpipewire-0.3-0 libva-drm2 libva2 xdg-desktop-portal",
+            "actually_needed": "Without root, the npm binary failed with 'libasound.so.2: cannot open shared object file'. Fetched Debian trixie debs (libasound2t64, libva2, libva-drm2, libpipewire-0.3-0t64, libdrm2), extracted them with dpkg-deb -x into ~/.local/concord-libs, and ran with LD_LIBRARY_PATH set",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Debian or Ubuntu: libasound2 libpipewire-0.3-0 libva-drm2 libva2",
+            "actually_needed": "The binary also loads libdrm.so.2 (libdrm2), which the README does not list. On Debian trixie the package names are libasound2t64 and libpipewire-0.3-0t64",
+            "kind": "readme_wrong"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The command printed 'concord 2.7.1' and exited 0, matching the expected signal.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-concord-20261119-221144-724a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-concord-20261119-221144-724a/check-1-cmd13.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.215407,
+        "features": [
+          {
+            "feature": "join voice calls with push-to-talk",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Voice calls require logging in to Discord and an audio device"
+          },
+          {
+            "feature": "watch and broadcast screen shares",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Screen sharing requires a Discord login, a voice channel and a desktop portal"
+          },
+          {
+            "feature": "search messages with filters",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Message search runs against Discord's servers through a logged-in account"
+          },
+          {
+            "feature": "render images inline in the terminal",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "Images are rendered from Discord message attachments, which need a logged-in account"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T22:12:56+08:00",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "npm:@chojs23/concord (fresh install, 44 packages)",
+      "github.com/chojs23/concord@56c58b33a992",
+      "Cargo.lock"
+    ],
+    "packages_checked": 843,
+    "findings_total": 22,
+    "advisories_total": 22,
+    "findings": [
+      {
+        "package": "crates:libcrux-chacha20poly1305",
+        "version": "0.0.7",
+        "advisory": "GHSA-hc3c-63hc-2r9f",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.0.8",
+        "summary": "libcrux: Potential Panic on Overlong Ciphertext Buffer",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "1.13.5",
+        "advisory": "GHSA-35jp-ww65-95wh",
+        "cves": [
+          "CVE-2026-44494"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.16.0",
+        "summary": "axios Vulnerable to Full Man-in-the-Middle via Prototype Pollution Gadget in `config.proxy`",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "1.13.5",
+        "advisory": "GHSA-3g43-6gmg-66jw",
+        "cves": [
+          "CVE-2026-44495"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.15.2",
+        "summary": "axios Vulnerable to Credential Theft and Response Hijacking via Prototype Pollution Gadget in Config Merge",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "1.13.5",
+        "advisory": "GHSA-3pq3-5fj3-cg6v",
+        "cves": [
+          "CVE-2026-101898"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.0",
+        "summary": "Axios: HTTP/2 adapter bypasses configured DNS lookup and proxy controls",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "1.13.5",
+        "advisory": "GHSA-542g-h47m-68v8",
+        "cves": [
+          "CVE-2026-101901"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.0",
+        "summary": "Axios: Denial of Service via Unhandled 'error' Event in HTTP/2 ClientHttp2Session Initialization",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "1.13.5",
+        "advisory": "GHSA-6chq-wfr3-2hj9",
+        "cves": [
+          "CVE-2026-42035"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.15.1",
+        "summary": "Axios: Header Injection via Prototype Pollution",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "1.13.5",
+        "advisory": "GHSA-777c-7fjr-54vf",
+        "cves": [
+          "CVE-2026-44488"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.16.0",
+        "summary": "Allocation of Resources Without Limits or Throttling in Axios",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "1.13.5",
+        "advisory": "GHSA-hfxv-24rg-xrqf",
+        "cves": [
+          "CVE-2026-44496"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.16.0",
+        "summary": "Axios: Regular Expression Denial of Service (ReDoS) via Cookie Name Injection",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "1.13.5",
+        "advisory": "GHSA-j5f8-grm9-p9fc",
+        "cves": [
+          "CVE-2026-44486"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.16.0",
+        "summary": "Axios: Proxy-Authorization header leaks to redirect target when proxy is re-evaluated to direct connection",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "1.13.5",
+        "advisory": "GHSA-p92q-9vqr-4j8v",
+        "cves": [
+          "CVE-2026-44487"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.16.0",
+        "summary": "Axios: Proxy-Authorization Credential Leak to Origin Server Across HTTP-to-HTTPS Redirect in Axios Node.js HTTP Adapter",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "1.13.5",
+        "advisory": "GHSA-pf86-5x62-jrwf",
+        "cves": [
+          "CVE-2026-42033"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.15.1",
+        "summary": "Axios: Prototype Pollution Gadgets - Response Tampering, Data Exfiltration, and Request Hijacking",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "1.13.5",
+        "advisory": "GHSA-pmwg-cvhr-8vh7",
+        "cves": [
+          "CVE-2026-42043"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.15.1",
+        "summary": "Axios: Incomplete Fix for CVE-2025-62718 — NO_PROXY Protection Bypassed via RFC 1122 Loopback Subnet (127.0.0.0/8) in Axios 1.15.0",
+        "malicious": false
+      },
+      {
+        "package": "npm:axios",
+        "version": "1.13.5",
+        "advisory": "GHSA-q8qp-cvcw-x6jj",
+        "cves": [
+          "CVE-2026-42264"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.15.2",
+        "summary": "Axios has prototype pollution read-side gadgets in HTTP adapter that allow credential injection and request hijacking",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "5.0.2",
+        "advisory": "GHSA-3jxr-9vmj-r5cp",
+        "cves": [
+          "CVE-2026-13149"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.7",
+        "summary": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "5.0.2",
+        "advisory": "GHSA-6j4f-fj2g-mc7p",
+        "cves": [
+          "CVE-2026-102276"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.10",
+        "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "5.0.2",
+        "advisory": "GHSA-mh99-v99m-4gvg",
+        "cves": [
+          "CVE-2026-14257"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.8",
+        "summary": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "5.0.2",
+        "advisory": "GHSA-qhr7-859c-m2p7",
+        "cves": [
+          "CVE-2026-102278"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.11",
+        "summary": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+        "malicious": false
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "5.0.2",
+        "advisory": "GHSA-rgw5-rvv9-x895",
+        "cves": [
+          "CVE-2026-69152"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.9",
+        "summary": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+        "malicious": false
+      },
+      {
+        "package": "npm:form-data",
+        "version": "4.0.5",
+        "advisory": "GHSA-hmw2-7cc7-3qxx",
+        "cves": [
+          "CVE-2026-12143"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.0.6",
+        "summary": "form-data: CRLF injection in form-data via unescaped multipart field names and filenames",
+        "malicious": false
+      },
+      {
+        "package": "npm:minimatch",
+        "version": "10.2.0",
+        "advisory": "GHSA-23c5-xmqv-rm74",
+        "cves": [
+          "CVE-2026-27904"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "10.2.3",
+        "summary": "minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions",
+        "malicious": false
+      },
+      {
+        "package": "npm:minimatch",
+        "version": "10.2.0",
+        "advisory": "GHSA-3ppc-4f35-3m26",
+        "cves": [
+          "CVE-2026-26996"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "10.2.1",
+        "summary": "minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern",
+        "malicious": false
+      },
+      {
+        "package": "npm:minimatch",
+        "version": "10.2.0",
+        "advisory": "GHSA-7r86-cg39-jmmj",
+        "cves": [
+          "CVE-2026-27903"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "10.2.3",
+        "summary": "minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments",
+        "malicious": false
+      }
+    ]
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T22:12:56+08:00",
+    "quality": {
+      "total": 69.0,
+      "confidence": 0.7,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.595,
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.8,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5245,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        }
+      }
+    },
+    "popularity": {
+      "score": 97.3,
+      "signals": {
+        "stars": 1681,
+        "monthly_downloads": 2122,
+        "forks": 99,
+        "dependents": null,
+        "release_downloads": 7598,
+        "hn_top_score": 21,
+        "registries_count": 3
+      },
+      "age_days": 194,
+      "packages": [
+        "npm:@chojs23/concord",
+        "crates:concord",
+        "homebrew:concord"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 1.86
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:12:48.751290+08:00",
+      "sources_sha": "5743d23faa3575672a43151d4a851e5dca803abeda61ce3f2937b8a496bc3e76",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Concord is a feature-rich TUI client for Discord, written in Rust with ratatui."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "A feature-rich TUI client for Discord"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "Requirements: Rust 1.99+, CMake 3.22+, a C11/C++17 compiler, and libclang."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/chojs23/concord/releases/latest/download/concord-installer.sh | sh"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "5. Close and reopen your terminal application, then run `concord`."
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Concord reads `config.toml`, `keymap.toml`, and `theme.toml` from\n`$XDG_CONFIG_HOME/concord` when `XDG_CONFIG_HOME` is set, or from the platform\nconfig directory otherwise."
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Download an archive for Linux, macOS, or Windows from the"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/chojs23/concord",
+      "fetched_at": "2026-11-19T22:11:28+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/chojs23/concord/blob/main/README.md",
+      "fetched_at": "2026-11-19T22:11:28+08:00"
+    },
+    {
+      "id": "release:v2.7.1",
+      "kind": "release",
+      "url": "https://github.com/chojs23/concord/releases/tag/v2.7.1",
+      "fetched_at": "2026-11-19T22:11:28+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "A feature-rich TUI client for Discord",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Close and reopen your terminal application, then run `concord`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A feature-rich TUI client for Discord",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Concord is a feature-rich TUI client for Discord, written in Rust with ratatui.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "Concord is a feature-rich TUI client for Discord, written in Rust with ratatui.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Download an archive for Linux, macOS, or Windows from the",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "Video and audio playback, including live streams, uses [mpv](https://mpv.io/). Make sure `mpv` is installed and in your PATH.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "sudo apt install libasound2 libegl1 libpipewire-0.3-0 libva-drm2 libva2 xdg-desktop-portal",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "readme",
+      "quote": "If hardware encoding is unavailable, Concord falls back to software encoding.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "paste an existing Discord token.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "**Token** : paste an existing Discord token.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/1",
+      "source_id": "readme",
+      "quote": "Set `KLIPY_API_KEY` before launching Concord",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/2",
+      "source_id": "readme",
+      "quote": "The `DEEPL_API_KEY` environment variable overrides `api_key` when present.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T22:11:28+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T22:11:28+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T22:11:28+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T22:11:28+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T22:11:28+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.7.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T22:11:28+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Concord is a feature-rich TUI client for Discord",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Voice calls with push-to-talk",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Translate messages and composer drafts",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Voice calls with push-to-talk",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Watch and broadcast screen shares",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Search messages with filters using `/`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Image rendering is powered by [ratatui-image](https://github.com/benjajaja/ratatui-image).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install concord",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g @chojs23/concord",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g @chojs23/concord",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "paste an existing Discord token.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:11:41+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T22:11:28+08:00",
+  "updated_at": "2026-11-19T22:12:56+08:00"
+}
