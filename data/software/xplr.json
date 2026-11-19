@@ -1,0 +1,576 @@
+{
+  "schema_version": "software.v1",
+  "slug": "xplr",
+  "repo_id": "gh:342030057",
+  "name": "xplr",
+  "summary": "A keyboard-controlled, scriptable terminal UI file explorer that integrates with other command-line file-system utilities.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "media_files",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "command-line",
+    "console",
+    "developer-tools",
+    "file-explorer",
+    "file-launcher",
+    "file-manager",
+    "filesystem",
+    "launcher",
+    "productivity"
+  ],
+  "use_cases": [
+    "browse and manage files from the terminal with the keyboard"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "keyboard-controlled file browsing",
+    "script and extend with Lua plugins",
+    "integrate other command-line utilities",
+    "customizable real-time visual layouts"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://xplr.dev",
+  "repo": {
+    "url": "https://github.com/sayanarijit/xplr",
+    "full_name": "sayanarijit/xplr",
+    "created_at": "2021-02-24T20:42:17Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "GNU coreutils (macOS)"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install xplr",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-xplr-20261119-200747-c737",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/xplr-dl && cd /tmp/xplr-dl && curl -fsSLO https://github.com/sayanarijit/xplr/releases/latest/download/xplr-linux.tar.gz && tar xzvf xplr-linux.tar.gz && mv xplr ~/.local/bin/",
+          "purpose": "Download the official xplr-linux.tar.gz release binary, extract it and move it to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "xplr --version",
+        "expected_signal": "xplr 1.2.2"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.2.2",
+    "published_at": "2026-10-25T18:24:32Z",
+    "url": "https://github.com/sayanarijit/xplr/releases/tag/v1.2.2"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T20:11:45.560530+08:00",
+    "runs": [
+      {
+        "id": "verify-xplr-20261119-200747-c737",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T20:11:45.560530+08:00",
+        "tool_version": "xplr 1.2.2",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/xplr-dl && cd /tmp/xplr-dl && curl -fsSLO https://github.com/sayanarijit/xplr/releases/latest/download/xplr-linux.tar.gz && tar xzvf xplr-linux.tar.gz && mv xplr ~/.local/bin/",
+            "purpose": "Download the official xplr-linux.tar.gz release binary, extract it and move it to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "xplr --version",
+            "expected_signal": "xplr 1.2.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "xplr 1.2.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/xt && (sleep 2; printf 'j'; sleep 1; printf 'x'; sleep 2) | timeout 20 script -qfec \"xplr -C /tmp/xt/init.lua /tmp/xt\" /dev/null",
+            "expected_signal": "",
+            "exit_code": 1,
+            "passed": false,
+            "observed_excerpt": "error: path doesn't exist: /tmp/xt/init.lua",
+            "setup": [
+              {
+                "command": "cat > /tmp/xt/init.lua <<'EOF'\nversion = \"1.2.2\"\nxplr.fn.custom.hello = function(app)\n  return { { LogSuccess = \"LUA_HOOK_OK focus=\" .. app.focused_node.relative_path } }\nend\nlocal keys = xplr.config.modes.builtin.default.key_bindings.on_key\nkeys[\"z\"] = { help = \"custom lua\", messages = { { CallLuaSilently = \"custom.hello\" } } }\nkeys[\"x\"] = { help = \"print focus\", messages = { \"PrintFocusPathAndQuit\" } }\nxplr.config.layouts.builtin.default = {\n  Horizontal = {\n    config = { constraints = { { Percentage = 50 }, { Percentage = 50 } } },\n    splits = { \"Table\", \"InputAndLogs\" },\n  },\n}\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "mkdir -p /tmp/xt/dir1 && printf 'hello\\n' > /tmp/xt/a.txt && printf 'world\\n' > /tmp/xt/b.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Install with cargo install --locked --force xplr, snap, pacman, pkg or nix",
+            "actually_needed": "No Rust toolchain, root or nix in this box, so I used the install guide's Direct Download instead: the xplr-linux.tar.gz release binary, placed in ~/.local/bin rather than with sudo mv to /usr/local/bin",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "(nothing about running headless)",
+            "actually_needed": "xplr is a TUI and needs a pty. For scripted checks, run it under `script -qec` with --on-load messages (e.g. FocusNext ... PrintFocusPathAndQuit) instead of keystrokes",
+            "kind": "note"
+          },
+          {
+            "readme_said": "(nothing)",
+            "actually_needed": "In the interactive pty runs xplr started in its 'debug error' mode ('Is a directory (os error 21)'). That mode waits for enter or escape, and enter opens $EDITOR, which defaults to vi and vi is not installed in this box. The cause of the startup error was not found",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Running `xplr --version` printed \"xplr 1.2.2\" and exited with code 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-xplr-20261119-200747-c737/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-xplr-20261119-200747-c737/check-1-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.321004,
+        "features": [
+          {
+            "feature": "keyboard-controlled file browsing",
+            "status": "test_failed",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": "sandbox",
+            "note": "Keystrokes sent through a scripted pty (script, python pty) never produced a printed path; the session timed out. A later pty run showed xplr's startup 'debug error' screen ('Is a directory (os error 21)'), which waits for enter or escape. Enter opens $EDITOR, which defaults to vi, and vi is not in…"
+          },
+          {
+            "feature": "script and extend with Lua plugins",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          },
+          {
+            "feature": "integrate other command-line utilities",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          },
+          {
+            "feature": "customizable real-time visual layouts",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check passed in the agent's box but is too long for the record"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T20:11:51+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/sayanarijit/xplr@e91f74b1e99c",
+      "Cargo.lock"
+    ],
+    "packages_checked": 430,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T20:11:45+08:00",
+    "quality": {
+      "total": 75.3,
+      "confidence": 0.7,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5095,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 95.5,
+      "signals": {
+        "stars": 4852,
+        "monthly_downloads": 540,
+        "forks": 96,
+        "dependents": null,
+        "release_downloads": 9556,
+        "hn_top_score": 205,
+        "registries_count": 2
+      },
+      "age_days": 2093,
+      "packages": [
+        "crates:xplr",
+        "homebrew:xplr"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 3.39
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:11:45.574142+08:00",
+      "sources_sha": "cb3500a4497cbe274844a54ea27915aed27d44c01eb2969c121fcca7b01fbfe7",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "xplr is a terminal UI based file explorer that aims to increase our terminal\nproductivity by being a flexible, interactive orchestrator for the ever growing\nawesome command-line utilities"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "enabling you to achieve insane terminal productivity."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Make sure you have the latest version of [GNU core utilities][29] installed."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install xplr"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "  tar -xzvf xplr-linux.tar.gz\n  ./xplr"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "extraConfig = ''\n    require(\"tree-view\").setup()"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "the user will need to keep\nan eye on the releases, and manually upgrade xplr when a new version is\navailable."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "- [GNU/Linux][16]\n- [macOS][17]"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/sayanarijit/xplr",
+      "fetched_at": "2026-11-19T20:07:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/sayanarijit/xplr/blob/main/README.md",
+      "fetched_at": "2026-11-19T20:07:27+08:00"
+    },
+    {
+      "id": "release:v1.2.2",
+      "kind": "release",
+      "url": "https://github.com/sayanarijit/xplr/releases/tag/v1.2.2",
+      "fetched_at": "2026-11-19T20:07:27+08:00"
+    },
+    {
+      "id": "docs1",
+      "kind": "readme",
+      "url": "https://github.com/sayanarijit/xplr/blob/main/docs/en/src/install.md",
+      "fetched_at": "2026-11-19T20:07:35+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "A hackable, minimal, fast TUI file explorer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:07:43+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "github_api",
+      "quote": "A hackable, minimal, fast TUI file explorer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:07:43+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A hackable, minimal, fast TUI file explorer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:07:43+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "xplr is a terminal UI based file explorer that aims to increase our terminal\nproductivity by being a flexible, interactive orchestrator",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:07:43+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "xplr is a terminal UI based file explorer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:07:43+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "docs1",
+      "quote": "Make sure you have the latest version of [GNU core utilities][29] installed.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:07:43+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T20:07:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T20:07:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T20:07:29+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T20:07:29+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T20:07:29+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.2.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T20:07:27+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "intuitive, scriptable, [keyboard controlled][2]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:07:43+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "[keyboard controlled][2]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:07:43+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "XPLR: Insanely Hackable Lua File Manager",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:07:43+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "orchestrator for the ever growing\nawesome command-line utilities that work with the file-system",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:07:43+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "[real-time visual interface][1]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:07:43+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "docs1",
+      "quote": "brew install xplr",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:07:43+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "docs1",
+      "quote": "sudo snap install xplr",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:07:43+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "github_api",
+      "quote": "A hackable, minimal, fast TUI file explorer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T20:07:43+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T20:07:27+08:00",
+  "updated_at": "2026-11-19T20:11:51+08:00"
+}
