@@ -1,0 +1,640 @@
+{
+  "schema_version": "software.v1",
+  "slug": "binsider",
+  "repo_id": "gh:678562120",
+  "name": "binsider",
+  "summary": "Terminal UI tool for analyzing ELF binaries with static and dynamic analysis, string extraction, linked library inspection and hexdumps.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "analysis",
+    "binary",
+    "binary-data",
+    "dynamic-analysis",
+    "elf",
+    "hex-editor",
+    "hexdump",
+    "linux",
+    "ratatui",
+    "reverse-engineering"
+  ],
+  "use_cases": [
+    "inspect ELF sections, segments, symbols and relocations",
+    "trace system calls and signals of a running binary",
+    "find URLs and passwords embedded in a binary"
+  ],
+  "alternatives_to": [
+    "strace",
+    "ltrace",
+    "strings",
+    "ldd"
+  ],
+  "features": [
+    "show binary file info and linked libraries",
+    "analyze ELF layout statically",
+    "trace system calls dynamically",
+    "extract strings and view hexdump"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://binsider.dev/",
+  "repo": {
+    "url": "https://github.com/orhun/binsider",
+    "full_name": "orhun/binsider",
+    "created_at": "2023-08-14T21:00:36Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-binsider-20261119-230641-917c",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "cd /tmp && curl -sSLO https://github.com/orhun/binsider/releases/download/v0.3.2/binsider-0.3.2-x86_64-unknown-linux-gnu.tar.gz && tar xzf binsider-0.3.2-x86_64-unknown-linux-gnu.tar.gz && mkdir -p ~/.local/bin && cp binsider-0.3.2/binsider ~/.local/bin/",
+          "purpose": "Download v0.3.2 x86_64-unknown-linux-gnu release tarball, extract, copy binsider to ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "binsider --help",
+        "expected_signal": "binsider 0.3.2"
+      },
+      "first_task": "python3 /tmp/drive.py \"\" binsider -t general /bin/ls"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.3.2",
+    "published_at": "2026-02-01T10:35:35Z",
+    "url": "https://github.com/orhun/binsider/releases/tag/v0.3.2"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T23:08:16.999027+08:00",
+    "runs": [
+      {
+        "id": "verify-binsider-20261119-230641-917c",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T23:08:16.999027+08:00",
+        "tool_version": "0.3.2",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "cd /tmp && curl -sSLO https://github.com/orhun/binsider/releases/download/v0.3.2/binsider-0.3.2-x86_64-unknown-linux-gnu.tar.gz && tar xzf binsider-0.3.2-x86_64-unknown-linux-gnu.tar.gz && mkdir -p ~/.local/bin && cp binsider-0.3.2/binsider ~/.local/bin/",
+            "purpose": "Download v0.3.2 x86_64-unknown-linux-gnu release tarball, extract, copy binsider to ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "binsider --help",
+            "expected_signal": "binsider 0.3.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "binsider 0.3.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 /tmp/drive.py \"\" binsider -t general /bin/ls",
+            "expected_signal": "Dependencies",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b]11;?\u001b\\ ▄ ▄ ▄▄▄▄▄▄ ▄ ▄ ▀ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄ ▀ ▄ ▄ ▀ ▀ ▄ ▄ ▀▀▀▀▀▀▀▀▀▀▀▀ Loading... ┌────────────────────────────────────────────────────────────────────────────────────────── | binsider - 0.3.2 | ──────────────────────────────────────────────────────────────────────────────────────────┐ │ General │ Sta…",
+            "setup": [
+              {
+                "command": "cat > /tmp/drive.py <<'EOF'\nimport os, pty, sys, time, select, re, struct, fcntl, termios\n# usage: drive.py \"<keys>\" binsider args...\nkeys = sys.argv[1].encode().decode('unicode_escape').encode()\nargs = sys.argv[2:]\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.execvp(args[0], args)\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 50, 200, 0, 0))\nos.kill(pid, 28)\nbuf = b''\ndef pump(t):\n    global buf\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try: buf += os.read(fd, 65536)\n            except OSError: return\npump(2)\nfor k in keys.split(b'|'):\n    if k:\n        os.write(fd, k); pump(2)\nos.write(fd, b'q'); pump(1)\n_, st = os.waitpid(pid, 0)\ntxt = re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]|\\x1b[()][A-Z0-9]|\\x1b[=>]', ' ', buf.decode('utf-8', 'replace'))\nprint(re.sub(r'[ \\t]+', ' ', txt))\nsys.exit(os.waitstatus_to_exitcode(st))\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 /tmp/drive.py \"\" binsider -t static-analysis /bin/ls",
+            "expected_signal": "File Headers",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b]11;?\u001b\\ ▄ ▄ ▄▄▄▄▄▄ ▄ ▄ ▀ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄ ▀ ▄ ▄ ▀ ▀ ▄ ▄ ▀▀▀▀▀▀▀▀▀▀▀▀ Loading... ┌────────────────────────────────────────────────────────────────────────────────────────── | binsider - 0.3.2 | ──────────────────────────────────────────────────────────────────────────────────────────┐ │ General │ Sta…",
+            "setup": [
+              {
+                "command": "cat > /tmp/drive.py <<'EOF'\nimport os, pty, sys, time, select, re, struct, fcntl, termios\n# usage: drive.py \"<keys>\" binsider args...\nkeys = sys.argv[1].encode().decode('unicode_escape').encode()\nargs = sys.argv[2:]\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.execvp(args[0], args)\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 50, 200, 0, 0))\nos.kill(pid, 28)\nbuf = b''\ndef pump(t):\n    global buf\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try: buf += os.read(fd, 65536)\n            except OSError: return\npump(2)\nfor k in keys.split(b'|'):\n    if k:\n        os.write(fd, k); pump(2)\nos.write(fd, b'q'); pump(1)\n_, st = os.waitpid(pid, 0)\ntxt = re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]|\\x1b[()][A-Z0-9]|\\x1b[=>]', ' ', buf.decode('utf-8', 'replace'))\nprint(re.sub(r'[ \\t]+', ' ', txt))\nsys.exit(os.waitstatus_to_exitcode(st))\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 /tmp/drive.py \"\" binsider -t strings /bin/ls",
+            "expected_signal": "__libc_start_main",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b]11;?\u001b\\ ▄ ▄ ▄▄▄▄▄▄ ▄ ▄ ▀ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄ ▀ ▄ ▄ ▀ ▀ ▄ ▄ ▀▀▀▀▀▀▀▀▀▀▀▀ Loading... ┌────────────────────────────────────────────────────────────────────────────────────────── | binsider - 0.3.2 | ──────────────────────────────────────────────────────────────────────────────────────────┐ │ General │ Sta…",
+            "setup": [
+              {
+                "command": "cat > /tmp/drive.py <<'EOF'\nimport os, pty, sys, time, select, re, struct, fcntl, termios\n# usage: drive.py \"<keys>\" binsider args...\nkeys = sys.argv[1].encode().decode('unicode_escape').encode()\nargs = sys.argv[2:]\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.execvp(args[0], args)\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 50, 200, 0, 0))\nos.kill(pid, 28)\nbuf = b''\ndef pump(t):\n    global buf\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try: buf += os.read(fd, 65536)\n            except OSError: return\npump(2)\nfor k in keys.split(b'|'):\n    if k:\n        os.write(fd, k); pump(2)\nos.write(fd, b'q'); pump(1)\n_, st = os.waitpid(pid, 0)\ntxt = re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]|\\x1b[()][A-Z0-9]|\\x1b[=>]', ' ', buf.decode('utf-8', 'replace'))\nprint(re.sub(r'[ \\t]+', ' ', txt))\nsys.exit(os.waitstatus_to_exitcode(st))\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 /tmp/drive.py \"\" binsider -t hexdump /bin/ls",
+            "expected_signal": "Hexadecimal",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b]11;?\u001b\\ ▄ ▄ ▄▄▄▄▄▄ ▄ ▄ ▀ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄ ▀ ▄ ▄ ▀ ▀ ▄ ▄ ▀▀▀▀▀▀▀▀▀▀▀▀ Loading... ┌────────────────────────────────────────────────────────────────────────────────────────── | binsider - 0.3.2 | ──────────────────────────────────────────────────────────────────────────────────────────┐ │ General │ Sta…",
+            "setup": [
+              {
+                "command": "cat > /tmp/drive.py <<'EOF'\nimport os, pty, sys, time, select, re, struct, fcntl, termios\n# usage: drive.py \"<keys>\" binsider args...\nkeys = sys.argv[1].encode().decode('unicode_escape').encode()\nargs = sys.argv[2:]\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.execvp(args[0], args)\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 50, 200, 0, 0))\nos.kill(pid, 28)\nbuf = b''\ndef pump(t):\n    global buf\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try: buf += os.read(fd, 65536)\n            except OSError: return\npump(2)\nfor k in keys.split(b'|'):\n    if k:\n        os.write(fd, k); pump(2)\nos.write(fd, b'q'); pump(1)\n_, st = os.waitpid(pid, 0)\ntxt = re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]|\\x1b[()][A-Z0-9]|\\x1b[=>]', ' ', buf.decode('utf-8', 'replace'))\nprint(re.sub(r'[ \\t]+', ' ', txt))\nsys.exit(os.waitstatus_to_exitcode(st))\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "python3 /tmp/drive.py \"\\r\" binsider -t dynamic-analysis /bin/ls",
+            "expected_signal": "System Calls",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b]11;?\u001b\\ ▄ ▄ ▄▄▄▄▄▄ ▄ ▄ ▀ ▄▄▄▄▄▄▄▄▄▄▄▄▄▄ ▀ ▄ ▄ ▀ ▀ ▄ ▄ ▀▀▀▀▀▀▀▀▀▀▀▀ Loading... ┌────────────────────────────────────────────────────────────────────────────────────────── | binsider - 0.3.2 | ──────────────────────────────────────────────────────────────────────────────────────────┐ │ General │ Sta…",
+            "setup": [
+              {
+                "command": "cat > /tmp/drive.py <<'EOF'\nimport os, pty, sys, time, select, re, struct, fcntl, termios\n# usage: drive.py \"<keys>\" binsider args...\nkeys = sys.argv[1].encode().decode('unicode_escape').encode()\nargs = sys.argv[2:]\npid, fd = pty.fork()\nif pid == 0:\n    os.environ['TERM'] = 'xterm-256color'\n    os.execvp(args[0], args)\nfcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 50, 200, 0, 0))\nos.kill(pid, 28)\nbuf = b''\ndef pump(t):\n    global buf\n    end = time.time() + t\n    while time.time() < end:\n        r, _, _ = select.select([fd], [], [], 0.1)\n        if r:\n            try: buf += os.read(fd, 65536)\n            except OSError: return\npump(2)\nfor k in keys.split(b'|'):\n    if k:\n        os.write(fd, k); pump(2)\nos.write(fd, b'q'); pump(1)\n_, st = os.waitpid(pid, 0)\ntxt = re.sub(r'\\x1b\\[[0-9;?]*[A-Za-z]|\\x1b[()][A-Z0-9]|\\x1b[=>]', ' ', buf.decode('utf-8', 'replace'))\nprint(re.sub(r'[ \\t]+', ' ', txt))\nsys.exit(os.waitstatus_to_exitcode(st))\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install binsider",
+            "actually_needed": "No Rust toolchain needed: prebuilt binary binsider-0.3.2-x86_64-unknown-linux-gnu.tar.gz from GitHub releases works",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "binsider <binary>",
+            "actually_needed": "It is a full-screen TUI with no non-interactive output; automated checks needed a pty driver script (/tmp/drive.py) using -t <tab> and sending keys",
+            "kind": "note"
+          },
+          {
+            "readme_said": "execute the binary and trace the system calls",
+            "actually_needed": "Under gVisor (this box) tracing fails with ESRCH: No such process; needs a regular Linux kernel with ptrace",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "binsider renders the General tab with file info and a Dependencies list for /bin/ls, the Static tab with File Headers and Notes, and --help prints 'binsider 0.3.2' with usage.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-binsider-20261119-230641-917c/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-binsider-20261119-230641-917c/check-1-cmd5.judged.png",
+            "runs/verify/verify-binsider-20261119-230641-917c/check-2-cmd6.judged.png",
+            "runs/verify/verify-binsider-20261119-230641-917c/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.304235,
+        "features": [
+          {
+            "feature": "show binary file info and linked libraries",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "analyze ELF layout statically",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "trace system calls dynamically",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "no failed check in the log; Tracing system call error: ESRCH: No such process; box is gVisor with limited ptrace"
+          },
+          {
+            "feature": "extract strings and view hexdump",
+            "status": "checked",
+            "smoke_tests": [
+              3,
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T23:08:23+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/orhun/binsider@7f0633d1a69a",
+      "Cargo.lock"
+    ],
+    "packages_checked": 354,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T23:08:17+08:00",
+    "quality": {
+      "total": 75.0,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.4375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.86,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5963,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 94.9,
+      "signals": {
+        "stars": 4532,
+        "monthly_downloads": 335,
+        "forks": 113,
+        "dependents": null,
+        "release_downloads": 11741,
+        "hn_top_score": 97,
+        "registries_count": 2
+      },
+      "age_days": 1192,
+      "packages": [
+        "crates:binsider",
+        "homebrew:binsider"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 3.82
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:08:17.024411+08:00",
+      "sources_sha": "f73608f370d013631650f3bf50266dac8802ef424c31a1c6535cef0ff71bfd0d",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "**Binsider** can perform static and dynamic analysis, inspect strings, examine linked libraries, and perform hexdumps, all within a user-friendly terminal user interface!"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "\"Swiss army knife for reverse engineers.\""
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "cargo install binsider"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "binsider <binary>"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Licensed under either of [Apache License Version 2.0](./LICENSE-APACHE) or [The MIT License](./LICENSE-MIT) at your option."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/orhun/binsider",
+      "fetched_at": "2026-11-19T23:06:30+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/orhun/binsider/blob/main/README.md",
+      "fetched_at": "2026-11-19T23:06:28+08:00"
+    },
+    {
+      "id": "release:v0.3.2",
+      "kind": "release",
+      "url": "https://github.com/orhun/binsider/releases/tag/v0.3.2",
+      "fetched_at": "2026-11-19T23:06:28+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "all within a user-friendly terminal user interface!",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:37+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Just dive into the binaries by running `binsider`:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:37+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "\"Swiss army knife for reverse engineers.\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:37+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "**Binsider** can perform static and dynamic analysis, inspect strings, examine linked libraries, and perform hexdumps, all within a user-friendly terminal user interface!",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:37+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "Install `binsider` with `cargo`:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:37+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:06:30+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:06:30+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T23:06:30+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:06:30+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:06:30+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.3.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T23:06:28+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "You can analyze the ELF layout (such as sections, segments, symbols, and relocations)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:37+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "execute the binary and trace the system calls, signals, and the program's execution flow",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:37+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "discovering interesting strings such as URLs, passwords, and other sensitive information",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:37+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "similar to [`strace(1)`]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:37+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "[`ltrace(1)`]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:37+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "Similar to the [`strings(1)`]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:37+08:00"
+    },
+    {
+      "field": "/alternatives_to/3",
+      "source_id": "readme",
+      "quote": "[`ldd(1)`]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:37+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "You can retrieve general binary file information, including file size, ownership, permissions, date, and linked shared libraries",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:37+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "You can analyze the ELF layout (such as sections, segments, symbols, and relocations)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:37+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "execute the binary and trace the system calls, signals, and the program's execution flow",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:37+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "`binsider` is able to extract strings from the binary file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T23:06:37+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T23:06:28+08:00",
+  "updated_at": "2026-11-19T23:08:23+08:00"
+}
