@@ -52,7 +52,7 @@ from pickfit.discover.run import pipeline_db_path
 from pickfit.discover.store import PipelineDB
 from pickfit.ledger import BudgetExceeded, Ledger, taipei_now
 from pickfit.meta import PROD_MODELS, call_meta, resolve_model
-from pickfit.schema import ExtractedFeatures, ExtractionResult, meta_strict_schema
+from pickfit.schema import DocsRubricItems, ExtractedFeatures, ExtractionResult, meta_strict_schema
 
 STAGE = "extract"
 README_MAX_CHARS = 30_000  # about 8-10K tokens; long READMEs are cut, and the source says so
@@ -130,6 +130,31 @@ and 8 apply.
 """
 FEATURES_STATUS = "features"  # a features-only row; never the extraction records are built from
 FEATURES_CACHE_KEY = "pickfit-extract-features-v1"
+
+# R4 of docs/proposals/scoring.md: the extraction call grades the docs rubric too, over the README it already has,
+# so scoring needs no rubric call of its own (about US$0.03 a record on Claude Opus). Off until
+# scripts/compare_rubric.py --mode merged has compared the two on scripts/rubric_calibration_set.json. The request
+# stays one body per candidate (build_body), so it can go through a batch (pickfit.msg_batch) as it is.
+RUBRIC_IN_EXTRACTION = False
+RUBRIC_CACHE_KEY = "pickfit-extract-rubric-v1"
+MERGED_RUBRIC_PROMPT_VERSION = "merged-p1"
+
+
+def merged_rubric_rules() -> str:
+    """The rubric section the extraction instructions get when the call grades the rubric too."""
+    from pickfit.score import RUBRIC_ITEMS
+
+    return ("\n9. docs_rubric grades the documentation itself, not the software, from the sources only. Score each "
+            "item 0, 1 or 2:\n" + RUBRIC_ITEMS
+            + "For a score of 1 or 2, its quote is a snippet copied character for character from one source that "
+              "shows the item: the shortest one that does, never more than 200 characters. For 0, quote is null. "
+              "When unsure between two scores, give the lower one.\n")
+
+
+class ExtractionWithRubric(ExtractionResult):
+    """ExtractionResult and the docs rubric, from one call (RUBRIC_IN_EXTRACTION)."""
+
+    docs_rubric: DocsRubricItems
 
 _SOURCE_TAG = re.compile(r"<(/?)(source)", re.I)
 
@@ -276,17 +301,30 @@ def render_sources(sources: list[Source]) -> str:
     return "\n\n".join(blocks)
 
 
-def build_body(sources: list[Source], features_only: bool = False) -> dict[str, Any]:
-    model = ExtractedFeatures if features_only else ExtractionResult
+def grades_rubric(sources: list[Source], features_only: bool = False, with_rubric: bool | None = None) -> bool:
+    """Whether an extraction call over these sources grades the docs rubric too: RUBRIC_IN_EXTRACTION (or
+    `with_rubric`), a full extraction, and a README to grade (a hosted web app has no install docs)."""
+    wanted = RUBRIC_IN_EXTRACTION if with_rubric is None else with_rubric
+    return (wanted and not features_only and not any(s.kind == "website" for s in sources)
+            and any(s.kind == "readme" for s in sources))
+
+
+def build_body(sources: list[Source], features_only: bool = False, with_rubric: bool = False) -> dict[str, Any]:
+    """The request for one candidate: the same for a call now and for a batch later. with_rubric: grade the docs
+    rubric in the same call (grades_rubric decides)."""
+    rubric = with_rubric and grades_rubric(sources, features_only, True)
+    model = ExtractedFeatures if features_only else ExtractionWithRubric if rubric else ExtractionResult
     web = not features_only and any(s.kind == "website" for s in sources)
+    name = "software_features" if features_only else "software_extraction_rubric" if rubric else "software_extraction"
+    key = FEATURES_CACHE_KEY if features_only else WEB_CACHE_KEY if web else RUBRIC_CACHE_KEY if rubric \
+        else PROMPT_CACHE_KEY
     return {
-        "instructions": INSTRUCTIONS + (FEATURES_ONLY if features_only else WEB_APP if web else ""),
+        "instructions": INSTRUCTIONS + (FEATURES_ONLY if features_only else WEB_APP if web else "")
+        + (merged_rubric_rules() if rubric else ""),
         "input": [{"role": "user", "content": [{"type": "input_text", "text": render_sources(sources)}]}],
-        "text": {"format": {"type": "json_schema",
-                            "name": "software_features" if features_only else "software_extraction",
-                            "schema": meta_strict_schema(model), "strict": True}},
+        "text": {"format": {"type": "json_schema", "name": name, "schema": meta_strict_schema(model), "strict": True}},
         "store": False,
-        "prompt_cache_key": FEATURES_CACHE_KEY if features_only else WEB_CACHE_KEY if web else PROMPT_CACHE_KEY,
+        "prompt_cache_key": key,
     }
 
 
@@ -484,19 +522,22 @@ def check_quotes(result: ExtractionResult | ExtractedFeatures, sources: list[Sou
 def extract_one(candidate: dict[str, Any], *, model: str, run_id: str, reasoning_effort: str,
                 client: Any = None, ledger: Ledger | None = None,
                 runs_dir: Path | str | None = None, cache: bool | None = None,
-                max_output_tokens: int = MAX_OUTPUT_TOKENS, features_only: bool = False) -> dict[str, Any]:
-    """One extraction call; returns the row to store. BudgetExceeded propagates."""
+                max_output_tokens: int = MAX_OUTPUT_TOKENS, features_only: bool = False,
+                with_rubric: bool | None = None) -> dict[str, Any]:
+    """One extraction call; returns the row to store. BudgetExceeded propagates. with_rubric (default
+    RUBRIC_IN_EXTRACTION): the call grades the docs rubric too, stored on the row as `rubric` (R4)."""
     sources = build_sources(candidate)
-    output_model = ExtractedFeatures if features_only else ExtractionResult
+    rubric = grades_rubric(sources, features_only, with_rubric)
+    output_model = ExtractedFeatures if features_only else ExtractionWithRubric if rubric else ExtractionResult
     started = time.monotonic()
     row: dict[str, Any] = {"repo_id": candidate["repo_id"], "run_id": run_id, "model": model,
                            "reasoning_effort": reasoning_effort, "sources_sha": sources_sha(sources),
                            "input_sha": input_sha(candidate), "prompt_version": prompt_version(sources, features_only),
                            "renderer_version": RENDERER_VERSION,
                            "result": None, "quote_failures": [], "quotes_checked": 0, "error": None,
-                           "usage": None, "cost_usd": 0.0, "cache_hit": False, "response_id": None}
+                           "usage": None, "cost_usd": 0.0, "cache_hit": False, "response_id": None, "rubric": None}
     try:
-        meta = call_meta("responses", build_body(sources, features_only), stage=STAGE, public_data_only=True,
+        meta = call_meta("responses", build_body(sources, features_only, rubric), stage=STAGE, public_data_only=True,
                          max_output_tokens=max_output_tokens, model=model,
                          reasoning_effort=reasoning_effort, scope=f"{STAGE}:{candidate['repo_id']}",
                          scope_cap_usd=SCOPE_CAP_USD, run_id=run_id, output_model=output_model,
@@ -515,7 +556,15 @@ def extract_one(candidate: dict[str, Any], *, model: str, run_id: str, reasoning
                 "error": f"status {meta.status} ({reason}): {meta.parse_error}"}
     if meta.parsed is None:
         return {**row, "status": "schema_error", "error": meta.parse_error}
-    cleaned, failures, checked = check_quotes(meta.parsed, sources)
+    parsed = meta.parsed
+    if rubric:
+        from pickfit.score import rubric_from_items
+
+        graded = rubric_from_items(parsed.docs_rubric, sources, model=meta.model, now=taipei_now(),
+                                   input_sha=row["input_sha"], prompt_version=MERGED_RUBRIC_PROMPT_VERSION)
+        row["rubric"] = graded.model_dump(mode="json")
+        parsed = ExtractionResult.model_validate(parsed.model_dump(mode="json", exclude={"docs_rubric"}))
+    cleaned, failures, checked = check_quotes(parsed, sources)
     status = FEATURES_STATUS if features_only else "quotes_dropped" if failures else "ok"
     return {**row, "status": status,
             "result": cleaned.model_dump(mode="json"), "quote_failures": failures,

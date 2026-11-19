@@ -225,7 +225,8 @@ MUTATIONS = {
     ),
     "archived without cap": ("cap_reason must be 'archived'", set_path("repo", "archived", True)),
     "library without cap": ("cap_reason must be 'not_a_tool'", set_path("kind", "library_sdk")),
-    "unverified without cap": ("cap_reason must be 'unverified'", without_runs),
+    # Rule 6 (11/19): an unverified record has no 69 cap, but it cannot be a treasure.
+    "unverified, still a treasure": ("blocked_by must be 'unverified'", without_runs),
     "failed without cap": ("cap_reason must be 'verification_failed'", with_failed_run),
     "weaker of two caps": (
         "cap_reason must be 'archived'",
@@ -298,7 +299,7 @@ def test_values_as_github_reports_them(example):
 
 def test_binding_cap_picks_the_lowest():
     assert binding_cap("cli_tool", False, "function") is None
-    assert binding_cap("cli_tool", False, "unverified") == "unverified"
+    assert binding_cap("cli_tool", False, "unverified") is None  # rule 6 (11/19): no 69 cap, not a treasure
     assert binding_cap("library_sdk", False, "unverified") == "not_a_tool"
     assert binding_cap("library_sdk", False, "failed") == "verification_failed"
     assert binding_cap("library_sdk", True, "failed") == "archived"

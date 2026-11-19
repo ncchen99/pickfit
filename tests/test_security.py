@@ -53,7 +53,8 @@ def test_the_cap_sits_just_below_treasure() -> None:
     assert binding_cap("cli_tool", False, "function", check()) == "known_vulnerability"
     assert binding_cap("cli_tool", False, "function", check("clean")) is None
     assert binding_cap("cli_tool", False, "function", check("unchecked")) is None
-    assert binding_cap("cli_tool", False, "unverified", check()) == "unverified"  # the lowest cap wins
+    # Rule 6 (11/19): unverified is no cap, so a known vulnerability caps it at 79 (it cannot be a treasure either way).
+    assert binding_cap("cli_tool", False, "unverified", check()) == "known_vulnerability"
     assert binding_cap("cli_tool", False, "function", None) is None
 
 
@@ -80,7 +81,9 @@ def test_a_vulnerable_record_is_capped_and_loses_treasure() -> None:
 
 
 def test_unchecked_keeps_the_score() -> None:
-    assert scored_web(check("unchecked"))["scores"]["quality"] == scored_web()["scores"]["quality"]
+    unchecked, none = scored_web(check("unchecked"))["scores"]["quality"], scored_web()["scores"]["quality"]
+    assert unchecked.pop("security")["basis"] == "status" and none.pop("security")["basis"] == "none"
+    assert unchecked == none
 
 
 def test_refresh_applies_and_lifts_the_cap() -> None:

@@ -639,6 +639,18 @@ class PipelineDB:
 _CHANNEL_PREFIXES = ("show_hn", "submission", "reverify", "flathub", "homebrew_cask", "named")
 
 
+class ReadOnlyPipelineDB(PipelineDB):
+    """A PipelineDB that opens the file read-only and adds no table or column: for dry runs of a migration."""
+
+    def __init__(self, path: Path | str) -> None:  # noqa: D107 - no schema, no migration
+        self.path = Path(path)
+
+    def _connect(self) -> sqlite3.Connection:
+        conn = sqlite3.connect(f"file:{self.path}?mode=ro", uri=True, timeout=30)
+        conn.row_factory = sqlite3.Row
+        return conn
+
+
 def _channels(query_ids: list[str]) -> set[str]:
     """Which channels found a candidate, from its query ids: `show_hn:<category>`,
     `submission:<id>`, `reverify:<id>`, `flathub:<app id>`, `homebrew_cask:<token>`, `named:<owner/name>`

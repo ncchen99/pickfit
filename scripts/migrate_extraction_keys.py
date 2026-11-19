@@ -27,28 +27,15 @@ from __future__ import annotations
 
 import argparse
 import json
-import sqlite3
 import sys
 from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from pickfit.discover.store import PipelineDB
+from pickfit.discover.store import PipelineDB, ReadOnlyPipelineDB
 from pickfit.extract import _DONE, FEATURES_STATUS, RENDERER_VERSION, build_sources, input_sha, sources_sha
 
 LEGACY_RENDERER = "r0"
-
-
-class ReadOnlyDB(PipelineDB):
-    """A PipelineDB that opens the file read-only and adds no table or column."""
-
-    def __init__(self, path: Path | str) -> None:  # noqa: D107 - no schema, no migration
-        self.path = Path(path)
-
-    def _connect(self) -> sqlite3.Connection:
-        conn = sqlite3.connect(f"file:{self.path}?mode=ro", uri=True, timeout=30)
-        conn.row_factory = sqlite3.Row
-        return conn
 
 
 def plan(db: PipelineDB) -> tuple[list[dict[str, Any]], Counter]:
@@ -91,7 +78,7 @@ def main(argv: list[str] | None = None) -> int:
     if not path.exists():
         print(f"no database at {path}", file=sys.stderr)
         return 2
-    db = PipelineDB(path) if args.write else ReadOnlyDB(path)
+    db = PipelineDB(path) if args.write else ReadOnlyPipelineDB(path)
     stamps, counts = plan(db)
     if args.write:
         for stamp in stamps:

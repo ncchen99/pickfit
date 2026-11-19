@@ -13,7 +13,7 @@ from PIL import Image
 import pickfit.env
 from pickfit import meta
 from pickfit.ledger import Caps, Ledger
-from pickfit.verify.judge import judge_checks, pick_checks
+from pickfit.verify.judge import judge_checks, locate, needs_screenshot, pick_checks
 from pickfit.verify.replay import CheckResult, RanCommand
 from pickfit.verify.screenshot import parse_ansi, render_terminal, wrap
 from verify_fakes import FakeServer
@@ -22,7 +22,7 @@ from verify_fakes import FakeServer
 @pytest.fixture(autouse=True)
 def isolated(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(pickfit.env, "DOTENV_PATH", tmp_path / "missing.env")
-    for name in ("PICKFIT_MODE", "PICKFIT_CACHE", "MODEL_API_KEY"):
+    for name in ("PICKFIT_MODE", "PICKFIT_CACHE", "MODEL_API_KEY", "PICKFIT_JUDGE_IMAGES"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("PICKFIT_LEDGER", str(tmp_path / "default-ledger.sqlite"))
     monkeypatch.setattr(meta, "sleep", lambda s: None)
@@ -117,7 +117,41 @@ def test_pick_checks_prefers_examples_and_skips_failures():
     assert [c.command_id for c in pick_checks(many + CHECKS[:1])] == [10, 11, 2]
 
 
-def test_judge_sends_images_and_reads_boxes_back(tmp_path: Path):
+def text_answer(verdict: str, quotes: list[dict[str, Any]]) -> dict[str, Any]:
+    reply = answer(verdict, [])
+    body = json.loads(reply["output"][0]["content"][0]["text"])
+    del body["evidence_regions"]
+    reply["output"][0]["content"][0]["text"] = json.dumps({**body, "evidence": quotes})
+    return reply
+
+
+def test_complete_outputs_go_as_text_alone_and_the_quotes_are_drawn(tmp_path: Path):
+    server = FakeServer(text_answer("working", [
+        {"check": 1, "label": "rendered edges", "quote": "a ──▶ b\nb  ──▶ c"},  # spaces may differ
+        {"check": 3, "label": "nowhere", "quote": "a ──▶ b"},
+        {"check": 2, "label": "made up", "quote": "graphtty 9.9"}]))
+    result, lines = run_judge(tmp_path, server)
+    request = server.requests[0]
+    content = request["input"][0]["content"]
+    assert [part["type"] for part in content] == ["input_text"]  # the same output is not sent twice
+    assert "screenshot" not in request["instructions"]
+    assert request["text"]["format"]["schema"]["properties"]["evidence"]["type"] == "array"
+    text = content[0]["text"]
+    assert "Check 1: command `graphtty graph.json`" in text and "Check 2: command `graphtty --version`" in text
+    assert '<source kind="output" check="1">\na ──▶ b\nb ──▶ c\n</source>' in text
+
+    assert result.verdict == "working" and result.images_sent == 0
+    first = result.regions[0]
+    assert first.text.splitlines() == ["a ──▶ b", "b ──▶ c"]  # found on the redrawn screenshot
+    assert "quote on check 3, which does not exist" in result.problems
+    assert "quote 'made up' is not in check 2's output" in result.problems
+    assert Path(result.annotated[0]).name == "check-1-cmd4.judged.png"
+    assert all(Path(p).exists() for p in result.screenshots + result.annotated)  # the record's evidence still
+    assert any("text only" in line for line in lines)
+
+
+def test_judge_sends_images_and_reads_boxes_back(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("PICKFIT_JUDGE_IMAGES", "always")
     server = FakeServer(answer("working", [
         {"image": 1, "label": "rendered edges", "box": {"x_min": 0, "y_min": 545, "x_max": 400, "y_max": 700}},
         {"image": 3, "label": "nowhere", "box": {"x_min": 0, "y_min": 0, "x_max": 10, "y_max": 10}},
@@ -141,8 +175,37 @@ def test_judge_sends_images_and_reads_boxes_back(tmp_path: Path):
     assert "box on image 3, which does not exist" in result.problems
     assert Path(result.annotated[0]).name == "check-1-cmd4.judged.png"
     assert all(Path(p).exists() for p in result.screenshots + result.annotated)
-    assert result.cost_usd > 0
+    assert result.cost_usd > 0 and result.images_sent == 2
     assert any(line.startswith("  judge · claude-opus-5-5") for line in lines)
+
+
+def test_a_cut_or_redrawing_output_sends_every_screenshot(tmp_path: Path):
+    long = check(6, "graphtty big.json", "\n".join(f"n{i} ──▶ n{i + 1}" for i in range(400)), signal="n0")
+    progress = check(7, "graphtty fetch", "fetching 10%\rfetching 100%\ndone", signal="done")
+    assert needs_screenshot(long) and needs_screenshot(progress)
+    assert not needs_screenshot(CHECKS[0]) and not needs_screenshot(check(8, "t", "\x1b[32mok\x1b[0m"))
+    for checks in ([long, CHECKS[0]], [progress]):
+        server = FakeServer(answer("working", []))
+        result, _ = run_judge(tmp_path, server, checks=checks)
+        content = server.requests[0]["input"][0]["content"]
+        assert [p["type"] for p in content] == ["input_text"] + ["input_image"] * len(checks)
+        assert "screenshot" in server.requests[0]["instructions"] and result.images_sent == len(checks)
+
+
+def test_a_bad_judge_images_setting_fails_loudly(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("PICKFIT_JUDGE_IMAGES", "sometimes")
+    with pytest.raises(ValueError, match="PICKFIT_JUDGE_IMAGES"):
+        run_judge(tmp_path, FakeServer())
+
+
+def test_a_quote_is_found_across_wrapped_rows_and_wide_characters(tmp_path: Path):
+    wide = "中文輸出 " + "x" * 120  # wraps at 100 columns; each Chinese character is two
+    screen = render_terminal("tool", f"first line\n{wide}\nlast", "", tmp_path / "w.png", title="t")
+    box = locate(screen, wide)
+    assert box is not None and screen.text_in_box(*box).replace("\n", "") == wide
+    assert screen.text_in_box(*locate(screen, "last")) == "last"
+    assert locate(screen, "first   line") is not None  # runs of spaces match one
+    assert locate(screen, "not printed") is None and locate(screen, "  \n ") is None
 
 
 def test_unparseable_answer_is_inconclusive(tmp_path: Path):

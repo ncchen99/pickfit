@@ -333,14 +333,20 @@ def _add_score_command(sub: argparse._SubParsersAction) -> None:
     s.add_argument("--db", default=None, help="pipeline database with the GitHub snapshots (default runs/pipeline.db)")
     s.add_argument("--model", default="prod", help='rubric model: "prod" (default), "dev" or a model id')
     s.add_argument("--force", action="store_true", help="grade the README again even if it has not changed")
+    s.add_argument("--regrade-before", default=None, metavar="VERSION",
+                   help="grade again the rubrics an older rubric prompt or renderer graded, e.g. rubric-p2 or r1 "
+                        "(by default only a README whose raw text changed is graded again)")
+    s.add_argument("--regrade-model", action="append", metavar="MODEL",
+                   help="grade again the rubrics this model graded, e.g. muse-spark-1.3 (repeatable)")
     s.add_argument("--no-github", action="store_true",
                    help="no GitHub calls: keep the stored responsiveness; no live snapshots for repos not in --db")
     s.add_argument("--no-registries", action="store_true",
                    help="no npm, PyPI, crates.io, Homebrew or Hacker News lookups: keep the stored signals")
     s.add_argument("--concurrency", type=int, default=DEFAULT_CONCURRENCY, help="records at once")
     s.add_argument("--refresh", action="store_true",
-                   help="recompute only what follows the record (sandbox, usage, cap, total, treasure) and move a "
-                        "refreshable older formula to this one; no GitHub, registry or model call")
+                   help="recompute every part from the record and the stored inputs (the docs rubric and registry "
+                        "signals kept) and move a refreshable older formula to this one; no GitHub, registry or "
+                        "model call")
     s.add_argument("--dry-run", action="store_true", help="compute and print; write nothing")
     s.add_argument("--verbose", action="store_true", help="print every record's scores")
     s.set_defaults(func=main_score)

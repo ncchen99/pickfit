@@ -99,11 +99,32 @@
       "title": "Check",
       "type": "object"
     },
+    "CoverageState": {
+      "enum": [
+        "complete",
+        "partial",
+        "unchecked"
+      ],
+      "type": "string"
+    },
     "DataSent": {
       "enum": [
         "none",
         "observed",
         "unknown"
+      ],
+      "type": "string"
+    },
+    "DependencyScope": {
+      "enum": [
+        "runtime",
+        "optional",
+        "dev",
+        "build",
+        "test",
+        "peer",
+        "platform",
+        "workspace"
       ],
       "type": "string"
     },
@@ -115,11 +136,63 @@
           "format": "date-time",
           "type": "string"
         },
+        "grader": {
+          "anyOf": [
+            {
+              "maxLength": 40,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Who graded it: the model's provider (anthropic, meta, ...) or human. Muse's (meta) are to be graded again by the prod model."
+        },
+        "input_sha": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "sha256 of the raw text behind the sources (pickfit.extract.input_sha): the reuse key."
+        },
         "items": {
           "$ref": "#/$defs/DocsRubricItems"
         },
         "model": {
           "type": "string"
+        },
+        "prompt_version": {
+          "anyOf": [
+            {
+              "maxLength": 40,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The rubric prompt: rubric-p1, or merged-p1 when the extraction call graded it too; null for one graded before versions were kept."
+        },
+        "renderer_version": {
+          "anyOf": [
+            {
+              "maxLength": 10,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How the sources were rendered (pickfit.extract.RENDERER_VERSION); r0 for one graded before versions were kept whose sources have changed since."
         },
         "sources_sha": {
           "description": "sha256 of the rendered sources the model read.",
@@ -599,6 +672,224 @@
       "title": "FieldEvidence",
       "type": "object"
     },
+    "FindingLevel": {
+      "enum": [
+        "blocked",
+        "exposed",
+        "conditional",
+        "present_unreachable",
+        "not_shipped"
+      ],
+      "type": "string"
+    },
+    "GapCategory": {
+      "enum": [
+        "advisory_db",
+        "lockfile_missing",
+        "lockfile_unreadable",
+        "resolve_failed",
+        "no_adapter",
+        "binary_no_metadata",
+        "no_source",
+        "tool_error",
+        "platform_unsupported"
+      ],
+      "type": "string"
+    },
+    "GapCode": {
+      "enum": [
+        "advisory_db.no_ecosystem",
+        "lockfile.missing",
+        "lockfile.none_found",
+        "lockfile.unsupported_format",
+        "lockfile.parse_error",
+        "resolve.registry_failed",
+        "resolve.pyproject_failed",
+        "adapter.missing",
+        "binary.prebuilt_package",
+        "binary.no_build_info",
+        "source.none",
+        "source.clone_failed",
+        "tool.sbom_error",
+        "platform.sbom_unsupported"
+      ],
+      "type": "string"
+    },
+    "GitHubInputs": {
+      "additionalProperties": false,
+      "description": "The repository as one GitHub snapshot showed it.",
+      "properties": {
+        "contributors": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Not fetched yet: null."
+        },
+        "created_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "fetched_at": {
+          "description": "When the snapshot was read; ages are measured from it.",
+          "format": "date-time",
+          "type": "string"
+        },
+        "files": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RepoFiles"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Null when the snapshot holds no file tree."
+        },
+        "forks": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "open_issues": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Open issues and pull requests, as GitHub counts."
+        },
+        "pushed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The last push (the newest commit pickfit sees)."
+        },
+        "releases": {
+          "default": [],
+          "description": "Newest first, drafts left out.",
+          "items": {
+            "$ref": "#/$defs/GitHubRelease"
+          },
+          "maxItems": 30,
+          "type": "array"
+        },
+        "source": {
+          "description": "runs/pipeline.db's candidate snapshot, or fetched from GitHub when scoring.",
+          "enum": [
+            "pipeline_db",
+            "github_live"
+          ],
+          "type": "string"
+        },
+        "stars": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "source",
+        "fetched_at"
+      ],
+      "title": "GitHubInputs",
+      "type": "object"
+    },
+    "GitHubRelease": {
+      "additionalProperties": false,
+      "properties": {
+        "downloads": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Its assets' downloads; null with no assets."
+        },
+        "notes_chars": {
+          "default": 0,
+          "description": "Length of the release notes, stripped.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "prerelease": {
+          "default": false,
+          "type": "boolean"
+        },
+        "published_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "tag": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "GitHubRelease",
+      "type": "object"
+    },
     "GuiCheck": {
       "additionalProperties": false,
       "description": "How far a GUI app got on the box's virtual display (Linux, Xvfb, no window manager).\n\nRecorded only for a launch whose checked screenshot the judge read. window: a mapped window whose X\nclient is one of the app's processes (per the X server), showing something other than the app's UI\n(`screen`: a sign-in wall, a crash, a blank or loading screen); ui_rendered: the judge saw the app's own\ninterface in a crop of its windows (its main screen or its first-run screen); action_checked: also, an\noperation (`operations`) passed pickfit's own check in the replay and the feature judge saw it show a\nlisted feature working. A launch supports install; action_checked supports function.",
@@ -974,6 +1265,87 @@
       "title": "InstallStep",
       "type": "object"
     },
+    "IssueFact": {
+      "additionalProperties": false,
+      "properties": {
+        "association": {
+          "anyOf": [
+            {
+              "maxLength": 40,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "GitHub's author_association."
+        },
+        "bot": {
+          "default": false,
+          "type": "boolean"
+        },
+        "closed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "created_at": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "created_at"
+      ],
+      "title": "IssueFact",
+      "type": "object"
+    },
+    "IssueInputs": {
+      "additionalProperties": false,
+      "description": "The newest issues GitHub returned when scoring (pull requests counted, not kept).",
+      "properties": {
+        "fetched_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "items": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/IssueFact"
+          },
+          "maxItems": 100,
+          "type": "array"
+        },
+        "page_full": {
+          "default": false,
+          "description": "GitHub returned a full page: older issues were not read.",
+          "type": "boolean"
+        },
+        "pull_requests": {
+          "default": 0,
+          "minimum": 0,
+          "type": "integer"
+        },
+        "source": {
+          "const": "github_live",
+          "default": "github_live",
+          "type": "string"
+        }
+      },
+      "required": [
+        "fetched_at"
+      ],
+      "title": "IssueInputs",
+      "type": "object"
+    },
     "Judge": {
       "additionalProperties": false,
       "description": "Separate model call that reads the screenshot and log.",
@@ -1025,6 +1397,53 @@
         "other"
       ],
       "type": "string"
+    },
+    "LegacyComponents": {
+      "additionalProperties": false,
+      "description": "Components kept from an earlier formula because their raw inputs were never stored (R1 backfill).",
+      "properties": {
+        "engineering_hygiene": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "maintenance": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "responsiveness": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "title": "LegacyComponents",
+      "type": "object"
     },
     "Maturity": {
       "enum": [
@@ -1688,10 +2107,36 @@
           "$ref": "#/$defs/QualityComponents"
         },
         "confidence": {
-          "description": "Share of weight that had data.",
+          "description": "Share of the formula's weight whose inputs pickfit verified. From b3.v7 on it is derived from the record's Verification Coverage (pickfit/coverage.py quality_confidence), the same number as before; the security dimension is never in it.",
           "maximum": 1,
           "minimum": 0,
           "type": "number"
+        },
+        "raw_total": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "From b3.v7 and web.v1 on: the weighted mean of the components before any cap, deduction or visual factor, so records at a cap still keep their order."
+        },
+        "security": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SecurityEffect"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "From b3.v7 and web.v1 on: what the security check did (deduction, cap, note)."
         },
         "total": {
           "anyOf": [
@@ -1731,6 +2176,20 @@
     "QualityComponent": {
       "additionalProperties": false,
       "properties": {
+        "penalty": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 1,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "b3.v7 maintenance, while pickfit/score.py's STALE_FIX_PENALTY is on (off by default): taken off the score because a security fix had been out 90 days or more and the checked version had not taken it."
+        },
         "score": {
           "anyOf": [
             {
@@ -1760,7 +2219,7 @@
     },
     "QualityComponents": {
       "additionalProperties": false,
-      "description": "The quality components of formula b3.v6 (nominal weights 20/20/25/10/5/10/10+; pickfit/score.py).\n\nA hosted web app (formula web.v1, pickfit/score.py) adds browser_facts and gives the four components a\nREADME and a repository feed weight 0: it is opened, not installed. Other records never carry it.",
+      "description": "The quality components of formulas b3.v6 and b3.v7 (nominal weights 20/20/25/10/5/10/10+; pickfit/score.py).\n\nA hosted web app (formula web.v1, pickfit/score.py) adds browser_facts and gives the four components a\nREADME and a repository feed weight 0: it is opened, not installed. Other records never carry it.",
       "properties": {
         "browser_facts": {
           "anyOf": [
@@ -1787,7 +2246,7 @@
             }
           ],
           "default": null,
-          "description": "Formula b3.v6: checked / (checked + failed because of the tool), over the passed runs. Null score when no feature reached a verdict (dropped from the denominator)."
+          "description": "From formula b3.v6: checked / (checked + failed because of the tool), over the passed runs. Null score when no feature reached a verdict (dropped from the denominator)."
         },
         "install_docs": {
           "$ref": "#/$defs/QualityComponent"
@@ -1828,6 +2287,23 @@
       ],
       "title": "QualityComponents",
       "type": "object"
+    },
+    "ReachMethod": {
+      "enum": [
+        "none",
+        "lockfile_scope",
+        "manifest_scope",
+        "installed_artifact",
+        "entry_point_grep",
+        "option_grep",
+        "symbol_grep",
+        "import_grep",
+        "govulncheck_binary",
+        "govulncheck_source",
+        "next_static_export",
+        "model_triage"
+      ],
+      "type": "string"
     },
     "RelPath": {
       "maxLength": 300,
@@ -1900,6 +2376,74 @@
         "archived"
       ],
       "title": "Repo",
+      "type": "object"
+    },
+    "RepoFiles": {
+      "additionalProperties": false,
+      "description": "What engineering_hygiene reads from the file tree: the first path that shows each part, else null.",
+      "properties": {
+        "changelog": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "ci": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "count": {
+          "description": "Files in the tree pickfit read.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "lockfile": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "tests": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "truncated": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "count"
+      ],
+      "title": "RepoFiles",
       "type": "object"
     },
     "RepoId": {
@@ -1997,11 +2541,32 @@
     },
     "RunVideo": {
       "additionalProperties": false,
-      "description": "A short captioned clip of pickfit operating a GUI or web app to check its features (pickfit/verify/video.py).\n\nA fresh box replayed this run's steps and operations (a web app: a second, recorded visit replaying the first\nvisit's actions without a model) while pickfit recorded its own screen; Muse Spark Open\nwatched each recording with pickfit's action log and picked whole segments, kept in their order (a speed-up\nis labelled on screen), and then watched the cut and confirmed that each caption shows on screen. Captions\nclaim only checks that passed in this run and again in the recorded replay. The clip's first frame says it\nwas recorded by pickfit in a sandbox, and on what date; it names each raw recording and its sha256.",
+      "description": "A short captioned clip of pickfit operating a GUI or web app to check its features (pickfit/verify/video.py).\n\nA fresh box replayed this run's steps and operations (a web app: a second, recorded visit replaying the first\nvisit's actions without a model) while pickfit recorded its own screen. pickfit picked whole segments, kept in\ntheir order, by its own rules from its action log (before 11/19 a model watched each recording and picked them),\nand checked that each segment shows what pickfit's own screenshot after each action showed; a model looks only\nat segments that check could not match, and at a sample. A speed-up or a stretch left out is marked on the\npicture (\"2×\", \"−11 s\"). Captions claim only checks that passed in this run and again in the recorded replay.\nA clip cut before 11/19 opens on a card saying it was recorded by pickfit in a sandbox, and on what date, and\nends on one naming each raw recording and its sha256; since then the clip is the app alone, its captions a\nWebVTT track, and the raw recordings and their sha256 are on the page (and in the mp4's metadata).",
       "properties": {
+        "actions": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VideoSource"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "pickfit's log of every action in the raw recordings (R2)."
+        },
+        "captions": {
+          "default": [],
+          "description": "The clip's captions in time order (the page serves them as WebVTT, in the page's language).",
+          "items": {
+            "$ref": "#/$defs/VideoCaption"
+          },
+          "maxItems": 200,
+          "type": "array"
+        },
         "chapters": {
           "default": [],
-          "description": "The clip's chapters in time order, covering it whole: the first card at 0, one chapter for each run of segments of one feature, the last card.",
+          "description": "The clip's chapters in time order, covering it whole from 0: one chapter for each run of segments of one feature (a clip cut before 11/19: between its first and last cards).",
           "items": {
             "$ref": "#/$defs/VideoChapter"
           },
@@ -2014,6 +2579,18 @@
         "clip_sha256": {
           "pattern": "^[0-9a-f]{64}$",
           "type": "string"
+        },
+        "edit_list": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/VideoSource"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The clip's segments, captions and review, as cut (R2)."
         },
         "features": {
           "description": "The run's checked features the clip shows.",
@@ -2067,6 +2644,106 @@
       "title": "RunVideo",
       "type": "object"
     },
+    "ScoreHistory": {
+      "additionalProperties": false,
+      "description": "What an earlier formula gave the record, kept when the formula changed (R10).",
+      "properties": {
+        "computed_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "formula_version": {
+          "maxLength": 40,
+          "minLength": 1,
+          "type": "string"
+        },
+        "is_treasure": {
+          "type": "boolean"
+        },
+        "popularity": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "quality": {
+          "anyOf": [
+            {
+              "maximum": 100,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "formula_version",
+        "computed_at",
+        "quality",
+        "popularity",
+        "is_treasure"
+      ],
+      "title": "ScoreHistory",
+      "type": "object"
+    },
+    "ScoreInputs": {
+      "additionalProperties": false,
+      "description": "The raw signals maintenance, engineering_hygiene, responsiveness and the GitHub popularity signals are computed\nfrom (docs/proposals/scoring.md R1), so a new formula is computed again offline, with no GitHub call.",
+      "properties": {
+        "github": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/GitHubInputs"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Null: not recovered; fetched at the next score."
+        },
+        "issues": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/IssueInputs"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Null: not fetched (pickfit score --no-github)."
+        },
+        "legacy": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LegacyComponents"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Until github or issues are fetched: the component an earlier formula computed from them."
+        },
+        "version": {
+          "const": "inputs.v1",
+          "default": "inputs.v1",
+          "type": "string"
+        }
+      },
+      "title": "ScoreInputs",
+      "type": "object"
+    },
     "Scores": {
       "additionalProperties": false,
       "properties": {
@@ -2091,6 +2768,27 @@
           "minLength": 1,
           "type": "string"
         },
+        "history": {
+          "default": [],
+          "description": "Earlier formulas' results, newest first (R10).",
+          "items": {
+            "$ref": "#/$defs/ScoreHistory"
+          },
+          "maxItems": 5,
+          "type": "array"
+        },
+        "inputs": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ScoreInputs"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "From b3.v7 on: the raw inputs of the repository components (R1)."
+        },
         "popularity": {
           "$ref": "#/$defs/Popularity"
         },
@@ -2111,9 +2809,60 @@
       "title": "Scores",
       "type": "object"
     },
+    "SecurityAssessment": {
+      "additionalProperties": false,
+      "description": "How the known findings were judged (S5). The level is what scoring reads: security.assessment.level. It says\nnothing about what could not be checked (SecurityCoverage).",
+      "properties": {
+        "assessed_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "counts": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "default": {},
+          "description": "Counted findings per level.",
+          "propertyNames": {
+            "$ref": "#/$defs/FindingLevel"
+          },
+          "type": "object"
+        },
+        "level": {
+          "$ref": "#/$defs/SecurityLevel"
+        },
+        "policy_version": {
+          "const": "sec.v2",
+          "type": "string"
+        },
+        "reasons": {
+          "default": [],
+          "description": "Why this level, as short codes, e.g. 'worst:GHSA-x npm:y@1 (conditional)', 'kev:...', 'malicious:MAL-...'.",
+          "items": {
+            "maxLength": 200,
+            "type": "string"
+          },
+          "maxItems": 10,
+          "type": "array"
+        },
+        "uncounted": {
+          "default": 0,
+          "description": "Moderate, low or unrated findings: observed only.",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "level",
+        "policy_version",
+        "assessed_at"
+      ],
+      "title": "SecurityAssessment",
+      "type": "object"
+    },
     "SecurityCheck": {
       "additionalProperties": false,
-      "description": "Known vulnerabilities in what a fresh install brings (sec.v1, pickfit/security.py; 念誠 11/3).\n\nNo model call: the dependencies are resolved the way a person installing it today gets them (a published package\nthrough npm --package-lock-only --ignore-scripts or uv pip compile --no-build, neither runs package code; else the\nrepository's lockfiles, Python re-resolved from pyproject.toml since pip and uv do not read uv.lock), without\ndevelopment dependencies and without lockfiles of parts the person does not install (docs sites, editor extensions,\nCI actions). Every resolved version is looked up on OSV.dev; any high or critical advisory, fixed or not, counts.",
+      "description": "Known vulnerabilities in what the software brings (pickfit/security.py).\n\nsec.v1 (念誠 11/3): the dependencies are resolved the way a person installing it today gets them (a published\npackage through npm --package-lock-only --ignore-scripts or uv pip compile --no-build, neither runs package code;\nelse the repository's lockfiles, Python re-resolved from pyproject.toml since pip and uv do not read uv.lock),\nwithout development dependencies and without lockfiles of parts the person does not install (docs sites, editor\nextensions, CI actions). Every resolved version is looked up on OSV.dev; any high or critical advisory, fixed or\nnot, counts.\n\nsec.v2 (11/19): the same reads plus development, build and peer dependencies (marked, not held against the\nsoftware), the installed artifact's SBOM when a replay box left one, every severity, and a level per finding.\n`status`, `findings_total` and `advisories_total` then cover the findings that warn (blocked, exposed,\nconditional); `findings` keeps those first, then the ones present but unreachable.",
       "properties": {
         "advisories_total": {
           "anyOf": [
@@ -2128,9 +2877,31 @@
           "default": null,
           "description": "Distinct vulnerabilities among the findings: one advisory (with its aliases) on several packages or versions counts once. Absent on a check written before 11/3 evening."
         },
+        "assessment": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SecurityAssessment"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "checked_at": {
           "format": "date-time",
           "type": "string"
+        },
+        "coverage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SecurityCoverage"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "database": {
           "const": "OSV.dev",
@@ -2150,6 +2921,17 @@
           "description": "Every finding (one per advisory on each package version), though findings keeps at most 60.",
           "minimum": 0,
           "type": "integer"
+        },
+        "observation": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SecurityObservation"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "packages_checked": {
           "minimum": 0,
@@ -2190,7 +2972,10 @@
           "default": null
         },
         "version": {
-          "const": "sec.v1",
+          "enum": [
+            "sec.v1",
+            "sec.v2"
+          ],
           "type": "string"
         }
       },
@@ -2203,14 +2988,205 @@
       "title": "SecurityCheck",
       "type": "object"
     },
+    "SecurityComponent": {
+      "additionalProperties": false,
+      "description": "One part read (or not): a lockfile, a resolved registry package, the installed artifact's SBOM.",
+      "properties": {
+        "component": {
+          "maxLength": 300,
+          "type": "string"
+        },
+        "ecosystem": {
+          "maxLength": 40,
+          "type": "string"
+        },
+        "gaps": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/GapCode"
+          },
+          "type": "array"
+        },
+        "packages": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "scanned",
+            "partial",
+            "not_scanned"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "ecosystem",
+        "component",
+        "status",
+        "packages"
+      ],
+      "title": "SecurityComponent",
+      "type": "object"
+    },
+    "SecurityCoverage": {
+      "additionalProperties": false,
+      "description": "How much could be checked, apart from what was found: complete (something checked, no gap), partial (something\nchecked, a gap) or unchecked (nothing checked). The record keeps up to 30 components and gaps; all are in\ndata/security/<slug>.json.",
+      "properties": {
+        "components": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/SecurityComponent"
+          },
+          "maxItems": 500,
+          "type": "array"
+        },
+        "gaps": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/SecurityGap"
+          },
+          "maxItems": 500,
+          "type": "array"
+        },
+        "packages_checked": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "packages_found": {
+          "description": "Checked plus what the gaps are known to hide (a lower bound).",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "state": {
+          "$ref": "#/$defs/CoverageState"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "enum": [
+                "repo_lockfile",
+                "registry_resolve",
+                "installed_artifact"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "state",
+        "packages_found",
+        "packages_checked"
+      ],
+      "title": "SecurityCoverage",
+      "type": "object"
+    },
+    "SecurityEffect": {
+      "additionalProperties": false,
+      "description": "What the record's known findings did to its scores (pickfit/score.py security_effect). What could not be\nchecked is never here: an unknown changes no score (念誠 11/19; it is Verification Coverage's).",
+      "properties": {
+        "basis": {
+          "description": "Where level comes from: the assessment, the sec.v1 status, or no check at all.",
+          "enum": [
+            "assessment",
+            "status",
+            "none"
+          ],
+          "type": "string"
+        },
+        "deduction": {
+          "default": 0,
+          "description": "Points taken off the total (exposed only).",
+          "maximum": 100,
+          "minimum": 0,
+          "type": "number"
+        },
+        "effect": {
+          "description": "The strongest: blocked is not listed; a level in SECURITY_CAP_LEVELS (or sec.v1 vulnerable) is capped at 79; exposed loses SECURITY_EXPOSED_DEDUCTION points (0 by default); a level in SECURITY_NO_TREASURE_LEVELS cannot be a treasure; conditional otherwise gets a line on the page.",
+          "enum": [
+            "unlisted",
+            "capped",
+            "deducted",
+            "no_treasure",
+            "note",
+            "none"
+          ],
+          "type": "string"
+        },
+        "level": {
+          "description": "security.assessment.level; for a sec.v1 check without one, its status (vulnerable, clean, unchecked); none without a check.",
+          "enum": [
+            "blocked",
+            "exposed",
+            "conditional",
+            "present_unreachable",
+            "not_shipped",
+            "none",
+            "vulnerable",
+            "clean",
+            "unchecked"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "level",
+        "basis",
+        "effect"
+      ],
+      "title": "SecurityEffect",
+      "type": "object"
+    },
     "SecurityFinding": {
       "additionalProperties": false,
-      "description": "One high or critical OSV advisory (or a malicious-package report) on a package a fresh install brings.",
+      "description": "One OSV advisory (or a malicious-package report) on one version of a package the software brings.\n\nA sec.v1 finding has the first eight fields and is high or critical. sec.v2 adds what the advisory says (ids, dates,\nCVSS vectors, CWE), where the package sits (scope, path, workspace, platform, lockfile or SBOM), whether the\ninstalled artifact has it, KEV and EPSS, preconditions and reachability, and the level the policy gave it.",
       "properties": {
         "advisory": {
           "description": "OSV id, e.g. GHSA-xxxx-xxxx-xxxx or MAL-2025-1.",
           "pattern": "^[A-Z][A-Z0-9]*-[\\w-]+$",
           "type": "string"
+        },
+        "aliases": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "type": "array"
+        },
+        "attack_vector": {
+          "anyOf": [
+            {
+              "enum": [
+                "network",
+                "adjacent",
+                "local",
+                "physical"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "counted": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Counts toward the record's level: high or critical, malicious, or on KEV. Moderate, low and unrated ones are observed only."
         },
         "cves": {
           "default": [],
@@ -2219,6 +3195,89 @@
           },
           "maxItems": 10,
           "type": "array"
+        },
+        "cvss_v3": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "cvss_v4": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "cwes": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "type": "array"
+        },
+        "dos_only": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Only availability is hit (CVSS C:N/I:N, else the words)."
+        },
+        "epss": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "epss_percentile": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "fix_published_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "When fixed_in came out (deps.dev): a maintenance signal for scoring, not a cap."
         },
         "fixed_in": {
           "anyOf": [
@@ -2231,19 +3290,182 @@
           ],
           "description": "The lowest fixed version above the installed one; null when none is out."
         },
+        "found_in": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The lockfile path, 'registry:<pkg>' or 'sbom:<run id>'."
+        },
+        "in_artifact": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Seen in the installed artifact's SBOM; null when no SBOM covers its ecosystem."
+        },
+        "intel_checked_at": {
+          "anyOf": [
+            {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The day KEV and EPSS were read."
+        },
+        "kev": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "level": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FindingLevel"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "malicious": {
           "default": false,
           "type": "boolean"
+        },
+        "modified": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         },
         "package": {
           "description": "Ecosystem and name, e.g. 'npm:undici'.",
           "pattern": "^(npm|pypi|crates|go):\\S+$",
           "type": "string"
         },
+        "paths": {
+          "default": [],
+          "description": "Shortest dependency paths, 'root > a > b'.",
+          "items": {
+            "maxLength": 400,
+            "type": "string"
+          },
+          "maxItems": 3,
+          "type": "array"
+        },
+        "platform": {
+          "default": [],
+          "description": "Only on these OSes (os fields, cfg()).",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 6,
+          "type": "array"
+        },
+        "policy_version": {
+          "anyOf": [
+            {
+              "const": "sec.v2",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "preconditions": {
+          "default": [],
+          "description": "What must hold for it to matter, as codes: local_access, adjacent_network, user_interaction, high_privileges, high_complexity, denial_of_service, server_side, option:<NAME>, symbol:<name>, entry:<module>.",
+          "items": {
+            "maxLength": 120,
+            "type": "string"
+          },
+          "maxItems": 8,
+          "type": "array"
+        },
+        "published": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "purl": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "reachability": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SecurityReachability"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DependencyScope"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "severity": {
+          "description": "GHSA's rating, else the CVSS v3 base score's band; sec.v1 keeps only CRITICAL and HIGH.",
           "enum": [
             "CRITICAL",
-            "HIGH"
+            "HIGH",
+            "MODERATE",
+            "LOW",
+            "UNKNOWN"
           ],
           "type": "string"
         },
@@ -2251,10 +3473,44 @@
           "maxLength": 200,
           "type": "string"
         },
+        "triage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SecurityTriage"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
         "version": {
           "maxLength": 100,
           "minLength": 1,
           "type": "string"
+        },
+        "vex": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SecurityVex"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "workspace": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
         }
       },
       "required": [
@@ -2266,6 +3522,373 @@
         "summary"
       ],
       "title": "SecurityFinding",
+      "type": "object"
+    },
+    "SecurityGap": {
+      "additionalProperties": false,
+      "description": "One reason something could not be checked, in the fixed taxonomy (pickfit/security.py).",
+      "properties": {
+        "capability": {
+          "description": "The harness capability that would close it.",
+          "maxLength": 80,
+          "type": "string"
+        },
+        "category": {
+          "$ref": "#/$defs/GapCategory"
+        },
+        "code": {
+          "$ref": "#/$defs/GapCode"
+        },
+        "component": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The lockfile, manifest, package or SBOM."
+        },
+        "detail": {
+          "default": "",
+          "maxLength": 300,
+          "type": "string"
+        },
+        "ecosystem": {
+          "description": "npm, pypi, crates, go, maven, c/c++, ... or unknown.",
+          "maxLength": 40,
+          "type": "string"
+        },
+        "first_seen": {
+          "anyOf": [
+            {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "found": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Packages it hides, when they can be counted."
+        },
+        "last_seen": {
+          "anyOf": [
+            {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "code",
+        "category",
+        "ecosystem",
+        "capability"
+      ],
+      "title": "SecurityGap",
+      "type": "object"
+    },
+    "SecurityLevel": {
+      "enum": [
+        "blocked",
+        "exposed",
+        "conditional",
+        "present_unreachable",
+        "not_shipped",
+        "none"
+      ],
+      "type": "string"
+    },
+    "SecurityObservation": {
+      "additionalProperties": false,
+      "description": "What the scan saw, without judging it. The record keeps this summary; every finding is in `details`.",
+      "properties": {
+        "advisories_fetched_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "artifact_sha256": {
+          "default": [],
+          "items": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "maxItems": 20,
+          "type": "array"
+        },
+        "commit": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{7,40}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "details": {
+          "anyOf": [
+            {
+              "pattern": "^security/[a-z0-9-]+\\.json$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The full observation, relative to the data root (data/security/<slug>.json)."
+        },
+        "details_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "epss_date": {
+          "anyOf": [
+            {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "findings_total": {
+          "description": "Every finding seen: all severities, all scopes.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "kev_catalog": {
+          "anyOf": [
+            {
+              "maxLength": 40,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "CISA KEV catalog version read."
+        },
+        "packages": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "default": {},
+          "description": "Packages read per ecosystem (npm, pypi, crates, go).",
+          "type": "object"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RunId"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The verification run whose replay box gave the SBOM."
+        },
+        "scanner": {
+          "const": "pickfit-security",
+          "default": "pickfit-security",
+          "type": "string"
+        },
+        "scanner_version": {
+          "const": "sec.v2",
+          "type": "string"
+        },
+        "scopes": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "default": {},
+          "description": "Packages read per scope (runtime, dev, build, ...).",
+          "type": "object"
+        },
+        "target": {
+          "description": "installed_artifact: the SBOM of what pickfit's replay box installed (pickfit/sbom.py); registry_resolve: the published package resolved as a fresh install; repo_lockfile: the repository's lockfiles at `commit`.",
+          "enum": [
+            "repo_lockfile",
+            "registry_resolve",
+            "installed_artifact"
+          ],
+          "type": "string"
+        },
+        "tool_version": {
+          "anyOf": [
+            {
+              "maxLength": 60,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "scanner_version",
+        "target",
+        "advisories_fetched_at",
+        "findings_total"
+      ],
+      "title": "SecurityObservation",
+      "type": "object"
+    },
+    "SecurityReachability": {
+      "additionalProperties": false,
+      "description": "Whether the vulnerable code runs, decided by a program (S4) or, later, a model with cited evidence (S6).",
+      "properties": {
+        "evidence": {
+          "default": [],
+          "description": "file:line quotes, or what was searched for and not found.",
+          "items": {
+            "maxLength": 300,
+            "type": "string"
+          },
+          "maxItems": 5,
+          "type": "array"
+        },
+        "method": {
+          "$ref": "#/$defs/ReachMethod"
+        },
+        "result": {
+          "enum": [
+            "reachable",
+            "not_reachable",
+            "unknown"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "method",
+        "result"
+      ],
+      "title": "SecurityReachability",
+      "type": "object"
+    },
+    "SecurityTriage": {
+      "additionalProperties": false,
+      "description": "A model's reading of one advisory against one project (S6, not run yet): kept only with evidence a program\ncan grep again.",
+      "properties": {
+        "at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "evidence": {
+          "default": [],
+          "items": {
+            "maxLength": 300,
+            "type": "string"
+          },
+          "maxItems": 5,
+          "type": "array"
+        },
+        "input_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "model": {
+          "maxLength": 100,
+          "type": "string"
+        },
+        "prompt_version": {
+          "maxLength": 40,
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "exposed",
+            "conditional",
+            "not_exposed"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "model",
+        "prompt_version",
+        "input_sha256",
+        "verdict",
+        "at"
+      ],
+      "title": "SecurityTriage",
+      "type": "object"
+    },
+    "SecurityVex": {
+      "additionalProperties": false,
+      "description": "The finding as an OpenVEX statement would put it (for a later public feed).",
+      "properties": {
+        "justification": {
+          "anyOf": [
+            {
+              "enum": [
+                "component_not_present",
+                "vulnerable_code_not_present",
+                "vulnerable_code_not_in_execute_path",
+                "vulnerable_code_cannot_be_controlled_by_adversary",
+                "inline_mitigations_already_exist"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "status": {
+          "enum": [
+            "not_affected",
+            "affected",
+            "fixed",
+            "under_investigation"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "SecurityVex",
       "type": "object"
     },
     "SetupStep": {
@@ -2476,8 +4099,20 @@
     "Treasure": {
       "additionalProperties": false,
       "properties": {
+        "blocked_by": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/TreasureBlock"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Why the record cannot be a treasure whatever its scores, under a treasure rule switched on (the settings by SECURITY_CAP_LEVELS; none is on by default): its security level, nothing of its security checked, a coverage share below its threshold, or unverified with the 69 cap off."
+        },
         "is_treasure": {
-          "description": "Tool, verified, not archived, quality >= 80 and popularity <= 45.",
+          "description": "Tool, verified, not archived, quality >= 80 and popularity <= 45, and not blocked_by anything.",
           "type": "boolean"
         },
         "value": {
@@ -2498,6 +4133,20 @@
       ],
       "title": "Treasure",
       "type": "object"
+    },
+    "TreasureBlock": {
+      "enum": [
+        "security_blocked",
+        "security_exposed",
+        "security_conditional",
+        "security_present_unreachable",
+        "security_not_shipped",
+        "security_unchecked",
+        "security_coverage",
+        "function_coverage",
+        "unverified"
+      ],
+      "type": "string"
     },
     "UnverifiedReason": {
       "enum": [
@@ -3037,9 +4686,37 @@
       "title": "VerificationRun",
       "type": "object"
     },
+    "VideoCaption": {
+      "additionalProperties": false,
+      "description": "One caption cue of a clip, served as a WebVTT track (the clip has no words drawn on it): English, put in\nother languages by the page's translation like any other sentence of the record.",
+      "properties": {
+        "end_s": {
+          "description": "Where it ends.",
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "start_s": {
+          "description": "Where the cue starts in the clip, seconds.",
+          "minimum": 0,
+          "type": "number"
+        },
+        "text": {
+          "maxLength": 120,
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "start_s",
+        "end_s",
+        "text"
+      ],
+      "title": "VideoCaption",
+      "type": "object"
+    },
     "VideoChapter": {
       "additionalProperties": false,
-      "description": "A chapter of a clip, for the player's progress bar: the first card, each feature's segments, the last card.",
+      "description": "A chapter of a clip, for the player's progress bar: each feature's segments (a clip cut before 11/19 also has\nits first and last cards, feature null).",
       "properties": {
         "feature": {
           "anyOf": [
@@ -3053,6 +4730,32 @@
             }
           ],
           "description": "The video.features entry the chapter shows; null for the first and last cards."
+        },
+        "raw": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Index into video.raw: the unedited recording the chapter's first segment was cut from (its link on the page opens that recording there)."
+        },
+        "raw_s": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Where in that recording the chapter's first segment starts, seconds."
         },
         "start_s": {
           "description": "Where the chapter starts in the clip, seconds.",
@@ -3107,6 +4810,28 @@
         "smoke_test"
       ],
       "title": "VideoRaw",
+      "type": "object"
+    },
+    "VideoSource": {
+      "additionalProperties": false,
+      "description": "A file kept in R2 beside the clip so the clip can be cut again later without a box: pickfit's action log of\nthe recordings (actions.json) or the clip's edit list (its segments, review and captions).",
+      "properties": {
+        "key": {
+          "description": "Its key in the videos bucket: <slug>/<file>.",
+          "maxLength": 200,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*/[A-Za-z0-9_][A-Za-z0-9_.-]*\\.json$",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "key",
+        "sha256"
+      ],
+      "title": "VideoSource",
       "type": "object"
     },
     "VisualCheck": {
@@ -3676,7 +5401,7 @@
         }
       ],
       "default": null,
-      "description": "Known high or critical vulnerabilities in what a fresh install brings (OSV.dev); null: not run yet."
+      "description": "Known vulnerabilities in what the software brings (OSV.dev): sec.v1 a verdict, sec.v2 an observation and an assessment whose level scoring reads; null: not run yet."
     },
     "slug": {
       "$ref": "#/$defs/Slug",

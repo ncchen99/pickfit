@@ -255,12 +255,98 @@ def treasure_value(quality: float, popularity: float) -> float:
     return quality * (1 - popularity / 100)
 
 
-def security_vulnerable(security: Any) -> bool:
-    """Whether a record's security check (model or its JSON) found a high or critical advisory."""
+# --- Treasure and cap rules (docs/proposals/coverage.md; 念誠 11/19) ------------------------------------------------
+#
+# 念誠's direction: keep the quality score, keep Verification Coverage apart from it (pickfit/coverage.py), never take
+# an unknown for a security problem, and leave the treasure rules open until the distribution of the unknowns is seen
+# (docs/proposals/coverage-distribution.md). So each candidate rule is a setting here, every default is today's rule,
+# and switching one needs `pickfit score --refresh` over the records and nothing else; `pickfit coverage rules` shows
+# what each would do.
+
+# The sec.v2 levels (security.assessment.level) the known_vulnerability cap (79) applies to. Default, today's rule:
+# every level that warns (blocked, exposed, conditional), which is exactly where sec.v2's status reads vulnerable
+# (security_status_for), so status vulnerable caps under sec.v1 and sec.v2 alike. A check without an assessment
+# (sec.v1) keeps its own rule: status vulnerable caps. Candidate: {"blocked", "exposed"} (conditional, a finding that
+# matters only in some uses, loses the cap).
+SECURITY_CAP_LEVELS: frozenset[str] = frozenset({"blocked", "exposed", "conditional"})
+# Levels that cannot be a treasure whatever the score (treasure.blocked_by "security_<level>"). Default: none beyond
+# the cap. Candidate (R5 as docs/proposals/scoring.md put it): {"blocked", "exposed"}, with no cap and
+# pickfit/score.py's SECURITY_EXPOSED_DEDUCTION.
+SECURITY_NO_TREASURE_LEVELS: frozenset[str] = frozenset()
+# R9: a record nothing of whose security could be checked (coverage unchecked, a sec.v1 status unchecked, or no check
+# yet) can be a treasure, and its page says it was not checked. False takes the treasure away until something is.
+UNCHECKED_CAN_BE_TREASURE = True
+# The 69 cap on an unverified record (QUALITY_CAPS). False: it keeps its score, and its order among the others, but
+# cannot be a treasure (blocked_by "unverified"): a coverage rule in place of a cap. False since 11/19 (念誠: rule 6 of
+# docs/proposals/coverage-distribution.md; the unverified records at exactly 69.0 spread out, no treasure moves).
+UNVERIFIED_CAP = False
+# A treasure needs at least this share of its packages checked (security), or of its listed features judged
+# (function): pickfit/coverage.py's measures, applied by pickfit/score.py (blocked_by "security_coverage",
+# "function_coverage"). None: no such rule (default).
+TREASURE_MIN_SECURITY_COVERAGE: float | None = None
+TREASURE_MIN_FUNCTION_COVERAGE: float | None = None
+type TreasureBlock = Literal["security_blocked", "security_exposed", "security_conditional",
+                             "security_present_unreachable", "security_not_shipped", "security_unchecked",
+                             "security_coverage", "function_coverage", "unverified"]
+COVERAGE_BLOCKS = frozenset({"security_coverage", "function_coverage"})
+
+
+def _field(value: Any, name: str) -> Any:
+    if value is None:
+        return None
+    return value.get(name) if isinstance(value, dict) else getattr(value, name, None)
+
+
+def security_level(security: Any) -> str | None:
+    """security.assessment.level (model or JSON): the worst known finding's level, or none. None for a check without
+    an assessment (sec.v1) or no check. Never an unknown: what could not be checked is security_coverage_state's."""
+    level = _field(_field(security, "assessment"), "level")
+    return level if isinstance(level, str) else None
+
+
+def security_coverage_state(security: Any) -> str:
+    """How much of a record's security could be checked, read as pickfit/security.py's coverage_of reads it: sec.v2's
+    coverage state; a sec.v1 check by its status (clean complete, vulnerable partial, unchecked unchecked); none yet:
+    unchecked."""
+    if security is None:
+        return "unchecked"
+    coverage = _field(security, "coverage")
+    if coverage is not None:
+        return str(_field(coverage, "state"))
+    status = _field(security, "status")
+    return "complete" if status == "clean" else "partial" if status == "vulnerable" else "unchecked"
+
+
+def security_capped(security: Any) -> bool:
+    """Whether the known_vulnerability cap applies: the assessment's level is in SECURITY_CAP_LEVELS; a check without
+    an assessment (sec.v1) by its status, vulnerable. What could not be checked never caps."""
     if security is None:
         return False
-    status = security.get("status") if isinstance(security, dict) else security.status
-    return status == "vulnerable"
+    level = security_level(security)
+    if level is None:
+        return _field(security, "status") == "vulnerable"
+    return level in SECURITY_CAP_LEVELS
+
+
+def security_vulnerable(security: Any) -> bool:
+    """Whether a record's security check (model or its JSON) reads vulnerable: a finding that warns, or under sec.v1
+    any high or critical advisory. The cap reads security_capped."""
+    return security is not None and _field(security, "status") == "vulnerable"
+
+
+def required_treasure_block(security: Any, level: str) -> TreasureBlock | None:
+    """Why a record cannot be a treasure under the settings above that the record alone decides, or None: its
+    security level is in SECURITY_NO_TREASURE_LEVELS, nothing of its security was checked while
+    UNCHECKED_CAN_BE_TREASURE is off, or it is unverified (`level`, verification.level) while UNVERIFIED_CAP is off.
+    The coverage thresholds are pickfit/score.py's to apply: they read pickfit/coverage.py."""
+    known = security_level(security)
+    if known in SECURITY_NO_TREASURE_LEVELS:
+        return f"security_{known}"  # type: ignore[return-value]
+    if not UNCHECKED_CAN_BE_TREASURE and security_coverage_state(security) == "unchecked":
+        return "security_unchecked"
+    if not UNVERIFIED_CAP and level == "unverified":
+        return "unverified"
+    return None
 
 
 def binding_cap(kind: str, archived: bool, level: str, security: Any = None) -> CapReason | None:
@@ -269,8 +355,8 @@ def binding_cap(kind: str, archived: bool, level: str, security: Any = None) -> 
         "archived": archived,
         "verification_failed": level == "failed",
         "not_a_tool": kind not in TOOL_KINDS,
-        "unverified": level == "unverified",
-        "known_vulnerability": security_vulnerable(security),
+        "unverified": level == "unverified" and UNVERIFIED_CAP,
+        "known_vulnerability": security_capped(security),
     }
     reasons = [reason for reason, hit in applies.items() if hit]
     return min(reasons, key=QUALITY_CAPS.__getitem__, default=None)
@@ -918,6 +1004,8 @@ class McpHandshake(_Model):
 type VideoFile = Annotated[str, StringConstraints(pattern=r"^[A-Za-z0-9_][A-Za-z0-9_.-]*\.mp4$", max_length=120)]
 VIDEO_MAX_S = 180
 VIDEO_CHAPTER_TITLE_MAX = 80
+VIDEO_CAPTION_MAX = 120
+VIDEO_CAPTIONS_MAX = 200
 
 
 class VideoRaw(_Model):
@@ -931,23 +1019,50 @@ class VideoRaw(_Model):
 
 
 class VideoChapter(_Model):
-    """A chapter of a clip, for the player's progress bar: the first card, each feature's segments, the last card."""
+    """A chapter of a clip, for the player's progress bar: each feature's segments (a clip cut before 11/19 also has
+    its first and last cards, feature null)."""
 
     start_s: float = Field(ge=0, description="Where the chapter starts in the clip, seconds.")
     title: str = Field(min_length=1, max_length=VIDEO_CHAPTER_TITLE_MAX, description="English, for the progress bar.")
     feature: Annotated[str, StringConstraints(min_length=1, max_length=FEATURE_MAX)] | None = Field(
         description="The video.features entry the chapter shows; null for the first and last cards.")
+    raw: int | None = Field(default=None, ge=0, exclude_if=lambda value: value is None,
+                            description="Index into video.raw: the unedited recording the chapter's first segment "
+                                        "was cut from (its link on the page opens that recording there).")
+    raw_s: float | None = Field(default=None, ge=0, exclude_if=lambda value: value is None,
+                                description="Where in that recording the chapter's first segment starts, seconds.")
+
+
+class VideoCaption(_Model):
+    """One caption cue of a clip, served as a WebVTT track (the clip has no words drawn on it): English, put in
+    other languages by the page's translation like any other sentence of the record."""
+
+    start_s: float = Field(ge=0, description="Where the cue starts in the clip, seconds.")
+    end_s: float = Field(gt=0, description="Where it ends.")
+    text: str = Field(min_length=1, max_length=VIDEO_CAPTION_MAX)
+
+
+class VideoSource(_Model):
+    """A file kept in R2 beside the clip so the clip can be cut again later without a box: pickfit's action log of
+    the recordings (actions.json) or the clip's edit list (its segments, review and captions)."""
+
+    key: str = Field(pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*/[A-Za-z0-9_][A-Za-z0-9_.-]*\.json$", max_length=200,
+                     description="Its key in the videos bucket: <slug>/<file>.")
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
 class RunVideo(_Model):
     """A short captioned clip of pickfit operating a GUI or web app to check its features (pickfit/verify/video.py).
 
     A fresh box replayed this run's steps and operations (a web app: a second, recorded visit replaying the first
-    visit's actions without a model) while pickfit recorded its own screen; Muse Spark Open
-    watched each recording with pickfit's action log and picked whole segments, kept in their order (a speed-up
-    is labelled on screen), and then watched the cut and confirmed that each caption shows on screen. Captions
-    claim only checks that passed in this run and again in the recorded replay. The clip's first frame says it
-    was recorded by pickfit in a sandbox, and on what date; it names each raw recording and its sha256.
+    visit's actions without a model) while pickfit recorded its own screen. pickfit picked whole segments, kept in
+    their order, by its own rules from its action log (before 11/19 a model watched each recording and picked them),
+    and checked that each segment shows what pickfit's own screenshot after each action showed; a model looks only
+    at segments that check could not match, and at a sample. A speed-up or a stretch left out is marked on the
+    picture ("2×", "−11 s"). Captions claim only checks that passed in this run and again in the recorded replay.
+    A clip cut before 11/19 opens on a card saying it was recorded by pickfit in a sandbox, and on what date, and
+    ends on one naming each raw recording and its sha256; since then the clip is the app alone, its captions a
+    WebVTT track, and the raw recordings and their sha256 are on the page (and in the mp4's metadata).
     """
 
     clip: VideoFile
@@ -961,25 +1076,42 @@ class RunVideo(_Model):
         min_length=1, max_length=FEATURES_MAX, description="The run's checked features the clip shows.")
     chapters: list[VideoChapter] = Field(
         default=[], max_length=FEATURES_MAX * 2 + 2, exclude_if=lambda value: not value,
-        description=("The clip's chapters in time order, covering it whole: the first card at 0, one chapter for each "
-                     "run of segments of one feature, the last card."))
+        description=("The clip's chapters in time order, covering it whole from 0: one chapter for each run of "
+                     "segments of one feature (a clip cut before 11/19: between its first and last cards)."))
+    captions: list[VideoCaption] = Field(
+        default=[], max_length=VIDEO_CAPTIONS_MAX, exclude_if=lambda value: not value,
+        description="The clip's captions in time order (the page serves them as WebVTT, in the page's language).")
+    actions: VideoSource | None = Field(default=None, exclude_if=lambda value: value is None,
+                                        description="pickfit's log of every action in the raw recordings (R2).")
+    edit_list: VideoSource | None = Field(default=None, exclude_if=lambda value: value is None,
+                                          description="The clip's segments, captions and review, as cut (R2).")
 
     @model_validator(mode="after")
     def _check_chapters(self) -> RunVideo:
-        """Chapters start at 0, rise, end before the clip does, open and close on the cards, and name only the
-        clip's features, each at least once, never twice in a row."""
-        if not self.chapters:
-            return self
-        starts = [c.start_s for c in self.chapters]
-        if starts[0] != 0 or any(b <= a for a, b in zip(starts, starts[1:])) or starts[-1] >= self.seconds:
-            raise ValueError("chapters must start at 0 and rise, all before the clip ends")
-        inner = [c.feature for c in self.chapters[1:-1]]
-        if len(self.chapters) < 3 or self.chapters[0].feature is not None or self.chapters[-1].feature is not None:
-            raise ValueError("chapters open on the first card and close on the last (feature null), a feature between")
-        if None in inner or set(inner) != set(self.features):
-            raise ValueError("the chapters between the cards must name the clip's features, each at least once")
-        if any(a == b for a, b in zip(inner, inner[1:])):
-            raise ValueError("consecutive segments of one feature are one chapter")
+        """Chapters start at 0, rise, end before the clip does, and name only the clip's features, each at least
+        once, never twice in a row; a clip with cards opens and closes its chapters on them. Captions rise and end
+        by the clip's end."""
+        if self.chapters:
+            starts = [c.start_s for c in self.chapters]
+            if starts[0] != 0 or any(b <= a for a, b in zip(starts, starts[1:])) or starts[-1] >= self.seconds:
+                raise ValueError("chapters must start at 0 and rise, all before the clip ends")
+            if self.chapters[0].feature is None:  # cut before 11/19: a first and a last card around the features
+                inner = [c.feature for c in self.chapters[1:-1]]
+                if len(self.chapters) < 3 or self.chapters[-1].feature is not None:
+                    raise ValueError("chapters open on the first card and close on the last (feature null), "
+                                     "a feature between")
+            else:
+                inner = [c.feature for c in self.chapters]
+            if None in inner or set(inner) != set(self.features):
+                raise ValueError("the chapters between the cards must name the clip's features, each at least once")
+            if any(a == b for a, b in zip(inner, inner[1:])):
+                raise ValueError("consecutive segments of one feature are one chapter")
+            if any(c.raw is not None and c.raw >= len(self.raw) for c in self.chapters):
+                raise ValueError("a chapter's raw must be an index into video.raw")
+        cues = self.captions
+        if any(c.end_s <= c.start_s or c.end_s > self.seconds + 0.5 for c in cues) or any(
+                b.start_s < a.start_s for a, b in zip(cues, cues[1:])):
+            raise ValueError("captions must rise, each ending after it starts and by the clip's end")
         return self
 
 
@@ -1269,10 +1401,15 @@ class QualityComponent(_Model):
         ge=0, le=1, description="0-1; null when data is missing (dropped from the denominator)."
     )
     weight: float = Field(ge=0, le=100, description="Weight applied under formula_version.")
+    penalty: float | None = Field(
+        default=None, gt=0, le=1, exclude_if=lambda value: value is None,
+        description="b3.v7 maintenance, while pickfit/score.py's STALE_FIX_PENALTY is on (off by default): taken off "
+                    "the score because a security fix had been out 90 days or more and the checked version had not "
+                    "taken it.")
 
 
 class QualityComponents(_Model):
-    """The quality components of formula b3.v6 (nominal weights 20/20/25/10/5/10/10+; pickfit/score.py).
+    """The quality components of formulas b3.v6 and b3.v7 (nominal weights 20/20/25/10/5/10/10+; pickfit/score.py).
 
     A hosted web app (formula web.v1, pickfit/score.py) adds browser_facts and gives the four components a
     README and a repository feed weight 0: it is opened, not installed. Other records never carry it.
@@ -1293,7 +1430,7 @@ class QualityComponents(_Model):
         default=None,
         exclude_if=lambda value: value is None,
         description=(
-            "Formula b3.v6: checked / (checked + failed because of the tool), over the passed runs. "
+            "From formula b3.v6: checked / (checked + failed because of the tool), over the passed runs. "
             "Null score when no feature reached a verdict (dropped from the denominator)."
         ),
     )
@@ -1326,17 +1463,62 @@ class VisualDeduction(_Model):
         return self
 
 
+class SecurityEffect(_Model):
+    """What the record's known findings did to its scores (pickfit/score.py security_effect). What could not be
+    checked is never here: an unknown changes no score (念誠 11/19; it is Verification Coverage's)."""
+
+    level: Literal["blocked", "exposed", "conditional", "present_unreachable", "not_shipped", "none", "vulnerable",
+                   "clean", "unchecked"] = Field(
+        description="security.assessment.level; for a sec.v1 check without one, its status (vulnerable, clean, "
+                    "unchecked); none without a check.")
+    basis: Literal["assessment", "status", "none"] = Field(
+        description="Where level comes from: the assessment, the sec.v1 status, or no check at all.")
+    effect: Literal["unlisted", "capped", "deducted", "no_treasure", "note", "none"] = Field(
+        description="The strongest: blocked is not listed; a level in SECURITY_CAP_LEVELS (or sec.v1 vulnerable) is "
+                    "capped at 79; exposed loses SECURITY_EXPOSED_DEDUCTION points (0 by default); a level in "
+                    "SECURITY_NO_TREASURE_LEVELS cannot be a treasure; conditional otherwise gets a line on the page.")
+    deduction: float = Field(default=0, ge=0, le=100, description="Points taken off the total (exposed only).")
+
+    @model_validator(mode="after")
+    def _deduction_is_exposed(self) -> SecurityEffect:
+        if self.deduction > 0 and self.level != "exposed":
+            raise ValueError("only an exposed finding takes points off")
+        statuses = ("vulnerable", "clean", "unchecked")
+        if (self.basis == "status") != (self.level in statuses) or (self.basis == "none" and self.level != "none"):
+            raise ValueError("a sec.v1 status is the level only on basis status, and no check has level none")
+        return self
+
+
 class Quality(_Model):
     total: float | None = Field(ge=0, le=100)
-    confidence: float = Field(ge=0, le=1, description="Share of weight that had data.")
+    raw_total: float | None = Field(
+        default=None, ge=0, le=100, exclude_if=lambda value: value is None,
+        description="From b3.v7 and web.v1 on: the weighted mean of the components before any cap, deduction or "
+                    "visual factor, so records at a cap still keep their order.")
+    confidence: float = Field(ge=0, le=1, description=(
+        "Share of the formula's weight whose inputs pickfit verified. From b3.v7 on it is derived from the record's "
+        "Verification Coverage (pickfit/coverage.py quality_confidence), the same number as before; the security "
+        "dimension is never in it."))
     cap: int | None = Field(
         ge=0, le=100, description="QUALITY_CAPS[cap_reason]; the lowest cap that applies."
     )
     cap_reason: CapReason | None = Field(description="binding_cap() of the record.")
     components: QualityComponents
+    security: SecurityEffect | None = Field(
+        default=None, exclude_if=lambda value: value is None,
+        description="From b3.v7 and web.v1 on: what the security check did (deduction, cap, note).")
     visual: VisualDeduction | None = Field(
         default=None, exclude_if=lambda value: value is None,
         description="Formulas ending +visual.v1: the visual check's factor, the total before it, its app defects.")
+
+    @model_validator(mode="after")
+    def _check_raw_total(self) -> Quality:
+        if self.raw_total is not None and self.total is not None and self.total > self.raw_total + 0.051:
+            raise ValueError("caps, deductions and the visual factor only lower quality: total <= raw_total")
+        if (self.security is not None and self.cap_reason == "known_vulnerability"
+                and self.security.effect not in ("capped", "unlisted")):
+            raise ValueError("a record capped for a known vulnerability says so in its security effect")
+        return self
 
     @model_validator(mode="after")
     def _check_visual(self) -> Quality:
@@ -1386,11 +1568,16 @@ class Popularity(_Model):
 
 class Treasure(_Model):
     is_treasure: bool = Field(
-        description="Tool, verified, not archived, quality >= 80 and popularity <= 45."
+        description="Tool, verified, not archived, quality >= 80 and popularity <= 45, and not blocked_by anything."
     )
     value: float | None = Field(
         description="T = quality * (1 - popularity/100); null when either is null."
     )
+    blocked_by: TreasureBlock | None = Field(
+        default=None, exclude_if=lambda value: value is None,
+        description="Why the record cannot be a treasure whatever its scores, under a treasure rule switched on (the "
+                    "settings by SECURITY_CAP_LEVELS; none is on by default): its security level, nothing of its "
+                    "security checked, a coverage share below its threshold, or unverified with the 69 cap off.")
 
 
 class RubricItem(_Model):
@@ -1453,6 +1640,104 @@ class DocsRubric(_Model):
     unquoted: list[str] = Field(
         default=[], description="Items set to 0 because their quote is not in the sources."
     )
+    # What the answer was read with (docs/proposals/scoring.md R2, R3); absent on a rubric graded before them.
+    input_sha: str | None = Field(
+        default=None, pattern=r"^[0-9a-f]{64}$", exclude_if=lambda value: value is None,
+        description="sha256 of the raw text behind the sources (pickfit.extract.input_sha): the reuse key.")
+    prompt_version: str | None = Field(
+        default=None, max_length=40, exclude_if=lambda value: value is None,
+        description="The rubric prompt: rubric-p1, or merged-p1 when the extraction call graded it too; null for one "
+                    "graded before versions were kept.")
+    renderer_version: str | None = Field(
+        default=None, max_length=10, exclude_if=lambda value: value is None,
+        description="How the sources were rendered (pickfit.extract.RENDERER_VERSION); r0 for one graded before "
+                    "versions were kept whose sources have changed since.")
+    grader: str | None = Field(
+        default=None, max_length=40, exclude_if=lambda value: value is None,
+        description="Who graded it: the model's provider (anthropic, meta, ...) or human. Muse's (meta) are to be "
+                    "graded again by the prod model.")
+
+
+class GitHubRelease(_Model):
+    tag: str | None = Field(default=None, max_length=200)
+    published_at: AwareDatetime | None = None
+    prerelease: bool = False
+    notes_chars: int = Field(default=0, ge=0, description="Length of the release notes, stripped.")
+    downloads: int | None = Field(default=None, ge=0, description="Its assets' downloads; null with no assets.")
+
+
+class RepoFiles(_Model):
+    """What engineering_hygiene reads from the file tree: the first path that shows each part, else null."""
+
+    count: int = Field(ge=0, description="Files in the tree pickfit read.")
+    truncated: bool = False
+    ci: str | None = Field(default=None, max_length=300)
+    tests: str | None = Field(default=None, max_length=300)
+    changelog: str | None = Field(default=None, max_length=300)
+    lockfile: str | None = Field(default=None, max_length=300)
+
+
+class GitHubInputs(_Model):
+    """The repository as one GitHub snapshot showed it."""
+
+    source: Literal["pipeline_db", "github_live"] = Field(
+        description="runs/pipeline.db's candidate snapshot, or fetched from GitHub when scoring.")
+    fetched_at: AwareDatetime = Field(description="When the snapshot was read; ages are measured from it.")
+    stars: int | None = Field(default=None, ge=0)
+    forks: int | None = Field(default=None, ge=0)
+    open_issues: int | None = Field(default=None, ge=0, description="Open issues and pull requests, as GitHub counts.")
+    created_at: AwareDatetime | None = None
+    pushed_at: AwareDatetime | None = Field(default=None, description="The last push (the newest commit pickfit sees).")
+    releases: list[GitHubRelease] = Field(default=[], max_length=30, description="Newest first, drafts left out.")
+    contributors: int | None = Field(default=None, ge=0, description="Not fetched yet: null.")
+    files: RepoFiles | None = Field(default=None, description="Null when the snapshot holds no file tree.")
+
+
+class IssueFact(_Model):
+    created_at: AwareDatetime
+    closed_at: AwareDatetime | None = None
+    association: str | None = Field(default=None, max_length=40, description="GitHub's author_association.")
+    bot: bool = False
+
+
+class IssueInputs(_Model):
+    """The newest issues GitHub returned when scoring (pull requests counted, not kept)."""
+
+    source: Literal["github_live"] = "github_live"
+    fetched_at: AwareDatetime
+    items: list[IssueFact] = Field(default=[], max_length=100)
+    pull_requests: int = Field(default=0, ge=0)
+    page_full: bool = Field(default=False, description="GitHub returned a full page: older issues were not read.")
+
+
+class LegacyComponents(_Model):
+    """Components kept from an earlier formula because their raw inputs were never stored (R1 backfill)."""
+
+    maintenance: float | None = Field(default=None, ge=0, le=1)
+    engineering_hygiene: float | None = Field(default=None, ge=0, le=1)
+    responsiveness: float | None = Field(default=None, ge=0, le=1)
+
+
+class ScoreInputs(_Model):
+    """The raw signals maintenance, engineering_hygiene, responsiveness and the GitHub popularity signals are computed
+    from (docs/proposals/scoring.md R1), so a new formula is computed again offline, with no GitHub call."""
+
+    version: Literal["inputs.v1"] = "inputs.v1"
+    github: GitHubInputs | None = Field(default=None, description="Null: not recovered; fetched at the next score.")
+    issues: IssueInputs | None = Field(default=None, description="Null: not fetched (pickfit score --no-github).")
+    legacy: LegacyComponents | None = Field(
+        default=None, exclude_if=lambda value: value is None,
+        description="Until github or issues are fetched: the component an earlier formula computed from them.")
+
+
+class ScoreHistory(_Model):
+    """What an earlier formula gave the record, kept when the formula changed (R10)."""
+
+    formula_version: str = Field(min_length=1, max_length=40)
+    computed_at: AwareDatetime
+    quality: float | None = Field(ge=0, le=100)
+    popularity: float | None = Field(ge=0, le=100)
+    is_treasure: bool
 
 
 class Scores(_Model):
@@ -1464,6 +1749,12 @@ class Scores(_Model):
     docs_rubric: DocsRubric | None = Field(
         default=None, description="Rubric behind quality.components.install_docs; null when not graded."
     )
+    inputs: ScoreInputs | None = Field(
+        default=None, exclude_if=lambda value: value is None,
+        description="From b3.v7 on: the raw inputs of the repository components (R1).")
+    history: list[ScoreHistory] = Field(
+        default=[], max_length=5, exclude_if=lambda value: not value,
+        description="Earlier formulas' results, newest first (R10).")
 
     @model_validator(mode="after")
     def _check_rubric(self) -> Scores:
@@ -1493,13 +1784,14 @@ class Scores(_Model):
             and n is not None
             and q >= TREASURE_MIN_QUALITY
             and n <= TREASURE_MAX_POPULARITY
+            and self.treasure.blocked_by is None
         )
         ease = self.quality.components.usability
         if self.formula_version in EASE_FORMULAS:
             eligible = eligible and ease is not None and ease.score is not None and ease.score >= EASE_TREASURE_MIN
         if self.treasure.is_treasure != eligible:
             raise ValueError(f"is_treasure must be quality >= {TREASURE_MIN_QUALITY} and "
-                             f"popularity <= {TREASURE_MAX_POPULARITY}"
+                             f"popularity <= {TREASURE_MAX_POPULARITY} and no blocked_by"
                              + (f" and usability >= {EASE_TREASURE_MIN}" if self.formula_version in EASE_FORMULAS
                                 else ""))
         return self
@@ -1673,30 +1965,271 @@ def visual_check_factor(visual: Any, verification: Any) -> float | None:
     return 1.0 if score == 2 else VISUAL_FACTOR
 
 
+# --- Security check (pickfit/security.py) -------------------------------------
+#
+# sec.v1 (11/3) stored one verdict: any high or critical advisory in what a fresh install brings made a record
+# "vulnerable". sec.v2 (11/19, docs/proposals/security.md) keeps three things apart: `observation` (scanner, target,
+# counts; every finding of every severity and scope in data/security/<slug>.json), `assessment` (the known findings'
+# level, under a named policy) and `coverage` (how much could be checked, and every gap in a fixed taxonomy). An
+# unknown is never a vulnerability (念誠 11/19). `status` stays for readers written for sec.v1: vulnerable when the
+# level warns, else clean when coverage is complete, else unchecked.
+
+# The record's level is the worst counted finding's, or none; a finding has one of the five finding levels.
+type SecurityLevel = Literal["blocked", "exposed", "conditional", "present_unreachable", "not_shipped", "none"]
+type FindingLevel = Literal["blocked", "exposed", "conditional", "present_unreachable", "not_shipped"]
+SECURITY_LEVELS: tuple[str, ...] = get_args(SecurityLevel.__value__)
+FINDING_LEVELS: tuple[str, ...] = get_args(FindingLevel.__value__)
+# Levels that warn: blocked (hidden), exposed (warn before installing), conditional (one line on the condition).
+WARN_LEVELS = frozenset({"blocked", "exposed", "conditional"})
+type CoverageState = Literal["complete", "partial", "unchecked"]
+COVERAGE_STATES: tuple[str, ...] = get_args(CoverageState.__value__)
+# The gap taxonomy (pickfit/security.py's docstring has the table): stable codes and their categories.
+type GapCategory = Literal["advisory_db", "lockfile_missing", "lockfile_unreadable", "resolve_failed", "no_adapter",
+                           "binary_no_metadata", "no_source", "tool_error", "platform_unsupported"]
+type GapCode = Literal["advisory_db.no_ecosystem", "lockfile.missing", "lockfile.none_found",
+                       "lockfile.unsupported_format", "lockfile.parse_error", "resolve.registry_failed",
+                       "resolve.pyproject_failed", "adapter.missing", "binary.prebuilt_package", "binary.no_build_info",
+                       "source.none", "source.clone_failed", "tool.sbom_error", "platform.sbom_unsupported"]
+GAP_CATEGORY: dict[str, str] = {
+    "advisory_db.no_ecosystem": "advisory_db", "lockfile.missing": "lockfile_missing",
+    "lockfile.none_found": "lockfile_missing", "lockfile.unsupported_format": "lockfile_unreadable",
+    "lockfile.parse_error": "lockfile_unreadable", "resolve.registry_failed": "resolve_failed",
+    "resolve.pyproject_failed": "resolve_failed", "adapter.missing": "no_adapter",
+    "binary.prebuilt_package": "binary_no_metadata", "binary.no_build_info": "binary_no_metadata",
+    "source.none": "no_source", "source.clone_failed": "tool_error", "tool.sbom_error": "tool_error",
+    "platform.sbom_unsupported": "platform_unsupported",
+}
+assert set(GAP_CATEGORY) == set(get_args(GapCode.__value__))
+assert set(GAP_CATEGORY.values()) == set(get_args(GapCategory.__value__))
+# Where a dependency sits. Only runtime (and optional, which installs when it can) reaches the person; workspace is a
+# member of the repository that is not part of the software (e.g. a plugin published on its own).
+type DependencyScope = Literal["runtime", "optional", "dev", "build", "test", "peer", "platform", "workspace"]
+type ReachMethod = Literal[
+    "none", "lockfile_scope", "manifest_scope", "installed_artifact", "entry_point_grep", "option_grep",
+    "symbol_grep", "import_grep", "govulncheck_binary", "govulncheck_source", "next_static_export", "model_triage"]
+
+
+def security_status_for(level: str, coverage: str = "complete") -> str:
+    """The sec.v1 status a level and a coverage state read as: vulnerable only for a level that warns; an unknown is
+    unchecked, never vulnerable and never clean."""
+    if level in WARN_LEVELS:
+        return "vulnerable"
+    return "clean" if coverage == "complete" else "unchecked"
+
+
+# The treasure and cap settings (by QUALITY_CAPS) name finding levels; their defaults are today's rule.
+assert SECURITY_CAP_LEVELS <= set(FINDING_LEVELS) and SECURITY_NO_TREASURE_LEVELS <= set(FINDING_LEVELS)
+
+
+def _empty(value: Any) -> bool:
+    """A sec.v2-only field left out of a dump when it holds nothing, so a sec.v1 finding dumps as it was written."""
+    return value is None or value == []
+
+
+class SecurityReachability(_Model):
+    """Whether the vulnerable code runs, decided by a program (S4) or, later, a model with cited evidence (S6)."""
+
+    method: ReachMethod
+    result: Literal["reachable", "not_reachable", "unknown"]
+    evidence: list[Annotated[str, StringConstraints(max_length=300)]] = Field(
+        default=[], max_length=5, description="file:line quotes, or what was searched for and not found.")
+
+
+class SecurityVex(_Model):
+    """The finding as an OpenVEX statement would put it (for a later public feed)."""
+
+    status: Literal["not_affected", "affected", "fixed", "under_investigation"]
+    justification: Literal["component_not_present", "vulnerable_code_not_present",
+                           "vulnerable_code_not_in_execute_path", "vulnerable_code_cannot_be_controlled_by_adversary",
+                           "inline_mitigations_already_exist"] | None = None
+
+
+class SecurityTriage(_Model):
+    """A model's reading of one advisory against one project (S6, not run yet): kept only with evidence a program
+    can grep again."""
+
+    model: str = Field(max_length=100)
+    prompt_version: str = Field(max_length=40)
+    input_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    verdict: Literal["exposed", "conditional", "not_exposed"]
+    evidence: list[Annotated[str, StringConstraints(max_length=300)]] = Field(default=[], max_length=5)
+    at: AwareDatetime
+
+
 class SecurityFinding(_Model):
-    """One high or critical OSV advisory (or a malicious-package report) on a package a fresh install brings."""
+    """One OSV advisory (or a malicious-package report) on one version of a package the software brings.
+
+    A sec.v1 finding has the first eight fields and is high or critical. sec.v2 adds what the advisory says (ids, dates,
+    CVSS vectors, CWE), where the package sits (scope, path, workspace, platform, lockfile or SBOM), whether the
+    installed artifact has it, KEV and EPSS, preconditions and reachability, and the level the policy gave it."""
 
     package: str = Field(pattern=r"^(npm|pypi|crates|go):\S+$", description="Ecosystem and name, e.g. 'npm:undici'.")
     version: str = Field(min_length=1, max_length=100)
     advisory: str = Field(pattern=r"^[A-Z][A-Z0-9]*-[\w-]+$", description="OSV id, e.g. GHSA-xxxx-xxxx-xxxx or MAL-2025-1.")
     cves: list[str] = Field(default=[], max_length=10)
-    severity: Literal["CRITICAL", "HIGH"]
+    severity: Literal["CRITICAL", "HIGH", "MODERATE", "LOW", "UNKNOWN"] = Field(
+        description="GHSA's rating, else the CVSS v3 base score's band; sec.v1 keeps only CRITICAL and HIGH.")
     fixed_in: str | None = Field(description="The lowest fixed version above the installed one; null when none is out.")
     summary: str = Field(max_length=200)
     malicious: bool = False
+    # sec.v2 only
+    aliases: list[str] = Field(exclude_if=_empty, default=[], max_length=20)
+    published: AwareDatetime | None = Field(default=None, exclude_if=_empty)
+    modified: AwareDatetime | None = Field(default=None, exclude_if=_empty)
+    purl: str | None = Field(exclude_if=_empty, default=None, max_length=300)
+    cvss_v3: str | None = Field(exclude_if=_empty, default=None, max_length=200)
+    cvss_v4: str | None = Field(exclude_if=_empty, default=None, max_length=300)
+    attack_vector: Literal["network", "adjacent", "local", "physical"] | None = Field(default=None, exclude_if=_empty)
+    cwes: list[str] = Field(exclude_if=_empty, default=[], max_length=10)
+    dos_only: bool | None = Field(exclude_if=_empty, default=None,
+                                  description="Only availability is hit (CVSS C:N/I:N, else the words).")
+    fix_published_at: AwareDatetime | None = Field(
+        exclude_if=_empty, default=None,
+        description="When fixed_in came out (deps.dev): a maintenance signal for scoring, not a cap.")
+    scope: DependencyScope | None = Field(default=None, exclude_if=_empty)
+    paths: list[Annotated[str, StringConstraints(max_length=400)]] = Field(
+        exclude_if=_empty, default=[], max_length=3, description="Shortest dependency paths, 'root > a > b'.")
+    workspace: str | None = Field(exclude_if=_empty, default=None, max_length=200)
+    platform: list[str] = Field(exclude_if=_empty, default=[], max_length=6,
+                                description="Only on these OSes (os fields, cfg()).")
+    found_in: str | None = Field(exclude_if=_empty, default=None, max_length=300,
+                                 description="The lockfile path, 'registry:<pkg>' or 'sbom:<run id>'.")
+    in_artifact: bool | None = Field(exclude_if=_empty, default=None,
+                                     description="Seen in the installed artifact's SBOM; null when no SBOM covers its "
+                                                 "ecosystem.")
+    kev: bool | None = Field(default=None, exclude_if=_empty)
+    epss: float | None = Field(exclude_if=_empty, default=None, ge=0, le=1)
+    epss_percentile: float | None = Field(exclude_if=_empty, default=None, ge=0, le=1)
+    intel_checked_at: str | None = Field(exclude_if=_empty, default=None, pattern=r"^\d{4}-\d{2}-\d{2}$",
+                                         description="The day KEV and EPSS were read.")
+    preconditions: list[Annotated[str, StringConstraints(max_length=120)]] = Field(
+        exclude_if=_empty, default=[], max_length=8, description=(
+            "What must hold for it to matter, as codes: local_access, adjacent_network, user_interaction, "
+            "high_privileges, high_complexity, denial_of_service, server_side, option:<NAME>, symbol:<name>, "
+            "entry:<module>."))
+    reachability: SecurityReachability | None = Field(default=None, exclude_if=_empty)
+    vex: SecurityVex | None = Field(default=None, exclude_if=_empty)
+    triage: SecurityTriage | None = Field(default=None, exclude_if=_empty)
+    counted: bool | None = Field(exclude_if=_empty, default=None, description=(
+        "Counts toward the record's level: high or critical, malicious, or on KEV. Moderate, low and unrated ones are "
+        "observed only."))
+    level: FindingLevel | None = Field(default=None, exclude_if=_empty)
+    policy_version: Literal["sec.v2"] | None = Field(default=None, exclude_if=_empty)
+
+
+class SecurityObservation(_Model):
+    """What the scan saw, without judging it. The record keeps this summary; every finding is in `details`."""
+
+    scanner: Literal["pickfit-security"] = "pickfit-security"
+    scanner_version: Literal["sec.v2"]
+    target: Literal["repo_lockfile", "registry_resolve", "installed_artifact"] = Field(description=(
+        "installed_artifact: the SBOM of what pickfit's replay box installed (pickfit/sbom.py); registry_resolve: the "
+        "published package resolved as a fresh install; repo_lockfile: the repository's lockfiles at `commit`."))
+    commit: str | None = Field(default=None, pattern=r"^[0-9a-f]{7,40}$")
+    run_id: RunId | None = Field(default=None, description="The verification run whose replay box gave the SBOM.")
+    tool_version: str | None = Field(default=None, max_length=60)
+    artifact_sha256: list[Annotated[str, StringConstraints(pattern=r"^[0-9a-f]{64}$")]] = Field(
+        default=[], max_length=20)
+    packages: dict[str, int] = Field(default={}, description="Packages read per ecosystem (npm, pypi, crates, go).")
+    scopes: dict[str, int] = Field(default={}, description="Packages read per scope (runtime, dev, build, ...).")
+    advisories_fetched_at: AwareDatetime
+    kev_catalog: str | None = Field(default=None, max_length=40, description="CISA KEV catalog version read.")
+    epss_date: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$")
+    findings_total: int = Field(ge=0, description="Every finding seen: all severities, all scopes.")
+    details: str | None = Field(default=None, pattern=r"^security/[a-z0-9-]+\.json$", description=(
+        "The full observation, relative to the data root (data/security/<slug>.json)."))
+    details_sha256: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+
+
+class SecurityAssessment(_Model):
+    """How the known findings were judged (S5). The level is what scoring reads: security.assessment.level. It says
+    nothing about what could not be checked (SecurityCoverage)."""
+
+    level: SecurityLevel
+    policy_version: Literal["sec.v2"]
+    reasons: list[Annotated[str, StringConstraints(max_length=200)]] = Field(default=[], max_length=10, description=(
+        "Why this level, as short codes, e.g. 'worst:GHSA-x npm:y@1 (conditional)', 'kev:...', 'malicious:MAL-...'."))
+    counts: dict[FindingLevel, int] = Field(default={}, description="Counted findings per level.")
+    uncounted: int = Field(default=0, ge=0, description="Moderate, low or unrated findings: observed only.")
+    assessed_at: AwareDatetime
+
+    @model_validator(mode="after")
+    def _level_follows_counts(self) -> SecurityAssessment:
+        worst = next((lvl for lvl in FINDING_LEVELS if self.counts.get(lvl)), "none")
+        if self.level != worst:
+            raise ValueError(f"the level is the worst counted finding's: {worst}")
+        return self
+
+
+class SecurityGap(_Model):
+    """One reason something could not be checked, in the fixed taxonomy (pickfit/security.py)."""
+
+    code: GapCode
+    category: GapCategory
+    ecosystem: str = Field(max_length=40, description="npm, pypi, crates, go, maven, c/c++, ... or unknown.")
+    component: str | None = Field(default=None, max_length=300, description="The lockfile, manifest, package or SBOM.")
+    detail: str = Field(default="", max_length=300)
+    capability: str = Field(max_length=80, description="The harness capability that would close it.")
+    found: int | None = Field(default=None, ge=0, description="Packages it hides, when they can be counted.")
+    first_seen: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$")
+    last_seen: str | None = Field(default=None, pattern=r"^\d{4}-\d{2}-\d{2}$")
+
+    @model_validator(mode="after")
+    def _category_follows_code(self) -> SecurityGap:
+        if GAP_CATEGORY[self.code] != self.category:
+            raise ValueError(f"{self.code} is a {GAP_CATEGORY[self.code]} gap")
+        return self
+
+
+class SecurityComponent(_Model):
+    """One part read (or not): a lockfile, a resolved registry package, the installed artifact's SBOM."""
+
+    ecosystem: str = Field(max_length=40)
+    component: str = Field(max_length=300)
+    status: Literal["scanned", "partial", "not_scanned"]
+    packages: int = Field(ge=0)
+    gaps: list[GapCode] = []
+
+
+class SecurityCoverage(_Model):
+    """How much could be checked, apart from what was found: complete (something checked, no gap), partial (something
+    checked, a gap) or unchecked (nothing checked). The record keeps up to 30 components and gaps; all are in
+    data/security/<slug>.json."""
+
+    state: CoverageState
+    target: Literal["repo_lockfile", "registry_resolve", "installed_artifact"] | None = None
+    packages_found: int = Field(ge=0, description="Checked plus what the gaps are known to hide (a lower bound).")
+    packages_checked: int = Field(ge=0)
+    components: list[SecurityComponent] = Field(default=[], max_length=500)
+    gaps: list[SecurityGap] = Field(default=[], max_length=500)
+
+    @model_validator(mode="after")
+    def _state_follows_gaps(self) -> SecurityCoverage:
+        expected = "unchecked" if self.packages_checked == 0 else "partial" if self.gaps else "complete"
+        if self.state != expected:
+            raise ValueError(f"coverage is {expected}: checked {self.packages_checked}, {len(self.gaps)} gaps")
+        if self.packages_found < self.packages_checked:
+            raise ValueError("packages_found counts the packages checked too")
+        return self
 
 
 class SecurityCheck(_Model):
-    """Known vulnerabilities in what a fresh install brings (sec.v1, pickfit/security.py; 念誠 11/3).
+    """Known vulnerabilities in what the software brings (pickfit/security.py).
 
-    No model call: the dependencies are resolved the way a person installing it today gets them (a published package
-    through npm --package-lock-only --ignore-scripts or uv pip compile --no-build, neither runs package code; else the
-    repository's lockfiles, Python re-resolved from pyproject.toml since pip and uv do not read uv.lock), without
-    development dependencies and without lockfiles of parts the person does not install (docs sites, editor extensions,
-    CI actions). Every resolved version is looked up on OSV.dev; any high or critical advisory, fixed or not, counts.
+    sec.v1 (念誠 11/3): the dependencies are resolved the way a person installing it today gets them (a published
+    package through npm --package-lock-only --ignore-scripts or uv pip compile --no-build, neither runs package code;
+    else the repository's lockfiles, Python re-resolved from pyproject.toml since pip and uv do not read uv.lock),
+    without development dependencies and without lockfiles of parts the person does not install (docs sites, editor
+    extensions, CI actions). Every resolved version is looked up on OSV.dev; any high or critical advisory, fixed or
+    not, counts.
+
+    sec.v2 (11/19): the same reads plus development, build and peer dependencies (marked, not held against the
+    software), the installed artifact's SBOM when a replay box left one, every severity, and a level per finding.
+    `status`, `findings_total` and `advisories_total` then cover the findings that warn (blocked, exposed,
+    conditional); `findings` keeps those first, then the ones present but unreachable.
     """
 
-    version: Literal["sec.v1"]
+    version: Literal["sec.v1", "sec.v2"]
     status: Literal["vulnerable", "clean", "unchecked"]
     unchecked_reason: Literal["no_source", "no_lockfile", "lockfile_not_supported", "resolve_failed"] | None = None
     sources: list[str] = Field(default=[], max_length=20, description="What was resolved, e.g. 'npm:x@1.2.0' or a lockfile path.")
@@ -1709,23 +2242,66 @@ class SecurityCheck(_Model):
     findings: list[SecurityFinding] = Field(default=[], max_length=60)
     database: Literal["OSV.dev"] = "OSV.dev"
     checked_at: AwareDatetime
+    observation: SecurityObservation | None = Field(default=None, exclude_if=lambda value: value is None)
+    assessment: SecurityAssessment | None = Field(default=None, exclude_if=lambda value: value is None)
+    coverage: SecurityCoverage | None = Field(default=None, exclude_if=lambda value: value is None)
 
     @model_validator(mode="after")
     def _status_follows_findings(self) -> SecurityCheck:
         if (self.status == "unchecked") != (self.unchecked_reason is not None):
             raise ValueError("unchecked_reason is set exactly when status is unchecked")
+        if self.advisories_total is not None and (
+                self.advisories_total > self.findings_total or (self.advisories_total == 0) != (self.findings_total == 0)):
+            raise ValueError("advisories_total is at most findings_total, and is 0 exactly when findings_total is")
+        if self.status == "clean" and not (self.packages_checked and self.sources):
+            raise ValueError("clean needs what was read: packages_checked and sources")
+        if self.version == "sec.v1":
+            return self._v1()
+        if self.observation is None or self.assessment is None or self.coverage is None:
+            raise ValueError("a sec.v2 check has an observation, an assessment and a coverage")
+        level, state = self.assessment.level, self.coverage.state
+        if self.status != security_status_for(level, state):
+            raise ValueError(f"status follows the level and the coverage: {security_status_for(level, state)}")
+        if any(f.level is None for f in self.findings):
+            raise ValueError("a sec.v2 finding has a level")
+        warn = [f for f in self.findings if f.level in WARN_LEVELS]
+        if (self.status == "vulnerable") != bool(warn) or (self.status == "vulnerable") != (self.findings_total > 0):
+            raise ValueError("status is vulnerable exactly when findings that warn are kept and counted")
+        if self.findings_total < len(warn):
+            raise ValueError("findings_total counts every finding that warns")
+        if self.coverage.packages_checked != self.packages_checked:
+            raise ValueError("coverage.packages_checked is packages_checked")
+        if state == "unchecked" and self.findings:
+            raise ValueError("nothing checked, nothing found")
+        return self
+
+    def _v1(self) -> SecurityCheck:
+        if self.observation is not None or self.assessment is not None or self.coverage is not None:
+            raise ValueError("observation, assessment and coverage are sec.v2")
+        if any(f.severity not in ("CRITICAL", "HIGH") for f in self.findings):
+            raise ValueError("a sec.v1 finding is high or critical")
         if self.status == "unchecked" and (self.findings or self.packages_checked):
             raise ValueError("an unchecked security check has no packages or findings")
         if (self.status == "vulnerable") != bool(self.findings):
             raise ValueError("status is vulnerable exactly when there are findings")
         if self.findings_total < len(self.findings) or (self.status != "vulnerable") != (self.findings_total == 0):
             raise ValueError("findings_total counts every finding kept, and is 0 exactly when not vulnerable")
-        if self.advisories_total is not None and (
-                self.advisories_total > self.findings_total or (self.advisories_total == 0) != (self.findings_total == 0)):
-            raise ValueError("advisories_total is at most findings_total, and is 0 exactly when findings_total is")
-        if self.status == "clean" and not (self.packages_checked and self.sources):
-            raise ValueError("clean needs what was read: packages_checked and sources")
         return self
+
+
+class SecurityDetails(_Model):
+    """data/security/<slug>.json: the full observation behind a record's sec.v2 check (every finding, every severity,
+    every scope) and the installed inventory it came from, so a new policy can be applied offline without a new scan."""
+
+    slug: Slug
+    version: Literal["sec.v2"]
+    observation: SecurityObservation
+    assessment: SecurityAssessment
+    coverage: SecurityCoverage
+    sources: list[str] = Field(default=[], max_length=200)
+    installed: list[dict[str, Any]] = Field(default=[], description=(
+        "The SBOM's packages (pickfit/sbom.py), so a rescan can look them up again without a box."))
+    findings: list[SecurityFinding] = []
 
 
 class VisualCheck(_Model):
@@ -1893,7 +2469,8 @@ class SoftwareRecord(_Model):
     security: SecurityCheck | None = Field(
         default=None,
         exclude_if=lambda value: value is None,
-        description="Known high or critical vulnerabilities in what a fresh install brings (OSV.dev); null: not run yet.",
+        description="Known vulnerabilities in what the software brings (OSV.dev): sec.v1 a verdict, sec.v2 an "
+                    "observation and an assessment whose level scoring reads; null: not run yet.",
     )
     scores: Scores | None = None
     outcomes: Outcomes = Field(default_factory=Outcomes)
@@ -2007,6 +2584,15 @@ class SoftwareRecord(_Model):
                                self.security)
         if quality.cap_reason != expected:
             raise ValueError(f"scores.quality.cap_reason must be {expected!r}")
+        required = required_treasure_block(self.security, self.verification.level)
+        blocked = self.scores.treasure.blocked_by
+        if required is not None and blocked != required:
+            raise ValueError(f"scores.treasure.blocked_by must be {required!r} (pickfit score --refresh)")
+        if required is None and blocked is not None and not (
+                (blocked == "security_coverage" and TREASURE_MIN_SECURITY_COVERAGE is not None)
+                or (blocked == "function_coverage" and TREASURE_MIN_FUNCTION_COVERAGE is not None)):
+            raise ValueError(f"scores.treasure.blocked_by {blocked!r} follows no rule that is on "
+                             "(pickfit score --refresh)")
         usage = quality.components.usage_outcomes
         if self.outcomes.external.total() < USAGE_MIN_REPORTS and usage.score is not None:
             raise ValueError(
@@ -2051,6 +2637,11 @@ def record_json_schema() -> dict[str, Any]:
 def extraction_json_schema() -> dict[str, Any]:
     """Full JSON Schema of ExtractionResult; send meta_strict_schema() to Meta."""
     return {"$schema": JSON_SCHEMA_DIALECT, **_model_schema(ExtractionResult)}
+
+
+def security_details_json_schema() -> dict[str, Any]:
+    """JSON Schema for data/security/<slug>.json (the full observation behind a sec.v2 check)."""
+    return {"$schema": JSON_SCHEMA_DIALECT, **_model_schema(SecurityDetails)}
 
 
 # --- Meta strict structured output -------------------------------------------
@@ -2186,6 +2777,7 @@ def _check_meta_limits(schema: dict[str, Any]) -> None:
 SCHEMA_FILES: dict[str, Callable[[], dict[str, Any]]] = {
     "software.v1.json": record_json_schema,
     "extraction.v1.json": extraction_json_schema,
+    "security-details.v1.json": security_details_json_schema,
 }
 
 

@@ -1,0 +1,1047 @@
+{
+  "$defs": {
+    "CoverageState": {
+      "enum": [
+        "complete",
+        "partial",
+        "unchecked"
+      ],
+      "type": "string"
+    },
+    "DependencyScope": {
+      "enum": [
+        "runtime",
+        "optional",
+        "dev",
+        "build",
+        "test",
+        "peer",
+        "platform",
+        "workspace"
+      ],
+      "type": "string"
+    },
+    "FindingLevel": {
+      "enum": [
+        "blocked",
+        "exposed",
+        "conditional",
+        "present_unreachable",
+        "not_shipped"
+      ],
+      "type": "string"
+    },
+    "GapCategory": {
+      "enum": [
+        "advisory_db",
+        "lockfile_missing",
+        "lockfile_unreadable",
+        "resolve_failed",
+        "no_adapter",
+        "binary_no_metadata",
+        "no_source",
+        "tool_error",
+        "platform_unsupported"
+      ],
+      "type": "string"
+    },
+    "GapCode": {
+      "enum": [
+        "advisory_db.no_ecosystem",
+        "lockfile.missing",
+        "lockfile.none_found",
+        "lockfile.unsupported_format",
+        "lockfile.parse_error",
+        "resolve.registry_failed",
+        "resolve.pyproject_failed",
+        "adapter.missing",
+        "binary.prebuilt_package",
+        "binary.no_build_info",
+        "source.none",
+        "source.clone_failed",
+        "tool.sbom_error",
+        "platform.sbom_unsupported"
+      ],
+      "type": "string"
+    },
+    "ReachMethod": {
+      "enum": [
+        "none",
+        "lockfile_scope",
+        "manifest_scope",
+        "installed_artifact",
+        "entry_point_grep",
+        "option_grep",
+        "symbol_grep",
+        "import_grep",
+        "govulncheck_binary",
+        "govulncheck_source",
+        "next_static_export",
+        "model_triage"
+      ],
+      "type": "string"
+    },
+    "RunId": {
+      "maxLength": 80,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "type": "string"
+    },
+    "SecurityAssessment": {
+      "additionalProperties": false,
+      "description": "How the known findings were judged (S5). The level is what scoring reads: security.assessment.level. It says\nnothing about what could not be checked (SecurityCoverage).",
+      "properties": {
+        "assessed_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "counts": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "default": {},
+          "description": "Counted findings per level.",
+          "propertyNames": {
+            "$ref": "#/$defs/FindingLevel"
+          },
+          "type": "object"
+        },
+        "level": {
+          "$ref": "#/$defs/SecurityLevel"
+        },
+        "policy_version": {
+          "const": "sec.v2",
+          "type": "string"
+        },
+        "reasons": {
+          "default": [],
+          "description": "Why this level, as short codes, e.g. 'worst:GHSA-x npm:y@1 (conditional)', 'kev:...', 'malicious:MAL-...'.",
+          "items": {
+            "maxLength": 200,
+            "type": "string"
+          },
+          "maxItems": 10,
+          "type": "array"
+        },
+        "uncounted": {
+          "default": 0,
+          "description": "Moderate, low or unrated findings: observed only.",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "level",
+        "policy_version",
+        "assessed_at"
+      ],
+      "title": "SecurityAssessment",
+      "type": "object"
+    },
+    "SecurityComponent": {
+      "additionalProperties": false,
+      "description": "One part read (or not): a lockfile, a resolved registry package, the installed artifact's SBOM.",
+      "properties": {
+        "component": {
+          "maxLength": 300,
+          "type": "string"
+        },
+        "ecosystem": {
+          "maxLength": 40,
+          "type": "string"
+        },
+        "gaps": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/GapCode"
+          },
+          "type": "array"
+        },
+        "packages": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "scanned",
+            "partial",
+            "not_scanned"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "ecosystem",
+        "component",
+        "status",
+        "packages"
+      ],
+      "title": "SecurityComponent",
+      "type": "object"
+    },
+    "SecurityCoverage": {
+      "additionalProperties": false,
+      "description": "How much could be checked, apart from what was found: complete (something checked, no gap), partial (something\nchecked, a gap) or unchecked (nothing checked). The record keeps up to 30 components and gaps; all are in\ndata/security/<slug>.json.",
+      "properties": {
+        "components": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/SecurityComponent"
+          },
+          "maxItems": 500,
+          "type": "array"
+        },
+        "gaps": {
+          "default": [],
+          "items": {
+            "$ref": "#/$defs/SecurityGap"
+          },
+          "maxItems": 500,
+          "type": "array"
+        },
+        "packages_checked": {
+          "minimum": 0,
+          "type": "integer"
+        },
+        "packages_found": {
+          "description": "Checked plus what the gaps are known to hide (a lower bound).",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "state": {
+          "$ref": "#/$defs/CoverageState"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "enum": [
+                "repo_lockfile",
+                "registry_resolve",
+                "installed_artifact"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "state",
+        "packages_found",
+        "packages_checked"
+      ],
+      "title": "SecurityCoverage",
+      "type": "object"
+    },
+    "SecurityFinding": {
+      "additionalProperties": false,
+      "description": "One OSV advisory (or a malicious-package report) on one version of a package the software brings.\n\nA sec.v1 finding has the first eight fields and is high or critical. sec.v2 adds what the advisory says (ids, dates,\nCVSS vectors, CWE), where the package sits (scope, path, workspace, platform, lockfile or SBOM), whether the\ninstalled artifact has it, KEV and EPSS, preconditions and reachability, and the level the policy gave it.",
+      "properties": {
+        "advisory": {
+          "description": "OSV id, e.g. GHSA-xxxx-xxxx-xxxx or MAL-2025-1.",
+          "pattern": "^[A-Z][A-Z0-9]*-[\\w-]+$",
+          "type": "string"
+        },
+        "aliases": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 20,
+          "type": "array"
+        },
+        "attack_vector": {
+          "anyOf": [
+            {
+              "enum": [
+                "network",
+                "adjacent",
+                "local",
+                "physical"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "counted": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Counts toward the record's level: high or critical, malicious, or on KEV. Moderate, low and unrated ones are observed only."
+        },
+        "cves": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "type": "array"
+        },
+        "cvss_v3": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "cvss_v4": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "cwes": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 10,
+          "type": "array"
+        },
+        "dos_only": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Only availability is hit (CVSS C:N/I:N, else the words)."
+        },
+        "epss": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "epss_percentile": {
+          "anyOf": [
+            {
+              "maximum": 1,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "fix_published_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "When fixed_in came out (deps.dev): a maintenance signal for scoring, not a cap."
+        },
+        "fixed_in": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "The lowest fixed version above the installed one; null when none is out."
+        },
+        "found_in": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The lockfile path, 'registry:<pkg>' or 'sbom:<run id>'."
+        },
+        "in_artifact": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Seen in the installed artifact's SBOM; null when no SBOM covers its ecosystem."
+        },
+        "intel_checked_at": {
+          "anyOf": [
+            {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The day KEV and EPSS were read."
+        },
+        "kev": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "level": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/FindingLevel"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "malicious": {
+          "default": false,
+          "type": "boolean"
+        },
+        "modified": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "package": {
+          "description": "Ecosystem and name, e.g. 'npm:undici'.",
+          "pattern": "^(npm|pypi|crates|go):\\S+$",
+          "type": "string"
+        },
+        "paths": {
+          "default": [],
+          "description": "Shortest dependency paths, 'root > a > b'.",
+          "items": {
+            "maxLength": 400,
+            "type": "string"
+          },
+          "maxItems": 3,
+          "type": "array"
+        },
+        "platform": {
+          "default": [],
+          "description": "Only on these OSes (os fields, cfg()).",
+          "items": {
+            "type": "string"
+          },
+          "maxItems": 6,
+          "type": "array"
+        },
+        "policy_version": {
+          "anyOf": [
+            {
+              "const": "sec.v2",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "preconditions": {
+          "default": [],
+          "description": "What must hold for it to matter, as codes: local_access, adjacent_network, user_interaction, high_privileges, high_complexity, denial_of_service, server_side, option:<NAME>, symbol:<name>, entry:<module>.",
+          "items": {
+            "maxLength": 120,
+            "type": "string"
+          },
+          "maxItems": 8,
+          "type": "array"
+        },
+        "published": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "purl": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "reachability": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SecurityReachability"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "scope": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DependencyScope"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "severity": {
+          "description": "GHSA's rating, else the CVSS v3 base score's band; sec.v1 keeps only CRITICAL and HIGH.",
+          "enum": [
+            "CRITICAL",
+            "HIGH",
+            "MODERATE",
+            "LOW",
+            "UNKNOWN"
+          ],
+          "type": "string"
+        },
+        "summary": {
+          "maxLength": 200,
+          "type": "string"
+        },
+        "triage": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SecurityTriage"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "version": {
+          "maxLength": 100,
+          "minLength": 1,
+          "type": "string"
+        },
+        "vex": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/SecurityVex"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "workspace": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "package",
+        "version",
+        "advisory",
+        "severity",
+        "fixed_in",
+        "summary"
+      ],
+      "title": "SecurityFinding",
+      "type": "object"
+    },
+    "SecurityGap": {
+      "additionalProperties": false,
+      "description": "One reason something could not be checked, in the fixed taxonomy (pickfit/security.py).",
+      "properties": {
+        "capability": {
+          "description": "The harness capability that would close it.",
+          "maxLength": 80,
+          "type": "string"
+        },
+        "category": {
+          "$ref": "#/$defs/GapCategory"
+        },
+        "code": {
+          "$ref": "#/$defs/GapCode"
+        },
+        "component": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The lockfile, manifest, package or SBOM."
+        },
+        "detail": {
+          "default": "",
+          "maxLength": 300,
+          "type": "string"
+        },
+        "ecosystem": {
+          "description": "npm, pypi, crates, go, maven, c/c++, ... or unknown.",
+          "maxLength": 40,
+          "type": "string"
+        },
+        "first_seen": {
+          "anyOf": [
+            {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "found": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Packages it hides, when they can be counted."
+        },
+        "last_seen": {
+          "anyOf": [
+            {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "code",
+        "category",
+        "ecosystem",
+        "capability"
+      ],
+      "title": "SecurityGap",
+      "type": "object"
+    },
+    "SecurityLevel": {
+      "enum": [
+        "blocked",
+        "exposed",
+        "conditional",
+        "present_unreachable",
+        "not_shipped",
+        "none"
+      ],
+      "type": "string"
+    },
+    "SecurityObservation": {
+      "additionalProperties": false,
+      "description": "What the scan saw, without judging it. The record keeps this summary; every finding is in `details`.",
+      "properties": {
+        "advisories_fetched_at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "artifact_sha256": {
+          "default": [],
+          "items": {
+            "pattern": "^[0-9a-f]{64}$",
+            "type": "string"
+          },
+          "maxItems": 20,
+          "type": "array"
+        },
+        "commit": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{7,40}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "details": {
+          "anyOf": [
+            {
+              "pattern": "^security/[a-z0-9-]+\\.json$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The full observation, relative to the data root (data/security/<slug>.json)."
+        },
+        "details_sha256": {
+          "anyOf": [
+            {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "epss_date": {
+          "anyOf": [
+            {
+              "pattern": "^\\d{4}-\\d{2}-\\d{2}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "findings_total": {
+          "description": "Every finding seen: all severities, all scopes.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "kev_catalog": {
+          "anyOf": [
+            {
+              "maxLength": 40,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "CISA KEV catalog version read."
+        },
+        "packages": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "default": {},
+          "description": "Packages read per ecosystem (npm, pypi, crates, go).",
+          "type": "object"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RunId"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The verification run whose replay box gave the SBOM."
+        },
+        "scanner": {
+          "const": "pickfit-security",
+          "default": "pickfit-security",
+          "type": "string"
+        },
+        "scanner_version": {
+          "const": "sec.v2",
+          "type": "string"
+        },
+        "scopes": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "default": {},
+          "description": "Packages read per scope (runtime, dev, build, ...).",
+          "type": "object"
+        },
+        "target": {
+          "description": "installed_artifact: the SBOM of what pickfit's replay box installed (pickfit/sbom.py); registry_resolve: the published package resolved as a fresh install; repo_lockfile: the repository's lockfiles at `commit`.",
+          "enum": [
+            "repo_lockfile",
+            "registry_resolve",
+            "installed_artifact"
+          ],
+          "type": "string"
+        },
+        "tool_version": {
+          "anyOf": [
+            {
+              "maxLength": 60,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "scanner_version",
+        "target",
+        "advisories_fetched_at",
+        "findings_total"
+      ],
+      "title": "SecurityObservation",
+      "type": "object"
+    },
+    "SecurityReachability": {
+      "additionalProperties": false,
+      "description": "Whether the vulnerable code runs, decided by a program (S4) or, later, a model with cited evidence (S6).",
+      "properties": {
+        "evidence": {
+          "default": [],
+          "description": "file:line quotes, or what was searched for and not found.",
+          "items": {
+            "maxLength": 300,
+            "type": "string"
+          },
+          "maxItems": 5,
+          "type": "array"
+        },
+        "method": {
+          "$ref": "#/$defs/ReachMethod"
+        },
+        "result": {
+          "enum": [
+            "reachable",
+            "not_reachable",
+            "unknown"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "method",
+        "result"
+      ],
+      "title": "SecurityReachability",
+      "type": "object"
+    },
+    "SecurityTriage": {
+      "additionalProperties": false,
+      "description": "A model's reading of one advisory against one project (S6, not run yet): kept only with evidence a program\ncan grep again.",
+      "properties": {
+        "at": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "evidence": {
+          "default": [],
+          "items": {
+            "maxLength": 300,
+            "type": "string"
+          },
+          "maxItems": 5,
+          "type": "array"
+        },
+        "input_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        "model": {
+          "maxLength": 100,
+          "type": "string"
+        },
+        "prompt_version": {
+          "maxLength": 40,
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "exposed",
+            "conditional",
+            "not_exposed"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "model",
+        "prompt_version",
+        "input_sha256",
+        "verdict",
+        "at"
+      ],
+      "title": "SecurityTriage",
+      "type": "object"
+    },
+    "SecurityVex": {
+      "additionalProperties": false,
+      "description": "The finding as an OpenVEX statement would put it (for a later public feed).",
+      "properties": {
+        "justification": {
+          "anyOf": [
+            {
+              "enum": [
+                "component_not_present",
+                "vulnerable_code_not_present",
+                "vulnerable_code_not_in_execute_path",
+                "vulnerable_code_cannot_be_controlled_by_adversary",
+                "inline_mitigations_already_exist"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "status": {
+          "enum": [
+            "not_affected",
+            "affected",
+            "fixed",
+            "under_investigation"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "SecurityVex",
+      "type": "object"
+    },
+    "Slug": {
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "type": "string"
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "description": "data/security/<slug>.json: the full observation behind a record's sec.v2 check (every finding, every severity,\nevery scope) and the installed inventory it came from, so a new policy can be applied offline without a new scan.",
+  "properties": {
+    "assessment": {
+      "$ref": "#/$defs/SecurityAssessment"
+    },
+    "coverage": {
+      "$ref": "#/$defs/SecurityCoverage"
+    },
+    "findings": {
+      "default": [],
+      "items": {
+        "$ref": "#/$defs/SecurityFinding"
+      },
+      "type": "array"
+    },
+    "installed": {
+      "default": [],
+      "description": "The SBOM's packages (pickfit/sbom.py), so a rescan can look them up again without a box.",
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "observation": {
+      "$ref": "#/$defs/SecurityObservation"
+    },
+    "slug": {
+      "$ref": "#/$defs/Slug"
+    },
+    "sources": {
+      "default": [],
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 200,
+      "type": "array"
+    },
+    "version": {
+      "const": "sec.v2",
+      "type": "string"
+    }
+  },
+  "required": [
+    "slug",
+    "version",
+    "observation",
+    "assessment",
+    "coverage"
+  ],
+  "title": "SecurityDetails",
+  "type": "object"
+}

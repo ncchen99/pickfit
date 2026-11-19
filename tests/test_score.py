@@ -37,6 +37,7 @@ from pickfit.score import (
     grade_docs,
     hygiene_parts,
     install_actions,
+    issue_inputs,
     maintenance_score,
     popularity,
     readme_fix,
@@ -95,11 +96,13 @@ def items(score: int = 2, quote: str | None = "tiny jq-like query tool") -> dict
 
 
 def fake_grade(points: int = 2, calls: list[str] | None = None):
-    def grade(sources: list[Any], *, model: str, run_id: str, scope: str, now: datetime, **_: Any) -> Graded:
+    def grade(sources: list[Any], *, model: str, run_id: str, scope: str, now: datetime,
+              input_sha: str | None = None, **_: Any) -> Graded:
         if calls is not None:
             calls.append(scope)
         rubric = DocsRubric(model=model, checked_at=now, sources_sha=sources_sha(sources),
-                            items=DocsRubricItems.model_validate(items(points)))
+                            items=DocsRubricItems.model_validate(items(points)), input_sha=input_sha,
+                            prompt_version="rubric-p1", renderer_version="r1", grader="meta")
         return Graded(rubric, cost_usd=0.015)
     return grade
 
@@ -114,7 +117,7 @@ def test_sandbox_component_follows_steps_readme_fixes_and_failure_not_how_far_th
     assert sandbox_score(verification(run(steps=2, pitfalls=1))) == 0.85
     assert sandbox_score(verification(run(steps=2, pitfalls=2))) == 0.7225
     for level in ("install", "function", "service", "inference"):
-        assert sandbox_score(verification(run(level=level))) == 1.0  # installing is installing
+        assert sandbox_score(verification(run(level=level))) == 1.0  # installing is installing (depth: coverage)
     assert sandbox_score(verification(run(level="failed"))) == 0.0
     assert sandbox_score(verification()) is None
 
@@ -457,7 +460,7 @@ def test_feature_coverage_is_shown_and_refresh_follows_the_features(tmp_path: Pa
     assert refresh_scores(after, LATER) is None  # write-back's refresh sees nothing to change either
 
 
-def test_b3_v5_scores_move_to_b3_v6_by_refresh(tmp_path: Path) -> None:
+def test_b3_v5_scores_move_to_the_current_formula_by_refresh(tmp_path: Path) -> None:
     db_path, out = setup_records(tmp_path)
     score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=LATER, grade=fake_grade())
     record = json.loads((out / "tinyq.json").read_text())
@@ -467,8 +470,10 @@ def test_b3_v5_scores_move_to_b3_v6_by_refresh(tmp_path: Path) -> None:
            "components": {k: v for k, v in components.items() if k != "feature_results"}}}
     moved = {**record, "scores": old}
     note = refresh_scores(moved, LATER)
-    assert note == "scores moved from formula b3.v5 to b3.v6, refreshed from the record"
+    assert note == f"scores moved from formula b3.v5 to {FORMULA_VERSION}, refreshed from the record"
     assert moved["scores"]["quality"]["total"] == new_total
+    assert moved["scores"]["history"][0]["formula_version"] == "b3.v5"  # what b3.v5 gave is kept (R10)
+    assert moved["scores"]["history"][0]["quality"] == 1.0
     SoftwareRecord.model_validate(moved)
 
 
@@ -508,24 +513,27 @@ def test_a_rescore_without_lookups_keeps_the_stored_signals(tmp_path: Path) -> N
                   registries=Fixed())
     path = out / "tinyq.json"
     data = json.loads(path.read_text(encoding="utf-8"))
-    comps = {k: v["score"] for k, v in data["scores"]["quality"]["components"].items()}
-    data["scores"]["quality"] = compose_quality({**comps, "responsiveness": 0.5}, 10, None)  # measured before
-    data["scores"]["treasure"] = treasure(data["scores"]["quality"]["total"], data["scores"]["popularity"]["score"])
+    as_of = datetime.fromisoformat(data["scores"]["inputs"]["github"]["fetched_at"])
+    measured = [issue(closed_days=2), issue(), issue(closed_days=1)]  # fetched by an earlier run with GitHub
+    data["scores"]["inputs"]["issues"] = issue_inputs(measured, NOW)
+    assert refresh_scores(data, NOW) == "scores refreshed from the record"
     path.write_text(json.dumps(data))
     before = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8")).scores
+    assert before.quality.components.responsiveness.score == responsiveness_score(measured, as_of)
     again = score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=LATER,
                           grade=fake_grade())
     after = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8")).scores
-    assert again.unchanged == ["tinyq"] and after.quality == before.quality
-    assert after.quality.components.responsiveness.score == 0.5
+    assert again.unchanged == ["tinyq"] and after.quality == before.quality and after.inputs == before.inputs
     assert after.popularity.signals == before.popularity.signals and after.popularity.packages == ["npm:tinyq"]
 
 
-def test_unverified_records_are_capped_below_the_treasure_line(tmp_path: Path) -> None:
+def test_unverified_records_keep_their_score_but_cannot_be_treasures(tmp_path: Path) -> None:
     db_path, out = setup_records(tmp_path, verified=False)
     score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=NOW, grade=fake_grade())
     scores = SoftwareRecord.model_validate_json((out / "tinyq.json").read_text(encoding="utf-8")).scores
-    assert scores.quality.cap_reason == "unverified" and scores.quality.total <= 69
+    # Rule 6 (11/19): no 69 cap, so unverified records keep their order; the treasure is what they cannot have.
+    assert scores.quality.cap_reason is None and scores.quality.total == scores.quality.raw_total
+    assert scores.treasure.blocked_by == "unverified"
     assert scores.quality.components.sandbox_verification.score is None
     assert not scores.treasure.is_treasure
 
@@ -543,7 +551,7 @@ def test_write_back_keeps_scores_and_refreshes_what_follows_the_run(tmp_path: Pa
     db_path, out = setup_records(tmp_path, verified=False)
     score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=NOW, grade=fake_grade(1))
     before = SoftwareRecord.model_validate_json((out / "tinyq.json").read_text(encoding="utf-8")).scores
-    assert before.quality.cap_reason == "unverified"
+    assert before.quality.cap_reason is None and before.treasure.blocked_by == "unverified"  # rule 6
     new_run = VerificationRun.model_validate(run("verify-2", steps=5, pitfalls=1))
     written, note = write_back(new_run, "tinyq", out)
     assert written and "scores refreshed" in note
@@ -698,7 +706,7 @@ def test_browser_facts_score_what_the_run_saw_and_drop_what_it_could_not_tell(fa
     assert browser_facts_score(verification) == expected
 
 
-def test_a_web_app_that_only_loaded_scores_lower_and_an_unverified_one_is_capped_with_no_total() -> None:
+def test_a_web_app_that_only_loaded_scores_lower_and_an_unverified_one_has_no_total() -> None:
     data = web_record(operations=[], data_sent="unknown")
     run = data["verification"]["runs"][0]
     run.update(level="install", features=[])
@@ -710,7 +718,7 @@ def test_a_web_app_that_only_loaded_scores_lower_and_an_unverified_one_is_capped
     run["web"].update(screen="sign_in_wall")
     data["verification"].update(level="unverified", unverified_reason="not_run")
     q = web_scores(data)["quality"]
-    assert (q["total"], q["cap_reason"], q["cap"]) == (None, "unverified", 69)
+    assert (q["total"], q["cap_reason"], q["cap"]) == (None, None, None)  # rule 6 (11/19): no 69 cap
 
 
 def test_web_popularity_is_stars_with_a_repo_else_the_cited_show_hn_points() -> None:
@@ -825,15 +833,15 @@ def test_gui_v1_weighs_usability_and_a_treasure_needs_seventy(monkeypatch: pytes
     assert components["usability"]["score"] == 0.85 and components["sandbox_verification"]["score"] == 1.0
     assert scores["quality"]["total"] == round(100 * (1.0 * 25 + 0.85 * 30) / 55, 1)
     Scores.model_validate(scores)
-    # A command-line tool keeps b3.v6 and no usability component.
+    # A command-line tool keeps b3.v7 and no usability component.
     tool = json.loads(CHAT_FIXTURE.read_text(encoding="utf-8"))
     assert build_scores(SoftwareRecord.model_validate(tool), None, None, None, now=NOW)["formula_version"] == FORMULA_VERSION
     high = {"total": 90.0, "components": {"usability": {"score": 0.69, "weight": 30}}}
     assert treasure(high, 30.0, ease=True)["is_treasure"] is False
     assert treasure(high | {"components": {"usability": {"score": 0.7, "weight": 30}}}, 30.0, ease=True)["is_treasure"]
-    assert treasure(high, 30.0)["is_treasure"]  # b3.v6 and web.v1 do not look at usability
+    assert treasure(high, 30.0)["is_treasure"]  # b3.v7 and web.v1 do not look at usability
     shown = scores | {"popularity": scores["popularity"] | {"score": 30.0},
-                      "quality": scores["quality"] | {"total": 90.0, "components": components | {
+                      "quality": scores["quality"] | {"total": 90.0, "raw_total": 90.0, "components": components | {
                           "usability": {"score": 0.69, "weight": 30}}},
                       "treasure": {"is_treasure": True, "value": 63.0}}
     with pytest.raises(ValueError, match="usability >= 0.7"):
@@ -847,7 +855,7 @@ def test_refresh_moves_records_to_the_usability_formulas_and_back(monkeypatch: p
     web["usability"] = ease(web["verification"]["runs"][0]["id"], 60.0)
     web["scores"] = web_scores(web)
     monkeypatch.setattr(score_module, "EASE_SCORED", True)
-    assert refresh_scores(data, LATER) == "scores moved from formula b3.v6 to gui.v1, refreshed from the record"
+    assert refresh_scores(data, LATER) == "scores moved from formula b3.v7 to gui.v1, refreshed from the record"
     assert data["scores"]["quality"]["components"]["usability"]["score"] == 0.85
     assert refresh_scores(web, LATER) == "scores moved from formula web.v1 to web.v2, refreshed from the record"
     components = web["scores"]["quality"]["components"]
@@ -860,13 +868,13 @@ def test_refresh_moves_records_to_the_usability_formulas_and_back(monkeypatch: p
     assert refresh_scores(data, LATER) == "scores refreshed from the record"
     assert data["scores"]["quality"]["components"]["usability"]["score"] is None
     monkeypatch.setattr(score_module, "EASE_SCORED", False)
-    assert refresh_scores(data, LATER) == "scores moved from formula gui.v1 to b3.v6, refreshed from the record"
+    assert refresh_scores(data, LATER) == "scores moved from formula gui.v1 to b3.v7, refreshed from the record"
     assert "usability" not in data["scores"]["quality"]["components"]
     assert refresh_scores(web, LATER) == "scores moved from formula web.v2 to web.v1, refreshed from the record"
     SoftwareRecord.model_validate(data)
 
 
-# --- measurable visual defects: an app-caused defect takes 5% off (b3.v6+visual.v1, web.v1+visual.v1) ------------
+# --- measurable visual defects: an app-caused defect takes 5% off (b3.v7+visual.v1, web.v1+visual.v1) ------------
 
 
 def visual(run_id: str, score: int = 1) -> dict[str, Any]:
@@ -888,8 +896,8 @@ def test_a_visual_defect_takes_five_percent_off_and_a_clean_or_missing_check_cha
     for score, factor in ((0, 0.95), (1, 0.95), (2, 1.0)):  # severity is not used
         desk["visual_check"] = visual(run_id, score)
         scores = build_scores(SoftwareRecord.model_validate(desk), None, None, None, now=NOW)
-        assert scores["formula_version"] == "b3.v6+visual.v1"
-        assert scores["quality"]["components"] == plain["quality"]["components"]  # the formula itself is b3.v6
+        assert scores["formula_version"] == "b3.v7+visual.v1"
+        assert scores["quality"]["components"] == plain["quality"]["components"]  # the formula itself is b3.v7
         assert scores["quality"]["total"] == round(plain["quality"]["total"] * factor, 1)
         assert scores["quality"]["visual"] == {"factor": factor, "before": plain["quality"]["total"],
                                                "defects": 0 if score == 2 else 1}
@@ -914,6 +922,7 @@ def test_the_treasure_rule_is_unchanged_and_works_on_the_total_after_the_deducti
                       "quality": scores["quality"] | {"total": 79.8, "visual": {"factor": 0.95, "before": 84.0,
                                                                                 "defects": 1}},
                       "treasure": {"is_treasure": False, "value": 55.86}}
+    shown["quality"]["raw_total"] = 84.0
     Scores.model_validate(shown)  # 84.0 before, 79.8 after: not a treasure
     with pytest.raises(ValueError, match="before the visual check times its factor"):
         Scores.model_validate(shown | {"quality": shown["quality"] | {"total": 84.0},
@@ -931,7 +940,7 @@ def test_refresh_applies_and_removes_the_deduction_and_moves_the_branch_formulas
     web["scores"] = web_scores(web)
     desk["visual_check"] = visual(desk["verification"]["runs"][0]["id"], 0)
     web["visual_check"] = visual(web["verification"]["runs"][0]["id"], 2)
-    assert refresh_scores(desk, LATER) == "scores moved from formula b3.v6 to b3.v6+visual.v1, refreshed from the record"
+    assert refresh_scores(desk, LATER) == "scores moved from formula b3.v7 to b3.v7+visual.v1, refreshed from the record"
     assert desk["scores"]["quality"]["total"] == round(before * 0.95, 1)
     assert refresh_scores(web, LATER) == "scores moved from formula web.v1 to web.v1+visual.v1, refreshed from the record"
     assert web["scores"]["quality"]["visual"]["factor"] == 1.0
@@ -940,12 +949,12 @@ def test_refresh_applies_and_removes_the_deduction_and_moves_the_branch_formulas
         assert refresh_scores(record, LATER) is None
     # A re-verified record whose check read a run it no longer has goes back until it is checked again.
     desk["visual_check"]["run_id"] = "verify-gone"
-    assert refresh_scores(desk, LATER) == "scores moved from formula b3.v6+visual.v1 to b3.v6, refreshed from the record"
+    assert refresh_scores(desk, LATER) == "scores moved from formula b3.v7+visual.v1 to b3.v7, refreshed from the record"
     assert desk["scores"]["quality"]["total"] == before and "visual" not in desk["scores"]["quality"]
     # gui.v2 (the additive version tried on this branch) moves to the deduction.
     desk["visual_check"]["run_id"] = desk["verification"]["runs"][0]["id"]
     desk["scores"]["formula_version"] = "gui.v2"
-    assert "to b3.v6+visual.v1" in refresh_scores(desk, LATER)
+    assert "to b3.v7+visual.v1" in refresh_scores(desk, LATER)
     assert "visual_quality" not in desk["scores"]["quality"]["components"]
 
 
