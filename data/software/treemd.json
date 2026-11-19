@@ -1,0 +1,695 @@
+{
+  "schema_version": "software.v1",
+  "slug": "treemd",
+  "repo_id": "gh:1092132533",
+  "name": "treemd",
+  "summary": "A terminal markdown viewer that shows headings as a foldable, searchable tree and offers CLI commands to list, extract and query document sections.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "productivity_docs",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "markdown",
+    "md",
+    "terminal",
+    "tui"
+  ],
+  "use_cases": [
+    "list a markdown file's headings with line ranges",
+    "print one section of a markdown document",
+    "extract all Rust code blocks from a document",
+    "read a GitHub repository's README in the terminal"
+  ],
+  "alternatives_to": [
+    "glow",
+    "mdcat",
+    "bat"
+  ],
+  "features": [
+    "fold, filter and jump between headings",
+    "render tables, images and Mermaid diagrams",
+    "toggle checkboxes and edit table cells",
+    "query documents with a jq-like language"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/Epistates/treemd",
+    "full_name": "Epistates/treemd",
+    "created_at": "2025-11-08T03:51:32Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "optional",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install treemd",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "treemd -l README.md"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-treemd-20261119-220843-59fe",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p /tmp/tmd && cd /tmp/tmd && curl -fsSLO https://github.com/epistates/treemd/releases/latest/download/treemd-x86_64-unknown-linux-gnu.tar.gz && curl -fsSLO https://github.com/epistates/treemd/releases/latest/download/SHA256SUMS && sha256sum --check --ignore-missing SHA256SUMS && tar xzf treemd-x86_64-unknown-linux-gnu.tar.gz",
+          "purpose": "download the latest Linux x86_64 release archive and SHA256SUMS, check the hash, extract"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && install -m 755 /tmp/tmd/treemd-x86_64-unknown-linux-gnu ~/.local/bin/treemd && treemd --version",
+          "purpose": "install the binary to ~/.local/bin/treemd and print its version"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "mkdir -p ~/.local/bin && install -m 755 /tmp/tmd/treemd-x86_64-unknown-linux-gnu ~/.local/bin/treemd && treemd --version",
+        "expected_signal": "treemd 0.11.0"
+      },
+      "first_task": "treemd -l README.md"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install treemd",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "treemd -l README.md"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.11.0",
+    "published_at": "2026-11-16T23:07:41Z",
+    "url": "https://github.com/Epistates/treemd/releases/tag/v0.11.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T22:09:33.069630+08:00",
+    "runs": [
+      {
+        "id": "verify-treemd-20261119-220843-59fe",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T22:09:33.069630+08:00",
+        "tool_version": "treemd 0.11.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p /tmp/tmd && cd /tmp/tmd && curl -fsSLO https://github.com/epistates/treemd/releases/latest/download/treemd-x86_64-unknown-linux-gnu.tar.gz && curl -fsSLO https://github.com/epistates/treemd/releases/latest/download/SHA256SUMS && sha256sum --check --ignore-missing SHA256SUMS && tar xzf treemd-x86_64-unknown-linux-gnu.tar.gz",
+            "purpose": "download the latest Linux x86_64 release archive and SHA256SUMS, check the hash, extract"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && install -m 755 /tmp/tmd/treemd-x86_64-unknown-linux-gnu ~/.local/bin/treemd && treemd --version",
+            "purpose": "install the binary to ~/.local/bin/treemd and print its version"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "mkdir -p ~/.local/bin && install -m 755 /tmp/tmd/treemd-x86_64-unknown-linux-gnu ~/.local/bin/treemd && treemd --version",
+            "expected_signal": "treemd 0.11.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "treemd 0.11.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "treemd -l README.md",
+            "expected_signal": "## Quick start",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "## Quick start",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "treemd --tree README.md",
+            "expected_signal": "│ ├──### Keys",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ ├──### Keys",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "treemd -q '.h2' doc.md",
+            "expected_signal": "## Installation ## Usage ## Diagram",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "## Diagram",
+            "setup": [
+              {
+                "command": "cat > doc.md <<'EOF'\n# Project\n\nIntro text.\n\n## Installation\n\nRun the installer.\n\n### From source\n\n```rust\nfn main() { println!(\"hi\"); }\n```\n\n## Usage\n\n| Name | Value |\n|------|-------|\n| a    | 1     |\n| b    | 2     |\n\n- [ ] write docs\n- [x] ship it\n\n## Diagram\n\n```mermaid\ngraph TD; A-->B;\n```\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "treemd -q '.code[rust]' doc.md",
+            "expected_signal": "fn main() { println!(\"hi\"); }",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "fn main() { println!(\"hi\"); }",
+            "setup": [
+              {
+                "command": "cat > doc.md <<'EOF'\n# Project\n\nIntro text.\n\n## Installation\n\nRun the installer.\n\n### From source\n\n```rust\nfn main() { println!(\"hi\"); }\n```\n\n## Usage\n\n| Name | Value |\n|------|-------|\n| a    | 1     |\n| b    | 2     |\n\n- [ ] write docs\n- [x] ship it\n\n## Diagram\n\n```mermaid\ngraph TD; A-->B;\n```\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "treemd -l --filter usage doc.md",
+            "expected_signal": "## Usage",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "## Usage",
+            "setup": [
+              {
+                "command": "cat > doc.md <<'EOF'\n# Project\n\nIntro text.\n\n## Installation\n\nRun the installer.\n\n### From source\n\n```rust\nfn main() { println!(\"hi\"); }\n```\n\n## Usage\n\n| Name | Value |\n|------|-------|\n| a    | 1     |\n| b    | 2     |\n\n- [ ] write docs\n- [x] ship it\n\n## Diagram\n\n```mermaid\ngraph TD; A-->B;\n```\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "treemd -s Usage doc.md",
+            "expected_signal": "- [x] ship it",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "- [x] ship it",
+            "setup": [
+              {
+                "command": "cat > doc.md <<'EOF'\n# Project\n\nIntro text.\n\n## Installation\n\nRun the installer.\n\n### From source\n\n```rust\nfn main() { println!(\"hi\"); }\n```\n\n## Usage\n\n| Name | Value |\n|------|-------|\n| a    | 1     |\n| b    | 2     |\n\n- [ ] write docs\n- [x] ship it\n\n## Diagram\n\n```mermaid\ngraph TD; A-->B;\n```\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install treemd (or pacman/pkgin/brew)",
+            "actually_needed": "No Rust toolchain or those package managers here; I used the prebuilt release archive treemd-x86_64-unknown-linux-gnu.tar.gz from the GitHub releases page, checked it against SHA256SUMS, and copied it into ~/.local/bin",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks succeeded: treemd listed the README headings including '## Quick start', drew them as a tree including '│ ├──### Keys', and printed 'treemd 0.11.0'.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-treemd-20261119-220843-59fe/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-treemd-20261119-220843-59fe/check-1-cmd4.judged.png",
+            "runs/verify/verify-treemd-20261119-220843-59fe/check-2-cmd5.judged.png",
+            "runs/verify/verify-treemd-20261119-220843-59fe/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.186495,
+        "features": [
+          {
+            "feature": "fold, filter and jump between headings",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Fold and jump only exist in the interactive screen, and this box has no terminal to drive it. The command-line outline (--tree) and heading filter (-l --filter) did work."
+          },
+          {
+            "feature": "render tables, images and Mermaid diagrams",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Tables, images and Mermaid diagrams are drawn only in the interactive screen, which needs a graphics-capable terminal this box lacks."
+          },
+          {
+            "feature": "toggle checkboxes and edit table cells",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "Toggling checkboxes and editing table cells happen only in the interactive screen, which this box cannot drive."
+          },
+          {
+            "feature": "query documents with a jq-like language",
+            "status": "checked",
+            "smoke_tests": [
+              3,
+              4,
+              6
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T22:09:39+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/Epistates/treemd@2b1d1190427f",
+      "Cargo.lock"
+    ],
+    "packages_checked": 407,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T22:09:33+08:00",
+    "quality": {
+      "total": 88.0,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 86.1,
+      "signals": {
+        "stars": 737,
+        "monthly_downloads": 460,
+        "forks": 31,
+        "dependents": null,
+        "release_downloads": 2350,
+        "hn_top_score": 0,
+        "registries_count": 2
+      },
+      "age_days": 376,
+      "packages": [
+        "crates:treemd",
+        "homebrew:treemd"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 12.23
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:09:33.079032+08:00",
+      "sources_sha": "db9c1570d976a370a3718247d91bea311e83cfc4ec554003bf9a93aca1021966",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Read markdown by its structure. treemd shows a document's headings as a tree"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "- **A CLI for scripts and agents**: heading lists with line ranges, section extraction, JSON output and a query language."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "The glibc builds need glibc 2.28 or newer (RHEL 8, Debian 10, Ubuntu\n18.10); the musl builds need no glibc."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "brew install treemd        # Homebrew, macOS and Linux"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "treemd README.md              # open a file"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| Linux | `~/.config/treemd/config.toml` |"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Prebuilt binaries for Linux, macOS and Windows are on the"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/Epistates/treemd",
+      "fetched_at": "2026-11-19T22:08:29+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/Epistates/treemd/blob/main/README.md",
+      "fetched_at": "2026-11-19T22:08:27+08:00"
+    },
+    {
+      "id": "release:v0.11.0",
+      "kind": "release",
+      "url": "https://github.com/Epistates/treemd/releases/tag/v0.11.0",
+      "fetched_at": "2026-11-19T22:08:27+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "A (TUI/CLI) markdown navigator with tree-based structural navigation.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "treemd README.md              # open a file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Read markdown by its structure.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "treemd shows a document's headings as a tree\nyou can fold and search, with the section you're on beside it, and gives the\nshell the same view: list, extract and query any part of a document",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# treemd",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Prebuilt binaries for Linux, macOS and Windows are on the",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "treemd https://example.com/guide.md   # any markdown URL",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T22:08:29+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T22:08:29+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T22:08:29+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T22:08:29+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.11.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T22:08:27+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "treemd -l -n README.md        # list headings with their line ranges",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "treemd -s Install README.md   # print one section",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "treemd -q '.code[rust]' doc.md # every Rust code block",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "treemd github:rust-lang/rust  # a GitHub repo's README, whatever it's named",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "[`glow`](https://github.com/charmbracelet/glow): renders markdown beautifully, with a file browser",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "[`mdcat`](https://github.com/swsnr/mdcat): prints rendered markdown to the terminal",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "[`bat`](https://github.com/sharkdp/bat): a syntax-highlighting pager",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "**Outline navigation**: fold, filter and jump between headings; the content follows.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**Rich rendering**: syntax highlighting for 50+ languages, tables, task lists, callouts, images and Mermaid diagrams in terminals that support them.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**Interactive mode**: toggle checkboxes, edit table cells, follow links and copy any element, writing changes back to the file.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "**A CLI for scripts and agents**: heading lists with line ranges, section extraction, JSON output and a query language.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install treemd",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install treemd",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install treemd",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:08:39+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T22:08:27+08:00",
+  "updated_at": "2026-11-19T22:09:39+08:00"
+}
