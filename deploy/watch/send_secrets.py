@@ -22,6 +22,13 @@ Then it copies runs/watch/jobs/ and runs/web/visits.jsonl (what was submitted an
 if you say yes, the Mac hosts in ~/.pickfit/mac-hosts with the SSH keys they name and the base manifests in
 ~/.pickfit/tart/hosts/ (the macOS lane uses a known host before it rents one). It checks that origin/main has the watch code the service runs, and starts the service.
 --dry-run shows which names were found and what would run, never a value.
+
+    uv run python deploy/watch/send_secrets.py root@HOST --add BSKY_HANDLE --add HARVEST_FEED_PER_HOUR=5 [--harvest-db]
+
+--add changes only the named lines of the machine's existing watch.env and leaves the rest alone. A bare NAME takes
+its value from the environment or the repository's dotenv file (a secret: never shown); NAME=VALUE is a plain
+setting given on the command line. --harvest-db also copies this Mac's runs/harvest.db, so the harvest timers start
+from the leads already collected and screened here. Nothing else is sent and the service is not restarted.
 """
 
 from __future__ import annotations
@@ -237,6 +244,54 @@ def state_tar(runs: Path) -> bytes:
     return buf.getvalue()
 
 
+_NAME = re.compile(r"^[A-Z][A-Z0-9_]*$")
+
+
+def add_names(args: argparse.Namespace, ssh: list[str], run=subprocess.run) -> int:
+    """Set only the --add names in the remote watch.env (other lines kept), and copy harvest.db if asked."""
+    found = {**dotenv(args.env_file), **{k: v for k, v in os.environ.items() if v}}
+    values: dict[str, str] = {}
+    for item in args.add:
+        name, eq, value = item.partition("=")
+        if not _NAME.match(name):
+            raise SystemExit(f"--add {name!r}: not an environment variable name")
+        if not eq:
+            value = found.get(name, "")
+            if not value:
+                print(f"{name} is not in the environment or {args.env_file}; nothing was sent")
+                return 1
+        values[name] = value
+    print("setting: " + ", ".join(sorted(values)))
+    names = "|".join(sorted(values))
+    remote = (f"set -e; f={ENV_PATH}; t=$(mktemp); trap 'rm -f $t' EXIT; "
+              f"grep -v -E '^({names})=' $f > $t || true; cat >> $t; "
+              f"install -m 640 -o root -g pickfit $t $f")
+    for name, value in values.items():
+        if "\n" in value or "\r" in value:
+            raise SystemExit(f"{name} has a line break; fix it at its source")
+    lines = "".join(f"{k}={v}\n" for k, v in sorted(values.items())).encode()
+    steps = [("env", remote, lines)]
+    if args.harvest_db:
+        db = args.runs / "harvest.db"
+        if not db.is_file():
+            print(f"{db} does not exist; nothing was sent")
+            return 1
+        steps.append(("harvest db", f"install -d -o pickfit -g pickfit {REMOTE_REPO}/runs/harvest && "
+                                    f"install -m 644 -o pickfit -g pickfit /dev/stdin {REMOTE_REPO}/runs/harvest.db",
+                      db.read_bytes()))
+    for name, command, data in steps:
+        if args.dry_run:
+            print(f"would run on {args.host}: {command}  (stdin: {len(data)} bytes)")
+            continue
+        done = run([*ssh, command], input=data, capture_output=True)
+        if done.returncode != 0:
+            said = (done.stderr or b"").decode(errors="replace").strip().splitlines()[-3:]
+            print(f"{name} failed on {args.host} (exit {done.returncode}): {' / '.join(said)}")
+            return 1
+        print(f"{name}: done")
+    return 0
+
+
 def main(argv: list[str] | None = None, *, ask=getpass.getpass, confirm=input,
          run=subprocess.run) -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
@@ -253,8 +308,13 @@ def main(argv: list[str] | None = None, *, ask=getpass.getpass, confirm=input,
     p.add_argument("--aws", default="aws", help="the AWS CLI, for this Mac's sign-in when no key is typed")
     p.add_argument("--no-start", action="store_true", help="send the secrets and state, do not start the service")
     p.add_argument("--dry-run", action="store_true", help="name what was found and what would run; send nothing")
+    p.add_argument("--add", action="append", metavar="NAME[=VALUE]",
+                   help="only set these names in the existing watch.env (repeatable); see the module's help")
+    p.add_argument("--harvest-db", action="store_true", help="with --add: also copy runs/harvest.db")
     args = p.parse_args(argv)
     ssh = ["ssh", "-o", "StrictHostKeyChecking=accept-new", *(["-i", args.key] if args.key else []), args.host]
+    if args.add:
+        return add_names(args, ssh, run)
 
     values = collect(args, ask=ask, confirm=confirm)
     missing = [n for n in REQUIRED if not values.get(n)]

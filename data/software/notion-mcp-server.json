@@ -1,0 +1,730 @@
+{
+  "schema_version": "software.v1",
+  "slug": "notion-mcp-server",
+  "repo_id": "gh:946169991",
+  "name": "Notion MCP Server",
+  "summary": "A self-hosted Model Context Protocol server that exposes the Notion API as tools for AI clients.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "mcp_server",
+  "kind": "mcp_server_or_agent_plugin",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [
+    "comment on a Notion page from an AI client",
+    "add a new page under a parent page",
+    "read a page's content by ID"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "query Notion data sources with filters",
+    "read and edit pages as Markdown",
+    "create and move Notion pages"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/makenotion/notion-mcp-server",
+    "full_name": "makenotion/notion-mcp-server",
+    "created_at": "2025-03-10T18:09:08Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": [
+      "Notion internal integration token"
+    ]
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-notion-mcp-server-20261119-122515-8ccb",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @notionhq/notion-mcp-server",
+          "purpose": "npm install -g @notionhq/notion-mcp-server"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ls ~/.local/bin && notion-mcp-server --help",
+        "expected_signal": "Usage: notion-mcp-server [options]"
+      },
+      "first_task": null
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "cloud",
+  "last_release": {
+    "tag": "v2.1.0",
+    "published_at": "2026-01-31T18:27:31Z",
+    "url": "https://github.com/makenotion/notion-mcp-server/releases/tag/v2.1.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T12:26:00.875811+08:00",
+    "runs": [
+      {
+        "id": "verify-notion-mcp-server-20261119-122515-8ccb",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T12:26:00.875811+08:00",
+        "tool_version": "1.0.0",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @notionhq/notion-mcp-server",
+            "purpose": "npm install -g @notionhq/notion-mcp-server"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ls ~/.local/bin && notion-mcp-server --help",
+            "expected_signal": "Usage: notion-mcp-server [options]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Usage: notion-mcp-server [options]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "python3 ~/.pickfit/mcp_probe.py --timeout 120 -- notion-mcp-server",
+            "expected_signal": "handshake: ok",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "handshake: ok",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Total tools now: 22",
+            "actually_needed": "The installed package lists 24 tools over stdio. They include API-retrieve-page-markdown and API-update-page-markdown, and every tool name starts with API-.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Set NOTION_TOKEN in the MCP config",
+            "actually_needed": "The server starts and completes the handshake without a token. Only tool calls need the token.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The MCP probe completed initialize, listed 24 tools and printed 'handshake: ok', and the --help check printed the full usage text beginning 'Usage: notion-mcp-server [options]', both exiting 0 as expected.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-notion-mcp-server-20261119-122515-8ccb/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-notion-mcp-server-20261119-122515-8ccb/check-1-cmd3.judged.png",
+            "runs/verify/verify-notion-mcp-server-20261119-122515-8ccb/check-2-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.1351,
+        "mcp": {
+          "transport": "stdio",
+          "launch": [
+            "notion-mcp-server"
+          ],
+          "url": null,
+          "protocol_version": "2025-11-25",
+          "server_name": "Notion?API",
+          "server_version": "1.0.0",
+          "tools": [
+            "API-get-user",
+            "API-get-users",
+            "API-get-self",
+            "API-post-search",
+            "API-get-block-children",
+            "API-patch-block-children",
+            "API-retrieve-a-block",
+            "API-update-a-block",
+            "API-delete-a-block",
+            "API-retrieve-a-page",
+            "API-patch-page",
+            "API-post-page",
+            "API-retrieve-a-page-property",
+            "API-retrieve-a-comment",
+            "API-create-a-comment",
+            "API-query-data-source",
+            "API-retrieve-a-data-source",
+            "API-update-a-data-source",
+            "API-create-a-data-source",
+            "API-list-data-source-templates",
+            "API-retrieve-a-database",
+            "API-move-page",
+            "API-retrieve-page-markdown",
+            "API-update-page-markdown"
+          ],
+          "tool_count": 24,
+          "called_tool": null,
+          "offline": true
+        },
+        "features": [
+          {
+            "feature": "query Notion data sources with filters",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "API-query-data-source calls the Notion API and needs a Notion integration token."
+          },
+          {
+            "feature": "read and edit pages as Markdown",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "API-retrieve-page-markdown and API-update-page-markdown call the Notion API and need a token."
+          },
+          {
+            "feature": "create and move Notion pages",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "API-post-page and API-move-page change a Notion workspace and need a token."
+          }
+        ]
+      }
+    ]
+  },
+  "mcp": {
+    "transports": [
+      "stdio",
+      "streamable_http"
+    ],
+    "launch_command": "npx @notionhq/notion-mcp-server",
+    "client_configs": [
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"notionApi\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@notionhq/notion-mcp-server\"],\n      \"env\": {\n        \"NOTION_TOKEN\": \"ntn_****\"\n      }\n    }\n  }\n}"
+      },
+      {
+        "client": "generic_json",
+        "snippet": "{\n  \"mcpServers\": {\n    \"notionApi\": {\n      \"command\": \"docker\",\n      \"args\": [\n        \"run\",\n        \"--rm\",\n        \"-i\",\n        \"-e\", \"NOTION_TOKEN\",\n        \"mcp/notion\"\n      ],\n      \"env\": {\n        \"NOTION_TOKEN\": \"ntn_****\"\n      }\n    }\n  }\n}"
+      }
+    ],
+    "env_vars": [
+      {
+        "name": "NOTION_TOKEN",
+        "required": null,
+        "purpose": "Notion integration token"
+      },
+      {
+        "name": "OPENAPI_MCP_HEADERS",
+        "required": null,
+        "purpose": "HTTP headers including Notion auth"
+      },
+      {
+        "name": "AUTH_TOKEN",
+        "required": null,
+        "purpose": "bearer token for HTTP transport"
+      },
+      {
+        "name": "ENABLE_TOKEN_PASSTHROUGH",
+        "required": false,
+        "purpose": "enable per-request Notion tokens"
+      }
+    ],
+    "tools": [
+      "query-data-source",
+      "retrieve-a-data-source",
+      "update-a-data-source",
+      "create-a-data-source",
+      "list-data-source-templates",
+      "move-page",
+      "retrieve-a-database",
+      "retrieve-page-markdown",
+      "update-page-markdown"
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T12:26:07+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "npm:@notionhq/notion-mcp-server (fresh install, 177 packages)"
+    ],
+    "packages_checked": 164,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T12:26:00+08:00",
+    "quality": {
+      "total": 66.8,
+      "confidence": 0.7,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.56,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.3682,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 90.6,
+      "signals": {
+        "stars": 4717,
+        "monthly_downloads": 1194963,
+        "forks": 651,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 0,
+        "registries_count": 2
+      },
+      "age_days": 618,
+      "packages": [
+        "npm:@notionhq/notion-mcp-server",
+        "homebrew:notion-mcp-server"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.28
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:26:00.885079+08:00",
+      "sources_sha": "d7fbdf30b96822fbb618296c8056315058b4977d3a5d5bfcadd4ece072eacc6a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "This project implements an [MCP server](https://spec.modelcontextprotocol.io/) for the [Notion API](https://developers.notion.com/reference/intro)."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "For web-based applications or clients that prefer HTTP communication, you can use the Streamable HTTP transport:"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Go to [https://www.notion.so/profile/integrations](https://www.notion.so/profile/integrations) and create a new **internal** integration or select an existing one."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "\"args\": [\"-y\", \"@notionhq/notion-mcp-server\"],"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Comment \"Hello MCP\" on page \"Getting started\""
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Make sure to set either the `NOTION_TOKEN` environment variable (recommended) or the `OPENAPI_MCP_HEADERS` environment variable with your Notion integration token"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 0,
+          "quote": null
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/makenotion/notion-mcp-server",
+      "fetched_at": "2026-11-19T12:24:57+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/makenotion/notion-mcp-server/blob/main/README.md",
+      "fetched_at": "2026-11-19T12:24:55+08:00"
+    },
+    {
+      "id": "release:v2.1.0",
+      "kind": "release",
+      "url": "https://github.com/makenotion/notion-mcp-server/releases/tag/v2.1.0",
+      "fetched_at": "2026-11-19T12:24:55+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Official Notion MCP Server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Adding MCP config to your client",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Official Notion MCP Server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "This project implements an [MCP server](https://spec.modelcontextprotocol.io/) for the [Notion API](https://developers.notion.com/reference/intro).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Notion MCP Server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "implements an [MCP server](https://spec.modelcontextprotocol.io/) for the [Notion API]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/prerequisites/api_keys/0",
+      "source_id": "readme",
+      "quote": "create a new **internal** integration or select an existing one",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T12:24:57+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T12:24:57+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T12:24:57+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.1.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T12:24:55+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Comment \"Hello MCP\" on page \"Getting started\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Add a page titled \"Notion MCP\" to page \"Development\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Get the content of page 1a6b35e6e67f802fa7e1d27686f017f2",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "`query-data-source` - Query a data source (database) with filters and sorts",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "The server exposes two tools for working with page content as enhanced Markdown instead of block JSON",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "`move-page` - Move a page to a different parent location",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "This project implements an [MCP server](https://spec.modelcontextprotocol.io/) for the [Notion API]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/mcp/transports",
+      "source_id": "readme",
+      "quote": "The Notion MCP Server supports two transport modes:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/mcp/launch_command",
+      "source_id": "readme",
+      "quote": "npx @notionhq/notion-mcp-server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/0",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"notionApi\": {\n      \"command\": \"npx\",\n      \"args\": [\"-y\", \"@notionhq/notion-mcp-server\"],\n      \"env\": {\n        \"NOTION_TOKEN\": \"ntn_****\"\n      }\n    }\n  }\n}",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/mcp/client_configs/1",
+      "source_id": "readme",
+      "quote": "{\n  \"mcpServers\": {\n    \"notionApi\": {\n      \"command\": \"docker\",\n      \"args\": [\n        \"run\",\n        \"--rm\",\n        \"-i\",\n        \"-e\", \"NOTION_TOKEN\",\n        \"mcp/notion\"\n      ],\n      \"env\": {\n        \"NOTION_TOKEN\": \"ntn_****\"\n      }\n    }\n  }\n}",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/0",
+      "source_id": "readme",
+      "quote": "NOTION_TOKEN",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/1",
+      "source_id": "readme",
+      "quote": "OPENAPI_MCP_HEADERS",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/2",
+      "source_id": "readme",
+      "quote": "AUTH_TOKEN",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/mcp/env_vars/3",
+      "source_id": "readme",
+      "quote": "ENABLE_TOKEN_PASSTHROUGH",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/0",
+      "source_id": "readme",
+      "quote": "`query-data-source` - Query a data source (database) with filters and sorts",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/1",
+      "source_id": "readme",
+      "quote": "`retrieve-a-data-source` - Get metadata and schema for a data source",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/2",
+      "source_id": "readme",
+      "quote": "`update-a-data-source` - Update data source properties",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/3",
+      "source_id": "readme",
+      "quote": "`create-a-data-source` - Create a new data source",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/4",
+      "source_id": "readme",
+      "quote": "`list-data-source-templates` - List available templates in a data source",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/5",
+      "source_id": "readme",
+      "quote": "`move-page` - Move a page to a different parent location",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/6",
+      "source_id": "readme",
+      "quote": "`retrieve-a-database` - Get database metadata including its data source IDs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/7",
+      "source_id": "readme",
+      "quote": "`retrieve-page-markdown` — Read a page's full content as Markdown",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    },
+    {
+      "field": "/mcp/tools/8",
+      "source_id": "readme",
+      "quote": "`update-page-markdown` — Edit a page's content with Markdown",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T12:25:10+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T12:24:55+08:00",
+  "updated_at": "2026-11-19T12:26:07+08:00"
+}

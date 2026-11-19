@@ -14,6 +14,7 @@ import httpx2
 from pickfit.d1 import Database, sql, timestamp
 from pickfit.discover.github import GitHub, GitHubError, runs_dir
 from pickfit.env import read_env
+from pickfit.harvest.check import quiet_before
 from pickfit.harvest.leads import LeadsDB, known_keys
 from pickfit.harvest.sources import DEFAULT_SOURCES, SOURCES, Ctx, SourceError
 from pickfit.env import REPO_ROOT
@@ -26,6 +27,11 @@ NOTE_MAX = 300
 
 def harvest_db_path() -> Path:
     return runs_dir() / "harvest.db"
+
+
+def pickfit_known() -> dict[str, str]:
+    """Lead keys of the records in data/software and the candidates in runs/pipeline.db."""
+    return known_keys(REPO_ROOT / "data" / "software", runs_dir() / "pipeline.db")
 
 
 def default_sources(env: dict[str, str]) -> list[str]:
@@ -97,11 +103,13 @@ def run_harvest(sources: list[str] | None = None, *, db_path: Path | None = None
 
 def feed(d1: Database, *, n: int, hourly_cap: int, apply: bool, db_path: Path | None = None,
          kinds: set[str] | None = None, platforms: set[str] | None = None, reserve: int = FEED_RESERVE,
-         now: datetime | None = None, log: Callable[[str], None] = print) -> list[dict[str, Any]]:
+         screened_only: bool = True, now: datetime | None = None,
+         log: Callable[[str], None] = print) -> list[dict[str, Any]]:
     """Queue the best `n` new leads as submit_software rows for `pickfit watch`.
 
-    Never more than the hour has room for, keeping `reserve` of SUBMIT_HOURLY_CAP for people. Without
-    `apply` nothing is written anywhere; the rows that would be queued are returned.
+    Never more than the hour has room for, keeping `reserve` of SUBMIT_HOURLY_CAP for people. Only leads the
+    prescreen kept (`harvest screen`) unless screened_only is off. Without `apply` nothing is written
+    anywhere; the rows that would be queued are returned.
     """
     now = now or datetime.now(UTC)
     db = LeadsDB(db_path or harvest_db_path())
@@ -112,9 +120,11 @@ def feed(d1: Database, *, n: int, hourly_cap: int, apply: bool, db_path: Path | 
         take = min(n, room)
         log(f"feed: hour has room for {room} (cap {hourly_cap}, reserve {reserve}); taking {take}")
         out = []
-        for lead in db.ranked(kinds=kinds, platforms=platforms):
+        for lead in db.ranked(kinds=kinds, platforms=platforms, quiet_before=quiet_before(now)):
             if len(out) >= take:
                 break
+            if screened_only and not (lead["check"] or {}).get("screen_keep"):
+                continue
             url = lead["url"].lower() if lead["key"].startswith("gh:") else lead["url"]
             existing = d1.query(sql("SELECT id, status FROM submissions WHERE url = ?1", url))
             if existing:
@@ -141,13 +151,13 @@ def export(path: Path, *, db_path: Path | None = None, status: str = "new", limi
     """Write ranked leads as JSON lines (for review, or to hand to `pickfit discover --repo`)."""
     db = LeadsDB(db_path or harvest_db_path())
     try:
-        rows = db.ranked(status=status, limit=limit)
+        rows = db.ranked(status=status, limit=limit, quiet_before=quiet_before(datetime.now(UTC)))
     finally:
         db.close()
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open("w", encoding="utf-8") as fh:
         for row in rows:
             fh.write(json.dumps({k: row[k] for k in ("key", "url", "kind_hint", "platforms", "priority",
-                                                     "best_signal", "sources", "first_seen")},
+                                                     "best_signal", "sources", "first_seen", "check")},
                                 ensure_ascii=False) + "\n")
     return len(rows)

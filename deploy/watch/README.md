@@ -87,9 +87,35 @@ ssh root@機器的IP journalctl -u pickfit-e2e@default -n 60
 
 發布那一段比對 pickfit.app 和 workers.dev 的資料是不是 origin/main 的。pickfit.app 由 Cloud Run 提供，CI 只部署 workers.dev，所以 Cloud Run 沒跟著部署時，這一段會失敗，整份報告也是 FAILED。
 
+## 收集來源（harvest）
+
+`pickfit harvest`（`pickfit/harvest/`，說明在 [docs/research/harvest-sources.md](../../docs/research/harvest-sources.md)）在這台機器上有三個 timer：
+
+| timer | 時間（UTC） | 做什麼 | 費用 |
+|---|---|---|---|
+| `pickfit-harvest-probe.timer` | 每天 02:50 | 每個來源各讀一小批，接著 check、一筆初篩、對 D1 的 dry-run feed，全在丟棄式資料庫裡。報告在 `runs/harvest/probe.json`，有來源壞掉時 unit 會失敗 | 約 US$0.05 |
+| `pickfit-harvest.timer` | 每天 03:30 | 讀所有來源，結果在 `runs/harvest/last-run.json` | X 約 US$0.5，其他免費 |
+| `pickfit-harvest-feed.timer` | 每小時 | 初篩 `HARVEST_SCREEN_PER_HOUR` 筆（預設 20），再把收下的 `HARVEST_FEED_PER_HOUR` 筆（預設 5）送進 D1 | 初篩約 US$0.04，送出的每筆進 watch 約 US$0.36 |
+
+Bluesky、X 的 key 和這些設定只改 watch.env 裡那幾行，在這台 Mac 跑：
+
+```bash
+uv run python deploy/watch/send_secrets.py root@機器的IP --key ~/.pickfit/ssh/scaleway-mac --add BSKY_HANDLE --add BSKY_APP_PASSWORD --add X_BEARER_TOKEN --add HARVEST_FEED_PER_HOUR=5 --harvest-db
+```
+
+`--harvest-db` 把這台的 `runs/harvest.db` 一起帶過去，timer 就從已經收集、初篩過的 lead 接著做。看狀況：
+
+```bash
+ssh root@機器的IP systemctl list-timers 'pickfit-harvest*'
+```
+
+```bash
+ssh root@機器的IP systemctl --failed
+```
+
 ## 平常要知道的事
 
-- macOS 那條預設不租 Mac，只用 `~pickfit/.pickfit/mac-hosts` 裡已經能用的主機。要自動租，在服務的 ExecStart 加 `--mac-rent`。要連 root 步驟也自動做，再加 `--mac-root-from-provider`（向 Scaleway 讀那台的 sudo 密碼，直接餵給主機上的腳本，不記錄、不存檔）。
+- macOS 那條沒有能用的 Mac 時，批次到了會自己租一台（`--mac-rent`，一週最多一台），root 步驟也自動做（`--mac-root-from-provider`，向 Scaleway 讀那台的 sudo 密碼，直接餵給主機上的腳本，不記錄、不存檔）。拿掉這兩個參數就只用 `~pickfit/.pickfit/mac-hosts` 裡已經能用的主機。
 - watch 自己租的 Mac，付費的第一天過完又沒事做時會自己刪。服務停掉時就不會刪，Scaleway 過了 24 小時按小時計費，要 `pickfit mac-host down 名稱 --yes`。
 - `systemctl stop pickfit-watch` 會等跑到一半的工作做完，最多 30 分鐘。
 - `pickfit watch --status`（在機器上以 pickfit 使用者執行）列出 D1 的送出、每條分流停著的工作和 Mac 主機。

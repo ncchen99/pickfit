@@ -9,7 +9,8 @@ from pathlib import Path
 import httpx2
 import pytest
 
-from pickfit.harvest import sources
+from pickfit.discover.store import PipelineDB
+from pickfit.harvest import check, sources
 from pickfit.harvest.leads import Hit, LeadsDB, known_keys, priority
 from pickfit.harvest.run import default_sources, feed, run_harvest
 from tests.queue_fakes import d1, submit
@@ -153,10 +154,12 @@ def test_feed_keeps_room_for_people(tmp_path: Path) -> None:
     db = LeadsDB(tmp_path / "h.db")
     db.add([Hit("npm", n, [f"https://github.com/O/{n}"], kind_hint="cli_tool") for n in "abcdef"])
     db.close()
-    dry = feed(database, n=10, hourly_cap=20, apply=False, db_path=tmp_path / "h.db", now=NOW, log=lambda s: None)
+    dry = feed(database, n=10, hourly_cap=20, apply=False, db_path=tmp_path / "h.db", now=NOW, screened_only=False,
+               log=lambda s: None)
     assert len(dry) == 3  # 20 - 5 reserve - 12 this hour
     assert database.query("SELECT count(*) AS n FROM submissions")[0]["n"] == 13  # dry run wrote nothing
-    rows = feed(database, n=10, hourly_cap=20, apply=True, db_path=tmp_path / "h.db", now=NOW, log=lambda s: None)
+    rows = feed(database, n=10, hourly_cap=20, apply=True, db_path=tmp_path / "h.db", now=NOW, screened_only=False,
+                log=lambda s: None)
     urls = {r["url"] for r in rows}
     assert "https://github.com/o/b" not in urls and len(rows) == 3  # o/b was submitted before
     assert all(u == u.lower() for u in urls)
@@ -170,3 +173,95 @@ def test_feed_keeps_room_for_people(tmp_path: Path) -> None:
 def test_social_sources_join_when_keyed() -> None:
     assert "bluesky" not in default_sources({}) and "x" not in default_sources({})
     assert default_sources({"BSKY_HANDLE": "h", "BSKY_APP_PASSWORD": "p", "X_BEARER_TOKEN": "t"})[-2:] == ["bluesky", "x"]
+
+
+def test_author_published_registries_are_one_voice() -> None:
+    vendor = priority("mcp_server", [], [0.0] * 3, ["awesome", "mcp_registry", "npm"])
+    assert vendor == priority("mcp_server", [], [0.0] * 2, ["awesome", "npm"])
+    assert vendor < priority("mcp_server", [], [0.0] * 3, ["awesome", "homebrew", "npm"])
+    assert priority("cli_tool", [], [0.0], ["awesome"], screen_keep=True) > priority(
+        "cli_tool", [], [0.0, 0.0], ["awesome", "hn"])  # a kept screen beats one more voice
+    assert priority("cli_tool", [], [0.0], ["awesome"], quiet=True) < priority("cli_tool", [], [0.0], ["awesome"])
+
+
+class FakeGitHub:
+    def __init__(self, repos: dict[str, dict | None]) -> None:
+        self.data = repos
+        self.asked: list[list[str]] = []
+
+    def repos(self, names: list[str]) -> dict[str, dict | None]:
+        self.asked.append(names)
+        return {n: self.data.get(n) for n in names}
+
+
+def _repo(full_name: str, pushed: str = "2026-11-01T00:00:00Z", **flags: bool) -> dict:
+    return {"full_name": full_name, "html_url": f"https://github.com/{full_name}", "stargazers_count": 10,
+            "pushed_at": pushed, "description": "a tool", **flags}
+
+
+def test_check_skips_gone_archived_stale_and_merges_renames(tmp_path: Path) -> None:
+    db = LeadsDB(tmp_path / "h.db")
+    db.add([Hit("awesome", n, [f"https://github.com/o/{n}"], kind_hint="cli_tool")
+            for n in ("gone", "arch", "fork", "old", "quiet", "moved", "new-name", "was-known", "ok")])
+    db.add([Hit("npm", "moved", ["https://github.com/o/moved"], signal=5)])
+    gh = FakeGitHub({"o/arch": _repo("o/arch", archived=True), "o/fork": _repo("o/fork", fork=True),
+                     "o/old": _repo("o/old", pushed="2024-01-01T00:00:00Z"),
+                     "o/quiet": _repo("o/quiet", pushed="2025-06-01T00:00:00Z"),
+                     "o/moved": _repo("O/New-Name"), "o/new-name": _repo("O/New-Name"),
+                     "o/was-known": _repo("o/recorded"), "o/ok": _repo("o/ok")})
+    out = check.check(db, n=50, gh=gh, known={"gh:o/recorded": "record:rec"}, now=NOW, log=lambda s: None)
+    assert out["gone"] == out["archived"] == out["fork"] == out["stale"] == 1 and out["renamed"] == 2
+    status = dict(db.conn.execute("SELECT key, status FROM leads").fetchall())
+    assert status["gh:o/moved"] == "skipped" and status["gh:o/new-name"] == "new"
+    assert status["gh:o/recorded"] == "known"  # renamed onto something pickfit has
+    ranked = {r["key"]: r for r in db.ranked(quiet_before=check.quiet_before(NOW))}
+    assert ranked["gh:o/new-name"]["sources"] == ["awesome", "npm"]  # the old name's sources moved over
+    assert set(ranked) == {"gh:o/new-name", "gh:o/quiet", "gh:o/ok"}
+    assert ranked["gh:o/quiet"]["priority"] < ranked["gh:o/ok"]["priority"]
+    assert check.check(db, n=50, gh=gh, known={}, now=NOW, log=lambda s: None) == {}  # nothing left unchecked
+    db.close()
+
+
+def test_screen_stores_prescreens_and_feed_takes_only_kept(tmp_path: Path) -> None:
+    db = LeadsDB(tmp_path / "h.db")
+    db.add([Hit("awesome", n, [f"https://github.com/o/{n}"], kind_hint="cli_tool")
+            for n in ("tool", "lib", "ruled", "rec")])
+    gh = FakeGitHub({f"o/{n}": _repo(f"o/{n}") for n in ("tool", "lib", "ruled", "rec")})
+    pipeline_db = tmp_path / "pipeline.db"
+    PipelineDB(pipeline_db)
+
+    def add(gh, pdb, names, *, data_dir, log):
+        rows = []
+        for i, name in enumerate(names):
+            short = name.split("/")[1]
+            rows.append({"name": name, "outcome": "added", "repo_id": f"gh:{i}", "full_name": name,
+                         "record": "rec-slug" if short == "rec" else None,
+                         "rule_passed": short != "ruled", "rule_label": "reject" if short == "ruled" else "pass"})
+        return rows
+
+    def prescreen(*, limit, repo_ids, review, concurrency, db_path, log):
+        pdb = PipelineDB(db_path)
+        for repo_id in repo_ids:
+            name = next(r for r in add(None, None, sorted(gh.data), data_dir=None, log=None)
+                        if r["repo_id"] == repo_id)["name"]
+            keep = name.endswith("tool")
+            pdb.save_prescreen(repo_id=repo_id, run_id="r", role="screen", provider="anthropic", model="haiku",
+                               reasoning_effort="low", status="ok", sources_sha="s",
+                               result={"kind": "cli_tool" if keep else "library", "reason": "why"}, keep=keep,
+                               review_reason=None, error=None, usage=None, cost_usd=0.0005, latency_s=1.0)
+        return {"screened": len(repo_ids)}
+
+    # names go to add() in rank order; make that order the same as sorted(gh.data) for the fake above
+    out = check.screen(db, n=10, gh=gh, known={}, pipeline_db=pipeline_db, data_dir=tmp_path, now=NOW,
+                       add=lambda gh_, pdb, names, **kw: add(gh_, pdb, sorted(names), **kw),
+                       prescreen=prescreen, log=lambda s: None)
+    assert out["screened"] == {"kept": 1, "dropped": 1, "rules": 1, "known": 1}
+    status = dict(db.conn.execute("SELECT key, status_note FROM leads").fetchall())
+    assert status["gh:o/lib"] == "prescreen:library" and status["gh:o/ruled"] == "rules:reject"
+    assert status["gh:o/rec"] == "record:rec-slug"
+    # The candidate harvest stored for screening does not make the kept lead "known".
+    assert db.mark_known({"gh:o/tool": "candidate"}) == 0
+    db.close()
+    database = d1(tmp_path)
+    rows = feed(database, n=10, hourly_cap=20, apply=False, db_path=tmp_path / "h.db", now=NOW, log=lambda s: None)
+    assert [r["url"] for r in rows] == ["https://github.com/o/tool"]

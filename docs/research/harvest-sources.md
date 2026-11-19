@@ -50,9 +50,11 @@
 
 1. `pickfit harvest run`：依序執行各來源。每個來源產生「hit」（某個來源提到某個軟體），整理成「lead」，也就是一個 GitHub repo（`gh:owner/name`）或一個網站（`web:https://…`）一筆，同一個軟體被幾個來源提到，就有幾筆來源紀錄。只存事實，包括來源裡的 id、回到來源的連結、短標題、一個熱度數字（星數、分數、下載數、安裝數、按讚數），不存貼文內容。某個來源出錯時記下錯誤，繼續跑下一個。
 2. 跑完後，已經有紀錄（`data/software`）或已在候選庫（`runs/pipeline.db`）的 lead 標成 `known`。
-3. 排序：先看類型（MCP、CLI、TUI、網頁優先，對應 11/15 的方針），再加上 Linux／網頁加分、熱度取 log、每多一個來源加一分。
+3. 排序：先看類型（MCP、CLI、TUI、網頁優先，對應 11/15 的方針），再加上 Linux／網頁加分、熱度（每個來源各自算百分位，取最高的）、每多一個獨立的來源加兩分。npm、crates.io、MCP Registry 都是作者自己發布的地方，算同一個來源。只出現在 npm 或 crates 的扣分，一年沒有 push 的扣一分，初篩留下的加三分。
 4. `pickfit harvest top`／`export`：看排序最前面的新 lead，或匯出成 JSON lines。
-5. `pickfit harvest feed -n N --apply`：把最前面的 N 筆寫進 D1 的 `submissions`（`status = 'queued'`，note 寫 `harvest: <來源>`），之後由 watch 照一般投稿的流程讀取、驗證、寫紀錄。每小時最多用到 `SUBMIT_HOURLY_CAP` 減 5，留 5 筆給真人投稿。不加 `--apply` 只列出會送哪些，不寫任何東西。
+5. `pickfit harvest check -n N`：用 GitHub GraphQL 查最前面 N 筆還沒查過的 repo，不花錢。不存在、archived、fork、template 的跳過（watch 的規則本來就會退），兩年沒有 push 的跳過，改過名的併到新名字，新名字已經有紀錄就標成 `known`。
+6. `pickfit harvest screen -n N`：先對排序最前面的 N 筆做 check，再把它們存成候選（README、檔案、規則標籤），跑既有的初篩（Claude Haiku，沒把握時由 Claude Opus 複審）。候選存在獨立的 `runs/harvest-pipeline.db`，不動這台 Mac 的 `runs/pipeline.db`。規則退件或初篩不收的跳過，並記下原因。
+7. `pickfit harvest feed -n N --apply`：把初篩收下、排序最前面的 N 筆寫進 D1 的 `submissions`（`status = 'queued'`，note 寫 `harvest: <來源>`），之後由 watch 照一般投稿的流程讀取、驗證、寫紀錄。每小時最多用到 `SUBMIT_HOURLY_CAP` 減 5，留 5 筆給真人投稿。不加 `--apply` 只列出會送哪些，不寫任何東西。加 `--any` 才會送沒初篩過的。
 
 feed 會花錢：每一筆進 watch 都要跑抽取與沙盒驗證（Anthropic API 與 Modal）。所以 feed 是分開的指令，要明確加 `--apply` 才會寫入。
 
@@ -75,13 +77,69 @@ feed 會花錢：每一筆進 watch 都要跑抽取與沙盒驗證（Anthropic A
 
 排序一開始直接比原始數字，npm 和 crates 的下載數上百萬，結果前幾名都是函式庫（`typescript-sdk`、`crossterm`）。改成每個來源各自算百分位，再看有幾個來源都提到、只出現在套件 registry 的扣分之後，前面變成 `ast-grep`、`broot`、`csvlens`、`television`、Notion／Slack／Kubernetes 的 MCP server 這類真正的工具。
 
-注意：lead 沒有經過任何篩選，函式庫、需要帳號的服務、內容有疑慮的專案都還在裡面。feed 送進 watch 之後才會照既有的規則、Haiku 初篩與沙盒驗證處理，所以每筆 feed 都會花一點錢。
+注意：`harvest run` 收進來的 lead 沒有經過任何篩選，函式庫、需要帳號的服務、內容有疑慮的專案都還在裡面。下一節的 check 和 screen 就是為了在 feed 之前先擋掉一部分。
+
+## 送進 watch 之前的核對（2026-11-19）
+
+**數量。** `harvest.db` 有 35,612 個 lead，各來源的數字和第一次執行的紀錄一致。370 個標成 `known`。pickfit 現有 1,158 筆紀錄、候選庫 1,150 筆，大多是 5–300 星的小專案，所以排序前面的 `broot`、`ast-grep`、`topgrade`、`hexyl` 這些知名工具確實還沒收。
+
+**排序品質。** 對前 1,000 名查了 GitHub，前 100 名逐筆看過，101–1000 名隨機抽 25 筆：
+
+- 前 100 名大約六成是可以直接用的 CLI／TUI 工具，前 100 名的星數中位數 1,648。
+- 函式庫或工具組混進來 3–4 個，例如 `slint-ui/slint`（GUI toolkit）、`krovacloud/krova-node`（SDK monorepo），原因是 npm 用 `mcp` 這個關鍵字搜。
+- 廠商的 MCP server 很多，例如 Notion、Slack、Postman、Porkbun，還有一批只有幾顆星、要付費帳號的。它們排得高，是因為作者會同時發到 MCP Registry、npm 和 awesome 清單，三個來源其實是同一個人送的。現在 npm、crates.io、MCP Registry 合算一個來源，這類 lead 少兩分。
+- 前 1,000 名裡，GitHub 找不到的 6 個，archived 5 個，fork 4 個，改過名的 10 個。改名的有兩個舊名都指向同一個 repo（`pvolok/mprocs` 改名成 `pvolok/dekit`），超過 18 個月沒 push 的 26 個。
+- `morluto/rea` 有 46.8 萬顆星，repo 是 2026 年 4 月才建立的，npm 一個月也有 180 萬次下載。數字看起來很異常，念誠確認這是目前很有名的專案，照常收。
+
+**改動。** 加了 `harvest check` 和 `harvest screen`（見上面的流程第 5、6 步），feed 只送初篩收下的 lead。
+
+**初篩前 200 名。** `pickfit harvest screen -n 200`：check 跳過 7 個（archived 1、不存在 1、超過兩年沒 push 3、改名併入 2），由下一名遞補。規則退了 8 個（`git/git`、`FFmpeg/FFmpeg` 這類大型專案 6 個，函式庫 2 個）。Haiku 初篩 192 個，收下 187 個，不收的 5 個都是框架或 SDK（`payloadcms/payload`、`pgrx`、`mcp-framework` 等）。19 個由 Opus 複審，其中 15 個是固定 5% 抽樣。初篩 US$0.09，複審 US$0.33，平均一個 lead 約 US$0.002。收下的類型是 CLI 100、MCP 39、TUI 35、自架網頁 5、常駐服務 4、桌面 App 4。
+
+**每天驗證的成本。** 一筆初篩通過的 lead 進 watch 後，模型費用來自抽取（約 US$0.09）、驗證（約 US$0.25）、評分與判定（約 US$0.08），11/18 e2e 實測一條約 US$0.18–0.39。Modal 箱子約 US$0.02（帳本 242 次驗證估 US$4.43）。抓一筆 US$0.30–0.45，Windows 要開 EC2、macOS 要用 Mac 主機，費用另計。
+
+| 每小時 feed | 每天 | 模型費／天 | Modal／天 |
+|---:|---:|---:|---:|
+| 3 | 72 | US$22–32 | 約 US$1.5 |
+| 5（預設） | 120 | US$36–54 | 約 US$2.5 |
+| 10 | 240 | US$72–108，會碰到 watch 的每日上限 US$80 | 約 US$5 |
+
+另外 screen 每小時 20 筆，一天約 US$1。`harvest run` 和 `check` 不花錢。
+
+**社群來源（11/19 念誠申請好 key 之後）。** Bluesky 一次 20 個請求，1,012 個 hit，新的 lead 496 個，免費。X 讀 100 則（約 US$0.5）只有 2 個 hit，因為 recent search 依時間排序，剛發的貼文幾乎都還沒有人按讚，過不了按讚數門檻。改成依 relevancy 排序、門檻從 20 降到 10 之後再讀 100 則，有 8 個 hit，新的只有 1 個。X 每天 US$0.5 換到的 lead 很少，之後看幾天的結果再決定要不要留。
+
+**試跑 10 筆（11/19 12:15–12:48，台北）。** 從這台 Mac 跑 `harvest feed -n 10 --apply`，watch 一次做 2 筆，33 分鐘全部做完：
+
+| 軟體 | 結果 | 模型費 |
+|---|---|---:|
+| tw93/Mole | 驗證通過（function），有 Linux 版 | US$0.38 |
+| qybaihe/bla | 驗證通過（function） | US$1.24 |
+| antvis/mcp-server-chart | 驗證通過（function） | US$0.22 |
+| ast-grep/ast-grep | 驗證通過（function） | US$0.17 |
+| makenotion/notion-mcp-server | 驗證通過（function） | US$0.21 |
+| Flux159/mcp-server-kubernetes | 驗證通過（service） | US$0.29 |
+| sharkdp/diskus | 驗證通過（function） | US$0.20 |
+| yeoman/yo | 未驗證：重播是離線的，`yo doctor` 要連網查版本而失敗，畫面判定看到錯誤 | US$0.30 |
+| korotovsky/slack-mcp-server | 未驗證：抽取沒找到 Linux 箱子能跑的安裝方式（它其實有 npx、Docker 和各平台的執行檔） | US$0.18 |
+| morluto/rea | 未驗證：畫面判定 inconclusive | US$0.41 |
+
+通過的 7 筆都由 watch 推上 main。10 筆的模型費共 US$3.60，Modal 箱子 US$0.04，平均一筆 US$0.36，比上面估的範圍低一點。一天 120 筆約 US$43。三筆沒通過的原因看起來都在 pickfit 這邊：重播時離線、抽取漏看安裝方式，要另外查。這次都在 Linux 箱子做完，沒有用到 Mac。
+
+## 測試
+
+有三層：
+
+- **單元測試**（不連網）：`tests/test_harvest.py` 測 lead 的合併、排序、check、screen、feed。`tests/test_harvest_sources.py` 用照真實 API 格式做的假回應，測每個來源送出的請求和讀出的 hit，例如 npm 的 repository 連結、Homebrew 跳過 deprecated、winget 的 manifest 路徑、awesome 清單不存說明文字、HN 的 Show HN 網站。`tests/test_harvest_probe.py` 測 probe 本身會不會把壞掉的來源判成失敗。
+- **連線檢查**（`pickfit harvest probe`）：每個來源對真的 API 讀 30 筆以內，存進丟棄式資料庫。來源出錯，或讀得到東西卻認不出任何軟體（通常是 API 改了格式），就算失敗。Bluesky、X 沒設 key 時記成 skipped。接著在同一份資料上跑 check 5 筆、初篩 1 筆、對 D1 做 dry-run feed，每一步都要有回答。整個約 US$0.05（X 讀 10 則加一次 Haiku），不寫 `runs/harvest.db`，也不寫 D1。報告在 `runs/harvest/probe.json`，有失敗時指令以 1 結束。
+- **同一份連線檢查進 pytest**：`PICKFIT_LIVE_HARVEST=1 uv run pytest tests/test_harvest_probe.py -k live`，預設跳過。
+
+11/19 在這台 Mac 跑 probe，10 個來源和 check、screen、feed 都通過，30 秒左右。
 
 ## 排程
 
-`deploy/watch/` 多了兩組 systemd unit，裝在跑 watch 的那台機器上：
+`deploy/watch/` 有三組 systemd unit，裝在跑 watch 的那台機器上，使用方式寫在 [deploy/watch/README.md](../../deploy/watch/README.md) 的「收集來源」：
 
+- `pickfit-harvest-probe.timer`：每天 02:50 UTC 跑 `pickfit harvest probe`，有來源壞掉時這個 unit 會失敗，`systemctl --failed` 看得到。
 - `pickfit-harvest.timer`：每天 03:30 UTC 跑一次 `pickfit harvest run`，結果寫在 `runs/harvest/last-run.json`。
-- `pickfit-harvest-feed.timer`：每小時跑一次 `pickfit harvest feed -n $HARVEST_FEED_PER_HOUR --apply`（預設 10 筆）。
+- `pickfit-harvest-feed.timer`：每小時先跑 `pickfit harvest screen -n $HARVEST_SCREEN_PER_HOUR`（預設 20 筆），再跑 `pickfit harvest feed -n $HARVEST_FEED_PER_HOUR --apply`（預設 5 筆，一天 120 筆）。
 
-`bootstrap.sh` 會安裝這些 unit，但不會啟用。要啟用時在機器上執行 `systemctl enable --now pickfit-harvest.timer`，確定要開始花錢時再啟用 `pickfit-harvest-feed.timer`。花費仍受 `PICKFIT_PIPELINE_DAILY_CAP_USD` 管。
+watch 機器上的 `harvest.db` 和這台 Mac 的是分開的。`send_secrets.py --harvest-db` 會把這台的複製過去，timer 就從已經收集、初篩過的 lead 接著做。花費仍受 `PICKFIT_PIPELINE_DAILY_CAP_USD` 管。
