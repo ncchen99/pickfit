@@ -236,7 +236,7 @@ export function whenItMatters(codes: string[] = []): string {
         case 'denial_of_service':
           return L('it gets crafted input (it can crash or hang, nothing leaks)', '收到特製的輸入（只會讓它當掉或卡住，不會外洩資料）');
         case 'server_side':
-          return L('it runs as a server', '它以伺服器模式執行');
+          return L('it runs as a server', '以伺服器模式執行');
         default:
           return '';
       }
