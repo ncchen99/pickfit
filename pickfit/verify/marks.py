@@ -5,6 +5,9 @@ The operator names a mark instead of guessing coordinates; pickfit clicks the mi
 Mac the operator's own aim was off by tens of pixels (writer-computer 11/2: every click on "Add Folder" landed
 ~57 px below it). Nothing runs in the box for it, and the text is the app's: data for the operator, never
 instructions. On a host that is not a Mac, or when the tool cannot be built, there are no marks.
+
+The same OCR reads the screen for gui_operate's screen_text check first (ocr_lines): text it finds there needs no
+screen judge call.
 """
 
 from __future__ import annotations
@@ -91,6 +94,68 @@ def text_marks(png: bytes, tool: Path | None = None) -> list[Mark]:
         except (OSError, subprocess.TimeoutExpired):
             return []
     return parse(done.stdout) if done.returncode == 0 else []
+
+
+def ocr_lines(png: bytes, engine: str = "auto", tool: Path | None = None) -> list[str] | None:
+    """Every line of text pickfit's own OCR reads on a screenshot, whole (no MAX_MARKS, no TEXT_MAX), or None
+    when this host has no OCR. gui_operate's screen_text check uses it before asking a model (OCR first).
+
+    engine: "auto" is the Mac's Vision framework (ocr_mac.swift), the one checked against the screen judge on the
+    saved screenshots (11/19: 63 expected texts, none OCR read that the judge had not); "tesseract" is the
+    tesseract command (Apache-2.0) where it is installed, for a Linux host, not yet checked that way."""
+    if engine == "tesseract":
+        return _tesseract_lines(png)
+    tool = tool or ocr_tool()
+    if tool is None:
+        return None
+    with tempfile.NamedTemporaryFile(suffix=".png") as fh:
+        fh.write(png)
+        fh.flush()
+        try:
+            done = subprocess.run([str(tool), fh.name], capture_output=True, text=True, timeout=OCR_TIMEOUT_S)
+        except (OSError, subprocess.TimeoutExpired):
+            return None
+    if done.returncode != 0:
+        return None
+    try:
+        items = json.loads(done.stdout)
+    except json.JSONDecodeError:
+        return None
+    lines = []
+    for item in items if isinstance(items, list) else []:
+        try:
+            text, conf = " ".join(str(item["text"]).split()), float(item.get("conf", 1))
+        except (KeyError, TypeError, ValueError):
+            continue
+        if text and conf >= MIN_CONFIDENCE:
+            lines.append(text)
+    return lines
+
+
+def parse_tesseract(tsv: str) -> list[str]:
+    """tesseract's TSV as lines: the words of each (page, block, paragraph, line), in order. Every word is kept,
+    however sure tesseract is of it: leaving one out would put its neighbours side by side."""
+    lines: dict[tuple[str, ...], list[str]] = {}
+    for row in tsv.splitlines()[1:]:
+        cells = row.split("\t")
+        if len(cells) < 12 or cells[0] != "5" or not cells[11].strip():
+            continue
+        lines.setdefault(tuple(cells[1:5]), []).append(cells[11].strip())
+    return [" ".join(words) for words in lines.values()]
+
+
+def _tesseract_lines(png: bytes) -> list[str] | None:
+    import shutil
+
+    command = shutil.which("tesseract")
+    if command is None:
+        return None
+    try:
+        done = subprocess.run([command, "stdin", "stdout", "tsv"], input=png, capture_output=True,
+                              timeout=OCR_TIMEOUT_S)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    return parse_tesseract(done.stdout.decode("utf-8", "replace")) if done.returncode == 0 else None
 
 
 def draw(view_png: bytes, marks: list[Mark], view: Any) -> bytes:
