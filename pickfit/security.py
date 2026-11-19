@@ -1592,8 +1592,9 @@ def repo_deps(root: Path, ctx: ReadContext = ReadContext(), *, resolve_python: b
             except (ValueError, UnicodeDecodeError, tomllib.TOMLDecodeError) as err:
                 root_unreadable |= "/" not in rel
                 missed("lockfile.parse_error", "pypi", rel, f"{type(err).__name__}: {str(err)[:150]}")
-    if not recognized and not read:
-        gaps.append(gap("lockfile.none_found", "unknown", None, "no manifest or lockfile pickfit recognizes"))
+    if not read and not gaps:  # every unchecked read names why
+        gaps.append(gap("lockfile.none_found", "unknown", None, "the manifests list no runtime dependencies" if recognized
+                        else "no manifest or lockfile pickfit recognizes"))
     reason = ("lockfile_not_supported" if root_unreadable else "resolve_failed" if root_unresolved
               else None if main_read else "lockfile_not_supported" if unsupported and not read else "no_lockfile")
     return RepoDeps(merge_deps(deps), read, reason is None, reason, components, gaps)
