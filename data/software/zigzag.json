@@ -1,0 +1,673 @@
+{
+  "schema_version": "software.v1",
+  "slug": "zigzag",
+  "repo_id": "gh:1439161577",
+  "name": "ZigZag",
+  "summary": "Embroidery editor that turns SVG artwork into machine embroidery stitches, exports PES/DST/EXP/JEF/VP3, and supports AI agents via MCP.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "media_files",
+  "kind": "desktop_app",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "brother-skitch",
+    "embroidery",
+    "embroidery-digitizing",
+    "embroidery-software",
+    "machine-embroidery",
+    "macos",
+    "mcp",
+    "model-context-protocol",
+    "rust",
+    "svg"
+  ],
+  "use_cases": [
+    "convert SVG artwork into machine embroidery files",
+    "send designs to a Brother Skitch PP1 over Bluetooth",
+    "trace a PNG logo into an embroidery design"
+  ],
+  "alternatives_to": [
+    "Ink/Stitch"
+  ],
+  "features": [
+    "convert SVG artwork into embroidery stitches",
+    "export PES, DST, EXP, JEF, VP3 files",
+    "let AI agents create designs via MCP",
+    "send designs to Brother Skitch via Bluetooth"
+  ],
+  "why_worth_it": null,
+  "homepage": "https://zigzag.diy/",
+  "repo": {
+    "url": "https://github.com/simpsoka/zigzag",
+    "full_name": "simpsoka/zigzag",
+    "created_at": "2026-10-30T01:53:39Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "windows",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "OpenGL"
+    ],
+    "gpu": null,
+    "apple_silicon_only": false,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install --cask simpsoka/zigzag/zigzag",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Allow the unsigned app past Windows SmartScreen on first run",
+        "Grant Bluetooth permission on macOS when sending to the Skitch"
+      ],
+      "check": null,
+      "first_task": "zigzag convert logo.png -o logo.pes"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-zigzag-20261119-220445-99e4",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/apps && curl -fsSL -o ~/apps/zigzag.tar.gz https://github.com/simpsoka/zigzag/releases/download/v0.1.5/ZigZag-0.1.5-x86_64-linux.tar.gz",
+          "purpose": "Download the ZigZag-0.1.5-x86_64-linux.tar.gz release asset"
+        },
+        {
+          "command": "tar -xzf ~/apps/zigzag.tar.gz -C ~/apps",
+          "purpose": "Extract it into ~/apps"
+        },
+        {
+          "command": "ln -sf ~/apps/ZigZag-0.1.5-x86_64-linux/zigzag ~/apps/ZigZag-0.1.5-x86_64-linux/zigzag-mcp ~/apps/ZigZag-0.1.5-x86_64-linux/zigzag-studio ~/.local/bin/",
+          "purpose": "Symlink zigzag, zigzag-mcp, zigzag-studio into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "zigzag --help",
+        "expected_signal": "SVG → embroidery (PES, DST, Brother Skitch)"
+      },
+      "first_task": "zigzag-studio /home/sbx/work/t/logo.svg"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": "free",
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.1.5",
+    "published_at": "2026-11-15T04:46:16Z",
+    "url": "https://github.com/simpsoka/zigzag/releases/tag/v0.1.5"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T22:10:22.201901+08:00",
+    "runs": [
+      {
+        "id": "verify-zigzag-20261119-220445-99e4",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:c74b9d4f5f6a",
+        "checked_at": "2026-11-19T22:10:22.201901+08:00",
+        "tool_version": null,
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/apps && curl -fsSL -o ~/apps/zigzag.tar.gz https://github.com/simpsoka/zigzag/releases/download/v0.1.5/ZigZag-0.1.5-x86_64-linux.tar.gz",
+            "purpose": "Download the ZigZag-0.1.5-x86_64-linux.tar.gz release asset"
+          },
+          {
+            "command": "tar -xzf ~/apps/zigzag.tar.gz -C ~/apps",
+            "purpose": "Extract it into ~/apps"
+          },
+          {
+            "command": "ln -sf ~/apps/ZigZag-0.1.5-x86_64-linux/zigzag ~/apps/ZigZag-0.1.5-x86_64-linux/zigzag-mcp ~/apps/ZigZag-0.1.5-x86_64-linux/zigzag-studio ~/.local/bin/",
+            "purpose": "Symlink zigzag, zigzag-mcp, zigzag-studio into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "zigzag --help",
+            "expected_signal": "SVG → embroidery (PES, DST, Brother Skitch)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "SVG → embroidery (PES, DST, Brother Skitch)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd ~/work/t && zigzag convert logo.svg -o logo.pes -o logo.dst -o logo.exp -o logo.jef -o logo.vp3 && ls -l logo.pes logo.dst logo.exp logo.jef logo.vp3",
+            "expected_signal": "wrote logo.vp3",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "wrote logo.vp3",
+            "setup": [
+              {
+                "command": "mkdir -p ~/work/t && cat > ~/work/t/logo.svg <<'EOF'\n<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40mm\" height=\"40mm\" viewBox=\"0 0 40 40\">\n  <rect x=\"5\" y=\"5\" width=\"30\" height=\"30\" fill=\"#cc2222\"/>\n  <circle cx=\"20\" cy=\"20\" r=\"8\" fill=\"#2244cc\"/>\n  <path d=\"M5 38 L35 38\" stroke=\"#000000\" stroke-width=\"0.5\" fill=\"none\"/>\n</svg>\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd ~/work/t && timeout 60 zigzag-mcp --headless < req.jsonl",
+            "expected_signal": "Wrote /home/sbx/work/t/mcp.dst",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"id\":3,\"jsonrpc\":\"2.0\",\"result\":{\"content\":[{\"text\":\"Wrote /home/sbx/work/t/mcp.dst (2041 stitches).\",\"type\":\"text\"}],\"isError\":false}}",
+            "setup": [
+              {
+                "command": "mkdir -p ~/work/t && cat > ~/work/t/logo.svg <<'EOF'\n<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40mm\" height=\"40mm\" viewBox=\"0 0 40 40\">\n  <rect x=\"5\" y=\"5\" width=\"30\" height=\"30\" fill=\"#cc2222\"/>\n  <circle cx=\"20\" cy=\"20\" r=\"8\" fill=\"#2244cc\"/>\n  <path d=\"M5 38 L35 38\" stroke=\"#000000\" stroke-width=\"0.5\" fill=\"none\"/>\n</svg>\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd ~/work/t && printf '%s\\n' '{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-03-26\",\"capabilities\":{},\"clientInfo\":{\"name\":\"t\",\"version\":\"1\"}}}' '{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}' '{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"open_file\",\"arguments\":{\"path\":\"/home/sbx/work/t/logo.svg\"}}}' '{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":{\"name\":\"export\",\"arguments\":{\"path\":\"/home/sbx/work/t/mcp.dst\"}}}' > req.jsonl",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "zigzag-studio /home/sbx/work/t/logo.svg",
+            "expected_signal": "gui tier: window",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "gui tier: window (a window of the app's own process is shown)",
+            "setup": [
+              {
+                "command": "mkdir -p ~/work/t && cat > ~/work/t/logo.svg <<'EOF'\n<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"40mm\" height=\"40mm\" viewBox=\"0 0 40 40\">\n  <rect x=\"5\" y=\"5\" width=\"30\" height=\"30\" fill=\"#cc2222\"/>\n  <circle cx=\"20\" cy=\"20\" r=\"8\" fill=\"#2244cc\"/>\n  <path d=\"M5 38 L35 38\" stroke=\"#000000\" stroke-width=\"0.5\" fill=\"none\"/>\n</svg>\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Install candidate: cargo build --release --features gui,ble (build from source)",
+            "actually_needed": "The prebuilt Linux release tarball (ZigZag-0.1.5-x86_64-linux.tar.gz) works without Rust; extract it and run the binaries inside",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Studio Export picks a format and saves the file",
+            "actually_needed": "In this box, choosing File > Export > DST in the studio opened no save dialog the operator could see, so no file was written. The box has no desktop file-chooser portal, which is probably why",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks succeeded: convert wrote all five embroidery files (listed by ls), the MCP server returned 'Wrote /home/sbx/work/t/mcp.dst (2041 stitches).', and --help printed the expected banner and commands. / ZigZag editor fully drawn with logo.svg rendered as embroidery stitches on the canvas…",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-zigzag-20261119-220445-99e4/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-zigzag-20261119-220445-99e4/check-1-cmd8.judged.png",
+            "runs/verify/verify-zigzag-20261119-220445-99e4/check-2-cmd11.judged.png",
+            "runs/verify/verify-zigzag-20261119-220445-99e4/check-3-cmd7.judged.png",
+            "runs/verify/verify-zigzag-20261119-220445-99e4/replay-12-1.app.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.855888,
+        "gui": {
+          "tier": "ui_rendered",
+          "screen": "main_ui",
+          "command": "zigzag-studio /home/sbx/work/t/logo.svg",
+          "window_title": "logo — ZigZag",
+          "display": "Xvfb 1280x800x24, no window manager, no GPU"
+        },
+        "features": [
+          {
+            "feature": "convert SVG artwork into embroidery stitches",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "export PES, DST, EXP, JEF, VP3 files",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "let AI agents create designs via MCP",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "send designs to Brother Skitch via Bluetooth",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "Needs a Brother Skitch PP1 over Bluetooth"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T22:10:28+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/simpsoka/zigzag@92bfe1a4378f",
+      "Cargo.lock"
+    ],
+    "packages_checked": 494,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T22:10:22+08:00",
+    "quality": {
+      "total": 86.6,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.75,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 84.9,
+      "signals": {
+        "stars": 959,
+        "monthly_downloads": null,
+        "forks": 61,
+        "dependents": null,
+        "release_downloads": 1984,
+        "hn_top_score": 742,
+        "registries_count": 0
+      },
+      "age_days": 20,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 13.08
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:10:22.217681+08:00",
+      "sources_sha": "4be5b50cdbfb98de267dfcf1cfdfc7776d7f608bf0b8e9586052accadf3c738e",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Turn SVG artwork into stitches, fine-tune it in\nthe editor, and export **PES, DST, EXP, JEF, or VP3** for broad compatibility\nwith embroidery machines"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Draw in Illustrator, draw in ZigZag, or let an agent draw."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "For x86-64 Linux desktops with glibc 2.35 or newer (Ubuntu 22.04+, Debian 12+),\nX11 or Wayland, and OpenGL."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "brew install --cask simpsoka/zigzag/zigzag"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "The command line traces too: `zigzag convert logo.png -o logo.pes`."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "For Claude Desktop, point the MCP config at\n`/Applications/ZigZag.app/Contents/MacOS/zigzag-mcp`."
+        },
+        "troubleshooting_uninstall": {
+          "score": 2,
+          "quote": "brew upgrade --cask --greedy simpsoka/zigzag/zigzag"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Free, open-source embroidery software for Mac and Windows."
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/simpsoka/zigzag",
+      "fetched_at": "2026-11-19T22:04:31+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/simpsoka/zigzag/blob/main/README.md",
+      "fetched_at": "2026-11-19T22:04:30+08:00"
+    },
+    {
+      "id": "release:v0.1.5",
+      "kind": "release",
+      "url": "https://github.com/simpsoka/zigzag/releases/tag/v0.1.5",
+      "fetched_at": "2026-11-19T22:04:30+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Free, open-source embroidery software for Mac and Windows.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:41+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Open the DMG, then drag\nZigZag into Applications.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:41+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Turn SVG artwork into machine embroidery, edit stitches visually",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:41+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Turn SVG artwork into stitches, fine-tune it in\nthe editor, and export **PES, DST, EXP, JEF, or VP3**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:41+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# ZigZag",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:41+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "## Download for Linux",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:41+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "X11 or Wayland, and OpenGL",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:41+08:00"
+    },
+    {
+      "field": "/prerequisites/apple_silicon_only",
+      "source_id": "readme",
+      "quote": "For Apple Silicon and Intel Macs, macOS 11 or later.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:41+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T22:04:31+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T22:04:31+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T22:04:31+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T22:04:31+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T22:04:31+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.1.5",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T22:04:30+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "github_api",
+      "quote": "Turn SVG artwork into machine embroidery",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:41+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "send designs directly to a **Brother Skitch\n(PP1) over Bluetooth**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:41+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "`zigzag convert logo.png -o logo.pes`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:41+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "(Ink/Stitch's circular fill)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:41+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Turn SVG artwork into stitches",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:41+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "export **PES, DST, EXP, JEF, or VP3**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:41+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "built-in **MCP (Model Context Protocol)** support so AI agents can create and\nedit designs alongside you",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:41+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "send designs directly to a **Brother Skitch\n(PP1) over Bluetooth**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:41+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install --cask simpsoka/zigzag/zigzag",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:41+08:00"
+    },
+    {
+      "field": "/pricing",
+      "source_id": "github_api",
+      "quote": "Free, open-source embroidery software",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:41+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "ZigZag is a visual embroidery editor built in Rust for performance",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T22:04:41+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T22:04:30+08:00",
+  "updated_at": "2026-11-19T22:10:28+08:00"
+}
