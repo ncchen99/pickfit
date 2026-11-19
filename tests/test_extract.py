@@ -15,18 +15,27 @@ import pickfit.env
 from pickfit import meta
 from pickfit.discover.github import normalize_repo
 from pickfit.discover.store import PipelineDB
+from pickfit import extract as extract_module
 from pickfit.extract import (
     INSTRUCTIONS,
     PROMPT_CACHE_KEY,
+    PROMPT_VERSION,
+    RENDERER_VERSION,
     QuoteChecker,
     Source,
     build_body,
     build_sources,
     check_quotes,
+    extraction_is_current,
+    input_sha,
+    is_extracted,
     normalize_for_match,
+    older_than,
+    parse_refresh,
     render_sources,
     run_extract,
     select_candidates,
+    sources_sha,
 )
 from pickfit.ledger import Caps, Ledger
 from pickfit.meta import BULK_MODEL
@@ -463,3 +472,115 @@ def test_enum_lists_keep_known_values_in_any_case_and_drop_the_rest() -> None:
     assert result.mcp.transports.value == ["stdio", "streamable_http"]
     data["platforms"] = {"value": ["python"], "quote": "python"}
     assert ExtractionResult.model_validate(data).platforms.value is None  # nothing left: unknown, not a guess
+
+
+# --- reuse keys (docs/proposals/scoring.md R3) ------------------------------------------------
+
+
+def _extract_once(tmp_path: Path, ledger: Ledger) -> tuple[Path, PipelineDB, str]:
+    db_path = tmp_path / "pipeline.db"
+    db = PipelineDB(db_path)
+    key = add_candidate(db, 1, "someone/tinyq")
+    assert _rerun(tmp_path, db_path, ledger, ok(extraction()))["attempted"] == 1
+    return db_path, db, key
+
+
+def _rerun(tmp_path: Path, db_path: Path, ledger: Ledger, *replies: Any, **kwargs: Any) -> dict[str, Any]:
+    """run_extract with a fake API that answers `replies` and refuses any other call."""
+    return run_extract(limit=5, db_path=db_path, client=FakeMeta(*replies).client(), ledger=ledger,
+                       runs_dir=tmp_path / "runs", log=lambda line: None, **kwargs)
+
+
+def test_a_row_records_its_raw_input_sha_prompt_and_renderer(tmp_path: Path, ledger: Ledger) -> None:
+    _, db, key = _extract_once(tmp_path, ledger)
+    (row,) = db.extractions()
+    assert row["input_sha"] == input_sha(db.candidate(key)) and len(row["input_sha"]) == 64
+    assert (row["prompt_version"], row["renderer_version"]) == (PROMPT_VERSION, RENDERER_VERSION)
+    assert row["rubric"] is None
+
+
+def test_only_a_renderer_change_reads_nothing_again(tmp_path: Path, ledger: Ledger,
+                                                    monkeypatch: pytest.MonkeyPatch) -> None:
+    db_path, db, key = _extract_once(tmp_path, ledger)
+    before = sources_sha(build_sources(db.candidate(key)))
+    monkeypatch.setattr(extract_module, "README_MAX_CHARS", 20)  # the same README, rendered another way
+    monkeypatch.setattr(extract_module, "RENDERER_VERSION", "r2")
+    assert sources_sha(build_sources(db.candidate(key))) != before  # the old rule would read it again
+    assert _rerun(tmp_path, db_path, ledger)["attempted"] == 0
+    monkeypatch.setattr(extract_module, "PROMPT_VERSION", "p5")  # a new prompt: still nothing by itself
+    assert _rerun(tmp_path, db_path, ledger)["attempted"] == 0
+
+
+def test_a_changed_readme_is_read_again(tmp_path: Path, ledger: Ledger) -> None:
+    db_path, db, key = _extract_once(tmp_path, ledger)
+    first = input_sha(db.candidate(key))
+    db.save_details(key, {"readme": README + "\nNew: a --watch flag.\n", "readme_path": "README.md",
+                          "files": ["src/main.rs"], "files_truncated": False, "manifests": {},
+                          "releases": db.candidate(key)["releases"]}, pushed_at="2026-10-21T00:00:00Z")
+    assert input_sha(db.candidate(key)) != first
+    assert _rerun(tmp_path, db_path, ledger, ok(extraction()))["attempted"] == 1
+    assert db.extractions()[-1]["input_sha"] == input_sha(db.candidate(key))
+    assert _rerun(tmp_path, db_path, ledger)["attempted"] == 0
+
+
+def test_an_explicit_refresh_reads_again_what_an_older_prompt_or_renderer_read(
+        tmp_path: Path, ledger: Ledger, monkeypatch: pytest.MonkeyPatch) -> None:
+    db_path, db, _ = _extract_once(tmp_path, ledger)
+    assert _rerun(tmp_path, db_path, ledger, refresh_before="p4")["attempted"] == 0  # read with p4: not older
+    assert _rerun(tmp_path, db_path, ledger, refresh_before="web-p9")["attempted"] == 0  # another prompt family
+    monkeypatch.setattr(extract_module, "PROMPT_VERSION", "p5")
+    assert _rerun(tmp_path, db_path, ledger, ok(extraction()), refresh_before="p5")["attempted"] == 1
+    assert db.extractions()[-1]["prompt_version"] == "p5"
+    assert _rerun(tmp_path, db_path, ledger, refresh_before="p5")["attempted"] == 0  # done once is enough
+    assert _rerun(tmp_path, db_path, ledger, ok(extraction()), refresh_before="r2")["attempted"] == 1
+    with pytest.raises(ValueError, match="refresh-before"):
+        _rerun(tmp_path, db_path, ledger, refresh_before="v5")
+
+
+def test_older_than_and_legacy_rows(tmp_path: Path) -> None:
+    assert parse_refresh("web-p2") == ("p", "web", 2) and parse_refresh("r2") == ("r", "", 2)
+    assert older_than({"prompt_version": None, "renderer_version": None}, "p1")  # unknown: older than any
+    assert older_than({"prompt_version": "p4", "renderer_version": "r0"}, "r1")
+    assert not older_than({"prompt_version": "p4", "renderer_version": "r1"}, "r1")
+    assert not older_than({"prompt_version": "features-p1"}, "p5") and not older_than({}, None)
+    db = PipelineDB(tmp_path / "pipeline.db")
+    candidate = db.candidate(add_candidate(db, 1, "someone/tinyq"))
+    legacy = {"sources_sha": sources_sha(build_sources(candidate)), "input_sha": None}
+    assert extraction_is_current(legacy, candidate)  # judged by the rendered sources, as before R3
+    assert not extraction_is_current({**legacy, "sources_sha": "0" * 64}, candidate)
+
+
+def test_an_older_database_gets_the_new_columns_and_the_migration_stamps_legacy_rows(
+        tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    import sqlite3
+
+    from scripts.migrate_extraction_keys import main as migrate
+
+    path = tmp_path / "pipeline.db"
+    db = PipelineDB(path)
+    same, changed = add_candidate(db, 1, "a/same"), add_candidate(db, 2, "a/changed")
+    for key in (same, changed):
+        db.save_extraction(repo_id=key, run_id="extract-old", model="m", reasoning_effort="minimal", status="ok",
+                           sources_sha=sources_sha(build_sources(db.candidate(key))), result=extraction(),
+                           quote_failures=[], quotes_checked=1, error=None, usage=None, cost_usd=0.01,
+                           cache_hit=False, response_id=None, latency_s=None)
+    with sqlite3.connect(path) as conn:  # as a database from before R3: no key columns
+        for column in ("input_sha", "prompt_version", "renderer_version", "rubric"):
+            conn.execute(f"ALTER TABLE extractions DROP COLUMN {column}")
+    db.save_details(changed, {"readme": README + "\nmore\n", "readme_path": "README.md", "files": [],
+                              "files_truncated": False, "manifests": {}, "releases": []}, pushed_at=None)
+    assert migrate(["--db", str(path)]) == 0  # dry run: read-only, adds no column
+    dry = json.loads(capsys.readouterr().out)
+    assert dry["stamps"] == 2 and not dry["written"]
+    with sqlite3.connect(path) as conn:
+        assert "input_sha" not in {r[1] for r in conn.execute("PRAGMA table_info(extractions)")}
+    assert migrate(["--db", str(path), "--write"]) == 0
+    capsys.readouterr()
+    db = PipelineDB(path)
+    rows = {r["repo_id"]: r for r in db.extractions()}
+    assert rows[same]["renderer_version"] == RENDERER_VERSION and rows[changed]["renderer_version"] == "r0"
+    assert all(r["input_sha"] == input_sha(db.candidate(k)) and r["prompt_version"] is None for k, r in rows.items())
+    # Stamped as the current reading: nothing is read again until the text changes or a refresh asks for r1.
+    assert all(is_extracted(db, db.candidate(k), "m") for k in rows)
+    assert not is_extracted(db, db.candidate(changed), "m", refresh_before="r1")
+    assert is_extracted(db, db.candidate(same), "m", refresh_before="r1")

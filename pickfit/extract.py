@@ -15,6 +15,16 @@ candidates extracted before features existed; its rows have status "features",
 so the earlier extraction stays the one profiles and verification build on, and
 they merge the features into it (feature_rows).
 
+An extraction is reused while the raw text it read is the same (input_sha: the
+README, release notes, store entries and install pages as fetched, before any
+rendering), whatever pickfit changes in how it renders that text into <source>
+blocks or words the instructions. Each row records input_sha, prompt_version and
+renderer_version; a change to the prompt or the renderer reads nothing again by
+itself. Reading again is asked for by name (`refresh_before`, or
+`pickfit extract --refresh-before p5`), so a person decides which rows to redo.
+A row written before these keys (no input_sha) is judged as before, by the
+rendered sources, until scripts/migrate_extraction_keys.py stamps it.
+
 Batches run a few calls at once (`concurrency`). A call that fails for a
 transient reason (server or network error after call_meta's own retries, an
 unparseable answer, or running out of output tokens) is tried again, up to
@@ -59,6 +69,12 @@ DEFAULT_CONCURRENCY = 4
 # Same instructions and schema on every call: the provider caches that prefix (Claude: the system prompt
 # is a cache breakpoint; the key is a hint only Meta's API reads).
 PROMPT_CACHE_KEY = "pickfit-extract-v4"  # v2: the mcp section; v3: package-store entries; v4: install guides
+# What a row was read with (docs/proposals/scoring.md R3). Bump PROMPT_VERSION with INSTRUCTIONS or the schema,
+# RENDERER_VERSION with build_sources or render_sources; neither makes anything be read again by itself.
+PROMPT_VERSION = "p4"  # PROMPT_CACHE_KEY's v4
+WEB_PROMPT_VERSION = "web-p1"
+FEATURES_PROMPT_VERSION = "features-p1"
+RENDERER_VERSION = "r1"
 # call_meta has already retried these; one more try later often gets through.
 TRANSIENT_ERRORS = ("APIConnectionError", "APITimeoutError", "InternalServerError", "RateLimitError",
                     "APIStatusError")
@@ -151,9 +167,8 @@ def build_sources(candidate: dict[str, Any]) -> list[Source]:
         branch = repo.get("default_branch") or "HEAD"
         sources.append(Source("readme", "readme", f"{url}/blob/{branch}/{path}",
                               _neutralize(readme[:README_MAX_CHARS]), len(readme) > README_MAX_CHARS))
-    releases = candidate.get("releases") or []
-    if releases:
-        release = next((r for r in releases if not r.get("prerelease")), releases[0])
+    release = newest_release(candidate.get("releases") or [])
+    if release is not None:
         parts = [f"tag: {release.get('tag')}"]
         if release.get("name"):
             parts.append(f"name: {release['name']}")
@@ -170,6 +185,11 @@ def build_sources(candidate: dict[str, Any]) -> list[Source]:
     sources += [listing_source(x) for x in candidate.get("listings") or []]
     sources += docs_sources(candidate)
     return sources
+
+
+def newest_release(releases: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """The release the sources show: the newest that is not a prerelease, else the newest."""
+    return next((r for r in releases if not r.get("prerelease")), releases[0]) if releases else None
 
 
 def docs_sources(candidate: dict[str, Any]) -> list[Source]:
@@ -271,7 +291,93 @@ def build_body(sources: list[Source], features_only: bool = False) -> dict[str, 
 
 
 def sources_sha(sources: list[Source]) -> str:
+    """sha256 of the sources as rendered for the model: changes with the renderer as well as with the text."""
     return hashlib.sha256(render_sources(sources).encode("utf-8")).hexdigest()
+
+
+_REPO_TEXT = ("description", "topics", "homepage")
+
+
+def raw_inputs(candidate: dict[str, Any]) -> dict[str, Any]:
+    """The text the sources are built from, as fetched and before any rendering: no truncation, escaping, labels or
+    URLs of pickfit's own. Which release is shown (newest_release) is part of it, so a new prerelease next to a
+    release changes nothing, as in the sources."""
+    if candidate.get("site"):
+        site = candidate["site"]
+        repo = candidate.get("repo") or {}
+        return {"site": {"url": site.get("site_url"), "page": site.get("page") or ""},
+                "repo": {"full_name": repo["full_name"], **{k: repo.get(k) for k in _REPO_TEXT}}
+                if repo.get("full_name") else None,
+                "readme": site.get("readme") or ""}
+    repo = candidate["repo"]
+    release = newest_release(candidate.get("releases") or [])
+    return {
+        "repo": {"full_name": repo.get("full_name") or candidate["full_name"], **{k: repo.get(k) for k in _REPO_TEXT}},
+        "readme": candidate.get("readme") or "",
+        "release": None if release is None else {
+            **{k: release.get(k) for k in ("tag", "name", "published_at", "body")},
+            "assets": [a.get("name") for a in release.get("assets") or []]},
+        "listings": [{k: x.get(k) for k in ("source", "item_id", "item_url", "name", "facts")}
+                     for x in candidate.get("listings") or []],
+        "docs": [{k: page.get(k) for k in ("kind", "url", "text")} for page in candidate.get("docs") or []],
+    }
+
+
+def input_sha(candidate: dict[str, Any]) -> str:
+    """sha256 of raw_inputs: the reuse key of an extraction and of the docs rubric (R3)."""
+    text = json.dumps(raw_inputs(candidate), ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+_VERSION = re.compile(r"^(?P<family>[a-z-]*?)-?(?P<kind>[pr])(?P<n>\d+)$")
+
+
+def _version(text: str | None, kind: str) -> tuple[str, int] | None:
+    """('web', 1) for 'web-p1' and kind 'p'; None for text that is not of that kind."""
+    m = _VERSION.match(text or "")
+    return (m["family"], int(m["n"])) if m and m["kind"] == kind else None
+
+
+def parse_refresh(spec: str) -> tuple[str, str, int]:
+    """`--refresh-before` as (kind, family, number): 'p5' -> ('p', '', 5), 'web-p2' -> ('p', 'web', 2),
+    'r2' -> ('r', '', 2). ValueError for anything else."""
+    m = _VERSION.match(spec)
+    if not m:
+        raise ValueError(f"--refresh-before takes a prompt or renderer version such as p5, web-p2 or r2, not {spec!r}")
+    return m["kind"], m["family"], int(m["n"])
+
+
+def older_than(row: dict[str, Any], spec: str | None) -> bool:
+    """Whether a row was read with a prompt or renderer older than `spec` (parse_refresh). A row with no version
+    (written before R3) is older than every version; a prompt of another family (web, features) is not compared."""
+    if not spec:
+        return False
+    kind, family, number = parse_refresh(spec)
+    if kind == "r":
+        have = _version(row.get("renderer_version"), "r")
+        return have is None or have[1] < number
+    have = _version(row.get("prompt_version"), "p")
+    if have is None:
+        return True
+    return have[0] == family and have[1] < number
+
+
+def extraction_is_current(row: dict[str, Any], candidate: dict[str, Any], refresh_before: str | None = None) -> bool:
+    """Whether a finished extraction row still stands for the candidate as it is now: the same raw text (input_sha),
+    and not read with a prompt or renderer older than `refresh_before`. A row without input_sha (written before R3,
+    not yet stamped by scripts/migrate_extraction_keys.py) is judged as before, by the rendered sources."""
+    if older_than(row, refresh_before):
+        return False
+    if row.get("input_sha"):
+        return row["input_sha"] == input_sha(candidate)
+    return row["sources_sha"] == sources_sha(build_sources(candidate))
+
+
+def prompt_version(sources: list[Source], features_only: bool = False) -> str:
+    """The prompt a call over these sources uses (build_body picks the same one)."""
+    if features_only:
+        return FEATURES_PROMPT_VERSION
+    return WEB_PROMPT_VERSION if any(s.kind == "website" for s in sources) else PROMPT_VERSION
 
 
 # --- Quote check ------------------------------------------------------------------
@@ -385,6 +491,8 @@ def extract_one(candidate: dict[str, Any], *, model: str, run_id: str, reasoning
     started = time.monotonic()
     row: dict[str, Any] = {"repo_id": candidate["repo_id"], "run_id": run_id, "model": model,
                            "reasoning_effort": reasoning_effort, "sources_sha": sources_sha(sources),
+                           "input_sha": input_sha(candidate), "prompt_version": prompt_version(sources, features_only),
+                           "renderer_version": RENDERER_VERSION,
                            "result": None, "quote_failures": [], "quotes_checked": 0, "error": None,
                            "usage": None, "cost_usd": 0.0, "cache_hit": False, "response_id": None}
     try:
@@ -462,21 +570,22 @@ def same_tier(model: str) -> tuple[str, ...]:
     return PROD_MODELS if model in PROD_MODELS else (model,)
 
 
-def _extracted(db: PipelineDB, candidate: dict[str, Any], model: str) -> bool:
-    """Whether `model` (or its tier) has a finished extraction of the candidate's sources as they are now."""
-    sha = sources_sha(build_sources(candidate))
+def is_extracted(db: PipelineDB, candidate: dict[str, Any], model: str, refresh_before: str | None = None) -> bool:
+    """Whether `model` (or its tier) has a finished extraction that still stands for the candidate
+    (extraction_is_current): the same raw text, and not older than `refresh_before`."""
     for m in same_tier(model):
         last = db.last_extraction(candidate["repo_id"], m, exclude=(FEATURES_STATUS,))
-        if last and last["status"] in _DONE and last["sources_sha"] == sha:
+        if last and last["status"] in _DONE and extraction_is_current(last, candidate, refresh_before):
             return True
     return False
 
 
 def select_candidates(db: PipelineDB, *, model: str, limit: int, repo_ids: list[str] | None = None,
                       force: bool = False, features_only: bool = False,
-                      categories: list[str] | None = None) -> list[dict[str, Any]]:
-    """Rule-passed candidates not yet extracted from the same sources by this model (or, for the prod
-    model, by the hackathon's: same_tier).
+                      categories: list[str] | None = None, refresh_before: str | None = None) -> list[dict[str, Any]]:
+    """Rule-passed candidates not yet extracted from the same raw text by this model (or, for the prod
+    model, by the hackathon's: same_tier). refresh_before (a version such as p5 or r2) also takes those whose
+    extraction used an older prompt or renderer.
 
     Candidates the prescreen rejected are skipped unless asked for by id; unscreened ones still go.
 
@@ -501,7 +610,7 @@ def select_candidates(db: PipelineDB, *, model: str, limit: int, repo_ids: list[
         if features_only:
             if not force and any(feature_rows(db, c["repo_id"], m) for m in same_tier(model)):
                 continue
-        elif not force and _extracted(db, c, model):
+        elif not force and is_extracted(db, c, model, refresh_before):
             continue
         todo.append(c)
     todo.sort(key=lambda c: c["repo"].get("pushed_at") or "", reverse=True)
@@ -525,12 +634,12 @@ def run_extract(*, limit: int, model: str = "dev", reasoning_effort: str = "mini
                 concurrency: int = 1, max_attempts: int = MAX_ATTEMPTS,
                 db_path: Path | None = None, client: Any = None, ledger: Ledger | None = None,
                 runs_dir: Path | str | None = None, cache: bool | None = None,
-                log: Callable[[str], None] | None = None) -> dict[str, Any]:
+                log: Callable[[str], None] | None = None, refresh_before: str | None = None) -> dict[str, Any]:
     """Extract up to `limit` candidates, `concurrency` calls at a time; returns a run summary.
 
     candidates: extract these (such as hosted web apps, pickfit.discover.webapps) instead of selecting
-    from the candidate pool; one already extracted from the same sources by this model is skipped
-    unless `force`.
+    from the candidate pool; one already extracted from the same raw text by this model is skipped
+    unless `force`. refresh_before (p5, web-p2, r2): also read again what an older prompt or renderer read.
 
     The budget or MAX_CONSECUTIVE_ERRORS failed candidates in a row stop the batch:
     no new call starts, and calls already in flight finish and are stored.
@@ -538,14 +647,16 @@ def run_extract(*, limit: int, model: str = "dev", reasoning_effort: str = "mini
     log = log or (lambda line: print(line, file=sys.stderr))
     if limit <= 0 or concurrency <= 0 or max_attempts <= 0:
         raise ValueError("limit, concurrency and max_attempts must be positive")
+    if refresh_before:
+        parse_refresh(refresh_before)  # refuse a malformed version before anything is selected
     model_id = resolve_model(model)
     db = PipelineDB(db_path or pipeline_db_path())
     run_id = f"{STAGE}{'-features' if features_only else ''}-" + taipei_now().strftime("%Y%m%d-%H%M%S")
     if candidates is not None:
-        todo = [c for c in candidates if force or not _extracted(db, c, model_id)][:limit]
+        todo = [c for c in candidates if force or not is_extracted(db, c, model_id, refresh_before)][:limit]
     else:
         todo = select_candidates(db, model=model_id, limit=limit, repo_ids=repo_ids, force=force,
-                                 features_only=features_only, categories=categories)
+                                 features_only=features_only, categories=categories, refresh_before=refresh_before)
     log(f"extract {run_id}: {len(todo)} candidates with {model_id} (effort {reasoning_effort}, "
         f"{concurrency} at a time, up to {max_attempts} attempts)")
     stop = threading.Event()

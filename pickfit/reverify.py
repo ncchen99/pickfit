@@ -469,13 +469,12 @@ class Reverifier:
         result.outcome = "rewritten"
 
     def _extraction(self, candidate: dict[str, Any], run_id: str, result: Result) -> dict[str, Any]:
-        from pickfit.extract import FEATURES_STATUS, build_sources, sources_sha
+        from pickfit.extract import FEATURES_STATUS, extraction_is_current
 
-        current = sources_sha(build_sources(candidate))
         stored = [e for model in EXTRACTION_MODELS
                   if (e := self.db.last_extraction(candidate["repo_id"], model, exclude=(FEATURES_STATUS,)))
                   and e["status"] in DONE_EXTRACTIONS]
-        same = next((e for e in stored if e["sources_sha"] == current), None)
+        same = next((e for e in stored if extraction_is_current(e, candidate)), None)
         if same:
             return self._with_features(same)
         rows = self.steps.extract(candidate, run_id)
