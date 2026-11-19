@@ -1,0 +1,722 @@
+{
+  "schema_version": "software.v1",
+  "slug": "xfr",
+  "repo_id": "gh:1146944432",
+  "name": "xfr",
+  "summary": "A network bandwidth testing tool similar to iperf3, with a live terminal UI, multi-client server, and TCP, UDP, QUIC and MPTCP support.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "security_net",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "bandwidth",
+    "benchmark",
+    "cli",
+    "iperf",
+    "network",
+    "rust",
+    "tui"
+  ],
+  "use_cases": [
+    "measure throughput of a VPN tunnel",
+    "detect UDP congestion on a link",
+    "find a path's UDP payload limit",
+    "compare network performance before and after a change",
+    "find test servers on the LAN"
+  ],
+  "alternatives_to": [
+    "iperf3"
+  ],
+  "features": [
+    "live TUI with throughput graphs",
+    "multi-client server with dashboard",
+    "test TCP, UDP, QUIC and MPTCP",
+    "export results as JSON or CSV"
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/lance0/xfr",
+    "full_name": "lance0/xfr",
+    "created_at": "2026-01-31T23:43:42Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "rust>=1.88 (for cargo install)"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": false,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install xfr",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Open port 5201 for TCP and UDP in the firewall"
+      ],
+      "check": null,
+      "first_task": "xfr --help"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-xfr-20261119-210744-196e",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p /tmp/xfr && curl -fsSL -o /tmp/xfr/xfr.tar.gz https://github.com/lance0/xfr/releases/download/v0.15.0/xfr-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/xfr/xfr.tar.gz -C /tmp/xfr",
+          "purpose": "download and extract v0.15.0 x86_64 musl release binary"
+        },
+        {
+          "command": "mkdir -p ~/.local/bin && install -m 755 /tmp/xfr/xfr ~/.local/bin/xfr",
+          "purpose": "install xfr into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "~/.local/bin/xfr --version",
+        "expected_signal": "xfr 0.15.0"
+      },
+      "first_task": "xfr 127.0.0.1 -t 2s --json"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "cargo",
+      "steps": [
+        {
+          "command": "cargo install xfr",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [
+        "Open port 5201 for TCP and UDP in the firewall"
+      ],
+      "check": null,
+      "first_task": "xfr --help"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.15.0",
+    "published_at": "2026-11-11T21:59:22Z",
+    "url": "https://github.com/lance0/xfr/releases/tag/v0.15.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-19T21:10:12.952730+08:00",
+    "runs": [
+      {
+        "id": "verify-xfr-20261119-210744-196e",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:12c0a02edc50",
+        "checked_at": "2026-11-19T21:10:12.952730+08:00",
+        "tool_version": "xfr 0.15.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p /tmp/xfr && curl -fsSL -o /tmp/xfr/xfr.tar.gz https://github.com/lance0/xfr/releases/download/v0.15.0/xfr-x86_64-unknown-linux-musl.tar.gz && tar -xzf /tmp/xfr/xfr.tar.gz -C /tmp/xfr",
+            "purpose": "download and extract v0.15.0 x86_64 musl release binary"
+          },
+          {
+            "command": "mkdir -p ~/.local/bin && install -m 755 /tmp/xfr/xfr ~/.local/bin/xfr",
+            "purpose": "install xfr into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "~/.local/bin/xfr --version",
+            "expected_signal": "xfr 0.15.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "xfr 0.15.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "xfr 127.0.0.1 -t 2s --json",
+            "expected_signal": "\"bytes_total\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"bytes_total\": 4278452224,",
+            "setup": [
+              {
+                "command": "xfr serve",
+                "background": true,
+                "port": 5201
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "xfr 127.0.0.1 -u -b 100M -t 2s --csv",
+            "expected_signal": "test_id,duration_secs,transfer_bytes,throughput_mbps",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "test_id,duration_secs,transfer_bytes,throughput_mbps,retransmits,jitter_ms,lost,lost_percent,bytes_sent,bytes_received,throughput_send_mbps,throughput_recv_mbps,udp_send_packets_received,udp_send_packets_lost,udp_send_lost_percent,udp_send_jitter_ms,udp_recv_packets_received,udp_recv_packets_lost,u…",
+            "setup": [
+              {
+                "command": "xfr serve",
+                "background": true,
+                "port": 5201
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "xfr 127.0.0.1 -Q -t 2s -P 2",
+            "expected_signal": "Per-Stream Results:",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Per-Stream Results:",
+            "setup": [
+              {
+                "command": "xfr serve",
+                "background": true,
+                "port": 5201
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "(sleep 6; printf q; sleep 2) | TERM=xterm-256color timeout 30 script -qec \"xfr 127.0.0.1 -t 2s\" /dev/null",
+            "expected_signal": "xfr Test Results",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "xfr Test Results",
+            "setup": [
+              {
+                "command": "xfr serve",
+                "background": true,
+                "port": 5201
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "((sleep 5; printf q; sleep 1) | TERM=xterm-256color timeout 30 script -qec \"xfr serve --tui -p 5203\" /dev/null &) ; sleep 2 && xfr 127.0.0.1 -p 5203 -t 2s --json",
+            "expected_signal": "\"bytes_total\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"bytes_total\": 3917217792,",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "cargo install xfr (Rust 1.88+)",
+            "actually_needed": "No Rust toolchain in the box; used the GitHub release binary xfr-x86_64-unknown-linux-musl.tar.gz (v0.15.0), which the README lists as a channel",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Live client TUI",
+            "actually_needed": "Without a terminal, the client TUI needs a pty (script) and waits for the q key after the test ends; with nothing sent it ran until the timeout killed it",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Linux MPTCP",
+            "actually_needed": "Needs a kernel with CONFIG_MPTCP=y; this box's kernel lacks it",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "JSON test result with bytes_total, CSV UDP test with summary header and row near 100 Mbps, and version 'xfr 0.15.0' all printed with exit code 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-xfr-20261119-210744-196e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-xfr-20261119-210744-196e/check-1-cmd7.judged.png",
+            "runs/verify/verify-xfr-20261119-210744-196e/check-2-cmd8.judged.png",
+            "runs/verify/verify-xfr-20261119-210744-196e/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.263742,
+        "features": [
+          {
+            "feature": "live TUI with throughput graphs",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Output shows only the final text results summary and status escape codes, no live TUI graphs or per-stream view is visible."
+          },
+          {
+            "feature": "multi-client server with dashboard",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: The client test against the server succeeded, but no dashboard rendering is shown, only status codes like '1 active test(s)'."
+          },
+          {
+            "feature": "test TCP, UDP, QUIC and MPTCP",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2,
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "export results as JSON or CSV",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v1",
+    "database": "OSV.dev",
+    "checked_at": "2026-11-19T21:10:20+08:00",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/lance0/xfr@cb8be9f05ec4",
+      "Cargo.lock"
+    ],
+    "packages_checked": 429,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": []
+  },
+  "scores": {
+    "formula_version": "b3.v6",
+    "computed_at": "2026-11-19T21:10:12+08:00",
+    "quality": {
+      "total": 88.0,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      }
+    },
+    "popularity": {
+      "score": 92.0,
+      "signals": {
+        "stars": 591,
+        "monthly_downloads": 317,
+        "forks": 22,
+        "dependents": null,
+        "release_downloads": 5432,
+        "hn_top_score": 4,
+        "registries_count": 2
+      },
+      "age_days": 291,
+      "packages": [
+        "crates:xfr",
+        "homebrew:xfr"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 7.04
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:10:12.973538+08:00",
+      "sources_sha": "174e35efb7444ef419c7e1d5288dcf8a7fe674a51045c21aad7b0405e86067bf",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Multi-client server with an optional dashboard: `xfr serve --tui`."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "| Measure a VPN tunnel | `xfr 10.8.0.1 -t 30s` |"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "cargo install xfr            # Rust 1.88+; or brew install xfr"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "brew install xfr                       # macOS/Linux"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "xfr 192.168.1.1              # On the client: TCP, 10 seconds"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Set defaults in `~/.config/xfr/config.toml`, in `/etc/xfr/config.toml` for the whole system, or in any file passed with `--config`; CLI values override them."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "For connection failures, throughput tuning, and UDP loss, start with"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Release binaries cover Linux x86_64/ARM64/ARMv7, macOS Apple Silicon, and"
+        }
+      },
+      "unquoted": []
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/lance0/xfr",
+      "fetched_at": "2026-11-19T21:07:30+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/lance0/xfr/blob/master/README.md",
+      "fetched_at": "2026-11-19T21:07:28+08:00"
+    },
+    {
+      "id": "release:v0.15.0",
+      "kind": "release",
+      "url": "https://github.com/lance0/xfr/releases/tag/v0.15.0",
+      "fetched_at": "2026-11-19T21:07:28+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Live client TUI with throughput graphs and per-stream statistics.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "xfr serve                    # On the server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "topics: bandwidth, benchmark, cli, iperf, network, rust, tui",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A modern iperf3 alternative with a live TUI, multi-client server, MPTCP, and QUIC support. Built in Rust.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# xfr",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "CI covers Ubuntu, macOS, and Windows.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "cargo install xfr            # Rust 1.88+; or brew install xfr",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/prerequisites/apple_silicon_only",
+      "source_id": "readme",
+      "quote": "macOS Intel can build from crates.io",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Allow port 5201 for TCP\nand UDP",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T21:07:30+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T21:07:30+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T21:07:30+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T21:07:30+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.15.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T21:07:28+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Measure a VPN tunnel | `xfr 10.8.0.1 -t 30s`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Detect UDP congestion | `xfr <host> -u -b 500M -t 60s`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Find a path's UDP payload limit | `xfr <host> --probe-mtu`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Compare before and after",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "Find servers on the LAN | `xfr discover`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "github_api",
+      "quote": "A modern iperf3 alternative",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Live client TUI with throughput graphs and per-stream statistics.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Multi-client server with an optional dashboard: `xfr serve --tui`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "TCP, UDP, QUIC, and Linux MPTCP; parallel streams and bidirectional tests.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Plain text, JSON, streaming JSON, and CSV output for automation.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install xfr",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install xfr",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "cargo install xfr",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "xfr uses its\nown protocol and does not connect to iperf3 servers.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T21:07:39+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T21:07:28+08:00",
+  "updated_at": "2026-11-19T21:10:20+08:00"
+}
