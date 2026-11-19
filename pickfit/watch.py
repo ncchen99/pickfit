@@ -1561,17 +1561,14 @@ class Watcher:
         self._mark_deployed()
         started: list[str] = []
         for slot in free:
+            why, line = None, None
             if self.restart_wanted:
-                self._held_back(slot, "restart: new program code, nothing new starts until what runs is done")
-            elif not free[slot]:
-                self._held_back(slot, f"slots: {self.busy(slot)} of {self.slot_limit(slot)} running")
-            else:
-                self._held_back(slot, None)
+                why = "restart: new program code, nothing new starts until what runs is done"
             for sub in todo.get(slot, []):
                 source = submission_source(sub)
                 why = self.blocked(slot, source)
                 if why:  # people's rows come first, so whatever follows is held back as well
-                    self._held_back(slot, why, f"not starting {sub['id']}: {why}")
+                    line = f"not starting {sub['id']}: {why}"
                     break
                 try:
                     if not claim(self.d1, sub["id"], self.now()):
@@ -1581,8 +1578,9 @@ class Watcher:
                     break
                 self._start(pool, sub, slot, source)
                 started.append(sub["id"])
-            if self._why.get(slot) is None and self.busy(slot) >= self.slot_limit(slot):
-                self._held_back(slot, f"slots: {self.busy(slot)} of {self.slot_limit(slot)} running")
+            if why is None and self.busy(slot) >= self.slot_limit(slot):
+                why = f"slots: {self.busy(slot)} of {self.slot_limit(slot)} running"
+            self._held_back(slot, why, line)  # once a tick: a reason that stays is logged once
         if self.reverifier is not None and self._start_reverify(pool):
             started.append("reverify")
         if not self.restart_wanted:
@@ -1603,9 +1601,13 @@ class Watcher:
             busy = set(self._lane_batches)
             running = set(self._lane_running)
         parked: dict[str, list[datetime]] = {}
+        first: dict[str, tuple[bool, str, str]] = {}  # lane -> the job its batch would start first
         for job in self.parked_jobs():
             if job.lane in self.lanes and job.submission_id not in running:
                 parked.setdefault(job.lane, []).append(_parse_time(job.parked_at or job.started_at))
+                key = (submission_source({"id": job.submission_id}) == "harvest", job.parked_at or "",
+                       job.submission_id)
+                first[job.lane] = min(first.get(job.lane, key), key)
         self._parked_counts = {name: len(parked.get(name, [])) for name in self.lanes}
         free: dict[str, Any] = {}
         for name, lane in self.lanes.items():
@@ -1632,12 +1634,17 @@ class Watcher:
                 self._why[name] = f"waiting for its batch: it starts {free[name].policy.describe()}"
         started = []
         for name, why in due.items():
+            # A batch its first job could not start in would only make the lane ready (rent a Mac, say) for nothing.
+            harvest, _, sid = first[name]
+            stop = self.blocked(name, "harvest" if harvest else "user")
+            if stop:
+                self._held_back(name, stop, f"no batch for {sid}: {stop}")
+                continue
             self.log(f"[{name}] batch of {len(parked[name])}: {why}")
             self._why[name] = None
             batch = self._batch_pool.submit(self._lane_batch, name)
             with self._state_lock:
                 self._lane_batches[name] = batch
-            batch.add_done_callback(lambda _f: self._wake.set())
             started.append(name)
         return started
 

@@ -81,8 +81,8 @@ def test_the_money_cap_rolls_over_24_hours_and_says_which_numbers_hold_it(env: d
     held = "rolling 24 h cap: $75.00 spent + $0.00 held for 0 running + $6.00 for the next > $80.00 (--daily-usd 80)"
     assert w.blocked() == held
     with ThreadPoolExecutor(2) as pool:
-        assert w.tick(pool) == []
-    assert any(line == f"[watch] not starting sub_1: {held}" for line in lines)
+        assert w.tick(pool) == [] and w.tick(pool) == []
+    assert lines.count(f"[watch] not starting sub_1: {held}") == 1  # a reason that stays is logged once
     linux = status(w)["lanes"]["linux"]
     assert (linux["running"], linux["queued"], linux["not_starting"]) == (0, 1, held)
     assert status(w)["money"]["spent_24h_usd"] == 75.0 and status(w)["money"]["cap_24h_usd"] == 80
@@ -307,6 +307,25 @@ def test_the_status_says_why_a_parked_lane_waits(env: dict[str, Any]) -> None:
     assert (macos["parked"], macos["running"], macos["limit"]) == (1, 0, 1)
     assert macos["not_starting"] == "waiting for its batch: it starts when 3 wait or the oldest has waited 24 h"
     assert "[watch] linux 0/6 · macos 0/1, 1 parked (waiting for its batch)" in lines
+
+
+def test_a_lane_whose_first_job_has_no_money_starts_no_batch(env: dict[str, Any]) -> None:
+    from pickfit.lanes import Policy
+
+    from test_watch_lanes import work
+
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    mac = FakeLane("macos", "macos", env["tmp"], mac_run("run-mac-1"),
+                   policy=Policy(min_batch=2, max_wait=timedelta(hours=24)))
+    lines: list[str] = []
+    w = make(env, pipeline=Pipeline(env["tmp"], result=extraction(**MAC_ONLY)), lanes={"macos": mac}, lines=lines)
+    w.run(once=True)  # parked, one of two
+    mac.up, w.s.daily_usd = True, 0.5  # a Mac is up, but the money is not there
+    w.run(once=True)
+    assert work(mac) == []  # not even made ready: a rented Mac would wait for nothing
+    held = "rolling 24 h cap: $0.02 spent + $0.00 held for 0 running + $6.00 for the next > $0.50 (--daily-usd 0.5)"
+    assert status(w)["lanes"]["macos"]["not_starting"] == held
+    assert f"[macos] no batch for sub_1: {held}" in lines
 
 
 def test_the_status_says_when_a_lane_rests(env: dict[str, Any]) -> None:
