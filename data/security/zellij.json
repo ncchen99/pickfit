@@ -1,0 +1,243 @@
+{
+ "slug": "zellij",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "ad3041d6dc1fcb223dd993e73e0a0c6041523470",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 656
+  },
+  "scopes": {
+   "runtime": 585,
+   "optional": 28,
+   "build": 8,
+   "dev": 35
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 5
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:RUSTSEC-2026-0482 crates:cap-primitives@3.4.4 (conditional)"
+  ],
+  "counts": {
+   "conditional": 1
+  },
+  "uncounted": 4,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 656,
+  "packages_checked": 656,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 656,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/zellij-org/zellij@ad3041d6dc1f",
+  "Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:cap-primitives",
+   "version": "3.4.4",
+   "advisory": "RUSTSEC-2026-0482",
+   "severity": "CRITICAL",
+   "fixed_in": "3.4.6",
+   "summary": "Paths or symlinks ending in a slash escape the sandbox",
+   "malicious": false,
+   "aliases": [
+    "GHSA-hp8f-xmx4-4qrg"
+   ],
+   "published": "2026-08-20T12:00:00Z",
+   "modified": "2026-11-11T08:45:02.459487612Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:N",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/cap-primitives@3.4.4",
+   "fix_published_at": "2026-08-20T15:13:07Z",
+   "scope": "runtime",
+   "paths": [
+    "zellij-server > wasmi_wasi > wasi-common > cap-fs-ext > cap-primitives"
+   ],
+   "workspace": "zellij-server",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:crossbeam-epoch",
+   "version": "0.9.8",
+   "advisory": "RUSTSEC-2026-0204",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.9.20",
+   "summary": "Invalid pointer dereference in `fmt::Pointer` impl for `Atomic` and `Shared` when the underlying pointer is invalid",
+   "malicious": false,
+   "published": "2026-07-06T12:00:00Z",
+   "modified": "2026-07-06T22:30:04.159269138Z",
+   "purl": "pkg:cargo/crossbeam-epoch@0.9.8",
+   "scope": "runtime",
+   "paths": [
+    "zellij-server > crossbeam > crossbeam-epoch"
+   ],
+   "workspace": "zellij-server",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:fmt::Pointer",
+    "symbol:Atomic",
+    "symbol:Shared"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "zellij-terminal/src/input/mouse.rs:100: return CursorIcon::Pointer;",
+     "named only in files that do not import crossbeam-epoch"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:libsqlite3-sys",
+   "version": "0.27.0",
+   "advisory": "RUSTSEC-2026-0459",
+   "cves": [
+    "CVE-2026-119375"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.39.0",
+   "summary": "`libsqlite3-sys` via C SQLite CVE-2026-119375",
+   "malicious": false,
+   "aliases": [
+    "BIT-sqlite-2026-119375",
+    "CVE-2026-119375",
+    "GHSA-72w2-rjgg-q729",
+    "RUSTSEC-2026-0502"
+   ],
+   "published": "2026-10-30T12:00:00Z",
+   "modified": "2026-11-17T13:41:05.770775012Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/libsqlite3-sys@0.27.0",
+   "scope": "runtime",
+   "paths": [
+    "zellij-utils > rusqlite > libsqlite3-sys"
+   ],
+   "workspace": "zellij-utils",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00195,
+   "epss_percentile": 0.09275,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:libz-sys",
+   "version": "1.1.8",
+   "advisory": "RUSTSEC-2026-0418",
+   "severity": "UNKNOWN",
+   "fixed_in": "1.1.31",
+   "summary": "libz-sys build script leaks environment variables in the build directory",
+   "malicious": false,
+   "aliases": [
+    "GHSA-8p3x-q3q3-q3v5"
+   ],
+   "published": "2026-10-28T12:00:00Z",
+   "modified": "2026-10-29T14:15:02.333141406Z",
+   "purl": "pkg:cargo/libz-sys@1.1.8",
+   "scope": "runtime",
+   "paths": [
+    "zellij > isahc > curl-sys > libz-sys"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:h2",
+   "version": "0.4.15",
+   "advisory": "RUSTSEC-2026-0258",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.4.16",
+   "summary": "h2 unbounded empty DATA frames",
+   "malicious": false,
+   "aliases": [
+    "GHSA-q83h-524g-xf6h"
+   ],
+   "published": "2026-08-17T12:00:00Z",
+   "modified": "2026-10-12T18:00:10.934581734Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/h2@0.4.15",
+   "scope": "optional",
+   "paths": [
+    "zellij-client > axum > hyper > h2"
+   ],
+   "workspace": "zellij-client",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

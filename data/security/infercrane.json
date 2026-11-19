@@ -1,0 +1,872 @@
+{
+ "slug": "infercrane",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "d506db24965967b0262033704d5cb5ad6c902755",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "go": 92,
+   "npm": 181
+  },
+  "scopes": {
+   "runtime": 100,
+   "peer": 4,
+   "dev": 169
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 19
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-mgcc-cww5-fp2q go:github.com/go-jose/go-jose/v3@v3.0.5 (conditional)"
+  ],
+  "counts": {
+   "conditional": 1
+  },
+  "uncounted": 18,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 273,
+  "packages_checked": 273,
+  "components": [
+   {
+    "ecosystem": "go",
+    "component": "go.mod",
+    "status": "scanned",
+    "packages": 40,
+    "gaps": []
+   },
+   {
+    "ecosystem": "go",
+    "component": "integrations/terraform/go.mod",
+    "status": "scanned",
+    "packages": 55,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "sdk/ai-sdk-provider/package-lock.json",
+    "status": "scanned",
+    "packages": 179,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "sdk/typescript/package-lock.json",
+    "status": "scanned",
+    "packages": 3,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/infercrane/infercrane@d506db249659",
+  "go.mod",
+  "integrations/terraform/go.mod",
+  "sdk/ai-sdk-provider/package-lock.json",
+  "sdk/typescript/package-lock.json"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.58.0",
+   "advisory": "GO-2026-6603",
+   "cves": [
+    "CVE-2026-78659"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "HTTP/2 server memory exhaustion due to Trailer headers in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-78659",
+    "CVE-2026-78659"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:13.462737073Z",
+   "dos_only": false,
+   "purl": "pkg:golang/golang.org/x/net@v0.58.0",
+   "scope": "runtime",
+   "paths": [
+    "integrations/terraform/go.mod > golang.org/x/net"
+   ],
+   "workspace": "integrations/terraform",
+   "found_in": "integrations/terraform/go.mod",
+   "kev": false,
+   "epss": 0.00866,
+   "epss_percentile": 0.59439,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:CanonicalHeaderKey",
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "internal/brezelsandbox/client.go:592: canonical := http.CanonicalHeaderKey(name)"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.58.0",
+   "advisory": "GO-2026-6610",
+   "cves": [
+    "CVE-2026-78660"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "HTTP/2 transport accepts malformed framing-related headers in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-78660",
+    "CVE-2026-78660"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:14.502576208Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.58.0",
+   "scope": "runtime",
+   "paths": [
+    "integrations/terraform/go.mod > golang.org/x/net"
+   ],
+   "workspace": "integrations/terraform",
+   "found_in": "integrations/terraform/go.mod",
+   "kev": false,
+   "epss": 0.00542,
+   "epss_percentile": 0.46363,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do",
+    "symbol:Client.Get"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "cmd/infercrane/finops_opencost.go:126: response, err := client.Do(request)"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.58.0",
+   "advisory": "GO-2026-6611",
+   "cves": [
+    "CVE-2026-78669"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "Excessive CPU consumption from repeated initial window changes in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-78669",
+    "CVE-2026-78669"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:14.349122729Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.58.0",
+   "scope": "runtime",
+   "paths": [
+    "integrations/terraform/go.mod > golang.org/x/net"
+   ],
+   "workspace": "integrations/terraform",
+   "found_in": "integrations/terraform/go.mod",
+   "kev": false,
+   "epss": 0.00847,
+   "epss_percentile": 0.58853,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:CanonicalHeaderKey",
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "internal/brezelsandbox/client.go:592: canonical := http.CanonicalHeaderKey(name)"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.58.0",
+   "advisory": "GO-2026-6612",
+   "cves": [
+    "CVE-2026-78663"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "Double flow control refund on HTTP/2 server streams in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-78663",
+    "CVE-2026-78663"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:14.440833902Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.58.0",
+   "scope": "runtime",
+   "paths": [
+    "integrations/terraform/go.mod > golang.org/x/net"
+   ],
+   "workspace": "integrations/terraform",
+   "found_in": "integrations/terraform/go.mod",
+   "kev": false,
+   "epss": 0.00858,
+   "epss_percentile": 0.59203,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:CanonicalHeaderKey",
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "internal/brezelsandbox/client.go:592: canonical := http.CanonicalHeaderKey(name)"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.58.0",
+   "advisory": "GO-2026-6617",
+   "cves": [
+    "CVE-2026-97032"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "HTTP/2 server crash due to HPACK encoder race in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-97032",
+    "CVE-2026-97032"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:14.222191133Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/net@v0.58.0",
+   "scope": "runtime",
+   "paths": [
+    "integrations/terraform/go.mod > golang.org/x/net"
+   ],
+   "workspace": "integrations/terraform",
+   "found_in": "integrations/terraform/go.mod",
+   "kev": false,
+   "epss": 0.00676,
+   "epss_percentile": 0.53036,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:CanonicalHeaderKey",
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "internal/brezelsandbox/client.go:592: canonical := http.CanonicalHeaderKey(name)"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/go-jose/go-jose/v3",
+   "version": "v3.0.5",
+   "advisory": "GHSA-mgcc-cww5-fp2q",
+   "cves": [
+    "CVE-2026-116587"
+   ],
+   "severity": "HIGH",
+   "summary": "Go JOSE: DoS when parsing JWKs that contain RSA keys",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116587"
+   ],
+   "published": "2026-10-27T19:01:30Z",
+   "modified": "2026-10-27T19:15:23.147827328Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-407",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/go-jose/go-jose/v3@v3.0.5",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/go-jose/go-jose/v3"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00489,
+   "epss_percentile": 0.42863,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2",
+   "fixed_in": null
+  },
+  {
+   "package": "go:github.com/go-jose/go-jose/v3",
+   "version": "v3.0.5",
+   "advisory": "GHSA-4w3g-jfj2-cw2q",
+   "cves": [
+    "CVE-2026-116585"
+   ],
+   "severity": "MODERATE",
+   "summary": "Go JOSE: Panic during CBC-HMAC processing",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116585"
+   ],
+   "published": "2026-10-28T21:14:00Z",
+   "modified": "2026-10-28T21:30:06.790863342Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-129"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/go-jose/go-jose/v3@v3.0.5",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/go-jose/go-jose/v3"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00264,
+   "epss_percentile": 0.18559,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2",
+   "fixed_in": null
+  },
+  {
+   "package": "go:github.com/go-jose/go-jose/v3",
+   "version": "v3.0.5",
+   "advisory": "GHSA-vvm8-gf78-28g4",
+   "cves": [
+    "CVE-2026-116586"
+   ],
+   "severity": "MODERATE",
+   "summary": "Go JOSE: Panics in JSON parsing",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116586"
+   ],
+   "published": "2026-10-28T21:14:08Z",
+   "modified": "2026-10-28T21:30:05.801821772Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-674"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/go-jose/go-jose/v3@v3.0.5",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/go-jose/go-jose/v3"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00292,
+   "epss_percentile": 0.22141,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2",
+   "fixed_in": null
+  },
+  {
+   "package": "go:golang.org/x/crypto",
+   "version": "v0.52.0",
+   "advisory": "GO-2026-5932",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.58.1-0.20261009181718-2f1f834330b2",
+   "summary": "The golang.org/x/crypto/openpgp package is unmaintained, unsafe by design, and has known security issues",
+   "malicious": false,
+   "published": "2026-07-07T22:15:29Z",
+   "modified": "2026-11-02T22:15:06.677088389Z",
+   "purl": "pkg:golang/golang.org/x/crypto@v0.52.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/crypto"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:golang.org/x/crypto/openpgp",
+    "symbol:golang.org/x/crypto/openpgp/packet",
+    "symbol:golang.org/x/crypto/openpgp/armor"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/crypto",
+   "version": "v0.52.0",
+   "advisory": "GO-2026-6303",
+   "cves": [
+    "CVE-2026-56854"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.55.0",
+   "summary": "Source-address critical option not enforced for non-public-key auth callbacks in golang.org/x/crypto/ssh",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-56854"
+   ],
+   "published": "2026-08-28T14:47:45Z",
+   "modified": "2026-08-29T10:10:52.440319762Z",
+   "purl": "pkg:golang/golang.org/x/crypto@v0.52.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/crypto"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00437,
+   "epss_percentile": 0.38754,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:NewServerConn",
+    "symbol:connection.serverAuthenticate"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/crypto",
+   "version": "v0.52.0",
+   "advisory": "GO-2026-6354",
+   "cves": [
+    "CVE-2026-78662"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.56.0",
+   "summary": "Prevent DoS on deadlocked undecided channel in golang.org/x/crypto/ssh",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-78662"
+   ],
+   "published": "2026-09-02T19:12:04Z",
+   "modified": "2026-09-03T10:10:55.147673102Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/crypto@v0.52.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/crypto"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00431,
+   "epss_percentile": 0.38104,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Dial",
+    "symbol:NewClientConn",
+    "symbol:NewControlClientConn"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/crypto",
+   "version": "v0.52.0",
+   "advisory": "GO-2026-6355",
+   "cves": [
+    "CVE-2026-56855"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.56.0",
+   "summary": "Prevent DoS on deadlocked established channel in golang.org/x/crypto/ssh",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-56855"
+   ],
+   "published": "2026-09-02T19:12:04Z",
+   "modified": "2026-11-14T13:12:14.167817306Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/crypto@v0.52.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/crypto"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.005,
+   "epss_percentile": 0.4361,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Dial",
+    "symbol:NewClientConn",
+    "symbol:NewControlClientConn"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/crypto",
+   "version": "v0.55.0",
+   "advisory": "GO-2026-5932",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.58.1-0.20261009181718-2f1f834330b2",
+   "summary": "The golang.org/x/crypto/openpgp package is unmaintained, unsafe by design, and has known security issues",
+   "malicious": false,
+   "published": "2026-07-07T22:15:29Z",
+   "modified": "2026-11-02T22:15:06.677088389Z",
+   "purl": "pkg:golang/golang.org/x/crypto@v0.55.0",
+   "scope": "runtime",
+   "paths": [
+    "integrations/terraform/go.mod > golang.org/x/crypto"
+   ],
+   "workspace": "integrations/terraform",
+   "found_in": "integrations/terraform/go.mod",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:golang.org/x/crypto/openpgp",
+    "symbol:golang.org/x/crypto/openpgp/packet",
+    "symbol:golang.org/x/crypto/openpgp/armor"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/crypto",
+   "version": "v0.55.0",
+   "advisory": "GO-2026-6354",
+   "cves": [
+    "CVE-2026-78662"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.56.0",
+   "summary": "Prevent DoS on deadlocked undecided channel in golang.org/x/crypto/ssh",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-78662"
+   ],
+   "published": "2026-09-02T19:12:04Z",
+   "modified": "2026-09-03T10:10:55.147673102Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/crypto@v0.55.0",
+   "scope": "runtime",
+   "paths": [
+    "integrations/terraform/go.mod > golang.org/x/crypto"
+   ],
+   "workspace": "integrations/terraform",
+   "found_in": "integrations/terraform/go.mod",
+   "kev": false,
+   "epss": 0.00431,
+   "epss_percentile": 0.38104,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Dial",
+    "symbol:NewClientConn",
+    "symbol:NewControlClientConn"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/crypto",
+   "version": "v0.55.0",
+   "advisory": "GO-2026-6355",
+   "cves": [
+    "CVE-2026-56855"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.56.0",
+   "summary": "Prevent DoS on deadlocked established channel in golang.org/x/crypto/ssh",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-56855"
+   ],
+   "published": "2026-09-02T19:12:04Z",
+   "modified": "2026-11-14T13:12:14.167817306Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/crypto@v0.55.0",
+   "scope": "runtime",
+   "paths": [
+    "integrations/terraform/go.mod > golang.org/x/crypto"
+   ],
+   "workspace": "integrations/terraform",
+   "found_in": "integrations/terraform/go.mod",
+   "kev": false,
+   "epss": 0.005,
+   "epss_percentile": 0.4361,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Dial",
+    "symbol:NewClientConn",
+    "symbol:NewControlClientConn"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/mod",
+   "version": "v0.38.0",
+   "advisory": "GO-2026-6179",
+   "cves": [
+    "CVE-2026-56865"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.40.0",
+   "summary": "Fix transparency log tile verification bypass in golang.org/x/mod/sumdb/tlog",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-56865",
+    "CVE-2026-56865"
+   ],
+   "published": "2026-08-13T21:43:54Z",
+   "modified": "2026-08-19T12:25:40.780492871Z",
+   "purl": "pkg:golang/golang.org/x/mod@v0.38.0",
+   "scope": "runtime",
+   "paths": [
+    "integrations/terraform/go.mod > golang.org/x/mod"
+   ],
+   "workspace": "integrations/terraform",
+   "found_in": "integrations/terraform/go.mod",
+   "kev": false,
+   "epss": 0.00129,
+   "epss_percentile": 0.0264,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:tileHashReader.ReadHashes"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/mod",
+   "version": "v0.38.0",
+   "advisory": "GO-2026-6180",
+   "cves": [
+    "CVE-2026-56864"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.40.0",
+   "summary": "Ignore unrelated, unauthenticated hashes in Lookup in golang.org/x/mod/sumdb",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-56864",
+    "CVE-2026-56864"
+   ],
+   "published": "2026-08-13T21:43:54Z",
+   "modified": "2026-08-19T12:25:49.995487491Z",
+   "purl": "pkg:golang/golang.org/x/mod@v0.38.0",
+   "scope": "runtime",
+   "paths": [
+    "integrations/terraform/go.mod > golang.org/x/mod"
+   ],
+   "workspace": "integrations/terraform",
+   "found_in": "integrations/terraform/go.mod",
+   "kev": false,
+   "epss": 0.00298,
+   "epss_percentile": 0.22873,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Client.Lookup"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.58.0",
+   "advisory": "GO-2026-6860",
+   "cves": [
+    "CVE-2026-78661"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.62.0",
+   "summary": "Avoid quadratic complexity when coalescing text nodes in html in golang.org/x/net",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-78661"
+   ],
+   "published": "2026-10-27T21:16:18Z",
+   "modified": "2026-10-27T21:30:04.890809062Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/net@v0.58.0",
+   "scope": "runtime",
+   "paths": [
+    "integrations/terraform/go.mod > golang.org/x/net"
+   ],
+   "workspace": "integrations/terraform",
+   "found_in": "integrations/terraform/go.mod",
+   "kev": false,
+   "epss": 0.00409,
+   "epss_percentile": 0.35903,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Parse",
+    "symbol:ParseFragment",
+    "symbol:ParseFragmentWithOptions"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.58.0",
+   "advisory": "GO-2026-6866",
+   "cves": [
+    "CVE-2026-97045"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.62.0",
+   "summary": "Check all ancestor namespace transitions when rendering raw text in html in golang.org/x/net",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-97045"
+   ],
+   "published": "2026-10-27T21:16:18Z",
+   "modified": "2026-10-27T21:45:08.978077289Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.58.0",
+   "scope": "runtime",
+   "paths": [
+    "integrations/terraform/go.mod > golang.org/x/net"
+   ],
+   "workspace": "integrations/terraform",
+   "found_in": "integrations/terraform/go.mod",
+   "kev": false,
+   "epss": 0.00267,
+   "epss_percentile": 0.19116,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Render",
+    "symbol:childTextNodesAreLiteral"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

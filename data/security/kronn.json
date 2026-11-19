@@ -1,0 +1,246 @@
+{
+ "slug": "kronn",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "c9a2c2c53eb9a498544aa1ec41179732fcb2556e",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 676,
+   "npm": 576
+  },
+  "scopes": {
+   "runtime": 976,
+   "peer": 4,
+   "dev": 272
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 4
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-m665-v7pm-7grj crates:zip@9.0.4 (conditional)"
+  ],
+  "counts": {
+   "conditional": 1
+  },
+  "uncounted": 3,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 1252,
+  "packages_checked": 1252,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "backend/Cargo.lock",
+    "status": "scanned",
+    "packages": 433,
+    "gaps": []
+   },
+   {
+    "ecosystem": "crates",
+    "component": "desktop/src-tauri/Cargo.lock",
+    "status": "scanned",
+    "packages": 658,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "frontend/pnpm-lock.yaml",
+    "status": "scanned",
+    "packages": 575,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "pnpm-lock.yaml",
+    "status": "scanned",
+    "packages": 1,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/DocRoms/Kronn@c9a2c2c53eb9",
+  "backend/Cargo.lock",
+  "desktop/src-tauri/Cargo.lock",
+  "frontend/pnpm-lock.yaml",
+  "pnpm-lock.yaml"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:zip",
+   "version": "9.0.4",
+   "advisory": "GHSA-m665-v7pm-7grj",
+   "cves": [
+    "CVE-2026-115905"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "9.0.5",
+   "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115905",
+    "RUSTSEC-2026-0548"
+   ],
+   "published": "2026-10-28T21:09:50Z",
+   "modified": "2026-11-17T10:26:05.424821880Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20",
+    "CWE-436"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@9.0.4",
+   "fix_published_at": "2026-10-17T18:45:16Z",
+   "scope": "runtime",
+   "paths": [
+    "kronn > zip"
+   ],
+   "workspace": "backend",
+   "found_in": "backend/Cargo.lock",
+   "kev": false,
+   "epss": 0.0032,
+   "epss_percentile": 0.25522,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:glib",
+   "version": "0.18.5",
+   "advisory": "GHSA-wrw7-89jp-8q8g",
+   "severity": "MODERATE",
+   "fixed_in": "0.20.0",
+   "summary": "Unsoundness in `Iterator` and `DoubleEndedIterator` impls for `glib::VariantStrIter`",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2024-0429"
+   ],
+   "published": "2024-12-23T20:19:24Z",
+   "modified": "2025-10-28T06:29:26.473225Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/glib@0.18.5",
+   "scope": "runtime",
+   "paths": [
+    "kronn-desktop > tauri > gtk > glib"
+   ],
+   "workspace": "desktop/src-tauri",
+   "found_in": "desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Iterator",
+    "symbol:DoubleEndedIterator",
+    "symbol:glib::VariantStrIter"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "backend/src/acp/secret_files.rs:168: fn steps(path: &Path) -> impl Iterator<Item = Step> + '_ {",
+     "named only in files that do not import glib"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:katex",
+   "version": "0.16.47",
+   "advisory": "GHSA-238p-pmpm-9mq7",
+   "cves": [
+    "CVE-2026-103923"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.18.2",
+   "summary": "KaTeX: Existing prototype pollution can bypass trust restrictions",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-103923"
+   ],
+   "published": "2026-10-05T23:41:05Z",
+   "modified": "2026-10-06T00:00:09.544490390Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-807"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/katex@0.16.47",
+   "scope": "runtime",
+   "paths": [
+    "frontend > mermaid > katex"
+   ],
+   "workspace": ".",
+   "found_in": "frontend/pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.003,
+   "epss_percentile": 0.23091,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-udp",
+   "version": "0.5.15",
+   "advisory": "RUSTSEC-2026-0538",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.5.16",
+   "summary": "Receive loop can spin after a truncated datagram",
+   "malicious": false,
+   "aliases": [
+    "GHSA-6pp4-4cxf-xf88"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:08.844283231Z",
+   "purl": "pkg:cargo/quinn-udp@0.5.15",
+   "scope": "runtime",
+   "paths": [
+    "kronn > reqwest > quinn > quinn-udp"
+   ],
+   "workspace": "kronn",
+   "found_in": "desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

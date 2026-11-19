@@ -1,0 +1,478 @@
+{
+ "slug": "github-mcp-server",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "df32d7ec5786e0e71932767fce9982409cbaec40",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "go": 37,
+   "npm": 211
+  },
+  "scopes": {
+   "runtime": 179,
+   "peer": 4,
+   "dev": 65
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 9
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-mrhx-c7xc-m3w5 npm:zod@4.6.5 (conditional)",
+   "worst:GHSA-587h-7wmj-h5pm npm:vite@8.3.2 (not_shipped)"
+  ],
+  "counts": {
+   "conditional": 1,
+   "not_shipped": 1
+  },
+  "uncounted": 7,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 248,
+  "packages_checked": 248,
+  "components": [
+   {
+    "ecosystem": "go",
+    "component": "go.mod",
+    "status": "scanned",
+    "packages": 37,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "ui/package-lock.json",
+    "status": "scanned",
+    "packages": 211,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/github/github-mcp-server@df32d7ec5786",
+  "go.mod",
+  "ui/package-lock.json"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "npm:zod",
+   "version": "4.6.5",
+   "advisory": "GHSA-mrhx-c7xc-m3w5",
+   "cves": [
+    "CVE-2023-54404"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "4.6.6",
+   "summary": "Zod can exhaust memory while validating oversized constrained collections",
+   "malicious": false,
+   "aliases": [
+    "CVE-2023-54404"
+   ],
+   "published": "2026-10-01T18:32:46Z",
+   "modified": "2026-10-23T18:30:09.376405885Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/zod@4.6.5",
+   "fix_published_at": "2026-10-11T16:18:23Z",
+   "scope": "runtime",
+   "paths": [
+    ". > zod"
+   ],
+   "workspace": ".",
+   "found_in": "ui/package-lock.json",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.61.0",
+   "advisory": "GO-2026-6860",
+   "cves": [
+    "CVE-2026-78661"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.62.0",
+   "summary": "Avoid quadratic complexity when coalescing text nodes in html in golang.org/x/net",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-78661"
+   ],
+   "published": "2026-10-27T21:16:18Z",
+   "modified": "2026-10-27T21:30:04.890809062Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/net@v0.61.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/net"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00409,
+   "epss_percentile": 0.35903,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Parse",
+    "symbol:ParseFragment",
+    "symbol:ParseFragmentWithOptions"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "unknown",
+    "evidence": [
+     "pkg/sanitize/sanitize.go:12: nethtml \"golang.org/x/net/html\"",
+     "no call to Parse, ParseFragment, ParseFragmentWithOptions found"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.61.0",
+   "advisory": "GO-2026-6866",
+   "cves": [
+    "CVE-2026-97045"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.62.0",
+   "summary": "Check all ancestor namespace transitions when rendering raw text in html in golang.org/x/net",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-97045"
+   ],
+   "published": "2026-10-27T21:16:18Z",
+   "modified": "2026-10-27T21:45:08.978077289Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.61.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/net"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00267,
+   "epss_percentile": 0.19116,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Render",
+    "symbol:childTextNodesAreLiteral"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "unknown",
+    "evidence": [
+     "pkg/sanitize/sanitize.go:12: nethtml \"golang.org/x/net/html\"",
+     "no call to Render, childTextNodesAreLiteral found"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "8.3.2",
+   "advisory": "GHSA-587h-7wmj-h5pm",
+   "cves": [
+    "CVE-2026-112942"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "8.3.3",
+   "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112942"
+   ],
+   "published": "2026-10-20T19:48:25Z",
+   "modified": "2026-10-20T20:00:04.608979840Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-77"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@8.3.2",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "ui/package-lock.json",
+   "kev": false,
+   "epss": 0.01694,
+   "epss_percentile": 0.77635,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "8.3.2",
+   "advisory": "GHSA-698v-4r3x-3vcv",
+   "cves": [
+    "CVE-2026-112943"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.3.3",
+   "summary": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112943"
+   ],
+   "published": "2026-10-20T18:30:24Z",
+   "modified": "2026-10-20T18:45:09.467993691Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-78"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@8.3.2",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "ui/package-lock.json",
+   "kev": false,
+   "epss": 0.00414,
+   "epss_percentile": 0.36473,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "8.3.2",
+   "advisory": "GHSA-r825-w8mm-5pxw",
+   "cves": [
+    "CVE-2026-112944"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.3.3",
+   "summary": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112944"
+   ],
+   "published": "2026-10-20T19:51:52Z",
+   "modified": "2026-10-20T20:00:04.608907013Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-88"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@8.3.2",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "ui/package-lock.json",
+   "kev": false,
+   "epss": 0.00705,
+   "epss_percentile": 0.54125,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "8.3.2",
+   "advisory": "GHSA-rq7h-c2jc-7f22",
+   "cves": [
+    "CVE-2026-112946"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.3.3",
+   "summary": "Vite: Files outside `server.fs.allow` could be served when project paths match system paths on non-Windows machine",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112946"
+   ],
+   "published": "2026-10-21T16:47:42Z",
+   "modified": "2026-10-21T17:00:06.336868869Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22",
+    "CWE-284"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@8.3.2",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "ui/package-lock.json",
+   "kev": false,
+   "epss": 0.00852,
+   "epss_percentile": 0.59015,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "8.3.2",
+   "advisory": "GHSA-vfpm-58rq-9qcg",
+   "cves": [
+    "CVE-2026-112947"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.3.3",
+   "summary": "Vite: First 4 bytes of files outside of `server.fs` setting is exposed by `?vite-wasm-instance`",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112947"
+   ],
+   "published": "2026-10-21T16:47:15Z",
+   "modified": "2026-10-21T17:00:07.443467820Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-209",
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@8.3.2",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "ui/package-lock.json",
+   "kev": false,
+   "epss": 0.00502,
+   "epss_percentile": 0.43727,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "8.3.2",
+   "advisory": "GHSA-9jrq-w75r-8gcw",
+   "cves": [
+    "CVE-2026-112945"
+   ],
+   "severity": "LOW",
+   "fixed_in": "8.3.3",
+   "summary": "Vite: Cross origin script execution through Vite custom middleware",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112945"
+   ],
+   "published": "2026-10-21T16:48:14Z",
+   "modified": "2026-10-21T17:00:26.569382874Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-80"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@8.3.2",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "ui/package-lock.json",
+   "kev": false,
+   "epss": 0.00672,
+   "epss_percentile": 0.52858,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

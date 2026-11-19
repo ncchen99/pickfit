@@ -1,0 +1,1307 @@
+{
+ "slug": "lazydb",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "ebe62f33ea94b3c0b6e931bf0fae887a8c1f9afa",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 704
+  },
+  "scopes": {
+   "runtime": 655,
+   "optional": 44,
+   "dev": 3,
+   "workspace": 2
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 31
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-m665-v7pm-7grj crates:zip@6.0.0 (conditional)",
+   "worst:RUSTSEC-2026-0369 crates:zip@6.0.0 (conditional)",
+   "worst:RUSTSEC-2026-0340 crates:quinn-proto@0.11.17 (conditional)"
+  ],
+  "counts": {
+   "conditional": 9
+  },
+  "uncounted": 22,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 704,
+  "packages_checked": 704,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 704,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/yelog/lazydb@ebe62f33ea94",
+  "Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:zip",
+   "version": "6.0.0",
+   "advisory": "GHSA-m665-v7pm-7grj",
+   "cves": [
+    "CVE-2026-115905"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "9.0.5",
+   "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115905",
+    "RUSTSEC-2026-0548"
+   ],
+   "published": "2026-10-28T21:09:50Z",
+   "modified": "2026-11-17T10:26:05.424821880Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20",
+    "CWE-436"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@6.0.0",
+   "fix_published_at": "2026-10-17T18:45:16Z",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > zip"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.0032,
+   "epss_percentile": 0.25522,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "6.0.0",
+   "advisory": "RUSTSEC-2026-0369",
+   "severity": "CRITICAL",
+   "fixed_in": "9.0.0",
+   "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+   "malicious": false,
+   "aliases": [
+    "GHSA-4684-h2q9-2vcp"
+   ],
+   "published": "2026-10-10T12:00:00Z",
+   "modified": "2026-10-16T23:30:02.387698467Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@6.0.0",
+   "fix_published_at": "2026-10-09T04:48:51Z",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > zip"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:ZipStreamReader::extract",
+    "symbol:ZipArchive::extract"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.17",
+   "advisory": "RUSTSEC-2026-0340",
+   "severity": "HIGH",
+   "fixed_in": "0.11.18",
+   "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+   "malicious": false,
+   "aliases": [
+    "GHSA-3g6h-r5qx-f6hq"
+   ],
+   "published": "2026-09-14T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.975478256Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.17",
+   "fix_published_at": "2026-09-14T10:08:32Z",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "option:ACK_FREQUENCY"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.17",
+   "advisory": "RUSTSEC-2026-0343",
+   "severity": "HIGH",
+   "fixed_in": "0.11.18",
+   "summary": "Outgoing datagram buffer accounting can panic the sender in quinn-proto",
+   "malicious": false,
+   "aliases": [
+    "GHSA-ppcp-v39w-8jq2"
+   ],
+   "published": "2026-09-14T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.961745820Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.17",
+   "fix_published_at": "2026-09-14T10:08:32Z",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rmcp",
+   "version": "3.1.4",
+   "advisory": "RUSTSEC-2026-0461",
+   "severity": "HIGH",
+   "fixed_in": "3.6.0",
+   "summary": "Unbounded tool schema cache in Streamable HTTP server transport",
+   "malicious": false,
+   "aliases": [
+    "GHSA-4432-vg92-fqh6"
+   ],
+   "published": "2026-10-20T12:00:00Z",
+   "modified": "2026-11-09T10:15:02.429230862Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/rmcp@3.1.4",
+   "fix_published_at": "2026-10-20T05:53:35Z",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > rmcp"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls-webpki",
+   "version": "0.101.7",
+   "advisory": "GHSA-82j2-j2ch-gfr8",
+   "cves": [
+    "CVE-2026-93599"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.103.13",
+   "summary": "rustls-webpki: Denial of service via panic on malformed CRL BIT STRING",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-93599",
+    "RUSTSEC-2026-0104"
+   ],
+   "published": "2026-04-24T16:20:17Z",
+   "modified": "2026-09-19T03:55:33.412079637Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-125"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/rustls-webpki@0.101.7",
+   "fix_published_at": "2026-04-21T10:25:37Z",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > tiberius > tokio-rustls > rustls > rustls-webpki"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00346,
+   "epss_percentile": 0.2879,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "6.0.0",
+   "advisory": "GHSA-9hj8-73fh-9963",
+   "cves": [
+    "CVE-2026-115907"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "9.0.0",
+   "summary": "zip: legacy Shrink/Reduce/Implode decoder: denial of service from attacker-controlled ZIP64 uncompressed size",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115907",
+    "RUSTSEC-2026-0547"
+   ],
+   "published": "2026-10-29T16:40:19Z",
+   "modified": "2026-11-17T10:26:14.175658092Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-789"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/zip@6.0.0",
+   "fix_published_at": "2026-10-09T04:48:51Z",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > zip"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.0035,
+   "epss_percentile": 0.29304,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "6.0.0",
+   "advisory": "GHSA-q7v9-x93c-xqv3",
+   "cves": [
+    "CVE-2026-115909"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "9.0.0",
+   "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115909",
+    "RUSTSEC-2026-0429"
+   ],
+   "published": "2026-10-29T16:40:01Z",
+   "modified": "2026-11-02T10:10:53.649189132Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-789"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/zip@6.0.0",
+   "fix_published_at": "2026-10-09T04:48:51Z",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > zip"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00461,
+   "epss_percentile": 0.4071,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "6.0.0",
+   "advisory": "RUSTSEC-2026-0367",
+   "severity": "HIGH",
+   "fixed_in": "9.0.0",
+   "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+   "malicious": false,
+   "aliases": [
+    "GHSA-vv5m-jxxh-4627"
+   ],
+   "published": "2026-10-09T12:00:00Z",
+   "modified": "2026-10-16T23:30:02.392172556Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:H/I:H/A:H",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@6.0.0",
+   "fix_published_at": "2026-10-09T04:48:51Z",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > zip"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rmcp",
+   "version": "3.1.4",
+   "advisory": "RUSTSEC-2026-0462",
+   "severity": "MODERATE",
+   "fixed_in": "3.9.0",
+   "summary": "Unbounded response body buffering in Streamable HTTP clients",
+   "malicious": false,
+   "aliases": [
+    "GHSA-c9f9-cp8h-jcj5"
+   ],
+   "published": "2026-11-05T12:00:00Z",
+   "modified": "2026-11-09T10:30:02.590803911Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/rmcp@3.1.4",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > rmcp"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.21.12",
+   "advisory": "GHSA-c8m5-c952-6cm4",
+   "cves": [
+    "CVE-2026-123609"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.23.46",
+   "summary": "Rustls: Session Debug formatting exposes TLS master secrets and resumption PSKs",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123609",
+    "RUSTSEC-2026-0346"
+   ],
+   "published": "2026-10-27T16:08:47Z",
+   "modified": "2026-11-08T10:55:36.514447652Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:H/PR:H/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-212"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.21.12",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > tiberius > tokio-rustls > rustls"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00101,
+   "epss_percentile": 0.00917,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction",
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.43",
+   "advisory": "GHSA-2mjx-qc3c-rqvc",
+   "cves": [
+    "CVE-2026-123613"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.23.45",
+   "summary": "Rustls: TLS 1.3 handshake messages incorrectly accepted across encryption level boundaries",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123613",
+    "RUSTSEC-2026-0285"
+   ],
+   "published": "2026-10-05T23:30:17Z",
+   "modified": "2026-11-08T10:55:54.395419388Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.23.43",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > google-cloud-auth > rustls"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00156,
+   "epss_percentile": 0.04813,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.43",
+   "advisory": "GHSA-c8m5-c952-6cm4",
+   "cves": [
+    "CVE-2026-123609"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.23.46",
+   "summary": "Rustls: Session Debug formatting exposes TLS master secrets and resumption PSKs",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123609",
+    "RUSTSEC-2026-0346"
+   ],
+   "published": "2026-10-27T16:08:47Z",
+   "modified": "2026-11-08T10:55:36.514447652Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:H/PR:H/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-212"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.23.43",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > google-cloud-auth > rustls"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00101,
+   "epss_percentile": 0.00917,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction",
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "6.0.0",
+   "advisory": "GHSA-8hxf-qr8p-62x4",
+   "cves": [
+    "CVE-2026-115906"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "9.0.0",
+   "summary": "zip: AES Entry HMAC Authentication Bypass on Premature EOF",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115906",
+    "RUSTSEC-2026-0545"
+   ],
+   "published": "2026-10-29T16:40:07Z",
+   "modified": "2026-11-17T10:26:09.858808117Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1284",
+    "CWE-354"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@6.0.0",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > zip"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00151,
+   "epss_percentile": 0.04286,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.21.12",
+   "advisory": "GHSA-h2v8-394m-p7vv",
+   "cves": [
+    "CVE-2026-123610"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.23.46",
+   "summary": "Rustls: Brotli certificate decompression can allocate an attacker-controlled amount of memory up to 1 GiB before authentication.",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123610",
+    "RUSTSEC-2026-0348"
+   ],
+   "published": "2026-10-27T16:08:36Z",
+   "modified": "2026-11-08T10:55:59.261359726Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/rustls@0.21.12",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > tiberius > tokio-rustls > rustls"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00165,
+   "epss_percentile": 0.0586,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.21.12",
+   "advisory": "GHSA-w44r-93j7-qv28",
+   "cves": [
+    "CVE-2026-123611"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.23.46",
+   "summary": "rustls: An unauthenticated ServerHello poisons the per-name key-exchange record, so later ClientHellos carry only a classical X25519 share",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123611",
+    "RUSTSEC-2026-0349"
+   ],
+   "published": "2026-10-27T16:08:54Z",
+   "modified": "2026-11-08T10:55:46.312019109Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-757"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.21.12",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > tiberius > tokio-rustls > rustls"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00188,
+   "epss_percentile": 0.08575,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.43",
+   "advisory": "GHSA-h2v8-394m-p7vv",
+   "cves": [
+    "CVE-2026-123610"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.23.46",
+   "summary": "Rustls: Brotli certificate decompression can allocate an attacker-controlled amount of memory up to 1 GiB before authentication.",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123610",
+    "RUSTSEC-2026-0348"
+   ],
+   "published": "2026-10-27T16:08:36Z",
+   "modified": "2026-11-08T10:55:59.261359726Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/rustls@0.23.43",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > google-cloud-auth > rustls"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00165,
+   "epss_percentile": 0.0586,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.43",
+   "advisory": "GHSA-w44r-93j7-qv28",
+   "cves": [
+    "CVE-2026-123611"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.23.46",
+   "summary": "rustls: An unauthenticated ServerHello poisons the per-name key-exchange record, so later ClientHellos carry only a classical X25519 share",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123611",
+    "RUSTSEC-2026-0349"
+   ],
+   "published": "2026-10-27T16:08:54Z",
+   "modified": "2026-11-08T10:55:46.312019109Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-757"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.23.43",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > google-cloud-auth > rustls"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00188,
+   "epss_percentile": 0.08575,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls-webpki",
+   "version": "0.101.7",
+   "advisory": "GHSA-965h-392x-2mh5",
+   "cves": [
+    "CVE-2026-93600"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.103.12",
+   "summary": "webpki: Name constraints for URI names were incorrectly accepted",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-93600",
+    "RUSTSEC-2026-0098"
+   ],
+   "published": "2026-04-16T21:16:22Z",
+   "modified": "2026-09-19T03:55:32.245575348Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-295"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls-webpki@0.101.7",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > tiberius > tokio-rustls > rustls > rustls-webpki"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00203,
+   "epss_percentile": 0.104,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls-webpki",
+   "version": "0.101.7",
+   "advisory": "GHSA-xgp8-3hg3-c2mh",
+   "cves": [
+    "CVE-2026-93601"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.103.12",
+   "summary": "webpki: Name constraints were accepted for certificates asserting a wildcard name",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-93601",
+    "RUSTSEC-2026-0099"
+   ],
+   "published": "2026-04-16T21:17:12Z",
+   "modified": "2026-09-19T03:55:49.146112754Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-295"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls-webpki@0.101.7",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > tiberius > tokio-rustls > rustls > rustls-webpki"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00203,
+   "epss_percentile": 0.104,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:ctutils",
+   "version": "0.4.2",
+   "advisory": "RUSTSEC-2026-0385",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.4.4",
+   "summary": "Non-constant-time mask generation and `u128` comparisons",
+   "malicious": false,
+   "published": "2026-10-23T12:00:00Z",
+   "modified": "2026-10-23T08:30:02.389575143Z",
+   "purl": "pkg:cargo/ctutils@0.4.2",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > mongodb > hmac > digest > ctutils"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:libsqlite3-sys",
+   "version": "0.37.0",
+   "advisory": "RUSTSEC-2026-0459",
+   "cves": [
+    "CVE-2026-119375"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.39.0",
+   "summary": "`libsqlite3-sys` via C SQLite CVE-2026-119375",
+   "malicious": false,
+   "aliases": [
+    "BIT-sqlite-2026-119375",
+    "CVE-2026-119375",
+    "GHSA-72w2-rjgg-q729",
+    "RUSTSEC-2026-0502"
+   ],
+   "published": "2026-10-30T12:00:00Z",
+   "modified": "2026-11-17T13:41:05.770775012Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/libsqlite3-sys@0.37.0",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > sqlx > sqlx-sqlite > libsqlite3-sys"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00195,
+   "epss_percentile": 0.09275,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.17",
+   "advisory": "RUSTSEC-2026-0338",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.18",
+   "summary": "Remote peer can panic quinn-proto with zero-length STREAM frames during unordered reads",
+   "malicious": false,
+   "aliases": [
+    "GHSA-465w-v9q3-7j98"
+   ],
+   "published": "2026-09-14T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.969514645Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.17",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.17",
+   "advisory": "RUSTSEC-2026-0523",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.19",
+   "summary": "MAX_STREAM_DATA frame can open streams beyond the stream limit",
+   "malicious": false,
+   "aliases": [
+    "GHSA-53rm-773f-4q8c"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:04.789912316Z",
+   "purl": "pkg:cargo/quinn-proto@0.11.17",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "option:MAX_STREAM_DATA"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use MAX_STREAM_DATA, but other packages depend on quinn-proto"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.17",
+   "advisory": "RUSTSEC-2026-0524",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.19",
+   "summary": "Long Retry token can panic or exhaust memory in a QUIC client",
+   "malicious": false,
+   "aliases": [
+    "GHSA-wppq-2f6r-wfvm"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:06.127108520Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.17",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-udp",
+   "version": "0.5.15",
+   "advisory": "RUSTSEC-2026-0538",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.5.16",
+   "summary": "Receive loop can spin after a truncated datagram",
+   "malicious": false,
+   "aliases": [
+    "GHSA-6pp4-4cxf-xf88"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:08.844283231Z",
+   "purl": "pkg:cargo/quinn-udp@0.5.15",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > reqwest > quinn > quinn-udp"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rmcp",
+   "version": "3.1.4",
+   "advisory": "RUSTSEC-2026-0457",
+   "severity": "UNKNOWN",
+   "fixed_in": "3.7.0",
+   "summary": "OAuth client SSRF filter checks host strings, not resolved addresses",
+   "malicious": false,
+   "aliases": [
+    "GHSA-5p52-q7pq-9fq2"
+   ],
+   "published": "2026-10-22T12:00:00Z",
+   "modified": "2026-11-09T10:00:02.336894229Z",
+   "purl": "pkg:cargo/rmcp@3.1.4",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > rmcp"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls-webpki",
+   "version": "0.101.7",
+   "advisory": "RUSTSEC-2026-0382",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.103.16",
+   "summary": "Certificate verification may accept distrusted intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0381",
+    "RUSTSEC-2026-0383"
+   ],
+   "published": "2026-10-20T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/rustls-webpki@0.101.7",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > tiberius > tokio-rustls > rustls > rustls-webpki"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls-webpki",
+   "version": "0.103.15",
+   "advisory": "RUSTSEC-2026-0382",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.103.16",
+   "summary": "Certificate verification may accept distrusted intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0381",
+    "RUSTSEC-2026-0383"
+   ],
+   "published": "2026-10-20T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/rustls-webpki@0.103.15",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > google-cloud-auth > rustls > rustls-webpki"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:webpki-roots",
+   "version": "1.0.9",
+   "advisory": "RUSTSEC-2026-0381",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "1.0.10",
+   "summary": "Bundled root certificates allow trust in distrusted emSign intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0382",
+    "RUSTSEC-2026-0383"
+   ],
+   "published": "2026-10-19T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/webpki-roots@1.0.9",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > reqwest > webpki-roots"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "6.0.0",
+   "advisory": "RUSTSEC-2026-0368",
+   "severity": "UNKNOWN",
+   "fixed_in": "9.0.0",
+   "summary": "zip: `ZipArchive::extract` creates symbolic links whose attacker-controlled targets are outside the destination directory",
+   "malicious": false,
+   "aliases": [
+    "GHSA-4v9h-p7m9-rh26"
+   ],
+   "published": "2026-10-09T12:00:00Z",
+   "modified": "2026-10-16T23:30:02.383750571Z",
+   "purl": "pkg:cargo/zip@6.0.0",
+   "scope": "runtime",
+   "paths": [
+    "lazydb > zip"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:ZipArchive::extract"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ZipArchive::extract, but other packages depend on zip"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

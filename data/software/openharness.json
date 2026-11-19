@@ -228,36 +228,34 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/autonomous-ai/openharness@86ab5b162d6e",
+      "github.com/autonomous-ai/openharness@ba0160a84d0f",
       "backend/package-lock.json",
       "backend/pnpm-lock.yaml",
       "cli/package-lock.json",
       "cli/pnpm-lock.yaml",
       "companions/package-lock.json",
+      "desktop/tool/browser_viewer/package-lock.json",
+      "device-app/src-tauri/Cargo.lock",
+      "device-app/ui/package-lock.json",
       "installer/Cargo.lock",
       "os/packaging/playwright-mcp/package-lock.json",
+      "provider/example-provider/package-lock.json",
+      "provider/reference-provider/package-lock.json",
       "pty/Cargo.lock",
       "serial/Cargo.lock",
       "store/agents/excalidraw/package-lock.json",
       "store/agents/godogen/package-lock.json",
       "store/agents/home-assistant/package-lock.json",
-      "store/agents/phaser/package-lock.json",
-      "store/agents/rdkit/package-lock.json",
-      "store/agents/remotion/package-lock.json",
-      "store/agents/strudel/package-lock.json",
-      "store/agents/trailofbits-skills/package-lock.json",
-      "store/agents/yosys/package-lock.json",
-      "store/viewers/doc-viewer/package-lock.json"
+      "store/agents/openmontage/package-lock.json",
+      "store/agents/phaser/package-lock.json"
     ],
-    "packages_checked": 1025,
-    "findings_total": 29,
-    "advisories_total": 18,
+    "packages_checked": 1837,
+    "findings_total": 27,
+    "advisories_total": 16,
     "findings": [
       {
         "package": "npm:@fastify/busboy",
@@ -269,7 +267,24 @@
         "severity": "HIGH",
         "fixed_in": "3.2.1",
         "summary": "@fastify/busboy vulnerable to Denial of Service via prototype-named multipart part header",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "backend/pnpm-lock.yaml",
+        "kev": false,
+        "epss": 0.00493,
+        "fix_published_at": "2026-08-12T20:05:52Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "backend > @fastify/multipart > @fastify/busboy"
+        ]
       },
       {
         "package": "npm:@fastify/busboy",
@@ -281,43 +296,50 @@
         "severity": "HIGH",
         "fixed_in": "3.2.1",
         "summary": "@fastify/busboy vulnerable to Denial of Service via oversized multipart boundary",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "backend/pnpm-lock.yaml",
+        "kev": false,
+        "epss": 0.00615,
+        "fix_published_at": "2026-08-12T20:05:52Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "backend > @fastify/multipart > @fastify/busboy"
+        ]
       },
       {
         "package": "npm:fast-uri",
-        "version": "4.1.2",
+        "version": "3.1.5",
         "advisory": "GHSA-5jgf-p345-68v8",
         "cves": [
           "CVE-2026-75931"
         ],
         "severity": "HIGH",
-        "fixed_in": "4.1.3",
-        "summary": "fast-uri vulnerable to host confusion via skipped IDN canonicalization on scheme-relative references",
-        "malicious": false
-      },
-      {
-        "package": "npm:fast-uri",
-        "version": "3.1.5",
-        "advisory": "GHSA-5jgf-p345-68v8",
-        "cves": [
-          "CVE-2026-75931"
-        ],
-        "severity": "HIGH",
         "fixed_in": "3.1.6",
         "summary": "fast-uri vulnerable to host confusion via skipped IDN canonicalization on scheme-relative references",
-        "malicious": false
-      },
-      {
-        "package": "npm:fast-uri",
-        "version": "4.1.2",
-        "advisory": "GHSA-f65p-4m7j-42xc",
-        "cves": [
-          "CVE-2026-75975"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.1.3",
-        "summary": "fast-uri vulnerable to server-side request forgery via malformed IPv6 normalization",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "backend/pnpm-lock.yaml",
+        "kev": false,
+        "epss": 0.00398,
+        "fix_published_at": "2026-08-23T01:42:00Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "backend > fastify > @fastify/ajv-compiler > fast-uri"
+        ]
       },
       {
         "package": "npm:fast-uri",
@@ -329,19 +351,21 @@
         "severity": "HIGH",
         "fixed_in": "3.1.6",
         "summary": "fast-uri vulnerable to server-side request forgery via malformed IPv6 normalization",
-        "malicious": false
-      },
-      {
-        "package": "npm:fast-uri",
-        "version": "4.1.2",
-        "advisory": "GHSA-fph4-wmhf-6fwf",
-        "cves": [
-          "CVE-2026-75899"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.1.3",
-        "summary": "fast-uri vulnerable to server-side request forgery via repeated hostname percent-decoding",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "backend/pnpm-lock.yaml",
+        "kev": false,
+        "epss": 0.0022,
+        "fix_published_at": "2026-08-23T01:42:00Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "backend > fastify > @fastify/ajv-compiler > fast-uri"
+        ]
       },
       {
         "package": "npm:fast-uri",
@@ -353,19 +377,21 @@
         "severity": "HIGH",
         "fixed_in": "3.1.6",
         "summary": "fast-uri vulnerable to server-side request forgery via repeated hostname percent-decoding",
-        "malicious": false
-      },
-      {
-        "package": "npm:fast-uri",
-        "version": "4.1.2",
-        "advisory": "GHSA-jqff-g426-hqxp",
-        "cves": [
-          "CVE-2026-76172"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.1.3",
-        "summary": "fast-uri vulnerable to host confusion via percent-encoded scheme normalization",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "backend/pnpm-lock.yaml",
+        "kev": false,
+        "epss": 0.0022,
+        "fix_published_at": "2026-08-23T01:42:00Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "backend > fastify > @fastify/ajv-compiler > fast-uri"
+        ]
       },
       {
         "package": "npm:fast-uri",
@@ -377,19 +403,21 @@
         "severity": "HIGH",
         "fixed_in": "3.1.6",
         "summary": "fast-uri vulnerable to host confusion via percent-encoded scheme normalization",
-        "malicious": false
-      },
-      {
-        "package": "npm:fast-uri",
-        "version": "4.1.2",
-        "advisory": "GHSA-qw65-cvwx-89v3",
-        "cves": [
-          "CVE-2026-84292"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.1.4",
-        "summary": "fast-uri vulnerable to authority injection via an unvalidated port in serialize",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "backend/pnpm-lock.yaml",
+        "kev": false,
+        "epss": 0.00232,
+        "fix_published_at": "2026-08-23T01:42:00Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "backend > fastify > @fastify/ajv-compiler > fast-uri"
+        ]
       },
       {
         "package": "npm:fast-uri",
@@ -401,19 +429,151 @@
         "severity": "HIGH",
         "fixed_in": "3.1.7",
         "summary": "fast-uri vulnerable to authority injection via an unvalidated port in serialize",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "backend/pnpm-lock.yaml",
+        "kev": false,
+        "epss": 0.00239,
+        "fix_published_at": "2026-09-02T11:06:41Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "backend > fastify > @fastify/ajv-compiler > fast-uri"
+        ]
       },
       {
-        "package": "npm:fastify",
-        "version": "5.12.1",
-        "advisory": "GHSA-667r-xxjv-c9mm",
+        "package": "npm:fast-uri",
+        "version": "4.1.2",
+        "advisory": "GHSA-5jgf-p345-68v8",
         "cves": [
-          "CVE-2026-84504"
+          "CVE-2026-75931"
         ],
         "severity": "HIGH",
-        "fixed_in": "5.12.2",
-        "summary": "fastify vulnerable to request body replacement via an async validation result collision",
-        "malicious": false
+        "fixed_in": "4.1.3",
+        "summary": "fast-uri vulnerable to host confusion via skipped IDN canonicalization on scheme-relative references",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "backend/pnpm-lock.yaml",
+        "kev": false,
+        "epss": 0.00398,
+        "fix_published_at": "2026-08-23T01:34:36Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "backend > fastify > fast-json-stringify > fast-uri"
+        ]
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "4.1.2",
+        "advisory": "GHSA-f65p-4m7j-42xc",
+        "cves": [
+          "CVE-2026-75975"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.1.3",
+        "summary": "fast-uri vulnerable to server-side request forgery via malformed IPv6 normalization",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "backend/pnpm-lock.yaml",
+        "kev": false,
+        "epss": 0.0022,
+        "fix_published_at": "2026-08-23T01:34:36Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "backend > fastify > fast-json-stringify > fast-uri"
+        ]
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "4.1.2",
+        "advisory": "GHSA-fph4-wmhf-6fwf",
+        "cves": [
+          "CVE-2026-75899"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.1.3",
+        "summary": "fast-uri vulnerable to server-side request forgery via repeated hostname percent-decoding",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "backend/pnpm-lock.yaml",
+        "kev": false,
+        "epss": 0.0022,
+        "fix_published_at": "2026-08-23T01:34:36Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "backend > fastify > fast-json-stringify > fast-uri"
+        ]
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "4.1.2",
+        "advisory": "GHSA-jqff-g426-hqxp",
+        "cves": [
+          "CVE-2026-76172"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.1.3",
+        "summary": "fast-uri vulnerable to host confusion via percent-encoded scheme normalization",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "backend/pnpm-lock.yaml",
+        "kev": false,
+        "epss": 0.00232,
+        "fix_published_at": "2026-08-23T01:34:36Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "backend > fastify > fast-json-stringify > fast-uri"
+        ]
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "4.1.2",
+        "advisory": "GHSA-qw65-cvwx-89v3",
+        "cves": [
+          "CVE-2026-84292"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.1.4",
+        "summary": "fast-uri vulnerable to authority injection via an unvalidated port in serialize",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "backend/pnpm-lock.yaml",
+        "kev": false,
+        "epss": 0.00239,
+        "fix_published_at": "2026-09-02T11:07:44Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "backend > fastify > fast-json-stringify > fast-uri"
+        ]
       },
       {
         "package": "npm:fastify",
@@ -425,7 +585,125 @@
         "severity": "HIGH",
         "fixed_in": "5.12.2",
         "summary": "fastify vulnerable to request body replacement via an async validation result collision",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "backend/pnpm-lock.yaml",
+        "kev": false,
+        "epss": 0.00428,
+        "fix_published_at": "2026-09-04T08:21:15Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "backend > fastify"
+        ]
+      },
+      {
+        "package": "npm:fastify",
+        "version": "5.11.3",
+        "advisory": "GHSA-9q9j-q6p8-xq58",
+        "cves": [
+          "CVE-2026-84428"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.12.2",
+        "summary": "fastify vulnerable to header validation bypass via incomplete schema case normalization",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "backend/pnpm-lock.yaml",
+        "kev": false,
+        "epss": 0.00524,
+        "fix_published_at": "2026-09-04T08:21:15Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "backend > fastify"
+        ]
+      },
+      {
+        "package": "npm:fastify",
+        "version": "5.11.3",
+        "advisory": "GHSA-hwr6-493r-vm6h",
+        "cves": [
+          "CVE-2026-84469"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.12.2",
+        "summary": "fastify vulnerable to request validation bypass via skipped boolean false schemas",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "backend/pnpm-lock.yaml",
+        "kev": false,
+        "epss": 0.00492,
+        "fix_published_at": "2026-09-04T08:21:15Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "backend > fastify"
+        ]
+      },
+      {
+        "package": "npm:fastify",
+        "version": "5.11.3",
+        "advisory": "GHSA-p68q-wchp-6fh7",
+        "cves": [
+          "CVE-2026-76169"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.12.2",
+        "summary": "fastify vulnerable to authentication bypass via malformed URLs reaching encapsulated not-found handlers",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "backend/pnpm-lock.yaml",
+        "kev": false,
+        "epss": 0.0053,
+        "fix_published_at": "2026-09-04T08:21:15Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "backend > fastify"
+        ]
+      },
+      {
+        "package": "npm:fastify",
+        "version": "5.12.1",
+        "advisory": "GHSA-667r-xxjv-c9mm",
+        "cves": [
+          "CVE-2026-84504"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.12.2",
+        "summary": "fastify vulnerable to request body replacement via an async validation result collision",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "backend/package-lock.json",
+        "kev": false,
+        "epss": 0.00428,
+        "fix_published_at": "2026-09-04T08:21:15Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          ". > fastify"
+        ]
       },
       {
         "package": "npm:fastify",
@@ -437,19 +715,21 @@
         "severity": "HIGH",
         "fixed_in": "5.12.2",
         "summary": "fastify vulnerable to header validation bypass via incomplete schema case normalization",
-        "malicious": false
-      },
-      {
-        "package": "npm:fastify",
-        "version": "5.11.3",
-        "advisory": "GHSA-9q9j-q6p8-xq58",
-        "cves": [
-          "CVE-2026-84428"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "5.12.2",
-        "summary": "fastify vulnerable to header validation bypass via incomplete schema case normalization",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "backend/package-lock.json",
+        "kev": false,
+        "epss": 0.00524,
+        "fix_published_at": "2026-09-04T08:21:15Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          ". > fastify"
+        ]
       },
       {
         "package": "npm:fastify",
@@ -461,19 +741,21 @@
         "severity": "HIGH",
         "fixed_in": "5.12.2",
         "summary": "fastify vulnerable to request validation bypass via skipped boolean false schemas",
-        "malicious": false
-      },
-      {
-        "package": "npm:fastify",
-        "version": "5.11.3",
-        "advisory": "GHSA-hwr6-493r-vm6h",
-        "cves": [
-          "CVE-2026-84469"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "5.12.2",
-        "summary": "fastify vulnerable to request validation bypass via skipped boolean false schemas",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "backend/package-lock.json",
+        "kev": false,
+        "epss": 0.00492,
+        "fix_published_at": "2026-09-04T08:21:15Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          ". > fastify"
+        ]
       },
       {
         "package": "npm:fastify",
@@ -485,143 +767,380 @@
         "severity": "HIGH",
         "fixed_in": "5.12.2",
         "summary": "fastify vulnerable to authentication bypass via malformed URLs reaching encapsulated not-found handlers",
-        "malicious": false
-      },
-      {
-        "package": "npm:fastify",
-        "version": "5.11.3",
-        "advisory": "GHSA-p68q-wchp-6fh7",
-        "cves": [
-          "CVE-2026-76169"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "5.12.2",
-        "summary": "fastify vulnerable to authentication bypass via malformed URLs reaching encapsulated not-found handlers",
-        "malicious": false
-      },
-      {
-        "package": "npm:follow-redirects",
-        "version": "1.16.0",
-        "advisory": "GHSA-8r9p-f939-6h3c",
-        "cves": [
-          "CVE-2026-111755"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.16.1",
-        "summary": "follow-redirects sensitiveHeaders regex escaping can expose credential headers",
-        "malicious": false
-      },
-      {
-        "package": "npm:follow-redirects",
-        "version": "1.16.0",
-        "advisory": "GHSA-mrwp-f3q8-3g9p",
-        "cves": [
-          "CVE-2026-116689"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.16.2",
-        "summary": "follow-redirects: Cross-realm sensitiveHeaders arrays are discarded and custom credentials can follow redirects",
-        "malicious": false
-      },
-      {
-        "package": "npm:follow-redirects",
-        "version": "1.16.0",
-        "advisory": "GHSA-q3jh-wrc6-jgq8",
-        "cves": [
-          "CVE-2026-111756"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.16.1",
-        "summary": "follow-redirects array-form headers bypass cross-origin credential stripping",
-        "malicious": false
-      },
-      {
-        "package": "npm:json5",
-        "version": "0.5.1",
-        "advisory": "GHSA-9c47-m6qq-7p4h",
-        "cves": [
-          "CVE-2022-46175"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.0.2",
-        "summary": "Prototype Pollution in JSON5 via Parse Method",
-        "malicious": false
-      },
-      {
-        "package": "npm:source-map-js",
-        "version": "1.2.1",
-        "advisory": "GHSA-68fv-2mgg-jv7q",
-        "cves": [
-          "CVE-2026-93749"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.2.2",
-        "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
-        "malicious": false
-      },
-      {
-        "package": "npm:vite",
-        "version": "6.4.3",
-        "advisory": "GHSA-587h-7wmj-h5pm",
-        "cves": [
-          "CVE-2026-112942"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "6.4.4",
-        "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
-        "malicious": false
-      },
-      {
-        "package": "npm:zod",
-        "version": "4.5.4",
-        "advisory": "GHSA-mrhx-c7xc-m3w5",
-        "cves": [
-          "CVE-2023-54404"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.6.6",
-        "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
-      },
-      {
-        "package": "npm:zod",
-        "version": "4.6.5",
-        "advisory": "GHSA-mrhx-c7xc-m3w5",
-        "cves": [
-          "CVE-2023-54404"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.6.6",
-        "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
-      },
-      {
-        "package": "npm:zod",
-        "version": "4.4.3",
-        "advisory": "GHSA-mrhx-c7xc-m3w5",
-        "cves": [
-          "CVE-2023-54404"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.6.6",
-        "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "backend/package-lock.json",
+        "kev": false,
+        "epss": 0.0053,
+        "fix_published_at": "2026-09-04T08:21:15Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          ". > fastify"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "ba0160a84d0ffd9c9878ad01a27ef9f37cead37c",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 641,
+        "npm": 1194,
+        "pypi": 2
+      },
+      "scopes": {
+        "runtime": 1160,
+        "optional": 44,
+        "platform": 7,
+        "peer": 11,
+        "build": 170,
+        "dev": 444,
+        "workspace": 1
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 107,
+      "details": "security/openharness.json",
+      "details_sha256": "825977be34a4d648a4bd7a730166cd1f1b1a6ebb0730116eadb7a6ae594e23cf"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-x8mw-p69m-v3mx npm:@fastify/busboy@3.2.0 (conditional)",
+        "worst:GHSA-xjh9-v7x6-24jw npm:@fastify/busboy@3.2.0 (conditional)",
+        "worst:GHSA-5jgf-p345-68v8 npm:fast-uri@3.1.5 (conditional)"
+      ],
+      "counts": {
+        "conditional": 27,
+        "not_shipped": 12
+      },
+      "uncounted": 68,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 2108,
+      "packages_checked": 1837,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "backend/package-lock.json",
+          "status": "scanned",
+          "packages": 362,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "backend/pnpm-lock.yaml",
+          "status": "scanned",
+          "packages": 354,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "cli/package-lock.json",
+          "status": "scanned",
+          "packages": 246,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "cli/pnpm-lock.yaml",
+          "status": "scanned",
+          "packages": 203,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "companions/package-lock.json",
+          "status": "scanned",
+          "packages": 136,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pub",
+          "component": "desktop/pubspec.lock",
+          "status": "not_scanned",
+          "packages": 117,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "desktop/tool/browser_viewer/package-lock.json",
+          "status": "scanned",
+          "packages": 28,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "device-app/src-tauri/Cargo.lock",
+          "status": "scanned",
+          "packages": 486,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "device-app/ui/package-lock.json",
+          "status": "scanned",
+          "packages": 133,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "installer/Cargo.lock",
+          "status": "scanned",
+          "packages": 51,
+          "gaps": []
+        },
+        {
+          "ecosystem": "maven",
+          "component": "mobile/android/app/build.gradle.kts",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "mobile/android/build.gradle.kts",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "pub",
+          "component": "mobile/pubspec.lock",
+          "status": "not_scanned",
+          "packages": 152,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "os/packaging/playwright-mcp/package-lock.json",
+          "status": "scanned",
+          "packages": 3,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "provider/example-provider/package-lock.json",
+          "status": "scanned",
+          "packages": 99,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "provider/reference-provider/package-lock.json",
+          "status": "scanned",
+          "packages": 106,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "pty/Cargo.lock",
+          "status": "scanned",
+          "packages": 81,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "serial/Cargo.lock",
+          "status": "scanned",
+          "packages": 21,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "store/agents/excalidraw/package-lock.json",
+          "status": "scanned",
+          "packages": 6,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "store/agents/godogen/package-lock.json",
+          "status": "scanned",
+          "packages": 70,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "store/agents/home-assistant/package-lock.json",
+          "status": "scanned",
+          "packages": 1,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "store/agents/openmontage/package-lock.json",
+          "status": "scanned",
+          "packages": 2,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "store/agents/phaser/package-lock.json",
+          "status": "scanned",
+          "packages": 77,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "store/agents/rdkit/package-lock.json",
+          "status": "scanned",
+          "packages": 6,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "store/agents/remotion/package-lock.json",
+          "status": "scanned",
+          "packages": 289,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "store/agents/strudel/package-lock.json",
+          "status": "scanned",
+          "packages": 127,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "store/agents/trailofbits-skills/package-lock.json",
+          "status": "scanned",
+          "packages": 1,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "store/agents/yosys/package-lock.json",
+          "status": "scanned",
+          "packages": 71,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "store/viewers/doc-viewer/package-lock.json",
+          "status": "scanned",
+          "packages": 13,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "store/viewers/model-viewer/package-lock.json",
+          "status": "scanned",
+          "packages": 1,
+          "gaps": []
+        }
+      ],
+      "gaps": [
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "pub",
+          "component": "desktop/pubspec.lock",
+          "detail": "no reader for pubspec.lock",
+          "capability": "adapter:pub",
+          "found": 117,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "mobile/android/app/build.gradle.kts",
+          "detail": "no reader for build.gradle.kts",
+          "capability": "adapter:maven",
+          "found": 0,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "mobile/android/build.gradle.kts",
+          "detail": "no reader for build.gradle.kts",
+          "capability": "adapter:maven",
+          "found": 0,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "pub",
+          "component": "mobile/pubspec.lock",
+          "detail": "no reader for pubspec.lock",
+          "capability": "adapter:pub",
+          "found": 152,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "lockfile.missing",
+          "category": "lockfile_missing",
+          "ecosystem": "pypi",
+          "component": "os/setup.py",
+          "detail": "setup.py without a lockfile",
+          "capability": "lockfile_from_manifest:pypi",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "lockfile.missing",
+          "category": "lockfile_missing",
+          "ecosystem": "pypi",
+          "component": "store/agents/vllm/requirements.txt",
+          "detail": "requirements without pinned versions",
+          "capability": "lockfile_from_manifest:pypi",
+          "found": 2,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 84.4,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -641,16 +1160,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 84.4,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -965,5 +1481,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

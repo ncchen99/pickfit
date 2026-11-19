@@ -1,0 +1,372 @@
+{
+ "slug": "jigor",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "cbd9a629f1a3d9b6829399f6f88bd3363693f9bb",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 167
+  },
+  "scopes": {
+   "runtime": 166,
+   "dev": 1
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 6
+ },
+ "assessment": {
+  "level": "none",
+  "policy_version": "sec.v2",
+  "reasons": [],
+  "counts": {},
+  "uncounted": 6,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "partial",
+  "target": "repo_lockfile",
+  "packages_found": 172,
+  "packages_checked": 167,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 167,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "npm/package.json",
+    "status": "not_scanned",
+    "packages": 5,
+    "gaps": [
+     "lockfile.missing"
+    ]
+   },
+   {
+    "ecosystem": "pypi",
+    "component": "pyproject.toml",
+    "status": "not_scanned",
+    "packages": 0,
+    "gaps": [
+     "resolve.pyproject_failed"
+    ]
+   }
+  ],
+  "gaps": [
+   {
+    "code": "lockfile.missing",
+    "category": "lockfile_missing",
+    "ecosystem": "npm",
+    "component": "npm/package.json",
+    "detail": "package.json without a lockfile",
+    "capability": "lockfile_from_manifest:npm",
+    "found": 5,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   },
+   {
+    "code": "resolve.pyproject_failed",
+    "category": "resolve_failed",
+    "ecosystem": "pypi",
+    "component": "pyproject.toml",
+    "detail": "uv pip compile --no-build did not resolve it",
+    "capability": "resolve_in_sandbox",
+    "found": null,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   },
+   {
+    "code": "resolve.registry_failed",
+    "category": "resolve_failed",
+    "ecosystem": "pypi",
+    "component": "pypi:jigor",
+    "detail": "RuntimeError: uv resolve failed: equire\n      jigor, we can conclude that your requirements are unsatisfiable.\n\nhint: Wheels are required for `jigor` because buildi",
+    "capability": "resolve_in_sandbox",
+    "found": null,
+    "first_seen": "2026-11-04",
+    "last_seen": "2026-11-20"
+   }
+  ]
+ },
+ "sources": [
+  "github.com/Partysun/jigor@cbd9a629f1a3",
+  "Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:rustls",
+   "version": "0.23.45",
+   "advisory": "GHSA-c8m5-c952-6cm4",
+   "cves": [
+    "CVE-2026-123609"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.23.46",
+   "summary": "Rustls: Session Debug formatting exposes TLS master secrets and resumption PSKs",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123609",
+    "RUSTSEC-2026-0346"
+   ],
+   "published": "2026-10-27T16:08:47Z",
+   "modified": "2026-11-08T10:55:36.514447652Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:H/PR:H/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-212"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.23.45",
+   "scope": "runtime",
+   "paths": [
+    "jigor > ureq > rustls"
+   ],
+   "workspace": "crates/jigor",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00101,
+   "epss_percentile": 0.00917,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction",
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.45",
+   "advisory": "GHSA-h2v8-394m-p7vv",
+   "cves": [
+    "CVE-2026-123610"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.23.46",
+   "summary": "Rustls: Brotli certificate decompression can allocate an attacker-controlled amount of memory up to 1 GiB before authentication.",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123610",
+    "RUSTSEC-2026-0348"
+   ],
+   "published": "2026-10-27T16:08:36Z",
+   "modified": "2026-11-08T10:55:59.261359726Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/rustls@0.23.45",
+   "scope": "runtime",
+   "paths": [
+    "jigor > ureq > rustls"
+   ],
+   "workspace": "crates/jigor",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00165,
+   "epss_percentile": 0.0586,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.45",
+   "advisory": "GHSA-vp88-798v-h67f",
+   "cves": [
+    "CVE-2026-123612"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.23.46",
+   "summary": "rustls: ECH rejection can expose buffered application data to authenticated outer server before `ech_required` alert",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123612",
+    "RUSTSEC-2026-0347"
+   ],
+   "published": "2026-10-27T16:08:59Z",
+   "modified": "2026-11-08T10:55:39.094187294Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-200"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.23.45",
+   "scope": "runtime",
+   "paths": [
+    "jigor > ureq > rustls"
+   ],
+   "workspace": "crates/jigor",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.0011,
+   "epss_percentile": 0.01297,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "high_privileges",
+    "symbol:ech_required"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ech_required, but other packages depend on rustls"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.45",
+   "advisory": "GHSA-w44r-93j7-qv28",
+   "cves": [
+    "CVE-2026-123611"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.23.46",
+   "summary": "rustls: An unauthenticated ServerHello poisons the per-name key-exchange record, so later ClientHellos carry only a classical X25519 share",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123611",
+    "RUSTSEC-2026-0349"
+   ],
+   "published": "2026-10-27T16:08:54Z",
+   "modified": "2026-11-08T10:55:46.312019109Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-757"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.23.45",
+   "scope": "runtime",
+   "paths": [
+    "jigor > ureq > rustls"
+   ],
+   "workspace": "crates/jigor",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00188,
+   "epss_percentile": 0.08575,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls-webpki",
+   "version": "0.103.15",
+   "advisory": "RUSTSEC-2026-0382",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.103.16",
+   "summary": "Certificate verification may accept distrusted intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0381",
+    "RUSTSEC-2026-0383"
+   ],
+   "published": "2026-10-20T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/rustls-webpki@0.103.15",
+   "scope": "runtime",
+   "paths": [
+    "jigor > ureq > rustls > rustls-webpki"
+   ],
+   "workspace": "crates/jigor",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:webpki-roots",
+   "version": "1.0.9",
+   "advisory": "RUSTSEC-2026-0381",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "1.0.10",
+   "summary": "Bundled root certificates allow trust in distrusted emSign intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0382",
+    "RUSTSEC-2026-0383"
+   ],
+   "published": "2026-10-19T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/webpki-roots@1.0.9",
+   "scope": "runtime",
+   "paths": [
+    "jigor > ureq > webpki-roots"
+   ],
+   "workspace": "crates/jigor",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

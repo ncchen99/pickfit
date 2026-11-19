@@ -343,65 +343,22 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/plasmate-labs/plasmate@3d7796880650",
+      "github.com/plasmate-labs/plasmate@bfa2614c6340",
       "Cargo.lock",
+      "integrations/vercel-ai/package-lock.json",
+      "packages/som-parser-node/package-lock.json",
+      "sdk/node/package-lock.json",
       "smoke/package-lock.json",
       "sdk/python/uv.lock"
     ],
-    "packages_checked": 412,
-    "findings_total": 5,
-    "advisories_total": 5,
+    "packages_checked": 559,
+    "findings_total": 1,
+    "advisories_total": 1,
     "findings": [
-      {
-        "package": "crates:wasmtime",
-        "version": "36.0.13",
-        "advisory": "GHSA-897f-g5gm-fmxm",
-        "cves": [
-          "CVE-2026-115889"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "36.0.19",
-        "summary": "Wasmtime: Bit-packing in Cranelift compiler causes silent overflow and miscompilation",
-        "malicious": false
-      },
-      {
-        "package": "crates:wasmtime",
-        "version": "36.0.13",
-        "advisory": "GHSA-mghf-wjfp-p5xm",
-        "cves": [
-          "CVE-2026-115893"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "36.0.19",
-        "summary": "Wasmtime: Cranelift backend on aarch64 can jump to incorrect target on large Wasm `br_table` instruction",
-        "malicious": false
-      },
-      {
-        "package": "crates:quinn-proto",
-        "version": "0.11.15",
-        "advisory": "RUSTSEC-2026-0340",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.11.18",
-        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
-      },
-      {
-        "package": "crates:quinn-proto",
-        "version": "0.11.15",
-        "advisory": "RUSTSEC-2026-0341",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.11.17",
-        "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
-        "malicious": false
-      },
       {
         "package": "npm:zod",
         "version": "3.25.76",
@@ -412,23 +369,136 @@
         "severity": "HIGH",
         "fixed_in": "4.6.6",
         "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "smoke/package-lock.json",
+        "kev": false,
+        "fix_published_at": "2026-10-11T16:18:23Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > puppeteer-core > chromium-bidi > zod"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "bfa2614c6340737a11ab709da353544f327ea89e",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 383,
+        "npm": 171,
+        "pypi": 5
+      },
+      "scopes": {
+        "runtime": 336,
+        "optional": 68,
+        "peer": 11,
+        "dev": 144
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 39,
+      "details": "security/plasmate.json",
+      "details_sha256": "24128502398e4eee26173abf29c271e9843d85e7cc65dcc07c27f8afe5653112"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-mrhx-c7xc-m3w5 npm:zod@3.25.76 (conditional)",
+        "worst:GHSA-897f-g5gm-fmxm crates:wasmtime@36.0.13 (not_shipped)",
+        "worst:GHSA-mghf-wjfp-p5xm crates:wasmtime@36.0.13 (not_shipped)"
+      ],
+      "counts": {
+        "conditional": 1,
+        "not_shipped": 8
+      },
+      "uncounted": 30,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 559,
+      "packages_checked": 559,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 383,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "integrations/vercel-ai/package-lock.json",
+          "status": "scanned",
+          "packages": 112,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "packages/som-parser-node/package-lock.json",
+          "status": "scanned",
+          "packages": 132,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "sdk/node/package-lock.json",
+          "status": "scanned",
+          "packages": 3,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "smoke/package-lock.json",
+          "status": "scanned",
+          "packages": 24,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "sdk/python/uv.lock",
+          "status": "scanned",
+          "packages": 5,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 81.5,
       "confidence": 0.8,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.7225,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.6875,
@@ -448,16 +518,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 81.5,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -1022,5 +1089,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:37:59+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

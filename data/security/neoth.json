@@ -1,0 +1,677 @@
+{
+ "slug": "neoth",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "4b81f44040714274147c825a79ccdffbdb169947",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 1457,
+   "npm": 223,
+   "pypi": 40
+  },
+  "scopes": {
+   "runtime": 1245,
+   "optional": 310,
+   "platform": 3,
+   "build": 1,
+   "dev": 65,
+   "workspace": 96
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 15
+ },
+ "assessment": {
+  "level": "exposed",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:RUSTSEC-2026-0195 crates:quick-xml@0.39.4 (exposed)",
+   "worst:RUSTSEC-2026-0194 crates:quick-xml@0.39.4 (conditional)"
+  ],
+  "counts": {
+   "exposed": 1,
+   "conditional": 1
+  },
+  "uncounted": 13,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "partial",
+  "target": "repo_lockfile",
+  "packages_found": 1765,
+  "packages_checked": 1720,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "SRC/Cargo.lock",
+    "status": "scanned",
+    "packages": 1425,
+    "gaps": []
+   },
+   {
+    "ecosystem": "pub",
+    "component": "apps/neoth_companion/pubspec.lock",
+    "status": "not_scanned",
+    "packages": 45,
+    "gaps": [
+     "adapter.missing"
+    ]
+   },
+   {
+    "ecosystem": "crates",
+    "component": "bridges/companion-native/Cargo.lock",
+    "status": "scanned",
+    "packages": 102,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "bridges/keet/pnpm-lock.yaml",
+    "status": "scanned",
+    "packages": 127,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "bridges/whatsapp-baileys/pnpm-lock.yaml",
+    "status": "scanned",
+    "packages": 96,
+    "gaps": []
+   },
+   {
+    "ecosystem": "pypi",
+    "component": "packaging/graphify-release/uv.lock",
+    "status": "scanned",
+    "packages": 40,
+    "gaps": []
+   }
+  ],
+  "gaps": [
+   {
+    "code": "adapter.missing",
+    "category": "no_adapter",
+    "ecosystem": "pub",
+    "component": "apps/neoth_companion/pubspec.lock",
+    "detail": "no reader for pubspec.lock",
+    "capability": "adapter:pub",
+    "found": 45,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   }
+  ]
+ },
+ "sources": [
+  "github.com/The-Geek-Freaks/NEOTH@4b81f4404071",
+  "SRC/Cargo.lock",
+  "bridges/companion-native/Cargo.lock",
+  "bridges/keet/pnpm-lock.yaml",
+  "bridges/whatsapp-baileys/pnpm-lock.yaml",
+  "packaging/graphify-release/uv.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:quick-xml",
+   "version": "0.39.4",
+   "advisory": "RUSTSEC-2026-0195",
+   "severity": "HIGH",
+   "fixed_in": "0.41.0",
+   "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+   "malicious": false,
+   "published": "2026-06-29T12:00:00Z",
+   "modified": "2026-07-02T09:00:04.037478193Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quick-xml@0.39.4",
+   "fix_published_at": "2026-06-29T18:04:43Z",
+   "scope": "runtime",
+   "paths": [
+    "neothd-gui > rfd > ashpd > wayland-client > wayland-scanner > quick-xml"
+   ],
+   "workspace": "SRC/neothd-gui",
+   "found_in": "SRC/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:NsReader"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "SRC/neothd/src/media/docx_structure.rs:6: use quick_xml::{NsReader, events::Event, name::ResolveResult};"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": true,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quick-xml",
+   "version": "0.39.4",
+   "advisory": "RUSTSEC-2026-0194",
+   "severity": "HIGH",
+   "fixed_in": "0.41.0",
+   "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+   "malicious": false,
+   "published": "2026-06-29T12:00:00Z",
+   "modified": "2026-07-02T08:00:03.849273679Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quick-xml@0.39.4",
+   "fix_published_at": "2026-06-29T18:04:43Z",
+   "scope": "runtime",
+   "paths": [
+    "neothd-gui > rfd > ashpd > wayland-client > wayland-scanner > quick-xml"
+   ],
+   "workspace": "SRC/neothd-gui",
+   "found_in": "SRC/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:libsqlite3-sys",
+   "version": "0.35.0",
+   "advisory": "RUSTSEC-2026-0459",
+   "cves": [
+    "CVE-2026-119375"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.39.0",
+   "summary": "`libsqlite3-sys` via C SQLite CVE-2026-119375",
+   "malicious": false,
+   "aliases": [
+    "BIT-sqlite-2026-119375",
+    "CVE-2026-119375",
+    "GHSA-72w2-rjgg-q729",
+    "RUSTSEC-2026-0502"
+   ],
+   "published": "2026-10-30T12:00:00Z",
+   "modified": "2026-11-17T13:41:05.770775012Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/libsqlite3-sys@0.35.0",
+   "scope": "runtime",
+   "paths": [
+    "neoth > rusqlite > libsqlite3-sys"
+   ],
+   "workspace": "SRC/neothd",
+   "found_in": "SRC/Cargo.lock",
+   "kev": false,
+   "epss": 0.00195,
+   "epss_percentile": 0.09275,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.18",
+   "advisory": "RUSTSEC-2026-0523",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.19",
+   "summary": "MAX_STREAM_DATA frame can open streams beyond the stream limit",
+   "malicious": false,
+   "aliases": [
+    "GHSA-53rm-773f-4q8c"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:04.789912316Z",
+   "purl": "pkg:cargo/quinn-proto@0.11.18",
+   "scope": "runtime",
+   "paths": [
+    "neoth > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "SRC/neothd",
+   "found_in": "SRC/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "option:MAX_STREAM_DATA"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use MAX_STREAM_DATA, but other packages depend on quinn-proto"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.18",
+   "advisory": "RUSTSEC-2026-0524",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.19",
+   "summary": "Long Retry token can panic or exhaust memory in a QUIC client",
+   "malicious": false,
+   "aliases": [
+    "GHSA-wppq-2f6r-wfvm"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:06.127108520Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.18",
+   "scope": "runtime",
+   "paths": [
+    "neoth > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "SRC/neothd",
+   "found_in": "SRC/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-udp",
+   "version": "0.5.14",
+   "advisory": "RUSTSEC-2026-0538",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.5.16",
+   "summary": "Receive loop can spin after a truncated datagram",
+   "malicious": false,
+   "aliases": [
+    "GHSA-6pp4-4cxf-xf88"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:08.844283231Z",
+   "purl": "pkg:cargo/quinn-udp@0.5.14",
+   "scope": "runtime",
+   "paths": [
+    "neoth > reqwest > quinn > quinn-udp"
+   ],
+   "workspace": "SRC/neothd",
+   "found_in": "SRC/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.65.0",
+   "advisory": "GHSA-736f-c93q-9fwx",
+   "cves": [
+    "CVE-2026-128088"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.65.1",
+   "summary": "russh try_sign: asynchronous confirmation can sign after agent lock",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-128088"
+   ],
+   "published": "2026-11-13T19:10:46Z",
+   "modified": "2026-11-13T19:15:05.906299888Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:H/PR:L/UI:R/S:U/C:N/I:L/A:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-367",
+    "CWE-863"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/russh@0.65.0",
+   "scope": "optional",
+   "paths": [
+    "neoth > russh"
+   ],
+   "workspace": "SRC/neothd",
+   "found_in": "SRC/Cargo.lock",
+   "kev": false,
+   "epss": 0.00113,
+   "epss_percentile": 0.01456,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.65.0",
+   "advisory": "GHSA-9264-jvgf-6w2f",
+   "cves": [
+    "CVE-2026-128087"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.65.1",
+   "summary": "russh kex_done: Shared-secret callback runs before server host-key verification",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-128087"
+   ],
+   "published": "2026-11-13T19:20:16Z",
+   "modified": "2026-11-13T19:30:05.188364651Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-696",
+    "CWE-863"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/russh@0.65.0",
+   "scope": "optional",
+   "paths": [
+    "neoth > russh"
+   ],
+   "workspace": "SRC/neothd",
+   "found_in": "SRC/Cargo.lock",
+   "kev": false,
+   "epss": 0.00239,
+   "epss_percentile": 0.15107,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:vodozemac",
+   "version": "0.10.0",
+   "advisory": "RUSTSEC-2026-0451",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.2",
+   "summary": "Degraded secret zeroization capabilities",
+   "malicious": false,
+   "aliases": [
+    "GHSA-v27v-f96q-qhjq"
+   ],
+   "published": "2026-11-06T12:00:00Z",
+   "modified": "2026-11-06T15:45:02.403869632Z",
+   "purl": "pkg:cargo/vodozemac@0.10.0",
+   "scope": "workspace",
+   "paths": [
+    "matrix-sdk > vodozemac"
+   ],
+   "workspace": "matrix-sdk",
+   "found_in": "SRC/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:vodozemac",
+   "version": "0.10.0",
+   "advisory": "RUSTSEC-2026-0510",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.2",
+   "summary": "Panic when decoding malformed Ed25519 keys from Base64",
+   "malicious": false,
+   "aliases": [
+    "GHSA-pqp6-f7wc-6498"
+   ],
+   "published": "2026-11-11T12:00:00Z",
+   "modified": "2026-11-12T14:30:06.142752344Z",
+   "dos_only": false,
+   "purl": "pkg:cargo/vodozemac@0.10.0",
+   "scope": "workspace",
+   "paths": [
+    "matrix-sdk > vodozemac"
+   ],
+   "workspace": "matrix-sdk",
+   "found_in": "SRC/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Ed25519PublicKey::from_base64",
+    "symbol:Ed25519SecretKey::from_base64"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use Ed25519PublicKey::from_base64, Ed25519SecretKey::from_base64, but other packages depend on vodozemac"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:wasmtime",
+   "version": "36.0.20",
+   "advisory": "RUSTSEC-2026-0566",
+   "severity": "UNKNOWN",
+   "fixed_in": "36.0.21",
+   "summary": "wasmtime-wasi: Unbounded host memory growth via empty writes to `AsyncWriteStream`",
+   "malicious": false,
+   "aliases": [
+    "GHSA-5m8g-xhq4-4h93"
+   ],
+   "published": "2026-11-16T12:00:00Z",
+   "modified": "2026-11-19T08:45:02.804113183Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/wasmtime@36.0.20",
+   "scope": "optional",
+   "paths": [
+    "neoth > wasmtime"
+   ],
+   "workspace": "SRC/neothd",
+   "found_in": "SRC/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:AsyncWriteStream"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use AsyncWriteStream, but other packages depend on wasmtime"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:wasmtime",
+   "version": "36.0.20",
+   "advisory": "RUSTSEC-2026-0567",
+   "severity": "UNKNOWN",
+   "fixed_in": "48.0.9",
+   "summary": "Abort in Wasmtime builds without the `threads` cargo feature",
+   "malicious": false,
+   "aliases": [
+    "GHSA-2674-w29h-wqvj"
+   ],
+   "published": "2026-11-16T12:00:00Z",
+   "modified": "2026-11-19T08:45:02.801281245Z",
+   "purl": "pkg:cargo/wasmtime@36.0.20",
+   "scope": "optional",
+   "paths": [
+    "neoth > wasmtime"
+   ],
+   "workspace": "SRC/neothd",
+   "found_in": "SRC/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:wasmtime",
+   "version": "36.0.20",
+   "advisory": "RUSTSEC-2026-0569",
+   "severity": "UNKNOWN",
+   "fixed_in": "36.0.21",
+   "summary": "Panic in `Caller::get_module_export` when a host function isn't called from WebAssembly",
+   "malicious": false,
+   "aliases": [
+    "GHSA-hj27-mpw9-ff4c"
+   ],
+   "published": "2026-11-16T12:00:00Z",
+   "modified": "2026-11-19T08:45:02.801253474Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/wasmtime@36.0.20",
+   "scope": "optional",
+   "paths": [
+    "neoth > wasmtime"
+   ],
+   "workspace": "SRC/neothd",
+   "found_in": "SRC/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Caller::get_module_export"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use Caller::get_module_export, but other packages depend on wasmtime"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:wasmtime",
+   "version": "36.0.20",
+   "advisory": "RUSTSEC-2026-0571",
+   "severity": "UNKNOWN",
+   "fixed_in": "36.0.21",
+   "summary": "wasmtime-wasi-http: Empty Body Writes can result in Unbound Heap Usage with HTTP/2",
+   "malicious": false,
+   "aliases": [
+    "GHSA-f8mm-ggr3-89wh"
+   ],
+   "published": "2026-11-16T12:00:00Z",
+   "modified": "2026-11-19T08:45:02.795286511Z",
+   "purl": "pkg:cargo/wasmtime@36.0.20",
+   "scope": "optional",
+   "paths": [
+    "neoth > wasmtime"
+   ],
+   "workspace": "SRC/neothd",
+   "found_in": "SRC/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:wasmtime",
+   "version": "36.0.20",
+   "advisory": "RUSTSEC-2026-0573",
+   "severity": "UNKNOWN",
+   "fixed_in": "48.0.9",
+   "summary": "Process abort when a GC heap's reservation isn't a multiple of the page size",
+   "malicious": false,
+   "aliases": [
+    "GHSA-wvgq-g5hf-6gm6"
+   ],
+   "published": "2026-11-16T12:00:00Z",
+   "modified": "2026-11-19T08:45:02.798083703Z",
+   "purl": "pkg:cargo/wasmtime@36.0.20",
+   "scope": "optional",
+   "paths": [
+    "neoth > wasmtime"
+   ],
+   "workspace": "SRC/neothd",
+   "found_in": "SRC/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

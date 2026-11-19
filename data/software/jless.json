@@ -346,9 +346,7 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-16T03:11:48+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -372,35 +370,123 @@
         "severity": "CRITICAL",
         "fixed_in": "1.0.0",
         "summary": "Out of bounds read in xcb",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.01749,
+        "fix_published_at": "2022-03-06T10:36:50Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "jless > clipboard > x11-clipboard > xcb"
+        ]
       },
       {
         "package": "crates:nix",
         "version": "0.22.1",
-        "advisory": "GHSA-wgrg-5h56-jg27",
+        "advisory": "GHSA-76w9-p8mg-j927",
         "cves": [
           "CVE-2021-45707"
         ],
         "severity": "HIGH",
         "fixed_in": "0.22.2",
-        "summary": "Out-of-bounds write in nix::unistd::getgrouplist",
-        "malicious": false
+        "summary": "Out-of-bounds Write in nix",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.0169,
+        "fix_published_at": "2021-09-29T04:38:59Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "high_privileges"
+        ],
+        "paths": [
+          "jless > rustyline > nix"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "e6cdef719c7319020391d6bbf838ab272ce44cf0",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 81
+      },
+      "scopes": {
+        "runtime": 79,
+        "dev": 2
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 5,
+      "details": "security/jless.json",
+      "details_sha256": "cfa954815be4bd44ee0f96038abd7df8c06f0c7fff3df4bd33cd5c9e268dc0d8"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-2xpg-3hx4-fm9r crates:xcb@0.8.2 (conditional)",
+        "worst:GHSA-76w9-p8mg-j927 crates:nix@0.22.1 (conditional)"
+      ],
+      "counts": {
+        "conditional": 2
+      },
+      "uncounted": 3,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 81,
+      "packages_checked": 81,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 81,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 63.0,
-      "raw_total": 63.0,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.595,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -420,16 +506,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 63.0,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -755,5 +838,5 @@
     }
   ],
   "first_seen_at": "2026-11-16T00:58:07+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

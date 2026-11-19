@@ -273,9 +273,7 @@
     "cost_usd": 0.019788
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -283,8 +281,8 @@
       "installer/Cargo.lock"
     ],
     "packages_checked": 349,
-    "findings_total": 6,
-    "advisories_total": 6,
+    "findings_total": 4,
+    "advisories_total": 4,
     "findings": [
       {
         "package": "crates:zip",
@@ -296,17 +294,21 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "8.6.0",
-        "advisory": "RUSTSEC-2026-0369",
-        "cves": [],
-        "severity": "CRITICAL",
-        "fixed_in": "9.0.0",
-        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "installer/core",
+        "found_in": "installer/Cargo.lock",
+        "kev": false,
+        "epss": 0.0032,
+        "fix_published_at": "2026-10-17T18:45:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "crowsetup-core > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -318,19 +320,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: legacy Shrink/Reduce/Implode decoder: denial of service from attacker-controlled ZIP64 uncompressed size",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "8.6.0",
-        "advisory": "GHSA-hjqx-j4rw-g7xv",
-        "cves": [
-          "CVE-2026-115908"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "installer/core",
+        "found_in": "installer/Cargo.lock",
+        "kev": false,
+        "epss": 0.0035,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
-        "malicious": false
+        "paths": [
+          "crowsetup-core > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -342,7 +349,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "installer/core",
+        "found_in": "installer/Cargo.lock",
+        "kev": false,
+        "epss": 0.00461,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "crowsetup-core > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -352,23 +376,188 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "installer/core",
+        "found_in": "installer/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
+        ],
+        "paths": [
+          "crowsetup-core > zip"
+        ]
+      },
+      {
+        "package": "crates:zip",
+        "version": "8.6.0",
+        "advisory": "RUSTSEC-2026-0369",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.0",
+        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "installer/core",
+        "found_in": "installer/Cargo.lock",
+        "kev": false,
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:ZipStreamReader::extract",
+          "symbol:ZipArchive::extract"
+        ],
+        "paths": [
+          "crowsetup-core > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses ZipStreamReader::extract, ZipArchive::extract; only the project depends on zip"
+          ]
+        }
+      },
+      {
+        "package": "crates:zip",
+        "version": "8.6.0",
+        "advisory": "GHSA-hjqx-j4rw-g7xv",
+        "cves": [
+          "CVE-2026-115908"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "installer/core",
+        "found_in": "installer/Cargo.lock",
+        "kev": false,
+        "epss": 0.00432,
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity",
+          "symbol:ZipArchive::extract"
+        ],
+        "paths": [
+          "crowsetup-core > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses ZipArchive::extract; only the project depends on zip"
+          ]
+        }
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:06:03+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "7f4bcec07ef4425e9662e219daf033098a1407ff",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 349
+      },
+      "scopes": {
+        "runtime": 341,
+        "dev": 8
+      },
+      "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 20,
+      "details": "security/crow.json",
+      "details_sha256": "2804a3393e2084f81328a998b08834df2cd972f41cdee0aa3f6896430f4fea99"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-m665-v7pm-7grj crates:zip@8.6.0 (conditional)",
+        "worst:GHSA-9hj8-73fh-9963 crates:zip@8.6.0 (conditional)",
+        "worst:GHSA-q7v9-x93c-xqv3 crates:zip@8.6.0 (conditional)"
+      ],
+      "counts": {
+        "conditional": 4,
+        "present_unreachable": 2
+      },
+      "uncounted": 14,
+      "assessed_at": "2026-11-20T00:06:03+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 349,
+      "packages_checked": 349,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "installer/Cargo.lock",
+          "status": "scanned",
+          "packages": 349,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "pyproject.toml",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "resolve.pyproject_failed"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "code": "resolve.pyproject_failed",
+          "category": "resolve_failed",
+          "ecosystem": "pypi",
+          "component": "pyproject.toml",
+          "detail": "uv pip compile --no-build did not resolve it",
+          "capability": "resolve_in_sandbox",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7+visual.v1",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 79.2,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5,
@@ -388,16 +577,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 79.2,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       },
@@ -765,5 +951,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:48:25+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:06:03+08:00"
 }

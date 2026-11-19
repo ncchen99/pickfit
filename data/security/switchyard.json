@@ -1,0 +1,510 @@
+{
+ "slug": "switchyard",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "5691e72a760128277fdf133db9525280530ac7bb",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 592
+  },
+  "scopes": {
+   "runtime": 569,
+   "optional": 4,
+   "dev": 19
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 12
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:RUSTSEC-2026-0461 crates:rmcp@3.5.1 (conditional)"
+  ],
+  "counts": {
+   "conditional": 1
+  },
+  "uncounted": 11,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 592,
+  "packages_checked": 592,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 379,
+    "gaps": []
+   },
+   {
+    "ecosystem": "crates",
+    "component": "desktop/Cargo.lock",
+    "status": "scanned",
+    "packages": 573,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/ichikuruma22-star/switchyard@5691e72a7601",
+  "Cargo.lock",
+  "desktop/Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:zstd-safe",
+   "version": "8.0.0",
+   "advisory": "RUSTSEC-2026-0398",
+   "severity": "UNKNOWN",
+   "fixed_in": "8.2.0",
+   "summary": "`Seekable::decompress` sets a `Vec` length beyond its capacity for offsets past the end",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-11-02T09:30:03.419709171Z",
+   "dos_only": false,
+   "purl": "pkg:cargo/zstd-safe@8.0.0",
+   "scope": "runtime",
+   "paths": [
+    "switchyard-server > zstd > zstd-safe"
+   ],
+   "workspace": "crates/server",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Seekable::decompress",
+    "symbol:Vec",
+    "symbol:AdvancedSeekable::decompress"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "crates/server/src/body.rs:119: fn encodings(headers: &HeaderMap) -> Result<Vec<Encoding>, BodyError> {"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rmcp",
+   "version": "3.5.1",
+   "advisory": "RUSTSEC-2026-0461",
+   "severity": "HIGH",
+   "fixed_in": "3.6.0",
+   "summary": "Unbounded tool schema cache in Streamable HTTP server transport",
+   "malicious": false,
+   "aliases": [
+    "GHSA-4432-vg92-fqh6"
+   ],
+   "published": "2026-10-20T12:00:00Z",
+   "modified": "2026-11-09T10:15:02.429230862Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/rmcp@3.5.1",
+   "fix_published_at": "2026-10-20T05:53:35Z",
+   "scope": "runtime",
+   "paths": [
+    "switchyard-app > rmcp"
+   ],
+   "workspace": "crates/app",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:glib",
+   "version": "0.18.5",
+   "advisory": "GHSA-wrw7-89jp-8q8g",
+   "severity": "MODERATE",
+   "fixed_in": "0.20.0",
+   "summary": "Unsoundness in `Iterator` and `DoubleEndedIterator` impls for `glib::VariantStrIter`",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2024-0429"
+   ],
+   "published": "2024-12-23T20:19:24Z",
+   "modified": "2025-10-28T06:29:26.473225Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/glib@0.18.5",
+   "scope": "runtime",
+   "paths": [
+    "switchya-desktop > tauri > gtk > glib"
+   ],
+   "workspace": "desktop",
+   "found_in": "desktop/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Iterator",
+    "symbol:DoubleEndedIterator",
+    "symbol:glib::VariantStrIter"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "crates/admin/src/routes/playground.rs:98: fn line_starts(bytes: &[u8]) -> impl Iterator<Item = usize> + '_ {",
+     "named only in files that do not import glib"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rmcp",
+   "version": "3.5.1",
+   "advisory": "RUSTSEC-2026-0462",
+   "severity": "MODERATE",
+   "fixed_in": "3.9.0",
+   "summary": "Unbounded response body buffering in Streamable HTTP clients",
+   "malicious": false,
+   "aliases": [
+    "GHSA-c9f9-cp8h-jcj5"
+   ],
+   "published": "2026-11-05T12:00:00Z",
+   "modified": "2026-11-09T10:30:02.590803911Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/rmcp@3.5.1",
+   "scope": "runtime",
+   "paths": [
+    "switchyard-app > rmcp"
+   ],
+   "workspace": "crates/app",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:libsqlite3-sys",
+   "version": "0.38.2",
+   "advisory": "RUSTSEC-2026-0459",
+   "cves": [
+    "CVE-2026-119375"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.39.0",
+   "summary": "`libsqlite3-sys` via C SQLite CVE-2026-119375",
+   "malicious": false,
+   "aliases": [
+    "BIT-sqlite-2026-119375",
+    "CVE-2026-119375",
+    "GHSA-72w2-rjgg-q729",
+    "RUSTSEC-2026-0502"
+   ],
+   "published": "2026-10-30T12:00:00Z",
+   "modified": "2026-11-17T13:41:05.770775012Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/libsqlite3-sys@0.38.2",
+   "scope": "runtime",
+   "paths": [
+    "switchyard-agent > rusqlite > libsqlite3-sys"
+   ],
+   "workspace": "crates/agent",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00195,
+   "epss_percentile": 0.09275,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rmcp",
+   "version": "3.5.1",
+   "advisory": "RUSTSEC-2026-0457",
+   "severity": "UNKNOWN",
+   "fixed_in": "3.7.0",
+   "summary": "OAuth client SSRF filter checks host strings, not resolved addresses",
+   "malicious": false,
+   "aliases": [
+    "GHSA-5p52-q7pq-9fq2"
+   ],
+   "published": "2026-10-22T12:00:00Z",
+   "modified": "2026-11-09T10:00:02.336894229Z",
+   "purl": "pkg:cargo/rmcp@3.5.1",
+   "scope": "runtime",
+   "paths": [
+    "switchyard-app > rmcp"
+   ],
+   "workspace": "crates/app",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls-webpki",
+   "version": "0.103.15",
+   "advisory": "RUSTSEC-2026-0382",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.103.16",
+   "summary": "Certificate verification may accept distrusted intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0381",
+    "RUSTSEC-2026-0383"
+   ],
+   "published": "2026-10-20T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/rustls-webpki@0.103.15",
+   "scope": "runtime",
+   "paths": [
+    "switchyard > rustls > rustls-webpki"
+   ],
+   "workspace": "crates/switchyard",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:webpki-root-certs",
+   "version": "1.0.9",
+   "advisory": "RUSTSEC-2026-0383",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "1.0.10",
+   "summary": "Bundled root certificates allow trust in distrusted emSign intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0381",
+    "RUSTSEC-2026-0382"
+   ],
+   "published": "2026-10-19T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/webpki-root-certs@1.0.9",
+   "scope": "runtime",
+   "paths": [
+    "switchyard-app > reqwest > rustls-platform-verifier > webpki-root-certs"
+   ],
+   "workspace": "crates/app",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:webpki-roots",
+   "version": "1.0.9",
+   "advisory": "RUSTSEC-2026-0381",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "1.0.10",
+   "summary": "Bundled root certificates allow trust in distrusted emSign intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0382",
+    "RUSTSEC-2026-0383"
+   ],
+   "published": "2026-10-19T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/webpki-roots@1.0.9",
+   "scope": "runtime",
+   "paths": [
+    "switchyard-upstream > webpki-roots"
+   ],
+   "workspace": "crates/upstream",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd",
+   "version": "0.14.0",
+   "advisory": "RUSTSEC-2026-0391",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.14.3",
+   "summary": "Data from an abandoned stream leaks into the next stream on a reused context",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-11-02T09:30:03.590733846Z",
+   "purl": "pkg:cargo/zstd@0.14.0",
+   "scope": "runtime",
+   "paths": [
+    "switchyard-server > zstd"
+   ],
+   "workspace": "crates/server",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Decoder::with_context",
+    "symbol:Encoder::with_context"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use Decoder::with_context, Encoder::with_context, but other packages depend on zstd"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd-safe",
+   "version": "8.0.0",
+   "advisory": "RUSTSEC-2026-0403",
+   "severity": "UNKNOWN",
+   "fixed_in": "8.2.0",
+   "summary": "Uninitialized memory exposed when streaming decompression of a legacy frame fails",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-11-02T09:30:04.136442771Z",
+   "purl": "pkg:cargo/zstd-safe@8.0.0",
+   "scope": "runtime",
+   "paths": [
+    "switchyard-server > zstd > zstd-safe"
+   ],
+   "workspace": "crates/server",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:DCtx::decompress_stream"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use DCtx::decompress_stream, but other packages depend on zstd-safe"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd-sys",
+   "version": "2.1.0+zstd.1.5.7",
+   "advisory": "RUSTSEC-2026-0410",
+   "severity": "UNKNOWN",
+   "fixed_in": "2.1.2",
+   "summary": "WebAssembly allocator shim corrupts memory on allocation failure",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-10-26T14:00:05.788985783Z",
+   "purl": "pkg:cargo/zstd-sys@2.1.0%2Bzstd.1.5.7",
+   "scope": "runtime",
+   "paths": [
+    "switchyard-server > zstd > zstd-safe > zstd-sys"
+   ],
+   "workspace": "crates/server",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

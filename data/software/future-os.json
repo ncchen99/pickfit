@@ -275,17 +275,15 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/futuregene/future-os@1d9671ae4a87",
+      "github.com/futuregene/future-os@c6a45617c776",
       "Cargo.lock",
       "package-lock.json"
     ],
-    "packages_checked": 1412,
+    "packages_checked": 2284,
     "findings_total": 4,
     "advisories_total": 4,
     "findings": [
@@ -297,7 +295,31 @@
         "severity": "HIGH",
         "fixed_in": "0.13.5",
         "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agent",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-21T19:45:37Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ENABLE_WIKILINKS"
+        ],
+        "paths": [
+          "future-agent > pulldown-cmark"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ENABLE_WIKILINKS, but other packages depend on pulldown-cmark"
+          ]
+        }
       },
       {
         "package": "crates:pulldown-cmark",
@@ -307,7 +329,31 @@
         "severity": "HIGH",
         "fixed_in": "0.13.6",
         "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agent",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-30T08:50:18Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ENABLE_WIKILINKS"
+        ],
+        "paths": [
+          "future-agent > pulldown-cmark"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ENABLE_WIKILINKS, but other packages depend on pulldown-cmark"
+          ]
+        }
       },
       {
         "package": "crates:quick-xml",
@@ -317,7 +363,23 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agent",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "future-agent > pprof > inferno > quick-xml"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -327,23 +389,115 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agent",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
+        ],
+        "paths": [
+          "future-agent > pprof > inferno > quick-xml"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use NsReader, but other packages depend on quick-xml"
+          ]
+        }
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "c6a45617c776341ba88da21aa40238640a4ce7a2",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 727,
+        "npm": 1557
+      },
+      "scopes": {
+        "runtime": 716,
+        "optional": 4,
+        "build": 6,
+        "dev": 1,
+        "workspace": 1557
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 11,
+      "details": "security/future-os.json",
+      "details_sha256": "c36932c661132f692bd07841d2af3a7007680d3e32bb09c3c8a35ad4568c9060"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0414 crates:pulldown-cmark@0.13.4 (conditional)",
+        "worst:RUSTSEC-2026-0433 crates:pulldown-cmark@0.13.4 (conditional)",
+        "worst:RUSTSEC-2026-0194 crates:quick-xml@0.26.0 (conditional)"
+      ],
+      "counts": {
+        "conditional": 4
+      },
+      "uncounted": 7,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 2284,
+      "packages_checked": 2284,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 727,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "package-lock.json",
+          "status": "scanned",
+          "packages": 1557,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 79.4,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -363,16 +517,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 79.4,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -803,5 +954,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

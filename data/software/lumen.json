@@ -232,9 +232,7 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -255,23 +253,96 @@
         "severity": "HIGH",
         "fixed_in": "0.103.13",
         "summary": "rustls-webpki: Denial of service via panic on malformed CRL BIT STRING",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/lumen-cli",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00346,
+        "fix_published_at": "2026-04-21T10:25:37Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "lumen-cli > ureq > rustls > rustls-webpki"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "5e4ad6e6ca384ce911cdb80acb976749e8684af4",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 199
+      },
+      "scopes": {
+        "runtime": 177,
+        "optional": 18,
+        "dev": 4
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 10,
+      "details": "security/lumen.json",
+      "details_sha256": "7927cb6c15acb5431611909b94d6d2263e905651e7753e09d0e4b9a06e1e8e36"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-82j2-j2ch-gfr8 crates:rustls-webpki@0.103.10 (conditional)"
+      ],
+      "counts": {
+        "conditional": 1
+      },
+      "uncounted": 9,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 199,
+      "packages_checked": 199,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 199,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 84.4,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -291,16 +362,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 84.4,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -615,5 +683,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:49:14+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

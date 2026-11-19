@@ -1,0 +1,103 @@
+{
+ "slug": "zigzag",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "7053f6793391e8433dcb1e953224860e07aeb4de",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 494
+  },
+  "scopes": {
+   "runtime": 127,
+   "optional": 354,
+   "build": 11,
+   "dev": 2
+  },
+  "advisories_fetched_at": "2026-11-20T00:50:25+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 1
+ },
+ "assessment": {
+  "level": "none",
+  "policy_version": "sec.v2",
+  "reasons": [],
+  "counts": {},
+  "uncounted": 1,
+  "assessed_at": "2026-11-20T00:50:25+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 494,
+  "packages_checked": 494,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 494,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/simpsoka/zigzag@7053f6793391",
+  "Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:glib",
+   "version": "0.18.5",
+   "advisory": "GHSA-wrw7-89jp-8q8g",
+   "severity": "MODERATE",
+   "fixed_in": "0.20.0",
+   "summary": "Unsoundness in `Iterator` and `DoubleEndedIterator` impls for `glib::VariantStrIter`",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2024-0429"
+   ],
+   "published": "2024-12-23T20:19:24Z",
+   "modified": "2025-10-28T06:29:26.473225Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/glib@0.18.5",
+   "scope": "optional",
+   "paths": [
+    "zigzag > muda > gtk > glib"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Iterator",
+    "symbol:DoubleEndedIterator",
+    "symbol:glib::VariantStrIter"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "src/formats/more.rs:12: fn deltas(cmds: &[Cmd]) -> impl Iterator<Item = (i64, i64, Op)> + '_ {",
+     "named only in files that do not import glib"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

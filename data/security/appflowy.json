@@ -1,0 +1,3561 @@
+{
+ "slug": "appflowy",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "8fcee27d9bd93aad4ee0191d5d8d915d6a9a4e93",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 792
+  },
+  "scopes": {
+   "runtime": 707,
+   "optional": 71,
+   "build": 7,
+   "dev": 7
+  },
+  "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 84
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-m665-v7pm-7grj crates:zip@0.6.6 (conditional)",
+   "worst:RUSTSEC-2026-0369 crates:zip@0.6.6 (conditional)",
+   "worst:GHSA-m665-v7pm-7grj crates:zip@2.2.0 (conditional)"
+  ],
+  "counts": {
+   "conditional": 21,
+   "present_unreachable": 1,
+   "not_shipped": 3
+  },
+  "uncounted": 59,
+  "assessed_at": "2026-11-20T00:06:03+08:00"
+ },
+ "coverage": {
+  "state": "partial",
+  "target": "repo_lockfile",
+  "packages_found": 1118,
+  "packages_checked": 792,
+  "components": [
+   {
+    "ecosystem": "maven",
+    "component": "frontend/appflowy_flutter/android/build.gradle",
+    "status": "not_scanned",
+    "packages": 0,
+    "gaps": [
+     "adapter.missing"
+    ]
+   },
+   {
+    "ecosystem": "pub",
+    "component": "frontend/appflowy_flutter/pubspec.lock",
+    "status": "not_scanned",
+    "packages": 326,
+    "gaps": [
+     "adapter.missing"
+    ]
+   },
+   {
+    "ecosystem": "crates",
+    "component": "frontend/rust-lib/Cargo.lock",
+    "status": "scanned",
+    "packages": 792,
+    "gaps": []
+   }
+  ],
+  "gaps": [
+   {
+    "code": "adapter.missing",
+    "category": "no_adapter",
+    "ecosystem": "maven",
+    "component": "frontend/appflowy_flutter/android/build.gradle",
+    "detail": "no reader for build.gradle",
+    "capability": "adapter:maven",
+    "found": 0,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   },
+   {
+    "code": "adapter.missing",
+    "category": "no_adapter",
+    "ecosystem": "pub",
+    "component": "frontend/appflowy_flutter/pubspec.lock",
+    "detail": "no reader for pubspec.lock",
+    "capability": "adapter:pub",
+    "found": 326,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   }
+  ]
+ },
+ "sources": [
+  "github.com/AppFlowy-IO/AppFlowy@8fcee27d9bd9",
+  "frontend/rust-lib/Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:tokio",
+   "version": "1.44.1",
+   "advisory": "GHSA-rr8g-9fpq-6wmg",
+   "severity": "LOW",
+   "fixed_in": "1.44.2",
+   "summary": "Tokio broadcast channel calls clone in parallel, but does not require `Sync`",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2025-0023"
+   ],
+   "published": "2025-04-07T21:12:50Z",
+   "modified": "2026-09-10T03:50:24.081979053Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N/E:U",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-664"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/tokio@1.44.1",
+   "scope": "runtime",
+   "paths": [
+    "collab-integrate > tokio"
+   ],
+   "workspace": "frontend/rust-lib/collab-integrate",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Sync"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "frontend/rust-lib/collab-integrate/src/collab_builder.rs:53: local_collab: Weak<RwLock<dyn BorrowMut<Collab> + Send + Sync + 'static>>,"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "0.6.6",
+   "advisory": "GHSA-m665-v7pm-7grj",
+   "cves": [
+    "CVE-2026-115905"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "9.0.5",
+   "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115905",
+    "RUSTSEC-2026-0548"
+   ],
+   "published": "2026-10-28T21:09:50Z",
+   "modified": "2026-11-17T10:26:05.424821880Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20",
+    "CWE-436"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@0.6.6",
+   "fix_published_at": "2026-10-17T18:45:16Z",
+   "scope": "runtime",
+   "paths": [
+    "flowy-storage > collab-importer > zip"
+   ],
+   "workspace": "frontend/rust-lib/flowy-storage",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.0032,
+   "epss_percentile": 0.25522,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "0.6.6",
+   "advisory": "RUSTSEC-2026-0369",
+   "severity": "CRITICAL",
+   "fixed_in": "9.0.0",
+   "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+   "malicious": false,
+   "aliases": [
+    "GHSA-4684-h2q9-2vcp"
+   ],
+   "published": "2026-10-10T12:00:00Z",
+   "modified": "2026-10-16T23:30:02.387698467Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@0.6.6",
+   "fix_published_at": "2026-10-09T04:48:51Z",
+   "scope": "runtime",
+   "paths": [
+    "flowy-storage > collab-importer > zip"
+   ],
+   "workspace": "frontend/rust-lib/flowy-storage",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:ZipStreamReader::extract",
+    "symbol:ZipArchive::extract"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "2.2.0",
+   "advisory": "GHSA-m665-v7pm-7grj",
+   "cves": [
+    "CVE-2026-115905"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "9.0.5",
+   "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115905",
+    "RUSTSEC-2026-0548"
+   ],
+   "published": "2026-10-28T21:09:50Z",
+   "modified": "2026-11-17T10:26:05.424821880Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20",
+    "CWE-436"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@2.2.0",
+   "fix_published_at": "2026-10-17T18:45:16Z",
+   "scope": "runtime",
+   "paths": [
+    "lib-infra > zip"
+   ],
+   "workspace": "frontend/rust-lib/lib-infra",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.0032,
+   "epss_percentile": 0.25522,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:diesel",
+   "version": "2.2.10",
+   "advisory": "GHSA-h5x4-m2qf-r4f2",
+   "severity": "HIGH",
+   "fixed_in": "2.3.8",
+   "summary": "Diesel's SQLite backend has possible UTF-8 corruption",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0111"
+   ],
+   "published": "2026-05-05T18:08:05Z",
+   "modified": "2026-06-18T20:30:23.851810890Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/diesel@2.2.10",
+   "fix_published_at": "2026-04-24T09:23:13Z",
+   "scope": "runtime",
+   "paths": [
+    "flowy-core > diesel"
+   ],
+   "workspace": "frontend/rust-lib/flowy-core",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:lz4_flex",
+   "version": "0.11.2",
+   "advisory": "GHSA-vvp9-7p8x-rfvv",
+   "cves": [
+    "CVE-2026-32829"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.11.6",
+   "summary": "lz4_flex's decompression can leak information from uninitialized memory or reused output buffer",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-32829",
+    "RUSTSEC-2026-0041"
+   ],
+   "published": "2026-03-16T20:48:08Z",
+   "modified": "2026-09-10T03:50:41.314710760Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-201",
+    "CWE-823"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/lz4_flex@0.11.2",
+   "fix_published_at": "2026-03-14T14:49:05Z",
+   "scope": "runtime",
+   "paths": [
+    "flowy-search > tantivy > lz4_flex"
+   ],
+   "workspace": "frontend/rust-lib/flowy-search",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00677,
+   "epss_percentile": 0.53045,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:mio",
+   "version": "0.8.9",
+   "advisory": "GHSA-r8w9-5wcg-vfj7",
+   "cves": [
+    "CVE-2024-27308"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.8.11",
+   "summary": "Mio's tokens for named pipes may be delivered after deregistration",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-27308",
+    "RUSTSEC-2024-0019"
+   ],
+   "published": "2024-03-04T20:44:35Z",
+   "modified": "2026-09-10T03:50:10.693636388Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-416",
+    "CWE-672"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/mio@0.8.9",
+   "fix_published_at": "2024-03-01T20:46:43Z",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > notify > mio"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00881,
+   "epss_percentile": 0.59893,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:oneshot",
+   "version": "0.1.11",
+   "advisory": "GHSA-rvr2-r3pv-5m4p",
+   "severity": "HIGH",
+   "fixed_in": "0.1.12",
+   "summary": "oneshot has potential Use After Free when used asynchronously",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0005"
+   ],
+   "published": "2026-01-27T00:59:04Z",
+   "modified": "2026-09-10T03:50:59.065721671Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-362",
+    "CWE-416"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/oneshot@0.1.11",
+   "fix_published_at": "2026-01-25T21:15:48Z",
+   "scope": "runtime",
+   "paths": [
+    "flowy-search > tantivy > oneshot"
+   ],
+   "workspace": "frontend/rust-lib/flowy-search",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:openssl",
+   "version": "0.10.62",
+   "advisory": "GHSA-8c75-8mhr-p7r9",
+   "cves": [
+    "CVE-2026-41678"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.10.78",
+   "summary": "rust-openssl has incorrect bounds assertion in aes key wrap",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-41678",
+    "RUSTSEC-2026-0463"
+   ],
+   "published": "2026-04-22T21:17:32Z",
+   "modified": "2026-11-09T16:26:14.394973598Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:U",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-787"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/openssl@0.10.62",
+   "fix_published_at": "2026-04-19T20:02:38Z",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > reqwest > native-tls > openssl"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00251,
+   "epss_percentile": 0.1669,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:openssl",
+   "version": "0.10.62",
+   "advisory": "GHSA-ghm9-cr32-g9qj",
+   "cves": [
+    "CVE-2026-41681"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.10.78",
+   "summary": "rust-openssl: rustMdCtxRef::digest_final() writes past caller buffer with no length check",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-41681",
+    "RUSTSEC-2026-0475"
+   ],
+   "published": "2026-04-22T21:05:02Z",
+   "modified": "2026-11-10T14:10:39.444799345Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:U",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-121"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/openssl@0.10.62",
+   "fix_published_at": "2026-04-19T20:02:38Z",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > reqwest > native-tls > openssl"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00359,
+   "epss_percentile": 0.30337,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:openssl",
+   "version": "0.10.62",
+   "advisory": "GHSA-hppc-g8h3-xhp3",
+   "cves": [
+    "CVE-2026-41898"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.10.78",
+   "summary": "rust-openssl: Unchecked callback length in PSK/cookie trampolines leaks adjacent memory to peer",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-41898",
+    "RUSTSEC-2026-0478"
+   ],
+   "published": "2026-04-22T21:00:57Z",
+   "modified": "2026-11-10T14:10:47.500432370Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-126",
+    "CWE-130"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/openssl@0.10.62",
+   "fix_published_at": "2026-04-19T20:02:38Z",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > reqwest > native-tls > openssl"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.0028,
+   "epss_percentile": 0.20909,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:openssl",
+   "version": "0.10.62",
+   "advisory": "GHSA-pqf5-4pqq-29f5",
+   "cves": [
+    "CVE-2026-41676"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.10.78",
+   "summary": "rust-openssl: Deriver::derive and PkeyCtxRef::derive can overflow short buffers on OpenSSL 1.1.1",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-41676",
+    "RUSTSEC-2026-0473"
+   ],
+   "published": "2026-04-22T21:22:00Z",
+   "modified": "2026-11-10T14:10:59.704101108Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:U",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-131",
+    "CWE-787"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/openssl@0.10.62",
+   "fix_published_at": "2026-04-19T20:02:38Z",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > reqwest > native-tls > openssl"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00285,
+   "epss_percentile": 0.21388,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "symbol:Deriver::derive",
+    "symbol:PkeyCtxRef::derive"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use Deriver::derive, PkeyCtxRef::derive, but other packages depend on openssl"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:openssl",
+   "version": "0.10.62",
+   "advisory": "GHSA-xp3w-r5p5-63rr",
+   "cves": [
+    "CVE-2026-42327"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.10.79",
+   "summary": "rust-openssl has undefined behavior in X509Ref::ocsp_responders for certificates with non-UTF-8 OCSP URLs",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42327",
+    "RUSTSEC-2026-0474"
+   ],
+   "published": "2026-05-05T21:46:38Z",
+   "modified": "2026-11-10T14:10:43.787985131Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/openssl@0.10.62",
+   "fix_published_at": "2026-05-04T00:19:55Z",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > reqwest > native-tls > openssl"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00211,
+   "epss_percentile": 0.11392,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:X509Ref::ocsp_responders"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use X509Ref::ocsp_responders, but other packages depend on openssl"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.9",
+   "advisory": "GHSA-4w2j-m93h-cj5j",
+   "cves": [
+    "CVE-2026-25800"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.11.15",
+   "summary": "Quinn: Remote memory exhaustion in quinn-proto from unbounded out-of-order stream reassembly",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-25800",
+    "RUSTSEC-2026-0185"
+   ],
+   "published": "2026-07-24T14:07:54Z",
+   "modified": "2026-09-10T03:51:10.288925502Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.9",
+   "fix_published_at": "2026-06-22T09:43:03Z",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00841,
+   "epss_percentile": 0.58649,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.9",
+   "advisory": "GHSA-6xvm-j4wr-6v98",
+   "cves": [
+    "CVE-2026-31812"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.11.14",
+   "summary": "Quinn affected by unauthenticated remote DoS via panic in QUIC transport parameter parsing",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-31812",
+    "RUSTSEC-2026-0037"
+   ],
+   "published": "2026-03-11T00:09:19Z",
+   "modified": "2026-09-10T03:50:37.796449419Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.9",
+   "fix_published_at": "2026-03-09T10:22:45Z",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00574,
+   "epss_percentile": 0.48188,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.9",
+   "advisory": "RUSTSEC-2026-0340",
+   "severity": "HIGH",
+   "fixed_in": "0.11.18",
+   "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+   "malicious": false,
+   "aliases": [
+    "GHSA-3g6h-r5qx-f6hq"
+   ],
+   "published": "2026-09-14T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.975478256Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.9",
+   "fix_published_at": "2026-09-14T10:08:32Z",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "option:ACK_FREQUENCY"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls-webpki",
+   "version": "0.102.8",
+   "advisory": "GHSA-82j2-j2ch-gfr8",
+   "cves": [
+    "CVE-2026-93599"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.103.13",
+   "summary": "rustls-webpki: Denial of service via panic on malformed CRL BIT STRING",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-93599",
+    "RUSTSEC-2026-0104"
+   ],
+   "published": "2026-04-24T16:20:17Z",
+   "modified": "2026-09-19T03:55:33.412079637Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-125"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/rustls-webpki@0.102.8",
+   "fix_published_at": "2026-04-21T10:25:37Z",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > rustls > rustls-webpki"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00346,
+   "epss_percentile": 0.2879,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "0.6.6",
+   "advisory": "RUSTSEC-2026-0367",
+   "severity": "HIGH",
+   "fixed_in": "9.0.0",
+   "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+   "malicious": false,
+   "aliases": [
+    "GHSA-vv5m-jxxh-4627"
+   ],
+   "published": "2026-10-09T12:00:00Z",
+   "modified": "2026-10-16T23:30:02.392172556Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:H/I:H/A:H",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@0.6.6",
+   "fix_published_at": "2026-10-09T04:48:51Z",
+   "scope": "runtime",
+   "paths": [
+    "flowy-storage > collab-importer > zip"
+   ],
+   "workspace": "frontend/rust-lib/flowy-storage",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "0.6.6",
+   "advisory": "RUSTSEC-2026-0429",
+   "cves": [
+    "CVE-2026-115909"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "9.0.0",
+   "summary": "zip: `ZipArchive::extract` aborts the process on a symlink entry with a large declared size",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115909",
+    "GHSA-q7v9-x93c-xqv3"
+   ],
+   "published": "2026-10-22T12:00:00Z",
+   "modified": "2026-11-02T10:00:02.471399952Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/zip@0.6.6",
+   "fix_published_at": "2026-10-09T04:48:51Z",
+   "scope": "runtime",
+   "paths": [
+    "flowy-storage > collab-importer > zip"
+   ],
+   "workspace": "frontend/rust-lib/flowy-storage",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00461,
+   "epss_percentile": 0.4071,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:ZipArchive::extract"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ZipArchive::extract, but other packages depend on zip"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "2.2.0",
+   "advisory": "GHSA-94vh-gphv-8pm8",
+   "cves": [
+    "CVE-2025-29787"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.3.0",
+   "summary": "zip Incorrectly Canonicalizes Paths during Archive Extraction Leading to Arbitrary File Write",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-29787",
+    "RUSTSEC-2025-0168"
+   ],
+   "published": "2025-03-17T21:26:32Z",
+   "modified": "2026-09-10T03:50:23.090058245Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:N/PR:L/UI:N/VC:L/VI:H/VA:N/SC:H/SI:H/SA:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-180",
+    "CWE-22",
+    "CWE-61"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@2.2.0",
+   "fix_published_at": "2025-03-16T17:31:55Z",
+   "scope": "runtime",
+   "paths": [
+    "lib-infra > zip"
+   ],
+   "workspace": "frontend/rust-lib/lib-infra",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00585,
+   "epss_percentile": 0.48764,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "2.2.0",
+   "advisory": "GHSA-q7v9-x93c-xqv3",
+   "cves": [
+    "CVE-2026-115909"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "9.0.0",
+   "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115909",
+    "RUSTSEC-2026-0429"
+   ],
+   "published": "2026-10-29T16:40:01Z",
+   "modified": "2026-11-02T10:10:53.649189132Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-789"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/zip@2.2.0",
+   "fix_published_at": "2026-10-09T04:48:51Z",
+   "scope": "runtime",
+   "paths": [
+    "lib-infra > zip"
+   ],
+   "workspace": "frontend/rust-lib/lib-infra",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00461,
+   "epss_percentile": 0.4071,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "2.2.0",
+   "advisory": "RUSTSEC-2026-0367",
+   "severity": "HIGH",
+   "fixed_in": "9.0.0",
+   "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+   "malicious": false,
+   "aliases": [
+    "GHSA-vv5m-jxxh-4627"
+   ],
+   "published": "2026-10-09T12:00:00Z",
+   "modified": "2026-10-16T23:30:02.392172556Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:H/I:H/A:H",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@2.2.0",
+   "fix_published_at": "2026-10-09T04:48:51Z",
+   "scope": "runtime",
+   "paths": [
+    "lib-infra > zip"
+   ],
+   "workspace": "frontend/rust-lib/lib-infra",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:bytes",
+   "version": "1.9.0",
+   "advisory": "GHSA-434x-w66g-qw3r",
+   "cves": [
+    "CVE-2026-25541"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.11.1",
+   "summary": "bytes has integer overflow in BytesMut::reserve",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-25541",
+    "RUSTSEC-2026-0007"
+   ],
+   "published": "2026-02-03T19:17:46Z",
+   "modified": "2026-09-10T03:50:33.995841351Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:P",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-680"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/bytes@1.9.0",
+   "scope": "runtime",
+   "paths": [
+    "dart-ffi > bytes"
+   ],
+   "workspace": "frontend/rust-lib/dart-ffi",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00601,
+   "epss_percentile": 0.49581,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "denial_of_service",
+    "symbol:BytesMut::reserve"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use BytesMut::reserve, but other packages depend on bytes"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:diesel",
+   "version": "2.2.10",
+   "advisory": "GHSA-ggxf-9f6j-w742",
+   "severity": "MODERATE",
+   "fixed_in": "2.3.10",
+   "summary": "Diesel has possible use after free when deserializing a SQLite database via `SqliteConnection::deserialize_readonly_database`",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0172"
+   ],
+   "published": "2026-07-16T19:25:25Z",
+   "modified": "2026-07-17T08:56:39.243302819Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-416"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/diesel@2.2.10",
+   "scope": "runtime",
+   "paths": [
+    "flowy-core > diesel"
+   ],
+   "workspace": "frontend/rust-lib/flowy-core",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:SqliteConnection::deserialize_readonly_database"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use SqliteConnection::deserialize_readonly_database, but other packages depend on diesel"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:diesel",
+   "version": "2.2.10",
+   "advisory": "GHSA-m9p2-fxp5-v3fp",
+   "severity": "MODERATE",
+   "fixed_in": "2.3.8",
+   "summary": "Diesel: Command injection in Diesel's implementation of `COPY FROM`/`COPY TO`",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0136"
+   ],
+   "published": "2026-05-19T19:42:00Z",
+   "modified": "2026-05-20T07:26:23.724197936Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-88"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/diesel@2.2.10",
+   "scope": "runtime",
+   "paths": [
+    "flowy-core > diesel"
+   ],
+   "workspace": "frontend/rust-lib/flowy-core",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:diesel",
+   "version": "2.2.10",
+   "advisory": "GHSA-q8x8-jrhj-fh9p",
+   "severity": "MODERATE",
+   "fixed_in": "2.3.8",
+   "summary": "Diesel: Possible unaligned data access for implementations of `SqliteAggregate`",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0137"
+   ],
+   "published": "2026-05-19T19:39:37Z",
+   "modified": "2026-05-20T07:26:23.800095769Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-188"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/diesel@2.2.10",
+   "scope": "runtime",
+   "paths": [
+    "flowy-core > diesel"
+   ],
+   "workspace": "frontend/rust-lib/flowy-core",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "symbol:SqliteAggregate"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use SqliteAggregate, but other packages depend on diesel"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:h2",
+   "version": "0.3.21",
+   "advisory": "GHSA-8r5v-vm4m-4g25",
+   "severity": "MODERATE",
+   "fixed_in": "0.3.24",
+   "summary": "Resource exhaustion vulnerability in h2 may lead to Denial of Service (DoS)",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2024-0003"
+   ],
+   "published": "2024-01-19T15:24:56Z",
+   "modified": "2026-09-10T03:50:09.232197976Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/h2@0.3.21",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > reqwest > h2"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:h2",
+   "version": "0.3.21",
+   "advisory": "GHSA-q6cp-qfwq-4gcv",
+   "severity": "MODERATE",
+   "fixed_in": "0.3.26",
+   "summary": "h2 servers vulnerable to degradation of service with CONTINUATION Flood",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2024-0332"
+   ],
+   "published": "2024-04-05T15:05:32Z",
+   "modified": "2026-09-10T03:49:18.784343884Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/h2@0.3.21",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > reqwest > h2"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:idna",
+   "version": "0.3.0",
+   "advisory": "GHSA-h97m-ww89-6jmq",
+   "cves": [
+    "CVE-2024-12224"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.0.0",
+   "summary": "`idna` accepts Punycode labels that do not produce any non-ASCII when decoded",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-12224",
+    "RUSTSEC-2024-0421"
+   ],
+   "published": "2024-12-09T20:41:10Z",
+   "modified": "2026-09-10T03:50:21.562272915Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1289",
+    "CWE-697"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/idna@0.3.0",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > cookie_store > publicsuffix > idna"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.0023,
+   "epss_percentile": 0.14005,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:idna",
+   "version": "0.5.0",
+   "advisory": "GHSA-h97m-ww89-6jmq",
+   "cves": [
+    "CVE-2024-12224"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.0.0",
+   "summary": "`idna` accepts Punycode labels that do not produce any non-ASCII when decoded",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-12224",
+    "RUSTSEC-2024-0421"
+   ],
+   "published": "2024-12-09T20:41:10Z",
+   "modified": "2026-09-10T03:50:21.562272915Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1289",
+    "CWE-697"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/idna@0.5.0",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > validator > idna"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.0023,
+   "epss_percentile": 0.14005,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:jsonwebtoken",
+   "version": "8.3.0",
+   "advisory": "GHSA-h395-gr6q-cpjc",
+   "cves": [
+    "CVE-2026-25537"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "10.3.0",
+   "summary": "jsonwebtoken has Type Confusion that leads to potential authorization bypass",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-25537"
+   ],
+   "published": "2026-02-03T18:47:40Z",
+   "modified": "2026-09-10T03:50:35.169824826Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N/E:P",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-843"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/jsonwebtoken@8.3.0",
+   "scope": "runtime",
+   "paths": [
+    "flowy-storage-pub > client-api-entity > gotrue-entity > jsonwebtoken"
+   ],
+   "workspace": "frontend/rust-lib/flowy-storage-pub",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00496,
+   "epss_percentile": 0.4333,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:openssl",
+   "version": "0.10.62",
+   "advisory": "GHSA-4fcv-w3qc-ppgg",
+   "severity": "MODERATE",
+   "fixed_in": "0.10.72",
+   "summary": "rust-openssl Use-After-Free in `Md::fetch` and `Cipher::fetch`",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2025-0022"
+   ],
+   "published": "2025-04-04T20:31:08Z",
+   "modified": "2026-09-10T03:50:56.938932795Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-416"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/openssl@0.10.62",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > reqwest > native-tls > openssl"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service",
+    "symbol:Md::fetch",
+    "symbol:Cipher::fetch"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use Md::fetch, Cipher::fetch, but other packages depend on openssl"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:openssl",
+   "version": "0.10.62",
+   "advisory": "GHSA-phqj-4mhp-q6mq",
+   "cves": [
+    "CVE-2026-45784"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.10.80",
+   "summary": "rust-openssl: Potential out-of-bounds write in `CipherCtxRef::cipher_update_inplace` for AES-KW-PAD ciphers",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-45784",
+    "RUSTSEC-2026-0477"
+   ],
+   "published": "2026-05-19T19:50:11Z",
+   "modified": "2026-11-10T14:10:52.035417381Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-131",
+    "CWE-787"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/openssl@0.10.62",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > reqwest > native-tls > openssl"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00134,
+   "epss_percentile": 0.03001,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "symbol:CipherCtxRef::cipher_update_inplace"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use CipherCtxRef::cipher_update_inplace, but other packages depend on openssl"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:openssl",
+   "version": "0.10.62",
+   "advisory": "GHSA-q445-7m23-qrmw",
+   "severity": "MODERATE",
+   "fixed_in": "0.10.66",
+   "summary": "openssl's `MemBio::get_buf` has undefined behavior with empty buffers",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2024-0357"
+   ],
+   "published": "2024-07-22T17:34:53Z",
+   "modified": "2026-09-10T03:50:16.826604285Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-476"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/openssl@0.10.62",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > reqwest > native-tls > openssl"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:MemBio::get_buf"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use MemBio::get_buf, but other packages depend on openssl"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:openssl",
+   "version": "0.10.62",
+   "advisory": "GHSA-rpmj-rpgj-qmpm",
+   "cves": [
+    "CVE-2025-24898"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.10.70",
+   "summary": "rust-openssl ssl::select_next_proto use after free",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-24898",
+    "RUSTSEC-2025-0004"
+   ],
+   "published": "2025-02-03T17:56:46Z",
+   "modified": "2026-09-10T03:50:06.186180196Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:L/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-416"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/openssl@0.10.62",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > reqwest > native-tls > openssl"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00676,
+   "epss_percentile": 0.53022,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:openssl",
+   "version": "0.10.62",
+   "advisory": "GHSA-xv59-967r-8726",
+   "cves": [
+    "CVE-2026-44662"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.10.79",
+   "summary": "rust-openssl vulnerable to heap buffer overflow when encrypting with AES key-wrap-with-padding",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-44662",
+    "RUSTSEC-2026-0476"
+   ],
+   "published": "2026-05-07T22:33:51Z",
+   "modified": "2026-11-10T14:11:00.353842596Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-122"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/openssl@0.10.62",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > reqwest > native-tls > openssl"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00172,
+   "epss_percentile": 0.06778,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:protobuf",
+   "version": "2.28.0",
+   "advisory": "GHSA-2gh3-rmm4-6rq5",
+   "cves": [
+    "CVE-2025-53605"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "3.7.2",
+   "summary": "Crash due to uncontrolled recursion in protobuf crate",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-53605",
+    "RUSTSEC-2024-0437"
+   ],
+   "published": "2025-03-07T20:02:37Z",
+   "modified": "2026-09-10T03:50:06.154902138Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:U",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/protobuf@2.28.0",
+   "scope": "runtime",
+   "paths": [
+    "dart-ffi > protobuf"
+   ],
+   "workspace": "frontend/rust-lib/dart-ffi",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00473,
+   "epss_percentile": 0.4166,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:ring",
+   "version": "0.16.20",
+   "advisory": "GHSA-4p46-pwfr-66x6",
+   "cves": [
+    "CVE-2025-4432"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.17.12",
+   "summary": "Some AES functions may panic when overflow checking is enabled in ring",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-4432",
+    "GHSA-c86p-w88r-qvqr",
+    "GO-2025-3678",
+    "RUSTSEC-2025-0009"
+   ],
+   "published": "2025-03-07T16:23:50Z",
+   "modified": "2026-09-10T03:50:56.900994558Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:U",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/ring@0.16.20",
+   "scope": "runtime",
+   "paths": [
+    "flowy-storage-pub > client-api-entity > gotrue-entity > jsonwebtoken > ring"
+   ],
+   "workspace": "frontend/rust-lib/flowy-storage-pub",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.01047,
+   "epss_percentile": 0.64892,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:ring",
+   "version": "0.17.8",
+   "advisory": "GHSA-4p46-pwfr-66x6",
+   "cves": [
+    "CVE-2025-4432"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.17.12",
+   "summary": "Some AES functions may panic when overflow checking is enabled in ring",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-4432",
+    "GHSA-c86p-w88r-qvqr",
+    "GO-2025-3678",
+    "RUSTSEC-2025-0009"
+   ],
+   "published": "2025-03-07T16:23:50Z",
+   "modified": "2026-09-10T03:50:56.900994558Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:U",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/ring@0.17.8",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > rustls > ring"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.01047,
+   "epss_percentile": 0.64892,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.20",
+   "advisory": "GHSA-2mjx-qc3c-rqvc",
+   "cves": [
+    "CVE-2026-123613"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.23.45",
+   "summary": "Rustls: TLS 1.3 handshake messages incorrectly accepted across encryption level boundaries",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123613",
+    "RUSTSEC-2026-0285"
+   ],
+   "published": "2026-10-05T23:30:17Z",
+   "modified": "2026-11-08T10:55:54.395419388Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.23.20",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > rustls"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00156,
+   "epss_percentile": 0.04813,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.20",
+   "advisory": "GHSA-c8m5-c952-6cm4",
+   "cves": [
+    "CVE-2026-123609"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.23.46",
+   "summary": "Rustls: Session Debug formatting exposes TLS master secrets and resumption PSKs",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123609",
+    "RUSTSEC-2026-0346"
+   ],
+   "published": "2026-10-27T16:08:47Z",
+   "modified": "2026-11-08T10:55:36.514447652Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:H/PR:H/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-212"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.23.20",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > rustls"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00101,
+   "epss_percentile": 0.00917,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction",
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls-webpki",
+   "version": "0.102.8",
+   "advisory": "GHSA-pwjx-qhcg-rvj4",
+   "cves": [
+    "CVE-2026-93602"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.103.10",
+   "summary": "webpki: CRLs not considered authoritative by Distribution Point due to faulty matching logic",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-93602",
+    "RUSTSEC-2026-0049"
+   ],
+   "published": "2026-03-20T21:51:17Z",
+   "modified": "2026-09-19T03:55:49.529651638Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-299"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls-webpki@0.102.8",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > rustls > rustls-webpki"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.002,
+   "epss_percentile": 0.10034,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:time",
+   "version": "0.3.36",
+   "advisory": "GHSA-r6v5-fh4h-64xc",
+   "cves": [
+    "CVE-2026-25727"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.3.47",
+   "summary": "time vulnerable to stack exhaustion Denial of Service attack",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-25727",
+    "RUSTSEC-2026-0009"
+   ],
+   "published": "2026-02-05T17:57:55Z",
+   "modified": "2026-09-10T03:50:35.583241382Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:N/PR:L/UI:A/VC:N/VI:N/VA:H/SC:N/SI:N/SA:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-121"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/time@0.3.36",
+   "scope": "runtime",
+   "paths": [
+    "flowy-core > diesel > time"
+   ],
+   "workspace": "frontend/rust-lib/flowy-core",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00334,
+   "epss_percentile": 0.27351,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:unsafe-libyaml",
+   "version": "0.2.9",
+   "advisory": "GHSA-r24f-hg58-vfrw",
+   "severity": "MODERATE",
+   "fixed_in": "0.2.10",
+   "summary": "unsafe-libyaml unaligned write of u64 on 32-bit and 16-bit platforms",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2023-0075"
+   ],
+   "published": "2023-12-21T18:14:34Z",
+   "modified": "2026-09-10T03:50:04.594283636Z",
+   "dos_only": false,
+   "purl": "pkg:cargo/unsafe-libyaml@0.2.9",
+   "scope": "runtime",
+   "paths": [
+    "dart-ffi > serde_yaml > unsafe-libyaml"
+   ],
+   "workspace": "frontend/rust-lib/dart-ffi",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "0.6.6",
+   "advisory": "GHSA-8hxf-qr8p-62x4",
+   "cves": [
+    "CVE-2026-115906"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "9.0.0",
+   "summary": "zip: AES Entry HMAC Authentication Bypass on Premature EOF",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115906",
+    "RUSTSEC-2026-0545"
+   ],
+   "published": "2026-10-29T16:40:07Z",
+   "modified": "2026-11-17T10:26:09.858808117Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1284",
+    "CWE-354"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@0.6.6",
+   "scope": "runtime",
+   "paths": [
+    "flowy-storage > collab-importer > zip"
+   ],
+   "workspace": "frontend/rust-lib/flowy-storage",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00151,
+   "epss_percentile": 0.04286,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "2.2.0",
+   "advisory": "GHSA-8hxf-qr8p-62x4",
+   "cves": [
+    "CVE-2026-115906"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "9.0.0",
+   "summary": "zip: AES Entry HMAC Authentication Bypass on Premature EOF",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115906",
+    "RUSTSEC-2026-0545"
+   ],
+   "published": "2026-10-29T16:40:07Z",
+   "modified": "2026-11-17T10:26:09.858808117Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1284",
+    "CWE-354"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@2.2.0",
+   "scope": "runtime",
+   "paths": [
+    "lib-infra > zip"
+   ],
+   "workspace": "frontend/rust-lib/lib-infra",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00151,
+   "epss_percentile": 0.04286,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:lru",
+   "version": "0.12.3",
+   "advisory": "GHSA-rhfx-m35p-ff5j",
+   "severity": "LOW",
+   "fixed_in": "0.16.3",
+   "summary": "`IterMut` violates Stacked Borrows by invalidating internal pointer",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0002"
+   ],
+   "published": "2026-01-07T20:38:57Z",
+   "modified": "2026-09-10T03:50:59.064354050Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N/E:U",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-476"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/lru@0.12.3",
+   "scope": "runtime",
+   "paths": [
+    "flowy-search > tantivy > lru"
+   ],
+   "workspace": "frontend/rust-lib/flowy-search",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:IterMut"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use IterMut, but other packages depend on lru"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:openssl",
+   "version": "0.10.62",
+   "advisory": "GHSA-xmgf-hq76-4vx2",
+   "cves": [
+    "CVE-2026-41677"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.10.78",
+   "summary": "rust-opennssl has an Out-of-bounds read in PEM password callback when returning an oversized length",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-41677",
+    "RUSTSEC-2026-0479"
+   ],
+   "published": "2026-04-22T21:20:04Z",
+   "modified": "2026-11-10T14:10:37.732358174Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:L/SC:N/SI:N/SA:N/E:U",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-125",
+    "CWE-1284"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/openssl@0.10.62",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > reqwest > native-tls > openssl"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00294,
+   "epss_percentile": 0.22381,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rand",
+   "version": "0.7.3",
+   "advisory": "GHSA-cq8v-f236-94qc",
+   "severity": "LOW",
+   "fixed_in": "0.8.6",
+   "summary": "Rand is unsound with a custom logger using rand::rng()",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0097"
+   ],
+   "published": "2026-04-14T01:03:36Z",
+   "modified": "2026-09-10T03:50:43.958966498Z",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rand@0.7.3",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai-pub > client-api > again > rand"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai-pub",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rand",
+   "version": "0.8.5",
+   "advisory": "GHSA-cq8v-f236-94qc",
+   "severity": "LOW",
+   "fixed_in": "0.8.6",
+   "summary": "Rand is unsound with a custom logger using rand::rng()",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0097"
+   ],
+   "published": "2026-04-14T01:03:36Z",
+   "modified": "2026-09-10T03:50:43.958966498Z",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rand@0.8.5",
+   "scope": "runtime",
+   "paths": [
+    "event-integration-test > rand"
+   ],
+   "workspace": "frontend/rust-lib/event-integration-test",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rand",
+   "version": "0.9.1",
+   "advisory": "GHSA-cq8v-f236-94qc",
+   "severity": "LOW",
+   "fixed_in": "0.9.3",
+   "summary": "Rand is unsound with a custom logger using rand::rng()",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0097"
+   ],
+   "published": "2026-04-14T01:03:36Z",
+   "modified": "2026-09-10T03:50:43.958966498Z",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rand@0.9.1",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > langchain-rust > mockito > rand"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.20",
+   "advisory": "GHSA-h2v8-394m-p7vv",
+   "cves": [
+    "CVE-2026-123610"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.23.46",
+   "summary": "Rustls: Brotli certificate decompression can allocate an attacker-controlled amount of memory up to 1 GiB before authentication.",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123610",
+    "RUSTSEC-2026-0348"
+   ],
+   "published": "2026-10-27T16:08:36Z",
+   "modified": "2026-11-08T10:55:59.261359726Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/rustls@0.23.20",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > rustls"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00165,
+   "epss_percentile": 0.0586,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.20",
+   "advisory": "GHSA-w44r-93j7-qv28",
+   "cves": [
+    "CVE-2026-123611"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.23.46",
+   "summary": "rustls: An unauthenticated ServerHello poisons the per-name key-exchange record, so later ClientHellos carry only a classical X25519 share",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123611",
+    "RUSTSEC-2026-0349"
+   ],
+   "published": "2026-10-27T16:08:54Z",
+   "modified": "2026-11-08T10:55:46.312019109Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-757"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.23.20",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > rustls"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00188,
+   "epss_percentile": 0.08575,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls-webpki",
+   "version": "0.102.8",
+   "advisory": "GHSA-965h-392x-2mh5",
+   "cves": [
+    "CVE-2026-93600"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.103.12",
+   "summary": "webpki: Name constraints for URI names were incorrectly accepted",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-93600",
+    "RUSTSEC-2026-0098"
+   ],
+   "published": "2026-04-16T21:16:22Z",
+   "modified": "2026-09-19T03:55:32.245575348Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-295"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls-webpki@0.102.8",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > rustls > rustls-webpki"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00203,
+   "epss_percentile": 0.104,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls-webpki",
+   "version": "0.102.8",
+   "advisory": "GHSA-xgp8-3hg3-c2mh",
+   "cves": [
+    "CVE-2026-93601"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.103.12",
+   "summary": "webpki: Name constraints were accepted for certificates asserting a wildcard name",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-93601",
+    "RUSTSEC-2026-0099"
+   ],
+   "published": "2026-04-16T21:17:12Z",
+   "modified": "2026-09-19T03:55:49.146112754Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-295"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls-webpki@0.102.8",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > rustls > rustls-webpki"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00203,
+   "epss_percentile": 0.104,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:shlex",
+   "version": "1.2.0",
+   "advisory": "GHSA-r7qv-8r2h-pg27",
+   "cves": [
+    "CVE-2024-58266"
+   ],
+   "severity": "LOW",
+   "fixed_in": "1.3.0",
+   "summary": "Multiple issues involving quote API in shlex",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-58266",
+    "RUSTSEC-2024-0006"
+   ],
+   "published": "2024-01-22T21:21:30Z",
+   "modified": "2025-07-28T16:42:04.422423Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:H/PR:N/UI:N/S:C/C:N/I:L/A:N",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/shlex@1.2.0",
+   "scope": "runtime",
+   "paths": [
+    "collab-integrate > collab-plugins > rocksdb > librocksdb-sys > bindgen > shlex"
+   ],
+   "workspace": "frontend/rust-lib/collab-integrate",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00778,
+   "epss_percentile": 0.56627,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:tracing-subscriber",
+   "version": "0.3.19",
+   "advisory": "GHSA-xwfj-jgwm-7wp5",
+   "cves": [
+    "CVE-2025-58160"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.3.20",
+   "summary": "Tracing logging user input may result in poisoning logs with ANSI escape sequences",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-58160",
+    "RUSTSEC-2025-0055"
+   ],
+   "published": "2025-08-29T20:33:56Z",
+   "modified": "2026-09-10T03:50:27.766863705Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-150"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/tracing-subscriber@0.3.19",
+   "scope": "runtime",
+   "paths": [
+    "lib-log > tracing-subscriber"
+   ],
+   "workspace": "frontend/rust-lib/lib-log",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00372,
+   "epss_percentile": 0.3185,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:crossbeam-epoch",
+   "version": "0.9.15",
+   "advisory": "RUSTSEC-2026-0204",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.9.20",
+   "summary": "Invalid pointer dereference in `fmt::Pointer` impl for `Atomic` and `Shared` when the underlying pointer is invalid",
+   "malicious": false,
+   "published": "2026-07-06T12:00:00Z",
+   "modified": "2026-07-06T22:30:04.159269138Z",
+   "purl": "pkg:cargo/crossbeam-epoch@0.9.15",
+   "scope": "runtime",
+   "paths": [
+    "flowy-database2 > moka > crossbeam-epoch"
+   ],
+   "workspace": "frontend/rust-lib/flowy-database2",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:fmt::Pointer",
+    "symbol:Atomic",
+    "symbol:Shared"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use fmt::Pointer, Atomic, Shared, but other packages depend on crossbeam-epoch"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:h2",
+   "version": "0.3.21",
+   "advisory": "RUSTSEC-2026-0258",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.4.16",
+   "summary": "h2 unbounded empty DATA frames",
+   "malicious": false,
+   "aliases": [
+    "GHSA-q83h-524g-xf6h"
+   ],
+   "published": "2026-08-17T12:00:00Z",
+   "modified": "2026-10-12T18:00:10.934581734Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/h2@0.3.21",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > reqwest > h2"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:h2",
+   "version": "0.4.7",
+   "advisory": "RUSTSEC-2026-0258",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.4.16",
+   "summary": "h2 unbounded empty DATA frames",
+   "malicious": false,
+   "aliases": [
+    "GHSA-q83h-524g-xf6h"
+   ],
+   "published": "2026-08-17T12:00:00Z",
+   "modified": "2026-10-12T18:00:10.934581734Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/h2@0.4.7",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > h2"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:libsqlite3-sys",
+   "version": "0.33.0",
+   "advisory": "RUSTSEC-2026-0459",
+   "cves": [
+    "CVE-2026-119375"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.39.0",
+   "summary": "`libsqlite3-sys` via C SQLite CVE-2026-119375",
+   "malicious": false,
+   "aliases": [
+    "BIT-sqlite-2026-119375",
+    "CVE-2026-119375",
+    "GHSA-72w2-rjgg-q729",
+    "RUSTSEC-2026-0502"
+   ],
+   "published": "2026-10-30T12:00:00Z",
+   "modified": "2026-11-17T13:41:05.770775012Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/libsqlite3-sys@0.33.0",
+   "scope": "runtime",
+   "paths": [
+    "flowy-sqlite > libsqlite3-sys"
+   ],
+   "workspace": "frontend/rust-lib/flowy-sqlite",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00195,
+   "epss_percentile": 0.09275,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:libz-sys",
+   "version": "1.1.12",
+   "advisory": "RUSTSEC-2026-0418",
+   "severity": "UNKNOWN",
+   "fixed_in": "1.1.31",
+   "summary": "libz-sys build script leaks environment variables in the build directory",
+   "malicious": false,
+   "aliases": [
+    "GHSA-8p3x-q3q3-q3v5"
+   ],
+   "published": "2026-10-28T12:00:00Z",
+   "modified": "2026-10-29T14:15:02.333141406Z",
+   "purl": "pkg:cargo/libz-sys@1.1.12",
+   "scope": "runtime",
+   "paths": [
+    "collab-integrate > collab-plugins > rocksdb > librocksdb-sys > libz-sys"
+   ],
+   "workspace": "frontend/rust-lib/collab-integrate",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.9",
+   "advisory": "RUSTSEC-2026-0338",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.18",
+   "summary": "Remote peer can panic quinn-proto with zero-length STREAM frames during unordered reads",
+   "malicious": false,
+   "aliases": [
+    "GHSA-465w-v9q3-7j98"
+   ],
+   "published": "2026-09-14T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.969514645Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.9",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.9",
+   "advisory": "RUSTSEC-2026-0339",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.17",
+   "summary": "Unbounded growth of pending connection ID retirements in quinn-proto",
+   "malicious": false,
+   "aliases": [
+    "GHSA-hmxj-32vh-65vr"
+   ],
+   "published": "2026-08-17T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.956822776Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.9",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.9",
+   "advisory": "RUSTSEC-2026-0342",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.17",
+   "summary": "Zero-length DATAGRAM frames bypass the receive buffer limit in quinn-proto",
+   "malicious": false,
+   "aliases": [
+    "GHSA-2hv7-gw8g-gpq5"
+   ],
+   "published": "2026-08-17T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.956681478Z",
+   "purl": "pkg:cargo/quinn-proto@0.11.9",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.9",
+   "advisory": "RUSTSEC-2026-0523",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.19",
+   "summary": "MAX_STREAM_DATA frame can open streams beyond the stream limit",
+   "malicious": false,
+   "aliases": [
+    "GHSA-53rm-773f-4q8c"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:04.789912316Z",
+   "purl": "pkg:cargo/quinn-proto@0.11.9",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "option:MAX_STREAM_DATA"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use MAX_STREAM_DATA, but other packages depend on quinn-proto"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.9",
+   "advisory": "RUSTSEC-2026-0524",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.19",
+   "summary": "Long Retry token can panic or exhaust memory in a QUIC client",
+   "malicious": false,
+   "aliases": [
+    "GHSA-wppq-2f6r-wfvm"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:06.127108520Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.9",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-udp",
+   "version": "0.5.9",
+   "advisory": "RUSTSEC-2026-0538",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.5.16",
+   "summary": "Receive loop can spin after a truncated datagram",
+   "malicious": false,
+   "aliases": [
+    "GHSA-6pp4-4cxf-xf88"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:08.844283231Z",
+   "purl": "pkg:cargo/quinn-udp@0.5.9",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > quinn > quinn-udp"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rkyv",
+   "version": "0.7.42",
+   "advisory": "RUSTSEC-2026-0001",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.7.46",
+   "summary": "Potential Undefined Behaviors in `Arc<T>`/`Rc<T>` impls of `from_value` on OOM",
+   "malicious": false,
+   "published": "2026-01-05T12:00:00Z",
+   "modified": "2026-01-06T15:50:23.269686Z",
+   "dos_only": false,
+   "purl": "pkg:cargo/rkyv@0.7.42",
+   "scope": "runtime",
+   "paths": [
+    "flowy-database2 > rust_decimal > rkyv"
+   ],
+   "workspace": "frontend/rust-lib/flowy-database2",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:from_value"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "frontend/rust-lib/flowy-ai/src/local_ai/chat/chains/conversation_chain.rs:203: let result: GenerateResult = serde_json::from_value(output[DEFAULT_RESULT_KEY].clone())?;",
+     "named only in files that do not import rkyv"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rkyv",
+   "version": "0.7.42",
+   "advisory": "RUSTSEC-2026-0235",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.8.17",
+   "summary": "Insufficient archive validation can cause out-of-bounds reads in archives containing Rc/Arc",
+   "malicious": false,
+   "published": "2026-05-13T12:00:00Z",
+   "modified": "2026-08-04T09:30:04.382146100Z",
+   "purl": "pkg:cargo/rkyv@0.7.42",
+   "scope": "runtime",
+   "paths": [
+    "flowy-database2 > rust_decimal > rkyv"
+   ],
+   "workspace": "frontend/rust-lib/flowy-database2",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls-webpki",
+   "version": "0.102.8",
+   "advisory": "RUSTSEC-2026-0382",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.103.16",
+   "summary": "Certificate verification may accept distrusted intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0381",
+    "RUSTSEC-2026-0383"
+   ],
+   "published": "2026-10-20T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/rustls-webpki@0.102.8",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > rustls > rustls-webpki"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:webpki-roots",
+   "version": "0.26.7",
+   "advisory": "RUSTSEC-2026-0381",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.26.11",
+   "summary": "Bundled root certificates allow trust in distrusted emSign intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0382",
+    "RUSTSEC-2026-0383"
+   ],
+   "published": "2026-10-19T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/webpki-roots@0.26.7",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai > ollama-rs > reqwest > webpki-roots"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "0.6.6",
+   "advisory": "RUSTSEC-2026-0368",
+   "severity": "UNKNOWN",
+   "fixed_in": "9.0.0",
+   "summary": "zip: `ZipArchive::extract` creates symbolic links whose attacker-controlled targets are outside the destination directory",
+   "malicious": false,
+   "aliases": [
+    "GHSA-4v9h-p7m9-rh26"
+   ],
+   "published": "2026-10-09T12:00:00Z",
+   "modified": "2026-10-16T23:30:02.383750571Z",
+   "purl": "pkg:cargo/zip@0.6.6",
+   "scope": "runtime",
+   "paths": [
+    "flowy-storage > collab-importer > zip"
+   ],
+   "workspace": "frontend/rust-lib/flowy-storage",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:ZipArchive::extract"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ZipArchive::extract, but other packages depend on zip"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd",
+   "version": "0.13.2",
+   "advisory": "RUSTSEC-2026-0391",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.13.4",
+   "summary": "Data from an abandoned stream leaks into the next stream on a reused context",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-11-02T09:30:03.590733846Z",
+   "purl": "pkg:cargo/zstd@0.13.2",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai-pub > client-api > zstd"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai-pub",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Decoder::with_context",
+    "symbol:Encoder::with_context"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use Decoder::with_context, Encoder::with_context, but other packages depend on zstd"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd-safe",
+   "version": "5.0.2+zstd.1.5.2",
+   "advisory": "RUSTSEC-2026-0403",
+   "severity": "UNKNOWN",
+   "fixed_in": "7.4.0",
+   "summary": "Uninitialized memory exposed when streaming decompression of a legacy frame fails",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-11-02T09:30:04.136442771Z",
+   "purl": "pkg:cargo/zstd-safe@5.0.2%2Bzstd.1.5.2",
+   "scope": "runtime",
+   "paths": [
+    "flowy-storage > collab-importer > zip > zstd > zstd-safe"
+   ],
+   "workspace": "frontend/rust-lib/flowy-storage",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:DCtx::decompress_stream"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use DCtx::decompress_stream, but other packages depend on zstd-safe"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd-safe",
+   "version": "7.2.0",
+   "advisory": "RUSTSEC-2026-0403",
+   "severity": "UNKNOWN",
+   "fixed_in": "7.4.0",
+   "summary": "Uninitialized memory exposed when streaming decompression of a legacy frame fails",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-11-02T09:30:04.136442771Z",
+   "purl": "pkg:cargo/zstd-safe@7.2.0",
+   "scope": "runtime",
+   "paths": [
+    "flowy-ai-pub > client-api > zstd > zstd-safe"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai-pub",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:DCtx::decompress_stream"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use DCtx::decompress_stream, but other packages depend on zstd-safe"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd-sys",
+   "version": "2.0.12+zstd.1.5.6",
+   "advisory": "RUSTSEC-2026-0410",
+   "severity": "UNKNOWN",
+   "fixed_in": "2.1.2",
+   "summary": "WebAssembly allocator shim corrupts memory on allocation failure",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-10-26T14:00:05.788985783Z",
+   "purl": "pkg:cargo/zstd-sys@2.0.12%2Bzstd.1.5.6",
+   "scope": "runtime",
+   "paths": [
+    "collab-integrate > collab-plugins > rocksdb > librocksdb-sys > zstd-sys"
+   ],
+   "workspace": "frontend/rust-lib/collab-integrate",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "2.2.0",
+   "advisory": "RUSTSEC-2026-0369",
+   "severity": "CRITICAL",
+   "fixed_in": "9.0.0",
+   "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+   "malicious": false,
+   "aliases": [
+    "GHSA-4684-h2q9-2vcp"
+   ],
+   "published": "2026-10-10T12:00:00Z",
+   "modified": "2026-10-16T23:30:02.387698467Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@2.2.0",
+   "scope": "runtime",
+   "paths": [
+    "lib-infra > zip"
+   ],
+   "workspace": "frontend/rust-lib/lib-infra",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:ZipStreamReader::extract",
+    "symbol:ZipArchive::extract"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses ZipStreamReader::extract, ZipArchive::extract; only the project depends on zip"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": true,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "2.2.0",
+   "advisory": "RUSTSEC-2026-0368",
+   "severity": "UNKNOWN",
+   "fixed_in": "9.0.0",
+   "summary": "zip: `ZipArchive::extract` creates symbolic links whose attacker-controlled targets are outside the destination directory",
+   "malicious": false,
+   "aliases": [
+    "GHSA-4v9h-p7m9-rh26"
+   ],
+   "published": "2026-10-09T12:00:00Z",
+   "modified": "2026-10-16T23:30:02.383750571Z",
+   "purl": "pkg:cargo/zip@2.2.0",
+   "scope": "runtime",
+   "paths": [
+    "lib-infra > zip"
+   ],
+   "workspace": "frontend/rust-lib/lib-infra",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:ZipArchive::extract"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses ZipArchive::extract; only the project depends on zip"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:lopdf",
+   "version": "0.36.0",
+   "advisory": "GHSA-6fj4-rcr3-r7rr",
+   "severity": "HIGH",
+   "fixed_in": "0.42.0",
+   "summary": "lopdf has a stack overflow via deeply nested PDF objects",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0187"
+   ],
+   "published": "2026-10-16T19:55:39Z",
+   "modified": "2026-10-17T15:26:01.305676388Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1124"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/lopdf@0.36.0",
+   "scope": "optional",
+   "paths": [
+    "flowy-ai > lopdf"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:pulldown-cmark",
+   "version": "0.13.0",
+   "advisory": "RUSTSEC-2026-0414",
+   "severity": "HIGH",
+   "fixed_in": "0.13.5",
+   "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
+   "malicious": false,
+   "published": "2026-10-18T12:00:00Z",
+   "modified": "2026-10-28T09:00:02.341043798Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/pulldown-cmark@0.13.0",
+   "scope": "optional",
+   "paths": [
+    "flowy-ai > pulldown-cmark"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "option:ENABLE_WIKILINKS"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses ENABLE_WIKILINKS; only the project depends on pulldown-cmark"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:pulldown-cmark",
+   "version": "0.13.0",
+   "advisory": "RUSTSEC-2026-0433",
+   "severity": "HIGH",
+   "fixed_in": "0.13.6",
+   "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
+   "malicious": false,
+   "published": "2026-10-28T12:00:00Z",
+   "modified": "2026-11-02T11:30:18.315201167Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/pulldown-cmark@0.13.0",
+   "scope": "optional",
+   "paths": [
+    "flowy-ai > pulldown-cmark"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "option:ENABLE_WIKILINKS"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses ENABLE_WIKILINKS; only the project depends on pulldown-cmark"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:aes-gcm",
+   "version": "0.10.2",
+   "advisory": "GHSA-423w-p2w9-r7vq",
+   "cves": [
+    "CVE-2023-42811"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.10.3",
+   "summary": "AEADs/aes-gcm: Plaintext exposed in decrypt_in_place_detached even on tag verification failure",
+   "malicious": false,
+   "aliases": [
+    "CVE-2023-42811",
+    "RUSTSEC-2023-0096"
+   ],
+   "published": "2023-09-22T16:11:47Z",
+   "modified": "2026-02-03T03:15:54.086216Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:H/PR:H/UI:N/S:U/C:L/I:H/A:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-347"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/aes-gcm@0.10.2",
+   "scope": "optional",
+   "paths": [
+    "lib-infra > aes-gcm"
+   ],
+   "workspace": "frontend/rust-lib/lib-infra",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "epss": 0.0023,
+   "epss_percentile": 0.13997,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:remove_dir_all",
+   "version": "0.5.3",
+   "advisory": "GHSA-mc8h-8q98-g5hr",
+   "severity": "LOW",
+   "fixed_in": "0.8.0",
+   "summary": "Race Condition Enabling Link Following and Time-of-check Time-of-use (TOCTOU) Race Condition in remove_dir_all",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2023-0018"
+   ],
+   "published": "2023-02-24T16:23:59Z",
+   "modified": "2026-09-10T03:49:52.047436844Z",
+   "cwes": [
+    "CWE-366",
+    "CWE-367"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/remove_dir_all@0.5.3",
+   "scope": "build",
+   "paths": [
+    "flowy-ai > tempdir > remove_dir_all"
+   ],
+   "workspace": "frontend/rust-lib/flowy-ai",
+   "found_in": "frontend/rust-lib/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

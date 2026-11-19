@@ -1,0 +1,174 @@
+{
+ "slug": "chaosengineai",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "0d6676d0d63b69e62ff9a0986784441b7b30cfc5",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 561,
+   "npm": 319
+  },
+  "scopes": {
+   "runtime": 716,
+   "peer": 4,
+   "dev": 160
+  },
+  "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 2
+ },
+ "assessment": {
+  "level": "none",
+  "policy_version": "sec.v2",
+  "reasons": [],
+  "counts": {},
+  "uncounted": 2,
+  "assessed_at": "2026-11-20T00:06:03+08:00"
+ },
+ "coverage": {
+  "state": "partial",
+  "target": "repo_lockfile",
+  "packages_found": 880,
+  "packages_checked": 880,
+  "components": [
+   {
+    "ecosystem": "npm",
+    "component": "package-lock.json",
+    "status": "scanned",
+    "packages": 319,
+    "gaps": []
+   },
+   {
+    "ecosystem": "crates",
+    "component": "src-tauri/Cargo.lock",
+    "status": "scanned",
+    "packages": 561,
+    "gaps": []
+   },
+   {
+    "ecosystem": "pypi",
+    "component": "pyproject.toml",
+    "status": "not_scanned",
+    "packages": 0,
+    "gaps": [
+     "resolve.pyproject_failed"
+    ]
+   }
+  ],
+  "gaps": [
+   {
+    "code": "resolve.pyproject_failed",
+    "category": "resolve_failed",
+    "ecosystem": "pypi",
+    "component": "pyproject.toml",
+    "detail": "uv pip compile --no-build did not resolve it",
+    "capability": "resolve_in_sandbox",
+    "found": null,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   }
+  ]
+ },
+ "sources": [
+  "github.com/cryptopoly/ChaosEngineAI@0d6676d0d63b",
+  "package-lock.json",
+  "src-tauri/Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:glib",
+   "version": "0.18.5",
+   "advisory": "GHSA-wrw7-89jp-8q8g",
+   "severity": "MODERATE",
+   "fixed_in": "0.20.0",
+   "summary": "Unsoundness in `Iterator` and `DoubleEndedIterator` impls for `glib::VariantStrIter`",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2024-0429"
+   ],
+   "published": "2024-12-23T20:19:24Z",
+   "modified": "2025-10-28T06:29:26.473225Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/glib@0.18.5",
+   "scope": "runtime",
+   "paths": [
+    "chaosengineai > webkit2gtk > glib"
+   ],
+   "workspace": "src-tauri",
+   "found_in": "src-tauri/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Iterator",
+    "symbol:DoubleEndedIterator",
+    "symbol:glib::VariantStrIter"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use Iterator, DoubleEndedIterator, glib::VariantStrIter, but other packages depend on glib"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:katex",
+   "version": "0.16.47",
+   "advisory": "GHSA-238p-pmpm-9mq7",
+   "cves": [
+    "CVE-2026-103923"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.18.2",
+   "summary": "KaTeX: Existing prototype pollution can bypass trust restrictions",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-103923"
+   ],
+   "published": "2026-10-05T23:41:05Z",
+   "modified": "2026-10-06T00:00:09.544490390Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-807"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/katex@0.16.47",
+   "scope": "runtime",
+   "paths": [
+    ". > katex"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.003,
+   "epss_percentile": 0.23091,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

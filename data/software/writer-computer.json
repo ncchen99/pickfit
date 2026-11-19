@@ -239,9 +239,7 @@
     "cost_usd": 0.025788
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -249,9 +247,9 @@
       "apps/desktop/src-tauri/Cargo.lock",
       "pnpm-lock.yaml"
     ],
-    "packages_checked": 756,
-    "findings_total": 13,
-    "advisories_total": 13,
+    "packages_checked": 1008,
+    "findings_total": 6,
+    "advisories_total": 6,
     "findings": [
       {
         "package": "crates:zip",
@@ -263,7 +261,21 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/desktop/src-tauri",
+        "found_in": "apps/desktop/src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.0032,
+        "fix_published_at": "2026-10-17T18:45:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "desktop > tauri-plugin-updater > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -273,19 +285,31 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
-      },
-      {
-        "package": "npm:dompurify",
-        "version": "3.4.7",
-        "advisory": "GHSA-cg2g-xh64-v4q7",
-        "cves": [
-          "CVE-2026-116804"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/desktop/src-tauri",
+        "found_in": "apps/desktop/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:ZipStreamReader::extract",
+          "symbol:ZipArchive::extract"
         ],
-        "severity": "CRITICAL",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify SAFE_FOR_TEMPLATES bypass: split template expressions survive in attached shadow root content on DOM output modes",
-        "malicious": false
+        "paths": [
+          "desktop > tauri-plugin-updater > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+          ]
+        }
       },
       {
         "package": "crates:quick-xml",
@@ -295,7 +319,23 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/desktop/src-tauri",
+        "found_in": "apps/desktop/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "desktop > tauri > plist > quick-xml"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -305,7 +345,31 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/desktop/src-tauri",
+        "found_in": "apps/desktop/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
+        ],
+        "paths": [
+          "desktop > tauri > plist > quick-xml"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use NsReader, but other packages depend on quick-xml"
+          ]
+        }
       },
       {
         "package": "crates:zip",
@@ -317,7 +381,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/desktop/src-tauri",
+        "found_in": "apps/desktop/src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00461,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "desktop > tauri-plugin-updater > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -327,95 +408,108 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
-      },
-      {
-        "package": "npm:dompurify",
-        "version": "3.4.7",
-        "advisory": "GHSA-mrv2-3pqr-j5jr",
-        "cves": [
-          "CVE-2026-116803"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/desktop/src-tauri",
+        "found_in": "apps/desktop/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
         ],
-        "severity": "HIGH",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
-        "malicious": false
-      },
-      {
-        "package": "npm:source-map-js",
-        "version": "1.2.1",
-        "advisory": "GHSA-68fv-2mgg-jv7q",
-        "cves": [
-          "CVE-2026-93749"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.2.2",
-        "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
-        "malicious": false
-      },
-      {
-        "package": "npm:vite",
-        "version": "@voidzero-dev/vite-plus-core@0.1.13",
-        "advisory": "GHSA-353f-5xf4-qw67",
-        "cves": [
-          "CVE-2023-34092"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "2.9.16",
-        "summary": "Vite Server Options (server.fs.deny) can be bypassed using double forward-slash (//)",
-        "malicious": false
-      },
-      {
-        "package": "npm:vite",
-        "version": "@voidzero-dev/vite-plus-core@0.1.13",
-        "advisory": "GHSA-587h-7wmj-h5pm",
-        "cves": [
-          "CVE-2026-112942"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "6.4.4",
-        "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
-        "malicious": false
-      },
-      {
-        "package": "npm:vite",
-        "version": "@voidzero-dev/vite-plus-core@0.1.13",
-        "advisory": "GHSA-c27g-q93r-2cwf",
-        "cves": [
-          "CVE-2024-52011"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "5.4.9",
-        "summary": "launch-editor vulnerable to command injection via the crafted request on Windows",
-        "malicious": false
-      },
-      {
-        "package": "npm:vite",
-        "version": "@voidzero-dev/vite-plus-core@0.1.13",
-        "advisory": "GHSA-mv48-hcvh-8jj8",
-        "cves": [
-          "CVE-2022-35204"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "2.9.13",
-        "summary": "Vite before v2.9.13 vulnerable to directory traversal via crafted URL to victim's service",
-        "malicious": false
+        "paths": [
+          "desktop > tauri-plugin-updater > zip"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "79b744c17b31422523d725cee3bd26db9b266588",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 608,
+        "npm": 400
+      },
+      "scopes": {
+        "runtime": 592,
+        "optional": 15,
+        "dev": 208,
+        "workspace": 193
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 76,
+      "details": "security/writer-computer.json",
+      "details_sha256": "0e363bdc3f430344099f964a95bf4f0a04cf5e7fd7e8c31bb22adc48e16d6d98"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-m665-v7pm-7grj crates:zip@4.6.1 (conditional)",
+        "worst:RUSTSEC-2026-0369 crates:zip@4.6.1 (conditional)",
+        "worst:RUSTSEC-2026-0194 crates:quick-xml@0.39.4 (conditional)"
+      ],
+      "counts": {
+        "conditional": 6,
+        "not_shipped": 17
+      },
+      "uncounted": 53,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 1008,
+      "packages_checked": 1008,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "apps/desktop/src-tauri/Cargo.lock",
+          "status": "scanned",
+          "packages": 608,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "pnpm-lock.yaml",
+          "status": "scanned",
+          "packages": 400,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7+visual.v1",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 69.7,
-      "raw_total": 69.7,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.4375,
@@ -435,16 +529,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 69.7,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       },
@@ -770,5 +861,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:46:48+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

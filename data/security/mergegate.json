@@ -1,0 +1,1010 @@
+{
+ "slug": "mergegate",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "6756a4cb3a0583be867ce55aa6b9509ba33743b9",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 358,
+   "npm": 258
+  },
+  "scopes": {
+   "runtime": 373,
+   "optional": 44,
+   "dev": 199
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 23
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-mghf-wjfp-p5xm crates:wasmtime@48.0.6 (conditional)",
+   "worst:GHSA-q54r-jf2p-rfr2 crates:gix@0.89.0 (conditional)"
+  ],
+  "counts": {
+   "conditional": 2
+  },
+  "uncounted": 21,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 616,
+  "packages_checked": 616,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 358,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "ui/pnpm-lock.yaml",
+    "status": "scanned",
+    "packages": 258,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/damian-kolasinski/mergegate@6756a4cb3a05",
+  "Cargo.lock",
+  "ui/pnpm-lock.yaml"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:wasmtime",
+   "version": "48.0.6",
+   "advisory": "GHSA-mghf-wjfp-p5xm",
+   "cves": [
+    "CVE-2026-115893"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "48.0.7",
+   "summary": "Wasmtime: Cranelift backend on aarch64 can jump to incorrect target on large Wasm `br_table` instruction",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115893",
+    "RUSTSEC-2026-0379"
+   ],
+   "published": "2026-10-28T21:14:14Z",
+   "modified": "2026-10-28T21:30:05.001444440Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-691"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/wasmtime@48.0.6",
+   "fix_published_at": "2026-10-19T19:16:54Z",
+   "scope": "runtime",
+   "paths": [
+    "mergegate-highlight > tree-sitter > wasmtime-c-api-impl > wasmtime"
+   ],
+   "workspace": "crates/highlight",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.0099,
+   "epss_percentile": 0.63227,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:br_table"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use br_table, but other packages depend on wasmtime"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:gix",
+   "version": "0.89.0",
+   "advisory": "GHSA-q54r-jf2p-rfr2",
+   "severity": "HIGH",
+   "fixed_in": "0.90.0",
+   "summary": "gitoxide gix: untrusted .git/config disables filesystem .git-protection path checks via unfiltered protect_options()",
+   "malicious": false,
+   "published": "2026-10-23T20:52:28Z",
+   "modified": "2026-10-23T21:00:06.833400057Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:H/I:H/A:H",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-349"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/gix@0.89.0",
+   "fix_published_at": "2026-10-22T13:58:58Z",
+   "scope": "runtime",
+   "paths": [
+    "mergegate-git > gix"
+   ],
+   "workspace": "crates/git",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:wasmtime",
+   "version": "48.0.6",
+   "advisory": "GHSA-9pvw-hwfg-92h5",
+   "cves": [
+    "CVE-2026-115892"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "48.0.7",
+   "summary": "Wasmtime: Panic lowering a host-created component model stream into a guest that expects a different payload type",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115892",
+    "RUSTSEC-2026-0378"
+   ],
+   "published": "2026-10-23T22:04:45Z",
+   "modified": "2026-10-23T22:25:32.526713550Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:H/UI:P/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-843"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/wasmtime@48.0.6",
+   "scope": "runtime",
+   "paths": [
+    "mergegate-highlight > tree-sitter > wasmtime-c-api-impl > wasmtime"
+   ],
+   "workspace": "crates/highlight",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00434,
+   "epss_percentile": 0.3838,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_privileges",
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:wasmtime",
+   "version": "48.0.6",
+   "advisory": "RUSTSEC-2026-0568",
+   "severity": "MODERATE",
+   "fixed_in": "48.0.9",
+   "summary": "Stale GC heap base pointer in compiled code lets a Wasm guest abort the host process",
+   "malicious": false,
+   "aliases": [
+    "GHSA-43j2-gcp4-m22g"
+   ],
+   "published": "2026-11-16T12:00:00Z",
+   "modified": "2026-11-19T08:45:02.806410831Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "local",
+   "dos_only": true,
+   "purl": "pkg:cargo/wasmtime@48.0.6",
+   "scope": "runtime",
+   "paths": [
+    "mergegate-highlight > tree-sitter > wasmtime-c-api-impl > wasmtime"
+   ],
+   "workspace": "crates/highlight",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:seroval",
+   "version": "1.6.9",
+   "advisory": "GHSA-9wx9-5pv9-3349",
+   "cves": [
+    "CVE-2026-116582"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.6.10",
+   "summary": "Seroval: Script injection through RegExp sources in serialized output",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116582"
+   ],
+   "published": "2026-10-28T21:17:31Z",
+   "modified": "2026-10-28T21:30:04.992414732Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-116",
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/seroval@1.6.9",
+   "scope": "runtime",
+   "paths": [
+    "ui > solid-js > seroval"
+   ],
+   "workspace": ".",
+   "found_in": "ui/pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00188,
+   "epss_percentile": 0.0849,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:seroval",
+   "version": "1.6.9",
+   "advisory": "GHSA-f86p-h4j2-7qgj",
+   "cves": [
+    "CVE-2026-116583"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.6.11",
+   "summary": "Seroval: Code injection through a typed array's own constructor property",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116583"
+   ],
+   "published": "2026-10-28T21:17:36Z",
+   "modified": "2026-10-28T21:30:05.897308225Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:P/VC:N/VI:N/VA:N/SC:H/SI:H/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79",
+    "CWE-94"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/seroval@1.6.9",
+   "scope": "runtime",
+   "paths": [
+    "ui > solid-js > seroval"
+   ],
+   "workspace": ".",
+   "found_in": "ui/pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00268,
+   "epss_percentile": 0.19203,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:wasmtime",
+   "version": "48.0.6",
+   "advisory": "RUSTSEC-2026-0422",
+   "cves": [
+    "CVE-2026-126408"
+   ],
+   "severity": "LOW",
+   "fixed_in": "48.0.8",
+   "summary": "Typed functions with `i31` or `nullref` arguments may panic due to insufficient type-check",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-126408",
+    "GHSA-3982-jqvv-277m"
+   ],
+   "published": "2026-10-29T12:00:00Z",
+   "modified": "2026-11-14T02:55:37.311477022Z",
+   "cvss_v3": "CVSS:3.1/AV:A/AC:H/PR:H/UI:R/S:U/C:N/I:N/A:L",
+   "attack_vector": "adjacent",
+   "dos_only": true,
+   "purl": "pkg:cargo/wasmtime@48.0.6",
+   "scope": "runtime",
+   "paths": [
+    "mergegate-highlight > tree-sitter > wasmtime-c-api-impl > wasmtime"
+   ],
+   "workspace": "crates/highlight",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00226,
+   "epss_percentile": 0.13473,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "adjacent_network",
+    "user_interaction",
+    "high_privileges",
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:wasmtime",
+   "version": "48.0.6",
+   "advisory": "RUSTSEC-2026-0570",
+   "severity": "LOW",
+   "fixed_in": "48.0.9",
+   "summary": "Abort in Wasmtime builds without the `gc` cargo feature",
+   "malicious": false,
+   "aliases": [
+    "GHSA-rc4p-x33f-vpr2"
+   ],
+   "published": "2026-11-16T12:00:00Z",
+   "modified": "2026-11-19T08:45:02.810072277Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/wasmtime@48.0.6",
+   "scope": "runtime",
+   "paths": [
+    "mergegate-highlight > tree-sitter > wasmtime-c-api-impl > wasmtime"
+   ],
+   "workspace": "crates/highlight",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_privileges",
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:wasmtime",
+   "version": "48.0.6",
+   "advisory": "RUSTSEC-2026-0572",
+   "severity": "LOW",
+   "fixed_in": "48.0.9",
+   "summary": "Panic when a component cancels a stream or future copy on the wrong end",
+   "malicious": false,
+   "aliases": [
+    "GHSA-xrvr-8678-5wp8"
+   ],
+   "published": "2026-11-16T12:00:00Z",
+   "modified": "2026-11-19T08:45:02.811424712Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/wasmtime@48.0.6",
+   "scope": "runtime",
+   "paths": [
+    "mergegate-highlight > tree-sitter > wasmtime-c-api-impl > wasmtime"
+   ],
+   "workspace": "crates/highlight",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:libsqlite3-sys",
+   "version": "0.38.2",
+   "advisory": "RUSTSEC-2026-0459",
+   "cves": [
+    "CVE-2026-119375"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.39.0",
+   "summary": "`libsqlite3-sys` via C SQLite CVE-2026-119375",
+   "malicious": false,
+   "aliases": [
+    "BIT-sqlite-2026-119375",
+    "CVE-2026-119375",
+    "GHSA-72w2-rjgg-q729",
+    "RUSTSEC-2026-0502"
+   ],
+   "published": "2026-10-30T12:00:00Z",
+   "modified": "2026-11-17T13:41:05.770775012Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/libsqlite3-sys@0.38.2",
+   "scope": "runtime",
+   "paths": [
+    "mergegate-store-sqlite > rusqlite > libsqlite3-sys"
+   ],
+   "workspace": "crates/store-sqlite",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00195,
+   "epss_percentile": 0.09275,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls-webpki",
+   "version": "0.103.15",
+   "advisory": "RUSTSEC-2026-0382",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.103.16",
+   "summary": "Certificate verification may accept distrusted intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0381",
+    "RUSTSEC-2026-0383"
+   ],
+   "published": "2026-10-20T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/rustls-webpki@0.103.15",
+   "scope": "runtime",
+   "paths": [
+    "mergegate-backend-github > ureq > rustls > rustls-webpki"
+   ],
+   "workspace": "crates/backend-github",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:wasmtime",
+   "version": "48.0.6",
+   "advisory": "RUSTSEC-2026-0423",
+   "cves": [
+    "CVE-2026-126409"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "48.0.8",
+   "summary": "Cross-engine type confusion with host-created struct-types-with-supertypes",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-126409",
+    "GHSA-qw58-7h65-crq2"
+   ],
+   "published": "2026-10-29T12:00:00Z",
+   "modified": "2026-11-14T02:55:49.595536564Z",
+   "purl": "pkg:cargo/wasmtime@48.0.6",
+   "scope": "runtime",
+   "paths": [
+    "mergegate-highlight > tree-sitter > wasmtime-c-api-impl > wasmtime"
+   ],
+   "workspace": "crates/highlight",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00206,
+   "epss_percentile": 0.10714,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:wasmtime",
+   "version": "48.0.6",
+   "advisory": "RUSTSEC-2026-0424",
+   "cves": [
+    "CVE-2026-126407"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "48.0.8",
+   "summary": "Unchecked memory usage in transferring borrowed resources between components",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-126407",
+    "GHSA-6fr9-xmw9-5352"
+   ],
+   "published": "2026-10-29T12:00:00Z",
+   "modified": "2026-11-14T02:55:59.002516813Z",
+   "purl": "pkg:cargo/wasmtime@48.0.6",
+   "scope": "runtime",
+   "paths": [
+    "mergegate-highlight > tree-sitter > wasmtime-c-api-impl > wasmtime"
+   ],
+   "workspace": "crates/highlight",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.0031,
+   "epss_percentile": 0.24322,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:wasmtime",
+   "version": "48.0.6",
+   "advisory": "RUSTSEC-2026-0566",
+   "severity": "UNKNOWN",
+   "fixed_in": "48.0.9",
+   "summary": "wasmtime-wasi: Unbounded host memory growth via empty writes to `AsyncWriteStream`",
+   "malicious": false,
+   "aliases": [
+    "GHSA-5m8g-xhq4-4h93"
+   ],
+   "published": "2026-11-16T12:00:00Z",
+   "modified": "2026-11-19T08:45:02.804113183Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/wasmtime@48.0.6",
+   "scope": "runtime",
+   "paths": [
+    "mergegate-highlight > tree-sitter > wasmtime-c-api-impl > wasmtime"
+   ],
+   "workspace": "crates/highlight",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:AsyncWriteStream"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use AsyncWriteStream, but other packages depend on wasmtime"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:wasmtime",
+   "version": "48.0.6",
+   "advisory": "RUSTSEC-2026-0567",
+   "severity": "UNKNOWN",
+   "fixed_in": "48.0.9",
+   "summary": "Abort in Wasmtime builds without the `threads` cargo feature",
+   "malicious": false,
+   "aliases": [
+    "GHSA-2674-w29h-wqvj"
+   ],
+   "published": "2026-11-16T12:00:00Z",
+   "modified": "2026-11-19T08:45:02.801281245Z",
+   "purl": "pkg:cargo/wasmtime@48.0.6",
+   "scope": "runtime",
+   "paths": [
+    "mergegate-highlight > tree-sitter > wasmtime-c-api-impl > wasmtime"
+   ],
+   "workspace": "crates/highlight",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:wasmtime",
+   "version": "48.0.6",
+   "advisory": "RUSTSEC-2026-0569",
+   "severity": "UNKNOWN",
+   "fixed_in": "48.0.9",
+   "summary": "Panic in `Caller::get_module_export` when a host function isn't called from WebAssembly",
+   "malicious": false,
+   "aliases": [
+    "GHSA-hj27-mpw9-ff4c"
+   ],
+   "published": "2026-11-16T12:00:00Z",
+   "modified": "2026-11-19T08:45:02.801253474Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/wasmtime@48.0.6",
+   "scope": "runtime",
+   "paths": [
+    "mergegate-highlight > tree-sitter > wasmtime-c-api-impl > wasmtime"
+   ],
+   "workspace": "crates/highlight",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Caller::get_module_export"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use Caller::get_module_export, but other packages depend on wasmtime"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:wasmtime",
+   "version": "48.0.6",
+   "advisory": "RUSTSEC-2026-0571",
+   "severity": "UNKNOWN",
+   "fixed_in": "48.0.9",
+   "summary": "wasmtime-wasi-http: Empty Body Writes can result in Unbound Heap Usage with HTTP/2",
+   "malicious": false,
+   "aliases": [
+    "GHSA-f8mm-ggr3-89wh"
+   ],
+   "published": "2026-11-16T12:00:00Z",
+   "modified": "2026-11-19T08:45:02.795286511Z",
+   "purl": "pkg:cargo/wasmtime@48.0.6",
+   "scope": "runtime",
+   "paths": [
+    "mergegate-highlight > tree-sitter > wasmtime-c-api-impl > wasmtime"
+   ],
+   "workspace": "crates/highlight",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:wasmtime",
+   "version": "48.0.6",
+   "advisory": "RUSTSEC-2026-0573",
+   "severity": "UNKNOWN",
+   "fixed_in": "48.0.9",
+   "summary": "Process abort when a GC heap's reservation isn't a multiple of the page size",
+   "malicious": false,
+   "aliases": [
+    "GHSA-wvgq-g5hf-6gm6"
+   ],
+   "published": "2026-11-16T12:00:00Z",
+   "modified": "2026-11-19T08:45:02.798083703Z",
+   "purl": "pkg:cargo/wasmtime@48.0.6",
+   "scope": "runtime",
+   "paths": [
+    "mergegate-highlight > tree-sitter > wasmtime-c-api-impl > wasmtime"
+   ],
+   "workspace": "crates/highlight",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:webpki-roots",
+   "version": "1.0.9",
+   "advisory": "RUSTSEC-2026-0381",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "1.0.10",
+   "summary": "Bundled root certificates allow trust in distrusted emSign intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0382",
+    "RUSTSEC-2026-0383"
+   ],
+   "published": "2026-10-19T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/webpki-roots@1.0.9",
+   "scope": "runtime",
+   "paths": [
+    "mergegate-backend-github > ureq > webpki-roots"
+   ],
+   "workspace": "crates/backend-github",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:dompurify",
+   "version": "3.4.16",
+   "advisory": "GHSA-c6gr-qvv4-5v3f",
+   "cves": [
+    "CVE-2026-116802"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.4.17",
+   "summary": "DOMPurify: SMIL attributeName=href guard is skipped when PARSER_MEDIA_TYPE is application/xhtml+xml",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116802"
+   ],
+   "published": "2026-10-22T16:24:23Z",
+   "modified": "2026-10-27T10:56:08.682782458Z",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/dompurify@3.4.16",
+   "scope": "runtime",
+   "paths": [
+    "ui > dompurify"
+   ],
+   "workspace": ".",
+   "found_in": "ui/pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00217,
+   "epss_percentile": 0.12291,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "option:PARSER_MEDIA_TYPE"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses PARSER_MEDIA_TYPE; only the project depends on dompurify"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:dompurify",
+   "version": "3.4.16",
+   "advisory": "GHSA-cg2g-xh64-v4q7",
+   "cves": [
+    "CVE-2026-116804"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.4.17",
+   "summary": "DOMPurify SAFE_FOR_TEMPLATES bypass: split template expressions survive in attached shadow root content on DOM output modes",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116804"
+   ],
+   "published": "2026-10-22T16:25:31Z",
+   "modified": "2026-11-19T00:15:04.697883878Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/dompurify@3.4.16",
+   "scope": "runtime",
+   "paths": [
+    "ui > dompurify"
+   ],
+   "workspace": ".",
+   "found_in": "ui/pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00178,
+   "epss_percentile": 0.07525,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "option:SAFE_FOR_TEMPLATES"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses SAFE_FOR_TEMPLATES; only the project depends on dompurify"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:dompurify",
+   "version": "3.4.16",
+   "advisory": "GHSA-mrv2-3pqr-j5jr",
+   "cves": [
+    "CVE-2026-116803"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.4.17",
+   "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116803"
+   ],
+   "published": "2026-10-22T16:24:52Z",
+   "modified": "2026-11-19T00:15:04.695368164Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-693",
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/dompurify@3.4.16",
+   "scope": "runtime",
+   "paths": [
+    "ui > dompurify"
+   ],
+   "workspace": ".",
+   "found_in": "ui/pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00164,
+   "epss_percentile": 0.05716,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "option:IN_PLACE"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses IN_PLACE; only the project depends on dompurify"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:minimatch",
+   "version": "10.2.6",
+   "advisory": "GHSA-g3hv-75wg-m249",
+   "cves": [
+    "CVE-2026-118764"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "11.0.1",
+   "summary": "minimatch has potential denial of service via globparts amplification",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118764"
+   ],
+   "published": "2026-10-30T23:09:55Z",
+   "modified": "2026-11-04T17:01:25.850114200Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-405"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/minimatch@10.2.6",
+   "scope": "dev",
+   "paths": [
+    "ui > eslint > minimatch"
+   ],
+   "workspace": ".",
+   "found_in": "ui/pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00301,
+   "epss_percentile": 0.23299,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

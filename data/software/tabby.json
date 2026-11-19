@@ -211,9 +211,7 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-05T03:16:33+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -221,9 +219,9 @@
       "Cargo.lock",
       "pnpm-lock.yaml"
     ],
-    "packages_checked": 1366,
-    "findings_total": 54,
-    "advisories_total": 49,
+    "packages_checked": 2866,
+    "findings_total": 15,
+    "advisories_total": 15,
     "findings": [
       {
         "package": "crates:lettre",
@@ -235,7 +233,24 @@
         "severity": "CRITICAL",
         "fixed_in": "0.11.22",
         "summary": "lettre has TLS hostname verification disabled when using Boring TLS backend",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "ee/tabby-webserver",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00319,
+        "fix_published_at": "2026-05-14T08:57:46Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "tabby-webserver > lettre"
+        ]
       },
       {
         "package": "crates:zip",
@@ -247,7 +262,21 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/tabby",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.0032,
+        "fix_published_at": "2026-10-17T18:45:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "tabby > utoipa-swagger-ui > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -257,51 +286,31 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "13.5.3",
-        "advisory": "GHSA-2464-fhr4-w9xw",
-        "cves": [],
-        "severity": "CRITICAL",
-        "fixed_in": "15.5.28",
-        "summary": "Next.js: Unauthenticated Remote Code Execution in Image Optimization API when SVG files are used",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "13.5.3",
-        "advisory": "GHSA-2xp9-vwfh-vxw4",
-        "cves": [],
-        "severity": "CRITICAL",
-        "fixed_in": "15.5.24",
-        "summary": "Next.js: Unauthenticated Remote Code Execution in Image Optimization API when AVIF files are used",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "13.5.3",
-        "advisory": "GHSA-f82v-jwr5-mffw",
-        "cves": [
-          "CVE-2025-29927"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/tabby",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:ZipStreamReader::extract",
+          "symbol:ZipArchive::extract"
         ],
-        "severity": "CRITICAL",
-        "fixed_in": "13.5.9",
-        "summary": "Authorization Bypass in Next.js Middleware",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "13.5.3",
-        "advisory": "GHSA-p293-qw3h-jr36",
-        "cves": [
-          "CVE-2026-75604"
+        "paths": [
+          "tabby > utoipa-swagger-ui > zip"
         ],
-        "severity": "CRITICAL",
-        "fixed_in": "15.5.24",
-        "summary": "Next.js: Unauthenticated Remote Code Execution on windows-hosted servers",
-        "malicious": false
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+          ]
+        }
       },
       {
         "package": "crates:juniper",
@@ -311,7 +320,23 @@
         "severity": "HIGH",
         "fixed_in": "0.17.2",
         "summary": "Stack overflow on deeply nested GraphQL documents",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "ee/tabby-schema",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-28T22:46:09Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "tabby-schema > juniper"
+        ]
       },
       {
         "package": "crates:juniper",
@@ -321,7 +346,23 @@
         "severity": "HIGH",
         "fixed_in": "0.17.2",
         "summary": "Excessive CPU and memory use on crafted GraphQL documents",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "ee/tabby-schema",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-28T22:46:09Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "tabby-schema > juniper"
+        ]
       },
       {
         "package": "crates:lz4_flex",
@@ -333,7 +374,24 @@
         "severity": "HIGH",
         "fixed_in": "0.11.6",
         "summary": "lz4_flex's decompression can leak information from uninitialized memory or reused output buffer",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/tabby",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00677,
+        "fix_published_at": "2026-03-14T14:49:05Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "tabby > tantivy > lz4_flex"
+        ]
       },
       {
         "package": "crates:oneshot",
@@ -343,7 +401,24 @@
         "severity": "HIGH",
         "fixed_in": "0.1.12",
         "summary": "oneshot has potential Use After Free when used asynchronously",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/tabby",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-01-25T21:15:48Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "high_complexity",
+          "denial_of_service"
+        ],
+        "paths": [
+          "tabby > tantivy > oneshot"
+        ]
       },
       {
         "package": "crates:openssl",
@@ -355,7 +430,24 @@
         "severity": "HIGH",
         "fixed_in": "0.10.78",
         "summary": "rust-openssl has incorrect bounds assertion in aes key wrap",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/aim-downloader",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00251,
+        "fix_published_at": "2026-04-19T20:02:38Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "aim-downloader > reqwest > native-tls > openssl"
+        ]
       },
       {
         "package": "crates:openssl",
@@ -367,7 +459,21 @@
         "severity": "HIGH",
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: rustMdCtxRef::digest_final() writes past caller buffer with no length check",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/aim-downloader",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00359,
+        "fix_published_at": "2026-04-19T20:02:38Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "aim-downloader > reqwest > native-tls > openssl"
+        ]
       },
       {
         "package": "crates:openssl",
@@ -379,7 +485,24 @@
         "severity": "HIGH",
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: Unchecked callback length in PSK/cookie trampolines leaks adjacent memory to peer",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/aim-downloader",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.0028,
+        "fix_published_at": "2026-04-19T20:02:38Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "aim-downloader > reqwest > native-tls > openssl"
+        ]
       },
       {
         "package": "crates:openssl",
@@ -391,7 +514,33 @@
         "severity": "HIGH",
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: Deriver::derive and PkeyCtxRef::derive can overflow short buffers on OpenSSL 1.1.1",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/aim-downloader",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00285,
+        "fix_published_at": "2026-04-19T20:02:38Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity",
+          "symbol:Deriver::derive",
+          "symbol:PkeyCtxRef::derive"
+        ],
+        "paths": [
+          "aim-downloader > reqwest > native-tls > openssl"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use Deriver::derive, PkeyCtxRef::derive, but other packages depend on openssl"
+          ]
+        }
       },
       {
         "package": "crates:openssl",
@@ -403,19 +552,31 @@
         "severity": "HIGH",
         "fixed_in": "0.10.79",
         "summary": "rust-openssl has undefined behavior in X509Ref::ocsp_responders for certificates with non-UTF-8 OCSP URLs",
-        "malicious": false
-      },
-      {
-        "package": "crates:rustls",
-        "version": "0.20.9",
-        "advisory": "RUSTSEC-2024-0336",
-        "cves": [
-          "CVE-2024-32650"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/aim-downloader",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00211,
+        "fix_published_at": "2026-05-04T00:19:55Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:X509Ref::ocsp_responders"
         ],
-        "severity": "HIGH",
-        "fixed_in": "0.21.11",
-        "summary": "`rustls::ConnectionCommon::complete_io` could fall into an infinite loop based on network input",
-        "malicious": false
+        "paths": [
+          "aim-downloader > reqwest > native-tls > openssl"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use X509Ref::ocsp_responders, but other packages depend on openssl"
+          ]
+        }
       },
       {
         "package": "crates:rustls-webpki",
@@ -427,7 +588,24 @@
         "severity": "HIGH",
         "fixed_in": "0.103.13",
         "summary": "rustls-webpki: Denial of service via panic on malformed CRL BIT STRING",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/aim-downloader",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00346,
+        "fix_published_at": "2026-04-21T10:25:37Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "aim-downloader > reqwest > rustls > rustls-webpki"
+        ]
       },
       {
         "package": "crates:zip",
@@ -439,7 +617,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/tabby",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00461,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "tabby > utoipa-swagger-ui > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -449,421 +644,150 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
-      },
-      {
-        "package": "npm:browserslist",
-        "version": "4.22.1",
-        "advisory": "GHSA-73wf-gq98-2v4g",
-        "cves": [
-          "CVE-2026-73088"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/tabby",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
         ],
-        "severity": "HIGH",
-        "fixed_in": "4.28.7",
-        "summary": "Browserslist: Uncaught crash / prototype write via untrusted browserslist-stats.json custom stats (normalizeStats)",
-        "malicious": false
-      },
-      {
-        "package": "npm:browserslist",
-        "version": "4.22.1",
-        "advisory": "GHSA-c83g-rgw3-j3cx",
-        "cves": [
-          "CVE-2026-73089"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.28.7",
-        "summary": "Browserslist: Unbounded memory growth (no cache eviction) via distinct query results, leading to eventual OOM",
-        "malicious": false
-      },
-      {
-        "package": "npm:dompurify",
-        "version": "3.1.5",
-        "advisory": "GHSA-mrv2-3pqr-j5jr",
-        "cves": [
-          "CVE-2026-116803"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
-        "malicious": false
-      },
-      {
-        "package": "npm:linkify-it",
-        "version": "5.0.0",
-        "advisory": "GHSA-22p9-wv53-3rq4",
-        "cves": [
-          "CVE-2026-48801"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "5.0.1",
-        "summary": "LinkifyIt#match scan loop has quadratic algorithmic complexity",
-        "malicious": false
-      },
-      {
-        "package": "npm:linkify-it",
-        "version": "5.0.0",
-        "advisory": "GHSA-v245-v573-v5vm",
-        "cves": [
-          "CVE-2026-59887"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "5.0.2",
-        "summary": "linkify-it: Quadratic-complexity DoS via the `mailto:` validator scan-loop on attacker text",
-        "malicious": false
-      },
-      {
-        "package": "npm:lodash",
-        "version": "4.17.21",
-        "advisory": "GHSA-r5fr-rjxr-66jc",
-        "cves": [
-          "CVE-2026-4800"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.18.0",
-        "summary": "lodash vulnerable to Code Injection via `_.template` imports key names",
-        "malicious": false
-      },
-      {
-        "package": "npm:lodash-es",
-        "version": "4.17.21",
-        "advisory": "GHSA-r5fr-rjxr-66jc",
-        "cves": [
-          "CVE-2026-4800"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.18.0",
-        "summary": "lodash vulnerable to Code Injection via `_.template` imports key names",
-        "malicious": false
-      },
-      {
-        "package": "npm:markdown-it",
-        "version": "14.1.0",
-        "advisory": "GHSA-gfr2-rv44-r23c",
-        "cves": [
-          "CVE-2026-111758"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "14.3.3",
-        "summary": "markdown-it: Quadratic-time rendering of a single multi-line link reference definition with default options (regression since 14.0)",
-        "malicious": false
-      },
-      {
-        "package": "npm:markdown-it",
-        "version": "14.1.0",
-        "advisory": "GHSA-r7fv-28h4-cvq7",
-        "cves": [
-          "CVE-2026-111759"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "14.3.2",
-        "summary": "markdown-it: Quadratic complexity in smartquotes with unmatched closing quotes",
-        "malicious": false
-      },
-      {
-        "package": "npm:nanoid",
-        "version": "3.3.7",
-        "advisory": "GHSA-28wg-ghj8-5hjv",
-        "cves": [
-          "CVE-2026-67214"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.3.16",
-        "summary": "nanoid: non-secure generators can loop indefinitely with negative size",
-        "malicious": false
-      },
-      {
-        "package": "npm:nanoid",
-        "version": "4.0.2",
-        "advisory": "GHSA-28wg-ghj8-5hjv",
-        "cves": [
-          "CVE-2026-67214"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "5.1.16",
-        "summary": "nanoid: non-secure generators can loop indefinitely with negative size",
-        "malicious": false
-      },
-      {
-        "package": "npm:nanoid",
-        "version": "3.3.7",
-        "advisory": "GHSA-2v37-7h3g-55p8",
-        "cves": [
-          "CVE-2026-67213"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.3.18",
-        "summary": "nanoid: custom generators can loop indefinitely when size is zero",
-        "malicious": false
-      },
-      {
-        "package": "npm:nanoid",
-        "version": "4.0.2",
-        "advisory": "GHSA-2v37-7h3g-55p8",
-        "cves": [
-          "CVE-2026-67213"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "5.1.6",
-        "summary": "nanoid: custom generators can loop indefinitely when size is zero",
-        "malicious": false
-      },
-      {
-        "package": "npm:nanoid",
-        "version": "3.3.7",
-        "advisory": "GHSA-xwg4-73v4-xw9w",
-        "cves": [
-          "CVE-2026-73086"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.3.12",
-        "summary": "nanoid: Integer Overflow or Wraparound",
-        "malicious": false
-      },
-      {
-        "package": "npm:nanoid",
-        "version": "4.0.2",
-        "advisory": "GHSA-xwg4-73v4-xw9w",
-        "cves": [
-          "CVE-2026-73086"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "5.1.11",
-        "summary": "nanoid: Integer Overflow or Wraparound",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "13.5.3",
-        "advisory": "GHSA-36qx-fr4f-26g5",
-        "cves": [
-          "CVE-2026-44573"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "15.5.16",
-        "summary": "Next.js has a Middleware / Proxy bypass in Pages Router applications using i18n",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "13.5.3",
-        "advisory": "GHSA-5j59-xgg2-r9c4",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "14.2.35",
-        "summary": "Next has a Denial of Service with Server Components - Incomplete Fix Follow-Up",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "13.5.3",
-        "advisory": "GHSA-7gfc-8cq8-jh5f",
-        "cves": [
-          "CVE-2024-51479"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "14.2.15",
-        "summary": "Next.js authorization bypass vulnerability",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "13.5.3",
-        "advisory": "GHSA-8h8q-6873-q5fj",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "15.5.16",
-        "summary": "Next.js Vulnerable to Denial of Service with Server Components",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "13.5.3",
-        "advisory": "GHSA-c4j6-fc7j-m34r",
-        "cves": [
-          "CVE-2026-44578"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "15.5.16",
-        "summary": "Next.js vulnerable to server-side request forgery in applications using WebSocket upgrades",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "13.5.3",
-        "advisory": "GHSA-fr5h-rqp8-mj6g",
-        "cves": [
-          "CVE-2024-34351"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "14.1.1",
-        "summary": "Next.js Server-Side Request Forgery in Server Actions",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "13.5.3",
-        "advisory": "GHSA-gp8f-8m3g-qvj9",
-        "cves": [
-          "CVE-2024-46982"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "13.5.7",
-        "summary": "Next.js Cache Poisoning",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "13.5.3",
-        "advisory": "GHSA-h25m-26qc-wcjf",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "15.0.8",
-        "summary": "Next.js HTTP request deserialization can lead to DoS when using insecure React Server Components",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "13.5.3",
-        "advisory": "GHSA-m99w-x7hq-7vfj",
-        "cves": [
-          "CVE-2026-64641"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "15.5.21",
-        "summary": "Next.js: Denial of Service in App Router using Server Actions",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "13.5.3",
-        "advisory": "GHSA-mwv6-3258-q52c",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "14.2.34",
-        "summary": "Next Vulnerable to Denial of Service with Server Components",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "13.5.3",
-        "advisory": "GHSA-p3m5-59mp-jv5r",
-        "cves": [
-          "CVE-2026-94482"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "15.5.28",
-        "summary": "Next.js: Denial of Service in App Router using Server Actions",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "13.5.3",
-        "advisory": "GHSA-p9j2-gv94-2wf4",
-        "cves": [
-          "CVE-2026-64645"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "15.5.21",
-        "summary": "Next.js: Server-Side Request Forgery in rewrites via attacker-controlled destination hostname",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "13.5.3",
-        "advisory": "GHSA-q4gf-8mx6-v5v3",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "15.5.15",
-        "summary": "Next.js has a Denial of Service with Server Components",
-        "malicious": false
-      },
-      {
-        "package": "npm:postcss",
-        "version": "8.4.14",
-        "advisory": "GHSA-6g55-p6wh-862q",
-        "cves": [
-          "CVE-2026-45623"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "8.5.12",
-        "summary": "PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments",
-        "malicious": false
-      },
-      {
-        "package": "npm:postcss",
-        "version": "8.4.14",
-        "advisory": "GHSA-r28c-9q8g-f849",
-        "cves": [
-          "CVE-2026-73646"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "8.5.18",
-        "summary": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
-        "malicious": false
-      },
-      {
-        "package": "npm:prosemirror-view",
-        "version": "1.37.1",
-        "advisory": "GHSA-c8x8-7fp4-3x9w",
-        "cves": [
-          "CVE-2026-104847"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.42.3",
-        "summary": "ProseMirror has a XSS vulnerability in prosemirror-view's paste handling",
-        "malicious": false
-      },
-      {
-        "package": "npm:source-map-js",
-        "version": "1.0.2",
-        "advisory": "GHSA-68fv-2mgg-jv7q",
-        "cves": [
-          "CVE-2026-93749"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.2.2",
-        "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
-        "malicious": false
-      },
-      {
-        "package": "npm:zod",
-        "version": "3.22.4",
-        "advisory": "GHSA-mrhx-c7xc-m3w5",
-        "cves": [
-          "CVE-2023-54404"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.6.6",
-        "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
-      },
-      {
-        "package": "npm:zod",
-        "version": "3.21.4",
-        "advisory": "GHSA-mrhx-c7xc-m3w5",
-        "cves": [
-          "CVE-2023-54404"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.6.6",
-        "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
+        "paths": [
+          "tabby > utoipa-swagger-ui > zip"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "21b29048d7bcf6b94f9f482f2d0fd05efadfd19f",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 711,
+        "npm": 2155
+      },
+      "scopes": {
+        "runtime": 682,
+        "optional": 5,
+        "build": 5,
+        "dev": 486,
+        "workspace": 1688
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 461,
+      "details": "security/tabby.json",
+      "details_sha256": "f41db29a0bbc32b836f58c46ad169619c7bbe13cdc5b6a59e4d8563b34844db6"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-4pj9-g833-qx53 crates:lettre@0.11.7 (conditional)",
+        "worst:GHSA-m665-v7pm-7grj crates:zip@2.6.1 (conditional)",
+        "worst:RUSTSEC-2026-0369 crates:zip@2.6.1 (conditional)"
+      ],
+      "counts": {
+        "conditional": 15,
+        "not_shipped": 185
+      },
+      "uncounted": 261,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 2871,
+      "packages_checked": 2866,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 711,
+          "gaps": []
+        },
+        {
+          "ecosystem": "maven",
+          "component": "clients/intellij/build.gradle.kts",
+          "status": "not_scanned",
+          "packages": 2,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "pnpm-lock.yaml",
+          "status": "scanned",
+          "packages": 2155,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "experimental/prompt-rewrite-eval/requirements.txt",
+          "status": "not_scanned",
+          "packages": 3,
+          "gaps": [
+            "lockfile.missing"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "clients/intellij/build.gradle.kts",
+          "detail": "no reader for build.gradle.kts",
+          "capability": "adapter:maven",
+          "found": 2,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "lockfile.missing",
+          "category": "lockfile_missing",
+          "ecosystem": "pypi",
+          "component": "experimental/prompt-rewrite-eval/requirements.txt",
+          "detail": "requirements without pinned versions",
+          "capability": "lockfile_from_manifest:pypi",
+          "found": 3,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 56.4,
-      "raw_total": 56.4,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.595,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5,
@@ -883,16 +807,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 56.4,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -1296,5 +1217,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:03+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

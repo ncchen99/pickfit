@@ -200,17 +200,15 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/ScriptedAlchemy/tracedecay@32afec6f6764",
+      "github.com/ScriptedAlchemy/tracedecay@3c1983b41343",
       "Cargo.lock",
       "pnpm-lock.yaml"
     ],
-    "packages_checked": 874,
+    "packages_checked": 1131,
     "findings_total": 4,
     "advisories_total": 4,
     "findings": [
@@ -224,7 +222,21 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/tracedecay-cli",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.0032,
+        "fix_published_at": "2026-10-17T18:45:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "tracedecay-cli > zip"
+        ]
       },
       {
         "package": "crates:gix",
@@ -234,19 +246,50 @@
         "severity": "HIGH",
         "fixed_in": "0.90.0",
         "summary": "gitoxide gix: untrusted .git/config disables filesystem .git-protection path checks via unfiltered protect_options()",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/tracedecay-agent-hosts",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-22T13:58:58Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
+        ],
+        "paths": [
+          "tracedecay-agent-hosts > gix"
+        ]
       },
       {
-        "package": "npm:body-parser",
-        "version": "2.3.0",
-        "advisory": "GHSA-27r3-jxmh-p828",
-        "cves": [
-          "CVE-2026-111181"
-        ],
+        "package": "crates:rmcp",
+        "version": "3.5.1",
+        "advisory": "RUSTSEC-2026-0461",
+        "cves": [],
         "severity": "HIGH",
-        "fixed_in": "2.4.0",
-        "summary": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
-        "malicious": false
+        "fixed_in": "3.6.0",
+        "summary": "Unbounded tool schema cache in Streamable HTTP server transport",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/tracedecay",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-20T05:53:35Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "tracedecay > rmcp"
+        ]
       },
       {
         "package": "npm:zod",
@@ -258,23 +301,108 @@
         "severity": "HIGH",
         "fixed_in": "4.6.6",
         "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "plugin/chatgpt-extension",
+        "found_in": "pnpm-lock.yaml",
+        "kev": false,
+        "fix_published_at": "2026-10-11T16:18:23Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "plugin/chatgpt-extension > @openai/mcp-extensions > zod"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "3c1983b413438d5b13c0d6b819ccce24b3128c9e",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 661,
+        "npm": 470
+      },
+      "scopes": {
+        "runtime": 589,
+        "optional": 20,
+        "peer": 82,
+        "dev": 280,
+        "workspace": 160
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 25,
+      "details": "security/tracedecay.json",
+      "details_sha256": "f671f932c0f6920d7531b22a7c825c7fe10a5f501ab8c0735983c173652a65f0"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-m665-v7pm-7grj crates:zip@9.0.3 (conditional)",
+        "worst:GHSA-q54r-jf2p-rfr2 crates:gix@0.89.0 (conditional)",
+        "worst:RUSTSEC-2026-0461 crates:rmcp@3.5.1 (conditional)"
+      ],
+      "counts": {
+        "conditional": 4,
+        "not_shipped": 1
+      },
+      "uncounted": 20,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 1131,
+      "packages_checked": 1131,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 661,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "pnpm-lock.yaml",
+          "status": "scanned",
+          "packages": 470,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 84.4,
       "confidence": 0.4,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.75,
@@ -294,16 +422,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 84.4,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -699,5 +824,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:38:35+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

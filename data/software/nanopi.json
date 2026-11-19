@@ -238,76 +238,70 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/ChrisZhangJin/nanopi@a3c79363d4ef",
+      "github.com/ChrisZhangJin/nanopi@47fccf3a8d6f",
       "Cargo.lock"
     ],
     "packages_checked": 321,
-    "findings_total": 8,
-    "advisories_total": 8,
+    "findings_total": 3,
+    "advisories_total": 3,
     "findings": [
-      {
-        "package": "crates:wasmtime",
-        "version": "19.0.2",
-        "advisory": "GHSA-897f-g5gm-fmxm",
-        "cves": [
-          "CVE-2026-115889"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "36.0.19",
-        "summary": "Wasmtime: Bit-packing in Cranelift compiler causes silent overflow and miscompilation",
-        "malicious": false
-      },
-      {
-        "package": "crates:wasmtime",
-        "version": "19.0.2",
-        "advisory": "GHSA-mghf-wjfp-p5xm",
-        "cves": [
-          "CVE-2026-115893"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "36.0.19",
-        "summary": "Wasmtime: Cranelift backend on aarch64 can jump to incorrect target on large Wasm `br_table` instruction",
-        "malicious": false
-      },
-      {
-        "package": "crates:wasmtime",
-        "version": "19.0.2",
-        "advisory": "RUSTSEC-2026-0095",
-        "cves": [
-          "CVE-2026-34987"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "36.0.7",
-        "summary": "Wasmtime with Winch compiler backend may allow a sandbox-escaping memory access",
-        "malicious": false
-      },
-      {
-        "package": "crates:wasmtime",
-        "version": "19.0.2",
-        "advisory": "RUSTSEC-2026-0096",
-        "cves": [
-          "CVE-2026-34971"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "36.0.7",
-        "summary": "Miscompiled guest heap access enables sandbox escape on aarch64 Cranelift",
-        "malicious": false
-      },
       {
         "package": "crates:hickory-proto",
         "version": "0.25.2",
         "advisory": "GHSA-3v94-mw7p-v465",
-        "cves": [],
+        "cves": [
+          "CVE-2026-123607"
+        ],
         "severity": "HIGH",
         "fixed_in": null,
         "summary": "hickory-proto: NSEC3 closest-encloser proof validation enters unbounded loop on cross-zone responses",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00343,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "nanopi > hickory-resolver > hickory-proto"
+        ]
+      },
+      {
+        "package": "crates:hickory-proto",
+        "version": "0.25.2",
+        "advisory": "RUSTSEC-2026-0505",
+        "cves": [
+          "CVE-2026-123580"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.26.0-beta.1",
+        "summary": "NSEC3 owner names not checked against the zone in DNSSEC validation (hickory-proto)",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00255,
+        "fix_published_at": "2026-03-12T20:56:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "nanopi > hickory-resolver > hickory-proto"
+        ]
       },
       {
         "package": "crates:hickory-resolver",
@@ -319,43 +313,107 @@
         "severity": "HIGH",
         "fixed_in": "0.26.2",
         "summary": "hickory-resolver: Resolver::lookup() and Resolver::lookup_ip() APIs obscure DNSSEC validation failures",
-        "malicious": false
-      },
-      {
-        "package": "crates:quinn-proto",
-        "version": "0.11.16",
-        "advisory": "RUSTSEC-2026-0340",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.11.18",
-        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
-      },
-      {
-        "package": "crates:quinn-proto",
-        "version": "0.11.16",
-        "advisory": "RUSTSEC-2026-0341",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.11.17",
-        "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00231,
+        "fix_published_at": "2026-09-03T19:35:39Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:Resolver::lookup",
+          "symbol:Resolver::lookup_ip"
+        ],
+        "paths": [
+          "nanopi > hickory-resolver"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use Resolver::lookup, Resolver::lookup_ip, but other packages depend on hickory-resolver"
+          ]
+        }
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "47fccf3a8d6f928fa19fbe1d186d4c31ad4ed60d",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 321
+      },
+      "scopes": {
+        "runtime": 252,
+        "optional": 67,
+        "dev": 2
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 63,
+      "details": "security/nanopi.json",
+      "details_sha256": "a2126cebfbd935785c4fd42f129a69a2b04e7cc07f4eee7ea64d7d7186c67c3d"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-3v94-mw7p-v465 crates:hickory-proto@0.25.2 (conditional)",
+        "worst:RUSTSEC-2026-0505 crates:hickory-proto@0.25.2 (conditional)",
+        "worst:GHSA-5j98-2g5x-46v6 crates:hickory-resolver@0.25.2 (conditional)"
+      ],
+      "counts": {
+        "conditional": 3,
+        "not_shipped": 6
+      },
+      "uncounted": 54,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 321,
+      "packages_checked": 321,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 321,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 92.2,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.8125,
@@ -375,16 +433,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 92.2,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -823,5 +878,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

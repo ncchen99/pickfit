@@ -327,18 +327,16 @@
     "cost_usd": 0.024072
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/trafficflowhq/ohmail@2e80f19e13c0",
+      "github.com/trafficflowhq/ohmail@48ae71f32aba",
       "apps/desktop/package-lock.json",
       "apps/desktop/src-tauri/Cargo.lock",
       "package-lock.json"
     ],
-    "packages_checked": 1399,
+    "packages_checked": 1599,
     "findings_total": 20,
     "advisories_total": 20,
     "findings": [
@@ -352,7 +350,21 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/desktop/src-tauri",
+        "found_in": "apps/desktop/src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.0032,
+        "fix_published_at": "2026-10-17T18:45:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "ohmail > tauri-plugin-updater > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -362,19 +374,31 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
-      },
-      {
-        "package": "npm:dompurify",
-        "version": "3.4.13",
-        "advisory": "GHSA-cg2g-xh64-v4q7",
-        "cves": [
-          "CVE-2026-116804"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/desktop/src-tauri",
+        "found_in": "apps/desktop/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:ZipStreamReader::extract",
+          "symbol:ZipArchive::extract"
         ],
-        "severity": "CRITICAL",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify SAFE_FOR_TEMPLATES bypass: split template expressions survive in attached shadow root content on DOM output modes",
-        "malicious": false
+        "paths": [
+          "ohmail > tauri-plugin-updater > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+          ]
+        }
       },
       {
         "package": "crates:zip",
@@ -386,7 +410,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/desktop/src-tauri",
+        "found_in": "apps/desktop/src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00461,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "ohmail > tauri-plugin-updater > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -396,7 +437,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/desktop/src-tauri",
+        "found_in": "apps/desktop/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
+        ],
+        "paths": [
+          "ohmail > tauri-plugin-updater > zip"
+        ]
       },
       {
         "package": "npm:decode-uri-component",
@@ -408,19 +466,25 @@
         "severity": "HIGH",
         "fixed_in": "0.5.1",
         "summary": "decode-uri-component vulnerable to denial of service via quadratic replacement of percent-encoded runs",
-        "malicious": false
-      },
-      {
-        "package": "npm:dompurify",
-        "version": "3.4.13",
-        "advisory": "GHSA-mrv2-3pqr-j5jr",
-        "cves": [
-          "CVE-2026-116803"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/mobile",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00318,
+        "fix_published_at": "2026-10-23T12:48:46Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "high_complexity",
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
-        "malicious": false
+        "paths": [
+          "apps/mobile > expo-router > query-string > decode-uri-component"
+        ]
       },
       {
         "package": "npm:drizzle-orm",
@@ -432,7 +496,21 @@
         "severity": "HIGH",
         "fixed_in": "0.45.2",
         "summary": "Drizzle ORM has SQL injection via improperly escaped SQL identifiers",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "apps/desktop/package-lock.json",
+        "kev": false,
+        "epss": 0.00399,
+        "fix_published_at": "2026-03-27T17:06:27Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          ". > drizzle-orm"
+        ]
       },
       {
         "package": "npm:image-size",
@@ -444,7 +522,24 @@
         "severity": "HIGH",
         "fixed_in": "2.0.3",
         "summary": "image-size: JXL and HEIF parsers allow denial of service through infinite loops",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/mobile",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.0043,
+        "fix_published_at": "2026-09-14T15:57:47Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "apps/mobile > expo > @expo/metro > metro > image-size"
+        ]
       },
       {
         "package": "npm:image-size",
@@ -456,7 +551,24 @@
         "severity": "HIGH",
         "fixed_in": "2.0.3",
         "summary": "image-size: ICNS parser allows denial of service through an infinite loop",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/mobile",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.0043,
+        "fix_published_at": "2026-09-14T15:57:47Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "apps/mobile > expo > @expo/metro > metro > image-size"
+        ]
       },
       {
         "package": "npm:node-forge",
@@ -468,7 +580,50 @@
         "severity": "HIGH",
         "fixed_in": "1.4.1",
         "summary": "Forge: X.509 basicConstraints bypass in verifyCertificateChain() via deprecated extension OIDs 2.5.29.10 and 2.5.29.13",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/mobile",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00242,
+        "fix_published_at": "2026-10-27T04:44:07Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "apps/mobile > expo > @expo/cli > node-forge"
+        ]
+      },
+      {
+        "package": "npm:node-forge",
+        "version": "1.4.0",
+        "advisory": "GHSA-6qrw-m8cv-hcxf",
+        "cves": [
+          "CVE-2026-119192"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.4.1",
+        "summary": "Forge: RSA PKCS#1 v1.5 signature forgery via non-canonical DigestInfo encoding",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/mobile",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00204,
+        "fix_published_at": "2026-10-27T04:44:07Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "apps/mobile > expo > @expo/cli > node-forge"
+        ]
       },
       {
         "package": "npm:node-forge",
@@ -480,7 +635,24 @@
         "severity": "HIGH",
         "fixed_in": "1.4.1",
         "summary": "Forge: Regular expression denial of service in PEM decoding (pem.decode)",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/mobile",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00669,
+        "fix_published_at": "2026-10-27T04:44:07Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "apps/mobile > expo > @expo/cli > node-forge"
+        ]
       },
       {
         "package": "npm:node-forge",
@@ -493,7 +665,20 @@
         "severity": "HIGH",
         "fixed_in": null,
         "summary": "node-forge RSA PKCS#1 v1.5 signature verification accepts extra nested DigestAlgorithm elements",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/mobile",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00491,
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "apps/mobile > expo > @expo/cli > node-forge"
+        ]
       },
       {
         "package": "npm:node-forge",
@@ -505,7 +690,24 @@
         "severity": "HIGH",
         "fixed_in": "1.4.1",
         "summary": "Forge: Denial of service in TLS record processing via a record interleaved with a fragmented handshake message",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/mobile",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00415,
+        "fix_published_at": "2026-10-27T04:44:07Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "apps/mobile > expo > @expo/cli > node-forge"
+        ]
       },
       {
         "package": "npm:node-forge",
@@ -517,7 +719,24 @@
         "severity": "HIGH",
         "fixed_in": "1.4.1",
         "summary": "Forge: Denial of service in TLS record processing via call stack exhaustion",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/mobile",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00415,
+        "fix_published_at": "2026-10-27T04:44:07Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "apps/mobile > expo > @expo/cli > node-forge"
+        ]
       },
       {
         "package": "npm:node-forge",
@@ -529,7 +748,50 @@
         "severity": "HIGH",
         "fixed_in": "1.4.1",
         "summary": "Forge: PKCS#12 MAC forgery and constant-key PBE via zero iteration count",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/mobile",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00121,
+        "fix_published_at": "2026-10-27T04:44:07Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "apps/mobile > expo > @expo/cli > node-forge"
+        ]
+      },
+      {
+        "package": "npm:node-forge",
+        "version": "1.4.0",
+        "advisory": "GHSA-rhr8-3pm8-cq29",
+        "cves": [
+          "CVE-2026-119191"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.4.1",
+        "summary": "Forge: ASN.1 resource exhaustion via BIT STRING decoding in asn1.fromDer",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/mobile",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00429,
+        "fix_published_at": "2026-10-27T04:44:07Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "apps/mobile > expo > @expo/cli > node-forge"
+        ]
       },
       {
         "package": "npm:nodemailer",
@@ -541,7 +803,24 @@
         "severity": "HIGH",
         "fixed_in": "9.1.0",
         "summary": "Nodemailer: Quadratic (O(n²)) time complexity in addressparser allows remote denial of service via a crafted address list",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "apps/desktop/package-lock.json",
+        "kev": false,
+        "epss": 0.00824,
+        "fix_published_at": "2026-08-31T11:29:12Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > nodemailer"
+        ]
       },
       {
         "package": "npm:nodemailer",
@@ -553,7 +832,21 @@
         "severity": "HIGH",
         "fixed_in": "9.0.1",
         "summary": "Nodemailer: Message-level raw option bypasses disableFileAccess/disableUrlAccess, enabling arbitrary file read and full-response SSRF in the delivered message",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "apps/desktop/package-lock.json",
+        "kev": false,
+        "epss": 0.00349,
+        "fix_published_at": "2026-06-17T10:56:53Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          ". > nodemailer"
+        ]
       },
       {
         "package": "npm:nodemailer",
@@ -565,7 +858,24 @@
         "severity": "HIGH",
         "fixed_in": "10.0.6",
         "summary": "Nodemailer: Quadratic backtracking in the addressparser free-text fallback allows remote denial of service",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "apps/desktop/package-lock.json",
+        "kev": false,
+        "epss": 0.00337,
+        "fix_published_at": "2026-09-11T13:00:33Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > nodemailer"
+        ]
       },
       {
         "package": "npm:zod",
@@ -577,23 +887,115 @@
         "severity": "HIGH",
         "fixed_in": "4.6.6",
         "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/mobile",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "fix_published_at": "2026-10-11T16:18:23Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "apps/mobile > expo > @expo/cli > zod"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "48ae71f32aba7ca51c0cd4c0cacf05ee4d1e1f30",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 542,
+        "npm": 1057
+      },
+      "scopes": {
+        "runtime": 1270,
+        "optional": 77,
+        "peer": 34,
+        "build": 23,
+        "dev": 195
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 90,
+      "details": "security/ohmail.json",
+      "details_sha256": "fb6a0fe3015280f77f9cf24ae6dfa9aa956e7e9992e84a3e470b1e68111ec1ad"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-m665-v7pm-7grj crates:zip@4.6.1 (conditional)",
+        "worst:RUSTSEC-2026-0369 crates:zip@4.6.1 (conditional)",
+        "worst:GHSA-q7v9-x93c-xqv3 crates:zip@4.6.1 (conditional)"
+      ],
+      "counts": {
+        "conditional": 20,
+        "not_shipped": 2
+      },
+      "uncounted": 68,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 1599,
+      "packages_checked": 1599,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "apps/desktop/package-lock.json",
+          "status": "scanned",
+          "packages": 369,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "apps/desktop/src-tauri/Cargo.lock",
+          "status": "scanned",
+          "packages": 542,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "package-lock.json",
+          "status": "scanned",
+          "packages": 1038,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7+visual.v1",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 87.0,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.6875,
@@ -613,16 +1015,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 87.0,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       },
@@ -1018,5 +1417,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:24+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

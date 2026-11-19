@@ -251,19 +251,17 @@
     "cost_usd": 0.021052
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/TabularisDB/tabularis@bdbc587fb878",
+      "github.com/TabularisDB/tabularis@a676f5af18e0",
       "pnpm-lock.yaml",
       "src-tauri/Cargo.lock"
     ],
-    "packages_checked": 1170,
-    "findings_total": 49,
-    "advisories_total": 45,
+    "packages_checked": 1863,
+    "findings_total": 37,
+    "advisories_total": 34,
     "findings": [
       {
         "package": "crates:zip",
@@ -275,7 +273,21 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.0032,
+        "fix_published_at": "2026-10-17T18:45:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "tabularis > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -285,19 +297,31 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
-      },
-      {
-        "package": "npm:dompurify",
-        "version": "3.4.13",
-        "advisory": "GHSA-cg2g-xh64-v4q7",
-        "cves": [
-          "CVE-2026-116804"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:ZipStreamReader::extract",
+          "symbol:ZipArchive::extract"
         ],
-        "severity": "CRITICAL",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify SAFE_FOR_TEMPLATES bypass: split template expressions survive in attached shadow root content on DOM output modes",
-        "malicious": false
+        "paths": [
+          "tabularis > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+          ]
+        }
       },
       {
         "package": "crates:aws-lc-sys",
@@ -307,7 +331,23 @@
         "severity": "HIGH",
         "fixed_in": "0.39.0",
         "summary": "AWS-LC X.509 Name Constraints Bypass via Wildcard/Unicode CN",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-03-19T20:58:18Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "tabularis > rustls > aws-lc-rs > aws-lc-sys"
+        ]
       },
       {
         "package": "crates:aws-lc-sys",
@@ -319,7 +359,24 @@
         "severity": "HIGH",
         "fixed_in": "0.39.0",
         "summary": "CRL Distribution Point Scope Check Logic Error in AWS-LC",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00278,
+        "fix_published_at": "2026-03-19T20:58:18Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "tabularis > rustls > aws-lc-rs > aws-lc-sys"
+        ]
       },
       {
         "package": "crates:openssl",
@@ -331,7 +388,24 @@
         "severity": "HIGH",
         "fixed_in": "0.10.78",
         "summary": "rust-openssl has incorrect bounds assertion in aes key wrap",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00251,
+        "fix_published_at": "2026-04-19T20:02:38Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "tabularis > openssl"
+        ]
       },
       {
         "package": "crates:openssl",
@@ -343,7 +417,21 @@
         "severity": "HIGH",
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: rustMdCtxRef::digest_final() writes past caller buffer with no length check",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00359,
+        "fix_published_at": "2026-04-19T20:02:38Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "tabularis > openssl"
+        ]
       },
       {
         "package": "crates:openssl",
@@ -355,31 +443,24 @@
         "severity": "HIGH",
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: Unchecked callback length in PSK/cookie trampolines leaks adjacent memory to peer",
-        "malicious": false
-      },
-      {
-        "package": "crates:openssl",
-        "version": "0.10.75",
-        "advisory": "GHSA-pqf5-4pqq-29f5",
-        "cves": [
-          "CVE-2026-41676"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.0028,
+        "fix_published_at": "2026-04-19T20:02:38Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
         ],
-        "severity": "HIGH",
-        "fixed_in": "0.10.78",
-        "summary": "rust-openssl: Deriver::derive and PkeyCtxRef::derive can overflow short buffers on OpenSSL 1.1.1",
-        "malicious": false
-      },
-      {
-        "package": "crates:openssl",
-        "version": "0.10.75",
-        "advisory": "GHSA-xp3w-r5p5-63rr",
-        "cves": [
-          "CVE-2026-42327"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.10.79",
-        "summary": "rust-openssl has undefined behavior in X509Ref::ocsp_responders for certificates with non-UTF-8 OCSP URLs",
-        "malicious": false
+        "paths": [
+          "tabularis > openssl"
+        ]
       },
       {
         "package": "crates:postgres-protocol",
@@ -389,7 +470,23 @@
         "severity": "HIGH",
         "fixed_in": "0.6.12",
         "summary": "postgres-protocol: Unbounded SCRAM iteration count allows a malicious server to cause CPU-exhaustion denial of service",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-12T15:34:01Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "tabularis > tokio-postgres > postgres-protocol"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -399,17 +496,23 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
-        "malicious": false
-      },
-      {
-        "package": "crates:quick-xml",
-        "version": "0.38.4",
-        "advisory": "RUSTSEC-2026-0194",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.41.0",
-        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "tabularis > tauri-plugin-notification > notify-rust > tauri-winrt-notification > quick-xml"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -419,7 +522,57 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
+        ],
+        "paths": [
+          "tabularis > tauri-plugin-notification > notify-rust > tauri-winrt-notification > quick-xml"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use NsReader, but other packages depend on quick-xml"
+          ]
+        }
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.38.4",
+        "advisory": "RUSTSEC-2026-0194",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "tabularis > plist > quick-xml"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -429,7 +582,31 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
+        ],
+        "paths": [
+          "tabularis > plist > quick-xml"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use NsReader, but other packages depend on quick-xml"
+          ]
+        }
       },
       {
         "package": "crates:quinn-proto",
@@ -441,7 +618,24 @@
         "severity": "HIGH",
         "fixed_in": "0.11.15",
         "summary": "Quinn: Remote memory exhaustion in quinn-proto from unbounded out-of-order stream reassembly",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00841,
+        "fix_published_at": "2026-06-22T09:43:03Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "tabularis > reqwest > quinn > quinn-proto"
+        ]
       },
       {
         "package": "crates:quinn-proto",
@@ -453,7 +647,24 @@
         "severity": "HIGH",
         "fixed_in": "0.11.14",
         "summary": "Quinn affected by unauthenticated remote DoS via panic in QUIC transport parameter parsing",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00574,
+        "fix_published_at": "2026-03-09T10:22:45Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "tabularis > reqwest > quinn > quinn-proto"
+        ]
       },
       {
         "package": "crates:quinn-proto",
@@ -463,7 +674,31 @@
         "severity": "HIGH",
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-09-14T10:08:32Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ACK_FREQUENCY"
+        ],
+        "paths": [
+          "tabularis > reqwest > quinn > quinn-proto"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+          ]
+        }
       },
       {
         "package": "crates:russh",
@@ -475,7 +710,21 @@
         "severity": "HIGH",
         "fixed_in": "0.63.1",
         "summary": "russh: Client-side channel-scoped Handler callbacks fire for channel IDs the client never opened",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00317,
+        "fix_published_at": "2026-08-23T18:16:15Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "tabularis > russh"
+        ]
       },
       {
         "package": "crates:russh",
@@ -487,7 +736,24 @@
         "severity": "HIGH",
         "fixed_in": "0.61.0",
         "summary": "Russh SSH message fields were decoded through allocation-first parsers before field-specific bounds",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00367,
+        "fix_published_at": "2026-05-20T22:36:26Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "tabularis > russh"
+        ]
       },
       {
         "package": "crates:russh",
@@ -499,7 +765,24 @@
         "severity": "HIGH",
         "fixed_in": "0.60.1",
         "summary": "russh has pre-auth DoS via unbounded allocation in its keyboard-interactive auth handler",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00481,
+        "fix_published_at": "2026-04-20T16:03:30Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "tabularis > russh"
+        ]
       },
       {
         "package": "crates:russh",
@@ -511,7 +794,24 @@
         "severity": "HIGH",
         "fixed_in": "0.60.3",
         "summary": "Russh: Unchecked CryptoVec allocation and growth handling is reachable",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00263,
+        "fix_published_at": "2026-05-15T21:13:36Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "tabularis > russh"
+        ]
       },
       {
         "package": "crates:russh",
@@ -523,7 +823,96 @@
         "severity": "HIGH",
         "fixed_in": "0.44.1",
         "summary": "Russh has an OOM Denial of Service due to allocation of untrusted amount",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00912,
+        "fix_published_at": "2024-08-14T20:53:52Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "tabularis > russh"
+        ]
+      },
+      {
+        "package": "crates:openssl",
+        "version": "0.10.75",
+        "advisory": "GHSA-pqf5-4pqq-29f5",
+        "cves": [
+          "CVE-2026-41676"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.10.78",
+        "summary": "rust-openssl: Deriver::derive and PkeyCtxRef::derive can overflow short buffers on OpenSSL 1.1.1",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00285,
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity",
+          "symbol:Deriver::derive",
+          "symbol:PkeyCtxRef::derive"
+        ],
+        "paths": [
+          "tabularis > openssl"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses Deriver::derive, PkeyCtxRef::derive; only the project depends on openssl"
+          ]
+        }
+      },
+      {
+        "package": "crates:openssl",
+        "version": "0.10.75",
+        "advisory": "GHSA-xp3w-r5p5-63rr",
+        "cves": [
+          "CVE-2026-42327"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.10.79",
+        "summary": "rust-openssl has undefined behavior in X509Ref::ocsp_responders for certificates with non-UTF-8 OCSP URLs",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00211,
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:X509Ref::ocsp_responders"
+        ],
+        "paths": [
+          "tabularis > openssl"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses X509Ref::ocsp_responders; only the project depends on openssl"
+          ]
+        }
       },
       {
         "package": "crates:russh",
@@ -535,319 +924,118 @@
         "severity": "HIGH",
         "fixed_in": "0.65",
         "summary": "russh: Agent server never calls `Agent::confirm`, so keys added with the confirm constraint (`ssh-add -c`) sign without confirmation",
-        "malicious": false
-      },
-      {
-        "package": "crates:russh",
-        "version": "0.43.0",
-        "advisory": "GHSA-wwx6-x28x-8259",
-        "cves": [
-          "CVE-2026-46702"
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00156,
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "symbol:Agent::confirm"
         ],
-        "severity": "HIGH",
-        "fixed_in": "0.61.1",
-        "summary": "russh: Post-decompression SSH packet size was not bounded, allowing remote oversized compressed packets",
-        "malicious": false
-      },
-      {
-        "package": "crates:russh-cryptovec",
-        "version": "0.7.3",
-        "advisory": "GHSA-g9f8-wqj9-fjw5",
-        "cves": [
-          "CVE-2026-46673"
+        "paths": [
+          "tabularis > russh"
         ],
-        "severity": "HIGH",
-        "fixed_in": "0.60.3",
-        "summary": "Russh: Unchecked CryptoVec allocation and growth handling is reachable",
-        "malicious": false
-      },
-      {
-        "package": "crates:rustls-webpki",
-        "version": "0.103.9",
-        "advisory": "GHSA-82j2-j2ch-gfr8",
-        "cves": [
-          "CVE-2026-93599"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.103.13",
-        "summary": "rustls-webpki: Denial of service via panic on malformed CRL BIT STRING",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "4.6.1",
-        "advisory": "GHSA-q7v9-x93c-xqv3",
-        "cves": [
-          "CVE-2026-115909"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "4.6.1",
-        "advisory": "RUSTSEC-2026-0367",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
-      },
-      {
-        "package": "npm:dompurify",
-        "version": "3.2.7",
-        "advisory": "GHSA-mrv2-3pqr-j5jr",
-        "cves": [
-          "CVE-2026-116803"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
-        "malicious": false
-      },
-      {
-        "package": "npm:dompurify",
-        "version": "3.4.13",
-        "advisory": "GHSA-mrv2-3pqr-j5jr",
-        "cves": [
-          "CVE-2026-116803"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
-        "malicious": false
-      },
-      {
-        "package": "npm:fast-uri",
-        "version": "3.1.4",
-        "advisory": "GHSA-5jgf-p345-68v8",
-        "cves": [
-          "CVE-2026-75931"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.1.6",
-        "summary": "fast-uri vulnerable to host confusion via skipped IDN canonicalization on scheme-relative references",
-        "malicious": false
-      },
-      {
-        "package": "npm:fast-uri",
-        "version": "3.1.4",
-        "advisory": "GHSA-7p8r-x3mc-p8w7",
-        "cves": [
-          "CVE-2026-18446"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.1.5",
-        "summary": "fast-uri vulnerable to host confusion via backslash authority introducer",
-        "malicious": false
-      },
-      {
-        "package": "npm:fast-uri",
-        "version": "3.1.4",
-        "advisory": "GHSA-f65p-4m7j-42xc",
-        "cves": [
-          "CVE-2026-75975"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.1.6",
-        "summary": "fast-uri vulnerable to server-side request forgery via malformed IPv6 normalization",
-        "malicious": false
-      },
-      {
-        "package": "npm:fast-uri",
-        "version": "3.1.4",
-        "advisory": "GHSA-fph4-wmhf-6fwf",
-        "cves": [
-          "CVE-2026-75899"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.1.6",
-        "summary": "fast-uri vulnerable to server-side request forgery via repeated hostname percent-decoding",
-        "malicious": false
-      },
-      {
-        "package": "npm:fast-uri",
-        "version": "3.1.4",
-        "advisory": "GHSA-jqff-g426-hqxp",
-        "cves": [
-          "CVE-2026-76172"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.1.6",
-        "summary": "fast-uri vulnerable to host confusion via percent-encoded scheme normalization",
-        "malicious": false
-      },
-      {
-        "package": "npm:fast-uri",
-        "version": "3.1.4",
-        "advisory": "GHSA-qw65-cvwx-89v3",
-        "cves": [
-          "CVE-2026-84292"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.1.7",
-        "summary": "fast-uri vulnerable to authority injection via an unvalidated port in serialize",
-        "malicious": false
-      },
-      {
-        "package": "npm:lodash",
-        "version": "4.17.21",
-        "advisory": "GHSA-r5fr-rjxr-66jc",
-        "cves": [
-          "CVE-2026-4800"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.18.0",
-        "summary": "lodash vulnerable to Code Injection via `_.template` imports key names",
-        "malicious": false
-      },
-      {
-        "package": "npm:nanoid",
-        "version": "3.3.11",
-        "advisory": "GHSA-28wg-ghj8-5hjv",
-        "cves": [
-          "CVE-2026-67214"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.3.16",
-        "summary": "nanoid: non-secure generators can loop indefinitely with negative size",
-        "malicious": false
-      },
-      {
-        "package": "npm:nanoid",
-        "version": "3.3.11",
-        "advisory": "GHSA-2v37-7h3g-55p8",
-        "cves": [
-          "CVE-2026-67213"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.3.18",
-        "summary": "nanoid: custom generators can loop indefinitely when size is zero",
-        "malicious": false
-      },
-      {
-        "package": "npm:nanoid",
-        "version": "3.3.11",
-        "advisory": "GHSA-xwg4-73v4-xw9w",
-        "cves": [
-          "CVE-2026-73086"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.3.12",
-        "summary": "nanoid: Integer Overflow or Wraparound",
-        "malicious": false
-      },
-      {
-        "package": "npm:postcss",
-        "version": "8.5.8",
-        "advisory": "GHSA-6g55-p6wh-862q",
-        "cves": [
-          "CVE-2026-45623"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "8.5.12",
-        "summary": "PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments",
-        "malicious": false
-      },
-      {
-        "package": "npm:postcss",
-        "version": "8.5.8",
-        "advisory": "GHSA-r28c-9q8g-f849",
-        "cves": [
-          "CVE-2026-73646"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "8.5.18",
-        "summary": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
-        "malicious": false
-      },
-      {
-        "package": "npm:react-router",
-        "version": "7.13.2",
-        "advisory": "GHSA-49rj-9fvp-4h2h",
-        "cves": [
-          "CVE-2026-42211"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "7.14.2",
-        "summary": "React Router's vendored turbo-stream v2 allows arbitrary constructor invocation via TYPE_ERROR deserialization leading to Unauth RCE",
-        "malicious": false
-      },
-      {
-        "package": "npm:react-router",
-        "version": "7.13.2",
-        "advisory": "GHSA-8x6r-g9mw-2r78",
-        "cves": [
-          "CVE-2026-42342"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "7.15.0",
-        "summary": "React Router vulnerable to DoS via unbounded path expansion in __manifest endpoint",
-        "malicious": false
-      },
-      {
-        "package": "npm:react-router",
-        "version": "7.13.2",
-        "advisory": "GHSA-chx6-hx7r-mcp5",
-        "cves": [
-          "CVE-2026-55685"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "7.18.0",
-        "summary": "React Router: Unauthenticated Denial of Service via Inefficient Route Matching",
-        "malicious": false
-      },
-      {
-        "package": "npm:react-router",
-        "version": "7.13.2",
-        "advisory": "GHSA-qwww-vcr4-c8h2",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "7.18.2",
-        "summary": "React Router: RSC Mode CSRF Bypass Allows Action Execution Before 400 Response",
-        "malicious": false
-      },
-      {
-        "package": "npm:react-router",
-        "version": "7.13.2",
-        "advisory": "GHSA-rxv8-25v2-qmq8",
-        "cves": [
-          "CVE-2026-34077"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "7.14.0",
-        "summary": "React Router vulnerable to Denial of Service via reflected user input in single-fetch",
-        "malicious": false
-      },
-      {
-        "package": "npm:source-map-js",
-        "version": "1.2.1",
-        "advisory": "GHSA-68fv-2mgg-jv7q",
-        "cves": [
-          "CVE-2026-93749"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.2.2",
-        "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
-        "malicious": false
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses Agent::confirm; only the project depends on russh"
+          ]
+        }
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "a676f5af18e0246b88453d27a88f67eaacedfd52",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 887,
+        "npm": 976
+      },
+      "scopes": {
+        "runtime": 1101,
+        "optional": 14,
+        "peer": 4,
+        "build": 44,
+        "dev": 694,
+        "workspace": 6
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 262,
+      "details": "security/tabularis.json",
+      "details_sha256": "32c096cdbcc2f6fc3a43321ed7e0e0cf91f619586e9616a186a71bc4ed2d3d12"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-m665-v7pm-7grj crates:zip@4.6.1 (conditional)",
+        "worst:RUSTSEC-2026-0369 crates:zip@4.6.1 (conditional)",
+        "worst:GHSA-394x-vwmw-crm3 crates:aws-lc-sys@0.38.0 (conditional)"
+      ],
+      "counts": {
+        "conditional": 37,
+        "present_unreachable": 3,
+        "not_shipped": 53
+      },
+      "uncounted": 169,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 1863,
+      "packages_checked": 1863,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "pnpm-lock.yaml",
+          "status": "scanned",
+          "packages": 976,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "src-tauri/Cargo.lock",
+          "status": "scanned",
+          "packages": 887,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7+visual.v1",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 86.6,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -867,16 +1055,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 86.6,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       },
@@ -1226,5 +1411,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:46:48+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

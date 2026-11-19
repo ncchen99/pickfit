@@ -139,52 +139,18 @@
     "runs": []
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/screwys/Rufin@71c2528262ab",
+      "github.com/screwys/Rufin@6e78a4f97a31",
       "Cargo.lock",
       "packaging/linux/Cargo.lock"
     ],
-    "packages_checked": 973,
-    "findings_total": 5,
-    "advisories_total": 5,
+    "packages_checked": 905,
+    "findings_total": 2,
+    "advisories_total": 2,
     "findings": [
-      {
-        "package": "crates:zip",
-        "version": "9.0.4",
-        "advisory": "GHSA-m665-v7pm-7grj",
-        "cves": [
-          "CVE-2026-115905"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "9.0.5",
-        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
-      },
-      {
-        "package": "crates:pulldown-cmark",
-        "version": "0.13.4",
-        "advisory": "RUSTSEC-2026-0414",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.13.5",
-        "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
-        "malicious": false
-      },
-      {
-        "package": "crates:pulldown-cmark",
-        "version": "0.13.4",
-        "advisory": "RUSTSEC-2026-0433",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.13.6",
-        "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
-        "malicious": false
-      },
       {
         "package": "crates:quinn-proto",
         "version": "0.11.16",
@@ -193,7 +159,31 @@
         "severity": "HIGH",
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/lyrics",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-09-14T10:08:32Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ACK_FREQUENCY"
+        ],
+        "paths": [
+          "lyrics > reqwest > quinn > quinn-proto"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+          ]
+        }
       },
       {
         "package": "crates:quinn-proto",
@@ -203,23 +193,163 @@
         "severity": "HIGH",
         "fixed_in": "0.11.17",
         "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/lyrics",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-08-17T17:32:41Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "lyrics > reqwest > quinn > quinn-proto"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "6e78a4f97a31d51a48e8cc3744f6fec0f2401102",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 905
+      },
+      "scopes": {
+        "runtime": 888,
+        "optional": 17
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 13,
+      "details": "security/rufin.json",
+      "details_sha256": "b4fc6cfefcd4899257e568d3021a7d9f8bd45e136a6f9d84ad1aefbd1dc99797"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0340 crates:quinn-proto@0.11.16 (conditional)",
+        "worst:RUSTSEC-2026-0341 crates:quinn-proto@0.11.16 (conditional)"
+      ],
+      "counts": {
+        "conditional": 2
+      },
+      "uncounted": 11,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 915,
+      "packages_checked": 905,
+      "components": [
+        {
+          "ecosystem": "c/c++",
+          "component": "CMakeLists.txt",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "advisory_db.no_ecosystem"
+          ]
+        },
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 905,
+          "gaps": []
+        },
+        {
+          "ecosystem": "maven",
+          "component": "android/app/build.gradle.kts",
+          "status": "not_scanned",
+          "packages": 10,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "android/build.gradle.kts",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "crates",
+          "component": "packaging/linux/Cargo.lock",
+          "status": "scanned",
+          "packages": 900,
+          "gaps": []
+        }
+      ],
+      "gaps": [
+        {
+          "code": "advisory_db.no_ecosystem",
+          "category": "advisory_db",
+          "ecosystem": "c/c++",
+          "component": "CMakeLists.txt",
+          "detail": "CMakeLists.txt: no advisory ecosystem for C/C++ libraries",
+          "capability": "advisory_source:c/c++",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "android/app/build.gradle.kts",
+          "detail": "no reader for build.gradle.kts",
+          "capability": "adapter:maven",
+          "found": 10,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "android/build.gradle.kts",
+          "detail": "no reader for build.gradle.kts",
+          "capability": "adapter:maven",
+          "found": 0,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 76.9,
-      "raw_total": 76.9,
       "confidence": 0.5,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -239,16 +369,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 76.9,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -586,5 +713,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:44+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

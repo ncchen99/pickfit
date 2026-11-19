@@ -1,0 +1,2283 @@
+{
+ "slug": "detent",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "ea8c87bf2a4e31e928216a5b964882cce258c976",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "go": 112,
+   "npm": 638
+  },
+  "scopes": {
+   "runtime": 476,
+   "platform": 4,
+   "peer": 7,
+   "dev": 263
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 45
+ },
+ "assessment": {
+  "level": "exposed",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-375p-5qhx-8wq4 go:github.com/labstack/echo/v4@v4.15.1 (exposed)",
+   "worst:GHSA-rj39-cv6w-8wv7 go:github.com/getkin/kin-openapi@v0.146.0 (conditional)",
+   "worst:GHSA-mgcc-cww5-fp2q go:github.com/go-jose/go-jose/v4@v4.1.4 (conditional)"
+  ],
+  "counts": {
+   "exposed": 1,
+   "conditional": 6,
+   "present_unreachable": 7,
+   "not_shipped": 5
+  },
+  "uncounted": 26,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 750,
+  "packages_checked": 750,
+  "components": [
+   {
+    "ecosystem": "go",
+    "component": "go.mod",
+    "status": "scanned",
+    "packages": 112,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "package-lock.json",
+    "status": "scanned",
+    "packages": 73,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "web/conversation/package-lock.json",
+    "status": "scanned",
+    "packages": 594,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/digitaldrywood/detent@ea8c87bf2a4e",
+  "go.mod",
+  "package-lock.json",
+  "web/conversation/package-lock.json"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "go:github.com/labstack/echo/v4",
+   "version": "v4.15.1",
+   "advisory": "GHSA-375p-5qhx-8wq4",
+   "cves": [
+    "CVE-2026-118650"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "4.16.0",
+   "summary": "Echo's middleware.Static: `%2F`-encoded path bypasses route/group middleware guarding a statically-served path",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118650",
+    "GO-2026-6873"
+   ],
+   "published": "2026-10-28T19:54:20Z",
+   "modified": "2026-11-05T23:25:48.388584574Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-177",
+    "CWE-863"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/labstack/echo/v4@v4.15.1",
+   "fix_published_at": "2026-09-27T22:45:34Z",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/labstack/echo/v4"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34598,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:MethodOverride",
+    "symbol:MethodOverrideWithConfig",
+    "symbol:Proxy"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "internal/artifact/http.go:54: func (h *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) { h.echo.ServeHTTP(w, r) }"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": true,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/labstack/echo/v4",
+   "version": "v4.15.1",
+   "advisory": "GHSA-23wf-92cp-8pcj",
+   "cves": [
+    "CVE-2026-118658"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.15.2",
+   "summary": "Echo has Arbitrary Scheme Injection in WWWRedirect/NonWWWRedirect Middlewares via X-Forwarded-Proto",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118658",
+    "GO-2026-6878"
+   ],
+   "published": "2026-10-28T21:04:10Z",
+   "modified": "2026-11-05T23:26:00.516303023Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-601"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/labstack/echo/v4@v4.15.1",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/labstack/echo/v4"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00186,
+   "epss_percentile": 0.08289,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "symbol:context.Scheme",
+    "symbol:Context.Scheme"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "internal/hubserver/hubauth/local.go:40: if c.IsTLS() || s.deps.TrustedProxy && c.Scheme() == \"https\" {"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/labstack/echo/v4",
+   "version": "v4.15.1",
+   "advisory": "GHSA-2ffq-g2xg-c22p",
+   "cves": [
+    "CVE-2026-118657"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.16.0",
+   "summary": "Echo: HTTPS Redirect and HSTS Bypass via Unconditional Trust of Forwarded Scheme Headers",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118657",
+    "GO-2026-6879"
+   ],
+   "published": "2026-10-28T21:04:52Z",
+   "modified": "2026-11-05T23:26:14.128464587Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-346"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/labstack/echo/v4@v4.15.1",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/labstack/echo/v4"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00133,
+   "epss_percentile": 0.02945,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "symbol:MethodOverride",
+    "symbol:MethodOverrideWithConfig",
+    "symbol:Proxy"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "internal/artifact/http.go:54: func (h *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) { h.echo.ServeHTTP(w, r) }"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/labstack/echo/v4",
+   "version": "v4.15.1",
+   "advisory": "GHSA-3pmx-cf9f-34xr",
+   "cves": [
+    "CVE-2026-118654"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.16.0",
+   "summary": "Echo static file middleware route protection bypass via encoded dot-dot traversal",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118654",
+    "GO-2026-6881"
+   ],
+   "published": "2026-10-28T21:04:46Z",
+   "modified": "2026-11-05T23:25:51.621096497Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/labstack/echo/v4@v4.15.1",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/labstack/echo/v4"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00347,
+   "epss_percentile": 0.28846,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "symbol:MethodOverride",
+    "symbol:MethodOverrideWithConfig",
+    "symbol:Proxy"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "internal/artifact/http.go:54: func (h *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) { h.echo.ServeHTTP(w, r) }"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/labstack/echo/v4",
+   "version": "v4.15.1",
+   "advisory": "GHSA-h9g5-28mm-hx3g",
+   "cves": [
+    "CVE-2026-118652"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.16.0",
+   "summary": "Echo vulnerable to Reflected Cross-Site Scripting (XSS) via unsanitized JSONP callback in Context.JSONP / Context.JSONPBlob",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118652",
+    "GO-2026-6876"
+   ],
+   "published": "2026-10-28T19:54:05Z",
+   "modified": "2026-11-05T23:26:16.338998832Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/labstack/echo/v4@v4.15.1",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/labstack/echo/v4"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00239,
+   "epss_percentile": 0.15194,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "symbol:MethodOverride",
+    "symbol:MethodOverrideWithConfig",
+    "symbol:Proxy"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "internal/artifact/http.go:54: func (h *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) { h.echo.ServeHTTP(w, r) }"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/labstack/echo/v4",
+   "version": "v4.15.1",
+   "advisory": "GHSA-r7w9-592q-9vg4",
+   "cves": [
+    "CVE-2026-118266"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.16.0",
+   "summary": "Echo has CSRF Protection Bypass via MethodOverride Rewriting POST to Safe Method",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118266",
+    "GO-2026-6877"
+   ],
+   "published": "2026-10-28T19:53:36Z",
+   "modified": "2026-11-05T23:26:09.232914134Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-352"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/labstack/echo/v4@v4.15.1",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/labstack/echo/v4"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00163,
+   "epss_percentile": 0.05595,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "symbol:MethodOverride",
+    "symbol:MethodOverrideWithConfig",
+    "symbol:Proxy"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "internal/artifact/http.go:54: func (h *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) { h.echo.ServeHTTP(w, r) }"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/labstack/echo/v4",
+   "version": "v4.15.1",
+   "advisory": "GHSA-v753-g4cw-jm48",
+   "cves": [
+    "CVE-2026-118656"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.16.0",
+   "summary": "Echo has Open Redirect via Control-Character Prefix Defeating sanitizeURI",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118656",
+    "GO-2026-6883"
+   ],
+   "published": "2026-10-28T21:04:22Z",
+   "modified": "2026-11-05T23:25:44.240402705Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-601"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/labstack/echo/v4@v4.15.1",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/labstack/echo/v4"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00197,
+   "epss_percentile": 0.09508,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "symbol:Echo.ServeHTTP",
+    "symbol:Echo.Start",
+    "symbol:Echo.StartAutoTLS"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "internal/artifact/http.go:54: func (h *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) { h.echo.ServeHTTP(w, r) }"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/getkin/kin-openapi",
+   "version": "v0.146.0",
+   "advisory": "GHSA-rj39-cv6w-8wv7",
+   "cves": [
+    "CVE-2026-100352"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.148.0",
+   "summary": "kin-openapi: YAML NaN/Inf Values Bypass Built-in Guards and Panic via OAS 3.1 Validation Path",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-100352",
+    "GO-2026-6795"
+   ],
+   "published": "2026-10-15T20:20:27Z",
+   "modified": "2026-11-05T23:25:44.340700901Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-754"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/getkin/kin-openapi@v0.146.0",
+   "fix_published_at": "2026-08-27T10:09:50Z",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/getkin/kin-openapi"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00595,
+   "epss_percentile": 0.49237,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/go-jose/go-jose/v4",
+   "version": "v4.1.4",
+   "advisory": "GHSA-mgcc-cww5-fp2q",
+   "cves": [
+    "CVE-2026-116587"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "4.1.6",
+   "summary": "Go JOSE: DoS when parsing JWKs that contain RSA keys",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116587"
+   ],
+   "published": "2026-10-27T19:01:30Z",
+   "modified": "2026-10-27T19:15:23.147827328Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-407",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/go-jose/go-jose/v4@v4.1.4",
+   "fix_published_at": "2026-10-14T22:46:21Z",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/go-jose/go-jose/v4"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00489,
+   "epss_percentile": 0.42863,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/labstack/echo/v4",
+   "version": "v4.15.1",
+   "advisory": "GHSA-vfp3-v2gw-7wfq",
+   "cves": [
+    "CVE-2026-55677"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "4.15.3",
+   "summary": "Echo: Encoded slash (%2F) bypasses route-level protection and exposes static files",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-55677",
+    "GO-2026-6293"
+   ],
+   "published": "2026-08-25T16:13:29Z",
+   "modified": "2026-09-10T03:51:14.774124457Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/labstack/echo/v4@v4.15.1",
+   "fix_published_at": "2026-06-14T16:16:56Z",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/labstack/echo/v4"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00519,
+   "epss_percentile": 0.44906,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Echo.Static",
+    "symbol:Echo.StaticFS",
+    "symbol:Group.Static"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "unknown",
+    "evidence": [
+     "internal/artifact/http.go:16: \"github.com/labstack/echo/v4\"",
+     "no call to Echo.Static, Echo.StaticFS, Group.Static found"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:seroval",
+   "version": "1.6.7",
+   "advisory": "GHSA-7rv5-mrxv-xcr9",
+   "cves": [
+    "CVE-2026-116580"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.6.8",
+   "summary": "Seroval: Deserialization invokes attacker-chosen callables: AsyncIteratorFactoryInstance calls source.on(listener) without type check",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116580"
+   ],
+   "published": "2026-10-28T21:17:15Z",
+   "modified": "2026-10-28T21:30:03.899348358Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-502"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/seroval@1.6.7",
+   "fix_published_at": "2026-09-29T05:57:53Z",
+   "scope": "runtime",
+   "paths": [
+    ". > @tanstack/react-router > @tanstack/router-core > seroval"
+   ],
+   "workspace": ".",
+   "found_in": "web/conversation/package-lock.json",
+   "kev": false,
+   "epss": 0.00342,
+   "epss_percentile": 0.28269,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:seroval",
+   "version": "1.6.7",
+   "advisory": "GHSA-97r2-qh9m-474h",
+   "cves": [
+    "CVE-2026-116581"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.6.8",
+   "summary": "Seroval: fromJSON deserializer trusts node-supplied array length and sequence doneAt (unauthenticated event-loop DoS)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116581"
+   ],
+   "published": "2026-10-28T21:17:27Z",
+   "modified": "2026-10-28T21:30:06.799577215Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1284",
+    "CWE-835"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/seroval@1.6.7",
+   "fix_published_at": "2026-09-29T05:57:53Z",
+   "scope": "runtime",
+   "paths": [
+    ". > @tanstack/react-router > @tanstack/router-core > seroval"
+   ],
+   "workspace": ".",
+   "found_in": "web/conversation/package-lock.json",
+   "kev": false,
+   "epss": 0.00451,
+   "epss_percentile": 0.3992,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:seroval",
+   "version": "1.6.7",
+   "advisory": "GHSA-wp97-x4hv-qvhp",
+   "cves": [
+    "CVE-2026-116584"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.6.8",
+   "summary": "Seroval `fromJSON`/`fromCrossJSON` denial of service via unvalidated array node length",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116584"
+   ],
+   "published": "2026-10-28T21:17:20Z",
+   "modified": "2026-10-28T21:30:05.906685921Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/seroval@1.6.7",
+   "fix_published_at": "2026-09-29T05:57:53Z",
+   "scope": "runtime",
+   "paths": [
+    ". > @tanstack/react-router > @tanstack/router-core > seroval"
+   ],
+   "workspace": ".",
+   "found_in": "web/conversation/package-lock.json",
+   "kev": false,
+   "epss": 0.00365,
+   "epss_percentile": 0.30938,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:fromJSON",
+    "symbol:fromCrossJSON"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use fromJSON, fromCrossJSON, but other packages depend on seroval"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/go-jose/go-jose/v4",
+   "version": "v4.1.4",
+   "advisory": "GHSA-4w3g-jfj2-cw2q",
+   "cves": [
+    "CVE-2026-116585"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.1.5",
+   "summary": "Go JOSE: Panic during CBC-HMAC processing",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116585"
+   ],
+   "published": "2026-10-28T21:14:00Z",
+   "modified": "2026-10-28T21:30:06.790863342Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-129"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/go-jose/go-jose/v4@v4.1.4",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/go-jose/go-jose/v4"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00264,
+   "epss_percentile": 0.18559,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/go-jose/go-jose/v4",
+   "version": "v4.1.4",
+   "advisory": "GHSA-vvm8-gf78-28g4",
+   "cves": [
+    "CVE-2026-116586"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.1.5",
+   "summary": "Go JOSE: Panics in JSON parsing",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116586"
+   ],
+   "published": "2026-10-28T21:14:08Z",
+   "modified": "2026-10-28T21:30:05.801821772Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-674"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/go-jose/go-jose/v4@v4.1.4",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/go-jose/go-jose/v4"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00292,
+   "epss_percentile": 0.22141,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/labstack/echo/v4",
+   "version": "v4.15.1",
+   "advisory": "GHSA-xwq5-6cqp-vx96",
+   "cves": [
+    "CVE-2026-118655"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.15.3",
+   "summary": "Echo has a Static Middleware Double-Unescape Path Traversal",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118655",
+    "GO-2026-6885"
+   ],
+   "published": "2026-10-28T21:04:39Z",
+   "modified": "2026-11-05T23:26:17.528492081Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-174"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/labstack/echo/v4@v4.15.1",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/labstack/echo/v4"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00303,
+   "epss_percentile": 0.23544,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "symbol:Static",
+    "symbol:StaticWithConfig",
+    "symbol:Echo.Static"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "unknown",
+    "evidence": [
+     "internal/artifact/http.go:16: \"github.com/labstack/echo/v4\"",
+     "no call to Static, StaticWithConfig, Echo.Static found"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:go.opentelemetry.io/otel/sdk",
+   "version": "v1.45.0",
+   "advisory": "GHSA-q7gw-24fr-5p69",
+   "cves": [
+    "CVE-2026-128085"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.47.0",
+   "summary": "opentelemetry-go: AttributeValueLengthLimit is fully bypassed by attribute values composed of valid U+FFFD runes",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-128085"
+   ],
+   "published": "2026-11-13T19:00:55Z",
+   "modified": "2026-11-13T19:15:05.908318974Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-135",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/go.opentelemetry.io/otel/sdk@v1.45.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > go.opentelemetry.io/otel/sdk"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00469,
+   "epss_percentile": 0.41317,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:go.opentelemetry.io/otel/trace",
+   "version": "v1.45.0",
+   "advisory": "GHSA-q7gw-24fr-5p69",
+   "cves": [
+    "CVE-2026-128085"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.47.0",
+   "summary": "opentelemetry-go: AttributeValueLengthLimit is fully bypassed by attribute values composed of valid U+FFFD runes",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-128085"
+   ],
+   "published": "2026-11-13T19:00:55Z",
+   "modified": "2026-11-13T19:15:05.908318974Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-135",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/go.opentelemetry.io/otel/trace@v1.45.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > go.opentelemetry.io/otel/trace"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00469,
+   "epss_percentile": 0.41317,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:seroval",
+   "version": "1.6.7",
+   "advisory": "GHSA-9wx9-5pv9-3349",
+   "cves": [
+    "CVE-2026-116582"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.6.10",
+   "summary": "Seroval: Script injection through RegExp sources in serialized output",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116582"
+   ],
+   "published": "2026-10-28T21:17:31Z",
+   "modified": "2026-10-28T21:30:04.992414732Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-116",
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/seroval@1.6.7",
+   "scope": "runtime",
+   "paths": [
+    ". > @tanstack/react-router > @tanstack/router-core > seroval"
+   ],
+   "workspace": ".",
+   "found_in": "web/conversation/package-lock.json",
+   "kev": false,
+   "epss": 0.00188,
+   "epss_percentile": 0.0849,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:seroval",
+   "version": "1.6.7",
+   "advisory": "GHSA-f86p-h4j2-7qgj",
+   "cves": [
+    "CVE-2026-116583"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.6.11",
+   "summary": "Seroval: Code injection through a typed array's own constructor property",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116583"
+   ],
+   "published": "2026-10-28T21:17:36Z",
+   "modified": "2026-10-28T21:30:05.897308225Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:P/VC:N/VI:N/VA:N/SC:H/SI:H/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79",
+    "CWE-94"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/seroval@1.6.7",
+   "scope": "runtime",
+   "paths": [
+    ". > @tanstack/react-router > @tanstack/router-core > seroval"
+   ],
+   "workspace": ".",
+   "found_in": "web/conversation/package-lock.json",
+   "kev": false,
+   "epss": 0.00268,
+   "epss_percentile": 0.19203,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.60.0",
+   "advisory": "GO-2026-6860",
+   "cves": [
+    "CVE-2026-78661"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.62.0",
+   "summary": "Avoid quadratic complexity when coalescing text nodes in html in golang.org/x/net",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-78661"
+   ],
+   "published": "2026-10-27T21:16:18Z",
+   "modified": "2026-10-27T21:30:04.890809062Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/net@v0.60.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/net"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00409,
+   "epss_percentile": 0.35903,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Parse",
+    "symbol:ParseFragment",
+    "symbol:ParseFragmentWithOptions"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "unknown",
+    "evidence": [
+     "internal/attachment/visual.go:17: nethtml \"golang.org/x/net/html\"",
+     "no call to Parse, ParseFragment, ParseFragmentWithOptions found"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.60.0",
+   "advisory": "GO-2026-6866",
+   "cves": [
+    "CVE-2026-97045"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.62.0",
+   "summary": "Check all ancestor namespace transitions when rendering raw text in html in golang.org/x/net",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-97045"
+   ],
+   "published": "2026-10-27T21:16:18Z",
+   "modified": "2026-10-27T21:45:08.978077289Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.60.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/net"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00267,
+   "epss_percentile": 0.19116,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Render",
+    "symbol:childTextNodesAreLiteral"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "unknown",
+    "evidence": [
+     "internal/attachment/visual.go:17: nethtml \"golang.org/x/net/html\"",
+     "no call to Render, childTextNodesAreLiteral found"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/labstack/echo/v4",
+   "version": "v4.15.1",
+   "advisory": "GHSA-cxf3-9h37-7rr8",
+   "cves": [
+    "CVE-2026-118264"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "4.16.1",
+   "summary": "Echo: Rejected WebSocket upgrades can bypass Echo route-level access controls",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118264",
+    "GO-2026-6839"
+   ],
+   "published": "2026-10-23T20:49:37Z",
+   "modified": "2026-11-05T23:26:10.984049228Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-444",
+    "CWE-863"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/labstack/echo/v4@v4.15.1",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/labstack/echo/v4"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.0043,
+   "epss_percentile": 0.37924,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "symbol:BodyDump",
+    "symbol:BodyDumpWithConfig",
+    "symbol:Decompress"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports github.com/labstack/echo/v4/middleware, github.com/labstack/echo/v5/middleware, github.com/labstack/echo/v5; go.mod requires github.com/labstack/echo/v4 directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": true,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/getkin/kin-openapi",
+   "version": "v0.146.0",
+   "advisory": "GHSA-23vg-4cjm-66q5",
+   "cves": [
+    "CVE-2026-100351"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.147.0",
+   "summary": "kin-openapi: ValidationHandler security-requirement bypass via encoded-path operation confusion",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-100351",
+    "GO-2026-6769"
+   ],
+   "published": "2026-10-15T20:19:20Z",
+   "modified": "2026-11-05T23:25:57.334084202Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-289",
+    "CWE-436"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/getkin/kin-openapi@v0.146.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/getkin/kin-openapi"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00488,
+   "epss_percentile": 0.42806,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "symbol:ValidationHandler.ServeHTTP",
+    "symbol:ValidationHandler.validateRequest"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports github.com/getkin/kin-openapi/openapi3filter; go.mod requires github.com/getkin/kin-openapi directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": true,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/getkin/kin-openapi",
+   "version": "v0.146.0",
+   "advisory": "GHSA-g8cf-rcjf-c8cf",
+   "cves": [
+    "CVE-2026-100354"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.149.0",
+   "summary": "kin-openapi: Uncontrolled Recursion on Circular allOf/anyOf/oneOf Schemas Causes Fatal Process Crash",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-100354",
+    "GO-2026-6785"
+   ],
+   "published": "2026-10-15T20:20:37Z",
+   "modified": "2026-11-05T23:26:08.883117792Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-674"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/getkin/kin-openapi@v0.146.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/getkin/kin-openapi"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00435,
+   "epss_percentile": 0.38522,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Callback.Validate",
+    "symbol:CallbackRef.Validate",
+    "symbol:Components.Validate"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports github.com/getkin/kin-openapi/openapi3, github.com/getkin/kin-openapi/openapi3filter; go.mod requires github.com/getkin/kin-openapi directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": true,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/getkin/kin-openapi",
+   "version": "v0.146.0",
+   "advisory": "GHSA-vrcc-3ch7-hppw",
+   "cves": [
+    "CVE-2026-100353"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.149.0",
+   "summary": "kin-openapi: Incomplete Fix for GHSA-p6wj-qrr4-pgh5: Three Unpatched nil-Items Panic Paths in openapi3filter",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-100353",
+    "GO-2026-6800"
+   ],
+   "published": "2026-10-15T20:20:47Z",
+   "modified": "2026-11-05T23:25:36.923366379Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-476"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/getkin/kin-openapi@v0.146.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/getkin/kin-openapi"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00335,
+   "epss_percentile": 0.27378,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:MultipartBodyDecoder",
+    "symbol:UrlencodedBodyDecoder",
+    "symbol:ValidateParameter"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports github.com/getkin/kin-openapi/openapi3filter; go.mod requires github.com/getkin/kin-openapi directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": true,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/labstack/echo/v4",
+   "version": "v4.15.1",
+   "advisory": "GHSA-9969-6676-49h5",
+   "cves": [
+    "CVE-2026-118262"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "4.16.1",
+   "summary": "Echo: WebSocket proxy can retain connections and handlers after client disconnect",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118262",
+    "GO-2026-6838"
+   ],
+   "published": "2026-10-23T20:50:17Z",
+   "modified": "2026-11-05T23:25:47.132082982Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-772"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/labstack/echo/v4@v4.15.1",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/labstack/echo/v4"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00302,
+   "epss_percentile": 0.23342,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service",
+    "symbol:BodyDump",
+    "symbol:BodyDumpWithConfig",
+    "symbol:Decompress"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports github.com/labstack/echo/v4/middleware, github.com/labstack/echo/v5, github.com/labstack/echo/v5/middleware; go.mod requires github.com/labstack/echo/v4 directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": true,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/labstack/echo/v4",
+   "version": "v4.15.1",
+   "advisory": "GHSA-f48p-c9v4-h7xv",
+   "cves": [
+    "CVE-2026-118260"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "4.16.1",
+   "summary": "Echo: BodyDump captures request and response bodies without size limits in v4",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118260",
+    "GO-2026-6840"
+   ],
+   "published": "2026-10-23T20:48:44Z",
+   "modified": "2026-11-05T23:26:11.132455771Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/labstack/echo/v4@v4.15.1",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/labstack/echo/v4"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00372,
+   "epss_percentile": 0.31768,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service",
+    "symbol:BodyDump",
+    "symbol:BodyDumpWithConfig",
+    "symbol:Decompress"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports github.com/labstack/echo/v4/middleware; go.mod requires github.com/labstack/echo/v4 directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": true,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/labstack/echo/v4",
+   "version": "v4.15.1",
+   "advisory": "GHSA-h7wr-284f-5qvc",
+   "cves": [
+    "CVE-2026-118261"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "4.16.1",
+   "summary": "Echo: Decompress permits unbounded gzip expansion in v4",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118261",
+    "GO-2026-6842"
+   ],
+   "published": "2026-10-23T20:49:49Z",
+   "modified": "2026-11-05T23:25:47.730471727Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-409"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/labstack/echo/v4@v4.15.1",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/labstack/echo/v4"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00372,
+   "epss_percentile": 0.31766,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service",
+    "symbol:BodyDump",
+    "symbol:BodyDumpWithConfig",
+    "symbol:Decompress"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports github.com/labstack/echo/v4/middleware; go.mod requires github.com/labstack/echo/v4 directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": true,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/labstack/echo/v4",
+   "version": "v4.15.1",
+   "advisory": "GHSA-246p-cpwv-v3jq",
+   "cves": [
+    "CVE-2026-118653"
+   ],
+   "severity": "MODERATE",
+   "summary": "Echo has Rate Limiter Bypass via Spoofed X-Forwarded-For Header in Default Configuration",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118653",
+    "GO-2026-6872"
+   ],
+   "published": "2026-10-28T19:53:47Z",
+   "modified": "2026-11-05T23:26:14.796992232Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-290"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/labstack/echo/v4@v4.15.1",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/labstack/echo/v4"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00415,
+   "epss_percentile": 0.3657,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Context.RealIP"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports github.com/labstack/echo/v5; go.mod requires github.com/labstack/echo/v4 directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2",
+   "fixed_in": null
+  },
+  {
+   "package": "go:github.com/labstack/echo/v4",
+   "version": "v4.15.1",
+   "advisory": "GHSA-99jh-6h7p-pp36",
+   "cves": [
+    "CVE-2026-118651"
+   ],
+   "severity": "MODERATE",
+   "summary": "Echo: Reverse Proxy Forwards Attacker-Supplied X-Real-IP to Upstream by Default",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118651",
+    "GO-2026-6875"
+   ],
+   "published": "2026-10-28T19:53:24Z",
+   "modified": "2026-11-05T23:25:35.191121662Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-346"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/labstack/echo/v4@v4.15.1",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/labstack/echo/v4"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00207,
+   "epss_percentile": 0.109,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Context.JSONPBlob",
+    "symbol:Context.Scheme",
+    "symbol:Context.jsonPBlob"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports github.com/labstack/echo/v5, github.com/labstack/echo/v5/middleware; go.mod requires github.com/labstack/echo/v4 directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2",
+   "fixed_in": null
+  },
+  {
+   "package": "go:github.com/yuin/goldmark",
+   "version": "v1.7.13",
+   "advisory": "GO-2026-5320",
+   "cves": [
+    "CVE-2026-5160"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.7.17",
+   "summary": "Cross-site Scripting (XSS) in github.com/yuin/goldmark",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-5160",
+    "GHSA-c97m-vxhj-p7j6"
+   ],
+   "published": "2026-07-07T16:52:19Z",
+   "modified": "2026-07-22T20:59:36.886153285Z",
+   "purl": "pkg:golang/github.com/yuin/goldmark@v1.7.13",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/yuin/goldmark"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00292,
+   "epss_percentile": 0.22144,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Renderer.renderAutoLink",
+    "symbol:Renderer.renderImage",
+    "symbol:Renderer.renderLink"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports github.com/yuin/goldmark/renderer/html; go.mod requires github.com/yuin/goldmark directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/crypto",
+   "version": "v0.57.0",
+   "advisory": "GO-2026-5932",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.58.1-0.20261009181718-2f1f834330b2",
+   "summary": "The golang.org/x/crypto/openpgp package is unmaintained, unsafe by design, and has known security issues",
+   "malicious": false,
+   "published": "2026-07-07T22:15:29Z",
+   "modified": "2026-11-02T22:15:06.677088389Z",
+   "purl": "pkg:golang/golang.org/x/crypto@v0.57.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/crypto"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:golang.org/x/crypto/openpgp",
+    "symbol:golang.org/x/crypto/openpgp/packet",
+    "symbol:golang.org/x/crypto/openpgp/armor"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports golang.org/x/crypto/openpgp, golang.org/x/crypto/openpgp/packet, golang.org/x/crypto/openpgp/armor; go.mod requires golang.org/x/crypto directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:shell-quote",
+   "version": "1.9.0",
+   "advisory": "GHSA-pqg4-j6r4-53mv",
+   "cves": [
+    "CVE-2026-102422"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "1.11.0",
+   "summary": "shell-quote: `quote()` command injection via a line terminator in a token after a `{ comment }` token",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-102422"
+   ],
+   "published": "2026-10-06T13:40:36Z",
+   "modified": "2026-10-06T13:45:06.393196831Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-78"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/shell-quote@1.9.0",
+   "scope": "dev",
+   "paths": [
+    ". > concurrently > shell-quote"
+   ],
+   "workspace": ".",
+   "found_in": "web/conversation/package-lock.json",
+   "kev": false,
+   "epss": 0.0048,
+   "epss_percentile": 0.42168,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:tinypool",
+   "version": "1.1.1",
+   "advisory": "GHSA-5gmw-xhrv-c9v3",
+   "cves": [
+    "CVE-2026-104848"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "2.1.1",
+   "summary": "Tinypool: Prototype Pollution gadget in worker options leads to Remote Code Execution",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-104848"
+   ],
+   "published": "2026-10-05T22:50:01Z",
+   "modified": "2026-10-05T23:00:04.259458991Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/tinypool@1.1.1",
+   "scope": "dev",
+   "paths": [
+    ". > vitest > tinypool"
+   ],
+   "workspace": ".",
+   "found_in": "web/conversation/package-lock.json",
+   "kev": false,
+   "epss": 0.00497,
+   "epss_percentile": 0.43412,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:tinypool",
+   "version": "1.1.1",
+   "advisory": "GHSA-85c8-ppgw-ccpr",
+   "cves": [
+    "CVE-2026-104849"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "2.1.2",
+   "summary": "Tinypool: Prototype Pollution Gadget to RCE in run() options",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-104849"
+   ],
+   "published": "2026-10-05T22:49:52Z",
+   "modified": "2026-10-05T23:00:05.324545780Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321",
+    "CWE-94"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/tinypool@1.1.1",
+   "scope": "dev",
+   "paths": [
+    ". > vitest > tinypool"
+   ],
+   "workspace": ".",
+   "found_in": "web/conversation/package-lock.json",
+   "kev": false,
+   "epss": 0.00485,
+   "epss_percentile": 0.42542,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:source-map-js",
+   "version": "1.2.1",
+   "advisory": "GHSA-68fv-2mgg-jv7q",
+   "cves": [
+    "CVE-2026-93749"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.2.2",
+   "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-93749"
+   ],
+   "published": "2026-09-18T18:31:44Z",
+   "modified": "2026-10-05T23:45:07.974936711Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1284"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/source-map-js@1.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > @tailwindcss/cli > @tailwindcss/node > source-map-js"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00455,
+   "epss_percentile": 0.40249,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "7.3.6",
+   "advisory": "GHSA-587h-7wmj-h5pm",
+   "cves": [
+    "CVE-2026-112942"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "7.3.7",
+   "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112942"
+   ],
+   "published": "2026-10-20T19:48:25Z",
+   "modified": "2026-10-20T20:00:04.608979840Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-77"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@7.3.6",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "web/conversation/package-lock.json",
+   "kev": false,
+   "epss": 0.01694,
+   "epss_percentile": 0.77635,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@vitest/mocker",
+   "version": "3.2.7",
+   "advisory": "GHSA-82fw-gwwq-j7x9",
+   "cves": [
+    "CVE-2026-84373"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.1.11",
+   "summary": "Vitest: Path Traversal / Arbitrary File Read via @vitest/mocker Redirect Mock",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-84373"
+   ],
+   "published": "2026-09-08T20:46:45Z",
+   "modified": "2026-09-08T21:00:07.248611070Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40vitest/mocker@3.2.7",
+   "scope": "dev",
+   "paths": [
+    ". > vitest > @vitest/mocker"
+   ],
+   "workspace": ".",
+   "found_in": "web/conversation/package-lock.json",
+   "kev": false,
+   "epss": 0.00527,
+   "epss_percentile": 0.45432,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@vitest/mocker",
+   "version": "3.2.7",
+   "advisory": "GHSA-qxg6-89mg-rqv8",
+   "cves": [
+    "CVE-2026-112949"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.1.12",
+   "summary": "Vitest: Code injection via unauthenticated manual mock registration",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112949"
+   ],
+   "published": "2026-10-21T19:54:26Z",
+   "modified": "2026-10-21T20:01:39.911013327Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-116",
+    "CWE-306",
+    "CWE-94"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40vitest/mocker@3.2.7",
+   "scope": "dev",
+   "paths": [
+    ". > vitest > @vitest/mocker"
+   ],
+   "workspace": ".",
+   "found_in": "web/conversation/package-lock.json",
+   "kev": false,
+   "epss": 0.00336,
+   "epss_percentile": 0.27565,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "7.3.6",
+   "advisory": "GHSA-698v-4r3x-3vcv",
+   "cves": [
+    "CVE-2026-112943"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "7.3.7",
+   "summary": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112943"
+   ],
+   "published": "2026-10-20T18:30:24Z",
+   "modified": "2026-10-20T18:45:09.467993691Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-78"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@7.3.6",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "web/conversation/package-lock.json",
+   "kev": false,
+   "epss": 0.00414,
+   "epss_percentile": 0.36473,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "7.3.6",
+   "advisory": "GHSA-r825-w8mm-5pxw",
+   "cves": [
+    "CVE-2026-112944"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "7.3.7",
+   "summary": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112944"
+   ],
+   "published": "2026-10-20T19:51:52Z",
+   "modified": "2026-10-20T20:00:04.608907013Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-88"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@7.3.6",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "web/conversation/package-lock.json",
+   "kev": false,
+   "epss": 0.00705,
+   "epss_percentile": 0.54125,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "7.3.6",
+   "advisory": "GHSA-rq7h-c2jc-7f22",
+   "cves": [
+    "CVE-2026-112946"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "7.3.7",
+   "summary": "Vite: Files outside `server.fs.allow` could be served when project paths match system paths on non-Windows machine",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112946"
+   ],
+   "published": "2026-10-21T16:47:42Z",
+   "modified": "2026-10-21T17:00:06.336868869Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22",
+    "CWE-284"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@7.3.6",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "web/conversation/package-lock.json",
+   "kev": false,
+   "epss": 0.00852,
+   "epss_percentile": 0.59015,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vitest",
+   "version": "3.2.7",
+   "advisory": "GHSA-82fw-gwwq-j7x9",
+   "cves": [
+    "CVE-2026-84373"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.1.11",
+   "summary": "Vitest: Path Traversal / Arbitrary File Read via @vitest/mocker Redirect Mock",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-84373"
+   ],
+   "published": "2026-09-08T20:46:45Z",
+   "modified": "2026-09-08T21:00:07.248611070Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vitest@3.2.7",
+   "scope": "dev",
+   "paths": [
+    ". > vitest"
+   ],
+   "workspace": ".",
+   "found_in": "web/conversation/package-lock.json",
+   "kev": false,
+   "epss": 0.00527,
+   "epss_percentile": 0.45432,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "7.3.6",
+   "advisory": "GHSA-9jrq-w75r-8gcw",
+   "cves": [
+    "CVE-2026-112945"
+   ],
+   "severity": "LOW",
+   "fixed_in": "7.3.7",
+   "summary": "Vite: Cross origin script execution through Vite custom middleware",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112945"
+   ],
+   "published": "2026-10-21T16:48:14Z",
+   "modified": "2026-10-21T17:00:26.569382874Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-80"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@7.3.6",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "web/conversation/package-lock.json",
+   "kev": false,
+   "epss": 0.00672,
+   "epss_percentile": 0.52858,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

@@ -253,32 +253,18 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/wshm-dev/wshm@e5e7296215ee",
+      "github.com/wshm-dev/wshm@3c8a7ad36473",
       "Cargo.lock",
       "web/package-lock.json"
     ],
-    "packages_checked": 676,
-    "findings_total": 5,
-    "advisories_total": 5,
+    "packages_checked": 742,
+    "findings_total": 2,
+    "advisories_total": 2,
     "findings": [
-      {
-        "package": "npm:dompurify",
-        "version": "3.4.15",
-        "advisory": "GHSA-cg2g-xh64-v4q7",
-        "cves": [
-          "CVE-2026-116804"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify SAFE_FOR_TEMPLATES bypass: split template expressions survive in attached shadow root content on DOM output modes",
-        "malicious": false
-      },
       {
         "package": "crates:openssl",
         "version": "0.10.78",
@@ -289,19 +275,31 @@
         "severity": "HIGH",
         "fixed_in": "0.10.79",
         "summary": "rust-openssl has undefined behavior in X509Ref::ocsp_responders for certificates with non-UTF-8 OCSP URLs",
-        "malicious": false
-      },
-      {
-        "package": "npm:dompurify",
-        "version": "3.4.15",
-        "advisory": "GHSA-mrv2-3pqr-j5jr",
-        "cves": [
-          "CVE-2026-116803"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00211,
+        "fix_published_at": "2026-05-04T00:19:55Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:X509Ref::ocsp_responders"
         ],
-        "severity": "HIGH",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
-        "malicious": false
+        "paths": [
+          "wshm-core > openssl"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use X509Ref::ocsp_responders, but other packages depend on openssl"
+          ]
+        }
       },
       {
         "package": "npm:source-map-js",
@@ -313,35 +311,150 @@
         "severity": "HIGH",
         "fixed_in": "1.2.2",
         "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
-        "malicious": false
-      },
-      {
-        "package": "npm:vite",
-        "version": "6.4.3",
-        "advisory": "GHSA-587h-7wmj-h5pm",
-        "cves": [
-          "CVE-2026-112942"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web/package-lock.json",
+        "kev": false,
+        "epss": 0.00455,
+        "fix_published_at": "2026-09-30T14:08:09Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "6.4.4",
-        "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
-        "malicious": false
+        "paths": [
+          ". > @tailwindcss/vite > @tailwindcss/node > source-map-js"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "3c8a7ad36473b3ec9ef98d21567cefd122b73327",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 570,
+        "npm": 172
+      },
+      "scopes": {
+        "runtime": 440,
+        "optional": 177,
+        "platform": 4,
+        "peer": 62,
+        "dev": 59
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 32,
+      "details": "security/wshm.json",
+      "details_sha256": "362c496bc9afd5e8ba5af6f19970402869f17fb96e7ff323a4ff81c3fdc84ef5"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-xp3w-r5p5-63rr crates:openssl@0.10.78 (conditional)",
+        "worst:GHSA-68fv-2mgg-jv7q npm:source-map-js@1.2.1 (conditional)",
+        "worst:GHSA-3r8g-jcqq-3p5j npm:@sveltejs/kit@2.70.3 (not_shipped)"
+      ],
+      "counts": {
+        "conditional": 2,
+        "not_shipped": 2
+      },
+      "uncounted": 28,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 948,
+      "packages_checked": 742,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 570,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "web/bun.lock",
+          "status": "not_scanned",
+          "packages": 174,
+          "gaps": [
+            "lockfile.unsupported_format"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "web/diagram-viewer/bun.lock",
+          "status": "not_scanned",
+          "packages": 32,
+          "gaps": [
+            "lockfile.unsupported_format"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "web/package-lock.json",
+          "status": "scanned",
+          "packages": 172,
+          "gaps": []
+        }
+      ],
+      "gaps": [
+        {
+          "code": "lockfile.unsupported_format",
+          "category": "lockfile_unreadable",
+          "ecosystem": "npm",
+          "component": "web/bun.lock",
+          "detail": "bun_lock is not read yet",
+          "capability": "read_lockfile:bun_lock",
+          "found": 174,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "lockfile.unsupported_format",
+          "category": "lockfile_unreadable",
+          "ecosystem": "npm",
+          "component": "web/diagram-viewer/bun.lock",
+          "detail": "bun_lock is not read yet",
+          "capability": "read_lockfile:bun_lock",
+          "found": 32,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 88.3,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.8125,
@@ -361,16 +474,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 88.3,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -830,5 +940,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

@@ -342,18 +342,16 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/mhyrzt/xrat@bfc61b50cc5c",
+      "github.com/mhyrzt/xrat@055265c5cc06",
       "Cargo.lock"
     ],
     "packages_checked": 663,
-    "findings_total": 13,
-    "advisories_total": 13,
+    "findings_total": 10,
+    "advisories_total": 10,
     "findings": [
       {
         "package": "crates:zip",
@@ -365,47 +363,75 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "7.2.0",
-        "advisory": "RUSTSEC-2026-0369",
-        "cves": [],
-        "severity": "CRITICAL",
-        "fixed_in": "9.0.0",
-        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/xrat-app",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.0032,
+        "fix_published_at": "2026-10-17T18:45:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "xrat-app > zip"
+        ]
       },
       {
         "package": "crates:hickory-proto",
         "version": "0.25.2",
         "advisory": "GHSA-3v94-mw7p-v465",
-        "cves": [],
+        "cves": [
+          "CVE-2026-123607"
+        ],
         "severity": "HIGH",
         "fixed_in": null,
         "summary": "hickory-proto: NSEC3 closest-encloser proof validation enters unbounded loop on cross-zone responses",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/xrat-support",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00343,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "xrat-support > hickory-proto"
+        ]
       },
       {
-        "package": "crates:pulldown-cmark",
-        "version": "0.13.4",
-        "advisory": "RUSTSEC-2026-0414",
-        "cves": [],
+        "package": "crates:hickory-proto",
+        "version": "0.25.2",
+        "advisory": "RUSTSEC-2026-0505",
+        "cves": [
+          "CVE-2026-123580"
+        ],
         "severity": "HIGH",
-        "fixed_in": "0.13.5",
-        "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
-        "malicious": false
-      },
-      {
-        "package": "crates:pulldown-cmark",
-        "version": "0.13.4",
-        "advisory": "RUSTSEC-2026-0433",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.13.6",
-        "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
-        "malicious": false
+        "fixed_in": "0.26.0-beta.1",
+        "summary": "NSEC3 owner names not checked against the zone in DNSSEC validation (hickory-proto)",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/xrat-support",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00255,
+        "fix_published_at": "2026-03-12T20:56:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "xrat-support > hickory-proto"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -415,7 +441,23 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/xrat-app",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "xrat-app > arboard > wl-clipboard-rs > wayland-client > wayland-scanner > quick-xml"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -425,7 +467,31 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/xrat-app",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
+        ],
+        "paths": [
+          "xrat-app > arboard > wl-clipboard-rs > wayland-client > wayland-scanner > quick-xml"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use NsReader, but other packages depend on quick-xml"
+          ]
+        }
       },
       {
         "package": "crates:quinn-proto",
@@ -437,7 +503,24 @@
         "severity": "HIGH",
         "fixed_in": "0.11.15",
         "summary": "Quinn: Remote memory exhaustion in quinn-proto from unbounded out-of-order stream reassembly",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/xrat-web",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00841,
+        "fix_published_at": "2026-06-22T09:43:03Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "xrat-web > dioxus > dioxus-fullstack > reqwest > quinn > quinn-proto"
+        ]
       },
       {
         "package": "crates:quinn-proto",
@@ -447,7 +530,31 @@
         "severity": "HIGH",
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/xrat-web",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-09-14T10:08:32Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ACK_FREQUENCY"
+        ],
+        "paths": [
+          "xrat-web > dioxus > dioxus-fullstack > reqwest > quinn > quinn-proto"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+          ]
+        }
       },
       {
         "package": "crates:zip",
@@ -459,19 +566,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: legacy Shrink/Reduce/Implode decoder: denial of service from attacker-controlled ZIP64 uncompressed size",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "7.2.0",
-        "advisory": "GHSA-hjqx-j4rw-g7xv",
-        "cves": [
-          "CVE-2026-115908"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/xrat-app",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.0035,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
-        "malicious": false
+        "paths": [
+          "xrat-app > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -483,7 +595,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/xrat-app",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00461,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "xrat-app > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -493,23 +622,233 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/xrat-app",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
+        ],
+        "paths": [
+          "xrat-app > zip"
+        ]
+      },
+      {
+        "package": "crates:zip",
+        "version": "7.2.0",
+        "advisory": "RUSTSEC-2026-0369",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.0",
+        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/xrat-app",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:ZipStreamReader::extract",
+          "symbol:ZipArchive::extract"
+        ],
+        "paths": [
+          "xrat-app > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses ZipStreamReader::extract, ZipArchive::extract; only the project depends on zip"
+          ]
+        }
+      },
+      {
+        "package": "crates:pulldown-cmark",
+        "version": "0.13.4",
+        "advisory": "RUSTSEC-2026-0414",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.13.5",
+        "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/xrat-app",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ENABLE_WIKILINKS"
+        ],
+        "paths": [
+          "xrat-app > pulldown-cmark"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses ENABLE_WIKILINKS; only the project depends on pulldown-cmark"
+          ]
+        }
+      },
+      {
+        "package": "crates:pulldown-cmark",
+        "version": "0.13.4",
+        "advisory": "RUSTSEC-2026-0433",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.13.6",
+        "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/xrat-app",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ENABLE_WIKILINKS"
+        ],
+        "paths": [
+          "xrat-app > pulldown-cmark"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses ENABLE_WIKILINKS; only the project depends on pulldown-cmark"
+          ]
+        }
+      },
+      {
+        "package": "crates:zip",
+        "version": "7.2.0",
+        "advisory": "GHSA-hjqx-j4rw-g7xv",
+        "cves": [
+          "CVE-2026-115908"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/xrat-app",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00432,
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity",
+          "symbol:ZipArchive::extract"
+        ],
+        "paths": [
+          "xrat-app > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses ZipArchive::extract; only the project depends on zip"
+          ]
+        }
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "055265c5cc06013e7b3b1999b4e795292f9e9756",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 663
+      },
+      "scopes": {
+        "runtime": 623,
+        "optional": 40
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 46,
+      "details": "security/xrat.json",
+      "details_sha256": "b896a1412feeb6313fd0837834a21e19f49a9e4e6f0dad9613f3e815b64d45e2"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-m665-v7pm-7grj crates:zip@7.2.0 (conditional)",
+        "worst:GHSA-3v94-mw7p-v465 crates:hickory-proto@0.25.2 (conditional)",
+        "worst:RUSTSEC-2026-0505 crates:hickory-proto@0.25.2 (conditional)"
+      ],
+      "counts": {
+        "conditional": 10,
+        "present_unreachable": 4
+      },
+      "uncounted": 32,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 663,
+      "packages_checked": 663,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 663,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 92.2,
       "confidence": 0.8,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.75,
@@ -529,16 +868,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 92.2,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -887,5 +1223,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:22+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

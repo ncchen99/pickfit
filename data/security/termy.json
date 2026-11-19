@@ -1,0 +1,534 @@
+{
+ "slug": "termy",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "162b4842580489e6a98d1f5a7c761942651fa341",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 1002
+  },
+  "scopes": {
+   "runtime": 930,
+   "optional": 62,
+   "build": 3,
+   "workspace": 7
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 10
+ },
+ "assessment": {
+  "level": "not_shipped",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:RUSTSEC-2026-0340 crates:quinn-proto@0.11.17 (not_shipped)",
+   "worst:RUSTSEC-2026-0343 crates:quinn-proto@0.11.17 (not_shipped)"
+  ],
+  "counts": {
+   "not_shipped": 2
+  },
+  "uncounted": 8,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "partial",
+  "target": "repo_lockfile",
+  "packages_found": 1127,
+  "packages_checked": 1002,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 1002,
+    "gaps": []
+   },
+   {
+    "ecosystem": "swift",
+    "component": "next/Package.resolved",
+    "status": "not_scanned",
+    "packages": 1,
+    "gaps": [
+     "adapter.missing"
+    ]
+   },
+   {
+    "ecosystem": "npm",
+    "component": "packages/bun.lock",
+    "status": "not_scanned",
+    "packages": 124,
+    "gaps": [
+     "lockfile.unsupported_format"
+    ]
+   },
+   {
+    "ecosystem": "swift",
+    "component": "remote/Package.swift",
+    "status": "not_scanned",
+    "packages": 0,
+    "gaps": [
+     "adapter.missing"
+    ]
+   },
+   {
+    "ecosystem": "swift",
+    "component": "sdk/swift/Package.swift",
+    "status": "not_scanned",
+    "packages": 0,
+    "gaps": [
+     "adapter.missing"
+    ]
+   }
+  ],
+  "gaps": [
+   {
+    "code": "adapter.missing",
+    "category": "no_adapter",
+    "ecosystem": "swift",
+    "component": "next/Package.resolved",
+    "detail": "no reader for Package.resolved",
+    "capability": "adapter:swift",
+    "found": 1,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   },
+   {
+    "code": "lockfile.unsupported_format",
+    "category": "lockfile_unreadable",
+    "ecosystem": "npm",
+    "component": "packages/bun.lock",
+    "detail": "bun_lock is not read yet",
+    "capability": "read_lockfile:bun_lock",
+    "found": 124,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   },
+   {
+    "code": "adapter.missing",
+    "category": "no_adapter",
+    "ecosystem": "swift",
+    "component": "remote/Package.swift",
+    "detail": "no reader for Package.swift",
+    "capability": "adapter:swift",
+    "found": null,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   },
+   {
+    "code": "adapter.missing",
+    "category": "no_adapter",
+    "ecosystem": "swift",
+    "component": "sdk/swift/Package.swift",
+    "detail": "no reader for Package.swift",
+    "capability": "adapter:swift",
+    "found": null,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   }
+  ]
+ },
+ "sources": [
+  "github.com/lassejlv/termy@162b48425804",
+  "Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:webbrowser",
+   "version": "1.1.0",
+   "advisory": "RUSTSEC-2026-0257",
+   "severity": "UNKNOWN",
+   "fixed_in": "1.2.2",
+   "summary": "Unix `BROWSER` handling allows browser argument injection",
+   "malicious": false,
+   "aliases": [
+    "GHSA-2ph8-5cr8-hr33"
+   ],
+   "published": "2026-07-29T12:00:00Z",
+   "modified": "2026-10-12T18:00:10.938749232Z",
+   "purl": "pkg:cargo/webbrowser@1.1.0",
+   "scope": "runtime",
+   "paths": [
+    "termy > webbrowser"
+   ],
+   "workspace": "crates/desktop_app",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:BROWSER",
+    "symbol:webbrowser::open",
+    "symbol:webbrowser::open_browser"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "crates/desktop_app/src/terminal_view/command_palette/plugins.rs:1351: webbrowser::open(&url)"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rsa",
+   "version": "0.9.10",
+   "advisory": "RUSTSEC-2023-0071",
+   "cves": [
+    "CVE-2023-49092"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.10.0",
+   "summary": "Marvin Attack: potential key recovery through timing sidechannels",
+   "malicious": false,
+   "aliases": [
+    "CVE-2023-49092",
+    "GHSA-4grx-2x9w-596c",
+    "GHSA-c38w-74pg-36hr"
+   ],
+   "published": "2023-11-22T12:00:00Z",
+   "modified": "2026-11-08T23:15:02.609337046Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/rsa@0.9.10",
+   "scope": "runtime",
+   "paths": [
+    "termy > sqlx > sqlx-macros > sqlx-macros-core > sqlx-mysql > rsa"
+   ],
+   "workspace": "crates/desktop_app",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.0061,
+   "epss_percentile": 0.5003,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:lru",
+   "version": "0.12.5",
+   "advisory": "GHSA-rhfx-m35p-ff5j",
+   "severity": "LOW",
+   "fixed_in": "0.16.3",
+   "summary": "`IterMut` violates Stacked Borrows by invalidating internal pointer",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0002"
+   ],
+   "published": "2026-01-07T20:38:57Z",
+   "modified": "2026-09-10T03:50:59.064354050Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N/E:U",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-476"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/lru@0.12.5",
+   "scope": "runtime",
+   "paths": [
+    "termy_cli > ratatui > lru"
+   ],
+   "workspace": "crates/cli",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:IterMut"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "crates/core/src/terminal_engine/grid/ring.rs:14: pub(super) type IterMut<'a, T> = Chain<slice::IterMut<'a, T>, slice::IterMut<'a, T>>;",
+     "named only in files that do not import lru"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:libsqlite3-sys",
+   "version": "0.30.1",
+   "advisory": "RUSTSEC-2026-0459",
+   "cves": [
+    "CVE-2026-119375"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.39.0",
+   "summary": "`libsqlite3-sys` via C SQLite CVE-2026-119375",
+   "malicious": false,
+   "aliases": [
+    "BIT-sqlite-2026-119375",
+    "CVE-2026-119375",
+    "GHSA-72w2-rjgg-q729",
+    "RUSTSEC-2026-0502"
+   ],
+   "published": "2026-10-30T12:00:00Z",
+   "modified": "2026-11-17T13:41:05.770775012Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/libsqlite3-sys@0.30.1",
+   "scope": "runtime",
+   "paths": [
+    "termy > sqlx > sqlx-sqlite > libsqlite3-sys"
+   ],
+   "workspace": "crates/desktop_app",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00195,
+   "epss_percentile": 0.09275,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.17",
+   "advisory": "RUSTSEC-2026-0340",
+   "severity": "HIGH",
+   "fixed_in": "0.11.18",
+   "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+   "malicious": false,
+   "aliases": [
+    "GHSA-3g6h-r5qx-f6hq"
+   ],
+   "published": "2026-09-14T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.975478256Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.17",
+   "scope": "optional",
+   "paths": [
+    "termy_relay > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "crates/relay",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "option:ACK_FREQUENCY"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.17",
+   "advisory": "RUSTSEC-2026-0343",
+   "severity": "HIGH",
+   "fixed_in": "0.11.18",
+   "summary": "Outgoing datagram buffer accounting can panic the sender in quinn-proto",
+   "malicious": false,
+   "aliases": [
+    "GHSA-ppcp-v39w-8jq2"
+   ],
+   "published": "2026-09-14T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.961745820Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.17",
+   "scope": "optional",
+   "paths": [
+    "termy_relay > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "crates/relay",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.17",
+   "advisory": "RUSTSEC-2026-0338",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.18",
+   "summary": "Remote peer can panic quinn-proto with zero-length STREAM frames during unordered reads",
+   "malicious": false,
+   "aliases": [
+    "GHSA-465w-v9q3-7j98"
+   ],
+   "published": "2026-09-14T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.969514645Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.17",
+   "scope": "optional",
+   "paths": [
+    "termy_relay > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "crates/relay",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.17",
+   "advisory": "RUSTSEC-2026-0523",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.19",
+   "summary": "MAX_STREAM_DATA frame can open streams beyond the stream limit",
+   "malicious": false,
+   "aliases": [
+    "GHSA-53rm-773f-4q8c"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:04.789912316Z",
+   "purl": "pkg:cargo/quinn-proto@0.11.17",
+   "scope": "optional",
+   "paths": [
+    "termy_relay > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "crates/relay",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "option:MAX_STREAM_DATA"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use MAX_STREAM_DATA, but other packages depend on quinn-proto"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.17",
+   "advisory": "RUSTSEC-2026-0524",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.19",
+   "summary": "Long Retry token can panic or exhaust memory in a QUIC client",
+   "malicious": false,
+   "aliases": [
+    "GHSA-wppq-2f6r-wfvm"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:06.127108520Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.17",
+   "scope": "optional",
+   "paths": [
+    "termy_relay > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "crates/relay",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-udp",
+   "version": "0.5.15",
+   "advisory": "RUSTSEC-2026-0538",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.5.16",
+   "summary": "Receive loop can spin after a truncated datagram",
+   "malicious": false,
+   "aliases": [
+    "GHSA-6pp4-4cxf-xf88"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:08.844283231Z",
+   "purl": "pkg:cargo/quinn-udp@0.5.15",
+   "scope": "optional",
+   "paths": [
+    "termy_relay > reqwest > quinn > quinn-udp"
+   ],
+   "workspace": "crates/relay",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

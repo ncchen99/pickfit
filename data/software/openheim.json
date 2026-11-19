@@ -241,33 +241,114 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
-    "status": "clean",
+    "version": "sec.v2",
+    "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/weirdstuff-dev/openheim@f44cea2e11ba",
+      "github.com/weirdstuff-dev/openheim@fa2ad9336b7e",
       "Cargo.lock"
     ],
-    "packages_checked": 475,
-    "findings_total": 0,
-    "advisories_total": 0,
-    "findings": []
+    "packages_checked": 476,
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "crates:rmcp",
+        "version": "3.4.0",
+        "advisory": "RUSTSEC-2026-0461",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "3.6.0",
+        "summary": "Unbounded tool schema cache in Streamable HTTP server transport",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-20T05:53:35Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "openheim > rmcp"
+        ]
+      }
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "fa2ad9336b7e34d8db51a8c149b581f38420651f",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 476
+      },
+      "scopes": {
+        "runtime": 425,
+        "optional": 50,
+        "dev": 1
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 13,
+      "details": "security/openheim.json",
+      "details_sha256": "7b3837beed6d891e163275da4d347f5d39235780c1be2e6aa9627229bdd27add"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0461 crates:rmcp@3.4.0 (conditional)"
+      ],
+      "counts": {
+        "conditional": 1
+      },
+      "uncounted": 12,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 476,
+      "packages_checked": 476,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 476,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 77.8,
-      "raw_total": 77.8,
       "confidence": 0.7,
-      "cap": null,
-      "cap_reason": null,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.6875,
@@ -287,17 +368,14 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 77.8,
       "security": {
-        "level": "clean",
-        "basis": "status",
-        "effect": "none",
+        "level": "conditional",
+        "basis": "assessment",
+        "effect": "capped",
         "deduction": 0.0
       }
     },
@@ -718,5 +796,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

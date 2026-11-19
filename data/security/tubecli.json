@@ -1,0 +1,4068 @@
+{
+ "slug": "tubecli",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "60dbc3f6502cfa6b83ca0909a013ee7bda4c9c0d",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "npm": 170,
+   "pypi": 74
+  },
+  "scopes": {
+   "runtime": 215,
+   "build": 29
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 88
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-jqcg-44mw-7w3h npm:proxy-addr@2.0.7 (conditional)",
+   "worst:GHSA-35jp-ww65-95wh npm:axios@1.13.1 (conditional)",
+   "worst:GHSA-3g43-6gmg-66jw npm:axios@1.13.1 (conditional)"
+  ],
+  "counts": {
+   "conditional": 35
+  },
+  "uncounted": 53,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "partial",
+  "target": "repo_lockfile",
+  "packages_found": 246,
+  "packages_checked": 244,
+  "components": [
+   {
+    "ecosystem": "npm",
+    "component": "package-lock.json",
+    "status": "scanned",
+    "packages": 37,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "tubecli/extensions/browser/package-lock.json",
+    "status": "scanned",
+    "packages": 138,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "tubecli/extensions/browser_scripts/package-lock.json",
+    "status": "scanned",
+    "packages": 1,
+    "gaps": []
+   },
+   {
+    "ecosystem": "pypi",
+    "component": "pyproject.toml",
+    "status": "scanned",
+    "packages": 74,
+    "gaps": []
+   },
+   {
+    "ecosystem": "pypi",
+    "component": "tubecli/extensions/video_downloader/requirements.txt",
+    "status": "not_scanned",
+    "packages": 1,
+    "gaps": [
+     "lockfile.missing"
+    ]
+   },
+   {
+    "ecosystem": "pypi",
+    "component": "tubecli/extensions/video_editor/requirements.txt",
+    "status": "not_scanned",
+    "packages": 1,
+    "gaps": [
+     "lockfile.missing"
+    ]
+   }
+  ],
+  "gaps": [
+   {
+    "code": "lockfile.missing",
+    "category": "lockfile_missing",
+    "ecosystem": "pypi",
+    "component": "tubecli/extensions/video_downloader/requirements.txt",
+    "detail": "requirements without pinned versions",
+    "capability": "lockfile_from_manifest:pypi",
+    "found": 1,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   },
+   {
+    "code": "lockfile.missing",
+    "category": "lockfile_missing",
+    "ecosystem": "pypi",
+    "component": "tubecli/extensions/video_editor/requirements.txt",
+    "detail": "requirements without pinned versions",
+    "capability": "lockfile_from_manifest:pypi",
+    "found": 1,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   }
+  ]
+ },
+ "sources": [
+  "github.com/tubecreate/tubecli@60dbc3f6502c",
+  "package-lock.json",
+  "tubecli/extensions/browser/package-lock.json",
+  "tubecli/extensions/browser_scripts/package-lock.json",
+  "pyproject.toml (resolved today)"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-jqh4-m9w3-8hp9",
+   "cves": [
+    "CVE-2026-67317"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.18.0",
+   "summary": "Axios: Fetch adapter `ReadableStream` uploads bypass `maxBodyLength`",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-67317"
+   ],
+   "published": "2026-07-20T22:27:12Z",
+   "modified": "2026-09-10T03:50:52.448472902Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00602,
+   "epss_percentile": 0.49593,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service",
+    "symbol:ReadableStream",
+    "symbol:maxBodyLength"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "tubecli/extensions/browser/browser_manager.js:416: maxBodyLength: 50 * 1024 * 1024,"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-mwf2-3pr3-8698",
+   "cves": [
+    "CVE-2026-67318"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.18.0",
+   "summary": "Axios: HTTP/2 streamed uploads bypass `maxBodyLength`",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-67318"
+   ],
+   "published": "2026-07-20T22:37:03Z",
+   "modified": "2026-09-10T03:50:12.260991190Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00616,
+   "epss_percentile": 0.50335,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service",
+    "symbol:maxBodyLength"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "tubecli/extensions/browser/browser_manager.js:416: maxBodyLength: 50 * 1024 * 1024,"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-jqh4-m9w3-8hp9",
+   "cves": [
+    "CVE-2026-67317"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.18.0",
+   "summary": "Axios: Fetch adapter `ReadableStream` uploads bypass `maxBodyLength`",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-67317"
+   ],
+   "published": "2026-07-20T22:27:12Z",
+   "modified": "2026-09-10T03:50:52.448472902Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00602,
+   "epss_percentile": 0.49593,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service",
+    "symbol:ReadableStream",
+    "symbol:maxBodyLength"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "tubecli/extensions/browser/browser_manager.js:416: maxBodyLength: 50 * 1024 * 1024,"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-mwf2-3pr3-8698",
+   "cves": [
+    "CVE-2026-67318"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.18.0",
+   "summary": "Axios: HTTP/2 streamed uploads bypass `maxBodyLength`",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-67318"
+   ],
+   "published": "2026-07-20T22:37:03Z",
+   "modified": "2026-09-10T03:50:12.260991190Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00616,
+   "epss_percentile": 0.50335,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service",
+    "symbol:maxBodyLength"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "tubecli/extensions/browser/browser_manager.js:416: maxBodyLength: 50 * 1024 * 1024,"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:proxy-addr",
+   "version": "2.0.7",
+   "advisory": "GHSA-jqcg-44mw-7w3h",
+   "cves": [
+    "CVE-2026-90711"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "2.0.8",
+   "summary": "proxy-addr vulnerable to IP spoofing via IPv4-mapped IPv6 trust subnet",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-90711"
+   ],
+   "published": "2026-10-05T23:30:26Z",
+   "modified": "2026-10-05T23:45:07.322157228Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-290",
+    "CWE-348",
+    "CWE-697"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/proxy-addr@2.0.7",
+   "fix_published_at": "2026-09-15T06:12:45Z",
+   "scope": "runtime",
+   "paths": [
+    ". > express > proxy-addr"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.0026,
+   "epss_percentile": 0.1788,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-35jp-ww65-95wh",
+   "cves": [
+    "CVE-2026-44494"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.16.0",
+   "summary": "axios Vulnerable to Full Man-in-the-Middle via Prototype Pollution Gadget in `config.proxy`",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-44494"
+   ],
+   "published": "2026-05-29T16:04:00Z",
+   "modified": "2026-09-10T03:51:04.268287831Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321",
+    "CWE-441"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "fix_published_at": "2026-05-02T15:04:00Z",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.01057,
+   "epss_percentile": 0.65159,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-3g43-6gmg-66jw",
+   "cves": [
+    "CVE-2026-44495"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.15.2",
+   "summary": "axios Vulnerable to Credential Theft and Response Hijacking via Prototype Pollution Gadget in Config Merge",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-44495"
+   ],
+   "published": "2026-05-29T16:07:31Z",
+   "modified": "2026-09-10T03:51:04.440180855Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:L/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321",
+    "CWE-94"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "fix_published_at": "2026-04-21T17:53:03Z",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00854,
+   "epss_percentile": 0.59077,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-3pq3-5fj3-cg6v",
+   "cves": [
+    "CVE-2026-101898"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.20.0",
+   "summary": "Axios: HTTP/2 adapter bypasses configured DNS lookup and proxy controls",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-101898"
+   ],
+   "published": "2026-09-30T15:02:14Z",
+   "modified": "2026-09-30T15:15:04.067807024Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:H/SI:H/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "fix_published_at": "2026-08-26T08:20:14Z",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00545,
+   "epss_percentile": 0.46529,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-43fc-jf86-j433",
+   "cves": [
+    "CVE-2026-25639"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.13.5",
+   "summary": "Axios is Vulnerable to Denial of Service via __proto__ Key in mergeConfig",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-25639"
+   ],
+   "published": "2026-02-09T17:46:14Z",
+   "modified": "2026-09-10T03:50:34.100599628Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321",
+    "CWE-754"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.1",
+   "fix_published_at": "2026-02-08T11:05:13Z",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.02759,
+   "epss_percentile": 0.86561,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-542g-h47m-68v8",
+   "cves": [
+    "CVE-2026-101901"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.20.0",
+   "summary": "Axios: Denial of Service via Unhandled 'error' Event in HTTP/2 ClientHttp2Session Initialization",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-101901"
+   ],
+   "published": "2026-09-30T15:01:07Z",
+   "modified": "2026-09-30T15:15:04.061469672Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.1",
+   "fix_published_at": "2026-08-26T08:20:14Z",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00536,
+   "epss_percentile": 0.45972,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-6chq-wfr3-2hj9",
+   "cves": [
+    "CVE-2026-42035"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.15.1",
+   "summary": "Axios: Header Injection via Prototype Pollution",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42035"
+   ],
+   "published": "2026-05-05T00:25:47Z",
+   "modified": "2026-09-10T03:51:04.772235088Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-113",
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "fix_published_at": "2026-04-19T17:07:36Z",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00403,
+   "epss_percentile": 0.35256,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-777c-7fjr-54vf",
+   "cves": [
+    "CVE-2026-44488"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.16.0",
+   "summary": "Allocation of Resources Without Limits or Throttling in Axios",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-44488"
+   ],
+   "published": "2026-06-04T14:21:37Z",
+   "modified": "2026-09-10T03:50:48.738717543Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.1",
+   "fix_published_at": "2026-05-02T15:04:00Z",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00669,
+   "epss_percentile": 0.52756,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-hfxv-24rg-xrqf",
+   "cves": [
+    "CVE-2026-44496"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.16.0",
+   "summary": "Axios: Regular Expression Denial of Service (ReDoS) via Cookie Name Injection",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-44496"
+   ],
+   "published": "2026-06-04T14:24:06Z",
+   "modified": "2026-09-10T03:50:49.732285826Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1333",
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.1",
+   "fix_published_at": "2026-05-02T15:04:00Z",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.05405,
+   "epss_percentile": 0.92852,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-j5f8-grm9-p9fc",
+   "cves": [
+    "CVE-2026-44486"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.16.0",
+   "summary": "Axios: Proxy-Authorization header leaks to redirect target when proxy is re-evaluated to direct connection",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-44486"
+   ],
+   "published": "2026-06-04T14:15:01Z",
+   "modified": "2026-09-10T03:50:50.017253448Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "fix_published_at": "2026-05-02T15:04:00Z",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00552,
+   "epss_percentile": 0.46911,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-p92q-9vqr-4j8v",
+   "cves": [
+    "CVE-2026-44487"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.16.0",
+   "summary": "Axios: Proxy-Authorization Credential Leak to Origin Server Across HTTP-to-HTTPS Redirect in Axios Node.js HTTP Adapter",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-44487"
+   ],
+   "published": "2026-06-04T14:19:53Z",
+   "modified": "2026-09-10T03:51:09.218790313Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-201"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "fix_published_at": "2026-05-02T15:04:00Z",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00689,
+   "epss_percentile": 0.53521,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-pf86-5x62-jrwf",
+   "cves": [
+    "CVE-2026-42033"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.15.1",
+   "summary": "Axios: Prototype Pollution Gadgets - Response Tampering, Data Exfiltration, and Request Hijacking",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42033"
+   ],
+   "published": "2026-05-05T00:26:29Z",
+   "modified": "2026-09-10T03:51:06.658921258Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "fix_published_at": "2026-04-19T17:07:36Z",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00867,
+   "epss_percentile": 0.59473,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-pmwg-cvhr-8vh7",
+   "cves": [
+    "CVE-2026-42043"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.15.1",
+   "summary": "Axios: Incomplete Fix for CVE-2025-62718 — NO_PROXY Protection Bypassed via RFC 1122 Loopback Subnet (127.0.0.0/8) in Axios 1.15.0",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42043"
+   ],
+   "published": "2026-05-05T00:20:58Z",
+   "modified": "2026-09-10T03:51:06.691311805Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-183",
+    "CWE-441",
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "fix_published_at": "2026-04-19T17:07:36Z",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00711,
+   "epss_percentile": 0.54332,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-q8qp-cvcw-x6jj",
+   "cves": [
+    "CVE-2026-42264"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.15.2",
+   "summary": "Axios has prototype pollution read-side gadgets in HTTP adapter that allow credential injection and request hijacking",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42264"
+   ],
+   "published": "2026-05-05T00:18:38Z",
+   "modified": "2026-09-10T03:50:55.280623838Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "fix_published_at": "2026-04-21T17:53:03Z",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00797,
+   "epss_percentile": 0.57271,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-35jp-ww65-95wh",
+   "cves": [
+    "CVE-2026-44494"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.16.0",
+   "summary": "axios Vulnerable to Full Man-in-the-Middle via Prototype Pollution Gadget in `config.proxy`",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-44494"
+   ],
+   "published": "2026-05-29T16:04:00Z",
+   "modified": "2026-09-10T03:51:04.268287831Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321",
+    "CWE-441"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "fix_published_at": "2026-05-02T15:04:00Z",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.01057,
+   "epss_percentile": 0.65159,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-3g43-6gmg-66jw",
+   "cves": [
+    "CVE-2026-44495"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.15.2",
+   "summary": "axios Vulnerable to Credential Theft and Response Hijacking via Prototype Pollution Gadget in Config Merge",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-44495"
+   ],
+   "published": "2026-05-29T16:07:31Z",
+   "modified": "2026-09-10T03:51:04.440180855Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:L/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321",
+    "CWE-94"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "fix_published_at": "2026-04-21T17:53:03Z",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00854,
+   "epss_percentile": 0.59077,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-3pq3-5fj3-cg6v",
+   "cves": [
+    "CVE-2026-101898"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.20.0",
+   "summary": "Axios: HTTP/2 adapter bypasses configured DNS lookup and proxy controls",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-101898"
+   ],
+   "published": "2026-09-30T15:02:14Z",
+   "modified": "2026-09-30T15:15:04.067807024Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:H/SI:H/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "fix_published_at": "2026-08-26T08:20:14Z",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00545,
+   "epss_percentile": 0.46529,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-43fc-jf86-j433",
+   "cves": [
+    "CVE-2026-25639"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.13.5",
+   "summary": "Axios is Vulnerable to Denial of Service via __proto__ Key in mergeConfig",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-25639"
+   ],
+   "published": "2026-02-09T17:46:14Z",
+   "modified": "2026-09-10T03:50:34.100599628Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321",
+    "CWE-754"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.4",
+   "fix_published_at": "2026-02-08T11:05:13Z",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.02759,
+   "epss_percentile": 0.86561,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-542g-h47m-68v8",
+   "cves": [
+    "CVE-2026-101901"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.20.0",
+   "summary": "Axios: Denial of Service via Unhandled 'error' Event in HTTP/2 ClientHttp2Session Initialization",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-101901"
+   ],
+   "published": "2026-09-30T15:01:07Z",
+   "modified": "2026-09-30T15:15:04.061469672Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.4",
+   "fix_published_at": "2026-08-26T08:20:14Z",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00536,
+   "epss_percentile": 0.45972,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-6chq-wfr3-2hj9",
+   "cves": [
+    "CVE-2026-42035"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.15.1",
+   "summary": "Axios: Header Injection via Prototype Pollution",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42035"
+   ],
+   "published": "2026-05-05T00:25:47Z",
+   "modified": "2026-09-10T03:51:04.772235088Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-113",
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "fix_published_at": "2026-04-19T17:07:36Z",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00403,
+   "epss_percentile": 0.35256,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-777c-7fjr-54vf",
+   "cves": [
+    "CVE-2026-44488"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.16.0",
+   "summary": "Allocation of Resources Without Limits or Throttling in Axios",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-44488"
+   ],
+   "published": "2026-06-04T14:21:37Z",
+   "modified": "2026-09-10T03:50:48.738717543Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.4",
+   "fix_published_at": "2026-05-02T15:04:00Z",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00669,
+   "epss_percentile": 0.52756,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-hfxv-24rg-xrqf",
+   "cves": [
+    "CVE-2026-44496"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.16.0",
+   "summary": "Axios: Regular Expression Denial of Service (ReDoS) via Cookie Name Injection",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-44496"
+   ],
+   "published": "2026-06-04T14:24:06Z",
+   "modified": "2026-09-10T03:50:49.732285826Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1333",
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.4",
+   "fix_published_at": "2026-05-02T15:04:00Z",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.05405,
+   "epss_percentile": 0.92852,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-j5f8-grm9-p9fc",
+   "cves": [
+    "CVE-2026-44486"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.16.0",
+   "summary": "Axios: Proxy-Authorization header leaks to redirect target when proxy is re-evaluated to direct connection",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-44486"
+   ],
+   "published": "2026-06-04T14:15:01Z",
+   "modified": "2026-09-10T03:50:50.017253448Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "fix_published_at": "2026-05-02T15:04:00Z",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00552,
+   "epss_percentile": 0.46911,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-p92q-9vqr-4j8v",
+   "cves": [
+    "CVE-2026-44487"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.16.0",
+   "summary": "Axios: Proxy-Authorization Credential Leak to Origin Server Across HTTP-to-HTTPS Redirect in Axios Node.js HTTP Adapter",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-44487"
+   ],
+   "published": "2026-06-04T14:19:53Z",
+   "modified": "2026-09-10T03:51:09.218790313Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-201"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "fix_published_at": "2026-05-02T15:04:00Z",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00689,
+   "epss_percentile": 0.53521,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-pf86-5x62-jrwf",
+   "cves": [
+    "CVE-2026-42033"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.15.1",
+   "summary": "Axios: Prototype Pollution Gadgets - Response Tampering, Data Exfiltration, and Request Hijacking",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42033"
+   ],
+   "published": "2026-05-05T00:26:29Z",
+   "modified": "2026-09-10T03:51:06.658921258Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "fix_published_at": "2026-04-19T17:07:36Z",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00867,
+   "epss_percentile": 0.59473,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-pmwg-cvhr-8vh7",
+   "cves": [
+    "CVE-2026-42043"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.15.1",
+   "summary": "Axios: Incomplete Fix for CVE-2025-62718 — NO_PROXY Protection Bypassed via RFC 1122 Loopback Subnet (127.0.0.0/8) in Axios 1.15.0",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42043"
+   ],
+   "published": "2026-05-05T00:20:58Z",
+   "modified": "2026-09-10T03:51:06.691311805Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-183",
+    "CWE-441",
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "fix_published_at": "2026-04-19T17:07:36Z",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00711,
+   "epss_percentile": 0.54332,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-q8qp-cvcw-x6jj",
+   "cves": [
+    "CVE-2026-42264"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.15.2",
+   "summary": "Axios has prototype pollution read-side gadgets in HTTP adapter that allow credential injection and request hijacking",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42264"
+   ],
+   "published": "2026-05-05T00:18:38Z",
+   "modified": "2026-09-10T03:50:55.280623838Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "fix_published_at": "2026-04-21T17:53:03Z",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00797,
+   "epss_percentile": 0.57271,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:body-parser",
+   "version": "1.20.4",
+   "advisory": "GHSA-27r3-jxmh-p828",
+   "cves": [
+    "CVE-2026-111181"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.20.9",
+   "summary": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-111181"
+   ],
+   "published": "2026-10-23T20:53:11Z",
+   "modified": "2026-10-23T21:00:06.131613693Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/body-parser@1.20.4",
+   "fix_published_at": "2026-10-22T11:38:27Z",
+   "scope": "runtime",
+   "paths": [
+    ". > body-parser"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00388,
+   "epss_percentile": 0.33634,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:extract-zip",
+   "version": "2.0.1",
+   "advisory": "GHSA-7pqw-9j4j-h8q3",
+   "cves": [
+    "CVE-2026-19693"
+   ],
+   "severity": "HIGH",
+   "summary": "extract-zip allows arbitrary file writes through symlink archive entries",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-19693"
+   ],
+   "published": "2026-08-17T15:30:40Z",
+   "modified": "2026-09-08T21:10:57.608811Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/extract-zip@2.0.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > extract-zip"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00453,
+   "epss_percentile": 0.40062,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2",
+   "fixed_in": null
+  },
+  {
+   "package": "npm:extract-zip",
+   "version": "2.0.1",
+   "advisory": "GHSA-jmr9-qjv8-65gv",
+   "cves": [
+    "CVE-2026-56876"
+   ],
+   "severity": "HIGH",
+   "summary": "extract-zip unvalidated symlink path traversal",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-56876"
+   ],
+   "published": "2026-06-26T18:34:00Z",
+   "modified": "2026-09-10T03:51:08.769710691Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:N",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/extract-zip@2.0.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > extract-zip"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00526,
+   "epss_percentile": 0.45319,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2",
+   "fixed_in": null
+  },
+  {
+   "package": "npm:form-data",
+   "version": "4.0.5",
+   "advisory": "GHSA-hmw2-7cc7-3qxx",
+   "cves": [
+    "CVE-2026-12143"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "4.0.6",
+   "summary": "form-data: CRLF injection in form-data via unescaped multipart field names and filenames",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-12143"
+   ],
+   "published": "2026-06-15T17:26:26Z",
+   "modified": "2026-09-10T03:50:49.785679067Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-93"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/form-data@4.0.5",
+   "fix_published_at": "2026-06-12T17:37:53Z",
+   "scope": "runtime",
+   "paths": [
+    ". > axios > form-data"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00669,
+   "epss_percentile": 0.52755,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:path-to-regexp",
+   "version": "0.1.12",
+   "advisory": "GHSA-37ch-88jc-xwx2",
+   "cves": [
+    "CVE-2024-45296",
+    "CVE-2026-4867"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.1.13",
+   "summary": "path-to-regexp vulnerable to Regular Expression Denial of Service via multiple route parameters",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-45296",
+    "CVE-2026-4867",
+    "GHSA-9wv6-86v2-598j"
+   ],
+   "published": "2026-03-27T20:04:53Z",
+   "modified": "2026-09-10T03:50:36.768786245Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1333"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/path-to-regexp@0.1.12",
+   "fix_published_at": "2026-03-26T15:42:40Z",
+   "scope": "runtime",
+   "paths": [
+    ". > express > path-to-regexp"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00932,
+   "epss_percentile": 0.6145,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:picomatch",
+   "version": "2.3.1",
+   "advisory": "GHSA-c2c7-rcm5-vvqj",
+   "cves": [
+    "CVE-2026-33671"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.3.2",
+   "summary": "Picomatch has a ReDoS vulnerability via extglob quantifiers",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-33671"
+   ],
+   "published": "2026-03-25T21:12:07Z",
+   "modified": "2026-09-10T03:51:00.292614896Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1333"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/picomatch@2.3.1",
+   "fix_published_at": "2026-03-23T20:39:08Z",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > fast-glob > micromatch > picomatch"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00429,
+   "epss_percentile": 0.37889,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ws",
+   "version": "7.5.10",
+   "advisory": "GHSA-96hv-2xvq-fx4p",
+   "cves": [
+    "CVE-2026-48779"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "7.5.11",
+   "summary": "ws: Memory exhaustion DoS from tiny fragments and data chunks",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-48779"
+   ],
+   "published": "2026-06-15T16:34:23Z",
+   "modified": "2026-09-10T03:50:49.163643932Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1050",
+    "CWE-400",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/ws@7.5.10",
+   "fix_published_at": "2026-05-22T17:59:29Z",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > chrome-remote-interface > ws"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.01426,
+   "epss_percentile": 0.73511,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ws",
+   "version": "8.20.0",
+   "advisory": "GHSA-96hv-2xvq-fx4p",
+   "cves": [
+    "CVE-2026-48779"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "8.21.0",
+   "summary": "ws: Memory exhaustion DoS from tiny fragments and data chunks",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-48779"
+   ],
+   "published": "2026-06-15T16:34:23Z",
+   "modified": "2026-09-10T03:50:49.163643932Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1050",
+    "CWE-400",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/ws@8.20.0",
+   "fix_published_at": "2026-05-22T17:59:59Z",
+   "scope": "runtime",
+   "paths": [
+    ". > ws"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser_scripts/package-lock.json",
+   "kev": false,
+   "epss": 0.01426,
+   "epss_percentile": 0.73511,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-3p68-rc4w-qgx5",
+   "cves": [
+    "CVE-2025-62718"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.15.0",
+   "summary": "Axios has a NO_PROXY Hostname Normalization Bypass that Leads to SSRF",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-62718"
+   ],
+   "published": "2026-04-09T17:32:19Z",
+   "modified": "2026-09-10T03:50:42.452672741Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:N",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-441",
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.01207,
+   "epss_percentile": 0.69002,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-3w6x-2g7m-8v23",
+   "cves": [
+    "CVE-2026-42044"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.15.2",
+   "summary": "Axios: Invisible JSON Response Tampering via Prototype Pollution Gadget in `parseReviver`",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42044"
+   ],
+   "published": "2026-05-05T00:19:33Z",
+   "modified": "2026-09-10T03:50:45.398396828Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321",
+    "CWE-915"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00618,
+   "epss_percentile": 0.50411,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "symbol:parseReviver"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use parseReviver, but other packages depend on axios"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-42h9-826w-cgv3",
+   "cves": [
+    "CVE-2026-67313"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.18.0",
+   "summary": "Axios: Excessive recursion in formDataToJSON can cause denial of service",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-67313"
+   ],
+   "published": "2026-07-20T17:58:59Z",
+   "modified": "2026-09-10T03:51:10.187294734Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-674"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00521,
+   "epss_percentile": 0.45018,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-445q-vr5w-6q77",
+   "cves": [
+    "CVE-2026-42037"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.15.1",
+   "summary": "Axios: CRLF Injection in multipart/form-data body via unsanitized blob.type in formDataToStream",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42037"
+   ],
+   "published": "2026-05-05T00:40:45Z",
+   "modified": "2026-09-10T03:50:45.396631689Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-93"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00294,
+   "epss_percentile": 0.22462,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-4hqw-qxg8-jxx2",
+   "cves": [
+    "CVE-2026-101900"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.20.0",
+   "summary": "Axios: Fetch Adapter Header Injection via Inherited FormData getHeaders",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-101900"
+   ],
+   "published": "2026-09-30T15:34:46Z",
+   "modified": "2026-09-30T15:46:17.701967512Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:L/SI:H/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321",
+    "CWE-693",
+    "CWE-74"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00546,
+   "epss_percentile": 0.46578,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-5c9x-8gcm-mpgx",
+   "cves": [
+    "CVE-2026-42034"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.15.1",
+   "summary": "Axios' HTTP adapter-streamed uploads bypass maxBodyLength when maxRedirects: 0",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42034"
+   ],
+   "published": "2026-05-05T00:33:25Z",
+   "modified": "2026-09-10T03:50:45.707956373Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00327,
+   "epss_percentile": 0.26353,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-62hf-57xw-28j9",
+   "cves": [
+    "CVE-2026-42039"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.15.1",
+   "summary": "Axios: unbounded recursion in toFormData causes DoS via deeply nested request data",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42039"
+   ],
+   "published": "2026-05-05T00:34:32Z",
+   "modified": "2026-09-10T03:50:45.703789635Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-674"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00772,
+   "epss_percentile": 0.56449,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-7q8q-rj6j-mhjq",
+   "cves": [
+    "CVE-2026-67319"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.18.0",
+   "summary": "Axios: Nested axios option objects can consume polluted prototype values",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-67319"
+   ],
+   "published": "2026-07-20T22:37:31Z",
+   "modified": "2026-09-10T03:51:10.872027953Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00318,
+   "epss_percentile": 0.25242,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-898c-q2cr-xwhg",
+   "cves": [
+    "CVE-2026-44490"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.16.0",
+   "summary": "axios has DoS & Header Injection via Prototype Pollution Read-Side Gadgets in axios merge functions",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-44490"
+   ],
+   "published": "2026-05-29T15:54:57Z",
+   "modified": "2026-09-10T03:51:04.811379218Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00332,
+   "epss_percentile": 0.2699,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-9fr6-4gfg-395g",
+   "cves": [
+    "CVE-2026-101902"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.20.0",
+   "summary": "Axios: Prototype-Pollution Gadget in the Default Instance Allows Inherited Object.prototype.method to Override HTTP Method",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-101902"
+   ],
+   "published": "2026-09-30T15:12:49Z",
+   "modified": "2026-09-30T15:30:03.718390401Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:N/SI:H/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00414,
+   "epss_percentile": 0.36404,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-fvcv-3m26-pcqx",
+   "cves": [
+    "CVE-2026-40175"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.15.0",
+   "summary": "Axios has Unrestricted Cloud Metadata Exfiltration via Header Injection Chain",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-40175"
+   ],
+   "published": "2026-04-10T19:47:16Z",
+   "modified": "2026-09-10T03:50:44.273401032Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-113",
+    "CWE-444",
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.01979,
+   "epss_percentile": 0.80976,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-j8rh-479h-cp32",
+   "cves": [
+    "CVE-2026-101904"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.20.0",
+   "summary": "Axios: Header Injection via Inherited headers After Minimal Interceptor",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-101904"
+   ],
+   "published": "2026-09-30T15:35:14Z",
+   "modified": "2026-09-30T15:46:18.108444439Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:L/SI:H/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321",
+    "CWE-74"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00488,
+   "epss_percentile": 0.42787,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-m7pr-hjqh-92cm",
+   "cves": [
+    "CVE-2026-42038"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.15.1",
+   "summary": "Axios: no_proxy bypass via IP alias allows SSRF",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42038"
+   ],
+   "published": "2026-05-05T00:40:17Z",
+   "modified": "2026-09-10T03:51:06.293033204Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00324,
+   "epss_percentile": 0.25946,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-mmx7-hfxf-jppx",
+   "cves": [
+    "CVE-2026-67316"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.18.0",
+   "summary": "Axios: Prototype pollution gadgets can alter axios request construction",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-67316"
+   ],
+   "published": "2026-07-20T22:25:07Z",
+   "modified": "2026-09-10T03:50:52.753640421Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00424,
+   "epss_percentile": 0.37459,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-pmv8-rq9r-6j72",
+   "cves": [
+    "CVE-2026-67312"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.18.0",
+   "summary": "Axios: Deep formToJSON Key Recursion Can Cause Denial of Service",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-67312"
+   ],
+   "published": "2026-07-20T17:48:18Z",
+   "modified": "2026-09-10T03:51:11.689184227Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00521,
+   "epss_percentile": 0.45018,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-qj83-cq47-w5f8",
+   "cves": [
+    "CVE-2026-39865"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.13.2",
+   "summary": "Axios HTTP/2 Session Cleanup State Corruption Vulnerability",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-39865"
+   ],
+   "published": "2026-04-08T15:51:48Z",
+   "modified": "2026-09-10T03:51:02.817552720Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00744,
+   "epss_percentile": 0.55532,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-vf2m-468p-8v99",
+   "cves": [
+    "CVE-2026-42036"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.15.1",
+   "summary": "Axios: HTTP adapter streamed responses bypass maxContentLength",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42036"
+   ],
+   "published": "2026-05-05T00:26:57Z",
+   "modified": "2026-09-10T03:50:47.671121168Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00327,
+   "epss_percentile": 0.26353,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-vh66-26gq-q6x8",
+   "cves": [
+    "CVE-2026-101908"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.20.0",
+   "summary": "Axios: Prototype pollution gadget in fetch adapter can alter outbound requests",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-101908"
+   ],
+   "published": "2026-09-30T15:13:16Z",
+   "modified": "2026-09-30T15:30:04.438497820Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:L/SI:H/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00471,
+   "epss_percentile": 0.41468,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-w9j2-pvgh-6h63",
+   "cves": [
+    "CVE-2026-42041"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.15.1",
+   "summary": "Axios: Authentication Bypass via Prototype Pollution Gadget in `validateStatus` Merge Strategy",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42041"
+   ],
+   "published": "2026-05-05T00:21:39Z",
+   "modified": "2026-09-10T03:50:47.772907977Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321",
+    "CWE-287"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00656,
+   "epss_percentile": 0.52218,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "symbol:validateStatus"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use validateStatus, but other packages depend on axios"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-xx6v-rp6x-q39c",
+   "cves": [
+    "CVE-2026-42042"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.15.1",
+   "summary": "Axios: XSRF Token Cross-Origin Leakage via Prototype Pollution Gadget in `withXSRFToken` Boolean Coercion",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42042"
+   ],
+   "published": "2026-05-05T00:25:22Z",
+   "modified": "2026-09-10T03:51:07.425895085Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-183",
+    "CWE-201"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.0021,
+   "epss_percentile": 0.11268,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "symbol:withXSRFToken"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use withXSRFToken, but other packages depend on axios"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-3p68-rc4w-qgx5",
+   "cves": [
+    "CVE-2025-62718"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.15.0",
+   "summary": "Axios has a NO_PROXY Hostname Normalization Bypass that Leads to SSRF",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-62718"
+   ],
+   "published": "2026-04-09T17:32:19Z",
+   "modified": "2026-09-10T03:50:42.452672741Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:N",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-441",
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.01207,
+   "epss_percentile": 0.69002,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-3w6x-2g7m-8v23",
+   "cves": [
+    "CVE-2026-42044"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.15.2",
+   "summary": "Axios: Invisible JSON Response Tampering via Prototype Pollution Gadget in `parseReviver`",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42044"
+   ],
+   "published": "2026-05-05T00:19:33Z",
+   "modified": "2026-09-10T03:50:45.398396828Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321",
+    "CWE-915"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00618,
+   "epss_percentile": 0.50411,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "symbol:parseReviver"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use parseReviver, but other packages depend on axios"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-42h9-826w-cgv3",
+   "cves": [
+    "CVE-2026-67313"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.18.0",
+   "summary": "Axios: Excessive recursion in formDataToJSON can cause denial of service",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-67313"
+   ],
+   "published": "2026-07-20T17:58:59Z",
+   "modified": "2026-09-10T03:51:10.187294734Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-674"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00521,
+   "epss_percentile": 0.45018,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-445q-vr5w-6q77",
+   "cves": [
+    "CVE-2026-42037"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.15.1",
+   "summary": "Axios: CRLF Injection in multipart/form-data body via unsanitized blob.type in formDataToStream",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42037"
+   ],
+   "published": "2026-05-05T00:40:45Z",
+   "modified": "2026-09-10T03:50:45.396631689Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-93"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00294,
+   "epss_percentile": 0.22462,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-4hqw-qxg8-jxx2",
+   "cves": [
+    "CVE-2026-101900"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.20.0",
+   "summary": "Axios: Fetch Adapter Header Injection via Inherited FormData getHeaders",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-101900"
+   ],
+   "published": "2026-09-30T15:34:46Z",
+   "modified": "2026-09-30T15:46:17.701967512Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:L/SI:H/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321",
+    "CWE-693",
+    "CWE-74"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00546,
+   "epss_percentile": 0.46578,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-5c9x-8gcm-mpgx",
+   "cves": [
+    "CVE-2026-42034"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.15.1",
+   "summary": "Axios' HTTP adapter-streamed uploads bypass maxBodyLength when maxRedirects: 0",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42034"
+   ],
+   "published": "2026-05-05T00:33:25Z",
+   "modified": "2026-09-10T03:50:45.707956373Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00327,
+   "epss_percentile": 0.26353,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-62hf-57xw-28j9",
+   "cves": [
+    "CVE-2026-42039"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.15.1",
+   "summary": "Axios: unbounded recursion in toFormData causes DoS via deeply nested request data",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42039"
+   ],
+   "published": "2026-05-05T00:34:32Z",
+   "modified": "2026-09-10T03:50:45.703789635Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-674"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00772,
+   "epss_percentile": 0.56449,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-7q8q-rj6j-mhjq",
+   "cves": [
+    "CVE-2026-67319"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.18.0",
+   "summary": "Axios: Nested axios option objects can consume polluted prototype values",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-67319"
+   ],
+   "published": "2026-07-20T22:37:31Z",
+   "modified": "2026-09-10T03:51:10.872027953Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00318,
+   "epss_percentile": 0.25242,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-898c-q2cr-xwhg",
+   "cves": [
+    "CVE-2026-44490"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.16.0",
+   "summary": "axios has DoS & Header Injection via Prototype Pollution Read-Side Gadgets in axios merge functions",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-44490"
+   ],
+   "published": "2026-05-29T15:54:57Z",
+   "modified": "2026-09-10T03:51:04.811379218Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00332,
+   "epss_percentile": 0.2699,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-9fr6-4gfg-395g",
+   "cves": [
+    "CVE-2026-101902"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.20.0",
+   "summary": "Axios: Prototype-Pollution Gadget in the Default Instance Allows Inherited Object.prototype.method to Override HTTP Method",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-101902"
+   ],
+   "published": "2026-09-30T15:12:49Z",
+   "modified": "2026-09-30T15:30:03.718390401Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:N/SI:H/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00414,
+   "epss_percentile": 0.36404,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-fvcv-3m26-pcqx",
+   "cves": [
+    "CVE-2026-40175"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.15.0",
+   "summary": "Axios has Unrestricted Cloud Metadata Exfiltration via Header Injection Chain",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-40175"
+   ],
+   "published": "2026-04-10T19:47:16Z",
+   "modified": "2026-09-10T03:50:44.273401032Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-113",
+    "CWE-444",
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.01979,
+   "epss_percentile": 0.80976,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-j8rh-479h-cp32",
+   "cves": [
+    "CVE-2026-101904"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.20.0",
+   "summary": "Axios: Header Injection via Inherited headers After Minimal Interceptor",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-101904"
+   ],
+   "published": "2026-09-30T15:35:14Z",
+   "modified": "2026-09-30T15:46:18.108444439Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:L/SI:H/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321",
+    "CWE-74"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00488,
+   "epss_percentile": 0.42787,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-m7pr-hjqh-92cm",
+   "cves": [
+    "CVE-2026-42038"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.15.1",
+   "summary": "Axios: no_proxy bypass via IP alias allows SSRF",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42038"
+   ],
+   "published": "2026-05-05T00:40:17Z",
+   "modified": "2026-09-10T03:51:06.293033204Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00324,
+   "epss_percentile": 0.25946,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-mmx7-hfxf-jppx",
+   "cves": [
+    "CVE-2026-67316"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.18.0",
+   "summary": "Axios: Prototype pollution gadgets can alter axios request construction",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-67316"
+   ],
+   "published": "2026-07-20T22:25:07Z",
+   "modified": "2026-09-10T03:50:52.753640421Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00424,
+   "epss_percentile": 0.37459,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-pmv8-rq9r-6j72",
+   "cves": [
+    "CVE-2026-67312"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.18.0",
+   "summary": "Axios: Deep formToJSON Key Recursion Can Cause Denial of Service",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-67312"
+   ],
+   "published": "2026-07-20T17:48:18Z",
+   "modified": "2026-09-10T03:51:11.689184227Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00521,
+   "epss_percentile": 0.45018,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-vf2m-468p-8v99",
+   "cves": [
+    "CVE-2026-42036"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.15.1",
+   "summary": "Axios: HTTP adapter streamed responses bypass maxContentLength",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42036"
+   ],
+   "published": "2026-05-05T00:26:57Z",
+   "modified": "2026-09-10T03:50:47.671121168Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00327,
+   "epss_percentile": 0.26353,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-vh66-26gq-q6x8",
+   "cves": [
+    "CVE-2026-101908"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.20.0",
+   "summary": "Axios: Prototype pollution gadget in fetch adapter can alter outbound requests",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-101908"
+   ],
+   "published": "2026-09-30T15:13:16Z",
+   "modified": "2026-09-30T15:30:04.438497820Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:L/SI:H/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00471,
+   "epss_percentile": 0.41468,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-w9j2-pvgh-6h63",
+   "cves": [
+    "CVE-2026-42041"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.15.1",
+   "summary": "Axios: Authentication Bypass via Prototype Pollution Gadget in `validateStatus` Merge Strategy",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42041"
+   ],
+   "published": "2026-05-05T00:21:39Z",
+   "modified": "2026-09-10T03:50:47.772907977Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321",
+    "CWE-287"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00656,
+   "epss_percentile": 0.52218,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "symbol:validateStatus"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use validateStatus, but other packages depend on axios"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-xx6v-rp6x-q39c",
+   "cves": [
+    "CVE-2026-42042"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.15.1",
+   "summary": "Axios: XSRF Token Cross-Origin Leakage via Prototype Pollution Gadget in `withXSRFToken` Boolean Coercion",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42042"
+   ],
+   "published": "2026-05-05T00:25:22Z",
+   "modified": "2026-09-10T03:51:07.425895085Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-183",
+    "CWE-201"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.0021,
+   "epss_percentile": 0.11268,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "symbol:withXSRFToken"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use withXSRFToken, but other packages depend on axios"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:follow-redirects",
+   "version": "1.15.11",
+   "advisory": "GHSA-r4q5-vmmm-2653",
+   "cves": [
+    "CVE-2026-40895"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.16.0",
+   "summary": "follow-redirects leaks Custom Authentication Headers to Cross-Domain Redirect Targets",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-40895"
+   ],
+   "published": "2026-04-14T01:11:11Z",
+   "modified": "2026-11-02T23:30:04.262099247Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/follow-redirects@1.15.11",
+   "scope": "runtime",
+   "paths": [
+    ". > axios > follow-redirects"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00505,
+   "epss_percentile": 0.43919,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:picomatch",
+   "version": "2.3.1",
+   "advisory": "GHSA-3v7f-55p6-f55p",
+   "cves": [
+    "CVE-2026-33672"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.3.2",
+   "summary": "Picomatch: Method Injection in POSIX Character Classes causes incorrect Glob Matching",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-33672"
+   ],
+   "published": "2026-03-25T21:13:39Z",
+   "modified": "2026-09-10T03:50:36.949634538Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/picomatch@2.3.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > fast-glob > micromatch > picomatch"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00435,
+   "epss_percentile": 0.38489,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:qs",
+   "version": "6.14.1",
+   "advisory": "GHSA-4mjr-xmp4-gh2g",
+   "cves": [
+    "CVE-2026-82417"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.16.0",
+   "summary": "qs: Denial of Service via Attacker Controlled isBuffer",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-82417"
+   ],
+   "published": "2026-09-02T14:45:13Z",
+   "modified": "2026-09-10T03:51:14.991984096Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248",
+    "CWE-703"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/qs@6.14.1",
+   "scope": "runtime",
+   "paths": [
+    ". > body-parser > qs"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34537,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:qs",
+   "version": "6.14.1",
+   "advisory": "GHSA-6pq8-jhm2-2vcw",
+   "cves": [
+    "CVE-2026-110816"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.16.1",
+   "summary": "qs : qs.stringify with arrayFormat 'comma' throws an uncaught TypeError on array elements carrying a non-callable own toString (DoS)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-110816"
+   ],
+   "published": "2026-10-27T16:10:55Z",
+   "modified": "2026-10-27T16:15:05.324423680Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248",
+    "CWE-704"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/qs@6.14.1",
+   "scope": "runtime",
+   "paths": [
+    ". > body-parser > qs"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00368,
+   "epss_percentile": 0.31342,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:qs",
+   "version": "6.14.1",
+   "advisory": "GHSA-q8mj-m7cp-5q26",
+   "cves": [
+    "CVE-2026-8723"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.15.2",
+   "summary": "qs has a remotely triggerable DoS: qs.stringify crashes with TypeError on null/undefined entries in comma-format arrays when encodeValuesOnly is set",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-8723"
+   ],
+   "published": "2026-05-22T17:27:19Z",
+   "modified": "2026-09-10T03:50:55.285123128Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-476"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/qs@6.14.1",
+   "scope": "runtime",
+   "paths": [
+    ". > body-parser > qs"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00399,
+   "epss_percentile": 0.34944,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ws",
+   "version": "8.20.0",
+   "advisory": "GHSA-58qx-3vcg-4xpx",
+   "cves": [
+    "CVE-2026-45736"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.20.1",
+   "summary": "ws: Uninitialized memory disclosure",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-45736"
+   ],
+   "published": "2026-05-18T19:02:40Z",
+   "modified": "2026-09-10T03:51:04.572514669Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-908"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/ws@8.20.0",
+   "scope": "runtime",
+   "paths": [
+    ". > ws"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser_scripts/package-lock.json",
+   "kev": false,
+   "epss": 0.00745,
+   "epss_percentile": 0.55565,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.1",
+   "advisory": "GHSA-xhjh-pmcv-23jw",
+   "cves": [
+    "CVE-2026-42040"
+   ],
+   "severity": "LOW",
+   "fixed_in": "1.15.1",
+   "summary": "Axios: Null Byte Injection via Reverse-Encoding in AxiosURLSearchParams",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42040"
+   ],
+   "published": "2026-05-05T00:18:03Z",
+   "modified": "2026-09-10T03:50:48.032269033Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-116",
+    "CWE-626"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.1",
+   "scope": "runtime",
+   "paths": [
+    ". > playwright-with-fingerprints > browser-with-fingerprints > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00217,
+   "epss_percentile": 0.12289,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:axios",
+   "version": "1.13.4",
+   "advisory": "GHSA-xhjh-pmcv-23jw",
+   "cves": [
+    "CVE-2026-42040"
+   ],
+   "severity": "LOW",
+   "fixed_in": "1.15.1",
+   "summary": "Axios: Null Byte Injection via Reverse-Encoding in AxiosURLSearchParams",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42040"
+   ],
+   "published": "2026-05-05T00:18:03Z",
+   "modified": "2026-09-10T03:50:48.032269033Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-116",
+    "CWE-626"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/axios@1.13.4",
+   "scope": "runtime",
+   "paths": [
+    ". > axios"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00217,
+   "epss_percentile": 0.12289,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:body-parser",
+   "version": "1.20.4",
+   "advisory": "GHSA-v422-hmwv-36x6",
+   "cves": [
+    "CVE-2026-12590"
+   ],
+   "severity": "LOW",
+   "fixed_in": "1.20.6",
+   "summary": "body-parser vulnerable to denial of service when invalid limit value silently disables size enforcement",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-12590"
+   ],
+   "published": "2026-07-20T23:23:26Z",
+   "modified": "2026-09-10T03:50:53.014509971Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/body-parser@1.20.4",
+   "scope": "runtime",
+   "paths": [
+    ". > body-parser"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00412,
+   "epss_percentile": 0.36229,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:qs",
+   "version": "6.14.1",
+   "advisory": "GHSA-w7fw-mjwx-w883",
+   "cves": [
+    "CVE-2026-2391"
+   ],
+   "severity": "LOW",
+   "fixed_in": "6.14.2",
+   "summary": "qs's arrayLimit bypass in comma parsing allows denial of service",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-2391"
+   ],
+   "published": "2026-02-12T17:04:39Z",
+   "modified": "2026-09-10T03:50:35.973235487Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/qs@6.14.1",
+   "scope": "runtime",
+   "paths": [
+    ". > body-parser > qs"
+   ],
+   "workspace": ".",
+   "found_in": "tubecli/extensions/browser/package-lock.json",
+   "kev": false,
+   "epss": 0.00534,
+   "epss_percentile": 0.45871,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

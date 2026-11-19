@@ -363,34 +363,20 @@
     "cost_usd": 0.035012
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/maziluiosif/oxi@8a89392782c0",
+      "github.com/maziluiosif/oxi@215068f726be",
       "Cargo.lock",
       "frontends/code/package-lock.json",
       "frontends/tauri/package-lock.json",
       "frontends/tauri/src-tauri/Cargo.lock"
     ],
-    "packages_checked": 1090,
-    "findings_total": 4,
-    "advisories_total": 4,
+    "packages_checked": 1230,
+    "findings_total": 2,
+    "advisories_total": 2,
     "findings": [
-      {
-        "package": "npm:dompurify",
-        "version": "3.4.15",
-        "advisory": "GHSA-cg2g-xh64-v4q7",
-        "cves": [
-          "CVE-2026-116804"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify SAFE_FOR_TEMPLATES bypass: split template expressions survive in attached shadow root content on DOM output modes",
-        "malicious": false
-      },
       {
         "package": "crates:quick-xml",
         "version": "0.39.4",
@@ -399,7 +385,23 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "oxi > rfd > wayland-client > wayland-scanner > quick-xml"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -409,35 +411,169 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
-        "malicious": false
-      },
-      {
-        "package": "npm:dompurify",
-        "version": "3.4.15",
-        "advisory": "GHSA-mrv2-3pqr-j5jr",
-        "cves": [
-          "CVE-2026-116803"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
         ],
-        "severity": "HIGH",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
-        "malicious": false
+        "paths": [
+          "oxi > rfd > wayland-client > wayland-scanner > quick-xml"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use NsReader, but other packages depend on quick-xml"
+          ]
+        }
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "215068f726be875ffd158b5204e9cc8eeb4e068a",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 1048,
+        "npm": 182
+      },
+      "scopes": {
+        "runtime": 1095,
+        "optional": 5,
+        "peer": 2,
+        "build": 4,
+        "dev": 124
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 11,
+      "details": "security/oxi.json",
+      "details_sha256": "31dd98dbe7f5e7f7335d179fa9dcda49ea11aafaea42a61805d37e14dc723b33"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0194 crates:quick-xml@0.39.4 (conditional)",
+        "worst:RUSTSEC-2026-0195 crates:quick-xml@0.39.4 (conditional)"
+      ],
+      "counts": {
+        "conditional": 2
+      },
+      "uncounted": 9,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 1243,
+      "packages_checked": 1230,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 766,
+          "gaps": []
+        },
+        {
+          "ecosystem": "maven",
+          "component": "frontends/android/app/build.gradle.kts",
+          "status": "not_scanned",
+          "packages": 13,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "frontends/android/build.gradle.kts",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "frontends/code/package-lock.json",
+          "status": "scanned",
+          "packages": 75,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "frontends/tauri/package-lock.json",
+          "status": "scanned",
+          "packages": 109,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "frontends/tauri/src-tauri/Cargo.lock",
+          "status": "scanned",
+          "packages": 471,
+          "gaps": []
+        }
+      ],
+      "gaps": [
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "frontends/android/app/build.gradle.kts",
+          "detail": "no reader for build.gradle.kts",
+          "capability": "adapter:maven",
+          "found": 13,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "frontends/android/build.gradle.kts",
+          "detail": "no reader for build.gradle.kts",
+          "capability": "adapter:maven",
+          "found": 0,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7+visual.v1",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 75.0,
-      "raw_total": 89.3,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.75,
@@ -457,16 +593,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 89.3,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       },
@@ -915,5 +1048,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

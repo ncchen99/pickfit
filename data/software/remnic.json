@@ -123,9 +123,7 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -137,18 +135,6 @@
     "findings": [
       {
         "package": "npm:zod",
-        "version": "4.0.0",
-        "advisory": "GHSA-mrhx-c7xc-m3w5",
-        "cves": [
-          "CVE-2023-54404"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.6.6",
-        "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
-      },
-      {
-        "package": "npm:zod",
         "version": "3.25.76",
         "advisory": "GHSA-mrhx-c7xc-m3w5",
         "cves": [
@@ -157,23 +143,123 @@
         "severity": "HIGH",
         "fixed_in": "4.6.6",
         "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "registry:npm:@remnic/cli",
+        "kev": false,
+        "fix_published_at": "2026-10-11T16:18:23Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "npm:@remnic/cli > @remnic/cli > @remnic/core > zod"
+        ]
+      },
+      {
+        "package": "npm:zod",
+        "version": "4.0.0",
+        "advisory": "GHSA-mrhx-c7xc-m3w5",
+        "cves": [
+          "CVE-2023-54404"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.6.6",
+        "summary": "Zod can exhaust memory while validating oversized constrained collections",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "registry:npm:@remnic/cli",
+        "kev": false,
+        "fix_published_at": "2026-10-11T16:18:23Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "npm:@remnic/cli > @remnic/cli > @remnic/core > @honcho-ai/sdk > zod"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "registry_resolve",
+      "commit": null,
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "npm": 235
+      },
+      "scopes": {
+        "runtime": 186,
+        "build": 49
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 2,
+      "details": "security/remnic.json",
+      "details_sha256": "7062311185f94c900b1eb5f839317b6b29f81fcfb6a04e81a7fe0d1e1c9c23c7"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-mrhx-c7xc-m3w5 npm:zod@3.25.76 (conditional)",
+        "worst:GHSA-mrhx-c7xc-m3w5 npm:zod@4.0.0 (conditional)"
+      ],
+      "counts": {
+        "conditional": 2
+      },
+      "uncounted": 0,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "registry_resolve",
+      "packages_found": 235,
+      "packages_checked": 235,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "registry:npm:@remnic/cli",
+          "status": "scanned",
+          "packages": 245,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 80.5,
       "confidence": 0.4,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.6875,
@@ -193,16 +279,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 80.5,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -632,5 +715,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

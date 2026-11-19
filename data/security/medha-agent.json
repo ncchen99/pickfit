@@ -1,0 +1,670 @@
+{
+ "slug": "medha-agent",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "f3085ffe202b2f6da62dde2820df93afc72639c4",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 906,
+   "npm": 291
+  },
+  "scopes": {
+   "runtime": 1035,
+   "optional": 36,
+   "dev": 120,
+   "workspace": 6
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 15
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:RUSTSEC-2026-0340 crates:quinn-proto@0.11.16 (conditional)",
+   "worst:RUSTSEC-2026-0341 crates:quinn-proto@0.11.16 (conditional)",
+   "worst:GHSA-68fv-2mgg-jv7q npm:source-map-js@1.2.1 (not_shipped)"
+  ],
+  "counts": {
+   "conditional": 2,
+   "not_shipped": 2
+  },
+  "uncounted": 11,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 1197,
+  "packages_checked": 1197,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 587,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "apps/desktop/package-lock.json",
+    "status": "scanned",
+    "packages": 291,
+    "gaps": []
+   },
+   {
+    "ecosystem": "crates",
+    "component": "apps/desktop/src-tauri/Cargo.lock",
+    "status": "scanned",
+    "packages": 575,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/kashyaprajharsh/medha-agent@f3085ffe202b",
+  "Cargo.lock",
+  "apps/desktop/package-lock.json",
+  "apps/desktop/src-tauri/Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0340",
+   "severity": "HIGH",
+   "fixed_in": "0.11.18",
+   "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+   "malicious": false,
+   "aliases": [
+    "GHSA-3g6h-r5qx-f6hq"
+   ],
+   "published": "2026-09-14T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.975478256Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "fix_published_at": "2026-09-14T10:08:32Z",
+   "scope": "runtime",
+   "paths": [
+    "mcp > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "crates/mcp",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "option:ACK_FREQUENCY"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0341",
+   "severity": "HIGH",
+   "fixed_in": "0.11.17",
+   "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
+   "malicious": false,
+   "aliases": [
+    "GHSA-qfwj-vfxf-92j2"
+   ],
+   "published": "2026-08-17T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.969505433Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "fix_published_at": "2026-08-17T17:32:41Z",
+   "scope": "runtime",
+   "paths": [
+    "mcp > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "crates/mcp",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:glib",
+   "version": "0.18.5",
+   "advisory": "GHSA-wrw7-89jp-8q8g",
+   "severity": "MODERATE",
+   "fixed_in": "0.20.0",
+   "summary": "Unsoundness in `Iterator` and `DoubleEndedIterator` impls for `glib::VariantStrIter`",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2024-0429"
+   ],
+   "published": "2024-12-23T20:19:24Z",
+   "modified": "2025-10-28T06:29:26.473225Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/glib@0.18.5",
+   "scope": "runtime",
+   "paths": [
+    "medha-desktop > tauri > gtk > glib"
+   ],
+   "workspace": "apps/desktop/src-tauri",
+   "found_in": "apps/desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Iterator",
+    "symbol:DoubleEndedIterator",
+    "symbol:glib::VariantStrIter"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "crates/extensions/src/store.rs:129: pub fn enabled(&self) -> impl Iterator<Item = &ListedPlugin> {",
+     "named only in files that do not import glib"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0338",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.18",
+   "summary": "Remote peer can panic quinn-proto with zero-length STREAM frames during unordered reads",
+   "malicious": false,
+   "aliases": [
+    "GHSA-465w-v9q3-7j98"
+   ],
+   "published": "2026-09-14T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.969514645Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "scope": "runtime",
+   "paths": [
+    "mcp > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "crates/mcp",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0339",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.17",
+   "summary": "Unbounded growth of pending connection ID retirements in quinn-proto",
+   "malicious": false,
+   "aliases": [
+    "GHSA-hmxj-32vh-65vr"
+   ],
+   "published": "2026-08-17T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.956822776Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "scope": "runtime",
+   "paths": [
+    "mcp > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "crates/mcp",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0342",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.17",
+   "summary": "Zero-length DATAGRAM frames bypass the receive buffer limit in quinn-proto",
+   "malicious": false,
+   "aliases": [
+    "GHSA-2hv7-gw8g-gpq5"
+   ],
+   "published": "2026-08-17T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.956681478Z",
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "scope": "runtime",
+   "paths": [
+    "mcp > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "crates/mcp",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0523",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.19",
+   "summary": "MAX_STREAM_DATA frame can open streams beyond the stream limit",
+   "malicious": false,
+   "aliases": [
+    "GHSA-53rm-773f-4q8c"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:04.789912316Z",
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "scope": "runtime",
+   "paths": [
+    "mcp > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "crates/mcp",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "option:MAX_STREAM_DATA"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use MAX_STREAM_DATA, but other packages depend on quinn-proto"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0524",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.19",
+   "summary": "Long Retry token can panic or exhaust memory in a QUIC client",
+   "malicious": false,
+   "aliases": [
+    "GHSA-wppq-2f6r-wfvm"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:06.127108520Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "scope": "runtime",
+   "paths": [
+    "mcp > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "crates/mcp",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-udp",
+   "version": "0.5.15",
+   "advisory": "RUSTSEC-2026-0538",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.5.16",
+   "summary": "Receive loop can spin after a truncated datagram",
+   "malicious": false,
+   "aliases": [
+    "GHSA-6pp4-4cxf-xf88"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:08.844283231Z",
+   "purl": "pkg:cargo/quinn-udp@0.5.15",
+   "scope": "runtime",
+   "paths": [
+    "mcp > reqwest > quinn > quinn-udp"
+   ],
+   "workspace": "crates/mcp",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:source-map-js",
+   "version": "1.2.1",
+   "advisory": "GHSA-68fv-2mgg-jv7q",
+   "cves": [
+    "CVE-2026-93749"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.2.2",
+   "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-93749"
+   ],
+   "published": "2026-09-18T18:31:44Z",
+   "modified": "2026-10-05T23:45:07.974936711Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1284"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/source-map-js@1.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > vite > postcss > source-map-js"
+   ],
+   "workspace": ".",
+   "found_in": "apps/desktop/package-lock.json",
+   "kev": false,
+   "epss": 0.00455,
+   "epss_percentile": 0.40249,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "6.4.3",
+   "advisory": "GHSA-587h-7wmj-h5pm",
+   "cves": [
+    "CVE-2026-112942"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "6.4.4",
+   "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112942"
+   ],
+   "published": "2026-10-20T19:48:25Z",
+   "modified": "2026-10-20T20:00:04.608979840Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-77"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@6.4.3",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "apps/desktop/package-lock.json",
+   "kev": false,
+   "epss": 0.01694,
+   "epss_percentile": 0.77635,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "6.4.3",
+   "advisory": "GHSA-698v-4r3x-3vcv",
+   "cves": [
+    "CVE-2026-112943"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.4",
+   "summary": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112943"
+   ],
+   "published": "2026-10-20T18:30:24Z",
+   "modified": "2026-10-20T18:45:09.467993691Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-78"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@6.4.3",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "apps/desktop/package-lock.json",
+   "kev": false,
+   "epss": 0.00414,
+   "epss_percentile": 0.36473,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "6.4.3",
+   "advisory": "GHSA-r825-w8mm-5pxw",
+   "cves": [
+    "CVE-2026-112944"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.4",
+   "summary": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112944"
+   ],
+   "published": "2026-10-20T19:51:52Z",
+   "modified": "2026-10-20T20:00:04.608907013Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-88"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@6.4.3",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "apps/desktop/package-lock.json",
+   "kev": false,
+   "epss": 0.00705,
+   "epss_percentile": 0.54125,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "6.4.3",
+   "advisory": "GHSA-rq7h-c2jc-7f22",
+   "cves": [
+    "CVE-2026-112946"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.4",
+   "summary": "Vite: Files outside `server.fs.allow` could be served when project paths match system paths on non-Windows machine",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112946"
+   ],
+   "published": "2026-10-21T16:47:42Z",
+   "modified": "2026-10-21T17:00:06.336868869Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22",
+    "CWE-284"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@6.4.3",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "apps/desktop/package-lock.json",
+   "kev": false,
+   "epss": 0.00852,
+   "epss_percentile": 0.59015,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "6.4.3",
+   "advisory": "GHSA-9jrq-w75r-8gcw",
+   "cves": [
+    "CVE-2026-112945"
+   ],
+   "severity": "LOW",
+   "fixed_in": "6.4.4",
+   "summary": "Vite: Cross origin script execution through Vite custom middleware",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112945"
+   ],
+   "published": "2026-10-21T16:48:14Z",
+   "modified": "2026-10-21T17:00:26.569382874Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-80"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@6.4.3",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "apps/desktop/package-lock.json",
+   "kev": false,
+   "epss": 0.00672,
+   "epss_percentile": 0.52858,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

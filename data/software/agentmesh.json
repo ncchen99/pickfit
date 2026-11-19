@@ -261,34 +261,152 @@
     "tools": []
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
-    "status": "clean",
-    "unchecked_reason": null,
+    "version": "sec.v2",
+    "status": "unchecked",
+    "unchecked_reason": "lockfile_not_supported",
     "sources": [
-      "github.com/google/agentmesh@e4787a050bcc",
+      "github.com/google/agentmesh@8474138fc806",
       "go.mod",
       "sdk/js/package-lock.json"
     ],
-    "packages_checked": 362,
+    "packages_checked": 427,
     "findings_total": 0,
     "advisories_total": 0,
-    "findings": []
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:06:03+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "8474138fc806960e873cf69a6387bfe93139088c",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "go": 151,
+        "npm": 276
+      },
+      "scopes": {
+        "runtime": 363,
+        "dev": 64
+      },
+      "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 2,
+      "details": "security/agentmesh.json",
+      "details_sha256": "27864ff752d98b020d4d951dc52b65fdfbb9d7a170395a827efa1a837dd48d66"
+    },
+    "assessment": {
+      "level": "none",
+      "policy_version": "sec.v2",
+      "reasons": [],
+      "counts": {},
+      "uncounted": 2,
+      "assessed_at": "2026-11-20T00:06:03+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 520,
+      "packages_checked": 427,
+      "components": [
+        {
+          "ecosystem": "go",
+          "component": "go.mod",
+          "status": "scanned",
+          "packages": 151,
+          "gaps": []
+        },
+        {
+          "ecosystem": "maven",
+          "component": "mobile/agentmesh-node-app/android/build.gradle.kts",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "pub",
+          "component": "mobile/agentmesh-node-app/pubspec.lock",
+          "status": "not_scanned",
+          "packages": 89,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "sdk/js/package-lock.json",
+          "status": "scanned",
+          "packages": 276,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "cmd/chaos-agent/requirements.txt",
+          "status": "not_scanned",
+          "packages": 4,
+          "gaps": [
+            "lockfile.missing"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "mobile/agentmesh-node-app/android/build.gradle.kts",
+          "detail": "no reader for build.gradle.kts",
+          "capability": "adapter:maven",
+          "found": 0,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "pub",
+          "component": "mobile/agentmesh-node-app/pubspec.lock",
+          "detail": "no reader for pubspec.lock",
+          "capability": "adapter:pub",
+          "found": 89,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "lockfile.missing",
+          "category": "lockfile_missing",
+          "ecosystem": "pypi",
+          "component": "cmd/chaos-agent/requirements.txt",
+          "detail": "requirements without pinned versions",
+          "capability": "lockfile_from_manifest:pypi",
+          "found": 4,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 86.0,
-      "raw_total": 86.0,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5625,
@@ -308,16 +426,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 86.0,
       "security": {
-        "level": "clean",
-        "basis": "status",
+        "level": "none",
+        "basis": "assessment",
         "effect": "none",
         "deduction": 0.0
       }
@@ -632,5 +747,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:06:03+08:00"
 }

@@ -93,13 +93,11 @@
     "runs": []
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/pegainfer-project/pegainfer@8eeca7dd6692",
+      "github.com/pegainfer-project/pegainfer@a10b21fd54a4",
       "Cargo.lock"
     ],
     "packages_checked": 720,
@@ -114,7 +112,31 @@
         "severity": "HIGH",
         "fixed_in": "0.13.5",
         "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "pegainfer-frontend",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-21T19:45:37Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ENABLE_WIKILINKS"
+        ],
+        "paths": [
+          "pegainfer-frontend > vllm-server > vllm-proto > tonic-prost-build > prost-build > pulldown-cmark"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ENABLE_WIKILINKS, but other packages depend on pulldown-cmark"
+          ]
+        }
       },
       {
         "package": "crates:pulldown-cmark",
@@ -124,23 +146,105 @@
         "severity": "HIGH",
         "fixed_in": "0.13.6",
         "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "pegainfer-frontend",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-30T08:50:18Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ENABLE_WIKILINKS"
+        ],
+        "paths": [
+          "pegainfer-frontend > vllm-server > vllm-proto > tonic-prost-build > prost-build > pulldown-cmark"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ENABLE_WIKILINKS, but other packages depend on pulldown-cmark"
+          ]
+        }
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "a10b21fd54a494eb4b3239e5f16dd710599f9e5c",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 720
+      },
+      "scopes": {
+        "runtime": 671,
+        "optional": 15,
+        "platform": 2,
+        "dev": 32
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 20,
+      "details": "security/pegainfer.json",
+      "details_sha256": "efdad8e0ee5b62e29210903c5ee07a921605ecf225d43dc520fc92339030d40c"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0414 crates:pulldown-cmark@0.13.3 (conditional)",
+        "worst:RUSTSEC-2026-0433 crates:pulldown-cmark@0.13.3 (conditional)"
+      ],
+      "counts": {
+        "conditional": 2
+      },
+      "uncounted": 18,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 720,
+      "packages_checked": 720,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 720,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 76.9,
-      "raw_total": 76.9,
       "confidence": 0.5,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.6875,
@@ -160,16 +264,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 76.9,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -485,5 +586,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

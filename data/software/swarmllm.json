@@ -82,41 +82,72 @@
     "runs": []
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/enapt/SwarmLLM@d3040a3c59b3",
+      "github.com/enapt/SwarmLLM@f127aee614c8",
       "Cargo.lock",
+      "js/package-lock.json",
       "python/pyproject.toml (resolved today)"
     ],
-    "packages_checked": 606,
+    "packages_checked": 605,
     "findings_total": 4,
     "advisories_total": 4,
     "findings": [
       {
-        "package": "crates:zip",
-        "version": "9.0.4",
-        "advisory": "GHSA-m665-v7pm-7grj",
+        "package": "crates:hickory-proto",
+        "version": "0.25.2",
+        "advisory": "GHSA-3v94-mw7p-v465",
         "cves": [
-          "CVE-2026-115905"
+          "CVE-2026-123607"
         ],
-        "severity": "CRITICAL",
-        "fixed_in": "9.0.5",
-        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "hickory-proto: NSEC3 closest-encloser proof validation enters unbounded loop on cross-zone responses",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00343,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "swarmllm > libp2p > libp2p-mdns > hickory-proto"
+        ]
       },
       {
         "package": "crates:hickory-proto",
         "version": "0.25.2",
-        "advisory": "GHSA-3v94-mw7p-v465",
-        "cves": [],
+        "advisory": "RUSTSEC-2026-0505",
+        "cves": [
+          "CVE-2026-123580"
+        ],
         "severity": "HIGH",
-        "fixed_in": null,
-        "summary": "hickory-proto: NSEC3 closest-encloser proof validation enters unbounded loop on cross-zone responses",
-        "malicious": false
+        "fixed_in": "0.26.0-beta.1",
+        "summary": "NSEC3 owner names not checked against the zone in DNSSEC validation (hickory-proto)",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00255,
+        "fix_published_at": "2026-03-12T20:56:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "swarmllm > libp2p > libp2p-mdns > hickory-proto"
+        ]
       },
       {
         "package": "crates:hickory-resolver",
@@ -128,7 +159,32 @@
         "severity": "HIGH",
         "fixed_in": "0.26.2",
         "summary": "hickory-resolver: Resolver::lookup() and Resolver::lookup_ip() APIs obscure DNSSEC validation failures",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00231,
+        "fix_published_at": "2026-09-03T19:35:39Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:Resolver::lookup",
+          "symbol:Resolver::lookup_ip"
+        ],
+        "paths": [
+          "swarmllm > libp2p > libp2p-dns > hickory-resolver"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use Resolver::lookup, Resolver::lookup_ip, but other packages depend on hickory-resolver"
+          ]
+        }
       },
       {
         "package": "crates:yamux",
@@ -140,23 +196,115 @@
         "severity": "HIGH",
         "fixed_in": "0.13.10",
         "summary": "Yamux vulnerable to remote Panic via malformed Data frame with SYN set and len = 262145",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00524,
+        "fix_published_at": "2026-03-09T14:02:49Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "swarmllm > libp2p > libp2p-yamux > yamux"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "f127aee614c882124d864ed973b2ca35583a13ce",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 590,
+        "npm": 1,
+        "pypi": 14
+      },
+      "scopes": {
+        "runtime": 462,
+        "optional": 33,
+        "dev": 8,
+        "workspace": 102
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 19,
+      "details": "security/swarmllm.json",
+      "details_sha256": "12ef0987a2ce3cb4a127745e71fe8758193792897799d300395cbbd1304bb4c6"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-3v94-mw7p-v465 crates:hickory-proto@0.25.2 (conditional)",
+        "worst:RUSTSEC-2026-0505 crates:hickory-proto@0.25.2 (conditional)",
+        "worst:GHSA-5j98-2g5x-46v6 crates:hickory-resolver@0.25.2 (conditional)"
+      ],
+      "counts": {
+        "conditional": 4
+      },
+      "uncounted": 15,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 605,
+      "packages_checked": 605,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 590,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "js/package-lock.json",
+          "status": "scanned",
+          "packages": 1,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "python/pyproject.toml",
+          "status": "scanned",
+          "packages": 14,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 83.5,
       "confidence": 0.5,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.75,
@@ -176,16 +324,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 83.5,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -638,5 +783,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:23+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

@@ -1,0 +1,1837 @@
+{
+ "slug": "navin",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "8b3dad2910906bc49bbde7418873cf9552a1a731",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 144,
+   "npm": 984,
+   "pypi": 106
+  },
+  "scopes": {
+   "runtime": 877,
+   "peer": 4,
+   "dev": 353
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 38
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-gfr2-rv44-r23c npm:markdown-it@14.3.2 (conditional)",
+   "worst:GHSA-mrhx-c7xc-m3w5 npm:zod@4.4.3 (conditional)",
+   "worst:GHSA-5fqc-mrg8-w798 pypi:dulwich@0.25.2 (conditional)"
+  ],
+  "counts": {
+   "conditional": 10,
+   "not_shipped": 5
+  },
+  "uncounted": 23,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "partial",
+  "target": "repo_lockfile",
+  "packages_found": 1268,
+  "packages_checked": 1234,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "crates/navin-engine/Cargo.lock",
+    "status": "scanned",
+    "packages": 144,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "webui/package-lock.json",
+    "status": "scanned",
+    "packages": 984,
+    "gaps": []
+   },
+   {
+    "ecosystem": "crates",
+    "component": "navin-core/Cargo.toml",
+    "status": "not_scanned",
+    "packages": 34,
+    "gaps": [
+     "lockfile.missing"
+    ]
+   },
+   {
+    "ecosystem": "pypi",
+    "component": "navin-core/pyproject.toml",
+    "status": "not_scanned",
+    "packages": 0,
+    "gaps": [
+     "resolve.pyproject_failed"
+    ]
+   },
+   {
+    "ecosystem": "pypi",
+    "component": "pyproject.toml",
+    "status": "scanned",
+    "packages": 106,
+    "gaps": []
+   }
+  ],
+  "gaps": [
+   {
+    "code": "lockfile.missing",
+    "category": "lockfile_missing",
+    "ecosystem": "crates",
+    "component": "navin-core/Cargo.toml",
+    "detail": "Cargo.toml without a lockfile",
+    "capability": "lockfile_from_manifest:crates",
+    "found": 34,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   },
+   {
+    "code": "resolve.pyproject_failed",
+    "category": "resolve_failed",
+    "ecosystem": "pypi",
+    "component": "navin-core/pyproject.toml",
+    "detail": "uv pip compile --no-build did not resolve it",
+    "capability": "resolve_in_sandbox",
+    "found": null,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   }
+  ]
+ },
+ "sources": [
+  "github.com/Navinspire-ia/navin@8b3dad291090",
+  "crates/navin-engine/Cargo.lock",
+  "webui/package-lock.json",
+  "pyproject.toml (resolved today)"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "npm:markdown-it",
+   "version": "14.3.2",
+   "advisory": "GHSA-gfr2-rv44-r23c",
+   "cves": [
+    "CVE-2026-111758"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "14.3.3",
+   "summary": "markdown-it: Quadratic-time rendering of a single multi-line link reference definition with default options (regression since 14.0)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-111758"
+   ],
+   "published": "2026-10-20T20:28:44Z",
+   "modified": "2026-10-20T20:45:05.953469039Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/markdown-it@14.3.2",
+   "fix_published_at": "2026-10-16T01:47:54Z",
+   "scope": "runtime",
+   "paths": [
+    ". > tiptap-markdown > markdown-it"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.0055,
+   "epss_percentile": 0.46803,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:zod",
+   "version": "4.4.3",
+   "advisory": "GHSA-mrhx-c7xc-m3w5",
+   "cves": [
+    "CVE-2023-54404"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "4.6.6",
+   "summary": "Zod can exhaust memory while validating oversized constrained collections",
+   "malicious": false,
+   "aliases": [
+    "CVE-2023-54404"
+   ],
+   "published": "2026-10-01T18:32:46Z",
+   "modified": "2026-10-23T18:30:09.376405885Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/zod@4.4.3",
+   "fix_published_at": "2026-10-11T16:18:23Z",
+   "scope": "runtime",
+   "paths": [
+    ". > zod"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "pypi:dulwich",
+   "version": "0.25.2",
+   "advisory": "GHSA-5fqc-mrg8-w798",
+   "cves": [
+    "CVE-2026-114097"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.2.8",
+   "summary": "Dulwich: Symlink directory traversal in filter-branch index_filter via cross-commit state persistence",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-114097"
+   ],
+   "published": "2026-10-02T18:53:05Z",
+   "modified": "2026-10-21T10:57:27.569314986Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:H",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-22",
+    "CWE-59"
+   ],
+   "dos_only": false,
+   "purl": "pkg:pypi/dulwich@0.25.2",
+   "fix_published_at": "2026-07-05T15:57:53Z",
+   "scope": "runtime",
+   "paths": [
+    "pyproject.toml > dulwich"
+   ],
+   "found_in": "pyproject.toml",
+   "kev": false,
+   "epss": 0.00186,
+   "epss_percentile": 0.08339,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "pypi:dulwich",
+   "version": "0.25.2",
+   "advisory": "GHSA-897w-fcg9-f6xj",
+   "cves": [
+    "CVE-2026-42305"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.2.5",
+   "summary": "Dulwich has an arbitrary file write via NTFS-hostile tree entries on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42305",
+    "PYSEC-2026-2463"
+   ],
+   "published": "2026-05-28T22:28:06Z",
+   "modified": "2026-09-10T03:51:04.871562898Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:pypi/dulwich@0.25.2",
+   "fix_published_at": "2026-05-28T22:27:39Z",
+   "scope": "runtime",
+   "paths": [
+    "pyproject.toml > dulwich"
+   ],
+   "found_in": "pyproject.toml",
+   "kev": false,
+   "epss": 0.00635,
+   "epss_percentile": 0.5126,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "pypi:dulwich",
+   "version": "0.25.2",
+   "advisory": "GHSA-8mcx-5rqc-vhmf",
+   "cves": [
+    "CVE-2026-114094"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.2.9",
+   "summary": "Dulwich: Arbitrary File Write (RCE) on Windows via Unvalidated Drive Letters in Tree Paths",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-114094"
+   ],
+   "published": "2026-10-02T19:14:21Z",
+   "modified": "2026-10-21T10:57:27.354775093Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:pypi/dulwich@0.25.2",
+   "fix_published_at": "2026-07-06T20:57:04Z",
+   "scope": "runtime",
+   "paths": [
+    "pyproject.toml > dulwich"
+   ],
+   "found_in": "pyproject.toml",
+   "kev": false,
+   "epss": 0.0095,
+   "epss_percentile": 0.61987,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "pypi:dulwich",
+   "version": "0.25.2",
+   "advisory": "GHSA-8w8g-wq8h-fq33",
+   "cves": [
+    "CVE-2026-114096"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.2.8",
+   "summary": "Dulwich: Symlink write-through in checkout(paths=[]) via raw os.open bypasses all symlink protections",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-114096"
+   ],
+   "published": "2026-10-02T18:53:35Z",
+   "modified": "2026-10-21T10:57:28.880982828Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:H",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-59",
+    "CWE-61"
+   ],
+   "dos_only": false,
+   "purl": "pkg:pypi/dulwich@0.25.2",
+   "fix_published_at": "2026-07-05T15:57:53Z",
+   "scope": "runtime",
+   "paths": [
+    "pyproject.toml > dulwich"
+   ],
+   "found_in": "pyproject.toml",
+   "kev": false,
+   "epss": 0.00155,
+   "epss_percentile": 0.04698,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "pypi:dulwich",
+   "version": "0.25.2",
+   "advisory": "GHSA-9277-mp7x-85jf",
+   "cves": [
+    "CVE-2026-42563"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.2.5",
+   "summary": "Dulwich Vulnerable to Command Injection via Merge Driver Path",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42563",
+    "PYSEC-2026-2464"
+   ],
+   "published": "2026-05-28T22:29:22Z",
+   "modified": "2026-09-10T03:51:05.165324181Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-78"
+   ],
+   "dos_only": false,
+   "purl": "pkg:pypi/dulwich@0.25.2",
+   "fix_published_at": "2026-05-28T22:27:39Z",
+   "scope": "runtime",
+   "paths": [
+    "pyproject.toml > dulwich"
+   ],
+   "found_in": "pyproject.toml",
+   "kev": false,
+   "epss": 0.00555,
+   "epss_percentile": 0.47081,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "pypi:dulwich",
+   "version": "0.25.2",
+   "advisory": "GHSA-cm62-gvxx-vmxx",
+   "cves": [
+    "CVE-2026-114098"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.2.8",
+   "summary": "Dulwich: Symlink directory traversal in stash pop allows arbitrary file write via intermediate directory symlinks",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-114098"
+   ],
+   "published": "2026-10-02T18:52:53Z",
+   "modified": "2026-10-21T10:57:23.057449524Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:C/C:H/I:H/A:H",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-22",
+    "CWE-59"
+   ],
+   "dos_only": false,
+   "purl": "pkg:pypi/dulwich@0.25.2",
+   "fix_published_at": "2026-07-05T15:57:53Z",
+   "scope": "runtime",
+   "paths": [
+    "pyproject.toml > dulwich"
+   ],
+   "found_in": "pyproject.toml",
+   "kev": false,
+   "epss": 0.00152,
+   "epss_percentile": 0.04431,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "pypi:dulwich",
+   "version": "0.25.2",
+   "advisory": "GHSA-gfhv-vqv2-4544",
+   "cves": [
+    "CVE-2026-52726"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.2.5",
+   "summary": "Dulwich's submodule path traversal in porcelain.submodule_update / porcelain.clone(recurse_submodules=True) yields RCE via attacker-dropped .git/hooks payload",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-52726",
+    "PYSEC-2026-2465"
+   ],
+   "published": "2026-07-02T17:50:00Z",
+   "modified": "2026-07-13T16:42:54.306948881Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": true,
+   "purl": "pkg:pypi/dulwich@0.25.2",
+   "fix_published_at": "2026-05-28T22:27:39Z",
+   "scope": "runtime",
+   "paths": [
+    "pyproject.toml > dulwich"
+   ],
+   "found_in": "pyproject.toml",
+   "kev": false,
+   "epss": 0.00448,
+   "epss_percentile": 0.39719,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "pypi:py7zr",
+   "version": "0.22.0",
+   "advisory": "GHSA-q6rc-2cgv-63h7",
+   "cves": [
+    "CVE-2026-23879"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.1.3",
+   "summary": "py7zr: Arbitrary File Write Vulnerability",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-23879",
+    "PYSEC-2026-2974"
+   ],
+   "published": "2026-06-19T19:21:57Z",
+   "modified": "2026-07-21T13:30:33.266395189Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:U/C:H/I:H/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-59"
+   ],
+   "dos_only": false,
+   "purl": "pkg:pypi/py7zr@0.22.0",
+   "fix_published_at": "2026-06-19T09:28:27Z",
+   "scope": "runtime",
+   "paths": [
+    "pyproject.toml > py7zr"
+   ],
+   "found_in": "pyproject.toml",
+   "kev": false,
+   "epss": 0.00498,
+   "epss_percentile": 0.43428,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "pypi:dulwich",
+   "version": "0.25.2",
+   "advisory": "GHSA-35mr-4567-66vg",
+   "cves": [
+    "CVE-2026-114095"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.2.9",
+   "summary": "Dulwich: Infinite Loop Denial of Service (DoS) in Packfile Object Resolution",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-114095"
+   ],
+   "published": "2026-10-02T18:54:39Z",
+   "modified": "2026-10-21T10:57:26.261763776Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-835"
+   ],
+   "dos_only": true,
+   "purl": "pkg:pypi/dulwich@0.25.2",
+   "scope": "runtime",
+   "paths": [
+    "pyproject.toml > dulwich"
+   ],
+   "found_in": "pyproject.toml",
+   "kev": false,
+   "epss": 0.00311,
+   "epss_percentile": 0.24406,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "pypi:dulwich",
+   "version": "0.25.2",
+   "advisory": "GHSA-xrvj-v92f-53gj",
+   "cves": [
+    "CVE-2026-47734"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.2.5",
+   "summary": "Dulwich has unbounded memory allocation in receive-pack from crafted thin packs",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-47734",
+    "PYSEC-2026-2466"
+   ],
+   "published": "2026-06-08T23:43:42Z",
+   "modified": "2026-07-13T16:43:32.716665118Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:L/UI:R/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-789"
+   ],
+   "dos_only": true,
+   "purl": "pkg:pypi/dulwich@0.25.2",
+   "scope": "runtime",
+   "paths": [
+    "pyproject.toml > dulwich"
+   ],
+   "found_in": "pyproject.toml",
+   "kev": false,
+   "epss": 0.00188,
+   "epss_percentile": 0.0854,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "pypi:py7zr",
+   "version": "0.22.0",
+   "advisory": "GHSA-gjrg-mpp7-g774",
+   "cves": [
+    "CVE-2026-55195"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.1.3",
+   "summary": "py7zr: Decompression bomb (zip bomb) denial of service via unchecked extraction size",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-55195",
+    "PYSEC-2026-2972"
+   ],
+   "published": "2026-06-19T21:16:29Z",
+   "modified": "2026-07-13T16:42:54.181190098Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-409"
+   ],
+   "dos_only": true,
+   "purl": "pkg:pypi/py7zr@0.22.0",
+   "scope": "runtime",
+   "paths": [
+    "pyproject.toml > py7zr"
+   ],
+   "found_in": "pyproject.toml",
+   "kev": false,
+   "epss": 0.00321,
+   "epss_percentile": 0.25618,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "pypi:py7zr",
+   "version": "0.22.0",
+   "advisory": "GHSA-h4gh-22qq-72r7",
+   "cves": [
+    "CVE-2026-55206"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.1.3",
+   "summary": "py7zr: O(n^2) algorithmic complexity DoS in PackInfo._read()",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-55206",
+    "PYSEC-2026-2973"
+   ],
+   "published": "2026-06-19T21:16:33Z",
+   "modified": "2026-07-13T16:43:06.899048591Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:pypi/py7zr@0.22.0",
+   "scope": "runtime",
+   "paths": [
+    "pyproject.toml > py7zr"
+   ],
+   "found_in": "pyproject.toml",
+   "kev": false,
+   "epss": 0.00266,
+   "epss_percentile": 0.19018,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:dompurify",
+   "version": "3.4.16",
+   "advisory": "GHSA-c6gr-qvv4-5v3f",
+   "cves": [
+    "CVE-2026-116802"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.4.17",
+   "summary": "DOMPurify: SMIL attributeName=href guard is skipped when PARSER_MEDIA_TYPE is application/xhtml+xml",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116802"
+   ],
+   "published": "2026-10-22T16:24:23Z",
+   "modified": "2026-10-27T10:56:08.682782458Z",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/dompurify@3.4.16",
+   "scope": "runtime",
+   "paths": [
+    ". > mermaid > dompurify"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.00217,
+   "epss_percentile": 0.12291,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "option:PARSER_MEDIA_TYPE"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use PARSER_MEDIA_TYPE, but other packages depend on dompurify"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:dompurify",
+   "version": "3.4.16",
+   "advisory": "GHSA-cg2g-xh64-v4q7",
+   "cves": [
+    "CVE-2026-116804"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.4.17",
+   "summary": "DOMPurify SAFE_FOR_TEMPLATES bypass: split template expressions survive in attached shadow root content on DOM output modes",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116804"
+   ],
+   "published": "2026-10-22T16:25:31Z",
+   "modified": "2026-11-19T00:15:04.697883878Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/dompurify@3.4.16",
+   "scope": "runtime",
+   "paths": [
+    ". > mermaid > dompurify"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.00178,
+   "epss_percentile": 0.07525,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "option:SAFE_FOR_TEMPLATES"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use SAFE_FOR_TEMPLATES, but other packages depend on dompurify"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:dompurify",
+   "version": "3.4.16",
+   "advisory": "GHSA-mrv2-3pqr-j5jr",
+   "cves": [
+    "CVE-2026-116803"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.4.17",
+   "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116803"
+   ],
+   "published": "2026-10-22T16:24:52Z",
+   "modified": "2026-11-19T00:15:04.695368164Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-693",
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/dompurify@3.4.16",
+   "scope": "runtime",
+   "paths": [
+    ". > mermaid > dompurify"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.00164,
+   "epss_percentile": 0.05716,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "option:IN_PLACE"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use IN_PLACE, but other packages depend on dompurify"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:markdown-it",
+   "version": "14.3.2",
+   "advisory": "GHSA-vfgh-jcmw-g37q",
+   "cves": [
+    "CVE-2026-111766"
+   ],
+   "severity": "LOW",
+   "fixed_in": "14.3.3",
+   "summary": "markdown-it: Quadratic-time denial of service in inline HTML parsing with html enabled",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-111766"
+   ],
+   "published": "2026-10-20T20:08:19Z",
+   "modified": "2026-10-20T20:15:05.220039200Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/markdown-it@14.3.2",
+   "scope": "runtime",
+   "paths": [
+    ". > tiptap-markdown > markdown-it"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.00428,
+   "epss_percentile": 0.37772,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "pypi:dulwich",
+   "version": "0.25.2",
+   "advisory": "GHSA-555p-6grf-mh7f",
+   "cves": [
+    "CVE-2026-47712"
+   ],
+   "severity": "LOW",
+   "fixed_in": "1.2.5",
+   "summary": "Dulwich doesn't sanitize commit subjects in `porcelain.format_patch`",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-47712",
+    "PYSEC-2026-2462"
+   ],
+   "published": "2026-06-08T23:04:48Z",
+   "modified": "2026-07-13T16:43:37.445090093Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:pypi/dulwich@0.25.2",
+   "scope": "runtime",
+   "paths": [
+    "pyproject.toml > dulwich"
+   ],
+   "found_in": "pyproject.toml",
+   "kev": false,
+   "epss": 0.00139,
+   "epss_percentile": 0.03328,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:libsqlite3-sys",
+   "version": "0.30.1",
+   "advisory": "RUSTSEC-2026-0459",
+   "cves": [
+    "CVE-2026-119375"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.39.0",
+   "summary": "`libsqlite3-sys` via C SQLite CVE-2026-119375",
+   "malicious": false,
+   "aliases": [
+    "BIT-sqlite-2026-119375",
+    "CVE-2026-119375",
+    "GHSA-72w2-rjgg-q729",
+    "RUSTSEC-2026-0502"
+   ],
+   "published": "2026-10-30T12:00:00Z",
+   "modified": "2026-11-17T13:41:05.770775012Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/libsqlite3-sys@0.30.1",
+   "scope": "runtime",
+   "paths": [
+    "navin-engine > rusqlite > libsqlite3-sys"
+   ],
+   "workspace": "crates/navin-engine",
+   "found_in": "crates/navin-engine/Cargo.lock",
+   "kev": false,
+   "epss": 0.00195,
+   "epss_percentile": 0.09275,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:undici",
+   "version": "7.29.1",
+   "advisory": "GHSA-2m5v-pch6-74hx",
+   "cves": [
+    "CVE-2026-109383"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "7.30.1",
+   "summary": "undici vulnerable to TLS certificate validation bypass via dropped tls options in Agent",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-109383"
+   ],
+   "published": "2026-10-27T19:02:26Z",
+   "modified": "2026-10-27T19:15:22.407771210Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-295"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/undici@7.29.1",
+   "scope": "dev",
+   "paths": [
+    ". > jsdom > undici"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.00184,
+   "epss_percentile": 0.08127,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:undici",
+   "version": "7.29.1",
+   "advisory": "GHSA-4w7w-5xrc-9h26",
+   "cves": [
+    "CVE-2026-109829"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "7.30.1",
+   "summary": "undici vulnerable to cache poisoning and cross-user disclosure via cross-origin redirects",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-109829"
+   ],
+   "published": "2026-10-27T19:02:31Z",
+   "modified": "2026-10-27T19:15:22.403656345Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-346",
+    "CWE-524"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/undici@7.29.1",
+   "scope": "dev",
+   "paths": [
+    ". > jsdom > undici"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.00149,
+   "epss_percentile": 0.04165,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:undici",
+   "version": "7.29.1",
+   "advisory": "GHSA-qrxm-fqhp-jwvm",
+   "cves": [
+    "CVE-2026-87018"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "7.30.1",
+   "summary": "undici vulnerable to Denial of Service via TLS 1.2 certificate-changing renegotiation",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-87018"
+   ],
+   "published": "2026-10-27T19:02:21Z",
+   "modified": "2026-10-27T19:15:22.403573595Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248",
+    "CWE-617"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/undici@7.29.1",
+   "scope": "dev",
+   "paths": [
+    ". > jsdom > undici"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.00187,
+   "epss_percentile": 0.08442,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:undici",
+   "version": "7.29.1",
+   "advisory": "GHSA-xjj6-f33q-929c",
+   "cves": [
+    "CVE-2026-109869"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "7.30.1",
+   "summary": "undici vulnerable to Denial of Service via unhandled error on excessive content-encodings",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-109869"
+   ],
+   "published": "2026-10-23T22:14:31Z",
+   "modified": "2026-10-23T22:30:05.007687918Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248",
+    "CWE-459"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/undici@7.29.1",
+   "scope": "dev",
+   "paths": [
+    ". > jsdom > undici"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.00344,
+   "epss_percentile": 0.28508,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "6.4.3",
+   "advisory": "GHSA-587h-7wmj-h5pm",
+   "cves": [
+    "CVE-2026-112942"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "6.4.4",
+   "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112942"
+   ],
+   "published": "2026-10-20T19:48:25Z",
+   "modified": "2026-10-20T20:00:04.608979840Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-77"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@6.4.3",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.01694,
+   "epss_percentile": 0.77635,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@vitest/mocker",
+   "version": "4.1.11",
+   "advisory": "GHSA-qxg6-89mg-rqv8",
+   "cves": [
+    "CVE-2026-112949"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.1.12",
+   "summary": "Vitest: Code injection via unauthenticated manual mock registration",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112949"
+   ],
+   "published": "2026-10-21T19:54:26Z",
+   "modified": "2026-10-21T20:01:39.911013327Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-116",
+    "CWE-306",
+    "CWE-94"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40vitest/mocker@4.1.11",
+   "scope": "dev",
+   "paths": [
+    ". > vitest > @vitest/mocker"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.00336,
+   "epss_percentile": 0.27565,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@vitest/mocker",
+   "version": "4.1.11",
+   "advisory": "GHSA-xp26-3454-mjgp",
+   "cves": [
+    "CVE-2026-112950"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.1.12",
+   "summary": "Vitest: Windows backslash traversal bypasses the @vitest/mocker redirect allowlist fix",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112950"
+   ],
+   "published": "2026-10-21T19:48:38Z",
+   "modified": "2026-10-21T20:01:41.013649429Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40vitest/mocker@4.1.11",
+   "scope": "dev",
+   "paths": [
+    ". > vitest > @vitest/mocker"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.00542,
+   "epss_percentile": 0.46337,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:minimatch",
+   "version": "10.2.6",
+   "advisory": "GHSA-g3hv-75wg-m249",
+   "cves": [
+    "CVE-2026-118764"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "11.0.1",
+   "summary": "minimatch has potential denial of service via globparts amplification",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118764"
+   ],
+   "published": "2026-10-30T23:09:55Z",
+   "modified": "2026-11-04T17:01:25.850114200Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-405"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/minimatch@10.2.6",
+   "scope": "dev",
+   "paths": [
+    ". > eslint > minimatch"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.00301,
+   "epss_percentile": 0.23299,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:postcss-selector-parser",
+   "version": "6.0.10",
+   "advisory": "GHSA-rj75-hqrm-r3gf",
+   "cves": [
+    "CVE-2026-104844"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.1.5",
+   "summary": "PostCSS: Quadratic complexity in flat selector parsing allows CPU exhaustion",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-104844"
+   ],
+   "published": "2026-10-05T22:53:54Z",
+   "modified": "2026-10-26T14:16:59.921540799Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/postcss-selector-parser@6.0.10",
+   "scope": "dev",
+   "paths": [
+    ". > @tailwindcss/typography > postcss-selector-parser"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.00389,
+   "epss_percentile": 0.33714,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:postcss-selector-parser",
+   "version": "6.1.4",
+   "advisory": "GHSA-rj75-hqrm-r3gf",
+   "cves": [
+    "CVE-2026-104844"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.1.5",
+   "summary": "PostCSS: Quadratic complexity in flat selector parsing allows CPU exhaustion",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-104844"
+   ],
+   "published": "2026-10-05T22:53:54Z",
+   "modified": "2026-10-26T14:16:59.921540799Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/postcss-selector-parser@6.1.4",
+   "scope": "dev",
+   "paths": [
+    ". > tailwindcss > postcss-nested > postcss-selector-parser"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.00389,
+   "epss_percentile": 0.33714,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:undici",
+   "version": "7.29.1",
+   "advisory": "GHSA-4qv8-2p9j-2685",
+   "cves": [
+    "CVE-2026-109924"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "7.30.1",
+   "summary": "undici vulnerable to Denial of Service via unbounded memory in the EventSource parser",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-109924"
+   ],
+   "published": "2026-10-23T22:13:29Z",
+   "modified": "2026-10-23T22:30:04.104974737Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/undici@7.29.1",
+   "scope": "dev",
+   "paths": [
+    ". > jsdom > undici"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.00321,
+   "epss_percentile": 0.25623,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:undici",
+   "version": "7.29.1",
+   "advisory": "GHSA-55wc-3pg8-jfw6",
+   "cves": [
+    "CVE-2026-87029"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "7.30.1",
+   "summary": "undici vulnerable to Denial of Service via unhandled exception in the decompress interceptor",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-87029"
+   ],
+   "published": "2026-10-27T19:02:10Z",
+   "modified": "2026-10-27T19:15:22.392692308Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/undici@7.29.1",
+   "scope": "dev",
+   "paths": [
+    ". > jsdom > undici"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.0026,
+   "epss_percentile": 0.17983,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:undici",
+   "version": "7.29.1",
+   "advisory": "GHSA-9fm3-97px-rjf6",
+   "cves": [
+    "CVE-2026-109932"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "7.30.1",
+   "summary": "undici WebSocket client vulnerable to Denial of Service via unbounded automatic PONG buffering",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-109932"
+   ],
+   "published": "2026-10-27T19:02:15Z",
+   "modified": "2026-10-27T19:15:22.400702743Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-405",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/undici@7.29.1",
+   "scope": "dev",
+   "paths": [
+    ". > jsdom > undici"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.00321,
+   "epss_percentile": 0.25623,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:undici",
+   "version": "7.29.1",
+   "advisory": "GHSA-f72v-6w45-q472",
+   "cves": [
+    "CVE-2026-109841"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "7.30.1",
+   "summary": "undici vulnerable to Subresource Integrity bypass via non-lowercase algorithm tokens",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-109841"
+   ],
+   "published": "2026-10-23T22:12:57Z",
+   "modified": "2026-10-23T22:30:04.094314933Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-178"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/undici@7.29.1",
+   "scope": "dev",
+   "paths": [
+    ". > jsdom > undici"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.00252,
+   "epss_percentile": 0.16839,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "6.4.3",
+   "advisory": "GHSA-698v-4r3x-3vcv",
+   "cves": [
+    "CVE-2026-112943"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.4",
+   "summary": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112943"
+   ],
+   "published": "2026-10-20T18:30:24Z",
+   "modified": "2026-10-20T18:45:09.467993691Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-78"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@6.4.3",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.00414,
+   "epss_percentile": 0.36473,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "6.4.3",
+   "advisory": "GHSA-r825-w8mm-5pxw",
+   "cves": [
+    "CVE-2026-112944"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.4",
+   "summary": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112944"
+   ],
+   "published": "2026-10-20T19:51:52Z",
+   "modified": "2026-10-20T20:00:04.608907013Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-88"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@6.4.3",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.00705,
+   "epss_percentile": 0.54125,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "6.4.3",
+   "advisory": "GHSA-rq7h-c2jc-7f22",
+   "cves": [
+    "CVE-2026-112946"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.4",
+   "summary": "Vite: Files outside `server.fs.allow` could be served when project paths match system paths on non-Windows machine",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112946"
+   ],
+   "published": "2026-10-21T16:47:42Z",
+   "modified": "2026-10-21T17:00:06.336868869Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22",
+    "CWE-284"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@6.4.3",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.00852,
+   "epss_percentile": 0.59015,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "6.4.3",
+   "advisory": "GHSA-9jrq-w75r-8gcw",
+   "cves": [
+    "CVE-2026-112945"
+   ],
+   "severity": "LOW",
+   "fixed_in": "6.4.4",
+   "summary": "Vite: Cross origin script execution through Vite custom middleware",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112945"
+   ],
+   "published": "2026-10-21T16:48:14Z",
+   "modified": "2026-10-21T17:00:26.569382874Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-80"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@6.4.3",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "webui/package-lock.json",
+   "kev": false,
+   "epss": 0.00672,
+   "epss_percentile": 0.52858,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

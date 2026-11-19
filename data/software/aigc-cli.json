@@ -79,33 +79,117 @@
     "runs": []
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
-    "status": "clean",
+    "version": "sec.v2",
+    "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/martianzhang/aigc-cli@622edad71631",
+      "github.com/martianzhang/aigc-cli@5de624bf5d7b",
       "go.mod"
     ],
     "packages_checked": 122,
-    "findings_total": 0,
-    "advisories_total": 0,
-    "findings": []
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "go:github.com/andybalholm/brotli",
+        "version": "v1.2.1",
+        "advisory": "GO-2026-6888",
+        "cves": [
+          "CVE-2026-111497"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "1.2.7",
+        "summary": "Excessive memory allocation when decompressing crafted streams in github.com/andybalholm/brotli",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "kev": true,
+        "epss": 0.8237,
+        "fix_published_at": "2026-10-23T17:03:27Z",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:Reader.Read",
+          "symbol:decodeBlockTypeAndLength",
+          "symbol:decodeCommandBlockSwitch"
+        ],
+        "paths": [
+          "go.mod > github.com/andybalholm/brotli"
+        ]
+      }
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:06:03+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "5de624bf5d7bc5c1dcb408e7fff18e20141785d2",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "go": 122
+      },
+      "scopes": {
+        "runtime": 122
+      },
+      "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 3,
+      "details": "security/aigc-cli.json",
+      "details_sha256": "7a256ccf520f966db1200a4b6013e1e63c7fd59465955da3948d2364dc40e26e"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "kev:GO-2026-6888 go:github.com/andybalholm/brotli@v1.2.1 (conditional)"
+      ],
+      "counts": {
+        "conditional": 1
+      },
+      "uncounted": 2,
+      "assessed_at": "2026-11-20T00:06:03+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 122,
+      "packages_checked": 122,
+      "components": [
+        {
+          "ecosystem": "go",
+          "component": "go.mod",
+          "status": "scanned",
+          "packages": 122,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 76.6,
-      "raw_total": 76.6,
       "confidence": 0.4,
-      "cap": null,
-      "cap_reason": null,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -125,17 +209,14 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 76.6,
       "security": {
-        "level": "clean",
-        "basis": "status",
-        "effect": "none",
+        "level": "conditional",
+        "basis": "assessment",
+        "effect": "capped",
         "deduction": 0.0
       }
     },
@@ -426,5 +507,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:38+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:06:03+08:00"
 }

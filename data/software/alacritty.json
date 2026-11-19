@@ -203,14 +203,25 @@
       }
     ]
   },
+  "visual_check": {
+    "version": "comfort.v1",
+    "run_id": "verify-alacritty-20261105-001905-0f08",
+    "score": 2,
+    "status": "scored",
+    "defects": [],
+    "screens": 2,
+    "model": "muse-wonder-1.0",
+    "effort": "medium",
+    "inputs_sha": "0e768093809e6fd7497220f36a872f2e26a1b91b95ba9fa6486889e14d4c5e51",
+    "checked_at": "2026-11-05T03:24:43+08:00",
+    "cost_usd": 0.017424
+  },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-05T03:16:33+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/alacritty/alacritty@aecf0f600fa8",
+      "github.com/alacritty/alacritty@791efff6d74c",
       "Cargo.lock"
     ],
     "packages_checked": 288,
@@ -225,7 +236,23 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "alacritty",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "alacritty > winit > smithay-client-toolkit > wayland-scanner > quick-xml"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -235,36 +262,104 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "alacritty",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
+        ],
+        "paths": [
+          "alacritty > winit > smithay-client-toolkit > wayland-scanner > quick-xml"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use NsReader, but other packages depend on quick-xml"
+          ]
+        }
       }
-    ]
-  },
-  "visual_check": {
-    "version": "comfort.v1",
-    "run_id": "verify-alacritty-20261105-001905-0f08",
-    "score": 2,
-    "status": "scored",
-    "defects": [],
-    "screens": 2,
-    "model": "muse-wonder-1.0",
-    "effort": "medium",
-    "inputs_sha": "0e768093809e6fd7497220f36a872f2e26a1b91b95ba9fa6486889e14d4c5e51",
-    "checked_at": "2026-11-05T03:24:43+08:00",
-    "cost_usd": 0.017424
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:06:03+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "791efff6d74c66bee390c259e322626ca93aadb6",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 288
+      },
+      "scopes": {
+        "runtime": 281,
+        "build": 6,
+        "dev": 1
+      },
+      "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 3,
+      "details": "security/alacritty.json",
+      "details_sha256": "b9b3bf25c03da3e2a9c32de611e2170ab5b0872c85ebb9a7c7f2e49978e4e95a"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0194 crates:quick-xml@0.37.5 (conditional)",
+        "worst:RUSTSEC-2026-0195 crates:quick-xml@0.37.5 (conditional)"
+      ],
+      "counts": {
+        "conditional": 2
+      },
+      "uncounted": 1,
+      "assessed_at": "2026-11-20T00:06:03+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 288,
+      "packages_checked": 288,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 288,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7+visual.v1",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 84.1,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -284,16 +379,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 84.1,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       },
@@ -668,5 +760,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:49+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:06:03+08:00"
 }

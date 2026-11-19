@@ -1,0 +1,93 @@
+{
+ "slug": "diskus",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "90196e950017d25b2940e8e0fda51a321ca66e1a",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 51
+  },
+  "scopes": {
+   "runtime": 43,
+   "dev": 8
+  },
+  "advisories_fetched_at": "2026-11-20T00:50:25+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 1
+ },
+ "assessment": {
+  "level": "none",
+  "policy_version": "sec.v2",
+  "reasons": [],
+  "counts": {},
+  "uncounted": 1,
+  "assessed_at": "2026-11-20T00:50:25+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 51,
+  "packages_checked": 51,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 51,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/sharkdp/diskus@90196e950017",
+  "Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:crossbeam-epoch",
+   "version": "0.9.18",
+   "advisory": "RUSTSEC-2026-0204",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.9.20",
+   "summary": "Invalid pointer dereference in `fmt::Pointer` impl for `Atomic` and `Shared` when the underlying pointer is invalid",
+   "malicious": false,
+   "published": "2026-07-06T12:00:00Z",
+   "modified": "2026-07-06T22:30:04.159269138Z",
+   "purl": "pkg:cargo/crossbeam-epoch@0.9.18",
+   "scope": "runtime",
+   "paths": [
+    "diskus > rayon > rayon-core > crossbeam-deque > crossbeam-epoch"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:fmt::Pointer",
+    "symbol:Atomic",
+    "symbol:Shared"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use fmt::Pointer, Atomic, Shared, but other packages depend on crossbeam-epoch"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

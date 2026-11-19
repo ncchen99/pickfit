@@ -236,102 +236,120 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
-    "status": "vulnerable",
-    "unchecked_reason": null,
+    "version": "sec.v2",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
     "sources": [
-      "github.com/aymen94/NeuronDump@c97010a62803",
+      "github.com/aymen94/NeuronDump@737b0d71e409",
       "Cargo.lock"
     ],
     "packages_checked": 223,
-    "findings_total": 6,
-    "advisories_total": 6,
-    "findings": [
-      {
-        "package": "crates:zip",
-        "version": "7.4.0",
-        "advisory": "GHSA-m665-v7pm-7grj",
-        "cves": [
-          "CVE-2026-115905"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "9.0.5",
-        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "737b0d71e409f71c1421b5abe377114991fccc75",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 223
       },
-      {
-        "package": "crates:zip",
-        "version": "7.4.0",
-        "advisory": "RUSTSEC-2026-0369",
-        "cves": [],
-        "severity": "CRITICAL",
-        "fixed_in": "9.0.0",
-        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
+      "scopes": {
+        "runtime": 188,
+        "workspace": 35
       },
-      {
-        "package": "crates:zip",
-        "version": "7.4.0",
-        "advisory": "GHSA-9hj8-73fh-9963",
-        "cves": [
-          "CVE-2026-115907"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: legacy Shrink/Reduce/Implode decoder: denial of service from attacker-controlled ZIP64 uncompressed size",
-        "malicious": false
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 8,
+      "details": "security/neurondump.json",
+      "details_sha256": "9b05c7b242cc0ca61e0c4901ab1bc63bd70a862340f3283faa96313c31fafbe7"
+    },
+    "assessment": {
+      "level": "not_shipped",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-m665-v7pm-7grj crates:zip@7.4.0 (not_shipped)",
+        "worst:RUSTSEC-2026-0369 crates:zip@7.4.0 (not_shipped)",
+        "worst:GHSA-9hj8-73fh-9963 crates:zip@7.4.0 (not_shipped)"
+      ],
+      "counts": {
+        "not_shipped": 6
       },
-      {
-        "package": "crates:zip",
-        "version": "7.4.0",
-        "advisory": "GHSA-hjqx-j4rw-g7xv",
-        "cves": [
-          "CVE-2026-115908"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "7.4.0",
-        "advisory": "GHSA-q7v9-x93c-xqv3",
-        "cves": [
-          "CVE-2026-115909"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "7.4.0",
-        "advisory": "RUSTSEC-2026-0367",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
-      }
-    ]
+      "uncounted": 2,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 226,
+      "packages_checked": 223,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 223,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "npm/neurondump/package.json",
+          "status": "not_scanned",
+          "packages": 3,
+          "gaps": [
+            "lockfile.missing"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "code": "lockfile.missing",
+          "category": "lockfile_missing",
+          "ecosystem": "npm",
+          "component": "npm/neurondump/package.json",
+          "detail": "package.json without a lockfile",
+          "capability": "lockfile_from_manifest:npm",
+          "found": 3,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "resolve.registry_failed",
+          "category": "resolve_failed",
+          "ecosystem": "crates",
+          "component": "crates:neurondump",
+          "detail": "RuntimeError: deps.dev has no dependency graph for this crate",
+          "capability": "resolve_in_sandbox",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 70.4,
-      "raw_total": 70.4,
       "confidence": 0.6,
-      "cap": 79,
-      "cap_reason": "known_vulnerability",
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 0.7225,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5625,
@@ -351,17 +369,14 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 70.4,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
-        "effect": "capped",
+        "level": "not_shipped",
+        "basis": "assessment",
+        "effect": "none",
         "deduction": 0.0
       }
     },
@@ -782,5 +797,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

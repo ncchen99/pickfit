@@ -1,0 +1,587 @@
+{
+ "slug": "nika",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "7ab6cf46e5c1c36de7e5ae220ff8cc628233e3c8",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 1008,
+   "npm": 5
+  },
+  "scopes": {
+   "runtime": 693,
+   "optional": 54,
+   "dev": 60,
+   "workspace": 206
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 12
+ },
+ "assessment": {
+  "level": "not_shipped",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-m665-v7pm-7grj crates:zip@7.2.0 (not_shipped)",
+   "worst:RUSTSEC-2026-0369 crates:zip@7.2.0 (not_shipped)",
+   "worst:RUSTSEC-2026-0194 crates:quick-xml@0.30.0 (not_shipped)"
+  ],
+  "counts": {
+   "not_shipped": 10
+  },
+  "uncounted": 2,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 1013,
+  "packages_checked": 1013,
+  "components": [
+   {
+    "ecosystem": "npm",
+    "component": "registry:npm:@supernovae-st/nika",
+    "status": "partial",
+    "packages": 5,
+    "gaps": [
+     "binary.prebuilt_package"
+    ]
+   },
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 881,
+    "gaps": []
+   },
+   {
+    "ecosystem": "crates",
+    "component": "crates/nika-acp/Cargo.lock",
+    "status": "scanned",
+    "packages": 422,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "npm:@supernovae-st/nika (fresh install, 5 packages)",
+  "github.com/supernovae-st/nika@7ab6cf46e5c1",
+  "Cargo.lock",
+  "crates/nika-acp/Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:zip",
+   "version": "7.2.0",
+   "advisory": "GHSA-m665-v7pm-7grj",
+   "cves": [
+    "CVE-2026-115905"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "9.0.5",
+   "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115905",
+    "RUSTSEC-2026-0548"
+   ],
+   "published": "2026-10-28T21:09:50Z",
+   "modified": "2026-11-17T10:26:05.424821880Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20",
+    "CWE-436"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@7.2.0",
+   "scope": "workspace",
+   "paths": [
+    "nika-infer-local > candle-core > zip"
+   ],
+   "workspace": "crates/nika-infer-local",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.0032,
+   "epss_percentile": 0.25522,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "7.2.0",
+   "advisory": "RUSTSEC-2026-0369",
+   "severity": "CRITICAL",
+   "fixed_in": "9.0.0",
+   "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+   "malicious": false,
+   "aliases": [
+    "GHSA-4684-h2q9-2vcp"
+   ],
+   "published": "2026-10-10T12:00:00Z",
+   "modified": "2026-10-16T23:30:02.387698467Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@7.2.0",
+   "scope": "workspace",
+   "paths": [
+    "nika-infer-local > candle-core > zip"
+   ],
+   "workspace": "crates/nika-infer-local",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:ZipStreamReader::extract",
+    "symbol:ZipArchive::extract"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quick-xml",
+   "version": "0.30.0",
+   "advisory": "RUSTSEC-2026-0194",
+   "severity": "HIGH",
+   "fixed_in": "0.41.0",
+   "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+   "malicious": false,
+   "published": "2026-06-29T12:00:00Z",
+   "modified": "2026-07-02T08:00:03.849273679Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quick-xml@0.30.0",
+   "scope": "workspace",
+   "paths": [
+    "nika-screen > xcap > xcb > quick-xml"
+   ],
+   "workspace": "crates/nika-screen",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quick-xml",
+   "version": "0.30.0",
+   "advisory": "RUSTSEC-2026-0195",
+   "severity": "HIGH",
+   "fixed_in": "0.41.0",
+   "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+   "malicious": false,
+   "published": "2026-06-29T12:00:00Z",
+   "modified": "2026-07-02T09:00:04.037478193Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quick-xml@0.30.0",
+   "scope": "workspace",
+   "paths": [
+    "nika-screen > xcap > xcb > quick-xml"
+   ],
+   "workspace": "crates/nika-screen",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:NsReader"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use NsReader, but other packages depend on quick-xml"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quick-xml",
+   "version": "0.39.4",
+   "advisory": "RUSTSEC-2026-0194",
+   "severity": "HIGH",
+   "fixed_in": "0.41.0",
+   "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+   "malicious": false,
+   "published": "2026-06-29T12:00:00Z",
+   "modified": "2026-07-02T08:00:03.849273679Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quick-xml@0.39.4",
+   "scope": "workspace",
+   "paths": [
+    "nika-a11y > atspi > atspi-common > zbus-lockstep > zbus_xml > quick-xml"
+   ],
+   "workspace": "crates/nika-a11y",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quick-xml",
+   "version": "0.39.4",
+   "advisory": "RUSTSEC-2026-0195",
+   "severity": "HIGH",
+   "fixed_in": "0.41.0",
+   "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+   "malicious": false,
+   "published": "2026-06-29T12:00:00Z",
+   "modified": "2026-07-02T09:00:04.037478193Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quick-xml@0.39.4",
+   "scope": "workspace",
+   "paths": [
+    "nika-a11y > atspi > atspi-common > zbus-lockstep > zbus_xml > quick-xml"
+   ],
+   "workspace": "crates/nika-a11y",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:NsReader"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use NsReader, but other packages depend on quick-xml"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "7.2.0",
+   "advisory": "GHSA-9hj8-73fh-9963",
+   "cves": [
+    "CVE-2026-115907"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "9.0.0",
+   "summary": "zip: legacy Shrink/Reduce/Implode decoder: denial of service from attacker-controlled ZIP64 uncompressed size",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115907",
+    "RUSTSEC-2026-0547"
+   ],
+   "published": "2026-10-29T16:40:19Z",
+   "modified": "2026-11-17T10:26:14.175658092Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-789"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/zip@7.2.0",
+   "scope": "workspace",
+   "paths": [
+    "nika-infer-local > candle-core > zip"
+   ],
+   "workspace": "crates/nika-infer-local",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.0035,
+   "epss_percentile": 0.29304,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "7.2.0",
+   "advisory": "GHSA-hjqx-j4rw-g7xv",
+   "cves": [
+    "CVE-2026-115908"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "9.0.0",
+   "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115908",
+    "RUSTSEC-2026-0546"
+   ],
+   "published": "2026-10-29T16:40:12Z",
+   "modified": "2026-11-17T10:25:40.757510179Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22",
+    "CWE-59",
+    "CWE-61"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@7.2.0",
+   "scope": "workspace",
+   "paths": [
+    "nika-infer-local > candle-core > zip"
+   ],
+   "workspace": "crates/nika-infer-local",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00432,
+   "epss_percentile": 0.38281,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "symbol:ZipArchive::extract"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ZipArchive::extract, but other packages depend on zip"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "7.2.0",
+   "advisory": "GHSA-q7v9-x93c-xqv3",
+   "cves": [
+    "CVE-2026-115909"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "9.0.0",
+   "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115909",
+    "RUSTSEC-2026-0429"
+   ],
+   "published": "2026-10-29T16:40:01Z",
+   "modified": "2026-11-02T10:10:53.649189132Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-789"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/zip@7.2.0",
+   "scope": "workspace",
+   "paths": [
+    "nika-infer-local > candle-core > zip"
+   ],
+   "workspace": "crates/nika-infer-local",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00461,
+   "epss_percentile": 0.4071,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "7.2.0",
+   "advisory": "RUSTSEC-2026-0367",
+   "severity": "HIGH",
+   "fixed_in": "9.0.0",
+   "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+   "malicious": false,
+   "aliases": [
+    "GHSA-vv5m-jxxh-4627"
+   ],
+   "published": "2026-10-09T12:00:00Z",
+   "modified": "2026-10-16T23:30:02.392172556Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:H/I:H/A:H",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@7.2.0",
+   "scope": "workspace",
+   "paths": [
+    "nika-infer-local > candle-core > zip"
+   ],
+   "workspace": "crates/nika-infer-local",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "7.2.0",
+   "advisory": "GHSA-8hxf-qr8p-62x4",
+   "cves": [
+    "CVE-2026-115906"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "9.0.0",
+   "summary": "zip: AES Entry HMAC Authentication Bypass on Premature EOF",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115906",
+    "RUSTSEC-2026-0545"
+   ],
+   "published": "2026-10-29T16:40:07Z",
+   "modified": "2026-11-17T10:26:09.858808117Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1284",
+    "CWE-354"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@7.2.0",
+   "scope": "workspace",
+   "paths": [
+    "nika-infer-local > candle-core > zip"
+   ],
+   "workspace": "crates/nika-infer-local",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00151,
+   "epss_percentile": 0.04286,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "7.2.0",
+   "advisory": "RUSTSEC-2026-0368",
+   "severity": "UNKNOWN",
+   "fixed_in": "9.0.0",
+   "summary": "zip: `ZipArchive::extract` creates symbolic links whose attacker-controlled targets are outside the destination directory",
+   "malicious": false,
+   "aliases": [
+    "GHSA-4v9h-p7m9-rh26"
+   ],
+   "published": "2026-10-09T12:00:00Z",
+   "modified": "2026-10-16T23:30:02.383750571Z",
+   "purl": "pkg:cargo/zip@7.2.0",
+   "scope": "workspace",
+   "paths": [
+    "nika-infer-local > candle-core > zip"
+   ],
+   "workspace": "crates/nika-infer-local",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:ZipArchive::extract"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ZipArchive::extract, but other packages depend on zip"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

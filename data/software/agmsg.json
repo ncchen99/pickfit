@@ -125,21 +125,20 @@
     "runs": []
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
       "npm:agmsg (fresh install, 1 packages)",
-      "github.com/fujibee/agmsg@64723d66c0ba",
+      "github.com/fujibee/agmsg@6acb58a5d68a",
+      "app/addons/diffview/pnpm-lock.yaml",
       "app/addons/fileview/pnpm-lock.yaml",
       "app/pnpm-lock.yaml",
       "app/poc-inject/Cargo.lock",
       "app/src-tauri/Cargo.lock",
       "server/package-lock.json"
     ],
-    "packages_checked": 638,
+    "packages_checked": 933,
     "findings_total": 6,
     "advisories_total": 6,
     "findings": [
@@ -153,7 +152,21 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "app/src-tauri",
+        "found_in": "app/src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.0032,
+        "fix_published_at": "2026-10-17T18:45:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "agmsg-app > tauri-plugin-updater > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -163,7 +176,31 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "app/src-tauri",
+        "found_in": "app/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:ZipStreamReader::extract",
+          "symbol:ZipArchive::extract"
+        ],
+        "paths": [
+          "agmsg-app > tauri-plugin-updater > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+          ]
+        }
       },
       {
         "package": "crates:quick-xml",
@@ -173,7 +210,23 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "app/src-tauri",
+        "found_in": "app/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "agmsg-app > tauri > plist > quick-xml"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -183,7 +236,31 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "app/src-tauri",
+        "found_in": "app/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
+        ],
+        "paths": [
+          "agmsg-app > tauri > plist > quick-xml"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use NsReader, but other packages depend on quick-xml"
+          ]
+        }
       },
       {
         "package": "crates:zip",
@@ -195,7 +272,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "app/src-tauri",
+        "found_in": "app/src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00461,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "agmsg-app > tauri-plugin-updater > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -205,23 +299,144 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "app/src-tauri",
+        "found_in": "app/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
+        ],
+        "paths": [
+          "agmsg-app > tauri-plugin-updater > zip"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:06:03+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "6acb58a5d68a5eb589c0d8e1aa5e88bbefdabda2",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 542,
+        "npm": 391
+      },
+      "scopes": {
+        "runtime": 635,
+        "peer": 1,
+        "dev": 297
+      },
+      "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 41,
+      "details": "security/agmsg.json",
+      "details_sha256": "cd753646d51d38e1c2653f40a9a1847cd9f5c7c4facb77dbe147d9905690e255"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-m665-v7pm-7grj crates:zip@4.6.1 (conditional)",
+        "worst:RUSTSEC-2026-0369 crates:zip@4.6.1 (conditional)",
+        "worst:RUSTSEC-2026-0194 crates:quick-xml@0.39.4 (conditional)"
+      ],
+      "counts": {
+        "conditional": 6,
+        "not_shipped": 7
+      },
+      "uncounted": 28,
+      "assessed_at": "2026-11-20T00:06:03+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 933,
+      "packages_checked": 933,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "registry:npm:agmsg",
+          "status": "partial",
+          "packages": 1,
+          "gaps": [
+            "binary.prebuilt_package"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "app/addons/diffview/pnpm-lock.yaml",
+          "status": "scanned",
+          "packages": 93,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "app/addons/fileview/pnpm-lock.yaml",
+          "status": "scanned",
+          "packages": 104,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "app/pnpm-lock.yaml",
+          "status": "scanned",
+          "packages": 172,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "app/poc-inject/Cargo.lock",
+          "status": "scanned",
+          "packages": 49,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "app/src-tauri/Cargo.lock",
+          "status": "scanned",
+          "packages": 542,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "server/package-lock.json",
+          "status": "scanned",
+          "packages": 179,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 87.5,
       "confidence": 0.5,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.75,
@@ -241,16 +456,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 87.5,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -616,5 +828,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:06:03+08:00"
 }

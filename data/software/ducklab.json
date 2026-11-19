@@ -235,17 +235,17 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "status": "vulnerable",
+    "version": "sec.v2",
+    "status": "clean",
     "unchecked_reason": null,
     "sources": [
-      "github.com/jrullan/ducklab@82b0aca04dfb",
+      "github.com/jrullan/ducklab@97f08e76a915",
       "frontend/package-lock.json",
       "go.mod"
     ],
-    "packages_checked": 33,
-    "findings_total": 1,
-    "advisories_total": 1,
+    "packages_checked": 316,
+    "findings_total": 0,
+    "advisories_total": 0,
     "findings": [
       {
         "package": "go:golang.org/x/image",
@@ -257,25 +257,115 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "golang.org/x/image/tiff has excessive resource consumption in PackBits decompression",
-        "malicious": false
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "kev": false,
+        "epss": 0.00353,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:Decode",
+          "symbol:unpackBits"
+        ],
+        "paths": [
+          "go.mod > golang.org/x/image"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no .go file imports golang.org/x/image/tiff; go.mod requires golang.org/x/image directly"
+          ]
+        }
       }
     ],
     "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00"
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "97f08e76a91507f0c1b407d1c5d3d1dd1b5f10bd",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "go": 21,
+        "npm": 295
+      },
+      "scopes": {
+        "runtime": 30,
+        "peer": 3,
+        "dev": 283
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 26,
+      "details": "security/ducklab.json",
+      "details_sha256": "3b2b4dce24abf4b08df01b82a9a8adabb4b1096d5f06d127178b6f04a272c960"
+    },
+    "assessment": {
+      "level": "present_unreachable",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-q675-qj96-32m9 go:golang.org/x/image@v0.40.0 (present_unreachable)",
+        "worst:GHSA-5gmw-xhrv-c9v3 npm:tinypool@1.1.1 (not_shipped)",
+        "worst:GHSA-85c8-ppgw-ccpr npm:tinypool@1.1.1 (not_shipped)"
+      ],
+      "counts": {
+        "present_unreachable": 1,
+        "not_shipped": 6
+      },
+      "uncounted": 19,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 316,
+      "packages_checked": 316,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "frontend/package-lock.json",
+          "status": "scanned",
+          "packages": 295,
+          "gaps": []
+        },
+        {
+          "ecosystem": "go",
+          "component": "go.mod",
+          "status": "scanned",
+          "packages": 21,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 76.7,
-      "raw_total": 76.7,
       "confidence": 0.6,
-      "cap": 79,
-      "cap_reason": "known_vulnerability",
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 0.6141,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.75,
@@ -295,17 +385,14 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 76.7,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
-        "effect": "capped",
+        "level": "present_unreachable",
+        "basis": "assessment",
+        "effect": "none",
         "deduction": 0.0
       }
     },
@@ -703,5 +790,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

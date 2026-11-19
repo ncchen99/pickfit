@@ -1,0 +1,1268 @@
+{
+ "slug": "ducklab",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "97f08e76a91507f0c1b407d1c5d3d1dd1b5f10bd",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "go": 21,
+   "npm": 295
+  },
+  "scopes": {
+   "runtime": 30,
+   "peer": 3,
+   "dev": 283
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 26
+ },
+ "assessment": {
+  "level": "present_unreachable",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-q675-qj96-32m9 go:golang.org/x/image@v0.40.0 (present_unreachable)",
+   "worst:GHSA-5gmw-xhrv-c9v3 npm:tinypool@1.1.1 (not_shipped)",
+   "worst:GHSA-85c8-ppgw-ccpr npm:tinypool@1.1.1 (not_shipped)"
+  ],
+  "counts": {
+   "present_unreachable": 1,
+   "not_shipped": 6
+  },
+  "uncounted": 19,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 316,
+  "packages_checked": 316,
+  "components": [
+   {
+    "ecosystem": "npm",
+    "component": "frontend/package-lock.json",
+    "status": "scanned",
+    "packages": 295,
+    "gaps": []
+   },
+   {
+    "ecosystem": "go",
+    "component": "go.mod",
+    "status": "scanned",
+    "packages": 21,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/jrullan/ducklab@97f08e76a915",
+  "frontend/package-lock.json",
+  "go.mod"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "go:golang.org/x/image",
+   "version": "v0.40.0",
+   "advisory": "GO-2026-4961",
+   "cves": [
+    "CVE-2026-33813"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.42.0",
+   "summary": "Panic when decoding large WEBP image on 32-bit platforms in golang.org/x/image",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-33813"
+   ],
+   "published": "2026-04-21T18:59:43Z",
+   "modified": "2026-06-25T18:45:14.933531136Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/image@v0.40.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/image"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00354,
+   "epss_percentile": 0.29718,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Decode",
+    "symbol:DecodeConfig",
+    "symbol:decode"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "unknown",
+    "evidence": [
+     "internal/service/visual.go:16: _ \"golang.org/x/image/webp\" // reference images may be .webp (G3 accepts them)",
+     "no call to Decode, DecodeConfig, decode found"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/image",
+   "version": "v0.40.0",
+   "advisory": "GO-2026-5061",
+   "cves": [
+    "CVE-2026-46601"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.43.0",
+   "summary": "Panic on VP8 alpha channel size mismatch in x/image/webp in golang.org/x/image",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-46601"
+   ],
+   "published": "2026-06-18T22:46:58Z",
+   "modified": "2026-06-26T13:44:18.873843227Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/image@v0.40.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/image"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00609,
+   "epss_percentile": 0.49978,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Decode",
+    "symbol:DecodeConfig",
+    "symbol:decode"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "unknown",
+    "evidence": [
+     "internal/service/visual.go:16: _ \"golang.org/x/image/webp\" // reference images may be .webp (G3 accepts them)",
+     "no call to Decode, DecodeConfig, decode found"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/sys",
+   "version": "v0.43.0",
+   "advisory": "GO-2026-5024",
+   "cves": [
+    "CVE-2026-39824"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.44.0",
+   "summary": "Invoking integer overflow in NewNTUnicodeString in golang.org/x/sys/windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-39824"
+   ],
+   "published": "2026-05-22T18:28:47Z",
+   "modified": "2026-06-09T18:59:22.740765220Z",
+   "purl": "pkg:golang/golang.org/x/sys@v0.43.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/sys"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00114,
+   "epss_percentile": 0.01528,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:NewNTUnicodeString"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "unknown",
+    "evidence": [
+     "internal/daemon/lock_windows.go:9: \"golang.org/x/sys/windows\"",
+     "no call to NewNTUnicodeString found"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/image",
+   "version": "v0.40.0",
+   "advisory": "GHSA-q675-qj96-32m9",
+   "cves": [
+    "CVE-2026-46599"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.41.0",
+   "summary": "golang.org/x/image/tiff has excessive resource consumption in PackBits decompression",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-46599",
+    "GO-2026-5032"
+   ],
+   "published": "2026-07-02T21:01:22Z",
+   "modified": "2026-09-10T03:51:11.816647347Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/image@v0.40.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/image"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00353,
+   "epss_percentile": 0.29646,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Decode",
+    "symbol:unpackBits"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports golang.org/x/image/tiff; go.mod requires golang.org/x/image directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": true,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/image",
+   "version": "v0.40.0",
+   "advisory": "GO-2026-5031",
+   "cves": [
+    "CVE-2026-42500"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.41.0",
+   "summary": "Panic when reading out of bound palette index in golang.org/x/image/bmp",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42500"
+   ],
+   "published": "2026-05-29T18:17:10Z",
+   "modified": "2026-11-14T13:12:15.035028899Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/image@v0.40.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/image"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00384,
+   "epss_percentile": 0.33212,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Decode",
+    "symbol:decodePaletted"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports golang.org/x/image/bmp; go.mod requires golang.org/x/image directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/image",
+   "version": "v0.40.0",
+   "advisory": "GO-2026-5062",
+   "cves": [
+    "CVE-2026-46602"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.43.0",
+   "summary": "Lack of limit on tile sizes in x/image/tiff in golang.org/x/image",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-46602"
+   ],
+   "published": "2026-06-18T22:50:55Z",
+   "modified": "2026-06-26T13:44:19.052864027Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/image@v0.40.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/image"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00609,
+   "epss_percentile": 0.49978,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Decode"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports golang.org/x/image/tiff; go.mod requires golang.org/x/image directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/image",
+   "version": "v0.40.0",
+   "advisory": "GO-2026-5066",
+   "cves": [
+    "CVE-2026-46604"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.43.0",
+   "summary": "Panic decoding image with out-of-bounds strip offset in x/image/tiff in golang.org/x/image",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-46604"
+   ],
+   "published": "2026-06-26T20:04:13Z",
+   "modified": "2026-06-27T06:14:20.408848742Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/image@v0.40.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/image"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00609,
+   "epss_percentile": 0.49977,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Decode"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports golang.org/x/image/tiff; go.mod requires golang.org/x/image directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/image",
+   "version": "v0.40.0",
+   "advisory": "GO-2026-6222",
+   "cves": [
+    "CVE-2026-46603"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.45.0",
+   "summary": "Excessive memory allocation during VP8L decoding in golang.org/x/image",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-46603"
+   ],
+   "published": "2026-08-14T16:22:50Z",
+   "modified": "2026-08-15T09:41:53.891904586Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/image@v0.40.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/image"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00412,
+   "epss_percentile": 0.36234,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Decode",
+    "symbol:decoder.decodeHuffmanGroups",
+    "symbol:decoder.decodeHuffmanTree"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports golang.org/x/image/vp8l; go.mod requires golang.org/x/image directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:tinypool",
+   "version": "1.1.1",
+   "advisory": "GHSA-5gmw-xhrv-c9v3",
+   "cves": [
+    "CVE-2026-104848"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "2.1.1",
+   "summary": "Tinypool: Prototype Pollution gadget in worker options leads to Remote Code Execution",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-104848"
+   ],
+   "published": "2026-10-05T22:50:01Z",
+   "modified": "2026-10-05T23:00:04.259458991Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/tinypool@1.1.1",
+   "scope": "dev",
+   "paths": [
+    ". > vitest > tinypool"
+   ],
+   "workspace": ".",
+   "found_in": "frontend/package-lock.json",
+   "kev": false,
+   "epss": 0.00497,
+   "epss_percentile": 0.43412,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:tinypool",
+   "version": "1.1.1",
+   "advisory": "GHSA-85c8-ppgw-ccpr",
+   "cves": [
+    "CVE-2026-104849"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "2.1.2",
+   "summary": "Tinypool: Prototype Pollution Gadget to RCE in run() options",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-104849"
+   ],
+   "published": "2026-10-05T22:49:52Z",
+   "modified": "2026-10-05T23:00:05.324545780Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321",
+    "CWE-94"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/tinypool@1.1.1",
+   "scope": "dev",
+   "paths": [
+    ". > vitest > tinypool"
+   ],
+   "workspace": ".",
+   "found_in": "frontend/package-lock.json",
+   "kev": false,
+   "epss": 0.00485,
+   "epss_percentile": 0.42542,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vitest",
+   "version": "2.1.9",
+   "advisory": "GHSA-5xrq-8626-4rwp",
+   "cves": [
+    "CVE-2026-47429"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "3.2.6",
+   "summary": "When Vitest UI server is listening, arbitrary file can be read and executed",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-47429"
+   ],
+   "published": "2026-06-01T14:09:53Z",
+   "modified": "2026-09-10T03:50:48.501520322Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22",
+    "CWE-862"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vitest@2.1.9",
+   "scope": "dev",
+   "paths": [
+    ". > vitest"
+   ],
+   "workspace": ".",
+   "found_in": "frontend/package-lock.json",
+   "kev": false,
+   "epss": 0.01028,
+   "epss_percentile": 0.64353,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:nanoid",
+   "version": "3.3.16",
+   "advisory": "GHSA-2v37-7h3g-55p8",
+   "cves": [
+    "CVE-2026-67213"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "3.3.18",
+   "summary": "nanoid: custom generators can loop indefinitely when size is zero",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-67213"
+   ],
+   "published": "2026-07-29T15:31:12Z",
+   "modified": "2026-09-10T03:50:51.243328986Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-835"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/nanoid@3.3.16",
+   "scope": "dev",
+   "paths": [
+    ". > postcss > nanoid"
+   ],
+   "workspace": ".",
+   "found_in": "frontend/package-lock.json",
+   "kev": false,
+   "epss": 0.00331,
+   "epss_percentile": 0.26789,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service",
+    "symbol:customAlphabet",
+    "symbol:customRandom"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use customAlphabet, customRandom, but other packages depend on nanoid"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:source-map-js",
+   "version": "1.2.1",
+   "advisory": "GHSA-68fv-2mgg-jv7q",
+   "cves": [
+    "CVE-2026-93749"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.2.2",
+   "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-93749"
+   ],
+   "published": "2026-09-18T18:31:44Z",
+   "modified": "2026-10-05T23:45:07.974936711Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1284"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/source-map-js@1.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > postcss > source-map-js"
+   ],
+   "workspace": ".",
+   "found_in": "frontend/package-lock.json",
+   "kev": false,
+   "epss": 0.00455,
+   "epss_percentile": 0.40249,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "5.4.21",
+   "advisory": "GHSA-587h-7wmj-h5pm",
+   "cves": [
+    "CVE-2026-112942"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "6.4.4",
+   "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112942"
+   ],
+   "published": "2026-10-20T19:48:25Z",
+   "modified": "2026-10-20T20:00:04.608979840Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-77"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@5.4.21",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "frontend/package-lock.json",
+   "kev": false,
+   "epss": 0.01694,
+   "epss_percentile": 0.77635,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@vitest/mocker",
+   "version": "2.1.9",
+   "advisory": "GHSA-82fw-gwwq-j7x9",
+   "cves": [
+    "CVE-2026-84373"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.1.11",
+   "summary": "Vitest: Path Traversal / Arbitrary File Read via @vitest/mocker Redirect Mock",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-84373"
+   ],
+   "published": "2026-09-08T20:46:45Z",
+   "modified": "2026-09-08T21:00:07.248611070Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40vitest/mocker@2.1.9",
+   "scope": "dev",
+   "paths": [
+    ". > vitest > @vitest/mocker"
+   ],
+   "workspace": ".",
+   "found_in": "frontend/package-lock.json",
+   "kev": false,
+   "epss": 0.00527,
+   "epss_percentile": 0.45432,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@vitest/mocker",
+   "version": "2.1.9",
+   "advisory": "GHSA-qxg6-89mg-rqv8",
+   "cves": [
+    "CVE-2026-112949"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.1.12",
+   "summary": "Vitest: Code injection via unauthenticated manual mock registration",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112949"
+   ],
+   "published": "2026-10-21T19:54:26Z",
+   "modified": "2026-10-21T20:01:39.911013327Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-116",
+    "CWE-306",
+    "CWE-94"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40vitest/mocker@2.1.9",
+   "scope": "dev",
+   "paths": [
+    ". > vitest > @vitest/mocker"
+   ],
+   "workspace": ".",
+   "found_in": "frontend/package-lock.json",
+   "kev": false,
+   "epss": 0.00336,
+   "epss_percentile": 0.27565,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:esbuild",
+   "version": "0.21.5",
+   "advisory": "GHSA-67mh-4wv8-2f99",
+   "severity": "MODERATE",
+   "fixed_in": "0.25.0",
+   "summary": "esbuild enables any website to send any requests to the development server and read the response",
+   "malicious": false,
+   "published": "2025-02-10T17:48:07Z",
+   "modified": "2026-09-10T03:50:22.418128505Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-346"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/esbuild@0.21.5",
+   "scope": "dev",
+   "paths": [
+    ". > vite > esbuild"
+   ],
+   "workspace": ".",
+   "found_in": "frontend/package-lock.json",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:postcss-selector-parser",
+   "version": "6.1.4",
+   "advisory": "GHSA-rj75-hqrm-r3gf",
+   "cves": [
+    "CVE-2026-104844"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.1.5",
+   "summary": "PostCSS: Quadratic complexity in flat selector parsing allows CPU exhaustion",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-104844"
+   ],
+   "published": "2026-10-05T22:53:54Z",
+   "modified": "2026-10-26T14:16:59.921540799Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/postcss-selector-parser@6.1.4",
+   "scope": "dev",
+   "paths": [
+    ". > tailwindcss > postcss-selector-parser"
+   ],
+   "workspace": ".",
+   "found_in": "frontend/package-lock.json",
+   "kev": false,
+   "epss": 0.00389,
+   "epss_percentile": 0.33714,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "5.4.21",
+   "advisory": "GHSA-4w7w-66w2-5vf9",
+   "cves": [
+    "CVE-2026-39365"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.2",
+   "summary": "Vite Vulnerable to Path Traversal in Optimized Deps `.map` Handling",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-39365"
+   ],
+   "published": "2026-04-06T18:03:46Z",
+   "modified": "2026-09-10T03:50:42.779400319Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@5.4.21",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "frontend/package-lock.json",
+   "kev": false,
+   "epss": 0.00914,
+   "epss_percentile": 0.60854,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "5.4.21",
+   "advisory": "GHSA-698v-4r3x-3vcv",
+   "cves": [
+    "CVE-2026-112943"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.4",
+   "summary": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112943"
+   ],
+   "published": "2026-10-20T18:30:24Z",
+   "modified": "2026-10-20T18:45:09.467993691Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-78"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@5.4.21",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "frontend/package-lock.json",
+   "kev": false,
+   "epss": 0.00414,
+   "epss_percentile": 0.36473,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "5.4.21",
+   "advisory": "GHSA-fx2h-pf6j-xcff",
+   "cves": [
+    "CVE-2026-53571"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.3",
+   "summary": "vite: `server.fs.deny` bypass on Windows alternate paths",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-53571"
+   ],
+   "published": "2026-06-15T17:17:45Z",
+   "modified": "2026-10-27T15:15:07.885624041Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:H/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@5.4.21",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "frontend/package-lock.json",
+   "kev": false,
+   "epss": 0.00577,
+   "epss_percentile": 0.48326,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "5.4.21",
+   "advisory": "GHSA-r825-w8mm-5pxw",
+   "cves": [
+    "CVE-2026-112944"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.4",
+   "summary": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112944"
+   ],
+   "published": "2026-10-20T19:51:52Z",
+   "modified": "2026-10-20T20:00:04.608907013Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-88"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@5.4.21",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "frontend/package-lock.json",
+   "kev": false,
+   "epss": 0.00705,
+   "epss_percentile": 0.54125,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "5.4.21",
+   "advisory": "GHSA-rq7h-c2jc-7f22",
+   "cves": [
+    "CVE-2026-112946"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.4",
+   "summary": "Vite: Files outside `server.fs.allow` could be served when project paths match system paths on non-Windows machine",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112946"
+   ],
+   "published": "2026-10-21T16:47:42Z",
+   "modified": "2026-10-21T17:00:06.336868869Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22",
+    "CWE-284"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@5.4.21",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "frontend/package-lock.json",
+   "kev": false,
+   "epss": 0.00852,
+   "epss_percentile": 0.59015,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "5.4.21",
+   "advisory": "GHSA-v6wh-96g9-6wx3",
+   "cves": [
+    "CVE-2026-53632"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.3",
+   "summary": "launch-editor: NTLMv2 hash disclosure via UNC path handling on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-53632"
+   ],
+   "published": "2026-06-15T17:18:31Z",
+   "modified": "2026-09-10T03:50:50.705036566Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:A/VC:N/VI:N/VA:N/SC:H/SI:H/SA:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-522",
+    "CWE-73"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@5.4.21",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "frontend/package-lock.json",
+   "kev": false,
+   "epss": 0.00464,
+   "epss_percentile": 0.40943,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vitest",
+   "version": "2.1.9",
+   "advisory": "GHSA-82fw-gwwq-j7x9",
+   "cves": [
+    "CVE-2026-84373"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.1.11",
+   "summary": "Vitest: Path Traversal / Arbitrary File Read via @vitest/mocker Redirect Mock",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-84373"
+   ],
+   "published": "2026-09-08T20:46:45Z",
+   "modified": "2026-09-08T21:00:07.248611070Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vitest@2.1.9",
+   "scope": "dev",
+   "paths": [
+    ". > vitest"
+   ],
+   "workspace": ".",
+   "found_in": "frontend/package-lock.json",
+   "kev": false,
+   "epss": 0.00527,
+   "epss_percentile": 0.45432,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "5.4.21",
+   "advisory": "GHSA-9jrq-w75r-8gcw",
+   "cves": [
+    "CVE-2026-112945"
+   ],
+   "severity": "LOW",
+   "fixed_in": "6.4.4",
+   "summary": "Vite: Cross origin script execution through Vite custom middleware",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112945"
+   ],
+   "published": "2026-10-21T16:48:14Z",
+   "modified": "2026-10-21T17:00:26.569382874Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-80"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@5.4.21",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "frontend/package-lock.json",
+   "kev": false,
+   "epss": 0.00672,
+   "epss_percentile": 0.52858,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

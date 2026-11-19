@@ -1,0 +1,113 @@
+{
+ "slug": "textus",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "157a1bd428a7c2cfd68c1447ae99692b08dc3729",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 609,
+   "npm": 730
+  },
+  "scopes": {
+   "runtime": 951,
+   "optional": 6,
+   "peer": 1,
+   "build": 3,
+   "dev": 377,
+   "workspace": 1
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 1
+ },
+ "assessment": {
+  "level": "none",
+  "policy_version": "sec.v2",
+  "reasons": [],
+  "counts": {},
+  "uncounted": 1,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 1339,
+  "packages_checked": 1339,
+  "components": [
+   {
+    "ecosystem": "npm",
+    "component": "package-lock.json",
+    "status": "scanned",
+    "packages": 730,
+    "gaps": []
+   },
+   {
+    "ecosystem": "crates",
+    "component": "src-tauri/Cargo.lock",
+    "status": "scanned",
+    "packages": 609,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/CatVinci-Studio/Textus@157a1bd428a7",
+  "package-lock.json",
+  "src-tauri/Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:glib",
+   "version": "0.18.5",
+   "advisory": "GHSA-wrw7-89jp-8q8g",
+   "severity": "MODERATE",
+   "fixed_in": "0.20.0",
+   "summary": "Unsoundness in `Iterator` and `DoubleEndedIterator` impls for `glib::VariantStrIter`",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2024-0429"
+   ],
+   "published": "2024-12-23T20:19:24Z",
+   "modified": "2025-10-28T06:29:26.473225Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/glib@0.18.5",
+   "scope": "runtime",
+   "paths": [
+    "textus > webkit2gtk > glib"
+   ],
+   "workspace": "src-tauri",
+   "found_in": "src-tauri/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Iterator",
+    "symbol:DoubleEndedIterator",
+    "symbol:glib::VariantStrIter"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "src-tauri/src/ai/doc_blocks.rs:197: fn block_ids<'a>(texts: impl Iterator<Item = &'a str>) -> Vec<String> {",
+     "named only in files that do not import glib"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

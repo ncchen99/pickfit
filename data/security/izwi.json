@@ -1,0 +1,199 @@
+{
+ "slug": "izwi",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "c69c896c57e23aab776cdda3565c633a1b7d2bd8",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 894,
+   "npm": 467
+  },
+  "scopes": {
+   "runtime": 1037,
+   "optional": 14,
+   "peer": 3,
+   "dev": 307
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 3
+ },
+ "assessment": {
+  "level": "none",
+  "policy_version": "sec.v2",
+  "reasons": [],
+  "counts": {},
+  "uncounted": 3,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 1361,
+  "packages_checked": 1361,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 894,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "ui/package-lock.json",
+    "status": "scanned",
+    "packages": 467,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/izwi-ai/izwi@c69c896c57e2",
+  "Cargo.lock",
+  "ui/package-lock.json"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:glib",
+   "version": "0.18.5",
+   "advisory": "GHSA-wrw7-89jp-8q8g",
+   "severity": "MODERATE",
+   "fixed_in": "0.20.0",
+   "summary": "Unsoundness in `Iterator` and `DoubleEndedIterator` impls for `glib::VariantStrIter`",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2024-0429"
+   ],
+   "published": "2024-12-23T20:19:24Z",
+   "modified": "2025-10-28T06:29:26.473225Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/glib@0.18.5",
+   "scope": "runtime",
+   "paths": [
+    "izwi-desktop > tauri > gtk > glib"
+   ],
+   "workspace": "crates/izwi-desktop",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Iterator",
+    "symbol:DoubleEndedIterator",
+    "symbol:glib::VariantStrIter"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "crates/izwi-core/src/kernels/cuda/fp8.rs:1703: fn finite_bytes() -> impl Iterator<Item = u8> {",
+     "named only in files that do not import glib"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:libsqlite3-sys",
+   "version": "0.37.0",
+   "advisory": "RUSTSEC-2026-0459",
+   "cves": [
+    "CVE-2026-119375"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.39.0",
+   "summary": "`libsqlite3-sys` via C SQLite CVE-2026-119375",
+   "malicious": false,
+   "aliases": [
+    "BIT-sqlite-2026-119375",
+    "CVE-2026-119375",
+    "GHSA-72w2-rjgg-q729",
+    "RUSTSEC-2026-0502"
+   ],
+   "published": "2026-10-30T12:00:00Z",
+   "modified": "2026-11-17T13:41:05.770775012Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/libsqlite3-sys@0.37.0",
+   "scope": "runtime",
+   "paths": [
+    "izwi-db > sea-orm > sqlx > sqlx-sqlite > libsqlite3-sys"
+   ],
+   "workspace": "crates/izwi-db",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00195,
+   "epss_percentile": 0.09275,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:minimatch",
+   "version": "10.2.6",
+   "advisory": "GHSA-g3hv-75wg-m249",
+   "cves": [
+    "CVE-2026-118764"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "11.0.1",
+   "summary": "minimatch has potential denial of service via globparts amplification",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118764"
+   ],
+   "published": "2026-10-30T23:09:55Z",
+   "modified": "2026-11-04T17:01:25.850114200Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-405"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/minimatch@10.2.6",
+   "scope": "dev",
+   "paths": [
+    ". > eslint > minimatch"
+   ],
+   "workspace": ".",
+   "found_in": "ui/package-lock.json",
+   "kev": false,
+   "epss": 0.00301,
+   "epss_percentile": 0.23299,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

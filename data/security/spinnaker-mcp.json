@@ -1,0 +1,186 @@
+{
+ "slug": "spinnaker-mcp",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "642ff81a0b397b2271eaa1c6a9ce798e45b5fb5e",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "go": 10,
+   "npm": 1
+  },
+  "scopes": {
+   "runtime": 11
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 3
+ },
+ "assessment": {
+  "level": "none",
+  "policy_version": "sec.v2",
+  "reasons": [],
+  "counts": {},
+  "uncounted": 3,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 11,
+  "packages_checked": 11,
+  "components": [
+   {
+    "ecosystem": "npm",
+    "component": "registry:npm:spinnaker-mcp",
+    "status": "partial",
+    "packages": 1,
+    "gaps": [
+     "binary.prebuilt_package"
+    ]
+   },
+   {
+    "ecosystem": "go",
+    "component": "go.mod",
+    "status": "scanned",
+    "packages": 10,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "npm:spinnaker-mcp (fresh install, 1 packages)",
+  "github.com/GeiserX/spinnaker-mcp@642ff81a0b39",
+  "go.mod"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "go:golang.org/x/text",
+   "version": "v0.14.0",
+   "advisory": "GO-2026-5970",
+   "cves": [
+    "CVE-2026-56852"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.39.0",
+   "summary": "Infinite loop on invalid input in golang.org/x/text",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-56852"
+   ],
+   "published": "2026-07-14T17:29:56Z",
+   "modified": "2026-11-14T13:12:13.157756222Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/text@v0.14.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/text"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00475,
+   "epss_percentile": 0.4181,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Form.Append",
+    "symbol:Form.AppendString",
+    "symbol:Form.Bytes"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/text",
+   "version": "v0.14.0",
+   "advisory": "GO-2026-6629",
+   "cves": [
+    "CVE-2026-56851"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.41.0",
+   "summary": "Panic parsing crafted input in x/text/secure/precis in golang.org/x/text",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-56851"
+   ],
+   "published": "2026-10-07T14:09:43Z",
+   "modified": "2026-11-14T13:12:14.100810021Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/text@v0.14.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/text"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00466,
+   "epss_percentile": 0.41058,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Profile.Append",
+    "symbol:Profile.AppendCompareKey",
+    "symbol:Profile.Bytes"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/mark3labs/mcp-go",
+   "version": "v1.5.0",
+   "advisory": "GO-2026-6911",
+   "severity": "UNKNOWN",
+   "summary": "SSRF and credential leak via unvalidated Location header in github.com/mark3labs/mcp-go",
+   "malicious": false,
+   "published": "2026-11-05T22:55:15Z",
+   "modified": "2026-11-05T23:15:16.971949313Z",
+   "purl": "pkg:golang/github.com/mark3labs/mcp-go@v1.5.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/mark3labs/mcp-go"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:NewStreamableHTTP",
+    "symbol:StreamableHTTP.Close",
+    "symbol:StreamableHTTP.SendNotification"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports github.com/mark3labs/mcp-go/client/transport; go.mod requires github.com/mark3labs/mcp-go directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2",
+   "fixed_in": null
+  }
+ ]
+}

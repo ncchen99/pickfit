@@ -106,44 +106,18 @@
     "runs": []
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/diffplug/dormouse@080cb6d11c29",
+      "github.com/diffplug/dormouse@8fc736c5789c",
       "pnpm-lock.yaml",
       "standalone/src-tauri/Cargo.lock"
     ],
-    "packages_checked": 1279,
-    "findings_total": 16,
-    "advisories_total": 14,
+    "packages_checked": 1701,
+    "findings_total": 2,
+    "advisories_total": 2,
     "findings": [
-      {
-        "package": "npm:dompurify",
-        "version": "3.4.15",
-        "advisory": "GHSA-cg2g-xh64-v4q7",
-        "cves": [
-          "CVE-2026-116804"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify SAFE_FOR_TEMPLATES bypass: split template expressions survive in attached shadow root content on DOM output modes",
-        "malicious": false
-      },
-      {
-        "package": "npm:dompurify",
-        "version": "3.4.16",
-        "advisory": "GHSA-cg2g-xh64-v4q7",
-        "cves": [
-          "CVE-2026-116804"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify SAFE_FOR_TEMPLATES bypass: split template expressions survive in attached shadow root content on DOM output modes",
-        "malicious": false
-      },
       {
         "package": "crates:quick-xml",
         "version": "0.39.4",
@@ -152,7 +126,23 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "standalone/src-tauri",
+        "found_in": "standalone/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "dormouse > tauri > plist > quick-xml"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -162,167 +152,112 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
-        "malicious": false
-      },
-      {
-        "package": "npm:brace-expansion",
-        "version": "5.0.6",
-        "advisory": "GHSA-3jxr-9vmj-r5cp",
-        "cves": [
-          "CVE-2026-13149"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "standalone/src-tauri",
+        "found_in": "standalone/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
         ],
-        "severity": "HIGH",
-        "fixed_in": "5.0.7",
-        "summary": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
-        "malicious": false
-      },
-      {
-        "package": "npm:brace-expansion",
-        "version": "5.0.6",
-        "advisory": "GHSA-6j4f-fj2g-mc7p",
-        "cves": [
-          "CVE-2026-102276"
+        "paths": [
+          "dormouse > tauri > plist > quick-xml"
         ],
-        "severity": "HIGH",
-        "fixed_in": "5.0.10",
-        "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
-        "malicious": false
-      },
-      {
-        "package": "npm:brace-expansion",
-        "version": "5.0.6",
-        "advisory": "GHSA-mh99-v99m-4gvg",
-        "cves": [
-          "CVE-2026-14257"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "5.0.8",
-        "summary": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
-        "malicious": false
-      },
-      {
-        "package": "npm:brace-expansion",
-        "version": "5.0.6",
-        "advisory": "GHSA-qhr7-859c-m2p7",
-        "cves": [
-          "CVE-2026-102278"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "5.0.11",
-        "summary": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
-        "malicious": false
-      },
-      {
-        "package": "npm:brace-expansion",
-        "version": "5.0.6",
-        "advisory": "GHSA-rgw5-rvv9-x895",
-        "cves": [
-          "CVE-2026-69152"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "5.0.9",
-        "summary": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
-        "malicious": false
-      },
-      {
-        "package": "npm:dompurify",
-        "version": "3.4.15",
-        "advisory": "GHSA-mrv2-3pqr-j5jr",
-        "cves": [
-          "CVE-2026-116803"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
-        "malicious": false
-      },
-      {
-        "package": "npm:dompurify",
-        "version": "3.4.16",
-        "advisory": "GHSA-mrv2-3pqr-j5jr",
-        "cves": [
-          "CVE-2026-116803"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
-        "malicious": false
-      },
-      {
-        "package": "npm:undici",
-        "version": "8.11.2",
-        "advisory": "GHSA-2m5v-pch6-74hx",
-        "cves": [
-          "CVE-2026-109383"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "8.12.2",
-        "summary": "undici vulnerable to TLS certificate validation bypass via dropped tls options in Agent",
-        "malicious": false
-      },
-      {
-        "package": "npm:undici",
-        "version": "8.11.2",
-        "advisory": "GHSA-4w7w-5xrc-9h26",
-        "cves": [
-          "CVE-2026-109829"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "8.12.2",
-        "summary": "undici vulnerable to cache poisoning and cross-user disclosure via cross-origin redirects",
-        "malicious": false
-      },
-      {
-        "package": "npm:undici",
-        "version": "8.11.2",
-        "advisory": "GHSA-qrxm-fqhp-jwvm",
-        "cves": [
-          "CVE-2026-87018"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "8.12.2",
-        "summary": "undici vulnerable to Denial of Service via TLS 1.2 certificate-changing renegotiation",
-        "malicious": false
-      },
-      {
-        "package": "npm:undici",
-        "version": "8.11.2",
-        "advisory": "GHSA-xjj6-f33q-929c",
-        "cves": [
-          "CVE-2026-109869"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "8.12.2",
-        "summary": "undici vulnerable to Denial of Service via unhandled error on excessive content-encodings",
-        "malicious": false
-      },
-      {
-        "package": "npm:zod",
-        "version": "4.6.5",
-        "advisory": "GHSA-mrhx-c7xc-m3w5",
-        "cves": [
-          "CVE-2023-54404"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.6.6",
-        "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use NsReader, but other packages depend on quick-xml"
+          ]
+        }
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "8fc736c5789c7f906ba7fd0fa90f944a5b0b1524",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 502,
+        "npm": 1199
+      },
+      "scopes": {
+        "runtime": 516,
+        "dev": 388,
+        "workspace": 797
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 5,
+      "details": "security/dormouse.json",
+      "details_sha256": "0c1aa60ae2147248b381b901d51e8a6666a9ec57eac381450cf50f36eb37e07e"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0194 crates:quick-xml@0.39.4 (conditional)",
+        "worst:RUSTSEC-2026-0195 crates:quick-xml@0.39.4 (conditional)"
+      ],
+      "counts": {
+        "conditional": 2
+      },
+      "uncounted": 3,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 1701,
+      "packages_checked": 1701,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "pnpm-lock.yaml",
+          "status": "scanned",
+          "packages": 1199,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "standalone/src-tauri/Cargo.lock",
+          "status": "scanned",
+          "packages": 502,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 54.5,
-      "raw_total": 54.5,
       "confidence": 0.4,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.3125,
@@ -342,16 +277,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 54.5,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -759,5 +691,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:15+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

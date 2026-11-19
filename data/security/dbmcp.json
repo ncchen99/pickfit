@@ -1,0 +1,174 @@
+{
+ "slug": "dbmcp",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "cc27aed8c97172c9a23d174067d904a3ae91393b",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 492
+  },
+  "scopes": {
+   "runtime": 452,
+   "optional": 1,
+   "dev": 39
+  },
+  "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 2
+ },
+ "assessment": {
+  "level": "none",
+  "policy_version": "sec.v2",
+  "reasons": [],
+  "counts": {},
+  "uncounted": 2,
+  "assessed_at": "2026-11-20T00:06:03+08:00"
+ },
+ "coverage": {
+  "state": "partial",
+  "target": "repo_lockfile",
+  "packages_found": 496,
+  "packages_checked": 492,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 492,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "npm/dbmcp/package.json",
+    "status": "not_scanned",
+    "packages": 4,
+    "gaps": [
+     "lockfile.missing"
+    ]
+   }
+  ],
+  "gaps": [
+   {
+    "code": "lockfile.missing",
+    "category": "lockfile_missing",
+    "ecosystem": "npm",
+    "component": "npm/dbmcp/package.json",
+    "detail": "package.json without a lockfile",
+    "capability": "lockfile_from_manifest:npm",
+    "found": 4,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   },
+   {
+    "code": "resolve.registry_failed",
+    "category": "resolve_failed",
+    "ecosystem": "crates",
+    "component": "crates:dbmcp",
+    "detail": "HTTPError: HTTP Error 404: Not Found",
+    "capability": "resolve_in_sandbox",
+    "found": null,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   }
+  ]
+ },
+ "sources": [
+  "github.com/haymon-ai/dbmcp@cc27aed8c971",
+  "Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:rsa",
+   "version": "0.10.0-rc.18",
+   "advisory": "RUSTSEC-2023-0071",
+   "cves": [
+    "CVE-2023-49092"
+   ],
+   "severity": "MODERATE",
+   "summary": "Marvin Attack: potential key recovery through timing sidechannels",
+   "malicious": false,
+   "aliases": [
+    "CVE-2023-49092",
+    "GHSA-4grx-2x9w-596c",
+    "GHSA-c38w-74pg-36hr"
+   ],
+   "published": "2023-11-22T12:00:00Z",
+   "modified": "2026-11-08T23:15:02.609337046Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/rsa@0.10.0-rc.18",
+   "scope": "runtime",
+   "paths": [
+    "dbmcp-ssh > russh > rsa"
+   ],
+   "workspace": "crates/ssh",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.0061,
+   "epss_percentile": 0.5003,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2",
+   "fixed_in": null
+  },
+  {
+   "package": "crates:libsqlite3-sys",
+   "version": "0.37.0",
+   "advisory": "RUSTSEC-2026-0459",
+   "cves": [
+    "CVE-2026-119375"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.39.0",
+   "summary": "`libsqlite3-sys` via C SQLite CVE-2026-119375",
+   "malicious": false,
+   "aliases": [
+    "BIT-sqlite-2026-119375",
+    "CVE-2026-119375",
+    "GHSA-72w2-rjgg-q729",
+    "RUSTSEC-2026-0502"
+   ],
+   "published": "2026-10-30T12:00:00Z",
+   "modified": "2026-11-17T13:41:05.770775012Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/libsqlite3-sys@0.37.0",
+   "scope": "runtime",
+   "paths": [
+    "dbmcp-mysql > sqlx > sqlx-sqlite > libsqlite3-sys"
+   ],
+   "workspace": "crates/mysql",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00195,
+   "epss_percentile": 0.09275,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

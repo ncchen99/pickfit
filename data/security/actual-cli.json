@@ -1,0 +1,276 @@
+{
+ "slug": "actual-cli",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "e25b6399738267ad9d6fe83041e55ee4bf3e4753",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 610,
+   "npm": 5
+  },
+  "scopes": {
+   "runtime": 514,
+   "optional": 62,
+   "dev": 17,
+   "workspace": 22
+  },
+  "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 6
+ },
+ "assessment": {
+  "level": "none",
+  "policy_version": "sec.v2",
+  "reasons": [],
+  "counts": {},
+  "uncounted": 6,
+  "assessed_at": "2026-11-20T00:06:03+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 615,
+  "packages_checked": 615,
+  "components": [
+   {
+    "ecosystem": "npm",
+    "component": "registry:npm:@actualai/actual",
+    "status": "partial",
+    "packages": 5,
+    "gaps": [
+     "binary.prebuilt_package"
+    ]
+   },
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 610,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "npm:@actualai/actual (fresh install, 5 packages)",
+  "github.com/actual-software/actual-cli@e25b63997382",
+  "Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:rsa",
+   "version": "0.9.10",
+   "advisory": "RUSTSEC-2023-0071",
+   "cves": [
+    "CVE-2023-49092"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.10.0",
+   "summary": "Marvin Attack: potential key recovery through timing sidechannels",
+   "malicious": false,
+   "aliases": [
+    "CVE-2023-49092",
+    "GHSA-4grx-2x9w-596c",
+    "GHSA-c38w-74pg-36hr"
+   ],
+   "published": "2023-11-22T12:00:00Z",
+   "modified": "2026-11-08T23:15:02.609337046Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/rsa@0.9.10",
+   "scope": "runtime",
+   "paths": [
+    "actual-cli > jsonwebtoken > rsa"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.0061,
+   "epss_percentile": 0.5003,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:crossbeam-epoch",
+   "version": "0.9.18",
+   "advisory": "RUSTSEC-2026-0204",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.9.20",
+   "summary": "Invalid pointer dereference in `fmt::Pointer` impl for `Atomic` and `Shared` when the underlying pointer is invalid",
+   "malicious": false,
+   "published": "2026-07-06T12:00:00Z",
+   "modified": "2026-07-06T22:30:04.159269138Z",
+   "purl": "pkg:cargo/crossbeam-epoch@0.9.18",
+   "scope": "runtime",
+   "paths": [
+    "actual-cli > ignore > crossbeam-deque > crossbeam-epoch"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:fmt::Pointer",
+    "symbol:Atomic",
+    "symbol:Shared"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "src/cli/commands/sync/pipeline.rs:3236: make_test_adr(\"adr-003\", \"Shared ADR\", vec![]),",
+     "named only in files that do not import crossbeam-epoch"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:crypto-bigint",
+   "version": "0.5.5",
+   "advisory": "RUSTSEC-2026-0387",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.7.6",
+   "summary": "Multiple timing variability issues in operations intended to be constant-time",
+   "malicious": false,
+   "published": "2026-10-23T12:00:00Z",
+   "modified": "2026-10-24T03:45:02.365137418Z",
+   "purl": "pkg:cargo/crypto-bigint@0.5.5",
+   "scope": "runtime",
+   "paths": [
+    "actual-cli > jsonwebtoken > p256 > elliptic-curve > crypto-bigint"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:h2",
+   "version": "0.4.13",
+   "advisory": "RUSTSEC-2026-0258",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.4.16",
+   "summary": "h2 unbounded empty DATA frames",
+   "malicious": false,
+   "aliases": [
+    "GHSA-q83h-524g-xf6h"
+   ],
+   "published": "2026-08-17T12:00:00Z",
+   "modified": "2026-10-12T18:00:10.934581734Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/h2@0.4.13",
+   "scope": "runtime",
+   "paths": [
+    "actual-cli > reqwest > hyper > h2"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:webpki-roots",
+   "version": "1.0.6",
+   "advisory": "RUSTSEC-2026-0381",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "1.0.10",
+   "summary": "Bundled root certificates allow trust in distrusted emSign intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0382",
+    "RUSTSEC-2026-0383"
+   ],
+   "published": "2026-10-19T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/webpki-roots@1.0.6",
+   "scope": "runtime",
+   "paths": [
+    "actual-cli > reqwest > webpki-roots"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-udp",
+   "version": "0.5.14",
+   "advisory": "RUSTSEC-2026-0538",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.5.16",
+   "summary": "Receive loop can spin after a truncated datagram",
+   "malicious": false,
+   "aliases": [
+    "GHSA-6pp4-4cxf-xf88"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:08.844283231Z",
+   "purl": "pkg:cargo/quinn-udp@0.5.14",
+   "scope": "optional",
+   "paths": [
+    "actual-cli > reqwest > quinn > quinn-udp"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

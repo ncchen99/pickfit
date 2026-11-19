@@ -233,19 +233,17 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
       "npm:@linuztx/alter-zero (fresh install, 5 packages)",
-      "github.com/linuztx/alter-zero@dc129f6676eb",
+      "github.com/linuztx/alter-zero@66553cad57dd",
       "Cargo.lock"
     ],
-    "packages_checked": 419,
-    "findings_total": 4,
-    "advisories_total": 4,
+    "packages_checked": 413,
+    "findings_total": 2,
+    "advisories_total": 2,
     "findings": [
       {
         "package": "crates:quick-xml",
@@ -255,7 +253,23 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "alter-zero > wl-clipboard-rs > wayland-client > wayland-scanner > quick-xml"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -265,43 +279,148 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
-        "malicious": false
-      },
-      {
-        "package": "crates:quinn-proto",
-        "version": "0.11.16",
-        "advisory": "RUSTSEC-2026-0340",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.11.18",
-        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
-      },
-      {
-        "package": "crates:quinn-proto",
-        "version": "0.11.16",
-        "advisory": "RUSTSEC-2026-0341",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.11.17",
-        "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
+        ],
+        "paths": [
+          "alter-zero > wl-clipboard-rs > wayland-client > wayland-scanner > quick-xml"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use NsReader, but other packages depend on quick-xml"
+          ]
+        }
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:06:03+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "66553cad57dd0cf2de6593a9c621d2eee190ab37",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 408,
+        "npm": 5
+      },
+      "scopes": {
+        "runtime": 391,
+        "optional": 8,
+        "workspace": 14
+      },
+      "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 16,
+      "details": "security/alter-zero.json",
+      "details_sha256": "d60fa4f88fc7a52e5746e78bcb0d7bc27106feae41dbc2d91ea5cf0583ecac6c"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0194 crates:quick-xml@0.39.4 (conditional)",
+        "worst:RUSTSEC-2026-0195 crates:quick-xml@0.39.4 (conditional)",
+        "worst:RUSTSEC-2026-0340 crates:quinn-proto@0.11.16 (not_shipped)"
+      ],
+      "counts": {
+        "conditional": 2,
+        "not_shipped": 2
+      },
+      "uncounted": 12,
+      "assessed_at": "2026-11-20T00:06:03+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 417,
+      "packages_checked": 413,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "registry:npm:@linuztx/alter-zero",
+          "status": "partial",
+          "packages": 5,
+          "gaps": [
+            "binary.prebuilt_package"
+          ]
+        },
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 408,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "npm/package.json",
+          "status": "not_scanned",
+          "packages": 4,
+          "gaps": [
+            "lockfile.missing"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "code": "lockfile.missing",
+          "category": "lockfile_missing",
+          "ecosystem": "npm",
+          "component": "npm/package.json",
+          "detail": "package.json without a lockfile",
+          "capability": "lockfile_from_manifest:npm",
+          "found": 4,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "binary.prebuilt_package",
+          "category": "binary_no_metadata",
+          "ecosystem": "npm",
+          "component": "npm:@linuztx/alter-zero",
+          "detail": "the package wraps a compiled binary",
+          "capability": "sbom_binary",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 91.3,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.8125,
@@ -321,16 +440,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 91.3,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -768,5 +884,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:06:03+08:00"
 }

@@ -286,18 +286,16 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/kashyaprajharsh/medha-agent@b810eaf4f936",
+      "github.com/kashyaprajharsh/medha-agent@f3085ffe202b",
       "Cargo.lock",
       "apps/desktop/package-lock.json",
       "apps/desktop/src-tauri/Cargo.lock"
     ],
-    "packages_checked": 1065,
+    "packages_checked": 1197,
     "findings_total": 2,
     "advisories_total": 2,
     "findings": [
@@ -309,7 +307,31 @@
         "severity": "HIGH",
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/mcp",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-09-14T10:08:32Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ACK_FREQUENCY"
+        ],
+        "paths": [
+          "mcp > reqwest > quinn > quinn-proto"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+          ]
+        }
       },
       {
         "package": "crates:quinn-proto",
@@ -319,23 +341,114 @@
         "severity": "HIGH",
         "fixed_in": "0.11.17",
         "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/mcp",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-08-17T17:32:41Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "mcp > reqwest > quinn > quinn-proto"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "f3085ffe202b2f6da62dde2820df93afc72639c4",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 906,
+        "npm": 291
+      },
+      "scopes": {
+        "runtime": 1035,
+        "optional": 36,
+        "dev": 120,
+        "workspace": 6
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 15,
+      "details": "security/medha-agent.json",
+      "details_sha256": "6e5a7c962cdc032dc5bcb3115d4114d9ec865951f412a98f10fc2fc1593be139"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0340 crates:quinn-proto@0.11.16 (conditional)",
+        "worst:RUSTSEC-2026-0341 crates:quinn-proto@0.11.16 (conditional)",
+        "worst:GHSA-68fv-2mgg-jv7q npm:source-map-js@1.2.1 (not_shipped)"
+      ],
+      "counts": {
+        "conditional": 2,
+        "not_shipped": 2
+      },
+      "uncounted": 11,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 1197,
+      "packages_checked": 1197,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 587,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "apps/desktop/package-lock.json",
+          "status": "scanned",
+          "packages": 291,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "apps/desktop/src-tauri/Cargo.lock",
+          "status": "scanned",
+          "packages": 575,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 84.7,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.7,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.8125,
@@ -355,16 +468,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 84.7,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -784,5 +894,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

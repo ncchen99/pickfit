@@ -139,21 +139,20 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-05T03:16:33+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/Stirling-Tools/Stirling-PDF@b78729215bf3",
+      "github.com/Stirling-Tools/Stirling-PDF@c544e2c3457f",
+      "devTools/package-lock.json",
       "frontend/package-lock.json",
       "frontend/src-tauri/Cargo.lock",
       "frontend/src-tauri/provisioner/Cargo.lock",
       "frontend/src-tauri/thumbnail-handler/Cargo.lock"
     ],
-    "packages_checked": 1198,
-    "findings_total": 13,
-    "advisories_total": 11,
+    "packages_checked": 1973,
+    "findings_total": 11,
+    "advisories_total": 9,
     "findings": [
       {
         "package": "crates:zip",
@@ -165,7 +164,21 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "frontend/src-tauri",
+        "found_in": "frontend/src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.0032,
+        "fix_published_at": "2026-10-17T18:45:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "stirling-pdf > tauri-plugin-updater > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -175,7 +188,31 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "frontend/src-tauri",
+        "found_in": "frontend/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:ZipStreamReader::extract",
+          "symbol:ZipArchive::extract"
+        ],
+        "paths": [
+          "stirling-pdf > tauri-plugin-updater > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+          ]
+        }
       },
       {
         "package": "crates:quick-xml",
@@ -185,17 +222,23 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
-        "malicious": false
-      },
-      {
-        "package": "crates:quick-xml",
-        "version": "0.38.4",
-        "advisory": "RUSTSEC-2026-0194",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.41.0",
-        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "frontend/src-tauri",
+        "found_in": "frontend/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "stirling-pdf > tauri-plugin-notification > notify-rust > tauri-winrt-notification > quick-xml"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -205,7 +248,57 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "frontend/src-tauri",
+        "found_in": "frontend/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
+        ],
+        "paths": [
+          "stirling-pdf > tauri-plugin-notification > notify-rust > tauri-winrt-notification > quick-xml"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use NsReader, but other packages depend on quick-xml"
+          ]
+        }
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.38.4",
+        "advisory": "RUSTSEC-2026-0194",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "frontend/src-tauri",
+        "found_in": "frontend/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "stirling-pdf > tauri > plist > quick-xml"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -215,7 +308,31 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "frontend/src-tauri",
+        "found_in": "frontend/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
+        ],
+        "paths": [
+          "stirling-pdf > tauri > plist > quick-xml"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use NsReader, but other packages depend on quick-xml"
+          ]
+        }
       },
       {
         "package": "crates:quinn-proto",
@@ -225,7 +342,31 @@
         "severity": "HIGH",
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "frontend/src-tauri",
+        "found_in": "frontend/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-09-14T10:08:32Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ACK_FREQUENCY"
+        ],
+        "paths": [
+          "stirling-pdf > reqwest > quinn > quinn-proto"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+          ]
+        }
       },
       {
         "package": "crates:quinn-proto",
@@ -235,7 +376,23 @@
         "severity": "HIGH",
         "fixed_in": "0.11.17",
         "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "frontend/src-tauri",
+        "found_in": "frontend/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-08-17T17:32:41Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "stirling-pdf > reqwest > quinn > quinn-proto"
+        ]
       },
       {
         "package": "crates:zip",
@@ -247,7 +404,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "frontend/src-tauri",
+        "found_in": "frontend/src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00461,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "stirling-pdf > tauri-plugin-updater > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -257,17 +431,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
-      },
-      {
-        "package": "npm:@vue/server-renderer",
-        "version": "3.5.39",
-        "advisory": "GHSA-g2v6-rqmx-r4w6",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "3.5.42",
-        "summary": "@vue/server-renderer: XSS via missing CR in attribute-name blacklist",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "frontend/src-tauri",
+        "found_in": "frontend/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
+        ],
+        "paths": [
+          "stirling-pdf > tauri-plugin-updater > zip"
+        ]
       },
       {
         "package": "npm:react-router",
@@ -277,35 +458,289 @@
         "severity": "HIGH",
         "fixed_in": "7.18.2",
         "summary": "React Router: RSC Mode CSRF Bypass Allows Action Execution Before 400 Response",
-        "malicious": false
-      },
-      {
-        "package": "npm:source-map-js",
-        "version": "1.2.1",
-        "advisory": "GHSA-68fv-2mgg-jv7q",
-        "cves": [
-          "CVE-2026-93749"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "frontend/package-lock.json",
+        "kev": false,
+        "fix_published_at": "2026-07-28T21:53:08Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction"
         ],
-        "severity": "HIGH",
-        "fixed_in": "1.2.2",
-        "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
-        "malicious": false
+        "paths": [
+          ". > react-router-dom > react-router"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "c544e2c3457f52d05675b36dffacc44a4479149e",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 682,
+        "npm": 1291
+      },
+      "scopes": {
+        "runtime": 1114,
+        "peer": 33,
+        "build": 59,
+        "dev": 767
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 58,
+      "details": "security/stirling-pdf.json",
+      "details_sha256": "5241a1ebeeb36cb5c65de45db8ce2affd870826eae432a374ccdf632b7b3b372"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-m665-v7pm-7grj crates:zip@4.6.1 (conditional)",
+        "worst:RUSTSEC-2026-0369 crates:zip@4.6.1 (conditional)",
+        "worst:RUSTSEC-2026-0194 crates:quick-xml@0.37.5 (conditional)"
+      ],
+      "counts": {
+        "conditional": 11,
+        "not_shipped": 14
+      },
+      "uncounted": 33,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 2105,
+      "packages_checked": 1973,
+      "components": [
+        {
+          "ecosystem": "maven",
+          "component": "app/common/build.gradle",
+          "status": "not_scanned",
+          "packages": 26,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "app/core/build.gradle",
+          "status": "not_scanned",
+          "packages": 39,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "app/proprietary/build.gradle",
+          "status": "not_scanned",
+          "packages": 46,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "app/saas/build.gradle",
+          "status": "not_scanned",
+          "packages": 9,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "build.gradle",
+          "status": "not_scanned",
+          "packages": 8,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "buildSrc/build.gradle",
+          "status": "not_scanned",
+          "packages": 3,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "devTools/package-lock.json",
+          "status": "scanned",
+          "packages": 120,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "frontend/package-lock.json",
+          "status": "scanned",
+          "packages": 1267,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "frontend/src-tauri/Cargo.lock",
+          "status": "scanned",
+          "packages": 672,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "frontend/src-tauri/provisioner/Cargo.lock",
+          "status": "scanned",
+          "packages": 11,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "frontend/src-tauri/thumbnail-handler/Cargo.lock",
+          "status": "scanned",
+          "packages": 19,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "testing/compose/mcp-client-check/package.json",
+          "status": "not_scanned",
+          "packages": 1,
+          "gaps": [
+            "lockfile.missing"
+          ]
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "engine/pyproject.toml",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "resolve.pyproject_failed"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "app/common/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 26,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "app/core/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 39,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "app/proprietary/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 46,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "app/saas/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 9,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 8,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "buildSrc/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 3,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "lockfile.missing",
+          "category": "lockfile_missing",
+          "ecosystem": "npm",
+          "component": "testing/compose/mcp-client-check/package.json",
+          "detail": "package.json without a lockfile",
+          "capability": "lockfile_from_manifest:npm",
+          "found": 1,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "resolve.pyproject_failed",
+          "category": "resolve_failed",
+          "ecosystem": "pypi",
+          "component": "engine/pyproject.toml",
+          "detail": "uv pip compile --no-build did not resolve it",
+          "capability": "resolve_in_sandbox",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 46.8,
-      "raw_total": 46.8,
       "confidence": 0.5,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.375,
@@ -325,16 +760,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 46.8,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -699,5 +1131,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:09+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

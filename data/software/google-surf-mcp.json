@@ -307,32 +307,114 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
-    "status": "clean",
+    "version": "sec.v2",
+    "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "npm:google-surf-mcp (fresh install, 234 packages)"
+      "npm:google-surf-mcp (fresh install, 317 packages)"
     ],
-    "packages_checked": 231,
-    "findings_total": 0,
-    "advisories_total": 0,
-    "findings": []
+    "packages_checked": 311,
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "npm:pdfjs-dist",
+        "version": "6.1.200",
+        "advisory": "GHSA-hq66-cqwq-w95j",
+        "cves": [
+          "CVE-2026-16633"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "6.2.108",
+        "summary": "PDF.js: Arbitrary JavaScript execution upon opening a malicious PDF",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "registry:npm:google-surf-mcp",
+        "kev": false,
+        "fix_published_at": "2026-07-28T19:51:33Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction"
+        ],
+        "paths": [
+          "npm:google-surf-mcp > google-surf-mcp > officeparser > pdfjs-dist"
+        ]
+      }
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "registry_resolve",
+      "commit": null,
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "npm": 311
+      },
+      "scopes": {
+        "runtime": 300,
+        "peer": 11
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 2,
+      "details": "security/google-surf-mcp.json",
+      "details_sha256": "5fb49d659886f7c6d1b662bc35c7ddf32dfb3b7d914ded6b81d867f71ef7e94e"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-hq66-cqwq-w95j npm:pdfjs-dist@6.1.200 (conditional)"
+      ],
+      "counts": {
+        "conditional": 1
+      },
+      "uncounted": 1,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "registry_resolve",
+      "packages_found": 311,
+      "packages_checked": 311,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "registry:npm:google-surf-mcp",
+          "status": "scanned",
+          "packages": 317,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
-      "total": 90.4,
-      "raw_total": 90.4,
+      "total": 79.0,
       "confidence": 0.7,
-      "cap": null,
-      "cap_reason": null,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.8125,
@@ -352,17 +434,14 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 90.4,
       "security": {
-        "level": "clean",
-        "basis": "status",
-        "effect": "none",
+        "level": "conditional",
+        "basis": "assessment",
+        "effect": "capped",
         "deduction": 0.0
       }
     },
@@ -384,7 +463,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 12.66
+      "value": 11.06
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -782,5 +861,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:19+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

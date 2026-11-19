@@ -318,33 +318,136 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-19T19:17:21+08:00",
-    "status": "clean",
-    "unchecked_reason": null,
+    "version": "sec.v2",
+    "status": "unchecked",
+    "unchecked_reason": "lockfile_not_supported",
     "sources": [
-      "github.com/vinhnx/VTCode@d1d241fde2d5",
+      "github.com/vinhnx/VTCode@059d4e06c9c9",
       "Cargo.lock"
     ],
     "packages_checked": 1257,
     "findings_total": 0,
     "advisories_total": 0,
-    "findings": []
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:50:25+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "059d4e06c9c983cf02142df30b4341691a323837",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 1257
+      },
+      "scopes": {
+        "runtime": 1172,
+        "optional": 50,
+        "dev": 21,
+        "workspace": 14
+      },
+      "advisories_fetched_at": "2026-11-20T00:50:25+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 1,
+      "details": "security/vtcode.json",
+      "details_sha256": "4e4c24f175f66251f4e6cd7004ce51e69183c7b7cd730bad40ec311d1660ceef"
+    },
+    "assessment": {
+      "level": "none",
+      "policy_version": "sec.v2",
+      "reasons": [],
+      "counts": {},
+      "uncounted": 1,
+      "assessed_at": "2026-11-20T00:50:25+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 1383,
+      "packages_checked": 1257,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 1257,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "apps/webmcp/bun.lock",
+          "status": "not_scanned",
+          "packages": 125,
+          "gaps": [
+            "lockfile.unsupported_format"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "package.json",
+          "status": "not_scanned",
+          "packages": 1,
+          "gaps": [
+            "lockfile.missing"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "code": "lockfile.unsupported_format",
+          "category": "lockfile_unreadable",
+          "ecosystem": "npm",
+          "component": "apps/webmcp/bun.lock",
+          "detail": "bun_lock is not read yet",
+          "capability": "read_lockfile:bun_lock",
+          "found": 125,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "lockfile.missing",
+          "category": "lockfile_missing",
+          "ecosystem": "npm",
+          "component": "package.json",
+          "detail": "package.json without a lockfile",
+          "capability": "lockfile_from_manifest:npm",
+          "found": 1,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "resolve.registry_failed",
+          "category": "resolve_failed",
+          "ecosystem": "crates",
+          "component": "crates:vtcode",
+          "detail": "HTTPError: HTTP Error 404: Not Found",
+          "capability": "resolve_in_sandbox",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T23:36:56+08:00",
+    "computed_at": "2026-11-20T00:50:25+08:00",
     "quality": {
       "total": 85.4,
-      "raw_total": 85.4,
       "confidence": 0.7,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 0.7225,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.8125,
@@ -364,16 +467,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 85.4,
       "security": {
-        "level": "clean",
-        "basis": "status",
+        "level": "none",
+        "basis": "assessment",
         "effect": "none",
         "deduction": 0.0
       }
@@ -731,5 +831,5 @@
     }
   ],
   "first_seen_at": "2026-11-19T19:15:27+08:00",
-  "updated_at": "2026-11-19T23:36:56+08:00"
+  "updated_at": "2026-11-20T00:50:25+08:00"
 }

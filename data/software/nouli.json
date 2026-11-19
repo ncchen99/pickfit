@@ -233,16 +233,14 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/standing-desks/nouli@41b1c70f3a4f",
+      "github.com/standing-desks/nouli@920eaa9635b3",
       "Cargo.lock"
     ],
-    "packages_checked": 359,
+    "packages_checked": 378,
     "findings_total": 1,
     "advisories_total": 1,
     "findings": [
@@ -254,23 +252,95 @@
         "severity": "HIGH",
         "fixed_in": "0.38.0",
         "summary": "Panic and unbounded allocation (OOM) in the CFB/OLE2 parser on malformed input",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "nouli-cli",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-11-02T01:32:22Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "nouli-cli > calamine"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "920eaa9635b329178bd43720268a2076347c4fef",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 378
+      },
+      "scopes": {
+        "runtime": 351,
+        "optional": 8,
+        "dev": 19
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 1,
+      "details": "security/nouli.json",
+      "details_sha256": "f5d247c8229f841933ae1ec263e7b967556713978b5df464f047f7747b341046"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0436 crates:calamine@0.37.0 (conditional)"
+      ],
+      "counts": {
+        "conditional": 1
+      },
+      "uncounted": 0,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 378,
+      "packages_checked": 378,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 378,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 87.2,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.8125,
@@ -290,16 +360,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 87.2,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -636,5 +703,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:24:35+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

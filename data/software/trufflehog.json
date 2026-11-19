@@ -330,13 +330,11 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-16T03:37:09+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/trufflesecurity/trufflehog@72cae0fbb6d5",
+      "github.com/trufflesecurity/trufflehog@9529cc6177f5",
       "go.mod"
     ],
     "packages_checked": 311,
@@ -353,7 +351,26 @@
         "severity": "HIGH",
         "fixed_in": null,
         "summary": "Docker: Race condition in docker cp allows bind mount redirection to host path",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "kev": false,
+        "epss": 0.00104,
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction",
+          "high_complexity",
+          "symbol:Daemon.openContainerFS"
+        ],
+        "paths": [
+          "go.mod > github.com/docker/docker"
+        ]
       },
       {
         "package": "go:github.com/docker/docker",
@@ -365,7 +382,26 @@
         "severity": "HIGH",
         "fixed_in": null,
         "summary": "Docker: `PUT /containers/{id}/archive` executes container binary on the host",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "kev": false,
+        "epss": 0.00318,
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction",
+          "high_complexity",
+          "symbol:Daemon.containerExtractToDir"
+        ],
+        "paths": [
+          "go.mod > github.com/docker/docker"
+        ]
       },
       {
         "package": "go:github.com/docker/docker",
@@ -377,23 +413,90 @@
         "severity": "HIGH",
         "fixed_in": null,
         "summary": "Moby has AuthZ plugin bypass when provided oversized request bodies in github.com/docker/docker",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "kev": false,
+        "epss": 0.09469,
+        "paths": [
+          "go.mod > github.com/docker/docker"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "9529cc6177f50ed15e29cb886547749627e5f96e",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "go": 311
+      },
+      "scopes": {
+        "runtime": 311
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 6,
+      "details": "security/trufflehog.json",
+      "details_sha256": "3fd71da6d60c21b813d5de2a84744a5dff4b55fa00a6d77b05e8699e5bf3d67a"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-rg2x-37c3-w2rh go:github.com/docker/docker@v28.5.2+incompatible (conditional)",
+        "worst:GHSA-x86f-5xw2-fm2r go:github.com/docker/docker@v28.5.2+incompatible (conditional)",
+        "worst:GO-2026-4887 go:github.com/docker/docker@v28.5.2+incompatible (conditional)"
+      ],
+      "counts": {
+        "conditional": 3
+      },
+      "uncounted": 3,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 311,
+      "packages_checked": 311,
+      "components": [
+        {
+          "ecosystem": "go",
+          "component": "go.mod",
+          "status": "scanned",
+          "packages": 311,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 83.7,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.8125,
@@ -413,16 +516,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 83.7,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -787,5 +887,5 @@
     }
   ],
   "first_seen_at": "2026-11-16T00:50:43+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

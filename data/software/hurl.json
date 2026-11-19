@@ -284,13 +284,11 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-05T03:16:33+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/Orange-OpenSource/hurl@42758592ff41",
+      "github.com/Orange-OpenSource/hurl@41a0fa4bc5f7",
       "Cargo.lock",
       "contrib/npm/hurl/package-lock.json",
       "contrib/sample/Cargo.lock",
@@ -310,7 +308,23 @@
         "severity": "HIGH",
         "fixed_in": null,
         "summary": "extract-zip allows arbitrary file writes through symlink archive entries",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "contrib/npm/hurl/package-lock.json",
+        "kev": false,
+        "epss": 0.00453,
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction"
+        ],
+        "paths": [
+          ". > extract-zip"
+        ]
       },
       {
         "package": "npm:extract-zip",
@@ -322,23 +336,118 @@
         "severity": "HIGH",
         "fixed_in": null,
         "summary": "extract-zip unvalidated symlink path traversal",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "contrib/npm/hurl/package-lock.json",
+        "kev": false,
+        "epss": 0.00526,
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction"
+        ],
+        "paths": [
+          ". > extract-zip"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "41a0fa4bc5f735f7dd2b01825faf12dc191b1562",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 323,
+        "npm": 21,
+        "pypi": 7
+      },
+      "scopes": {
+        "runtime": 350,
+        "optional": 1
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 4,
+      "details": "security/hurl.json",
+      "details_sha256": "ea72845eeb3cb6f99706a2f23c2905cd2d393001af00c3221684129882033454"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-7pqw-9j4j-h8q3 npm:extract-zip@2.0.1 (conditional)",
+        "worst:GHSA-jmr9-qjv8-65gv npm:extract-zip@2.0.1 (conditional)"
+      ],
+      "counts": {
+        "conditional": 2
+      },
+      "uncounted": 2,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 351,
+      "packages_checked": 351,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 156,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "contrib/npm/hurl/package-lock.json",
+          "status": "scanned",
+          "packages": 21,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "contrib/sample/Cargo.lock",
+          "status": "scanned",
+          "packages": 183,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "bin/requirements.txt",
+          "status": "scanned",
+          "packages": 7,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 81.9,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.75,
@@ -358,16 +467,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 81.9,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -771,5 +877,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:56+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

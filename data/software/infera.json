@@ -59,20 +59,18 @@
     "runs": []
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/AMD-AGI/Infera@44a294f80582",
+      "github.com/AMD-AGI/Infera@962845a65c03",
       "deploy/operator/go.mod",
       "rust/Cargo.lock",
       "agent_sys/pyproject.toml (resolved today)",
       "pyproject.toml (resolved today)",
       "manual/sphinx/requirements.txt"
     ],
-    "packages_checked": 513,
+    "packages_checked": 514,
     "findings_total": 31,
     "advisories_total": 31,
     "findings": [
@@ -84,7 +82,22 @@
         "severity": "CRITICAL",
         "fixed_in": "2026.10.18",
         "summary": "certifi bundles emSign root CAs with compromised intermediate CA keys",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual/sphinx/requirements.txt",
+        "kev": false,
+        "fix_published_at": "2026-10-18T16:21:06Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "manual/sphinx/requirements.txt > certifi"
+        ]
       },
       {
         "package": "pypi:gitpython",
@@ -96,27 +109,20 @@
         "severity": "CRITICAL",
         "fixed_in": "3.1.59",
         "summary": "GitPython: Dormant multi-line git-config values are corrupted into live injected directives (e.g. core.hooksPath) on any unrelated GitConfigParser write, enabling RCE",
-        "malicious": false
-      },
-      {
-        "package": "crates:quinn-proto",
-        "version": "0.11.16",
-        "advisory": "RUSTSEC-2026-0340",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.11.18",
-        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
-      },
-      {
-        "package": "crates:quinn-proto",
-        "version": "0.11.16",
-        "advisory": "RUSTSEC-2026-0341",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.11.17",
-        "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual/sphinx/requirements.txt",
+        "kev": false,
+        "epss": 0.00556,
+        "fix_published_at": "2026-08-10T12:03:18Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "manual/sphinx/requirements.txt > gitpython"
+        ]
       },
       {
         "package": "go:golang.org/x/net",
@@ -128,7 +134,26 @@
         "severity": "HIGH",
         "fixed_in": "0.33.0",
         "summary": "Non-linear parsing of case-insensitive content in golang.org/x/net/html",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "deploy/operator",
+        "found_in": "deploy/operator/go.mod",
+        "kev": false,
+        "epss": 0.01072,
+        "fix_published_at": "2024-12-18T19:34:41Z",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:Parse",
+          "symbol:ParseFragment",
+          "symbol:ParseFragmentWithOptions"
+        ],
+        "paths": [
+          "deploy/operator/go.mod > golang.org/x/net"
+        ]
       },
       {
         "package": "go:golang.org/x/oauth2",
@@ -140,7 +165,25 @@
         "severity": "HIGH",
         "fixed_in": "0.27.0",
         "summary": "golang.org/x/oauth2 Improper Validation of Syntactic Correctness of Input vulnerability",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "deploy/operator",
+        "found_in": "deploy/operator/go.mod",
+        "kev": false,
+        "epss": 0.0087,
+        "fix_published_at": "2025-02-24T17:56:26Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:Verify"
+        ],
+        "paths": [
+          "deploy/operator/go.mod > golang.org/x/oauth2"
+        ]
       },
       {
         "package": "pypi:cryptography",
@@ -152,7 +195,23 @@
         "severity": "HIGH",
         "fixed_in": "50.0.0",
         "summary": "cryptography: PKCS#7 EnvelopedData decryption exposes a Bleichenbacher oracle through distinguishable errors and timing",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual/sphinx/requirements.txt",
+        "kev": false,
+        "epss": 0.00274,
+        "fix_published_at": "2026-07-31T14:23:50Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "manual/sphinx/requirements.txt > cryptography"
+        ]
       },
       {
         "package": "pypi:gitpython",
@@ -164,7 +223,23 @@
         "severity": "HIGH",
         "fixed_in": "3.1.60",
         "summary": "GitPython: Repository content can impersonate the git directory, leading to arbitrary code execution",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual/sphinx/requirements.txt",
+        "kev": false,
+        "epss": 0.00419,
+        "fix_published_at": "2026-08-25T18:33:44Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction"
+        ],
+        "paths": [
+          "manual/sphinx/requirements.txt > gitpython"
+        ]
       },
       {
         "package": "pypi:gitpython",
@@ -176,7 +251,20 @@
         "severity": "HIGH",
         "fixed_in": "3.2.0",
         "summary": "GitPython: arbitrary file read via attacker-controlled branch name in `Head.checkout()` (incomplete fix of CVE-2026-78679)",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual/sphinx/requirements.txt",
+        "kev": false,
+        "epss": 0.00387,
+        "fix_published_at": "2026-09-30T09:10:31Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "manual/sphinx/requirements.txt > gitpython"
+        ]
       },
       {
         "package": "pypi:gitpython",
@@ -188,7 +276,20 @@
         "severity": "HIGH",
         "fixed_in": "3.1.57",
         "summary": "GitPython: Unguarded git option forwarding in IndexFile.checkout() and TagReference.create() enables arbitrary file overwrite and arbitrary file read",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual/sphinx/requirements.txt",
+        "kev": false,
+        "epss": 0.00574,
+        "fix_published_at": "2026-07-26T07:33:24Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "manual/sphinx/requirements.txt > gitpython"
+        ]
       },
       {
         "package": "pypi:gitpython",
@@ -200,7 +301,20 @@
         "severity": "HIGH",
         "fixed_in": "3.1.58",
         "summary": "GitPython: Unguarded git read-tree option forwarding in IndexFile.from_tree/reset/merge_tree enables arbitrary file overwrite",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual/sphinx/requirements.txt",
+        "kev": false,
+        "epss": 0.00543,
+        "fix_published_at": "2026-08-04T15:05:48Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "manual/sphinx/requirements.txt > gitpython"
+        ]
       },
       {
         "package": "pypi:gitpython",
@@ -212,7 +326,23 @@
         "severity": "HIGH",
         "fixed_in": "3.1.54",
         "summary": "GitPython: Incomplete unsafe_git_clone_options denylist omits --template enabling arbitrary command execution via clone hooks",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual/sphinx/requirements.txt",
+        "kev": false,
+        "epss": 0.00961,
+        "fix_published_at": "2026-07-22T04:08:50Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "manual/sphinx/requirements.txt > gitpython"
+        ]
       },
       {
         "package": "pypi:gitpython",
@@ -224,7 +354,23 @@
         "severity": "HIGH",
         "fixed_in": "3.1.59",
         "summary": "GitPython: Arbitrary local file content disclosure via [include] directive in untrusted .gitmodules (SubmoduleConfigParser never disables merge_includes)",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual/sphinx/requirements.txt",
+        "kev": false,
+        "epss": 0.00178,
+        "fix_published_at": "2026-08-10T12:03:18Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access"
+        ],
+        "paths": [
+          "manual/sphinx/requirements.txt > gitpython"
+        ]
       },
       {
         "package": "pypi:gitpython",
@@ -236,7 +382,24 @@
         "severity": "HIGH",
         "fixed_in": "3.2.1",
         "summary": "GitPython validates a submodule's \".git\" path only after cloning into it (RCE)",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual/sphinx/requirements.txt",
+        "kev": false,
+        "epss": 0.00423,
+        "fix_published_at": "2026-10-14T12:20:18Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction",
+          "high_complexity"
+        ],
+        "paths": [
+          "manual/sphinx/requirements.txt > gitpython"
+        ]
       },
       {
         "package": "pypi:gitpython",
@@ -248,7 +411,20 @@
         "severity": "HIGH",
         "fixed_in": "3.1.59",
         "summary": "GitPython: clone_from()/clone() omit --separate-git-dir from unsafe_git_clone_options, enabling arbitrary git-directory creation outside the destination",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual/sphinx/requirements.txt",
+        "kev": false,
+        "epss": 0.00651,
+        "fix_published_at": "2026-08-10T12:03:18Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "manual/sphinx/requirements.txt > gitpython"
+        ]
       },
       {
         "package": "pypi:gitpython",
@@ -260,7 +436,20 @@
         "severity": "HIGH",
         "fixed_in": "3.1.55",
         "summary": "GitPython: Environment-variable exfiltration via Repo.create_remote() / Remote.add() URL (incomplete fix of GHSA-rwj8-pgh3-r573)",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual/sphinx/requirements.txt",
+        "kev": false,
+        "epss": 0.00514,
+        "fix_published_at": "2026-07-23T02:52:41Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "manual/sphinx/requirements.txt > gitpython"
+        ]
       },
       {
         "package": "pypi:gitpython",
@@ -272,7 +461,23 @@
         "severity": "HIGH",
         "fixed_in": "3.1.58",
         "summary": "GitPython: Unguarded git option forwarding in Repo.init enables arbitrary command execution via --template clone hooks",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual/sphinx/requirements.txt",
+        "kev": false,
+        "epss": 0.0072,
+        "fix_published_at": "2026-08-04T15:05:48Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "manual/sphinx/requirements.txt > gitpython"
+        ]
       },
       {
         "package": "pypi:gitpython",
@@ -284,7 +489,23 @@
         "severity": "HIGH",
         "fixed_in": "3.2.0",
         "summary": "GitPython Remote.pull() refspec bypasses the --upload-pack unsafe-option guard, enabling arbitrary command execution",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual/sphinx/requirements.txt",
+        "kev": false,
+        "epss": 0.00465,
+        "fix_published_at": "2026-09-30T09:10:31Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "manual/sphinx/requirements.txt > gitpython"
+        ]
       },
       {
         "package": "pypi:gitpython",
@@ -296,7 +517,20 @@
         "severity": "HIGH",
         "fixed_in": "3.1.54",
         "summary": "GitPython: Arbitrary file overwrite via git diff --output argument injection in Diffable.diff (key- and value-controlled)",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual/sphinx/requirements.txt",
+        "kev": false,
+        "epss": 0.00553,
+        "fix_published_at": "2026-07-22T04:08:50Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "manual/sphinx/requirements.txt > gitpython"
+        ]
       },
       {
         "package": "pypi:gitpython",
@@ -308,7 +542,23 @@
         "severity": "HIGH",
         "fixed_in": "3.1.60",
         "summary": "GitPython: Denial of Service via catastrophic backtracking (ReDoS) in Actor.name_email_regex — commit author/committer field parsing",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual/sphinx/requirements.txt",
+        "kev": false,
+        "epss": 0.00521,
+        "fix_published_at": "2026-08-25T18:33:44Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "manual/sphinx/requirements.txt > gitpython"
+        ]
       },
       {
         "package": "pypi:gitpython",
@@ -320,7 +570,23 @@
         "severity": "HIGH",
         "fixed_in": "3.1.58",
         "summary": "GitPython: Arbitrary Git Repository Creation Outside the Working Tree via Unvalidated .gitmodules Submodule Name in GitPython",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual/sphinx/requirements.txt",
+        "kev": false,
+        "epss": 0.00422,
+        "fix_published_at": "2026-08-04T15:05:48Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction"
+        ],
+        "paths": [
+          "manual/sphinx/requirements.txt > gitpython"
+        ]
       },
       {
         "package": "pypi:gitpython",
@@ -332,131 +598,124 @@
         "severity": "HIGH",
         "fixed_in": "3.1.58",
         "summary": "GitPython: git-config OPTION-name injection via =/#/whitespace bypasses name validator, enabling forged core.sshCommand/hooksPath (RCE)",
-        "malicious": false
-      },
-      {
-        "package": "pypi:gitpython",
-        "version": "3.1.53",
-        "advisory": "GHSA-m64x-33q8-m5h7",
-        "cves": [
-          "CVE-2026-110856"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.2.0",
-        "summary": "GitPython parse_actor_and_date() is vulnerable to quadratic backtracking on malformed identity lines",
-        "malicious": false
-      },
-      {
-        "package": "pypi:gitpython",
-        "version": "3.1.53",
-        "advisory": "GHSA-r9mr-m37c-5fr3",
-        "cves": [
-          "CVE-2026-73625"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.1.54",
-        "summary": "GitPython: Unsafe git option guard bypass via single-character kwarg value token smuggling enables arbitrary command execution",
-        "malicious": false
-      },
-      {
-        "package": "pypi:gitpython",
-        "version": "3.1.53",
-        "advisory": "GHSA-w8jc-g24h-crhw",
-        "cves": [
-          "CVE-2026-110857"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.2.0",
-        "summary": "GitPython command wrappers omit unsafe protocol and option checks",
-        "malicious": false
-      },
-      {
-        "package": "pypi:gitpython",
-        "version": "3.1.53",
-        "advisory": "GHSA-wvpp-8hx9-p66j",
-        "cves": [
-          "CVE-2026-76220"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.1.58",
-        "summary": "GitPython: Unsafe git option guard bypass via split_single_char_options=False short-option token smuggling enables command execution",
-        "malicious": false
-      },
-      {
-        "package": "pypi:tornado",
-        "version": "6.5.7",
-        "advisory": "GHSA-c2m8-h5v5-343r",
-        "cves": [
-          "CVE-2026-103263"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "6.5.9",
-        "summary": "Tornado: StaticFileHandler follows symlinks outside static root (path traversal)",
-        "malicious": false
-      },
-      {
-        "package": "pypi:tornado",
-        "version": "6.5.7",
-        "advisory": "GHSA-chx6-46f5-w4vp",
-        "cves": [
-          "CVE-2026-103262"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "6.5.9",
-        "summary": "tornado: CurlAsyncHTTPClient enforces no response-size limit — decompression bomb drives unbounded memory accumulation to OOM",
-        "malicious": false
-      },
-      {
-        "package": "pypi:tornado",
-        "version": "6.5.7",
-        "advisory": "GHSA-mpf4-983q-p7j4",
-        "cves": [
-          "CVE-2026-82397"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "6.5.8",
-        "summary": "Tornado: Urlencoded body parsing omits max_num_fields, so one request can stall the event loop",
-        "malicious": false
-      },
-      {
-        "package": "pypi:urllib3",
-        "version": "2.7.0",
-        "advisory": "GHSA-8988-9cw3-xx77",
-        "cves": [
-          "CVE-2026-97687"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "2.8.0",
-        "summary": "urllib3: HTTPS proxy TLS configuration may be ignored or overridden",
-        "malicious": false
-      },
-      {
-        "package": "pypi:urllib3",
-        "version": "2.7.0",
-        "advisory": "GHSA-vxq7-64xx-v4gw",
-        "cves": [
-          "CVE-2026-97689"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "2.8.0",
-        "summary": "urllib3: HTTPResponse.stream()/read_chunked() buffers an unbounded chunk-size line into memory",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual/sphinx/requirements.txt",
+        "kev": false,
+        "epss": 0.00485,
+        "fix_published_at": "2026-08-04T15:05:48Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "manual/sphinx/requirements.txt > gitpython"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "962845a65c03e1195dab41ae9a2d97940a415a63",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 314,
+        "go": 57,
+        "pypi": 143
+      },
+      "scopes": {
+        "runtime": 506,
+        "optional": 8
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 86,
+      "details": "security/infera.json",
+      "details_sha256": "d495d82351ab9238682f9f7ba03eb2e8f4c7042379298f4b83e0cbf7194be73f"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-6q48-6c7w-9gw2 pypi:certifi@2026.6.17 (conditional)",
+        "worst:GHSA-284h-m62q-gf8w pypi:gitpython@3.1.53 (conditional)",
+        "worst:GO-2024-3333 go:golang.org/x/net@v0.30.0 (conditional)"
+      ],
+      "counts": {
+        "conditional": 31,
+        "not_shipped": 2
+      },
+      "uncounted": 53,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 514,
+      "packages_checked": 514,
+      "components": [
+        {
+          "ecosystem": "go",
+          "component": "deploy/operator/go.mod",
+          "status": "scanned",
+          "packages": 57,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "rust/Cargo.lock",
+          "status": "scanned",
+          "packages": 314,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "agent_sys/pyproject.toml",
+          "status": "scanned",
+          "packages": 17,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "pyproject.toml",
+          "status": "scanned",
+          "packages": 49,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "manual/sphinx/requirements.txt",
+          "status": "scanned",
+          "packages": 93,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 72.7,
-      "raw_total": 72.7,
       "confidence": 0.4,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5625,
@@ -476,16 +735,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 72.7,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -813,5 +1069,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:30+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

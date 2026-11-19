@@ -78,19 +78,17 @@
     "runs": []
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/FTShare-Lab/agent-claim-network@058660cec2bc",
+      "github.com/FTShare-Lab/agent-claim-network@196b90968dd0",
       "Cargo.lock",
       "frontend/maintainer-workbench/package-lock.json"
     ],
-    "packages_checked": 512,
-    "findings_total": 4,
-    "advisories_total": 4,
+    "packages_checked": 825,
+    "findings_total": 5,
+    "advisories_total": 5,
     "findings": [
       {
         "package": "crates:pulldown-cmark",
@@ -100,7 +98,31 @@
         "severity": "HIGH",
         "fixed_in": "0.13.5",
         "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-21T19:45:37Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ENABLE_WIKILINKS"
+        ],
+        "paths": [
+          "agent-claim-network > pulldown-cmark"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ENABLE_WIKILINKS, but other packages depend on pulldown-cmark"
+          ]
+        }
       },
       {
         "package": "crates:pulldown-cmark",
@@ -110,7 +132,31 @@
         "severity": "HIGH",
         "fixed_in": "0.13.6",
         "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-30T08:50:18Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ENABLE_WIKILINKS"
+        ],
+        "paths": [
+          "agent-claim-network > pulldown-cmark"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ENABLE_WIKILINKS, but other packages depend on pulldown-cmark"
+          ]
+        }
       },
       {
         "package": "crates:quinn-proto",
@@ -120,7 +166,31 @@
         "severity": "HIGH",
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-09-14T10:08:32Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ACK_FREQUENCY"
+        ],
+        "paths": [
+          "agent-claim-network > reqwest > quinn > quinn-proto"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+          ]
+        }
       },
       {
         "package": "crates:quinn-proto",
@@ -130,23 +200,132 @@
         "severity": "HIGH",
         "fixed_in": "0.11.17",
         "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-08-17T17:32:41Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "agent-claim-network > reqwest > quinn > quinn-proto"
+        ]
+      },
+      {
+        "package": "crates:rmcp",
+        "version": "3.1.2",
+        "advisory": "RUSTSEC-2026-0461",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "3.6.0",
+        "summary": "Unbounded tool schema cache in Streamable HTTP server transport",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-20T05:53:35Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "agent-claim-network > rmcp"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:06:03+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "196b90968dd04c8186956f5a2ae61a32258e4159",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 472,
+        "npm": 353
+      },
+      "scopes": {
+        "runtime": 507,
+        "optional": 2,
+        "peer": 3,
+        "dev": 313
+      },
+      "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 24,
+      "details": "security/agent-claim-network.json",
+      "details_sha256": "cd9499add7e1b9087c93cc941e5691e9cac0cc4f9aa2ce4081845912d63b997c"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0414 crates:pulldown-cmark@0.13.3 (conditional)",
+        "worst:RUSTSEC-2026-0433 crates:pulldown-cmark@0.13.3 (conditional)",
+        "worst:RUSTSEC-2026-0340 crates:quinn-proto@0.11.16 (conditional)"
+      ],
+      "counts": {
+        "conditional": 5
+      },
+      "uncounted": 19,
+      "assessed_at": "2026-11-20T00:06:03+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 825,
+      "packages_checked": 825,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 472,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "frontend/maintainer-workbench/package-lock.json",
+          "status": "scanned",
+          "packages": 353,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 80.5,
       "confidence": 0.4,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.6875,
@@ -166,16 +345,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 80.5,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -483,5 +659,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:22+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:06:03+08:00"
 }

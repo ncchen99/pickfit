@@ -1,0 +1,120 @@
+{
+ "slug": "tutor-mcp",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "549110b535615997ce98dedf7c58e8ba82f082cf",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 547,
+   "go": 56,
+   "npm": 256
+  },
+  "scopes": {
+   "runtime": 708,
+   "optional": 2,
+   "peer": 2,
+   "dev": 147
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 1
+ },
+ "assessment": {
+  "level": "none",
+  "policy_version": "sec.v2",
+  "reasons": [],
+  "counts": {},
+  "uncounted": 1,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 859,
+  "packages_checked": 859,
+  "components": [
+   {
+    "ecosystem": "npm",
+    "component": "client/package-lock.json",
+    "status": "scanned",
+    "packages": 256,
+    "gaps": []
+   },
+   {
+    "ecosystem": "crates",
+    "component": "client/src-tauri/Cargo.lock",
+    "status": "scanned",
+    "packages": 547,
+    "gaps": []
+   },
+   {
+    "ecosystem": "go",
+    "component": "go.mod",
+    "status": "scanned",
+    "packages": 56,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/ArnaudGuiovanna/tutor-mcp@549110b53561",
+  "client/package-lock.json",
+  "client/src-tauri/Cargo.lock",
+  "go.mod"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:glib",
+   "version": "0.18.5",
+   "advisory": "GHSA-wrw7-89jp-8q8g",
+   "severity": "MODERATE",
+   "fixed_in": "0.20.0",
+   "summary": "Unsoundness in `Iterator` and `DoubleEndedIterator` impls for `glib::VariantStrIter`",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2024-0429"
+   ],
+   "published": "2024-12-23T20:19:24Z",
+   "modified": "2025-10-28T06:29:26.473225Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/glib@0.18.5",
+   "scope": "runtime",
+   "paths": [
+    "tutor-client > tauri > gtk > glib"
+   ],
+   "workspace": "client/src-tauri",
+   "found_in": "client/src-tauri/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Iterator",
+    "symbol:DoubleEndedIterator",
+    "symbol:glib::VariantStrIter"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "client/src-tauri/src/agent_policy.rs:60: fn claude_env_selects<'a>(mut vars: impl Iterator<Item = (&'a str, &'a str)>) -> bool {",
+     "named only in files that do not import glib"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

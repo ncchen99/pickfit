@@ -422,17 +422,15 @@
     "cost_usd": 0.054692
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/stevyhacker/LokalBot@00a8469d1802",
+      "github.com/stevyhacker/LokalBot@76f490155e77",
       "Distribution/raycast/package-lock.json",
       "LinuxWindows/Cargo.lock"
     ],
-    "packages_checked": 1140,
+    "packages_checked": 1238,
     "findings_total": 8,
     "advisories_total": 6,
     "findings": [
@@ -446,7 +444,21 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "LinuxWindows/crates/lokalbot-speech",
+        "found_in": "LinuxWindows/Cargo.lock",
+        "kev": false,
+        "epss": 0.0032,
+        "fix_published_at": "2026-10-17T18:45:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "lokalbot-speech > sherpa-onnx > sherpa-onnx-sys > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -456,7 +468,31 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "LinuxWindows/crates/lokalbot-speech",
+        "found_in": "LinuxWindows/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:ZipStreamReader::extract",
+          "symbol:ZipArchive::extract"
+        ],
+        "paths": [
+          "lokalbot-speech > sherpa-onnx > sherpa-onnx-sys > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+          ]
+        }
       },
       {
         "package": "crates:zip",
@@ -468,7 +504,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "LinuxWindows/crates/lokalbot-speech",
+        "found_in": "LinuxWindows/Cargo.lock",
+        "kev": false,
+        "epss": 0.00461,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "lokalbot-speech > sherpa-onnx > sherpa-onnx-sys > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -478,19 +531,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
-      },
-      {
-        "package": "npm:brace-expansion",
-        "version": "5.0.9",
-        "advisory": "GHSA-6j4f-fj2g-mc7p",
-        "cves": [
-          "CVE-2026-102276"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "LinuxWindows/crates/lokalbot-speech",
+        "found_in": "LinuxWindows/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
         ],
-        "severity": "HIGH",
-        "fixed_in": "5.0.10",
-        "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
-        "malicious": false
+        "paths": [
+          "lokalbot-speech > sherpa-onnx > sherpa-onnx-sys > zip"
+        ]
       },
       {
         "package": "npm:brace-expansion",
@@ -502,19 +560,24 @@
         "severity": "HIGH",
         "fixed_in": "2.1.5",
         "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
-        "malicious": false
-      },
-      {
-        "package": "npm:brace-expansion",
-        "version": "5.0.9",
-        "advisory": "GHSA-qhr7-859c-m2p7",
-        "cves": [
-          "CVE-2026-102278"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Distribution/raycast/package-lock.json",
+        "kev": false,
+        "epss": 0.00455,
+        "fix_published_at": "2026-09-14T21:40:14Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "5.0.11",
-        "summary": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
-        "malicious": false
+        "paths": [
+          ". > @raycast/api > @oclif/plugin-autocomplete > ejs > jake > filelist > minimatch > brace-expansion"
+        ]
       },
       {
         "package": "npm:brace-expansion",
@@ -526,23 +589,248 @@
         "severity": "HIGH",
         "fixed_in": "2.1.6",
         "summary": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Distribution/raycast/package-lock.json",
+        "kev": false,
+        "epss": 0.00491,
+        "fix_published_at": "2026-09-14T21:51:19Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > @raycast/api > @oclif/plugin-autocomplete > ejs > jake > filelist > minimatch > brace-expansion"
+        ]
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "5.0.9",
+        "advisory": "GHSA-6j4f-fj2g-mc7p",
+        "cves": [
+          "CVE-2026-102276"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.10",
+        "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Distribution/raycast/package-lock.json",
+        "kev": false,
+        "epss": 0.00455,
+        "fix_published_at": "2026-09-14T21:37:19Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > @raycast/api > @oclif/core > minimatch > brace-expansion"
+        ]
+      },
+      {
+        "package": "npm:brace-expansion",
+        "version": "5.0.9",
+        "advisory": "GHSA-qhr7-859c-m2p7",
+        "cves": [
+          "CVE-2026-102278"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.0.11",
+        "summary": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Distribution/raycast/package-lock.json",
+        "kev": false,
+        "epss": 0.00491,
+        "fix_published_at": "2026-09-14T21:49:31Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > @raycast/api > @oclif/core > minimatch > brace-expansion"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "76f490155e7728a83cc13ee1a025cabc34697fd6",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 1029,
+        "npm": 209
+      },
+      "scopes": {
+        "runtime": 1086,
+        "optional": 23,
+        "peer": 2,
+        "build": 28,
+        "dev": 99
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 19,
+      "details": "security/lokalbot.json",
+      "details_sha256": "580a399a58d617d1eb3b7b15732cb6a5df237f0fc814a5da92013f14b9cd8e5c"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-m665-v7pm-7grj crates:zip@2.6.1 (conditional)",
+        "worst:RUSTSEC-2026-0369 crates:zip@2.6.1 (conditional)",
+        "worst:GHSA-q7v9-x93c-xqv3 crates:zip@2.6.1 (conditional)"
+      ],
+      "counts": {
+        "conditional": 8,
+        "not_shipped": 3
+      },
+      "uncounted": 8,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 1267,
+      "packages_checked": 1238,
+      "components": [
+        {
+          "ecosystem": "maven",
+          "component": "Companion/android/app/build.gradle.kts",
+          "status": "not_scanned",
+          "packages": 28,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "Companion/android/build.gradle.kts",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "Companion/android/sync/build.gradle.kts",
+          "status": "not_scanned",
+          "packages": 1,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "swift",
+          "component": "Companion/ios/LokalBotCompanionKit/Package.swift",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "Distribution/raycast/package-lock.json",
+          "status": "scanned",
+          "packages": 209,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "LinuxWindows/Cargo.lock",
+          "status": "scanned",
+          "packages": 1029,
+          "gaps": []
+        }
+      ],
+      "gaps": [
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "Companion/android/app/build.gradle.kts",
+          "detail": "no reader for build.gradle.kts",
+          "capability": "adapter:maven",
+          "found": 28,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "Companion/android/build.gradle.kts",
+          "detail": "no reader for build.gradle.kts",
+          "capability": "adapter:maven",
+          "found": 0,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "Companion/android/sync/build.gradle.kts",
+          "detail": "no reader for build.gradle.kts",
+          "capability": "adapter:maven",
+          "found": 1,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "swift",
+          "component": "Companion/ios/LokalBotCompanionKit/Package.swift",
+          "detail": "no reader for Package.swift",
+          "capability": "adapter:swift",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7+visual.v1",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 75.0,
-      "raw_total": 93.3,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.8125,
@@ -562,16 +850,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 93.3,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       },
@@ -1044,5 +1329,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:38+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

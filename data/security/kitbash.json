@@ -1,0 +1,2109 @@
+{
+ "slug": "kitbash",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "00cca112a1be1b0336fd101385d573c46cd8a542",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "npm": 115
+  },
+  "scopes": {
+   "runtime": 92,
+   "dev": 23
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 42
+ },
+ "assessment": {
+  "level": "exposed",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-jqcg-44mw-7w3h npm:proxy-addr@2.0.7 (exposed)",
+   "worst:GHSA-27r3-jxmh-p828 npm:body-parser@2.3.0 (exposed)",
+   "worst:GHSA-mwp4-54f8-5fhr npm:ip-address@10.2.0 (exposed)"
+  ],
+  "counts": {
+   "exposed": 3,
+   "conditional": 7
+  },
+  "uncounted": 32,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 115,
+  "packages_checked": 115,
+  "components": [
+   {
+    "ecosystem": "npm",
+    "component": "package-lock.json",
+    "status": "scanned",
+    "packages": 115,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/Open-Dev-Society/kitbash@00cca112a1be",
+  "package-lock.json"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "npm:proxy-addr",
+   "version": "2.0.7",
+   "advisory": "GHSA-jqcg-44mw-7w3h",
+   "cves": [
+    "CVE-2026-90711"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "2.0.8",
+   "summary": "proxy-addr vulnerable to IP spoofing via IPv4-mapped IPv6 trust subnet",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-90711"
+   ],
+   "published": "2026-10-05T23:30:26Z",
+   "modified": "2026-10-05T23:45:07.322157228Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-290",
+    "CWE-348",
+    "CWE-697"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/proxy-addr@2.0.7",
+   "fix_published_at": "2026-09-15T06:12:45Z",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > express > proxy-addr"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.0026,
+   "epss_percentile": 0.1788,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": true,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:body-parser",
+   "version": "2.3.0",
+   "advisory": "GHSA-27r3-jxmh-p828",
+   "cves": [
+    "CVE-2026-111181"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.4.0",
+   "summary": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-111181"
+   ],
+   "published": "2026-10-23T20:53:11Z",
+   "modified": "2026-10-23T21:00:06.131613693Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/body-parser@2.3.0",
+   "fix_published_at": "2026-10-22T11:39:38Z",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > express > body-parser"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00388,
+   "epss_percentile": 0.33634,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": true,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ip-address",
+   "version": "10.2.0",
+   "advisory": "GHSA-mwp4-54f8-5fhr",
+   "cves": [
+    "CVE-2026-69192"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "10.3.1",
+   "summary": "ip-address: Address4 decodes leading-zero octets as decimal while resolvers decode them as octal, allowing SSRF and trust-boundary bypass",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-69192"
+   ],
+   "published": "2026-08-03T19:59:44Z",
+   "modified": "2026-09-10T03:51:14.478555296Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:N/VA:N/SC:H/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20",
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/ip-address@10.2.0",
+   "fix_published_at": "2026-07-25T08:00:07Z",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > express-rate-limit > ip-address"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00465,
+   "epss_percentile": 0.4101,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": true,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@hono/node-server",
+   "version": "1.19.14",
+   "advisory": "GHSA-frvp-7c67-39w9",
+   "severity": "MODERATE",
+   "fixed_in": "1.19.15",
+   "summary": "Node.js Adapter for Hono: Path traversal in `serve-static` on Windows via encoded backslash (`%5C`)",
+   "malicious": false,
+   "published": "2026-07-21T18:17:25Z",
+   "modified": "2026-09-10T03:50:51.945277237Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40hono/node-server@1.19.14",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > @hono/node-server"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@hono/node-server",
+   "version": "1.19.14",
+   "advisory": "GHSA-jpvv-r467-5p4w",
+   "cves": [
+    "CVE-2026-126210"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.19.18",
+   "summary": "@hono/node-server: Backslash in the request path is parsed as a path separator, bypassing path-based access control at a reverse proxy",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-126210"
+   ],
+   "published": "2026-11-12T21:28:02Z",
+   "modified": "2026-11-12T21:45:03.417268669Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-436"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40hono/node-server@1.19.14",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > @hono/node-server"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00375,
+   "epss_percentile": 0.32162,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@hono/node-server",
+   "version": "1.19.14",
+   "advisory": "GHSA-rmxm-3fg6-px4f",
+   "cves": [
+    "CVE-2026-118663"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.1.3",
+   "summary": "@hono/node-server: `serveStatic` decodes the request path a second time, leading to bypass of middleware on static paths",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118663"
+   ],
+   "published": "2026-10-28T21:05:00Z",
+   "modified": "2026-10-28T21:15:04.153052864Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-174"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40hono/node-server@1.19.14",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > @hono/node-server"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00353,
+   "epss_percentile": 0.29616,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:hono",
+   "version": "4.12.30",
+   "advisory": "GHSA-46wx-v44x-9hh2",
+   "cves": [
+    "CVE-2026-126355"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.13.16",
+   "summary": "Hono: `csrf()` does not check requests sent by hyperlink auditing (`text/ping`)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-126355"
+   ],
+   "published": "2026-11-12T23:31:25Z",
+   "modified": "2026-11-12T23:45:03.241008967Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-352"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/hono@4.12.30",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > hono"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00176,
+   "epss_percentile": 0.0728,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:hono",
+   "version": "4.12.30",
+   "advisory": "GHSA-4h7h-rv7c-7m2v",
+   "cves": [
+    "CVE-2026-126356"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.13.16",
+   "summary": "Hono: `validator('form')` skips validation for `multipart/form-data` requests with extra parameters",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-126356"
+   ],
+   "published": "2026-11-12T23:30:45Z",
+   "modified": "2026-11-12T23:45:03.255833027Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1471",
+    "CWE-20"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/hono@4.12.30",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > hono"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00392,
+   "epss_percentile": 0.34089,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:hono",
+   "version": "4.12.30",
+   "advisory": "GHSA-4m76-xfj5-7975",
+   "cves": [
+    "CVE-2026-126357"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.13.16",
+   "summary": "Hono: `mount()` and `app.mount()` can forward a path that bypasses middleware scoped inside the mount prefix",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-126357"
+   ],
+   "published": "2026-11-12T23:24:11Z",
+   "modified": "2026-11-12T23:30:03.867783771Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-288"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/hono@4.12.30",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > hono"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.004,
+   "epss_percentile": 0.3495,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:hono",
+   "version": "4.12.30",
+   "advisory": "GHSA-54fx-42gc-7vw4",
+   "cves": [
+    "CVE-2026-71848"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.12.34",
+   "summary": "Hono: Algorithmic Complexity DoS in Language Middleware",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-71848"
+   ],
+   "published": "2026-08-07T18:36:31Z",
+   "modified": "2026-09-10T03:50:53.311438629Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/hono@4.12.30",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > hono"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00507,
+   "epss_percentile": 0.44009,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:hono",
+   "version": "4.12.30",
+   "advisory": "GHSA-5r4p-p66f-jhc7",
+   "cves": [
+    "CVE-2026-109955",
+    "CVE-2026-111757"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.13.11",
+   "summary": "Hono: `serveStatic` decodes the request path a second time, leading to bypass of middleware on static paths",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-109955",
+    "CVE-2026-111757"
+   ],
+   "published": "2026-10-20T14:36:11Z",
+   "modified": "2026-10-20T14:45:03.780823695Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-174"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/hono@4.12.30",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > hono"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00315,
+   "epss_percentile": 0.24916,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:hono",
+   "version": "4.12.30",
+   "advisory": "GHSA-8j4g-w8fx-2239",
+   "cves": [
+    "CVE-2026-69207"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.12.34",
+   "summary": "Hono: ReDoS in CORS middleware via Access-Control-Request-Headers",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-69207"
+   ],
+   "published": "2026-08-03T20:23:30Z",
+   "modified": "2026-09-10T03:51:13.583285977Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1333"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/hono@4.12.30",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > hono"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00609,
+   "epss_percentile": 0.49968,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:hono",
+   "version": "4.12.30",
+   "advisory": "GHSA-crvj-82cr-hjcx",
+   "cves": [
+    "CVE-2026-84363"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.13.5",
+   "summary": "Hono: Query parser reads parameters after the URL fragment, causing cache-key and proxy interpretation differentials",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-84363"
+   ],
+   "published": "2026-09-08T21:22:50Z",
+   "modified": "2026-09-08T21:30:04.756349206Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-444"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/hono@4.12.30",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > hono"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00448,
+   "epss_percentile": 0.39704,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:hono",
+   "version": "4.12.30",
+   "advisory": "GHSA-f23p-vx2j-j53r",
+   "cves": [
+    "CVE-2026-71850"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.12.34",
+   "summary": "Hono: `memo()` retains SSR output across requests, leading to cross-user data disclosure",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-71850"
+   ],
+   "published": "2026-08-07T18:42:01Z",
+   "modified": "2026-09-10T03:51:13.947851047Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-488"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/hono@4.12.30",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > hono"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00267,
+   "epss_percentile": 0.19095,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:hono",
+   "version": "4.12.30",
+   "advisory": "GHSA-g6gw-c38x-mqfc",
+   "cves": [
+    "CVE-2026-84364"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.13.5",
+   "summary": "Hono: Unbounded dot-notation nesting in `parseBody()` can cause memory exhaustion",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-84364"
+   ],
+   "published": "2026-09-08T21:23:02Z",
+   "modified": "2026-09-08T21:30:05.512225825Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/hono@4.12.30",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > hono"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00529,
+   "epss_percentile": 0.45537,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:hono",
+   "version": "4.12.30",
+   "advisory": "GHSA-gqvv-2mrq-wpjv",
+   "cves": [
+    "CVE-2026-84365"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.13.5",
+   "summary": "Hono: Incomplete fix for CVE-2026-39408: `toSSG()` still writes files outside the output directory",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-84365"
+   ],
+   "published": "2026-09-08T21:23:51Z",
+   "modified": "2026-09-08T21:30:04.760578762Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/hono@4.12.30",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > hono"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00437,
+   "epss_percentile": 0.38748,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:hono",
+   "version": "4.12.30",
+   "advisory": "GHSA-h7mg-cq63-vhpq",
+   "cves": [
+    "CVE-2026-126358"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.13.16",
+   "summary": "Hono: RegExpRouter skips wildcard middleware for some route sets and for paths with an encoded line terminator",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-126358"
+   ],
+   "published": "2026-11-12T23:23:30Z",
+   "modified": "2026-11-12T23:30:03.867508007Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-863"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/hono@4.12.30",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > hono"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00347,
+   "epss_percentile": 0.28949,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:hono",
+   "version": "4.12.30",
+   "advisory": "GHSA-hxh3-vqpv-xpqv",
+   "cves": [
+    "CVE-2026-93981"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.13.7",
+   "summary": "hono/jsx renders plain strings unescaped in boundary components, leading to XSS",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-93981"
+   ],
+   "published": "2026-09-30T23:46:16Z",
+   "modified": "2026-10-01T00:00:05.750907953Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/hono@4.12.30",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > hono"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00227,
+   "epss_percentile": 0.13645,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ip-address",
+   "version": "10.2.0",
+   "advisory": "GHSA-22jq-vg5j-6vgg",
+   "cves": [
+    "CVE-2026-54272"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "10.2.1",
+   "summary": "ip-address: misclassification of IPv4-mapped/NAT64 IPv6 addresses can bypass SSRF and trust-boundary checks",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-54272"
+   ],
+   "published": "2026-08-03T19:52:33Z",
+   "modified": "2026-09-10T03:51:12.850896059Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:H/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20",
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/ip-address@10.2.0",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > express-rate-limit > ip-address"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00401,
+   "epss_percentile": 0.35128,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ip-address",
+   "version": "10.2.0",
+   "advisory": "GHSA-2vr4-cq9g-pvrc",
+   "cves": [
+    "CVE-2026-101910"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "10.5.1",
+   "summary": "ip-address: no classifier recognizes the NAT64 local-use range 64:ff9b:1::/48, allowing SSRF and trust-boundary bypass",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-101910"
+   ],
+   "published": "2026-09-28T20:43:03Z",
+   "modified": "2026-09-28T21:00:05.355682124Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:H/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/ip-address@10.2.0",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > express-rate-limit > ip-address"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00386,
+   "epss_percentile": 0.33404,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ip-address",
+   "version": "10.2.0",
+   "advisory": "GHSA-4xrf-jv44-h6hh",
+   "cves": [
+    "CVE-2026-69198"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "10.2.2",
+   "summary": "ip-address: a CIDR suffix on the parsed address suppresses special-use classification and can bypass SSRF and trust-boundary checks",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-69198"
+   ],
+   "published": "2026-08-03T19:59:33Z",
+   "modified": "2026-09-10T03:50:53.339579998Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:H/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20",
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/ip-address@10.2.0",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > express-rate-limit > ip-address"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.0048,
+   "epss_percentile": 0.42198,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ip-address",
+   "version": "10.2.0",
+   "advisory": "GHSA-h3mg-xc3c-68pw",
+   "cves": [
+    "CVE-2026-101911"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "10.7.1",
+   "summary": "ip-address: Address6 builds a parse diagnostic proportional to the input with no length bound, allowing a single long string to stall or crash the process",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-101911"
+   ],
+   "published": "2026-09-29T23:46:39Z",
+   "modified": "2026-09-30T00:00:04.407982988Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/ip-address@10.2.0",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > express-rate-limit > ip-address"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00383,
+   "epss_percentile": 0.33073,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ip-address",
+   "version": "10.2.0",
+   "advisory": "GHSA-j6r3-76f7-8jcv",
+   "cves": [
+    "CVE-2026-101912"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "10.7.1",
+   "summary": "ip-address: isInSubnet() and isHostInSubnet() compare addresses of different families as if they shared an address space, allowing an allowlist check to admit an address outside its range",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-101912"
+   ],
+   "published": "2026-09-29T23:46:52Z",
+   "modified": "2026-09-30T00:00:03.843448355Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-697",
+    "CWE-843"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/ip-address@10.2.0",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > express-rate-limit > ip-address"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.0037,
+   "epss_percentile": 0.3164,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ip-address",
+   "version": "10.2.0",
+   "advisory": "GHSA-rpw4-54j3-4h4q",
+   "cves": [
+    "CVE-2026-101913"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "10.5.1",
+   "summary": "ip-address: Address6.isLinkLocal() recognizes fe80::/64 rather than fe80::/10, allowing SSRF and trust-boundary bypass to on-link hosts",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-101913"
+   ],
+   "published": "2026-09-28T20:43:55Z",
+   "modified": "2026-09-28T21:00:05.359993143Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:L/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-697",
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/ip-address@10.2.0",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > express-rate-limit > ip-address"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00386,
+   "epss_percentile": 0.33404,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ip-address",
+   "version": "10.2.0",
+   "advisory": "GHSA-rxp7-6hxx-x8q5",
+   "cves": [
+    "CVE-2026-111997"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "10.7.4",
+   "summary": "ip-address: Address6 matches a zone identifier in quadratic time ahead of its length limit, allowing a single long string to stall the process",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-111997"
+   ],
+   "published": "2026-10-22T16:19:39Z",
+   "modified": "2026-10-22T16:30:30.129356757Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1333"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/ip-address@10.2.0",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > express-rate-limit > ip-address"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00315,
+   "epss_percentile": 0.24896,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:qs",
+   "version": "6.15.3",
+   "advisory": "GHSA-4mjr-xmp4-gh2g",
+   "cves": [
+    "CVE-2026-82417"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.16.0",
+   "summary": "qs: Denial of Service via Attacker Controlled isBuffer",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-82417"
+   ],
+   "published": "2026-09-02T14:45:13Z",
+   "modified": "2026-09-10T03:51:14.991984096Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248",
+    "CWE-703"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/qs@6.15.3",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > express > qs"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34537,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:qs",
+   "version": "6.15.3",
+   "advisory": "GHSA-6pq8-jhm2-2vcw",
+   "cves": [
+    "CVE-2026-110816"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.16.1",
+   "summary": "qs : qs.stringify with arrayFormat 'comma' throws an uncaught TypeError on array elements carrying a non-callable own toString (DoS)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-110816"
+   ],
+   "published": "2026-10-27T16:10:55Z",
+   "modified": "2026-10-27T16:15:05.324423680Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248",
+    "CWE-704"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/qs@6.15.3",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > express > qs"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00368,
+   "epss_percentile": 0.31342,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:qs",
+   "version": "6.15.3",
+   "advisory": "GHSA-x5fp-wj9c-mxmx",
+   "cves": [
+    "CVE-2026-82562"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.16.0",
+   "summary": "qs array-limit bypass via bracket-key comma parsing",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-82562"
+   ],
+   "published": "2026-09-02T14:46:57Z",
+   "modified": "2026-09-10T03:50:54.569331980Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/qs@6.15.3",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > express > qs"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.0054,
+   "epss_percentile": 0.46219,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:hono",
+   "version": "4.12.30",
+   "advisory": "GHSA-3gg2-335m-rxc6",
+   "cves": [
+    "CVE-2026-126359"
+   ],
+   "severity": "LOW",
+   "fixed_in": "4.13.16",
+   "summary": "Hono: `css` helper does not escape a closing tag split between the template and an interpolated value, allowing HTML injection",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-126359"
+   ],
+   "published": "2026-11-12T23:22:36Z",
+   "modified": "2026-11-12T23:30:03.858972167Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/hono@4.12.30",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > hono"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00262,
+   "epss_percentile": 0.18176,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:hono",
+   "version": "4.12.30",
+   "advisory": "GHSA-79qm-7rj5-m7r9",
+   "cves": [
+    "CVE-2026-71849"
+   ],
+   "severity": "LOW",
+   "fixed_in": "4.12.34",
+   "summary": "Hono: Proxy Helper does not remove response headers listed in the `Connection` header",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-71849"
+   ],
+   "published": "2026-08-07T18:38:48Z",
+   "modified": "2026-09-10T03:51:13.317395159Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/hono@4.12.30",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > hono"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00355,
+   "epss_percentile": 0.29828,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "entry:the MCP SDK's HTTP server transports"
+   ],
+   "reachability": {
+    "method": "entry_point_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:fast-uri",
+   "version": "3.1.3",
+   "advisory": "GHSA-5jgf-p345-68v8",
+   "cves": [
+    "CVE-2026-75931"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "3.1.6",
+   "summary": "fast-uri vulnerable to host confusion via skipped IDN canonicalization on scheme-relative references",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-75931"
+   ],
+   "published": "2026-09-02T15:44:30Z",
+   "modified": "2026-09-10T03:51:15.083681721Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-436"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/fast-uri@3.1.3",
+   "fix_published_at": "2026-08-23T01:42:00Z",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00398,
+   "epss_percentile": 0.34772,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:fast-uri",
+   "version": "3.1.3",
+   "advisory": "GHSA-7p8r-x3mc-p8w7",
+   "cves": [
+    "CVE-2026-18446"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "3.1.5",
+   "summary": "fast-uri vulnerable to host confusion via backslash authority introducer",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-18446"
+   ],
+   "published": "2026-08-03T19:16:43Z",
+   "modified": "2026-09-10T03:50:53.468438344Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-436"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/fast-uri@3.1.3",
+   "fix_published_at": "2026-07-31T09:16:56Z",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.0038,
+   "epss_percentile": 0.32707,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:fast-uri",
+   "version": "3.1.3",
+   "advisory": "GHSA-f65p-4m7j-42xc",
+   "cves": [
+    "CVE-2026-75975"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "3.1.6",
+   "summary": "fast-uri vulnerable to server-side request forgery via malformed IPv6 normalization",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-75975"
+   ],
+   "published": "2026-09-02T15:43:30Z",
+   "modified": "2026-09-10T03:51:15.292437844Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20",
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/fast-uri@3.1.3",
+   "fix_published_at": "2026-08-23T01:42:00Z",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.0022,
+   "epss_percentile": 0.12684,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:fast-uri",
+   "version": "3.1.3",
+   "advisory": "GHSA-fph4-wmhf-6fwf",
+   "cves": [
+    "CVE-2026-75899"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "3.1.6",
+   "summary": "fast-uri vulnerable to server-side request forgery via repeated hostname percent-decoding",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-75899"
+   ],
+   "published": "2026-09-02T15:42:39Z",
+   "modified": "2026-09-10T03:50:54.420840001Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-174",
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/fast-uri@3.1.3",
+   "fix_published_at": "2026-08-23T01:42:00Z",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.0022,
+   "epss_percentile": 0.12684,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:fast-uri",
+   "version": "3.1.3",
+   "advisory": "GHSA-jqff-g426-hqxp",
+   "cves": [
+    "CVE-2026-76172"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "3.1.6",
+   "summary": "fast-uri vulnerable to host confusion via percent-encoded scheme normalization",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-76172"
+   ],
+   "published": "2026-09-02T15:41:53Z",
+   "modified": "2026-09-10T03:50:54.467662526Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-177"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/fast-uri@3.1.3",
+   "fix_published_at": "2026-08-23T01:42:00Z",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00232,
+   "epss_percentile": 0.14249,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:fast-uri",
+   "version": "3.1.3",
+   "advisory": "GHSA-qw65-cvwx-89v3",
+   "cves": [
+    "CVE-2026-84292"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "3.1.7",
+   "summary": "fast-uri vulnerable to authority injection via an unvalidated port in serialize",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-84292"
+   ],
+   "published": "2026-09-28T21:24:39Z",
+   "modified": "2026-09-28T21:45:03.859117836Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-116"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/fast-uri@3.1.3",
+   "fix_published_at": "2026-09-02T11:06:41Z",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00239,
+   "epss_percentile": 0.15181,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:fast-uri",
+   "version": "3.1.3",
+   "advisory": "GHSA-v2hh-gcrm-f6hx",
+   "cves": [
+    "CVE-2026-16221"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "3.1.4",
+   "summary": "fast-uri vulnerable to host confusion via literal backslash authority delimiter",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-16221"
+   ],
+   "published": "2026-07-21T22:08:28Z",
+   "modified": "2026-09-10T03:51:12.051886648Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-436"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/fast-uri@3.1.3",
+   "fix_published_at": "2026-07-19T07:42:54Z",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00436,
+   "epss_percentile": 0.38589,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:fast-uri",
+   "version": "3.1.3",
+   "advisory": "GHSA-hrr3-gc8f-f4qj",
+   "cves": [
+    "CVE-2026-86472"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "3.1.8",
+   "summary": "fast-uri vulnerable to inconsistent host case normalization via percent-encoded octets",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-86472"
+   ],
+   "published": "2026-09-29T23:54:25Z",
+   "modified": "2026-09-30T00:00:04.426165475Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-178"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/fast-uri@3.1.3",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00253,
+   "epss_percentile": 0.16963,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:fast-uri",
+   "version": "3.1.3",
+   "advisory": "GHSA-w74x-v6f9-j3xg",
+   "cves": [
+    "CVE-2026-110306"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "3.1.9",
+   "summary": "fast-uri vulnerable to URI scheme spoofing via percent-encoded scheme decoding",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-110306"
+   ],
+   "published": "2026-10-23T21:41:36Z",
+   "modified": "2026-10-23T21:45:04.896137439Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-172",
+    "CWE-180"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/fast-uri@3.1.3",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.0025,
+   "epss_percentile": 0.16509,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:fast-uri",
+   "version": "3.1.3",
+   "advisory": "GHSA-wjr9-j795-jxcr",
+   "cves": [
+    "CVE-2026-110180"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "3.1.9",
+   "summary": "fast-uri vulnerable to host confusion via unchecked WHATWG host canonicalization",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-110180"
+   ],
+   "published": "2026-10-23T21:37:59Z",
+   "modified": "2026-10-23T21:45:04.892054666Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20",
+    "CWE-436"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/fast-uri@3.1.3",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00255,
+   "epss_percentile": 0.17285,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:fast-uri",
+   "version": "3.1.3",
+   "advisory": "GHSA-333x-w4r6-6crp",
+   "cves": [
+    "CVE-2026-110725"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.1.9",
+   "summary": "fast-uri vulnerable to scheme injection via an unescaped first-segment colon in suffix references",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-110725"
+   ],
+   "published": "2026-10-23T21:36:40Z",
+   "modified": "2026-10-23T21:45:04.900311356Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-116",
+    "CWE-41"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/fast-uri@3.1.3",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00302,
+   "epss_percentile": 0.23411,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:fast-uri",
+   "version": "3.1.3",
+   "advisory": "GHSA-xhq7-xmqj-769h",
+   "cves": [
+    "CVE-2026-110095"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.1.9",
+   "summary": "fast-uri vulnerable to improper path equivalence in relative reference normalization",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-110095"
+   ],
+   "published": "2026-10-23T21:39:34Z",
+   "modified": "2026-10-23T21:45:04.902389903Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-41"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/fast-uri@3.1.3",
+   "scope": "runtime",
+   "paths": [
+    ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+   ],
+   "workspace": ".",
+   "found_in": "package-lock.json",
+   "kev": false,
+   "epss": 0.00289,
+   "epss_percentile": 0.21903,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

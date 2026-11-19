@@ -88,32 +88,18 @@
     "runs": []
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/labscommunity/cascadia@36b03a7e417f",
+      "github.com/labscommunity/cascadia@365169cea287",
       "Cargo.lock",
       "crates/cascadia-dashboard/web/package-lock.json"
     ],
-    "packages_checked": 392,
-    "findings_total": 3,
-    "advisories_total": 3,
+    "packages_checked": 569,
+    "findings_total": 2,
+    "advisories_total": 2,
     "findings": [
-      {
-        "package": "crates:openssl",
-        "version": "0.10.78",
-        "advisory": "GHSA-xp3w-r5p5-63rr",
-        "cves": [
-          "CVE-2026-42327"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.10.79",
-        "summary": "rust-openssl has undefined behavior in X509Ref::ocsp_responders for certificates with non-UTF-8 OCSP URLs",
-        "malicious": false
-      },
       {
         "package": "npm:react-router",
         "version": "7.15.1",
@@ -124,7 +110,24 @@
         "severity": "HIGH",
         "fixed_in": "7.18.0",
         "summary": "React Router: Unauthenticated Denial of Service via Inefficient Route Matching",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "crates/cascadia-dashboard/web/package-lock.json",
+        "kev": false,
+        "epss": 0.00708,
+        "fix_published_at": "2026-06-16T14:12:39Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > react-router-dom > react-router"
+        ]
       },
       {
         "package": "npm:react-router",
@@ -134,23 +137,107 @@
         "severity": "HIGH",
         "fixed_in": "7.18.2",
         "summary": "React Router: RSC Mode CSRF Bypass Allows Action Execution Before 400 Response",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "crates/cascadia-dashboard/web/package-lock.json",
+        "kev": false,
+        "fix_published_at": "2026-07-28T21:53:08Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction"
+        ],
+        "paths": [
+          ". > react-router-dom > react-router"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:06:03+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "365169cea2874aa59030c8821897477d1d813b32",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 382,
+        "npm": 187
+      },
+      "scopes": {
+        "runtime": 275,
+        "optional": 16,
+        "dev": 177,
+        "workspace": 101
+      },
+      "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 26,
+      "details": "security/cascadia.json",
+      "details_sha256": "7b634ae5ec14b9faddc8139d4447c8f063701caf07a74b516e84f0bfd8361cda"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-chx6-hx7r-mcp5 npm:react-router@7.15.1 (conditional)",
+        "worst:GHSA-qwww-vcr4-c8h2 npm:react-router@7.15.1 (conditional)",
+        "worst:GHSA-73wf-gq98-2v4g npm:browserslist@4.28.2 (not_shipped)"
+      ],
+      "counts": {
+        "conditional": 2,
+        "not_shipped": 7
+      },
+      "uncounted": 17,
+      "assessed_at": "2026-11-20T00:06:03+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 569,
+      "packages_checked": 569,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 382,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "crates/cascadia-dashboard/web/package-lock.json",
+          "status": "scanned",
+          "packages": 187,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 87.3,
       "confidence": 0.5,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.8125,
@@ -170,16 +257,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 87.3,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -584,5 +668,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:30+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:06:03+08:00"
 }

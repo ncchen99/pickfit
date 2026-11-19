@@ -535,14 +535,12 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
       "npm:dreamd-mcp (fresh install, 1 packages)",
-      "github.com/botzrDev/dreamd@da34a3d3cd60",
+      "github.com/botzrDev/dreamd@6343f0998c4a",
       "Cargo.lock"
     ],
     "packages_checked": 598,
@@ -559,7 +557,24 @@
         "severity": "HIGH",
         "fixed_in": "2.0.0",
         "summary": "RMCP: Missing Resource Field Validation in OAuth Protected Resource Metadata Discovery",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/dreamd-core",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00195,
+        "fix_published_at": "2026-06-29T12:32:23Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction"
+        ],
+        "paths": [
+          "dreamd-core > rmcp"
+        ]
       },
       {
         "package": "crates:rmcp",
@@ -571,23 +586,108 @@
         "severity": "HIGH",
         "fixed_in": "2.0.0",
         "summary": "RMCP: Unauthenticated permanent session-table leak in rmcp Streamable HTTP server transport leads to remote denial-of-service",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/dreamd-core",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00535,
+        "fix_published_at": "2026-06-29T12:32:23Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "dreamd-core > rmcp"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "6343f0998c4a95668e852170f593e36c7f292df4",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 597,
+        "npm": 1
+      },
+      "scopes": {
+        "runtime": 441,
+        "optional": 122,
+        "build": 12,
+        "dev": 23
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 6,
+      "details": "security/dreamd.json",
+      "details_sha256": "aaade19d30859ecfc102966006ce78489a97817d0ce333f8e93bdde5b940ab5a"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-33f5-2c5q-wgwj crates:rmcp@1.7.0 (conditional)",
+        "worst:GHSA-9pj6-vhgr-3mwh crates:rmcp@1.7.0 (conditional)"
+      ],
+      "counts": {
+        "conditional": 2
+      },
+      "uncounted": 4,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 598,
+      "packages_checked": 598,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "registry:npm:dreamd-mcp",
+          "status": "partial",
+          "packages": 1,
+          "gaps": [
+            "binary.prebuilt_package"
+          ]
+        },
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 597,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 88.3,
       "confidence": 0.8,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -607,16 +707,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 88.3,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -1013,5 +1110,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:37:45+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

@@ -279,20 +279,18 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/Tylogi/TyloQuant@ab4f9e4454a3",
+      "github.com/Tylogi/TyloQuant@b06a0b73c9f5",
       "MFQStudio/package-lock.json",
       "MFQStudio/src-tauri/Cargo.lock",
       "pyproject.toml (resolved today)"
     ],
-    "packages_checked": 601,
-    "findings_total": 10,
-    "advisories_total": 10,
+    "packages_checked": 772,
+    "findings_total": 6,
+    "advisories_total": 6,
     "findings": [
       {
         "package": "crates:zip",
@@ -304,29 +302,21 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "8.6.0",
-        "advisory": "RUSTSEC-2026-0369",
-        "cves": [],
-        "severity": "CRITICAL",
-        "fixed_in": "9.0.0",
-        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
-      },
-      {
-        "package": "npm:dompurify",
-        "version": "3.4.16",
-        "advisory": "GHSA-cg2g-xh64-v4q7",
-        "cves": [
-          "CVE-2026-116804"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify SAFE_FOR_TEMPLATES bypass: split template expressions survive in attached shadow root content on DOM output modes",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "MFQStudio/src-tauri",
+        "found_in": "MFQStudio/src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.0032,
+        "fix_published_at": "2026-10-17T18:45:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "mfq-studio > zip"
+        ]
       },
       {
         "package": "crates:quinn-proto",
@@ -336,7 +326,31 @@
         "severity": "HIGH",
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "MFQStudio/src-tauri",
+        "found_in": "MFQStudio/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-09-14T10:08:32Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ACK_FREQUENCY"
+        ],
+        "paths": [
+          "mfq-studio > reqwest > quinn > quinn-proto"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+          ]
+        }
       },
       {
         "package": "crates:quinn-proto",
@@ -346,7 +360,23 @@
         "severity": "HIGH",
         "fixed_in": "0.11.17",
         "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "MFQStudio/src-tauri",
+        "found_in": "MFQStudio/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-08-17T17:32:41Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "mfq-studio > reqwest > quinn > quinn-proto"
+        ]
       },
       {
         "package": "crates:zip",
@@ -358,19 +388,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: legacy Shrink/Reduce/Implode decoder: denial of service from attacker-controlled ZIP64 uncompressed size",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "8.6.0",
-        "advisory": "GHSA-hjqx-j4rw-g7xv",
-        "cves": [
-          "CVE-2026-115908"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "MFQStudio/src-tauri",
+        "found_in": "MFQStudio/src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.0035,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
-        "malicious": false
+        "paths": [
+          "mfq-studio > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -382,7 +417,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "MFQStudio/src-tauri",
+        "found_in": "MFQStudio/src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00461,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "mfq-studio > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -392,35 +444,208 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "MFQStudio/src-tauri",
+        "found_in": "MFQStudio/src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
+        ],
+        "paths": [
+          "mfq-studio > zip"
+        ]
       },
       {
-        "package": "npm:dompurify",
-        "version": "3.4.16",
-        "advisory": "GHSA-mrv2-3pqr-j5jr",
+        "package": "crates:zip",
+        "version": "8.6.0",
+        "advisory": "RUSTSEC-2026-0369",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.0",
+        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "MFQStudio/src-tauri",
+        "found_in": "MFQStudio/src-tauri/Cargo.lock",
+        "kev": false,
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:ZipStreamReader::extract",
+          "symbol:ZipArchive::extract"
+        ],
+        "paths": [
+          "mfq-studio > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses ZipStreamReader::extract, ZipArchive::extract; only the project depends on zip"
+          ]
+        }
+      },
+      {
+        "package": "crates:zip",
+        "version": "8.6.0",
+        "advisory": "GHSA-hjqx-j4rw-g7xv",
         "cves": [
-          "CVE-2026-116803"
+          "CVE-2026-115908"
         ],
         "severity": "HIGH",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
-        "malicious": false
+        "fixed_in": "9.0.0",
+        "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "MFQStudio/src-tauri",
+        "found_in": "MFQStudio/src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00432,
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity",
+          "symbol:ZipArchive::extract"
+        ],
+        "paths": [
+          "mfq-studio > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses ZipArchive::extract; only the project depends on zip"
+          ]
+        }
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "b06a0b73c9f5de6fb374eed1fbbf6a5507034ee6",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 502,
+        "npm": 226,
+        "pypi": 44
+      },
+      "scopes": {
+        "runtime": 592,
+        "optional": 3,
+        "peer": 3,
+        "build": 3,
+        "dev": 171
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 34,
+      "details": "security/tyloquant.json",
+      "details_sha256": "f2eb9e10495a68326387f802b5f9aaa9deffea95e3f21305636379c56afccb22"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-m665-v7pm-7grj crates:zip@8.6.0 (conditional)",
+        "worst:RUSTSEC-2026-0340 crates:quinn-proto@0.11.16 (conditional)",
+        "worst:RUSTSEC-2026-0341 crates:quinn-proto@0.11.16 (conditional)"
+      ],
+      "counts": {
+        "conditional": 6,
+        "present_unreachable": 2,
+        "not_shipped": 1
+      },
+      "uncounted": 25,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 772,
+      "packages_checked": 772,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "MFQStudio/package-lock.json",
+          "status": "scanned",
+          "packages": 226,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "MFQStudio/src-tauri/Cargo.lock",
+          "status": "scanned",
+          "packages": 502,
+          "gaps": []
+        },
+        {
+          "ecosystem": "c/c++",
+          "component": "cpp_runtime/CMakeLists.txt",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "advisory_db.no_ecosystem"
+          ]
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "pyproject.toml",
+          "status": "scanned",
+          "packages": 44,
+          "gaps": []
+        }
+      ],
+      "gaps": [
+        {
+          "code": "advisory_db.no_ecosystem",
+          "category": "advisory_db",
+          "ecosystem": "c/c++",
+          "component": "cpp_runtime/CMakeLists.txt",
+          "detail": "CMakeLists.txt: no advisory ecosystem for C/C++ libraries",
+          "capability": "advisory_source:c/c++",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 88.3,
       "confidence": 0.8,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -440,16 +665,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 88.3,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -827,5 +1049,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:11+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

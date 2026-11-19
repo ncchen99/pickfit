@@ -439,14 +439,12 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
       "npm:indexio (fresh install, 1 packages)",
-      "github.com/IOServicesLabs/indexio@7d57be890de9",
+      "github.com/IOServicesLabs/indexio@8483b3a3351b",
       "Cargo.lock"
     ],
     "packages_checked": 406,
@@ -463,7 +461,33 @@
         "severity": "HIGH",
         "fixed_in": "0.83.0",
         "summary": "gitoxide: CommandForbiddenInModulesConfiguration Bypass in gix_submodule::File::update() Enables Arbitrary Command Execution via .gitmodules",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/indexio-ingest",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00651,
+        "fix_published_at": "2026-04-27T23:01:17Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction",
+          "symbol:File::update"
+        ],
+        "paths": [
+          "indexio-ingest > gix"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "crates/indexio-ingest/src/team.rs:203: h.update(n.as_bytes());"
+          ]
+        }
       },
       {
         "package": "crates:gix",
@@ -475,7 +499,21 @@
         "severity": "HIGH",
         "fixed_in": "0.83.0",
         "summary": "gix and gitoxide: unvalidated submodule name traverses out of .git/modules and redirects state() / open() to another repository",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/indexio-ingest",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00522,
+        "fix_published_at": "2026-04-27T23:01:17Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "indexio-ingest > gix"
+        ]
       },
       {
         "package": "crates:gix",
@@ -487,7 +525,25 @@
         "severity": "HIGH",
         "fixed_in": "0.83.0",
         "summary": "gix's submodule name validation bypass + trust inheritance flaw enables path traversal and credential disclosure",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/indexio-ingest",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00657,
+        "fix_published_at": "2026-04-27T23:01:17Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction",
+          "high_complexity"
+        ],
+        "paths": [
+          "indexio-ingest > gix"
+        ]
       },
       {
         "package": "crates:gix",
@@ -499,7 +555,21 @@
         "severity": "HIGH",
         "fixed_in": "0.83.0",
         "summary": "gix and gitoxide's symlinked .gitmodules are followed and parsed from outside of the repository",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/indexio-ingest",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00522,
+        "fix_published_at": "2026-04-27T23:01:17Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "indexio-ingest > gix"
+        ]
       },
       {
         "package": "crates:gix-fs",
@@ -511,7 +581,25 @@
         "severity": "HIGH",
         "fixed_in": "0.21.1",
         "summary": "gix-fs: Symlink prefix-reuse allows worktree escape during checkout",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/indexio-ingest",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00291,
+        "fix_published_at": "2026-04-30T10:25:00Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
+        ],
+        "paths": [
+          "indexio-ingest > gix > gix-fs"
+        ]
       },
       {
         "package": "crates:gix-pack",
@@ -523,19 +611,24 @@
         "severity": "HIGH",
         "fixed_in": "0.69.0",
         "summary": "gix-pack has multiple DoS vectors: unchecked indexing panics and uncapped OOM allocations from crafted pack data",
-        "malicious": false
-      },
-      {
-        "package": "crates:gix-validate",
-        "version": "0.9.4",
-        "advisory": "GHSA-p3hw-mv63-rf9w",
-        "cves": [
-          "CVE-2026-82253"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/indexio-ingest",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00488,
+        "fix_published_at": "2026-04-24T08:59:19Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "0.11.1",
-        "summary": "gix's submodule name validation bypass + trust inheritance flaw enables path traversal and credential disclosure",
-        "malicious": false
+        "paths": [
+          "indexio-ingest > gix > gix-pack"
+        ]
       },
       {
         "package": "crates:gix-validate",
@@ -547,23 +640,181 @@
         "severity": "HIGH",
         "fixed_in": "0.11.1",
         "summary": "gix's submodule name validation bypass + trust inheritance flaw enables path traversal and credential disclosure",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/indexio-ingest",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00657,
+        "fix_published_at": "2026-04-24T08:50:27Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction",
+          "high_complexity"
+        ],
+        "paths": [
+          "indexio-ingest > gix > gix-path > gix-validate"
+        ]
+      },
+      {
+        "package": "crates:gix-validate",
+        "version": "0.9.4",
+        "advisory": "GHSA-p3hw-mv63-rf9w",
+        "cves": [
+          "CVE-2026-82253"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.11.1",
+        "summary": "gix's submodule name validation bypass + trust inheritance flaw enables path traversal and credential disclosure",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/indexio-ingest",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00657,
+        "fix_published_at": "2026-04-24T08:50:27Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction",
+          "high_complexity"
+        ],
+        "paths": [
+          "indexio-ingest > gix > gix-validate"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "8483b3a3351b37bd172608951bcec2850583eb8e",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 405,
+        "npm": 1
+      },
+      "scopes": {
+        "runtime": 385,
+        "optional": 21
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 41,
+      "details": "security/indexio.json",
+      "details_sha256": "0d2020899e070e9fd3a2056b09a3abc70f6e7f286ef5edbf8379fead8005119b"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-f26g-jm89-4g65 crates:gix@0.66.0 (conditional)",
+        "worst:GHSA-fr8x-3vfx-f45h crates:gix@0.66.0 (conditional)",
+        "worst:GHSA-p3hw-mv63-rf9w crates:gix@0.66.0 (conditional)"
+      ],
+      "counts": {
+        "conditional": 8
+      },
+      "uncounted": 33,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 406,
+      "packages_checked": 406,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "registry:npm:indexio",
+          "status": "partial",
+          "packages": 1,
+          "gaps": [
+            "binary.prebuilt_package"
+          ]
+        },
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 405,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "pypi/pyproject.toml",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "resolve.pyproject_failed"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "code": "resolve.pyproject_failed",
+          "category": "resolve_failed",
+          "ecosystem": "pypi",
+          "component": "pypi/pyproject.toml",
+          "detail": "uv pip compile --no-build did not resolve it",
+          "capability": "resolve_in_sandbox",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "binary.prebuilt_package",
+          "category": "binary_no_metadata",
+          "ecosystem": "npm",
+          "component": "npm:indexio",
+          "detail": "the package wraps a compiled binary",
+          "capability": "sbom_binary",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "resolve.registry_failed",
+          "category": "resolve_failed",
+          "ecosystem": "pypi",
+          "component": "pypi:indexio-cli",
+          "detail": "RuntimeError: uv resolve failed: an conclude that your requirements are unsatisfiable.\n\nhint: Wheels are available for `indexio-cli` (v0.1.14) on the following plat",
+          "capability": "resolve_in_sandbox",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 100.0,
       "confidence": 0.8,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 1.0,
@@ -583,16 +834,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 100.0,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -1060,5 +1308,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:22:25+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

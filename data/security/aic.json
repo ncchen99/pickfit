@@ -1,0 +1,207 @@
+{
+ "slug": "aic",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "8cd448f0d4d1e6646ff60a6f1d5f2273bb4b36c7",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 799
+  },
+  "scopes": {
+   "runtime": 396,
+   "optional": 402,
+   "dev": 1
+  },
+  "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 4
+ },
+ "assessment": {
+  "level": "none",
+  "policy_version": "sec.v2",
+  "reasons": [],
+  "counts": {},
+  "uncounted": 4,
+  "assessed_at": "2026-11-20T00:06:03+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 799,
+  "packages_checked": 799,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 799,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/CaicoLeung/aic@8cd448f0d4d1",
+  "Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:libz-sys",
+   "version": "1.1.31",
+   "advisory": "RUSTSEC-2026-0544",
+   "cves": [
+    "CVE-2026-85091"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "1.1.33",
+   "summary": "libs-sys: heap buffer overflow",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-85091"
+   ],
+   "published": "2026-11-11T12:00:00Z",
+   "modified": "2026-11-17T10:15:02.362721160Z",
+   "purl": "pkg:cargo/libz-sys@1.1.31",
+   "scope": "runtime",
+   "paths": [
+    "aic > git2 > libgit2-sys > libz-sys"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00469,
+   "epss_percentile": 0.41324,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd",
+   "version": "0.13.3",
+   "advisory": "RUSTSEC-2026-0391",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.13.4",
+   "summary": "Data from an abandoned stream leaks into the next stream on a reused context",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-11-02T09:30:03.590733846Z",
+   "purl": "pkg:cargo/zstd@0.13.3",
+   "scope": "optional",
+   "paths": [
+    "aic > rig > rig-lancedb > lancedb > arrow-ipc > zstd"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Decoder::with_context",
+    "symbol:Encoder::with_context"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "src/llm/cli_agent/mod.rs:627: return Err(e).with_context(|| format!(\"failed to spawn `{}`\", spec.program));",
+     "named only in files that do not import zstd"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd-safe",
+   "version": "7.3.0",
+   "advisory": "RUSTSEC-2026-0398",
+   "severity": "UNKNOWN",
+   "fixed_in": "7.4.0",
+   "summary": "`Seekable::decompress` sets a `Vec` length beyond its capacity for offsets past the end",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-11-02T09:30:03.419709171Z",
+   "dos_only": false,
+   "purl": "pkg:cargo/zstd-safe@7.3.0",
+   "scope": "optional",
+   "paths": [
+    "aic > rig > rig-lancedb > lancedb > arrow-ipc > zstd > zstd-safe"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Seekable::decompress",
+    "symbol:Vec",
+    "symbol:AdvancedSeekable::decompress"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "src/core/cli/mod.rs:12: pub(crate) fn use_vocabulary() -> Vec<&'static str> {",
+     "named only in files that do not import zstd-safe"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd-safe",
+   "version": "7.3.0",
+   "advisory": "RUSTSEC-2026-0403",
+   "severity": "UNKNOWN",
+   "fixed_in": "7.4.0",
+   "summary": "Uninitialized memory exposed when streaming decompression of a legacy frame fails",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-11-02T09:30:04.136442771Z",
+   "purl": "pkg:cargo/zstd-safe@7.3.0",
+   "scope": "optional",
+   "paths": [
+    "aic > rig > rig-lancedb > lancedb > arrow-ipc > zstd > zstd-safe"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:DCtx::decompress_stream"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use DCtx::decompress_stream, but other packages depend on zstd-safe"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

@@ -123,13 +123,11 @@
     "tools": []
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/megamen32/gptadmin_opensource@36ca989c7a7e",
+      "github.com/megamen32/gptadmin_opensource@83cef27b6fec",
       "admin-ui/package-lock.json",
       "bezhook/go.mod",
       "cloudos-ui/pnpm-lock.yaml",
@@ -140,30 +138,10 @@
       "package-lock.json",
       "pyproject.toml (resolved today)"
     ],
-    "packages_checked": 404,
-    "findings_total": 8,
-    "advisories_total": 8,
+    "packages_checked": 1044,
+    "findings_total": 2,
+    "advisories_total": 2,
     "findings": [
-      {
-        "package": "crates:quinn-proto",
-        "version": "0.11.16",
-        "advisory": "RUSTSEC-2026-0340",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.11.18",
-        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
-      },
-      {
-        "package": "crates:quinn-proto",
-        "version": "0.11.16",
-        "advisory": "RUSTSEC-2026-0341",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.11.17",
-        "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
-        "malicious": false
-      },
       {
         "package": "go:github.com/fatedier/frp",
         "version": "v0.64.0",
@@ -174,7 +152,25 @@
         "severity": "HIGH",
         "fixed_in": "0.70.1",
         "summary": "frp: Unauthenticated Remote Denial of Service in the frp SSH Tunnel Gateway via Integer Overflow",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "bezhook",
+        "found_in": "bezhook/go.mod",
+        "kev": false,
+        "epss": 0.00524,
+        "fix_published_at": "2026-07-23T07:34:31Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "high_complexity",
+          "denial_of_service"
+        ],
+        "paths": [
+          "bezhook/go.mod > github.com/fatedier/frp"
+        ]
       },
       {
         "package": "go:github.com/go-jose/go-jose/v4",
@@ -186,65 +182,200 @@
         "severity": "HIGH",
         "fixed_in": "4.1.6",
         "summary": "Go JOSE: DoS when parsing JWKs that contain RSA keys",
-        "malicious": false
-      },
-      {
-        "package": "npm:devalue",
-        "version": "5.8.1",
-        "advisory": "GHSA-j22f-vq7h-c4qm",
-        "cves": [
-          "CVE-2026-92708"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "bezhook",
+        "found_in": "bezhook/go.mod",
+        "kev": false,
+        "epss": 0.00489,
+        "fix_published_at": "2026-10-14T22:46:21Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "5.9.3",
-        "summary": "devalue: `stringify`/`uneval` serialize shared memory",
-        "malicious": false
-      },
-      {
-        "package": "npm:devalue",
-        "version": "5.8.1",
-        "advisory": "GHSA-mcm9-63f2-9j32",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "5.9.3",
-        "summary": "devalue: Repeated primitive strings cause quadratic expansion in uneval",
-        "malicious": false
-      },
-      {
-        "package": "npm:devalue",
-        "version": "5.8.1",
-        "advisory": "GHSA-r9w8-h9r3-54w4",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "5.9.3",
-        "summary": "devalue: Custom ArrayBuffer revivers can bypass typed-array allocation validation",
-        "malicious": false
-      },
-      {
-        "package": "npm:devalue",
-        "version": "5.8.1",
-        "advisory": "GHSA-x5rw-q4pp-hg5g",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "5.9.3",
-        "summary": "devalue: stringifyAsync can cause an unhandled rejection despite a caught returned promise",
-        "malicious": false
+        "paths": [
+          "bezhook/go.mod > github.com/go-jose/go-jose/v4"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "83cef27b6fec57e945000c357685c11d78029937",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 216,
+        "go": 85,
+        "npm": 698,
+        "pypi": 45
+      },
+      "scopes": {
+        "runtime": 369,
+        "optional": 17,
+        "peer": 14,
+        "dev": 644
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 144,
+      "details": "security/gptadmin-opensource.json",
+      "details_sha256": "aa2d6e91ff73ead6bfb3763ad568f0f7d48a334b7f7b63a91f87f435473bf918"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-26gq-p25f-99cp go:github.com/fatedier/frp@v0.64.0 (conditional)",
+        "worst:GHSA-mgcc-cww5-fp2q go:github.com/go-jose/go-jose/v4@v4.1.4 (conditional)",
+        "worst:RUSTSEC-2026-0340 crates:quinn-proto@0.11.16 (not_shipped)"
+      ],
+      "counts": {
+        "conditional": 2,
+        "not_shipped": 58
+      },
+      "uncounted": 84,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 1044,
+      "packages_checked": 1044,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "admin-ui/package-lock.json",
+          "status": "scanned",
+          "packages": 227,
+          "gaps": []
+        },
+        {
+          "ecosystem": "maven",
+          "component": "android-cellular-proxy/app/build.gradle",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "android-cellular-proxy/build.gradle",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "go",
+          "component": "bezhook/go.mod",
+          "status": "scanned",
+          "packages": 47,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "cloudos-ui/pnpm-lock.yaml",
+          "status": "scanned",
+          "packages": 505,
+          "gaps": []
+        },
+        {
+          "ecosystem": "go",
+          "component": "go-hub/go.mod",
+          "status": "scanned",
+          "packages": 39,
+          "gaps": []
+        },
+        {
+          "ecosystem": "go",
+          "component": "go-proxyrelay/go.mod",
+          "status": "scanned",
+          "packages": 1,
+          "gaps": []
+        },
+        {
+          "ecosystem": "go",
+          "component": "go-shellmcp/go.mod",
+          "status": "scanned",
+          "packages": 3,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "grepmesh/Cargo.lock",
+          "status": "scanned",
+          "packages": 216,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "package-lock.json",
+          "status": "scanned",
+          "packages": 4,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "pyproject.toml",
+          "status": "scanned",
+          "packages": 45,
+          "gaps": []
+        }
+      ],
+      "gaps": [
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "android-cellular-proxy/app/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 0,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "android-cellular-proxy/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 0,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 80.5,
       "confidence": 0.4,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.6875,
@@ -264,16 +395,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 80.5,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -605,5 +733,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

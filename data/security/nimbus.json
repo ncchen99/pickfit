@@ -1,0 +1,119 @@
+{
+ "slug": "nimbus",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "4296aa26de2d977e5faa4ea4d7750900ef89ab57",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 497
+  },
+  "scopes": {
+   "runtime": 497
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 1
+ },
+ "assessment": {
+  "level": "none",
+  "policy_version": "sec.v2",
+  "reasons": [],
+  "counts": {},
+  "uncounted": 1,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "partial",
+  "target": "repo_lockfile",
+  "packages_found": 1911,
+  "packages_checked": 497,
+  "components": [
+   {
+    "ecosystem": "npm",
+    "component": "bun.lock",
+    "status": "not_scanned",
+    "packages": 1414,
+    "gaps": [
+     "lockfile.unsupported_format"
+    ]
+   },
+   {
+    "ecosystem": "crates",
+    "component": "packages/ui/src-tauri/Cargo.lock",
+    "status": "scanned",
+    "packages": 497,
+    "gaps": []
+   }
+  ],
+  "gaps": [
+   {
+    "code": "lockfile.unsupported_format",
+    "category": "lockfile_unreadable",
+    "ecosystem": "npm",
+    "component": "bun.lock",
+    "detail": "bun_lock is not read yet",
+    "capability": "read_lockfile:bun_lock",
+    "found": 1414,
+    "first_seen": "2026-11-04",
+    "last_seen": "2026-11-20"
+   }
+  ]
+ },
+ "sources": [
+  "github.com/nimbus-agent/Nimbus@4296aa26de2d",
+  "packages/ui/src-tauri/Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:glib",
+   "version": "0.18.5",
+   "advisory": "GHSA-wrw7-89jp-8q8g",
+   "severity": "MODERATE",
+   "fixed_in": "0.20.0",
+   "summary": "Unsoundness in `Iterator` and `DoubleEndedIterator` impls for `glib::VariantStrIter`",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2024-0429"
+   ],
+   "published": "2024-12-23T20:19:24Z",
+   "modified": "2025-10-28T06:29:26.473225Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/glib@0.18.5",
+   "scope": "runtime",
+   "paths": [
+    "app > tauri > gtk > glib"
+   ],
+   "workspace": "packages/ui/src-tauri",
+   "found_in": "packages/ui/src-tauri/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Iterator",
+    "symbol:DoubleEndedIterator",
+    "symbol:glib::VariantStrIter"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use Iterator, DoubleEndedIterator, glib::VariantStrIter, but other packages depend on glib"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

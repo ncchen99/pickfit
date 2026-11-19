@@ -78,9 +78,7 @@
     "runs": []
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -89,7 +87,7 @@
       "bridge/requirements.txt",
       "requirements.txt"
     ],
-    "packages_checked": 47,
+    "packages_checked": 108,
     "findings_total": 3,
     "advisories_total": 3,
     "findings": [
@@ -103,7 +101,20 @@
         "severity": "HIGH",
         "fixed_in": "1.27.2",
         "summary": "MCP Python SDK: Experimental task handlers allow any client to access and cancel other clients' tasks",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "requirements.txt",
+        "kev": false,
+        "epss": 0.00388,
+        "fix_published_at": "2026-05-29T17:16:02Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "requirements.txt > mcp"
+        ]
       },
       {
         "package": "pypi:mcp",
@@ -115,7 +126,23 @@
         "severity": "HIGH",
         "fixed_in": "1.27.2",
         "summary": "MCP Python SDK: HTTP transports serve session requests without verifying the authenticated principal",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "requirements.txt",
+        "kev": false,
+        "epss": 0.00535,
+        "fix_published_at": "2026-05-29T17:16:02Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "requirements.txt > mcp"
+        ]
       },
       {
         "package": "pypi:mcp",
@@ -127,23 +154,112 @@
         "severity": "HIGH",
         "fixed_in": "1.28.1",
         "summary": "MCP Python SDK: WebSocket server transport does not support Host/Origin validation",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "requirements.txt",
+        "kev": false,
+        "epss": 0.00231,
+        "fix_published_at": "2026-06-26T12:57:27Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction",
+          "high_complexity"
+        ],
+        "paths": [
+          "requirements.txt > mcp"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "9fee13af821b7a8163690b8dc993e39962bf2f7c",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "npm": 96,
+        "pypi": 12
+      },
+      "scopes": {
+        "runtime": 47,
+        "dev": 61
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 7,
+      "details": "security/kwipu.json",
+      "details_sha256": "6283a9d7a8bc127789338bd272db8a832472fb3692e52e99a6b2b2b7102806df"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-hvrp-rf83-w775 pypi:mcp@1.27.1 (conditional)",
+        "worst:GHSA-jpw9-pfvf-9f58 pypi:mcp@1.27.1 (conditional)",
+        "worst:GHSA-vj7q-gjh5-988w pypi:mcp@1.27.1 (conditional)"
+      ],
+      "counts": {
+        "conditional": 3
+      },
+      "uncounted": 4,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 108,
+      "packages_checked": 108,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "frontend/package-lock.json",
+          "status": "scanned",
+          "packages": 96,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "bridge/requirements.txt",
+          "status": "scanned",
+          "packages": 2,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "requirements.txt",
+          "status": "scanned",
+          "packages": 10,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 79.2,
       "confidence": 0.5,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.875,
@@ -163,16 +279,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 79.2,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -490,5 +603,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

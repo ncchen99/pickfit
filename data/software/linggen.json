@@ -278,23 +278,21 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/linggen/linggen@74497f55c1a7",
+      "github.com/linggen/linggen@3ca908ea3258",
       "Cargo.lock",
       "ui/package-lock.json"
     ],
-    "packages_checked": 953,
-    "findings_total": 20,
-    "advisories_total": 13,
+    "packages_checked": 1498,
+    "findings_total": 17,
+    "advisories_total": 10,
     "findings": [
       {
         "package": "crates:zip",
-        "version": "7.2.0",
+        "version": "7.4.0",
         "advisory": "GHSA-m665-v7pm-7grj",
         "cves": [
           "CVE-2026-115905"
@@ -302,7 +300,55 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.0032,
+        "fix_published_at": "2026-10-17T18:45:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "linggen > any-tts > zip"
+        ]
+      },
+      {
+        "package": "crates:zip",
+        "version": "7.4.0",
+        "advisory": "RUSTSEC-2026-0369",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.0",
+        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:ZipStreamReader::extract",
+          "symbol:ZipArchive::extract"
+        ],
+        "paths": [
+          "linggen > any-tts > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+          ]
+        }
       },
       {
         "package": "crates:zip",
@@ -314,17 +360,21 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "7.2.0",
-        "advisory": "RUSTSEC-2026-0369",
-        "cves": [],
-        "severity": "CRITICAL",
-        "fixed_in": "9.0.0",
-        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/linggen-engine",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.0032,
+        "fix_published_at": "2026-10-17T18:45:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "linggen-engine > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -334,33 +384,35 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
-      },
-      {
-        "package": "crates:quinn-proto",
-        "version": "0.11.14",
-        "advisory": "GHSA-4w2j-m93h-cj5j",
-        "cves": [
-          "CVE-2026-25800"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/linggen-engine",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:ZipStreamReader::extract",
+          "symbol:ZipArchive::extract"
         ],
-        "severity": "HIGH",
-        "fixed_in": "0.11.15",
-        "summary": "Quinn: Remote memory exhaustion in quinn-proto from unbounded out-of-order stream reassembly",
-        "malicious": false
-      },
-      {
-        "package": "crates:quinn-proto",
-        "version": "0.11.14",
-        "advisory": "RUSTSEC-2026-0340",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.11.18",
-        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
+        "paths": [
+          "linggen-engine > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+          ]
+        }
       },
       {
         "package": "crates:zip",
-        "version": "7.2.0",
+        "version": "7.4.0",
         "advisory": "GHSA-9hj8-73fh-9963",
         "cves": [
           "CVE-2026-115907"
@@ -368,7 +420,117 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: legacy Shrink/Reduce/Implode decoder: denial of service from attacker-controlled ZIP64 uncompressed size",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.0035,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "linggen > any-tts > zip"
+        ]
+      },
+      {
+        "package": "crates:zip",
+        "version": "7.4.0",
+        "advisory": "GHSA-hjqx-j4rw-g7xv",
+        "cves": [
+          "CVE-2026-115908"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00432,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity",
+          "symbol:ZipArchive::extract"
+        ],
+        "paths": [
+          "linggen > any-tts > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ZipArchive::extract, but other packages depend on zip"
+          ]
+        }
+      },
+      {
+        "package": "crates:zip",
+        "version": "7.4.0",
+        "advisory": "GHSA-q7v9-x93c-xqv3",
+        "cves": [
+          "CVE-2026-115909"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00461,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "linggen > any-tts > zip"
+        ]
+      },
+      {
+        "package": "crates:zip",
+        "version": "7.4.0",
+        "advisory": "RUSTSEC-2026-0367",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
+        ],
+        "paths": [
+          "linggen > any-tts > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -380,19 +542,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: legacy Shrink/Reduce/Implode decoder: denial of service from attacker-controlled ZIP64 uncompressed size",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "7.2.0",
-        "advisory": "GHSA-hjqx-j4rw-g7xv",
-        "cves": [
-          "CVE-2026-115908"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/linggen-engine",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.0035,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
-        "malicious": false
+        "paths": [
+          "linggen-engine > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -404,19 +571,32 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "7.2.0",
-        "advisory": "GHSA-q7v9-x93c-xqv3",
-        "cves": [
-          "CVE-2026-115909"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/linggen-engine",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00432,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity",
+          "symbol:ZipArchive::extract"
         ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
+        "paths": [
+          "linggen-engine > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ZipArchive::extract, but other packages depend on zip"
+          ]
+        }
       },
       {
         "package": "crates:zip",
@@ -428,17 +608,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "7.2.0",
-        "advisory": "RUSTSEC-2026-0367",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/linggen-engine",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00461,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "linggen-engine > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -448,19 +635,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
-      },
-      {
-        "package": "npm:dompurify",
-        "version": "3.3.1",
-        "advisory": "GHSA-mrv2-3pqr-j5jr",
-        "cves": [
-          "CVE-2026-116803"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/linggen-engine",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
         ],
-        "severity": "HIGH",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
-        "malicious": false
+        "paths": [
+          "linggen-engine > zip"
+        ]
       },
       {
         "package": "npm:lodash-es",
@@ -472,7 +664,24 @@
         "severity": "HIGH",
         "fixed_in": "4.18.0",
         "summary": "lodash vulnerable to Code Injection via `_.template` imports key names",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "ui/package-lock.json",
+        "kev": false,
+        "epss": 0.0287,
+        "fix_published_at": "2026-03-31T18:16:59Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          ". > mermaid > @mermaid-js/parser > langium > chevrotain > @chevrotain/cst-dts-gen > lodash-es"
+        ]
       },
       {
         "package": "npm:lodash-es",
@@ -484,7 +693,24 @@
         "severity": "HIGH",
         "fixed_in": "4.18.0",
         "summary": "lodash vulnerable to Code Injection via `_.template` imports key names",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "ui/package-lock.json",
+        "kev": false,
+        "epss": 0.0287,
+        "fix_published_at": "2026-03-31T18:16:59Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          ". > mermaid > lodash-es"
+        ]
       },
       {
         "package": "npm:react-router",
@@ -496,7 +722,24 @@
         "severity": "HIGH",
         "fixed_in": "7.15.0",
         "summary": "React Router vulnerable to DoS via unbounded path expansion in __manifest endpoint",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "ui/package-lock.json",
+        "kev": false,
+        "epss": 0.00299,
+        "fix_published_at": "2026-05-05T14:32:57Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > react-router-dom > react-router"
+        ]
       },
       {
         "package": "npm:react-router",
@@ -508,7 +751,24 @@
         "severity": "HIGH",
         "fixed_in": "7.18.0",
         "summary": "React Router: Unauthenticated Denial of Service via Inefficient Route Matching",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "ui/package-lock.json",
+        "kev": false,
+        "epss": 0.00708,
+        "fix_published_at": "2026-06-16T14:12:39Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > react-router-dom > react-router"
+        ]
       },
       {
         "package": "npm:react-router",
@@ -518,23 +778,129 @@
         "severity": "HIGH",
         "fixed_in": "7.18.2",
         "summary": "React Router: RSC Mode CSRF Bypass Allows Action Execution Before 400 Response",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "ui/package-lock.json",
+        "kev": false,
+        "fix_published_at": "2026-07-28T21:53:08Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction"
+        ],
+        "paths": [
+          ". > react-router-dom > react-router"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "3ca908ea3258173a4b684f014dcd9964bf53fd31",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 906,
+        "npm": 592
+      },
+      "scopes": {
+        "runtime": 1192,
+        "optional": 2,
+        "peer": 2,
+        "dev": 269,
+        "workspace": 33
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 115,
+      "details": "security/linggen.json",
+      "details_sha256": "25f631a2e80eafaaf52f6b2346d62b03ade61e973160c95f4ecbb382adabe06a"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-m665-v7pm-7grj crates:zip@7.4.0 (conditional)",
+        "worst:RUSTSEC-2026-0369 crates:zip@7.4.0 (conditional)",
+        "worst:GHSA-m665-v7pm-7grj crates:zip@8.6.0 (conditional)"
+      ],
+      "counts": {
+        "conditional": 17,
+        "not_shipped": 35
+      },
+      "uncounted": 63,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 1610,
+      "packages_checked": 1498,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 906,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "runtimes/claude-agent-sdk/bun.lock",
+          "status": "not_scanned",
+          "packages": 112,
+          "gaps": [
+            "lockfile.unsupported_format"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "ui/package-lock.json",
+          "status": "scanned",
+          "packages": 592,
+          "gaps": []
+        }
+      ],
+      "gaps": [
+        {
+          "code": "lockfile.unsupported_format",
+          "category": "lockfile_unreadable",
+          "ecosystem": "npm",
+          "component": "runtimes/claude-agent-sdk/bun.lock",
+          "detail": "bun_lock is not read yet",
+          "capability": "read_lockfile:bun_lock",
+          "found": 112,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 79.4,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -554,16 +920,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 79.4,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -970,5 +1333,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:27:46+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

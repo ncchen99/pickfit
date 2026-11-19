@@ -1,0 +1,266 @@
+{
+ "slug": "binsider",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "7f0633d1a69af15cc3be9e0533cb36dbe67eb598",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 354
+  },
+  "scopes": {
+   "runtime": 351,
+   "dev": 3
+  },
+  "advisories_fetched_at": "2026-11-20T00:50:25+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 5
+ },
+ "assessment": {
+  "level": "none",
+  "policy_version": "sec.v2",
+  "reasons": [],
+  "counts": {},
+  "uncounted": 5,
+  "assessed_at": "2026-11-20T00:50:25+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 354,
+  "packages_checked": 354,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 354,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/orhun/binsider@7f0633d1a69a",
+  "Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:webbrowser",
+   "version": "1.0.6",
+   "advisory": "RUSTSEC-2026-0257",
+   "severity": "UNKNOWN",
+   "fixed_in": "1.2.2",
+   "summary": "Unix `BROWSER` handling allows browser argument injection",
+   "malicious": false,
+   "aliases": [
+    "GHSA-2ph8-5cr8-hr33"
+   ],
+   "published": "2026-07-29T12:00:00Z",
+   "modified": "2026-10-12T18:00:10.938749232Z",
+   "purl": "pkg:cargo/webbrowser@1.0.6",
+   "scope": "runtime",
+   "paths": [
+    "binsider > webbrowser"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:BROWSER",
+    "symbol:webbrowser::open",
+    "symbol:webbrowser::open_browser"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/tui/state.rs:215: webbrowser::open(env!(\"CARGO_PKG_HOMEPAGE\"))?;"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:bytes",
+   "version": "1.11.0",
+   "advisory": "GHSA-434x-w66g-qw3r",
+   "cves": [
+    "CVE-2026-25541"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.11.1",
+   "summary": "bytes has integer overflow in BytesMut::reserve",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-25541",
+    "RUSTSEC-2026-0007"
+   ],
+   "published": "2026-02-03T19:17:46Z",
+   "modified": "2026-09-10T03:50:33.995841351Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:P",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-680"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/bytes@1.11.0",
+   "scope": "runtime",
+   "paths": [
+    "binsider > webbrowser > jni > combine > bytes"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00601,
+   "epss_percentile": 0.49581,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "denial_of_service",
+    "symbol:BytesMut::reserve"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use BytesMut::reserve, but other packages depend on bytes"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:time",
+   "version": "0.3.45",
+   "advisory": "GHSA-r6v5-fh4h-64xc",
+   "cves": [
+    "CVE-2026-25727"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.3.47",
+   "summary": "time vulnerable to stack exhaustion Denial of Service attack",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-25727",
+    "RUSTSEC-2026-0009"
+   ],
+   "published": "2026-02-05T17:57:55Z",
+   "modified": "2026-09-10T03:50:35.583241382Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:N/PR:L/UI:A/VC:N/VI:N/VA:H/SC:N/SI:N/SA:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-121"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/time@0.3.45",
+   "scope": "runtime",
+   "paths": [
+    "binsider > ratatui > ratatui-widgets > time"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00334,
+   "epss_percentile": 0.27351,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rand",
+   "version": "0.8.5",
+   "advisory": "GHSA-cq8v-f236-94qc",
+   "severity": "LOW",
+   "fixed_in": "0.8.6",
+   "summary": "Rand is unsound with a custom logger using rand::rng()",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0097"
+   ],
+   "published": "2026-04-14T01:03:36Z",
+   "modified": "2026-09-10T03:50:43.958966498Z",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rand@0.8.5",
+   "scope": "runtime",
+   "paths": [
+    "binsider > ratatui > ratatui-termwiz > termwiz > phf > phf_macros > phf_generator > rand"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:crossbeam-epoch",
+   "version": "0.9.18",
+   "advisory": "RUSTSEC-2026-0204",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.9.20",
+   "summary": "Invalid pointer dereference in `fmt::Pointer` impl for `Atomic` and `Shared` when the underlying pointer is invalid",
+   "malicious": false,
+   "published": "2026-07-06T12:00:00Z",
+   "modified": "2026-07-06T22:30:04.159269138Z",
+   "purl": "pkg:cargo/crossbeam-epoch@0.9.18",
+   "scope": "runtime",
+   "paths": [
+    "binsider > heh > crossbeam > crossbeam-epoch"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:fmt::Pointer",
+    "symbol:Atomic",
+    "symbol:Shared"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use fmt::Pointer, Atomic, Shared, but other packages depend on crossbeam-epoch"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

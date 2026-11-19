@@ -191,32 +191,54 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/The-Geek-Freaks/NEOTH@19ab409d6259",
+      "github.com/The-Geek-Freaks/NEOTH@4b81f4404071",
       "SRC/Cargo.lock",
       "bridges/companion-native/Cargo.lock",
       "bridges/keet/pnpm-lock.yaml",
       "bridges/whatsapp-baileys/pnpm-lock.yaml",
       "packaging/graphify-release/uv.lock"
     ],
-    "packages_checked": 1674,
-    "findings_total": 4,
-    "advisories_total": 4,
+    "packages_checked": 1720,
+    "findings_total": 2,
+    "advisories_total": 2,
     "findings": [
       {
-        "package": "crates:pulldown-cmark",
-        "version": "0.13.5",
-        "advisory": "RUSTSEC-2026-0433",
+        "package": "crates:quick-xml",
+        "version": "0.39.4",
+        "advisory": "RUSTSEC-2026-0195",
         "cves": [],
         "severity": "HIGH",
-        "fixed_in": "0.13.6",
-        "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
-        "malicious": false
+        "fixed_in": "0.41.0",
+        "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+        "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "SRC/neothd-gui",
+        "found_in": "SRC/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
+        ],
+        "paths": [
+          "neothd-gui > rfd > ashpd > wayland-client > wayland-scanner > quick-xml"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "SRC/neothd/src/media/docx_structure.rs:6: use quick_xml::{NsReader, events::Event, name::ResolveResult};"
+          ]
+        }
       },
       {
         "package": "crates:quick-xml",
@@ -226,45 +248,151 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
-        "malicious": false
-      },
-      {
-        "package": "crates:quick-xml",
-        "version": "0.39.4",
-        "advisory": "RUSTSEC-2026-0195",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.41.0",
-        "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
-        "malicious": false
-      },
-      {
-        "package": "crates:russh",
-        "version": "0.64.1",
-        "advisory": "GHSA-vp5q-ff62-jwqv",
-        "cves": [
-          "CVE-2026-116794"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "SRC/neothd-gui",
+        "found_in": "SRC/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "0.65",
-        "summary": "russh: Agent server never calls `Agent::confirm`, so keys added with the confirm constraint (`ssh-add -c`) sign without confirmation",
-        "malicious": false
+        "paths": [
+          "neothd-gui > rfd > ashpd > wayland-client > wayland-scanner > quick-xml"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "4b81f44040714274147c825a79ccdffbdb169947",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 1457,
+        "npm": 223,
+        "pypi": 40
+      },
+      "scopes": {
+        "runtime": 1245,
+        "optional": 310,
+        "platform": 3,
+        "build": 1,
+        "dev": 65,
+        "workspace": 96
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 15,
+      "details": "security/neoth.json",
+      "details_sha256": "e48ad99de0044046486a7a9d5a3a22bb97694261d897bf291a77e7363172ffba"
+    },
+    "assessment": {
+      "level": "exposed",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0195 crates:quick-xml@0.39.4 (exposed)",
+        "worst:RUSTSEC-2026-0194 crates:quick-xml@0.39.4 (conditional)"
+      ],
+      "counts": {
+        "exposed": 1,
+        "conditional": 1
+      },
+      "uncounted": 13,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 1765,
+      "packages_checked": 1720,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "SRC/Cargo.lock",
+          "status": "scanned",
+          "packages": 1425,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pub",
+          "component": "apps/neoth_companion/pubspec.lock",
+          "status": "not_scanned",
+          "packages": 45,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "crates",
+          "component": "bridges/companion-native/Cargo.lock",
+          "status": "scanned",
+          "packages": 102,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "bridges/keet/pnpm-lock.yaml",
+          "status": "scanned",
+          "packages": 127,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "bridges/whatsapp-baileys/pnpm-lock.yaml",
+          "status": "scanned",
+          "packages": 96,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "packaging/graphify-release/uv.lock",
+          "status": "scanned",
+          "packages": 40,
+          "gaps": []
+        }
+      ],
+      "gaps": [
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "pub",
+          "component": "apps/neoth_companion/pubspec.lock",
+          "detail": "no reader for pubspec.lock",
+          "capability": "adapter:pub",
+          "found": 45,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 85.6,
       "confidence": 0.5,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.8125,
@@ -284,16 +412,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 85.6,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "exposed",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -736,5 +861,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

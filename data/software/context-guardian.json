@@ -258,16 +258,14 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
       "github.com/Ar5en1c/context-guardian@e0827542101c",
       "package-lock.json"
     ],
-    "packages_checked": 8,
+    "packages_checked": 114,
     "findings_total": 2,
     "advisories_total": 2,
     "findings": [
@@ -281,7 +279,24 @@
         "severity": "HIGH",
         "fixed_in": "4.12.25",
         "summary": "hono: CORS Middleware reflects any Origin with credentials when `origin` defaults to the wildcard",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00328,
+        "fix_published_at": "2026-06-09T03:28:50Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction"
+        ],
+        "paths": [
+          ". > hono"
+        ]
       },
       {
         "package": "npm:zod",
@@ -293,23 +308,97 @@
         "severity": "HIGH",
         "fixed_in": "4.6.6",
         "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "fix_published_at": "2026-10-11T16:18:23Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > zod"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:06:03+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "e0827542101cea4a95757fbfa450ed86e814881b",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "npm": 114
+      },
+      "scopes": {
+        "runtime": 8,
+        "dev": 106
+      },
+      "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 58,
+      "details": "security/context-guardian.json",
+      "details_sha256": "ca2597aa548824f481a8d65b4b17dbb344fc38ed3ff9863e22092433214519be"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-88fw-hqm2-52qc npm:hono@4.12.12 (conditional)",
+        "worst:GHSA-mrhx-c7xc-m3w5 npm:zod@3.25.76 (conditional)",
+        "worst:GHSA-5gmw-xhrv-c9v3 npm:tinypool@1.1.1 (not_shipped)"
+      ],
+      "counts": {
+        "conditional": 2,
+        "not_shipped": 10
+      },
+      "uncounted": 46,
+      "assessed_at": "2026-11-20T00:06:03+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 114,
+      "packages_checked": 114,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "package-lock.json",
+          "status": "scanned",
+          "packages": 114,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 79.4,
       "confidence": 0.8,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.6875,
@@ -329,16 +418,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 79.4,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -674,5 +760,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:06:03+08:00"
 }

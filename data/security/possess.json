@@ -1,0 +1,284 @@
+{
+ "slug": "possess",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "95c1429e43434cc7bba329c2db7e729736e4381f",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 167
+  },
+  "scopes": {
+   "runtime": 161,
+   "optional": 2,
+   "dev": 4
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 6
+ },
+ "assessment": {
+  "level": "none",
+  "policy_version": "sec.v2",
+  "reasons": [],
+  "counts": {},
+  "uncounted": 6,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 167,
+  "packages_checked": 167,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 167,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/steven-p-walsh/Possess@95c1429e4343",
+  "Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:zstd",
+   "version": "0.13.3",
+   "advisory": "RUSTSEC-2026-0391",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.13.4",
+   "summary": "Data from an abandoned stream leaks into the next stream on a reused context",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-11-02T09:30:03.590733846Z",
+   "purl": "pkg:cargo/zstd@0.13.3",
+   "scope": "runtime",
+   "paths": [
+    "possess > zstd"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Decoder::with_context",
+    "symbol:Encoder::with_context"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "src/handoff.rs:239: std::fs::write(path, bytes).with_context(|| format!(\"write {}\", path.display()))?;"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:lru",
+   "version": "0.12.5",
+   "advisory": "GHSA-rhfx-m35p-ff5j",
+   "severity": "LOW",
+   "fixed_in": "0.16.3",
+   "summary": "`IterMut` violates Stacked Borrows by invalidating internal pointer",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0002"
+   ],
+   "published": "2026-01-07T20:38:57Z",
+   "modified": "2026-09-10T03:50:59.064354050Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N/E:U",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-476"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/lru@0.12.5",
+   "scope": "runtime",
+   "paths": [
+    "possess > ratatui > lru"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:IterMut"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use IterMut, but other packages depend on lru"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:libsqlite3-sys",
+   "version": "0.35.0",
+   "advisory": "RUSTSEC-2026-0459",
+   "cves": [
+    "CVE-2026-119375"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.39.0",
+   "summary": "`libsqlite3-sys` via C SQLite CVE-2026-119375",
+   "malicious": false,
+   "aliases": [
+    "BIT-sqlite-2026-119375",
+    "CVE-2026-119375",
+    "GHSA-72w2-rjgg-q729",
+    "RUSTSEC-2026-0502"
+   ],
+   "published": "2026-10-30T12:00:00Z",
+   "modified": "2026-11-17T13:41:05.770775012Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/libsqlite3-sys@0.35.0",
+   "scope": "runtime",
+   "paths": [
+    "possess > rusqlite > libsqlite3-sys"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00195,
+   "epss_percentile": 0.09275,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd-safe",
+   "version": "7.3.0",
+   "advisory": "RUSTSEC-2026-0398",
+   "severity": "UNKNOWN",
+   "fixed_in": "7.4.0",
+   "summary": "`Seekable::decompress` sets a `Vec` length beyond its capacity for offsets past the end",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-11-02T09:30:03.419709171Z",
+   "dos_only": false,
+   "purl": "pkg:cargo/zstd-safe@7.3.0",
+   "scope": "runtime",
+   "paths": [
+    "possess > zstd > zstd-safe"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Seekable::decompress",
+    "symbol:Vec",
+    "symbol:AdvancedSeekable::decompress"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "src/adapters/claude.rs:114: fn list_sessions(&self) -> Result<Vec<SessionSummary>> {",
+     "named only in files that do not import zstd-safe"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd-safe",
+   "version": "7.3.0",
+   "advisory": "RUSTSEC-2026-0403",
+   "severity": "UNKNOWN",
+   "fixed_in": "7.4.0",
+   "summary": "Uninitialized memory exposed when streaming decompression of a legacy frame fails",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-11-02T09:30:04.136442771Z",
+   "purl": "pkg:cargo/zstd-safe@7.3.0",
+   "scope": "runtime",
+   "paths": [
+    "possess > zstd > zstd-safe"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:DCtx::decompress_stream"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use DCtx::decompress_stream, but other packages depend on zstd-safe"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd-sys",
+   "version": "2.1.0+zstd.1.5.7",
+   "advisory": "RUSTSEC-2026-0410",
+   "severity": "UNKNOWN",
+   "fixed_in": "2.1.2",
+   "summary": "WebAssembly allocator shim corrupts memory on allocation failure",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-10-26T14:00:05.788985783Z",
+   "purl": "pkg:cargo/zstd-sys@2.1.0%2Bzstd.1.5.7",
+   "scope": "runtime",
+   "paths": [
+    "possess > zstd > zstd-safe > zstd-sys"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

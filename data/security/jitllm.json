@@ -1,0 +1,580 @@
+{
+ "slug": "jitllm",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "4de5fe208690f1e73f3562ee66aacceda7d7636c",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "go": 63,
+   "npm": 37
+  },
+  "scopes": {
+   "runtime": 66,
+   "dev": 34
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 11
+ },
+ "assessment": {
+  "level": "none",
+  "policy_version": "sec.v2",
+  "reasons": [],
+  "counts": {},
+  "uncounted": 11,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 100,
+  "packages_checked": 100,
+  "components": [
+   {
+    "ecosystem": "go",
+    "component": "common/go.mod",
+    "status": "scanned",
+    "packages": 8,
+    "gaps": []
+   },
+   {
+    "ecosystem": "go",
+    "component": "dev/race/go.mod",
+    "status": "scanned",
+    "packages": 22,
+    "gaps": []
+   },
+   {
+    "ecosystem": "go",
+    "component": "go.mod",
+    "status": "scanned",
+    "packages": 1,
+    "gaps": []
+   },
+   {
+    "ecosystem": "go",
+    "component": "server/go.mod",
+    "status": "scanned",
+    "packages": 7,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "server/webui/package-lock.json",
+    "status": "scanned",
+    "packages": 37,
+    "gaps": []
+   },
+   {
+    "ecosystem": "go",
+    "component": "tui/go.mod",
+    "status": "scanned",
+    "packages": 52,
+    "gaps": []
+   },
+   {
+    "ecosystem": "go",
+    "component": "ui/go.mod",
+    "status": "scanned",
+    "packages": 19,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/jitllm/jitllm@4de5fe208690",
+  "common/go.mod",
+  "dev/race/go.mod",
+  "go.mod",
+  "server/go.mod",
+  "server/webui/package-lock.json",
+  "tui/go.mod",
+  "ui/go.mod"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.59.0",
+   "advisory": "GO-2026-6603",
+   "cves": [
+    "CVE-2026-78659"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "HTTP/2 server memory exhaustion due to Trailer headers in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-78659",
+    "CVE-2026-78659"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:13.462737073Z",
+   "dos_only": false,
+   "purl": "pkg:golang/golang.org/x/net@v0.59.0",
+   "scope": "runtime",
+   "paths": [
+    "common/go.mod > golang.org/x/net"
+   ],
+   "workspace": "common",
+   "found_in": "common/go.mod",
+   "kev": false,
+   "epss": 0.00866,
+   "epss_percentile": 0.59439,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:CanonicalHeaderKey",
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "dev/httpbench/hb/run.go:315: defer clients[i].CloseIdleConnections()"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.59.0",
+   "advisory": "GO-2026-6610",
+   "cves": [
+    "CVE-2026-78660"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "HTTP/2 transport accepts malformed framing-related headers in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-78660",
+    "CVE-2026-78660"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:14.502576208Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.59.0",
+   "scope": "runtime",
+   "paths": [
+    "common/go.mod > golang.org/x/net"
+   ],
+   "workspace": "common",
+   "found_in": "common/go.mod",
+   "kev": false,
+   "epss": 0.00542,
+   "epss_percentile": 0.46363,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do",
+    "symbol:Client.Get"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "dev/httpbench/hb/run.go:315: defer clients[i].CloseIdleConnections()"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.59.0",
+   "advisory": "GO-2026-6611",
+   "cves": [
+    "CVE-2026-78669"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "Excessive CPU consumption from repeated initial window changes in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-78669",
+    "CVE-2026-78669"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:14.349122729Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.59.0",
+   "scope": "runtime",
+   "paths": [
+    "common/go.mod > golang.org/x/net"
+   ],
+   "workspace": "common",
+   "found_in": "common/go.mod",
+   "kev": false,
+   "epss": 0.00847,
+   "epss_percentile": 0.58853,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:CanonicalHeaderKey",
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "dev/httpbench/hb/run.go:315: defer clients[i].CloseIdleConnections()"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.59.0",
+   "advisory": "GO-2026-6612",
+   "cves": [
+    "CVE-2026-78663"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "Double flow control refund on HTTP/2 server streams in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-78663",
+    "CVE-2026-78663"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:14.440833902Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.59.0",
+   "scope": "runtime",
+   "paths": [
+    "common/go.mod > golang.org/x/net"
+   ],
+   "workspace": "common",
+   "found_in": "common/go.mod",
+   "kev": false,
+   "epss": 0.00858,
+   "epss_percentile": 0.59203,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:CanonicalHeaderKey",
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "dev/httpbench/hb/run.go:315: defer clients[i].CloseIdleConnections()"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.59.0",
+   "advisory": "GO-2026-6617",
+   "cves": [
+    "CVE-2026-97032"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "HTTP/2 server crash due to HPACK encoder race in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-97032",
+    "CVE-2026-97032"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:14.222191133Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/net@v0.59.0",
+   "scope": "runtime",
+   "paths": [
+    "common/go.mod > golang.org/x/net"
+   ],
+   "workspace": "common",
+   "found_in": "common/go.mod",
+   "kev": false,
+   "epss": 0.00676,
+   "epss_percentile": 0.53036,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:CanonicalHeaderKey",
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "dev/httpbench/hb/run.go:315: defer clients[i].CloseIdleConnections()"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/yuin/goldmark",
+   "version": "v1.7.13",
+   "advisory": "GO-2026-5320",
+   "cves": [
+    "CVE-2026-5160"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.7.17",
+   "summary": "Cross-site Scripting (XSS) in github.com/yuin/goldmark",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-5160",
+    "GHSA-c97m-vxhj-p7j6"
+   ],
+   "published": "2026-07-07T16:52:19Z",
+   "modified": "2026-07-22T20:59:36.886153285Z",
+   "purl": "pkg:golang/github.com/yuin/goldmark@v1.7.13",
+   "scope": "runtime",
+   "paths": [
+    "tui/go.mod > github.com/yuin/goldmark"
+   ],
+   "workspace": "tui",
+   "found_in": "tui/go.mod",
+   "kev": false,
+   "epss": 0.00292,
+   "epss_percentile": 0.22144,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Renderer.renderAutoLink",
+    "symbol:Renderer.renderImage",
+    "symbol:Renderer.renderLink"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.59.0",
+   "advisory": "GO-2026-6860",
+   "cves": [
+    "CVE-2026-78661"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.62.0",
+   "summary": "Avoid quadratic complexity when coalescing text nodes in html in golang.org/x/net",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-78661"
+   ],
+   "published": "2026-10-27T21:16:18Z",
+   "modified": "2026-10-27T21:30:04.890809062Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/net@v0.59.0",
+   "scope": "runtime",
+   "paths": [
+    "common/go.mod > golang.org/x/net"
+   ],
+   "workspace": "common",
+   "found_in": "common/go.mod",
+   "kev": false,
+   "epss": 0.00409,
+   "epss_percentile": 0.35903,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Parse",
+    "symbol:ParseFragment",
+    "symbol:ParseFragmentWithOptions"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.59.0",
+   "advisory": "GO-2026-6866",
+   "cves": [
+    "CVE-2026-97045"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.62.0",
+   "summary": "Check all ancestor namespace transitions when rendering raw text in html in golang.org/x/net",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-97045"
+   ],
+   "published": "2026-10-27T21:16:18Z",
+   "modified": "2026-10-27T21:45:08.978077289Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.59.0",
+   "scope": "runtime",
+   "paths": [
+    "common/go.mod > golang.org/x/net"
+   ],
+   "workspace": "common",
+   "found_in": "common/go.mod",
+   "kev": false,
+   "epss": 0.00267,
+   "epss_percentile": 0.19116,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Render",
+    "symbol:childTextNodesAreLiteral"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/sys",
+   "version": "v0.42.0",
+   "advisory": "GO-2026-5024",
+   "cves": [
+    "CVE-2026-39824"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.44.0",
+   "summary": "Invoking integer overflow in NewNTUnicodeString in golang.org/x/sys/windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-39824"
+   ],
+   "published": "2026-05-22T18:28:47Z",
+   "modified": "2026-06-09T18:59:22.740765220Z",
+   "purl": "pkg:golang/golang.org/x/sys@v0.42.0",
+   "scope": "runtime",
+   "paths": [
+    "dev/race/go.mod > golang.org/x/sys"
+   ],
+   "workspace": "dev/race",
+   "found_in": "dev/race/go.mod",
+   "kev": false,
+   "epss": 0.00114,
+   "epss_percentile": 0.01528,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:NewNTUnicodeString"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/text",
+   "version": "v0.3.8",
+   "advisory": "GO-2026-5970",
+   "cves": [
+    "CVE-2026-56852"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.39.0",
+   "summary": "Infinite loop on invalid input in golang.org/x/text",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-56852"
+   ],
+   "published": "2026-07-14T17:29:56Z",
+   "modified": "2026-11-14T13:12:13.157756222Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/text@v0.3.8",
+   "scope": "runtime",
+   "paths": [
+    "dev/race/go.mod > golang.org/x/text"
+   ],
+   "workspace": "dev/race",
+   "found_in": "dev/race/go.mod",
+   "kev": false,
+   "epss": 0.00475,
+   "epss_percentile": 0.4181,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Form.Append",
+    "symbol:Form.AppendString",
+    "symbol:Form.Bytes"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/text",
+   "version": "v0.3.8",
+   "advisory": "GO-2026-6629",
+   "cves": [
+    "CVE-2026-56851"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.41.0",
+   "summary": "Panic parsing crafted input in x/text/secure/precis in golang.org/x/text",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-56851"
+   ],
+   "published": "2026-10-07T14:09:43Z",
+   "modified": "2026-11-14T13:12:14.100810021Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/text@v0.3.8",
+   "scope": "runtime",
+   "paths": [
+    "dev/race/go.mod > golang.org/x/text"
+   ],
+   "workspace": "dev/race",
+   "found_in": "dev/race/go.mod",
+   "kev": false,
+   "epss": 0.00466,
+   "epss_percentile": 0.41058,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Profile.Append",
+    "symbol:Profile.AppendCompareKey",
+    "symbol:Profile.Bytes"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

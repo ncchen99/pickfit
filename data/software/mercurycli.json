@@ -232,30 +232,168 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-04T17:17:43+08:00",
+    "version": "sec.v2",
     "status": "unchecked",
     "unchecked_reason": "lockfile_not_supported",
-    "sources": [],
-    "packages_checked": 0,
+    "sources": [
+      "npm:mercury-tech-cli (fresh install, 1 packages)",
+      "github.com/Whq02/MercuryCLI@b61af160fe5d",
+      "native/desktop/Cargo.lock",
+      "native/embed/Cargo.lock",
+      "native/voice/Cargo.lock",
+      "native/whisper/Cargo.lock"
+    ],
+    "packages_checked": 166,
     "findings_total": 0,
     "advisories_total": 0,
-    "findings": []
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "b61af160fe5df5ac23f4db3cc582e0f44ff59fae",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 165,
+        "npm": 1
+      },
+      "scopes": {
+        "runtime": 166
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 0,
+      "details": "security/mercurycli.json",
+      "details_sha256": "08bca96f20ca4f02828a264abc8cf8d7e424f5bd8965ec6021d1a9414a8adcf2"
+    },
+    "assessment": {
+      "level": "none",
+      "policy_version": "sec.v2",
+      "reasons": [],
+      "counts": {},
+      "uncounted": 0,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 575,
+      "packages_checked": 166,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "registry:npm:mercury-tech-cli",
+          "status": "partial",
+          "packages": 1,
+          "gaps": [
+            "binary.prebuilt_package"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "bun.lock",
+          "status": "not_scanned",
+          "packages": 409,
+          "gaps": [
+            "lockfile.unsupported_format"
+          ]
+        },
+        {
+          "ecosystem": "crates",
+          "component": "native/desktop/Cargo.lock",
+          "status": "scanned",
+          "packages": 67,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "native/embed/Cargo.lock",
+          "status": "scanned",
+          "packages": 32,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "native/voice/Cargo.lock",
+          "status": "scanned",
+          "packages": 106,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "native/whisper/Cargo.lock",
+          "status": "scanned",
+          "packages": 56,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "sdk-py/pyproject.toml",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "resolve.pyproject_failed"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "code": "lockfile.unsupported_format",
+          "category": "lockfile_unreadable",
+          "ecosystem": "npm",
+          "component": "bun.lock",
+          "detail": "bun_lock is not read yet",
+          "capability": "read_lockfile:bun_lock",
+          "found": 409,
+          "first_seen": "2026-11-04",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "resolve.pyproject_failed",
+          "category": "resolve_failed",
+          "ecosystem": "pypi",
+          "component": "sdk-py/pyproject.toml",
+          "detail": "uv pip compile --no-build did not resolve it",
+          "capability": "resolve_in_sandbox",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "binary.prebuilt_package",
+          "category": "binary_no_metadata",
+          "ecosystem": "npm",
+          "component": "npm:mercury-tech-cli",
+          "detail": "the package wraps a compiled binary",
+          "capability": "sbom_binary",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 84.6,
-      "raw_total": 84.6,
       "confidence": 0.6,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.75,
@@ -275,16 +413,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 84.6,
       "security": {
-        "level": "unchecked",
-        "basis": "status",
+        "level": "none",
+        "basis": "assessment",
         "effect": "none",
         "deduction": 0.0
       }
@@ -709,5 +844,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

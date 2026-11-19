@@ -1,0 +1,385 @@
+{
+ "slug": "duckdb-web-shell",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "adfd5fd14f9eb7f73ec7fc04b8a4398b55ecd19f",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 175
+  },
+  "scopes": {
+   "runtime": 172,
+   "dev": 3
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 8
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-3jch-9qgp-4844 crates:flatbuffers@2.1.2 (conditional)"
+  ],
+  "counts": {
+   "conditional": 1
+  },
+  "uncounted": 7,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "partial",
+  "target": "repo_lockfile",
+  "packages_found": 1418,
+  "packages_checked": 175,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 175,
+    "gaps": []
+   },
+   {
+    "ecosystem": "c/c++",
+    "component": "lib/CMakeLists.txt",
+    "status": "not_scanned",
+    "packages": 0,
+    "gaps": [
+     "advisory_db.no_ecosystem"
+    ]
+   },
+   {
+    "ecosystem": "npm",
+    "component": "yarn.lock",
+    "status": "not_scanned",
+    "packages": 1243,
+    "gaps": [
+     "lockfile.unsupported_format"
+    ]
+   }
+  ],
+  "gaps": [
+   {
+    "code": "advisory_db.no_ecosystem",
+    "category": "advisory_db",
+    "ecosystem": "c/c++",
+    "component": "lib/CMakeLists.txt",
+    "detail": "CMakeLists.txt: no advisory ecosystem for C/C++ libraries",
+    "capability": "advisory_source:c/c++",
+    "found": null,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   },
+   {
+    "code": "lockfile.unsupported_format",
+    "category": "lockfile_unreadable",
+    "ecosystem": "npm",
+    "component": "yarn.lock",
+    "detail": "yarn_lock is not read yet",
+    "capability": "read_lockfile:yarn_lock",
+    "found": 1243,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   }
+  ]
+ },
+ "sources": [
+  "github.com/duckdb/duckdb-wasm@adfd5fd14f9e",
+  "Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:flatbuffers",
+   "version": "2.1.2",
+   "advisory": "GHSA-3jch-9qgp-4844",
+   "severity": "CRITICAL",
+   "fixed_in": "22.9.29",
+   "summary": "Generated code can read and write out of bounds in safe code",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2021-0122"
+   ],
+   "published": "2022-06-16T23:54:35Z",
+   "modified": "2023-11-08T04:14:40.953991Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/flatbuffers@2.1.2",
+   "fix_published_at": "2022-10-18T20:48:00Z",
+   "scope": "runtime",
+   "paths": [
+    "dataprep > arrow > flatbuffers"
+   ],
+   "workspace": "dataprep",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:bytes",
+   "version": "1.6.0",
+   "advisory": "GHSA-434x-w66g-qw3r",
+   "cves": [
+    "CVE-2026-25541"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.11.1",
+   "summary": "bytes has integer overflow in BytesMut::reserve",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-25541",
+    "RUSTSEC-2026-0007"
+   ],
+   "published": "2026-02-03T19:17:46Z",
+   "modified": "2026-09-10T03:50:33.995841351Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:P",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-680"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/bytes@1.6.0",
+   "scope": "runtime",
+   "paths": [
+    "duckdb-wasm-shell > arrow > arrow-buffer > bytes"
+   ],
+   "workspace": "packages/duckdb-wasm-shell/crate",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00601,
+   "epss_percentile": 0.49581,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "denial_of_service",
+    "symbol:BytesMut::reserve"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use BytesMut::reserve, but other packages depend on bytes"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:thrift",
+   "version": "0.13.0",
+   "advisory": "GHSA-2f9f-gq7v-9h6m",
+   "cves": [
+    "CVE-2026-43868"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.23.0",
+   "summary": "Apache Thrift has a Memory Allocation with Excessive Size Value Vulnerability",
+   "malicious": false,
+   "aliases": [
+    "BIT-thrift-2026-43868",
+    "CVE-2026-43868",
+    "RUSTSEC-2026-0435"
+   ],
+   "published": "2026-05-05T09:31:55Z",
+   "modified": "2026-11-02T12:10:42.318149664Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1285",
+    "CWE-789"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/thrift@0.13.0",
+   "scope": "runtime",
+   "paths": [
+    "dataprep > parquet > thrift"
+   ],
+   "workspace": "dataprep",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00706,
+   "epss_percentile": 0.54147,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:atty",
+   "version": "0.2.14",
+   "advisory": "GHSA-g98v-hv3f-hcfr",
+   "severity": "LOW",
+   "summary": "atty potential unaligned read",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2021-0145"
+   ],
+   "published": "2023-06-30T20:21:59Z",
+   "modified": "2026-09-10T03:49:53.897184297Z",
+   "purl": "pkg:cargo/atty@0.2.14",
+   "scope": "runtime",
+   "paths": [
+    "dataprep > clap > atty"
+   ],
+   "workspace": "dataprep",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2",
+   "fixed_in": null
+  },
+  {
+   "package": "crates:lexical-core",
+   "version": "0.8.5",
+   "advisory": "GHSA-2326-pfpj-vx3h",
+   "severity": "LOW",
+   "fixed_in": "1.0.0",
+   "summary": "lexical-core has multiple soundness issues",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2023-0086"
+   ],
+   "published": "2024-09-16T17:19:01Z",
+   "modified": "2026-09-10T03:50:55.529405940Z",
+   "purl": "pkg:cargo/lexical-core@0.8.5",
+   "scope": "runtime",
+   "paths": [
+    "dataprep > arrow > lexical-core"
+   ],
+   "workspace": "dataprep",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rand",
+   "version": "0.8.5",
+   "advisory": "GHSA-cq8v-f236-94qc",
+   "severity": "LOW",
+   "fixed_in": "0.8.6",
+   "summary": "Rand is unsound with a custom logger using rand::rng()",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0097"
+   ],
+   "published": "2026-04-14T01:03:36Z",
+   "modified": "2026-09-10T03:50:43.958966498Z",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rand@0.8.5",
+   "scope": "runtime",
+   "paths": [
+    "dataprep > arrow > rand"
+   ],
+   "workspace": "dataprep",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd-safe",
+   "version": "5.0.2+zstd.1.5.2",
+   "advisory": "RUSTSEC-2026-0403",
+   "severity": "UNKNOWN",
+   "fixed_in": "7.4.0",
+   "summary": "Uninitialized memory exposed when streaming decompression of a legacy frame fails",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-11-02T09:30:04.136442771Z",
+   "purl": "pkg:cargo/zstd-safe@5.0.2%2Bzstd.1.5.2",
+   "scope": "runtime",
+   "paths": [
+    "dataprep > parquet > zstd > zstd-safe"
+   ],
+   "workspace": "dataprep",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:DCtx::decompress_stream"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use DCtx::decompress_stream, but other packages depend on zstd-safe"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd-sys",
+   "version": "2.0.9+zstd.1.5.5",
+   "advisory": "RUSTSEC-2026-0410",
+   "severity": "UNKNOWN",
+   "fixed_in": "2.1.2",
+   "summary": "WebAssembly allocator shim corrupts memory on allocation failure",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-10-26T14:00:05.788985783Z",
+   "purl": "pkg:cargo/zstd-sys@2.0.9%2Bzstd.1.5.5",
+   "scope": "runtime",
+   "paths": [
+    "dataprep > parquet > zstd > zstd-safe > zstd-sys"
+   ],
+   "workspace": "dataprep",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

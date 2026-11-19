@@ -1,0 +1,1367 @@
+{
+ "slug": "llmman",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "8cb3e0a307210a4a16a045b5ac871a279d8d8d8e",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 530,
+   "go": 100,
+   "npm": 1055
+  },
+  "scopes": {
+   "runtime": 1171,
+   "peer": 175,
+   "dev": 339
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 30
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:RUSTSEC-2026-0340 crates:quinn-proto@0.11.16 (conditional)",
+   "worst:RUSTSEC-2026-0341 crates:quinn-proto@0.11.16 (conditional)",
+   "worst:GO-2026-6865 go:github.com/klauspost/compress@v1.18.7 (conditional)"
+  ],
+  "counts": {
+   "conditional": 5
+  },
+  "uncounted": 25,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "partial",
+  "target": "repo_lockfile",
+  "packages_found": 1688,
+  "packages_checked": 1685,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 530,
+    "gaps": []
+   },
+   {
+    "ecosystem": "maven",
+    "component": "android/app/build.gradle.kts",
+    "status": "not_scanned",
+    "packages": 3,
+    "gaps": [
+     "adapter.missing"
+    ]
+   },
+   {
+    "ecosystem": "maven",
+    "component": "android/build.gradle.kts",
+    "status": "not_scanned",
+    "packages": 0,
+    "gaps": [
+     "adapter.missing"
+    ]
+   },
+   {
+    "ecosystem": "npm",
+    "component": "app/package-lock.json",
+    "status": "scanned",
+    "packages": 1055,
+    "gaps": []
+   },
+   {
+    "ecosystem": "go",
+    "component": "csi/go.mod",
+    "status": "scanned",
+    "packages": 7,
+    "gaps": []
+   },
+   {
+    "ecosystem": "go",
+    "component": "go-shim/go.mod",
+    "status": "scanned",
+    "packages": 93,
+    "gaps": []
+   },
+   {
+    "ecosystem": "pypi",
+    "component": "vllm-plugin/pyproject.toml",
+    "status": "not_scanned",
+    "packages": 0,
+    "gaps": [
+     "resolve.pyproject_failed"
+    ]
+   }
+  ],
+  "gaps": [
+   {
+    "code": "adapter.missing",
+    "category": "no_adapter",
+    "ecosystem": "maven",
+    "component": "android/app/build.gradle.kts",
+    "detail": "no reader for build.gradle.kts",
+    "capability": "adapter:maven",
+    "found": 3,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   },
+   {
+    "code": "adapter.missing",
+    "category": "no_adapter",
+    "ecosystem": "maven",
+    "component": "android/build.gradle.kts",
+    "detail": "no reader for build.gradle.kts",
+    "capability": "adapter:maven",
+    "found": 0,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   },
+   {
+    "code": "resolve.pyproject_failed",
+    "category": "resolve_failed",
+    "ecosystem": "pypi",
+    "component": "vllm-plugin/pyproject.toml",
+    "detail": "uv pip compile --no-build did not resolve it",
+    "capability": "resolve_in_sandbox",
+    "found": null,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   },
+   {
+    "code": "resolve.registry_failed",
+    "category": "resolve_failed",
+    "ecosystem": "crates",
+    "component": "crates:llmman",
+    "detail": "HTTPError: HTTP Error 404: Not Found",
+    "capability": "resolve_in_sandbox",
+    "found": null,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   }
+  ]
+ },
+ "sources": [
+  "github.com/llmmanorg/llmman@8cb3e0a30721",
+  "Cargo.lock",
+  "app/package-lock.json",
+  "csi/go.mod",
+  "go-shim/go.mod"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.58.0",
+   "advisory": "GO-2026-6603",
+   "cves": [
+    "CVE-2026-78659"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "HTTP/2 server memory exhaustion due to Trailer headers in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-78659",
+    "CVE-2026-78659"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:13.462737073Z",
+   "dos_only": false,
+   "purl": "pkg:golang/golang.org/x/net@v0.58.0",
+   "scope": "runtime",
+   "paths": [
+    "go-shim/go.mod > golang.org/x/net"
+   ],
+   "workspace": "go-shim",
+   "found_in": "go-shim/go.mod",
+   "kev": false,
+   "epss": 0.00866,
+   "epss_percentile": 0.59439,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:CanonicalHeaderKey",
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "go-shim/referrers.go:420: defer client.CloseIdleConnections()"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.58.0",
+   "advisory": "GO-2026-6610",
+   "cves": [
+    "CVE-2026-78660"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "HTTP/2 transport accepts malformed framing-related headers in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-78660",
+    "CVE-2026-78660"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:14.502576208Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.58.0",
+   "scope": "runtime",
+   "paths": [
+    "go-shim/go.mod > golang.org/x/net"
+   ],
+   "workspace": "go-shim",
+   "found_in": "go-shim/go.mod",
+   "kev": false,
+   "epss": 0.00542,
+   "epss_percentile": 0.46363,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do",
+    "symbol:Client.Get"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "go-shim/referrers.go:420: defer client.CloseIdleConnections()"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.58.0",
+   "advisory": "GO-2026-6611",
+   "cves": [
+    "CVE-2026-78669"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "Excessive CPU consumption from repeated initial window changes in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-78669",
+    "CVE-2026-78669"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:14.349122729Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.58.0",
+   "scope": "runtime",
+   "paths": [
+    "go-shim/go.mod > golang.org/x/net"
+   ],
+   "workspace": "go-shim",
+   "found_in": "go-shim/go.mod",
+   "kev": false,
+   "epss": 0.00847,
+   "epss_percentile": 0.58853,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:CanonicalHeaderKey",
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "go-shim/referrers.go:420: defer client.CloseIdleConnections()"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.58.0",
+   "advisory": "GO-2026-6612",
+   "cves": [
+    "CVE-2026-78663"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "Double flow control refund on HTTP/2 server streams in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-78663",
+    "CVE-2026-78663"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:14.440833902Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.58.0",
+   "scope": "runtime",
+   "paths": [
+    "go-shim/go.mod > golang.org/x/net"
+   ],
+   "workspace": "go-shim",
+   "found_in": "go-shim/go.mod",
+   "kev": false,
+   "epss": 0.00858,
+   "epss_percentile": 0.59203,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:CanonicalHeaderKey",
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "go-shim/referrers.go:420: defer client.CloseIdleConnections()"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.58.0",
+   "advisory": "GO-2026-6617",
+   "cves": [
+    "CVE-2026-97032"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "HTTP/2 server crash due to HPACK encoder race in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-97032",
+    "CVE-2026-97032"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:14.222191133Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/net@v0.58.0",
+   "scope": "runtime",
+   "paths": [
+    "go-shim/go.mod > golang.org/x/net"
+   ],
+   "workspace": "go-shim",
+   "found_in": "go-shim/go.mod",
+   "kev": false,
+   "epss": 0.00676,
+   "epss_percentile": 0.53036,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:CanonicalHeaderKey",
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "go-shim/referrers.go:420: defer client.CloseIdleConnections()"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0340",
+   "severity": "HIGH",
+   "fixed_in": "0.11.18",
+   "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+   "malicious": false,
+   "aliases": [
+    "GHSA-3g6h-r5qx-f6hq"
+   ],
+   "published": "2026-09-14T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.975478256Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "fix_published_at": "2026-09-14T10:08:32Z",
+   "scope": "runtime",
+   "paths": [
+    "llmman > hf-xet > xet-client > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "option:ACK_FREQUENCY"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0341",
+   "severity": "HIGH",
+   "fixed_in": "0.11.17",
+   "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
+   "malicious": false,
+   "aliases": [
+    "GHSA-qfwj-vfxf-92j2"
+   ],
+   "published": "2026-08-17T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.969505433Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "fix_published_at": "2026-08-17T17:32:41Z",
+   "scope": "runtime",
+   "paths": [
+    "llmman > hf-xet > xet-client > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/klauspost/compress",
+   "version": "v1.18.7",
+   "advisory": "GO-2026-6865",
+   "cves": [
+    "CVE-2026-116591"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.20.2",
+   "summary": "Panic on two-block frames in github.com/klauspost/compress",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116591",
+    "GHSA-fpmh-frq8-7rj8"
+   ],
+   "published": "2026-11-05T22:54:32Z",
+   "modified": "2026-11-05T23:15:14.472777299Z",
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/klauspost/compress@v1.18.7",
+   "fix_published_at": "2026-10-12T09:34:06Z",
+   "scope": "runtime",
+   "paths": [
+    "go-shim/go.mod > github.com/klauspost/compress"
+   ],
+   "workspace": "go-shim",
+   "found_in": "go-shim/go.mod",
+   "kev": false,
+   "epss": 0.00333,
+   "epss_percentile": 0.27026,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Compress",
+    "symbol:Decompress",
+    "symbol:Scratch.readNCount"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:decode-uri-component",
+   "version": "0.2.2",
+   "advisory": "GHSA-qr28-fpjm-wq7f",
+   "cves": [
+    "CVE-2026-118664"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.5.1",
+   "summary": "decode-uri-component vulnerable to denial of service via quadratic replacement of percent-encoded runs",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118664"
+   ],
+   "published": "2026-10-29T16:41:28Z",
+   "modified": "2026-10-29T17:00:04.168610583Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/decode-uri-component@0.2.2",
+   "fix_published_at": "2026-10-23T12:48:46Z",
+   "scope": "runtime",
+   "paths": [
+    ". > expo-router > query-string > decode-uri-component"
+   ],
+   "workspace": ".",
+   "found_in": "app/package-lock.json",
+   "kev": false,
+   "epss": 0.00318,
+   "epss_percentile": 0.25316,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:zod",
+   "version": "3.25.76",
+   "advisory": "GHSA-mrhx-c7xc-m3w5",
+   "cves": [
+    "CVE-2023-54404"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "4.6.6",
+   "summary": "Zod can exhaust memory while validating oversized constrained collections",
+   "malicious": false,
+   "aliases": [
+    "CVE-2023-54404"
+   ],
+   "published": "2026-10-01T18:32:46Z",
+   "modified": "2026-10-23T18:30:09.376405885Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/zod@3.25.76",
+   "fix_published_at": "2026-10-11T16:18:23Z",
+   "scope": "runtime",
+   "paths": [
+    ". > expo > @expo/cli > zod"
+   ],
+   "workspace": ".",
+   "found_in": "app/package-lock.json",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:decode-uri-component",
+   "version": "0.2.2",
+   "advisory": "GHSA-vcc3-ghjq-m6fr",
+   "cves": [
+    "CVE-2026-45822"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.5.0",
+   "summary": "decode-uri-component: Denial of service via exponential decoding of malformed percent-encoded input",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-45822"
+   ],
+   "published": "2026-08-31T22:10:20Z",
+   "modified": "2026-09-10T03:51:14.713899943Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:U/S:N/AU:Y/R:U/V:D/RE:M/U:Amber",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1176",
+    "CWE-400",
+    "CWE-405",
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/decode-uri-component@0.2.2",
+   "scope": "runtime",
+   "paths": [
+    ". > expo-router > query-string > decode-uri-component"
+   ],
+   "workspace": ".",
+   "found_in": "app/package-lock.json",
+   "kev": false,
+   "epss": 0.00507,
+   "epss_percentile": 0.44013,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:glob",
+   "version": "13.0.6",
+   "advisory": "GHSA-3g3m-2fjr-6pw4",
+   "cves": [
+    "CVE-2026-118773"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "14.0.2",
+   "summary": "Glob: AbortSignal cancellation bypass allows post-timeout filesystem traversal",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118773"
+   ],
+   "published": "2026-10-30T23:09:11Z",
+   "modified": "2026-10-30T23:15:04.503965732Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/glob@13.0.6",
+   "scope": "runtime",
+   "paths": [
+    ". > expo > @expo/cli > glob"
+   ],
+   "workspace": ".",
+   "found_in": "app/package-lock.json",
+   "kev": false,
+   "epss": 0.0035,
+   "epss_percentile": 0.2932,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:minimatch",
+   "version": "10.2.6",
+   "advisory": "GHSA-g3hv-75wg-m249",
+   "cves": [
+    "CVE-2026-118764"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "11.0.1",
+   "summary": "minimatch has potential denial of service via globparts amplification",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118764"
+   ],
+   "published": "2026-10-30T23:09:55Z",
+   "modified": "2026-11-04T17:01:25.850114200Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-405"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/minimatch@10.2.6",
+   "scope": "runtime",
+   "paths": [
+    ". > expo > @expo/fingerprint > minimatch"
+   ],
+   "workspace": ".",
+   "found_in": "app/package-lock.json",
+   "kev": false,
+   "epss": 0.00301,
+   "epss_percentile": 0.23299,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:uuid",
+   "version": "7.0.3",
+   "advisory": "GHSA-w5hq-g745-h8pq",
+   "cves": [
+    "CVE-2026-41907",
+    "CVE-2026-41988"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "11.1.1",
+   "summary": "uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-41907",
+    "CVE-2026-41988"
+   ],
+   "published": "2026-04-22T20:53:24Z",
+   "modified": "2026-09-10T03:51:03.663336650Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1285",
+    "CWE-787"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/uuid@7.0.3",
+   "scope": "runtime",
+   "paths": [
+    ". > expo > @expo/config-plugins > xcode > uuid"
+   ],
+   "workspace": ".",
+   "found_in": "app/package-lock.json",
+   "kev": false,
+   "epss": 0.0035,
+   "epss_percentile": 0.29245,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:ctutils",
+   "version": "0.4.2",
+   "advisory": "RUSTSEC-2026-0385",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.4.4",
+   "summary": "Non-constant-time mask generation and `u128` comparisons",
+   "malicious": false,
+   "published": "2026-10-23T12:00:00Z",
+   "modified": "2026-10-23T08:30:02.389575143Z",
+   "purl": "pkg:cargo/ctutils@0.4.2",
+   "scope": "runtime",
+   "paths": [
+    "llmman > aws-sdk-s3 > hmac > digest > ctutils"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:h2",
+   "version": "0.4.13",
+   "advisory": "RUSTSEC-2026-0258",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.4.16",
+   "summary": "h2 unbounded empty DATA frames",
+   "malicious": false,
+   "aliases": [
+    "GHSA-q83h-524g-xf6h"
+   ],
+   "published": "2026-08-17T12:00:00Z",
+   "modified": "2026-10-12T18:00:10.934581734Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/h2@0.4.13",
+   "scope": "runtime",
+   "paths": [
+    "llmman > reqwest > h2"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0338",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.18",
+   "summary": "Remote peer can panic quinn-proto with zero-length STREAM frames during unordered reads",
+   "malicious": false,
+   "aliases": [
+    "GHSA-465w-v9q3-7j98"
+   ],
+   "published": "2026-09-14T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.969514645Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "scope": "runtime",
+   "paths": [
+    "llmman > hf-xet > xet-client > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0339",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.17",
+   "summary": "Unbounded growth of pending connection ID retirements in quinn-proto",
+   "malicious": false,
+   "aliases": [
+    "GHSA-hmxj-32vh-65vr"
+   ],
+   "published": "2026-08-17T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.956822776Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "scope": "runtime",
+   "paths": [
+    "llmman > hf-xet > xet-client > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0342",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.17",
+   "summary": "Zero-length DATAGRAM frames bypass the receive buffer limit in quinn-proto",
+   "malicious": false,
+   "aliases": [
+    "GHSA-2hv7-gw8g-gpq5"
+   ],
+   "published": "2026-08-17T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.956681478Z",
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "scope": "runtime",
+   "paths": [
+    "llmman > hf-xet > xet-client > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0523",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.19",
+   "summary": "MAX_STREAM_DATA frame can open streams beyond the stream limit",
+   "malicious": false,
+   "aliases": [
+    "GHSA-53rm-773f-4q8c"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:04.789912316Z",
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "scope": "runtime",
+   "paths": [
+    "llmman > hf-xet > xet-client > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "option:MAX_STREAM_DATA"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use MAX_STREAM_DATA, but other packages depend on quinn-proto"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0524",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.19",
+   "summary": "Long Retry token can panic or exhaust memory in a QUIC client",
+   "malicious": false,
+   "aliases": [
+    "GHSA-wppq-2f6r-wfvm"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:06.127108520Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "scope": "runtime",
+   "paths": [
+    "llmman > hf-xet > xet-client > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-udp",
+   "version": "0.5.15",
+   "advisory": "RUSTSEC-2026-0538",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.5.16",
+   "summary": "Receive loop can spin after a truncated datagram",
+   "malicious": false,
+   "aliases": [
+    "GHSA-6pp4-4cxf-xf88"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:08.844283231Z",
+   "purl": "pkg:cargo/quinn-udp@0.5.15",
+   "scope": "runtime",
+   "paths": [
+    "llmman > hf-xet > xet-client > reqwest > quinn > quinn-udp"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/crypto",
+   "version": "v0.55.0",
+   "advisory": "GO-2026-5932",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.58.1-0.20261009181718-2f1f834330b2",
+   "summary": "The golang.org/x/crypto/openpgp package is unmaintained, unsafe by design, and has known security issues",
+   "malicious": false,
+   "published": "2026-07-07T22:15:29Z",
+   "modified": "2026-11-02T22:15:06.677088389Z",
+   "purl": "pkg:golang/golang.org/x/crypto@v0.55.0",
+   "scope": "runtime",
+   "paths": [
+    "go-shim/go.mod > golang.org/x/crypto"
+   ],
+   "workspace": "go-shim",
+   "found_in": "go-shim/go.mod",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:golang.org/x/crypto/openpgp",
+    "symbol:golang.org/x/crypto/openpgp/packet",
+    "symbol:golang.org/x/crypto/openpgp/armor"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/crypto",
+   "version": "v0.55.0",
+   "advisory": "GO-2026-6354",
+   "cves": [
+    "CVE-2026-78662"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.56.0",
+   "summary": "Prevent DoS on deadlocked undecided channel in golang.org/x/crypto/ssh",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-78662"
+   ],
+   "published": "2026-09-02T19:12:04Z",
+   "modified": "2026-09-03T10:10:55.147673102Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/crypto@v0.55.0",
+   "scope": "runtime",
+   "paths": [
+    "go-shim/go.mod > golang.org/x/crypto"
+   ],
+   "workspace": "go-shim",
+   "found_in": "go-shim/go.mod",
+   "kev": false,
+   "epss": 0.00431,
+   "epss_percentile": 0.38104,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Dial",
+    "symbol:NewClientConn",
+    "symbol:NewControlClientConn"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/crypto",
+   "version": "v0.55.0",
+   "advisory": "GO-2026-6355",
+   "cves": [
+    "CVE-2026-56855"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.56.0",
+   "summary": "Prevent DoS on deadlocked established channel in golang.org/x/crypto/ssh",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-56855"
+   ],
+   "published": "2026-09-02T19:12:04Z",
+   "modified": "2026-11-14T13:12:14.167817306Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/crypto@v0.55.0",
+   "scope": "runtime",
+   "paths": [
+    "go-shim/go.mod > golang.org/x/crypto"
+   ],
+   "workspace": "go-shim",
+   "found_in": "go-shim/go.mod",
+   "kev": false,
+   "epss": 0.005,
+   "epss_percentile": 0.4361,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Dial",
+    "symbol:NewClientConn",
+    "symbol:NewControlClientConn"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.58.0",
+   "advisory": "GO-2026-6860",
+   "cves": [
+    "CVE-2026-78661"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.62.0",
+   "summary": "Avoid quadratic complexity when coalescing text nodes in html in golang.org/x/net",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-78661"
+   ],
+   "published": "2026-10-27T21:16:18Z",
+   "modified": "2026-10-27T21:30:04.890809062Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/net@v0.58.0",
+   "scope": "runtime",
+   "paths": [
+    "go-shim/go.mod > golang.org/x/net"
+   ],
+   "workspace": "go-shim",
+   "found_in": "go-shim/go.mod",
+   "kev": false,
+   "epss": 0.00409,
+   "epss_percentile": 0.35903,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Parse",
+    "symbol:ParseFragment",
+    "symbol:ParseFragmentWithOptions"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.58.0",
+   "advisory": "GO-2026-6866",
+   "cves": [
+    "CVE-2026-97045"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.62.0",
+   "summary": "Check all ancestor namespace transitions when rendering raw text in html in golang.org/x/net",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-97045"
+   ],
+   "published": "2026-10-27T21:16:18Z",
+   "modified": "2026-10-27T21:45:08.978077289Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.58.0",
+   "scope": "runtime",
+   "paths": [
+    "go-shim/go.mod > golang.org/x/net"
+   ],
+   "workspace": "go-shim",
+   "found_in": "go-shim/go.mod",
+   "kev": false,
+   "epss": 0.00267,
+   "epss_percentile": 0.19116,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Render",
+    "symbol:childTextNodesAreLiteral"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.60.0",
+   "advisory": "GO-2026-6860",
+   "cves": [
+    "CVE-2026-78661"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.62.0",
+   "summary": "Avoid quadratic complexity when coalescing text nodes in html in golang.org/x/net",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-78661"
+   ],
+   "published": "2026-10-27T21:16:18Z",
+   "modified": "2026-10-27T21:30:04.890809062Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/net@v0.60.0",
+   "scope": "runtime",
+   "paths": [
+    "csi/go.mod > golang.org/x/net"
+   ],
+   "workspace": "csi",
+   "found_in": "csi/go.mod",
+   "kev": false,
+   "epss": 0.00409,
+   "epss_percentile": 0.35903,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Parse",
+    "symbol:ParseFragment",
+    "symbol:ParseFragmentWithOptions"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.60.0",
+   "advisory": "GO-2026-6866",
+   "cves": [
+    "CVE-2026-97045"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.62.0",
+   "summary": "Check all ancestor namespace transitions when rendering raw text in html in golang.org/x/net",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-97045"
+   ],
+   "published": "2026-10-27T21:16:18Z",
+   "modified": "2026-10-27T21:45:08.978077289Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.60.0",
+   "scope": "runtime",
+   "paths": [
+    "csi/go.mod > golang.org/x/net"
+   ],
+   "workspace": "csi",
+   "found_in": "csi/go.mod",
+   "kev": false,
+   "epss": 0.00267,
+   "epss_percentile": 0.19116,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Render",
+    "symbol:childTextNodesAreLiteral"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/docker/distribution",
+   "version": "v2.8.3+incompatible",
+   "advisory": "GHSA-685w-q87j-wqw3",
+   "cves": [
+    "CVE-2026-85747"
+   ],
+   "severity": "MODERATE",
+   "summary": "Distribution: Client `manifests.Get()` does not verify returned content against requested digest",
+   "malicious": false,
+   "aliases": [
+    "BIT-distribution-2026-85747",
+    "CVE-2026-85747",
+    "GO-2026-6778"
+   ],
+   "published": "2026-10-15T20:22:02Z",
+   "modified": "2026-11-05T23:25:40.391377389Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-354"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/docker/distribution@v2.8.3%2Bincompatible",
+   "scope": "runtime",
+   "paths": [
+    "go-shim/go.mod > github.com/docker/distribution"
+   ],
+   "workspace": "go-shim",
+   "found_in": "go-shim/go.mod",
+   "kev": false,
+   "epss": 0.00218,
+   "epss_percentile": 0.12383,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "symbol:manifests.Get"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports github.com/distribution/distribution/registry/client, github.com/distribution/distribution/v3/internal/client, github.com/docker/distribution/registry/client; go.mod requires github.com/docker/distribution directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2",
+   "fixed_in": null
+  }
+ ]
+}

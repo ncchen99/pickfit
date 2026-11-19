@@ -272,33 +272,339 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
-    "status": "clean",
+    "version": "sec.v2",
+    "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/banorton/gote@3665c4e36449",
-      "go.mod"
+      "github.com/banorton/gote@4072aeb64e8a",
+      "go.mod",
+      "web/package-lock.json"
     ],
-    "packages_checked": 4,
-    "findings_total": 0,
-    "advisories_total": 0,
-    "findings": []
+    "packages_checked": 321,
+    "findings_total": 7,
+    "advisories_total": 4,
+    "findings": [
+      {
+        "package": "npm:lodash-es",
+        "version": "4.17.21",
+        "advisory": "GHSA-r5fr-rjxr-66jc",
+        "cves": [
+          "CVE-2026-4800"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.18.0",
+        "summary": "lodash vulnerable to Code Injection via `_.template` imports key names",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web/package-lock.json",
+        "kev": false,
+        "epss": 0.0287,
+        "fix_published_at": "2026-03-31T18:16:59Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          ". > @excalidraw/excalidraw > @excalidraw/mermaid-to-excalidraw > mermaid > dagre-d3-es > lodash-es"
+        ]
+      },
+      {
+        "package": "npm:nanoid",
+        "version": "3.3.3",
+        "advisory": "GHSA-28wg-ghj8-5hjv",
+        "cves": [
+          "CVE-2026-67214"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.3.16",
+        "summary": "nanoid: non-secure generators can loop indefinitely with negative size",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web/package-lock.json",
+        "kev": false,
+        "epss": 0.0033,
+        "fix_published_at": "2026-07-12T08:23:40Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "high_complexity",
+          "denial_of_service",
+          "symbol:nanoid/non-secure"
+        ],
+        "paths": [
+          ". > @excalidraw/excalidraw > nanoid"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use nanoid/non-secure, but other packages depend on nanoid"
+          ]
+        }
+      },
+      {
+        "package": "npm:nanoid",
+        "version": "3.3.3",
+        "advisory": "GHSA-2v37-7h3g-55p8",
+        "cves": [
+          "CVE-2026-67213"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.3.18",
+        "summary": "nanoid: custom generators can loop indefinitely when size is zero",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web/package-lock.json",
+        "kev": false,
+        "epss": 0.00331,
+        "fix_published_at": "2026-08-07T16:41:05Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "high_complexity",
+          "denial_of_service",
+          "symbol:customAlphabet",
+          "symbol:customRandom"
+        ],
+        "paths": [
+          ". > @excalidraw/excalidraw > nanoid"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use customAlphabet, customRandom, but other packages depend on nanoid"
+          ]
+        }
+      },
+      {
+        "package": "npm:nanoid",
+        "version": "3.3.3",
+        "advisory": "GHSA-xwg4-73v4-xw9w",
+        "cves": [
+          "CVE-2026-73086"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.3.12",
+        "summary": "nanoid: Integer Overflow or Wraparound",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web/package-lock.json",
+        "kev": false,
+        "epss": 0.00296,
+        "fix_published_at": "2026-04-30T22:04:14Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          ". > @excalidraw/excalidraw > nanoid"
+        ]
+      },
+      {
+        "package": "npm:nanoid",
+        "version": "4.0.2",
+        "advisory": "GHSA-28wg-ghj8-5hjv",
+        "cves": [
+          "CVE-2026-67214"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.1.16",
+        "summary": "nanoid: non-secure generators can loop indefinitely with negative size",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web/package-lock.json",
+        "kev": false,
+        "epss": 0.0033,
+        "fix_published_at": "2026-06-24T18:37:08Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "high_complexity",
+          "denial_of_service",
+          "symbol:nanoid/non-secure"
+        ],
+        "paths": [
+          ". > @excalidraw/excalidraw > @excalidraw/mermaid-to-excalidraw > nanoid"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use nanoid/non-secure, but other packages depend on nanoid"
+          ]
+        }
+      },
+      {
+        "package": "npm:nanoid",
+        "version": "4.0.2",
+        "advisory": "GHSA-2v37-7h3g-55p8",
+        "cves": [
+          "CVE-2026-67213"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.1.6",
+        "summary": "nanoid: custom generators can loop indefinitely when size is zero",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web/package-lock.json",
+        "kev": false,
+        "epss": 0.00331,
+        "fix_published_at": "2025-09-22T09:45:52Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "high_complexity",
+          "denial_of_service",
+          "symbol:customAlphabet",
+          "symbol:customRandom"
+        ],
+        "paths": [
+          ". > @excalidraw/excalidraw > @excalidraw/mermaid-to-excalidraw > nanoid"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use customAlphabet, customRandom, but other packages depend on nanoid"
+          ]
+        }
+      },
+      {
+        "package": "npm:nanoid",
+        "version": "4.0.2",
+        "advisory": "GHSA-xwg4-73v4-xw9w",
+        "cves": [
+          "CVE-2026-73086"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.1.11",
+        "summary": "nanoid: Integer Overflow or Wraparound",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web/package-lock.json",
+        "kev": false,
+        "epss": 0.00296,
+        "fix_published_at": "2026-04-30T22:06:42Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          ". > @excalidraw/excalidraw > @excalidraw/mermaid-to-excalidraw > nanoid"
+        ]
+      }
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "4072aeb64e8a97bf938aa90e701d7cf47716e4b8",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "go": 45,
+        "npm": 276
+      },
+      "scopes": {
+        "runtime": 291,
+        "dev": 30
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 30,
+      "details": "security/gote.json",
+      "details_sha256": "cc20f1c6d449e683bf719cfccdec1fdf57c09f34427f4ca19662b25bdf20cf11"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-r5fr-rjxr-66jc npm:lodash-es@4.17.21 (conditional)",
+        "worst:GHSA-28wg-ghj8-5hjv npm:nanoid@3.3.3 (conditional)",
+        "worst:GHSA-2v37-7h3g-55p8 npm:nanoid@3.3.3 (conditional)"
+      ],
+      "counts": {
+        "conditional": 7
+      },
+      "uncounted": 23,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 321,
+      "packages_checked": 321,
+      "components": [
+        {
+          "ecosystem": "go",
+          "component": "go.mod",
+          "status": "scanned",
+          "packages": 45,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "web/package-lock.json",
+          "status": "scanned",
+          "packages": 276,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
-      "total": 90.1,
-      "raw_total": 90.1,
+      "total": 79.0,
       "confidence": 0.6,
-      "cap": null,
-      "cap_reason": null,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.8125,
@@ -318,17 +624,14 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 90.1,
       "security": {
-        "level": "clean",
-        "basis": "status",
-        "effect": "none",
+        "level": "conditional",
+        "basis": "assessment",
+        "effect": "capped",
         "deduction": 0.0
       }
     },
@@ -347,8 +650,8 @@
       "packages": []
     },
     "treasure": {
-      "is_treasure": true,
-      "value": 79.65
+      "is_treasure": false,
+      "value": 69.84
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -640,5 +943,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:18:08+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

@@ -353,35 +353,6 @@
       }
     ]
   },
-  "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-05T03:16:33+08:00",
-    "status": "vulnerable",
-    "unchecked_reason": null,
-    "sources": [
-      "github.com/laurent22/joplin@d6d28fb49e7b",
-      "packages/app-clipper/popup/package-lock.json",
-      "packages/onenote-converter/Cargo.lock"
-    ],
-    "packages_checked": 110,
-    "findings_total": 1,
-    "advisories_total": 1,
-    "findings": [
-      {
-        "package": "crates:regex",
-        "version": "1.4.6",
-        "advisory": "GHSA-m5pq-gvj9-9vr8",
-        "cves": [
-          "CVE-2022-24713"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.5.5",
-        "summary": "Rust's regex crate vulnerable to regular expression denial of service",
-        "malicious": false
-      }
-    ]
-  },
   "visual_check": {
     "version": "comfort.v1",
     "run_id": "verify-joplin-20261104-224720-ca03",
@@ -413,19 +384,271 @@
     "checked_at": "2026-11-05T03:27:09+08:00",
     "cost_usd": 0.052376
   },
+  "security": {
+    "version": "sec.v2",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/laurent22/joplin@b8c4cff78d87",
+      "packages/app-clipper/popup/package-lock.json",
+      "packages/onenote-converter/Cargo.lock"
+    ],
+    "packages_checked": 448,
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "crates:regex",
+        "version": "1.4.6",
+        "advisory": "GHSA-m5pq-gvj9-9vr8",
+        "cves": [
+          "CVE-2022-24713"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.5.5",
+        "summary": "Rust's regex crate vulnerable to regular expression denial of service",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "packages/onenote-converter/parser",
+        "found_in": "packages/onenote-converter/Cargo.lock",
+        "kev": false,
+        "epss": 0.1446,
+        "fix_published_at": "2022-03-08T13:59:00Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "parser > regex"
+        ]
+      }
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "b8c4cff78d87b208e483df6fe6586235dbdba504",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 105,
+        "npm": 343
+      },
+      "scopes": {
+        "runtime": 92,
+        "dev": 338,
+        "workspace": 18
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 32,
+      "details": "security/joplin.json",
+      "details_sha256": "cc215f4f3d2eb49bc5c0dc5af923e970168c87deb6941c419ccf5e873b6d934b"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-m5pq-gvj9-9vr8 crates:regex@1.4.6 (conditional)",
+        "worst:GHSA-fv7c-fp4j-7gwp npm:@babel/plugin-transform-modules-systemjs@7.23.3 (not_shipped)",
+        "worst:GHSA-73wf-gq98-2v4g npm:browserslist@4.24.4 (not_shipped)"
+      ],
+      "counts": {
+        "conditional": 1,
+        "not_shipped": 12
+      },
+      "uncounted": 19,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 6646,
+      "packages_checked": 448,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "Assets/TinyMCE/JoplinLists/yarn.lock",
+          "status": "not_scanned",
+          "packages": 831,
+          "gaps": [
+            "lockfile.unsupported_format"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "packages/app-clipper/popup/package-lock.json",
+          "status": "scanned",
+          "packages": 343,
+          "gaps": []
+        },
+        {
+          "ecosystem": "rubygems",
+          "component": "packages/app-mobile/Gemfile",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "packages/app-mobile/android/build.gradle",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "crates",
+          "component": "packages/onenote-converter/Cargo.lock",
+          "status": "scanned",
+          "packages": 105,
+          "gaps": []
+        },
+        {
+          "ecosystem": "maven",
+          "component": "packages/react-native-alarm-notification/android/build.gradle",
+          "status": "not_scanned",
+          "packages": 3,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "packages/react-native-saf-x/android/build.gradle",
+          "status": "not_scanned",
+          "packages": 2,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "packages/whisper-voice-typing/android/build.gradle",
+          "status": "not_scanned",
+          "packages": 2,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "yarn.lock",
+          "status": "not_scanned",
+          "packages": 5360,
+          "gaps": [
+            "lockfile.unsupported_format"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "code": "lockfile.unsupported_format",
+          "category": "lockfile_unreadable",
+          "ecosystem": "npm",
+          "component": "Assets/TinyMCE/JoplinLists/yarn.lock",
+          "detail": "yarn_lock is not read yet",
+          "capability": "read_lockfile:yarn_lock",
+          "found": 831,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "rubygems",
+          "component": "packages/app-mobile/Gemfile",
+          "detail": "no reader for Gemfile",
+          "capability": "adapter:rubygems",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "packages/app-mobile/android/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 0,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "packages/react-native-alarm-notification/android/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 3,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "packages/react-native-saf-x/android/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 2,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "packages/whisper-voice-typing/android/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 2,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "lockfile.unsupported_format",
+          "category": "lockfile_unreadable",
+          "ecosystem": "npm",
+          "component": "yarn.lock",
+          "detail": "yarn_lock is not read yet",
+          "capability": "read_lockfile:yarn_lock",
+          "found": 5360,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
+  },
   "scores": {
     "formula_version": "b3.v7+visual.v1",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 71.3,
-      "raw_total": 75.1,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.4375,
@@ -445,16 +668,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 75.1,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       },
@@ -891,5 +1111,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:37+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

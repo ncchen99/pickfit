@@ -1,0 +1,3494 @@
+{
+ "slug": "writer-computer",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "79b744c17b31422523d725cee3bd26db9b266588",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 608,
+   "npm": 400
+  },
+  "scopes": {
+   "runtime": 592,
+   "optional": 15,
+   "dev": 208,
+   "workspace": 193
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 76
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-m665-v7pm-7grj crates:zip@4.6.1 (conditional)",
+   "worst:RUSTSEC-2026-0369 crates:zip@4.6.1 (conditional)",
+   "worst:RUSTSEC-2026-0194 crates:quick-xml@0.39.4 (conditional)"
+  ],
+  "counts": {
+   "conditional": 6,
+   "not_shipped": 17
+  },
+  "uncounted": 53,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 1008,
+  "packages_checked": 1008,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "apps/desktop/src-tauri/Cargo.lock",
+    "status": "scanned",
+    "packages": 608,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "pnpm-lock.yaml",
+    "status": "scanned",
+    "packages": 400,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/joelbqz/writer-computer@79b744c17b31",
+  "apps/desktop/src-tauri/Cargo.lock",
+  "pnpm-lock.yaml"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:zip",
+   "version": "4.6.1",
+   "advisory": "GHSA-m665-v7pm-7grj",
+   "cves": [
+    "CVE-2026-115905"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "9.0.5",
+   "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115905",
+    "RUSTSEC-2026-0548"
+   ],
+   "published": "2026-10-28T21:09:50Z",
+   "modified": "2026-11-17T10:26:05.424821880Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20",
+    "CWE-436"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@4.6.1",
+   "fix_published_at": "2026-10-17T18:45:16Z",
+   "scope": "runtime",
+   "paths": [
+    "desktop > tauri-plugin-updater > zip"
+   ],
+   "workspace": "apps/desktop/src-tauri",
+   "found_in": "apps/desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "epss": 0.0032,
+   "epss_percentile": 0.25522,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "4.6.1",
+   "advisory": "RUSTSEC-2026-0369",
+   "severity": "CRITICAL",
+   "fixed_in": "9.0.0",
+   "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+   "malicious": false,
+   "aliases": [
+    "GHSA-4684-h2q9-2vcp"
+   ],
+   "published": "2026-10-10T12:00:00Z",
+   "modified": "2026-10-16T23:30:02.387698467Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@4.6.1",
+   "fix_published_at": "2026-10-09T04:48:51Z",
+   "scope": "runtime",
+   "paths": [
+    "desktop > tauri-plugin-updater > zip"
+   ],
+   "workspace": "apps/desktop/src-tauri",
+   "found_in": "apps/desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:ZipStreamReader::extract",
+    "symbol:ZipArchive::extract"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quick-xml",
+   "version": "0.39.4",
+   "advisory": "RUSTSEC-2026-0194",
+   "severity": "HIGH",
+   "fixed_in": "0.41.0",
+   "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+   "malicious": false,
+   "published": "2026-06-29T12:00:00Z",
+   "modified": "2026-07-02T08:00:03.849273679Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quick-xml@0.39.4",
+   "fix_published_at": "2026-06-29T18:04:43Z",
+   "scope": "runtime",
+   "paths": [
+    "desktop > tauri > plist > quick-xml"
+   ],
+   "workspace": "apps/desktop/src-tauri",
+   "found_in": "apps/desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quick-xml",
+   "version": "0.39.4",
+   "advisory": "RUSTSEC-2026-0195",
+   "severity": "HIGH",
+   "fixed_in": "0.41.0",
+   "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+   "malicious": false,
+   "published": "2026-06-29T12:00:00Z",
+   "modified": "2026-07-02T09:00:04.037478193Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quick-xml@0.39.4",
+   "fix_published_at": "2026-06-29T18:04:43Z",
+   "scope": "runtime",
+   "paths": [
+    "desktop > tauri > plist > quick-xml"
+   ],
+   "workspace": "apps/desktop/src-tauri",
+   "found_in": "apps/desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:NsReader"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use NsReader, but other packages depend on quick-xml"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "4.6.1",
+   "advisory": "GHSA-q7v9-x93c-xqv3",
+   "cves": [
+    "CVE-2026-115909"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "9.0.0",
+   "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115909",
+    "RUSTSEC-2026-0429"
+   ],
+   "published": "2026-10-29T16:40:01Z",
+   "modified": "2026-11-02T10:10:53.649189132Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-789"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/zip@4.6.1",
+   "fix_published_at": "2026-10-09T04:48:51Z",
+   "scope": "runtime",
+   "paths": [
+    "desktop > tauri-plugin-updater > zip"
+   ],
+   "workspace": "apps/desktop/src-tauri",
+   "found_in": "apps/desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "epss": 0.00461,
+   "epss_percentile": 0.4071,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "4.6.1",
+   "advisory": "RUSTSEC-2026-0367",
+   "severity": "HIGH",
+   "fixed_in": "9.0.0",
+   "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+   "malicious": false,
+   "aliases": [
+    "GHSA-vv5m-jxxh-4627"
+   ],
+   "published": "2026-10-09T12:00:00Z",
+   "modified": "2026-10-16T23:30:02.392172556Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:H/I:H/A:H",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@4.6.1",
+   "fix_published_at": "2026-10-09T04:48:51Z",
+   "scope": "runtime",
+   "paths": [
+    "desktop > tauri-plugin-updater > zip"
+   ],
+   "workspace": "apps/desktop/src-tauri",
+   "found_in": "apps/desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:glib",
+   "version": "0.18.5",
+   "advisory": "GHSA-wrw7-89jp-8q8g",
+   "severity": "MODERATE",
+   "fixed_in": "0.20.0",
+   "summary": "Unsoundness in `Iterator` and `DoubleEndedIterator` impls for `glib::VariantStrIter`",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2024-0429"
+   ],
+   "published": "2024-12-23T20:19:24Z",
+   "modified": "2025-10-28T06:29:26.473225Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/glib@0.18.5",
+   "scope": "runtime",
+   "paths": [
+    "desktop > tauri > gtk > glib"
+   ],
+   "workspace": "apps/desktop/src-tauri",
+   "found_in": "apps/desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Iterator",
+    "symbol:DoubleEndedIterator",
+    "symbol:glib::VariantStrIter"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use Iterator, DoubleEndedIterator, glib::VariantStrIter, but other packages depend on glib"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.40",
+   "advisory": "GHSA-2mjx-qc3c-rqvc",
+   "cves": [
+    "CVE-2026-123613"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.23.45",
+   "summary": "Rustls: TLS 1.3 handshake messages incorrectly accepted across encryption level boundaries",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123613",
+    "RUSTSEC-2026-0285"
+   ],
+   "published": "2026-10-05T23:30:17Z",
+   "modified": "2026-11-08T10:55:54.395419388Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.23.40",
+   "scope": "runtime",
+   "paths": [
+    "desktop > rustls"
+   ],
+   "workspace": "apps/desktop/src-tauri",
+   "found_in": "apps/desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "epss": 0.00156,
+   "epss_percentile": 0.04813,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.40",
+   "advisory": "GHSA-c8m5-c952-6cm4",
+   "cves": [
+    "CVE-2026-123609"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.23.46",
+   "summary": "Rustls: Session Debug formatting exposes TLS master secrets and resumption PSKs",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123609",
+    "RUSTSEC-2026-0346"
+   ],
+   "published": "2026-10-27T16:08:47Z",
+   "modified": "2026-11-08T10:55:36.514447652Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:H/PR:H/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-212"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.23.40",
+   "scope": "runtime",
+   "paths": [
+    "desktop > rustls"
+   ],
+   "workspace": "apps/desktop/src-tauri",
+   "found_in": "apps/desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "epss": 0.00101,
+   "epss_percentile": 0.00917,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction",
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:serde_with",
+   "version": "3.20.0",
+   "advisory": "GHSA-7gcf-g7xr-8hxj",
+   "severity": "MODERATE",
+   "fixed_in": "3.21.0",
+   "summary": "serde_with: KeyValueMap serialization panics on empty sequence or map entries",
+   "malicious": false,
+   "published": "2026-07-15T22:41:01Z",
+   "modified": "2026-09-10T03:51:10.897685062Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/serde_with@3.20.0",
+   "scope": "runtime",
+   "paths": [
+    "desktop > tauri > tauri-utils > serde_with"
+   ],
+   "workspace": "apps/desktop/src-tauri",
+   "found_in": "apps/desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "4.6.1",
+   "advisory": "GHSA-8hxf-qr8p-62x4",
+   "cves": [
+    "CVE-2026-115906"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "9.0.0",
+   "summary": "zip: AES Entry HMAC Authentication Bypass on Premature EOF",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115906",
+    "RUSTSEC-2026-0545"
+   ],
+   "published": "2026-10-29T16:40:07Z",
+   "modified": "2026-11-17T10:26:09.858808117Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1284",
+    "CWE-354"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@4.6.1",
+   "scope": "runtime",
+   "paths": [
+    "desktop > tauri-plugin-updater > zip"
+   ],
+   "workspace": "apps/desktop/src-tauri",
+   "found_in": "apps/desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "epss": 0.00151,
+   "epss_percentile": 0.04286,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.40",
+   "advisory": "GHSA-h2v8-394m-p7vv",
+   "cves": [
+    "CVE-2026-123610"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.23.46",
+   "summary": "Rustls: Brotli certificate decompression can allocate an attacker-controlled amount of memory up to 1 GiB before authentication.",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123610",
+    "RUSTSEC-2026-0348"
+   ],
+   "published": "2026-10-27T16:08:36Z",
+   "modified": "2026-11-08T10:55:59.261359726Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/rustls@0.23.40",
+   "scope": "runtime",
+   "paths": [
+    "desktop > rustls"
+   ],
+   "workspace": "apps/desktop/src-tauri",
+   "found_in": "apps/desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "epss": 0.00165,
+   "epss_percentile": 0.0586,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.40",
+   "advisory": "GHSA-w44r-93j7-qv28",
+   "cves": [
+    "CVE-2026-123611"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.23.46",
+   "summary": "rustls: An unauthenticated ServerHello poisons the per-name key-exchange record, so later ClientHellos carry only a classical X25519 share",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123611",
+    "RUSTSEC-2026-0349"
+   ],
+   "published": "2026-10-27T16:08:54Z",
+   "modified": "2026-11-08T10:55:46.312019109Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-757"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.23.40",
+   "scope": "runtime",
+   "paths": [
+    "desktop > rustls"
+   ],
+   "workspace": "apps/desktop/src-tauri",
+   "found_in": "apps/desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "epss": 0.00188,
+   "epss_percentile": 0.08575,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:crossbeam-epoch",
+   "version": "0.9.18",
+   "advisory": "RUSTSEC-2026-0204",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.9.20",
+   "summary": "Invalid pointer dereference in `fmt::Pointer` impl for `Atomic` and `Shared` when the underlying pointer is invalid",
+   "malicious": false,
+   "published": "2026-07-06T12:00:00Z",
+   "modified": "2026-07-06T22:30:04.159269138Z",
+   "purl": "pkg:cargo/crossbeam-epoch@0.9.18",
+   "scope": "runtime",
+   "paths": [
+    "desktop > ignore > crossbeam-deque > crossbeam-epoch"
+   ],
+   "workspace": "apps/desktop/src-tauri",
+   "found_in": "apps/desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:fmt::Pointer",
+    "symbol:Atomic",
+    "symbol:Shared"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use fmt::Pointer, Atomic, Shared, but other packages depend on crossbeam-epoch"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls-webpki",
+   "version": "0.103.13",
+   "advisory": "RUSTSEC-2026-0382",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.103.16",
+   "summary": "Certificate verification may accept distrusted intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0381",
+    "RUSTSEC-2026-0383"
+   ],
+   "published": "2026-10-20T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/rustls-webpki@0.103.13",
+   "scope": "runtime",
+   "paths": [
+    "desktop > rustls > rustls-webpki"
+   ],
+   "workspace": "apps/desktop/src-tauri",
+   "found_in": "apps/desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:webpki-root-certs",
+   "version": "1.0.7",
+   "advisory": "RUSTSEC-2026-0383",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "1.0.10",
+   "summary": "Bundled root certificates allow trust in distrusted emSign intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0381",
+    "RUSTSEC-2026-0382"
+   ],
+   "published": "2026-10-19T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/webpki-root-certs@1.0.7",
+   "scope": "runtime",
+   "paths": [
+    "desktop > reqwest > rustls-platform-verifier > webpki-root-certs"
+   ],
+   "workspace": "apps/desktop/src-tauri",
+   "found_in": "apps/desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "4.6.1",
+   "advisory": "RUSTSEC-2026-0368",
+   "severity": "UNKNOWN",
+   "fixed_in": "9.0.0",
+   "summary": "zip: `ZipArchive::extract` creates symbolic links whose attacker-controlled targets are outside the destination directory",
+   "malicious": false,
+   "aliases": [
+    "GHSA-4v9h-p7m9-rh26"
+   ],
+   "published": "2026-10-09T12:00:00Z",
+   "modified": "2026-10-16T23:30:02.383750571Z",
+   "purl": "pkg:cargo/zip@4.6.1",
+   "scope": "runtime",
+   "paths": [
+    "desktop > tauri-plugin-updater > zip"
+   ],
+   "workspace": "apps/desktop/src-tauri",
+   "found_in": "apps/desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:ZipArchive::extract"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ZipArchive::extract, but other packages depend on zip"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-4r4m-qw57-chr8",
+   "cves": [
+    "CVE-2025-31125"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.5.11",
+   "summary": "Vite has a `server.fs.deny` bypassed for `inline` and `raw` with `?import` query",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-31125"
+   ],
+   "published": "2025-03-31T17:31:54Z",
+   "modified": "2026-09-10T03:50:56.858424937Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-284"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": true,
+   "epss": 0.74939,
+   "epss_percentile": 0.99514,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:tinypool",
+   "version": "2.1.0",
+   "advisory": "GHSA-5gmw-xhrv-c9v3",
+   "cves": [
+    "CVE-2026-104848"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "2.1.1",
+   "summary": "Tinypool: Prototype Pollution gadget in worker options leads to Remote Code Execution",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-104848"
+   ],
+   "published": "2026-10-05T22:50:01Z",
+   "modified": "2026-10-05T23:00:04.259458991Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/tinypool@2.1.0",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus > oxfmt > tinypool"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00497,
+   "epss_percentile": 0.43412,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:tinypool",
+   "version": "2.1.0",
+   "advisory": "GHSA-85c8-ppgw-ccpr",
+   "cves": [
+    "CVE-2026-104849"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "2.1.2",
+   "summary": "Tinypool: Prototype Pollution Gadget to RCE in run() options",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-104849"
+   ],
+   "published": "2026-10-05T22:49:52Z",
+   "modified": "2026-10-05T23:00:05.324545780Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321",
+    "CWE-94"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/tinypool@2.1.0",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus > oxfmt > tinypool"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00485,
+   "epss_percentile": 0.42542,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite-plus",
+   "version": "0.1.22",
+   "advisory": "GHSA-g8mr-85jm-7xhm",
+   "cves": [
+    "CVE-2026-53633"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "0.1.24",
+   "summary": "Vitest Browser: Exposed Browser Mode API Can Proxy CDP and Overwrite Config Files, Leading to RCE",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-53633"
+   ],
+   "published": "2026-06-15T20:05:15Z",
+   "modified": "2026-08-13T18:30:12.338998545Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-749",
+    "CWE-862"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite-plus@0.1.22",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00896,
+   "epss_percentile": 0.60293,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:browserslist",
+   "version": "4.28.1",
+   "advisory": "GHSA-73wf-gq98-2v4g",
+   "cves": [
+    "CVE-2026-73088"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "4.28.7",
+   "summary": "Browserslist: Uncaught crash / prototype write via untrusted browserslist-stats.json custom stats (normalizeStats)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-73088"
+   ],
+   "published": "2026-09-01T16:41:54Z",
+   "modified": "2026-09-10T03:51:15.295037659Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321",
+    "CWE-248"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/browserslist@4.28.1",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > @vitejs/plugin-react > @babel/core > @babel/helper-compilation-targets > browserslist"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00658,
+   "epss_percentile": 0.5229,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:browserslist",
+   "version": "4.28.1",
+   "advisory": "GHSA-c83g-rgw3-j3cx",
+   "cves": [
+    "CVE-2026-73089"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "4.28.7",
+   "summary": "Browserslist: Unbounded memory growth (no cache eviction) via distinct query results, leading to eventual OOM",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-73089"
+   ],
+   "published": "2026-09-01T16:42:13Z",
+   "modified": "2026-09-10T03:50:54.622936829Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/browserslist@4.28.1",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > @vitejs/plugin-react > @babel/core > @babel/helper-compilation-targets > browserslist"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00655,
+   "epss_percentile": 0.5218,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:nanoid",
+   "version": "3.3.12",
+   "advisory": "GHSA-28wg-ghj8-5hjv",
+   "cves": [
+    "CVE-2026-67214"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "3.3.16",
+   "summary": "nanoid: non-secure generators can loop indefinitely with negative size",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-67214"
+   ],
+   "published": "2026-07-29T15:31:12Z",
+   "modified": "2026-09-10T03:50:51.191256883Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-835"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/nanoid@3.3.12",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus > @voidzero-dev/vite-plus-core > postcss > nanoid"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.0033,
+   "epss_percentile": 0.26642,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service",
+    "symbol:nanoid/non-secure"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use nanoid/non-secure, but other packages depend on nanoid"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:nanoid",
+   "version": "3.3.12",
+   "advisory": "GHSA-2v37-7h3g-55p8",
+   "cves": [
+    "CVE-2026-67213"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "3.3.18",
+   "summary": "nanoid: custom generators can loop indefinitely when size is zero",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-67213"
+   ],
+   "published": "2026-07-29T15:31:12Z",
+   "modified": "2026-09-10T03:50:51.243328986Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-835"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/nanoid@3.3.12",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus > @voidzero-dev/vite-plus-core > postcss > nanoid"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00331,
+   "epss_percentile": 0.26789,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service",
+    "symbol:customAlphabet",
+    "symbol:customRandom"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use customAlphabet, customRandom, but other packages depend on nanoid"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:postcss",
+   "version": "8.5.15",
+   "advisory": "GHSA-r28c-9q8g-f849",
+   "cves": [
+    "CVE-2026-73646"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "8.5.18",
+   "summary": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-73646"
+   ],
+   "published": "2026-07-24T16:24:55Z",
+   "modified": "2026-09-10T03:50:52.854537677Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/postcss@8.5.15",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus > @voidzero-dev/vite-plus-core > postcss"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.0053,
+   "epss_percentile": 0.45573,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:source-map-js",
+   "version": "1.2.1",
+   "advisory": "GHSA-68fv-2mgg-jv7q",
+   "cves": [
+    "CVE-2026-93749"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.2.2",
+   "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-93749"
+   ],
+   "published": "2026-09-18T18:31:44Z",
+   "modified": "2026-10-05T23:45:07.974936711Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1284"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/source-map-js@1.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus > @voidzero-dev/vite-plus-core > postcss > source-map-js"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00455,
+   "epss_percentile": 0.40249,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "8.0.14",
+   "advisory": "GHSA-587h-7wmj-h5pm",
+   "cves": [
+    "CVE-2026-112942"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "8.1.6",
+   "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112942"
+   ],
+   "published": "2026-10-20T19:48:25Z",
+   "modified": "2026-10-20T20:00:04.608979840Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-77"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@8.0.14",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus > @voidzero-dev/vite-plus-test > vite"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.01694,
+   "epss_percentile": 0.77635,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-353f-5xf4-qw67",
+   "cves": [
+    "CVE-2023-34092"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.9.16",
+   "summary": "Vite Server Options (server.fs.deny) can be bypassed using double forward-slash (//)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2023-34092"
+   ],
+   "published": "2023-06-06T02:01:39Z",
+   "modified": "2026-09-10T03:50:01.912023705Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-50",
+    "CWE-706"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.03152,
+   "epss_percentile": 0.88224,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-587h-7wmj-h5pm",
+   "cves": [
+    "CVE-2026-112942"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "6.4.4",
+   "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112942"
+   ],
+   "published": "2026-10-20T19:48:25Z",
+   "modified": "2026-10-20T20:00:04.608979840Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-77"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.01694,
+   "epss_percentile": 0.77635,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-c27g-q93r-2cwf",
+   "cves": [
+    "CVE-2024-52011"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "5.4.9",
+   "summary": "launch-editor vulnerable to command injection via the crafted request on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-52011"
+   ],
+   "published": "2026-06-03T18:02:48Z",
+   "modified": "2026-09-10T03:51:08.326505134Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-77"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00514,
+   "epss_percentile": 0.44585,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-mv48-hcvh-8jj8",
+   "cves": [
+    "CVE-2022-35204"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.9.13",
+   "summary": "Vite before v2.9.13 vulnerable to directory traversal via crafted URL to victim's service",
+   "malicious": false,
+   "aliases": [
+    "CVE-2022-35204"
+   ],
+   "published": "2022-08-19T00:00:20Z",
+   "modified": "2024-09-23T19:18:33Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:N/A:N",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.01332,
+   "epss_percentile": 0.71728,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite-plus",
+   "version": "0.1.22",
+   "advisory": "GHSA-587h-7wmj-h5pm",
+   "cves": [
+    "CVE-2026-112942"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.1.0",
+   "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112942"
+   ],
+   "published": "2026-10-20T19:48:25Z",
+   "modified": "2026-10-20T20:00:04.608979840Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-77"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite-plus@0.1.22",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.01694,
+   "epss_percentile": 0.77635,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ws",
+   "version": "8.20.1",
+   "advisory": "GHSA-96hv-2xvq-fx4p",
+   "cves": [
+    "CVE-2026-48779"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "8.21.0",
+   "summary": "ws: Memory exhaustion DoS from tiny fragments and data chunks",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-48779"
+   ],
+   "published": "2026-06-15T16:34:23Z",
+   "modified": "2026-09-10T03:50:49.163643932Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1050",
+    "CWE-400",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/ws@8.20.1",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus > @voidzero-dev/vite-plus-test > ws"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.01426,
+   "epss_percentile": 0.73511,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:baseline-browser-mapping",
+   "version": "2.10.10",
+   "advisory": "GHSA-w5vr-8v7q-w6rv",
+   "cves": [
+    "CVE-2026-45819"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.11.0",
+   "summary": "baseline-browser-mapping process termination on invalid input causes denial of service",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-45819"
+   ],
+   "published": "2026-08-13T12:31:09Z",
+   "modified": "2026-09-08T21:10:57.707771Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:U/S:N/AU:Y/R:U/V:D/RE:M/U:Amber",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-705"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/baseline-browser-mapping@2.10.10",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > @vitejs/plugin-react > @babel/core > @babel/helper-compilation-targets > browserslist > baseline-browser-mapping"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00507,
+   "epss_percentile": 0.44008,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:dompurify",
+   "version": "3.4.7",
+   "advisory": "GHSA-55q2-fjhq-7xh7",
+   "cves": [
+    "CVE-2026-75838"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "3.4.13",
+   "summary": "DOMPurify: IN_PLACE hook removal leaves a detached subtree executable, causing XSS",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-75838"
+   ],
+   "published": "2026-08-07T15:30:47Z",
+   "modified": "2026-09-10T03:51:13.069736975Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/dompurify@3.4.7",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > dompurify"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00394,
+   "epss_percentile": 0.34298,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "option:IN_PLACE"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses IN_PLACE; only the project depends on dompurify"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:dompurify",
+   "version": "3.4.7",
+   "advisory": "GHSA-cmwh-pvxp-8882",
+   "cves": [
+    "CVE-2026-65898"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "3.4.11",
+   "summary": "DOMPurify: Permanent `ALLOWED_ATTR` pollution via `setConfig()` bypassing the hook clone-guard (incomplete fix of the 3.4.7 hook-pollution patch)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-65898"
+   ],
+   "published": "2026-06-18T14:27:37Z",
+   "modified": "2026-09-10T03:51:08.631772464Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-471",
+    "CWE-665",
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/dompurify@3.4.7",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > dompurify"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00212,
+   "epss_percentile": 0.11634,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "option:ALLOWED_ATTR",
+    "symbol:setConfig"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "reachable",
+    "evidence": [
+     "apps/desktop/src/components/editor-area/html-block-decorations.ts:78: const ALLOWED_ATTR = ["
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:postcss",
+   "version": "8.5.15",
+   "advisory": "GHSA-fxqj-rqcc-2cmp",
+   "cves": [
+    "CVE-2026-69153"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.5.23",
+   "summary": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-69153"
+   ],
+   "published": "2026-08-03T17:11:39Z",
+   "modified": "2026-09-10T03:50:53.572374167Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/postcss@8.5.15",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus > @voidzero-dev/vite-plus-core > postcss"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00451,
+   "epss_percentile": 0.39936,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "8.0.14",
+   "advisory": "GHSA-698v-4r3x-3vcv",
+   "cves": [
+    "CVE-2026-112943"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.1.6",
+   "summary": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112943"
+   ],
+   "published": "2026-10-20T18:30:24Z",
+   "modified": "2026-10-20T18:45:09.467993691Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-78"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@8.0.14",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus > @voidzero-dev/vite-plus-test > vite"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00414,
+   "epss_percentile": 0.36473,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "8.0.14",
+   "advisory": "GHSA-fx2h-pf6j-xcff",
+   "cves": [
+    "CVE-2026-53571"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.0.16",
+   "summary": "vite: `server.fs.deny` bypass on Windows alternate paths",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-53571"
+   ],
+   "published": "2026-06-15T17:17:45Z",
+   "modified": "2026-10-27T15:15:07.885624041Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:H/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@8.0.14",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus > @voidzero-dev/vite-plus-test > vite"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00577,
+   "epss_percentile": 0.48326,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "8.0.14",
+   "advisory": "GHSA-r825-w8mm-5pxw",
+   "cves": [
+    "CVE-2026-112944"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.1.6",
+   "summary": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112944"
+   ],
+   "published": "2026-10-20T19:51:52Z",
+   "modified": "2026-10-20T20:00:04.608907013Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-88"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@8.0.14",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus > @voidzero-dev/vite-plus-test > vite"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00705,
+   "epss_percentile": 0.54125,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "8.0.14",
+   "advisory": "GHSA-rq7h-c2jc-7f22",
+   "cves": [
+    "CVE-2026-112946"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.1.6",
+   "summary": "Vite: Files outside `server.fs.allow` could be served when project paths match system paths on non-Windows machine",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112946"
+   ],
+   "published": "2026-10-21T16:47:42Z",
+   "modified": "2026-10-21T17:00:06.336868869Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22",
+    "CWE-284"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@8.0.14",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus > @voidzero-dev/vite-plus-test > vite"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00852,
+   "epss_percentile": 0.59015,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "8.0.14",
+   "advisory": "GHSA-v6wh-96g9-6wx3",
+   "cves": [
+    "CVE-2026-53632"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.0.16",
+   "summary": "launch-editor: NTLMv2 hash disclosure via UNC path handling on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-53632"
+   ],
+   "published": "2026-06-15T17:18:31Z",
+   "modified": "2026-09-10T03:50:50.705036566Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:A/VC:N/VI:N/VA:N/SC:H/SI:H/SA:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-522",
+    "CWE-73"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@8.0.14",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus > @voidzero-dev/vite-plus-test > vite"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00464,
+   "epss_percentile": 0.40943,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-356w-63v5-8wf4",
+   "cves": [
+    "CVE-2025-32395"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.5.13",
+   "summary": "Vite has an `server.fs.deny` bypass with an invalid `request-target`",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-32395"
+   ],
+   "published": "2025-04-11T14:06:03Z",
+   "modified": "2026-09-10T03:50:56.951750105Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.0181,
+   "epss_percentile": 0.79087,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-4w7w-66w2-5vf9",
+   "cves": [
+    "CVE-2026-39365"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.2",
+   "summary": "Vite Vulnerable to Path Traversal in Optimized Deps `.map` Handling",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-39365"
+   ],
+   "published": "2026-04-06T18:03:46Z",
+   "modified": "2026-09-10T03:50:42.779400319Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00914,
+   "epss_percentile": 0.60854,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-64vr-g452-qvp3",
+   "cves": [
+    "CVE-2024-45812"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "3.2.11",
+   "summary": "Vite DOM Clobbering gadget found in vite bundled scripts that leads to XSS",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-45812"
+   ],
+   "published": "2024-09-17T19:28:01Z",
+   "modified": "2026-09-10T03:50:18.740023707Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:A/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00636,
+   "epss_percentile": 0.51314,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-698v-4r3x-3vcv",
+   "cves": [
+    "CVE-2026-112943"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.4",
+   "summary": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112943"
+   ],
+   "published": "2026-10-20T18:30:24Z",
+   "modified": "2026-10-20T18:45:09.467993691Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-78"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00414,
+   "epss_percentile": 0.36473,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-859w-5945-r5v3",
+   "cves": [
+    "CVE-2025-46565"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.5.14",
+   "summary": "Vite's server.fs.deny bypassed with /. for files under project root",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-46565"
+   ],
+   "published": "2025-04-30T17:40:27Z",
+   "modified": "2026-09-10T03:50:23.700922294Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.01243,
+   "epss_percentile": 0.69875,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-9cwx-2883-4wfx",
+   "cves": [
+    "CVE-2024-45811"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "3.2.11",
+   "summary": "Vite's `server.fs.deny` is bypassed when using `?import&raw`",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-45811"
+   ],
+   "published": "2024-09-17T18:44:12Z",
+   "modified": "2026-09-10T03:50:18.095447094Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-284"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.01105,
+   "epss_percentile": 0.6649,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-fx2h-pf6j-xcff",
+   "cves": [
+    "CVE-2026-53571"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.3",
+   "summary": "vite: `server.fs.deny` bypass on Windows alternate paths",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-53571"
+   ],
+   "published": "2026-06-15T17:17:45Z",
+   "modified": "2026-10-27T15:15:07.885624041Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:H/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00577,
+   "epss_percentile": 0.48326,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-r825-w8mm-5pxw",
+   "cves": [
+    "CVE-2026-112944"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.4",
+   "summary": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112944"
+   ],
+   "published": "2026-10-20T19:51:52Z",
+   "modified": "2026-10-20T20:00:04.608907013Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-88"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00705,
+   "epss_percentile": 0.54125,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-rq7h-c2jc-7f22",
+   "cves": [
+    "CVE-2026-112946"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.4",
+   "summary": "Vite: Files outside `server.fs.allow` could be served when project paths match system paths on non-Windows machine",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112946"
+   ],
+   "published": "2026-10-21T16:47:42Z",
+   "modified": "2026-10-21T17:00:06.336868869Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22",
+    "CWE-284"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00852,
+   "epss_percentile": 0.59015,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-v6wh-96g9-6wx3",
+   "cves": [
+    "CVE-2026-53632"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.3",
+   "summary": "launch-editor: NTLMv2 hash disclosure via UNC path handling on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-53632"
+   ],
+   "published": "2026-06-15T17:18:31Z",
+   "modified": "2026-09-10T03:50:50.705036566Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:A/VC:N/VI:N/VA:N/SC:H/SI:H/SA:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-522",
+    "CWE-73"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00464,
+   "epss_percentile": 0.40943,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-vg6x-rcgg-rjx6",
+   "cves": [
+    "CVE-2025-24010"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.5.6",
+   "summary": "Websites were able to send any requests to the development server and read the response in vite",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-24010"
+   ],
+   "published": "2025-01-21T19:52:55Z",
+   "modified": "2026-09-10T03:50:22.216786200Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1385",
+    "CWE-346",
+    "CWE-350"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00297,
+   "epss_percentile": 0.22789,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-x574-m823-4x7w",
+   "cves": [
+    "CVE-2025-30208"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.5.10",
+   "summary": "Vite bypasses server.fs.deny when using ?raw??",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-30208"
+   ],
+   "published": "2025-03-25T14:00:02Z",
+   "modified": "2026-09-10T03:50:23.379149181Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-284"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.74771,
+   "epss_percentile": 0.99512,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-xcj6-pq6g-qj4x",
+   "cves": [
+    "CVE-2025-31486"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.5.12",
+   "summary": "Vite allows server.fs.deny to be bypassed with .svg or relative paths",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-31486"
+   ],
+   "published": "2025-04-04T14:20:05Z",
+   "modified": "2026-09-10T03:49:36.567949213Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-284"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.40461,
+   "epss_percentile": 0.98674,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite-plus",
+   "version": "0.1.22",
+   "advisory": "GHSA-698v-4r3x-3vcv",
+   "cves": [
+    "CVE-2026-112943"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.1.0",
+   "summary": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112943"
+   ],
+   "published": "2026-10-20T18:30:24Z",
+   "modified": "2026-10-20T18:45:09.467993691Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-78"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite-plus@0.1.22",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00414,
+   "epss_percentile": 0.36473,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite-plus",
+   "version": "0.1.22",
+   "advisory": "GHSA-fx2h-pf6j-xcff",
+   "cves": [
+    "CVE-2026-53571"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.1.24",
+   "summary": "vite: `server.fs.deny` bypass on Windows alternate paths",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-53571"
+   ],
+   "published": "2026-06-15T17:17:45Z",
+   "modified": "2026-10-27T15:15:07.885624041Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:H/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite-plus@0.1.22",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00577,
+   "epss_percentile": 0.48326,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite-plus",
+   "version": "0.1.22",
+   "advisory": "GHSA-r825-w8mm-5pxw",
+   "cves": [
+    "CVE-2026-112944"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.1.0",
+   "summary": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112944"
+   ],
+   "published": "2026-10-20T19:51:52Z",
+   "modified": "2026-10-20T20:00:04.608907013Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-88"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite-plus@0.1.22",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00705,
+   "epss_percentile": 0.54125,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite-plus",
+   "version": "0.1.22",
+   "advisory": "GHSA-rq7h-c2jc-7f22",
+   "cves": [
+    "CVE-2026-112946"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.1.0",
+   "summary": "Vite: Files outside `server.fs.allow` could be served when project paths match system paths on non-Windows machine",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112946"
+   ],
+   "published": "2026-10-21T16:47:42Z",
+   "modified": "2026-10-21T17:00:06.336868869Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22",
+    "CWE-284"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite-plus@0.1.22",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00852,
+   "epss_percentile": 0.59015,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite-plus",
+   "version": "0.1.22",
+   "advisory": "GHSA-v6wh-96g9-6wx3",
+   "cves": [
+    "CVE-2026-53632"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.1.24",
+   "summary": "launch-editor: NTLMv2 hash disclosure via UNC path handling on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-53632"
+   ],
+   "published": "2026-06-15T17:18:31Z",
+   "modified": "2026-09-10T03:50:50.705036566Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:A/VC:N/VI:N/VA:N/SC:H/SI:H/SA:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-522",
+    "CWE-73"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite-plus@0.1.22",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00464,
+   "epss_percentile": 0.40943,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@babel/core",
+   "version": "7.29.0",
+   "advisory": "GHSA-4x5r-pxfx-6jf8",
+   "cves": [
+    "CVE-2026-49356"
+   ],
+   "severity": "LOW",
+   "fixed_in": "7.29.6",
+   "summary": "@babel/core: Arbitrary File Read via sourceMappingURL Comment",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-49356"
+   ],
+   "published": "2026-06-15T17:14:14Z",
+   "modified": "2026-09-10T03:50:48.280629201Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:H/PR:N/UI:N/S:C/C:L/I:N/A:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-200",
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40babel/core@7.29.0",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > @vitejs/plugin-react > @babel/core"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00152,
+   "epss_percentile": 0.04411,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:dompurify",
+   "version": "3.4.7",
+   "advisory": "GHSA-6688-9rhm-gjv2",
+   "cves": [
+    "CVE-2026-109345"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.4.16",
+   "summary": "DOMPurify: IN_PLACE returns a force-removed rawtext root whose text carries attacker markup — pure HTML reparse executes",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-109345"
+   ],
+   "published": "2026-10-05T23:43:53Z",
+   "modified": "2026-10-13T02:56:32.032824370Z",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/dompurify@3.4.7",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > dompurify"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.0025,
+   "epss_percentile": 0.16542,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "option:IN_PLACE"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses IN_PLACE; only the project depends on dompurify"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:dompurify",
+   "version": "3.4.7",
+   "advisory": "GHSA-c2j3-45gr-mqc4",
+   "cves": [
+    "CVE-2026-66010"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.4.12",
+   "summary": "DOMPurify: `CUSTOM_ELEMENT_HANDLING` bypasses `afterSanitizeElements` for allowed custom elements.",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-66010"
+   ],
+   "published": "2026-07-21T19:41:07Z",
+   "modified": "2026-10-02T23:00:15.983015754Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:A/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-184",
+    "CWE-693",
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/dompurify@3.4.7",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > dompurify"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00215,
+   "epss_percentile": 0.12066,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "option:CUSTOM_ELEMENT_HANDLING",
+    "symbol:afterSanitizeElements"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses CUSTOM_ELEMENT_HANDLING, afterSanitizeElements; only the project depends on dompurify"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:dompurify",
+   "version": "3.4.7",
+   "advisory": "GHSA-c6gr-qvv4-5v3f",
+   "cves": [
+    "CVE-2026-116802"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.4.17",
+   "summary": "DOMPurify: SMIL attributeName=href guard is skipped when PARSER_MEDIA_TYPE is application/xhtml+xml",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116802"
+   ],
+   "published": "2026-10-22T16:24:23Z",
+   "modified": "2026-10-27T10:56:08.682782458Z",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/dompurify@3.4.7",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > dompurify"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00217,
+   "epss_percentile": 0.12291,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "option:PARSER_MEDIA_TYPE"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses PARSER_MEDIA_TYPE; only the project depends on dompurify"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:dompurify",
+   "version": "3.4.7",
+   "advisory": "GHSA-cg2g-xh64-v4q7",
+   "cves": [
+    "CVE-2026-116804"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.4.17",
+   "summary": "DOMPurify SAFE_FOR_TEMPLATES bypass: split template expressions survive in attached shadow root content on DOM output modes",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116804"
+   ],
+   "published": "2026-10-22T16:25:31Z",
+   "modified": "2026-11-19T00:15:04.697883878Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/dompurify@3.4.7",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > dompurify"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00178,
+   "epss_percentile": 0.07525,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "option:SAFE_FOR_TEMPLATES"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses SAFE_FOR_TEMPLATES; only the project depends on dompurify"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:dompurify",
+   "version": "3.4.7",
+   "advisory": "GHSA-gvmj-g25r-r7wr",
+   "cves": [
+    "CVE-2026-65900"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.4.8",
+   "summary": "DOMPurify: SAFE_FOR_TEMPLATES bypass - template expressions survive sanitization inside <template> content when using DOM output modes",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-65900"
+   ],
+   "published": "2026-06-15T20:02:40Z",
+   "modified": "2026-09-10T03:50:49.714722650Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:A/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N/E:P",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/dompurify@3.4.7",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > dompurify"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.0031,
+   "epss_percentile": 0.24314,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "option:SAFE_FOR_TEMPLATES"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses SAFE_FOR_TEMPLATES; only the project depends on dompurify"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:dompurify",
+   "version": "3.4.7",
+   "advisory": "GHSA-mrv2-3pqr-j5jr",
+   "cves": [
+    "CVE-2026-116803"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.4.17",
+   "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116803"
+   ],
+   "published": "2026-10-22T16:24:52Z",
+   "modified": "2026-11-19T00:15:04.695368164Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-693",
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/dompurify@3.4.7",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > dompurify"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00164,
+   "epss_percentile": 0.05716,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "option:IN_PLACE"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses IN_PLACE; only the project depends on dompurify"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:dompurify",
+   "version": "3.4.7",
+   "advisory": "GHSA-vxr8-fq34-vvx9",
+   "cves": [
+    "CVE-2026-65899"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.4.9",
+   "summary": "DOMPurify: Trusted Types policy survives `clearConfig()` and can poison later `RETURN_TRUSTED_TYPE` output",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-65899"
+   ],
+   "published": "2026-06-15T20:12:53Z",
+   "modified": "2026-09-10T03:50:12.262708400Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-693"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/dompurify@3.4.7",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > dompurify"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00413,
+   "epss_percentile": 0.36287,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "option:RETURN_TRUSTED_TYPE",
+    "symbol:clearConfig"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses RETURN_TRUSTED_TYPE, clearConfig; only the project depends on dompurify"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:esbuild",
+   "version": "0.27.4",
+   "advisory": "GHSA-g7r4-m6w7-qqqr",
+   "severity": "LOW",
+   "fixed_in": "0.28.1",
+   "summary": "esbuild allows arbitrary file read when running the development server on Windows",
+   "malicious": false,
+   "published": "2026-06-12T20:08:53Z",
+   "modified": "2026-09-10T03:50:49.427692265Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/esbuild@0.27.4",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus > @voidzero-dev/vite-plus-core > esbuild"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:katex",
+   "version": "0.16.47",
+   "advisory": "GHSA-238p-pmpm-9mq7",
+   "cves": [
+    "CVE-2026-103923"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.18.2",
+   "summary": "KaTeX: Existing prototype pollution can bypass trust restrictions",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-103923"
+   ],
+   "published": "2026-10-05T23:41:05Z",
+   "modified": "2026-10-06T00:00:09.544490390Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-807"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/katex@0.16.47",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > katex"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.003,
+   "epss_percentile": 0.23091,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "8.0.14",
+   "advisory": "GHSA-9jrq-w75r-8gcw",
+   "cves": [
+    "CVE-2026-112945"
+   ],
+   "severity": "LOW",
+   "fixed_in": "8.1.6",
+   "summary": "Vite: Cross origin script execution through Vite custom middleware",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112945"
+   ],
+   "published": "2026-10-21T16:48:14Z",
+   "modified": "2026-10-21T17:00:26.569382874Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-80"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@8.0.14",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus > @voidzero-dev/vite-plus-test > vite"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00672,
+   "epss_percentile": 0.52858,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-9jrq-w75r-8gcw",
+   "cves": [
+    "CVE-2026-112945"
+   ],
+   "severity": "LOW",
+   "fixed_in": "6.4.4",
+   "summary": "Vite: Cross origin script execution through Vite custom middleware",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112945"
+   ],
+   "published": "2026-10-21T16:48:14Z",
+   "modified": "2026-10-21T17:00:26.569382874Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-80"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00672,
+   "epss_percentile": 0.52858,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-g4jq-h2w9-997c",
+   "cves": [
+    "CVE-2025-58751"
+   ],
+   "severity": "LOW",
+   "fixed_in": "5.4.20",
+   "summary": "Vite middleware may serve files starting with the same name with the public directory",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-58751"
+   ],
+   "published": "2025-09-09T20:55:56Z",
+   "modified": "2026-09-10T03:50:28.405024248Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-22",
+    "CWE-284"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.01263,
+   "epss_percentile": 0.70313,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "@voidzero-dev/vite-plus-core@0.1.13",
+   "advisory": "GHSA-jqfw-vq24-v9c3",
+   "cves": [
+    "CVE-2025-58752"
+   ],
+   "severity": "LOW",
+   "fixed_in": "5.4.20",
+   "summary": "Vite's `server.fs` settings were not applied to HTML files",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-58752"
+   ],
+   "published": "2025-09-09T20:54:42Z",
+   "modified": "2026-09-10T03:50:28.597734404Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-23",
+    "CWE-284"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@%40voidzero-dev%2Fvite-plus-core%400.1.13",
+   "scope": "workspace",
+   "paths": [
+    "apps/desktop > vite"
+   ],
+   "workspace": "apps/desktop",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00608,
+   "epss_percentile": 0.49897,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite-plus",
+   "version": "0.1.22",
+   "advisory": "GHSA-9jrq-w75r-8gcw",
+   "cves": [
+    "CVE-2026-112945"
+   ],
+   "severity": "LOW",
+   "fixed_in": "1.1.0",
+   "summary": "Vite: Cross origin script execution through Vite custom middleware",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112945"
+   ],
+   "published": "2026-10-21T16:48:14Z",
+   "modified": "2026-10-21T17:00:26.569382874Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-80"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite-plus@0.1.22",
+   "scope": "dev",
+   "paths": [
+    ". > vite-plus"
+   ],
+   "workspace": ".",
+   "found_in": "pnpm-lock.yaml",
+   "kev": false,
+   "epss": 0.00672,
+   "epss_percentile": 0.52858,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

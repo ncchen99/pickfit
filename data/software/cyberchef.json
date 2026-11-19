@@ -237,34 +237,6 @@
   "web": {
     "url": "https://gchq.github.io/CyberChef/"
   },
-  "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-16T03:11:48+08:00",
-    "status": "vulnerable",
-    "unchecked_reason": null,
-    "sources": [
-      "github.com/gchq/CyberChef@d4d96c6c3d25",
-      "package-lock.json"
-    ],
-    "packages_checked": 370,
-    "findings_total": 1,
-    "advisories_total": 1,
-    "findings": [
-      {
-        "package": "npm:zod",
-        "version": "3.25.76",
-        "advisory": "GHSA-mrhx-c7xc-m3w5",
-        "cves": [
-          "CVE-2023-54404"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.6.6",
-        "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
-      }
-    ]
-  },
   "visual_check": {
     "version": "comfort.v1",
     "run_id": "web-cyberchef-20261116-023640-dc42",
@@ -313,21 +285,126 @@
     "checked_at": "2026-11-16T03:14:08+08:00",
     "cost_usd": 0.026016
   },
+  "security": {
+    "version": "sec.v2",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/gchq/CyberChef@e81c9f41f54c",
+      "package-lock.json"
+    ],
+    "packages_checked": 1422,
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "npm:zod",
+        "version": "3.25.76",
+        "advisory": "GHSA-mrhx-c7xc-m3w5",
+        "cves": [
+          "CVE-2023-54404"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.6.6",
+        "summary": "Zod can exhaust memory while validating oversized constrained collections",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "fix_published_at": "2026-10-11T16:18:23Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > jimp > @jimp/plugin-blit > zod"
+        ]
+      }
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:06:03+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "e81c9f41f54c56b29ded7c41d533b22ef6072258",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "npm": 1422
+      },
+      "scopes": {
+        "runtime": 369,
+        "peer": 1,
+        "dev": 1052
+      },
+      "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 24,
+      "details": "security/cyberchef.json",
+      "details_sha256": "b09cbe49dda188a61e9a86fd3c42e0548593e9e1fa3eac71d6a8613dc1b77293"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-mrhx-c7xc-m3w5 npm:zod@3.25.76 (conditional)",
+        "worst:GHSA-c475-qrg2-pj4r npm:basic-ftp@5.3.1 (not_shipped)",
+        "worst:GHSA-27r3-jxmh-p828 npm:body-parser@2.3.0 (not_shipped)"
+      ],
+      "counts": {
+        "conditional": 1,
+        "not_shipped": 7
+      },
+      "uncounted": 16,
+      "assessed_at": "2026-11-20T00:06:03+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 1422,
+      "packages_checked": 1422,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "package-lock.json",
+          "status": "scanned",
+          "packages": 1422,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
+  },
   "scores": {
     "formula_version": "web.v1+visual.v1",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 75.0,
-      "raw_total": 91.1,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 50.0
+          "weight": 50
         },
-        "install_docs": {
+        "engineering_hygiene": {
+          "score": null,
+          "weight": 0.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10
+        },
+        "responsiveness": {
           "score": null,
           "weight": 0.0
         },
@@ -335,26 +412,19 @@
           "score": null,
           "weight": 0.0
         },
-        "engineering_hygiene": {
+        "install_docs": {
           "score": null,
           "weight": 0.0
-        },
-        "responsiveness": {
-          "score": null,
-          "weight": 0.0
-        },
-        "usage_outcomes": {
-          "score": null,
-          "weight": 10.0
         },
         "browser_facts": {
           "score": 0.8,
-          "weight": 40.0
+          "weight": 40
         }
       },
+      "raw_total": 91.1,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       },
@@ -632,5 +702,5 @@
     }
   ],
   "first_seen_at": "2026-11-16T00:48:11+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:06:03+08:00"
 }

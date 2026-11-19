@@ -232,93 +232,17 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/vitali87/croft@aaa218592412",
+      "github.com/vitali87/croft@5c5a0712e27d",
       "Cargo.lock"
     ],
-    "packages_checked": 556,
-    "findings_total": 17,
-    "advisories_total": 11,
+    "packages_checked": 555,
+    "findings_total": 2,
+    "advisories_total": 2,
     "findings": [
-      {
-        "package": "crates:zip",
-        "version": "7.4.0",
-        "advisory": "GHSA-m665-v7pm-7grj",
-        "cves": [
-          "CVE-2026-115905"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "9.0.5",
-        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "8.6.0",
-        "advisory": "GHSA-m665-v7pm-7grj",
-        "cves": [
-          "CVE-2026-115905"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "9.0.5",
-        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "7.4.0",
-        "advisory": "RUSTSEC-2026-0369",
-        "cves": [],
-        "severity": "CRITICAL",
-        "fixed_in": "9.0.0",
-        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "8.6.0",
-        "advisory": "RUSTSEC-2026-0369",
-        "cves": [],
-        "severity": "CRITICAL",
-        "fixed_in": "9.0.0",
-        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
-      },
-      {
-        "package": "crates:calamine",
-        "version": "0.34.0",
-        "advisory": "RUSTSEC-2026-0436",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.38.0",
-        "summary": "Panic and unbounded allocation (OOM) in the CFB/OLE2 parser on malformed input",
-        "malicious": false
-      },
-      {
-        "package": "crates:pulldown-cmark",
-        "version": "0.13.4",
-        "advisory": "RUSTSEC-2026-0414",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.13.5",
-        "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
-        "malicious": false
-      },
-      {
-        "package": "crates:pulldown-cmark",
-        "version": "0.13.4",
-        "advisory": "RUSTSEC-2026-0433",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.13.6",
-        "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
-        "malicious": false
-      },
       {
         "package": "crates:quick-xml",
         "version": "0.39.2",
@@ -327,7 +251,23 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "croft-software > quick-xml"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -337,115 +277,173 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "7.4.0",
-        "advisory": "GHSA-9hj8-73fh-9963",
-        "cves": [
-          "CVE-2026-115907"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
         ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: legacy Shrink/Reduce/Implode decoder: denial of service from attacker-controlled ZIP64 uncompressed size",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "8.6.0",
-        "advisory": "GHSA-9hj8-73fh-9963",
-        "cves": [
-          "CVE-2026-115907"
+        "paths": [
+          "croft-software > quick-xml"
         ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: legacy Shrink/Reduce/Implode decoder: denial of service from attacker-controlled ZIP64 uncompressed size",
-        "malicious": false
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use NsReader, but other packages depend on quick-xml"
+          ]
+        }
       },
       {
-        "package": "crates:zip",
-        "version": "7.4.0",
-        "advisory": "GHSA-hjqx-j4rw-g7xv",
-        "cves": [
-          "CVE-2026-115908"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "8.6.0",
-        "advisory": "GHSA-hjqx-j4rw-g7xv",
-        "cves": [
-          "CVE-2026-115908"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "7.4.0",
-        "advisory": "GHSA-q7v9-x93c-xqv3",
-        "cves": [
-          "CVE-2026-115909"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "8.6.0",
-        "advisory": "GHSA-q7v9-x93c-xqv3",
-        "cves": [
-          "CVE-2026-115909"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "7.4.0",
-        "advisory": "RUSTSEC-2026-0367",
+        "package": "crates:pulldown-cmark",
+        "version": "0.13.4",
+        "advisory": "RUSTSEC-2026-0414",
         "cves": [],
         "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
+        "fixed_in": "0.13.5",
+        "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ENABLE_WIKILINKS"
+        ],
+        "paths": [
+          "croft-software > pulldown-cmark"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses ENABLE_WIKILINKS; only the project depends on pulldown-cmark"
+          ]
+        }
       },
       {
-        "package": "crates:zip",
-        "version": "8.6.0",
-        "advisory": "RUSTSEC-2026-0367",
+        "package": "crates:pulldown-cmark",
+        "version": "0.13.4",
+        "advisory": "RUSTSEC-2026-0433",
         "cves": [],
         "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
+        "fixed_in": "0.13.6",
+        "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ENABLE_WIKILINKS"
+        ],
+        "paths": [
+          "croft-software > pulldown-cmark"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses ENABLE_WIKILINKS; only the project depends on pulldown-cmark"
+          ]
+        }
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:06:03+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "5c5a0712e27dc03a1ebba2089ad10ff52dfb4fec",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 555
+      },
+      "scopes": {
+        "runtime": 540,
+        "optional": 1,
+        "dev": 11,
+        "workspace": 3
+      },
+      "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 7,
+      "details": "security/croft.json",
+      "details_sha256": "5d714be560819c07264bc0febe4a1be5aedcf4bfa53054d6a00d77bf2eb24030"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0194 crates:quick-xml@0.39.2 (conditional)",
+        "worst:RUSTSEC-2026-0195 crates:quick-xml@0.39.2 (conditional)",
+        "worst:RUSTSEC-2026-0414 crates:pulldown-cmark@0.13.4 (present_unreachable)"
+      ],
+      "counts": {
+        "conditional": 2,
+        "present_unreachable": 2
+      },
+      "uncounted": 3,
+      "assessed_at": "2026-11-20T00:06:03+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 555,
+      "packages_checked": 555,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 555,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 63.6,
-      "raw_total": 63.6,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5,
@@ -465,16 +463,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 63.6,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -859,5 +854,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:06:03+08:00"
 }

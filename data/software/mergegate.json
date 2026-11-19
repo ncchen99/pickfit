@@ -394,19 +394,17 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/damian-kolasinski/mergegate@537a35450b0e",
+      "github.com/damian-kolasinski/mergegate@6756a4cb3a05",
       "Cargo.lock",
       "ui/pnpm-lock.yaml"
     ],
-    "packages_checked": 417,
-    "findings_total": 4,
-    "advisories_total": 4,
+    "packages_checked": 616,
+    "findings_total": 2,
+    "advisories_total": 2,
     "findings": [
       {
         "package": "crates:wasmtime",
@@ -418,19 +416,31 @@
         "severity": "CRITICAL",
         "fixed_in": "48.0.7",
         "summary": "Wasmtime: Cranelift backend on aarch64 can jump to incorrect target on large Wasm `br_table` instruction",
-        "malicious": false
-      },
-      {
-        "package": "npm:dompurify",
-        "version": "3.4.16",
-        "advisory": "GHSA-cg2g-xh64-v4q7",
-        "cves": [
-          "CVE-2026-116804"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/highlight",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.0099,
+        "fix_published_at": "2026-10-19T19:16:54Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:br_table"
         ],
-        "severity": "CRITICAL",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify SAFE_FOR_TEMPLATES bypass: split template expressions survive in attached shadow root content on DOM output modes",
-        "malicious": false
+        "paths": [
+          "mergegate-highlight > tree-sitter > wasmtime-c-api-impl > wasmtime"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use br_table, but other packages depend on wasmtime"
+          ]
+        }
       },
       {
         "package": "crates:gix",
@@ -440,35 +450,105 @@
         "severity": "HIGH",
         "fixed_in": "0.90.0",
         "summary": "gitoxide gix: untrusted .git/config disables filesystem .git-protection path checks via unfiltered protect_options()",
-        "malicious": false
-      },
-      {
-        "package": "npm:dompurify",
-        "version": "3.4.16",
-        "advisory": "GHSA-mrv2-3pqr-j5jr",
-        "cves": [
-          "CVE-2026-116803"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/git",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-22T13:58:58Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
         ],
-        "severity": "HIGH",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
-        "malicious": false
+        "paths": [
+          "mergegate-git > gix"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "6756a4cb3a0583be867ce55aa6b9509ba33743b9",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 358,
+        "npm": 258
+      },
+      "scopes": {
+        "runtime": 373,
+        "optional": 44,
+        "dev": 199
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 23,
+      "details": "security/mergegate.json",
+      "details_sha256": "00426993d1389a860bf9a8791b74ee8830d021633823ca9109ef38ca49b286d0"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-mghf-wjfp-p5xm crates:wasmtime@48.0.6 (conditional)",
+        "worst:GHSA-q54r-jf2p-rfr2 crates:gix@0.89.0 (conditional)"
+      ],
+      "counts": {
+        "conditional": 2
+      },
+      "uncounted": 21,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 616,
+      "packages_checked": 616,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 358,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "ui/pnpm-lock.yaml",
+          "status": "scanned",
+          "packages": 258,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 87.2,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.8125,
@@ -488,16 +568,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 87.2,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -852,5 +929,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:41:31+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

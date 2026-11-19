@@ -1,0 +1,205 @@
+{
+ "slug": "pinvou-agent",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "fc83066b165f139e6aa7961bc19c302a93c68c2d",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 1104,
+   "npm": 717
+  },
+  "scopes": {
+   "runtime": 1047,
+   "optional": 49,
+   "dev": 704,
+   "workspace": 21
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 3
+ },
+ "assessment": {
+  "level": "none",
+  "policy_version": "sec.v2",
+  "reasons": [],
+  "counts": {},
+  "uncounted": 3,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 1821,
+  "packages_checked": 1821,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "pinvou-cli/Cargo.lock",
+    "status": "scanned",
+    "packages": 1087,
+    "gaps": []
+   },
+   {
+    "ecosystem": "crates",
+    "component": "pinvou-knowledge/Cargo.lock",
+    "status": "scanned",
+    "packages": 537,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "pinvou3-app/package-lock.json",
+    "status": "scanned",
+    "packages": 716,
+    "gaps": []
+   },
+   {
+    "ecosystem": "crates",
+    "component": "pinvou3-app/src-tauri/Cargo.lock",
+    "status": "scanned",
+    "packages": 1068,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "remote-control-relay/package-lock.json",
+    "status": "scanned",
+    "packages": 1,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/Pinvou/pinvou-agent@fc83066b165f",
+  "pinvou-cli/Cargo.lock",
+  "pinvou-knowledge/Cargo.lock",
+  "pinvou3-app/package-lock.json",
+  "pinvou3-app/src-tauri/Cargo.lock",
+  "remote-control-relay/package-lock.json"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:glib",
+   "version": "0.18.5",
+   "advisory": "GHSA-wrw7-89jp-8q8g",
+   "severity": "MODERATE",
+   "fixed_in": "0.20.0",
+   "summary": "Unsoundness in `Iterator` and `DoubleEndedIterator` impls for `glib::VariantStrIter`",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2024-0429"
+   ],
+   "published": "2024-12-23T20:19:24Z",
+   "modified": "2025-10-28T06:29:26.473225Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/glib@0.18.5",
+   "scope": "runtime",
+   "paths": [
+    "pinvou3-tauri > gtk > glib"
+   ],
+   "workspace": "pinvou3-tauri",
+   "found_in": "pinvou-cli/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Iterator",
+    "symbol:DoubleEndedIterator",
+    "symbol:glib::VariantStrIter"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "pinvou3-app/src-tauri/src/app/commands/artifacts.rs:301: candidates: impl Iterator<Item = &'a (Option<std::path::PathBuf>, Option<std::path::PathBuf>)>,",
+     "named only in files that do not import glib"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:crypto-bigint",
+   "version": "0.5.5",
+   "advisory": "RUSTSEC-2026-0387",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.7.6",
+   "summary": "Multiple timing variability issues in operations intended to be constant-time",
+   "malicious": false,
+   "published": "2026-10-23T12:00:00Z",
+   "modified": "2026-10-24T03:45:02.365137418Z",
+   "purl": "pkg:cargo/crypto-bigint@0.5.5",
+   "scope": "runtime",
+   "paths": [
+    "pinvou3-tauri > age > p256 > elliptic-curve > crypto-bigint"
+   ],
+   "workspace": "pinvou3-tauri",
+   "found_in": "pinvou-cli/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:minimatch",
+   "version": "10.2.6",
+   "advisory": "GHSA-g3hv-75wg-m249",
+   "cves": [
+    "CVE-2026-118764"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "11.0.1",
+   "summary": "minimatch has potential denial of service via globparts amplification",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118764"
+   ],
+   "published": "2026-10-30T23:09:55Z",
+   "modified": "2026-11-04T17:01:25.850114200Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-405"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/minimatch@10.2.6",
+   "scope": "dev",
+   "paths": [
+    ". > eslint > minimatch"
+   ],
+   "workspace": ".",
+   "found_in": "pinvou3-app/package-lock.json",
+   "kev": false,
+   "epss": 0.00301,
+   "epss_percentile": 0.23299,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

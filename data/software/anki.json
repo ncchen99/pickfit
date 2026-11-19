@@ -187,69 +187,6 @@
       }
     ]
   },
-  "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-05T03:16:33+08:00",
-    "status": "vulnerable",
-    "unchecked_reason": null,
-    "sources": [
-      "github.com/ankitects/anki@d88ae6eb159a",
-      "Cargo.lock",
-      "pylib/pyproject.toml (resolved today)",
-      "uv.lock",
-      "qt/pyproject.toml (resolved today)"
-    ],
-    "packages_checked": 633,
-    "findings_total": 4,
-    "advisories_total": 4,
-    "findings": [
-      {
-        "package": "crates:quinn-proto",
-        "version": "0.11.16",
-        "advisory": "RUSTSEC-2026-0340",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.11.18",
-        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
-      },
-      {
-        "package": "crates:quinn-proto",
-        "version": "0.11.16",
-        "advisory": "RUSTSEC-2026-0341",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.11.17",
-        "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
-        "malicious": false
-      },
-      {
-        "package": "pypi:urllib3",
-        "version": "2.7.0",
-        "advisory": "GHSA-8988-9cw3-xx77",
-        "cves": [
-          "CVE-2026-97687"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "2.8.0",
-        "summary": "urllib3: HTTPS proxy TLS configuration may be ignored or overridden",
-        "malicious": false
-      },
-      {
-        "package": "pypi:urllib3",
-        "version": "2.7.0",
-        "advisory": "GHSA-vxq7-64xx-v4gw",
-        "cves": [
-          "CVE-2026-97689"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "2.8.0",
-        "summary": "urllib3: HTTPResponse.stream()/read_chunked() buffers an unbounded chunk-size line into memory",
-        "malicious": false
-      }
-    ]
-  },
   "visual_check": {
     "version": "comfort.v1",
     "run_id": "verify-anki-20261104-191008-bf55",
@@ -263,19 +200,257 @@
     "checked_at": "2026-11-05T03:25:03+08:00",
     "cost_usd": 0.020124
   },
+  "security": {
+    "version": "sec.v2",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/ankitects/anki@0402bcffe0b2",
+      "Cargo.lock",
+      "pylib/pyproject.toml (resolved today)",
+      "uv.lock",
+      "qt/pyproject.toml (resolved today)"
+    ],
+    "packages_checked": 635,
+    "findings_total": 4,
+    "advisories_total": 4,
+    "findings": [
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.16",
+        "advisory": "RUSTSEC-2026-0340",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.18",
+        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "rslib",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-09-14T10:08:32Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ACK_FREQUENCY"
+        ],
+        "paths": [
+          "anki > reqwest > quinn > quinn-proto"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+          ]
+        }
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.16",
+        "advisory": "RUSTSEC-2026-0341",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.17",
+        "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "rslib",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-08-17T17:32:41Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "anki > reqwest > quinn > quinn-proto"
+        ]
+      },
+      {
+        "package": "pypi:urllib3",
+        "version": "2.7.0",
+        "advisory": "GHSA-8988-9cw3-xx77",
+        "cves": [
+          "CVE-2026-97687"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.8.0",
+        "summary": "urllib3: HTTPS proxy TLS configuration may be ignored or overridden",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "uv.lock",
+        "kev": false,
+        "epss": 0.00206,
+        "fix_published_at": "2026-09-15T19:29:34Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction",
+          "high_complexity"
+        ],
+        "paths": [
+          "uv.lock > urllib3"
+        ]
+      },
+      {
+        "package": "pypi:urllib3",
+        "version": "2.7.0",
+        "advisory": "GHSA-vxq7-64xx-v4gw",
+        "cves": [
+          "CVE-2026-97689"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.8.0",
+        "summary": "urllib3: HTTPResponse.stream()/read_chunked() buffers an unbounded chunk-size line into memory",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "uv.lock",
+        "kev": false,
+        "epss": 0.00335,
+        "fix_published_at": "2026-09-15T19:29:34Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "high_complexity",
+          "denial_of_service"
+        ],
+        "paths": [
+          "uv.lock > urllib3"
+        ]
+      }
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:06:03+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "0402bcffe0b2a3525bf41d2d8636a657cfdd1ffb",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 582,
+        "pypi": 53
+      },
+      "scopes": {
+        "runtime": 518,
+        "optional": 20,
+        "build": 19,
+        "dev": 6,
+        "workspace": 72
+      },
+      "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 13,
+      "details": "security/anki.json",
+      "details_sha256": "8f40ada8116483ee7d498f08e17e9a5e90f28a5043f064cb2d784c6be183093f"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0340 crates:quinn-proto@0.11.16 (conditional)",
+        "worst:RUSTSEC-2026-0341 crates:quinn-proto@0.11.16 (conditional)",
+        "worst:GHSA-8988-9cw3-xx77 pypi:urllib3@2.7.0 (conditional)"
+      ],
+      "counts": {
+        "conditional": 4
+      },
+      "uncounted": 9,
+      "assessed_at": "2026-11-20T00:06:03+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 1497,
+      "packages_checked": 635,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 582,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "yarn.lock",
+          "status": "not_scanned",
+          "packages": 862,
+          "gaps": [
+            "lockfile.unsupported_format"
+          ]
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "pylib/pyproject.toml",
+          "status": "scanned",
+          "packages": 12,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "uv.lock",
+          "status": "scanned",
+          "packages": 36,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "qt/pyproject.toml",
+          "status": "scanned",
+          "packages": 30,
+          "gaps": []
+        }
+      ],
+      "gaps": [
+        {
+          "code": "lockfile.unsupported_format",
+          "category": "lockfile_unreadable",
+          "ecosystem": "npm",
+          "component": "yarn.lock",
+          "detail": "yarn_lock is not read yet",
+          "capability": "read_lockfile:yarn_lock",
+          "found": 862,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
+  },
   "scores": {
     "formula_version": "b3.v7+visual.v1",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 75.8,
-      "raw_total": 75.8,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5,
@@ -295,16 +470,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 75.8,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       },
@@ -685,5 +857,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:37+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:06:03+08:00"
 }

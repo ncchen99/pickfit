@@ -475,13 +475,11 @@
     "cost_usd": 0.044992
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/dip497/hivemind@557c6a96eb06",
+      "github.com/dip497/hivemind@424a84b5eb47",
       "crates/Cargo.lock",
       "crates/agent-host/Cargo.lock",
       "crates/hive-net/Cargo.lock",
@@ -489,54 +487,10 @@
       "crates/hive-phone-ffi/Cargo.lock",
       "pnpm-lock.yaml"
     ],
-    "packages_checked": 983,
-    "findings_total": 6,
-    "advisories_total": 6,
+    "packages_checked": 1545,
+    "findings_total": 2,
+    "advisories_total": 2,
     "findings": [
-      {
-        "package": "npm:dompurify",
-        "version": "3.4.16",
-        "advisory": "GHSA-cg2g-xh64-v4q7",
-        "cves": [
-          "CVE-2026-116804"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify SAFE_FOR_TEMPLATES bypass: split template expressions survive in attached shadow root content on DOM output modes",
-        "malicious": false
-      },
-      {
-        "package": "crates:pulldown-cmark",
-        "version": "0.13.4",
-        "advisory": "RUSTSEC-2026-0414",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.13.5",
-        "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
-        "malicious": false
-      },
-      {
-        "package": "crates:pulldown-cmark",
-        "version": "0.13.4",
-        "advisory": "RUSTSEC-2026-0433",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.13.6",
-        "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
-        "malicious": false
-      },
-      {
-        "package": "npm:dompurify",
-        "version": "3.4.16",
-        "advisory": "GHSA-mrv2-3pqr-j5jr",
-        "cves": [
-          "CVE-2026-116803"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.4.17",
-        "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
-        "malicious": false
-      },
       {
         "package": "npm:electron",
         "version": "44.5.1",
@@ -547,7 +501,24 @@
         "severity": "HIGH",
         "fixed_in": "44.9.1",
         "summary": "Electron: Mitigation for compromised eMudhra intermediate certificates",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/desktop",
+        "found_in": "pnpm-lock.yaml",
+        "kev": false,
+        "epss": 0.00377,
+        "fix_published_at": "2026-10-20T02:53:15Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "apps/desktop > electron"
+        ]
       },
       {
         "package": "npm:zod",
@@ -559,23 +530,245 @@
         "severity": "HIGH",
         "fixed_in": "4.6.6",
         "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "packages/hive-core",
+        "found_in": "pnpm-lock.yaml",
+        "kev": false,
+        "fix_published_at": "2026-10-11T16:18:23Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "packages/hive-core > zod"
+        ]
+      },
+      {
+        "package": "crates:pulldown-cmark",
+        "version": "0.13.4",
+        "advisory": "RUSTSEC-2026-0414",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.13.5",
+        "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/hive-phone",
+        "found_in": "crates/Cargo.lock",
+        "kev": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ENABLE_WIKILINKS"
+        ],
+        "paths": [
+          "hive-phone > pulldown-cmark"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses ENABLE_WIKILINKS; only the project depends on pulldown-cmark"
+          ]
+        }
+      },
+      {
+        "package": "crates:pulldown-cmark",
+        "version": "0.13.4",
+        "advisory": "RUSTSEC-2026-0433",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.13.6",
+        "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/hive-phone",
+        "found_in": "crates/Cargo.lock",
+        "kev": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ENABLE_WIKILINKS"
+        ],
+        "paths": [
+          "hive-phone > pulldown-cmark"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses ENABLE_WIKILINKS; only the project depends on pulldown-cmark"
+          ]
+        }
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "424a84b5eb47679d364a9899eb8ef65269c0b52a",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 588,
+        "npm": 957
+      },
+      "scopes": {
+        "runtime": 935,
+        "optional": 17,
+        "peer": 7,
+        "build": 7,
+        "dev": 570,
+        "workspace": 9
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 39,
+      "details": "security/hivemind.json",
+      "details_sha256": "38d9dd894655bef6aa30e011e323d35ee2860980d93a498303f709d5acd47c25"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-jr5w-w6x2-84p9 npm:electron@44.5.1 (conditional)",
+        "worst:GHSA-mrhx-c7xc-m3w5 npm:zod@4.6.5 (conditional)",
+        "worst:RUSTSEC-2026-0414 crates:pulldown-cmark@0.13.4 (present_unreachable)"
+      ],
+      "counts": {
+        "conditional": 2,
+        "present_unreachable": 2,
+        "not_shipped": 9
+      },
+      "uncounted": 26,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 1572,
+      "packages_checked": 1545,
+      "components": [
+        {
+          "ecosystem": "maven",
+          "component": "apps/android/app/build.gradle.kts",
+          "status": "not_scanned",
+          "packages": 27,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "apps/android/build.gradle.kts",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "crates",
+          "component": "crates/Cargo.lock",
+          "status": "scanned",
+          "packages": 420,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "crates/agent-host/Cargo.lock",
+          "status": "scanned",
+          "packages": 41,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "crates/hive-net/Cargo.lock",
+          "status": "scanned",
+          "packages": 483,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "crates/hive-phone/Cargo.lock",
+          "status": "scanned",
+          "packages": 519,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "crates/hive-phone-ffi/Cargo.lock",
+          "status": "scanned",
+          "packages": 454,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "pnpm-lock.yaml",
+          "status": "scanned",
+          "packages": 957,
+          "gaps": []
+        }
+      ],
+      "gaps": [
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "apps/android/app/build.gradle.kts",
+          "detail": "no reader for build.gradle.kts",
+          "capability": "adapter:maven",
+          "found": 27,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "apps/android/build.gradle.kts",
+          "detail": "no reader for build.gradle.kts",
+          "capability": "adapter:maven",
+          "found": 0,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7+visual.v1",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 70.3,
-      "raw_total": 74.0,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.375,
@@ -595,16 +788,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 74.0,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       },
@@ -992,5 +1182,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:15+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

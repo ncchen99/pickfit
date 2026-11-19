@@ -1,0 +1,229 @@
+{
+ "slug": "mi-lsp",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "52c12fbc2a3bc0d1a444551d090a30a0bcb219e3",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "go": 21
+  },
+  "scopes": {
+   "runtime": 21
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 3
+ },
+ "assessment": {
+  "level": "none",
+  "policy_version": "sec.v2",
+  "reasons": [],
+  "counts": {},
+  "uncounted": 3,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "partial",
+  "target": "repo_lockfile",
+  "packages_found": 29,
+  "packages_checked": 21,
+  "components": [
+   {
+    "ecosystem": "go",
+    "component": "go.mod",
+    "status": "scanned",
+    "packages": 21,
+    "gaps": []
+   },
+   {
+    "ecosystem": "nuget",
+    "component": "worker-dotnet/MiLsp.Worker/MiLsp.Worker.csproj",
+    "status": "not_scanned",
+    "packages": 8,
+    "gaps": [
+     "adapter.missing"
+    ]
+   },
+   {
+    "ecosystem": "nuget",
+    "component": "worker-dotnet/MiLsp.Worker.ContractTests/MiLsp.Worker.ContractTests.csproj",
+    "status": "not_scanned",
+    "packages": 0,
+    "gaps": [
+     "adapter.missing"
+    ]
+   }
+  ],
+  "gaps": [
+   {
+    "code": "adapter.missing",
+    "category": "no_adapter",
+    "ecosystem": "nuget",
+    "component": "worker-dotnet/MiLsp.Worker/MiLsp.Worker.csproj",
+    "detail": "no reader for MiLsp.Worker.csproj",
+    "capability": "adapter:nuget",
+    "found": 8,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   },
+   {
+    "code": "adapter.missing",
+    "category": "no_adapter",
+    "ecosystem": "nuget",
+    "component": "worker-dotnet/MiLsp.Worker.ContractTests/MiLsp.Worker.ContractTests.csproj",
+    "detail": "no reader for MiLsp.Worker.ContractTests.csproj",
+    "capability": "adapter:nuget",
+    "found": 0,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   }
+  ]
+ },
+ "sources": [
+  "github.com/fgpaz/mi-lsp@52c12fbc2a3b",
+  "go.mod"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "go:golang.org/x/text",
+   "version": "v0.28.0",
+   "advisory": "GO-2026-5970",
+   "cves": [
+    "CVE-2026-56852"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.39.0",
+   "summary": "Infinite loop on invalid input in golang.org/x/text",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-56852"
+   ],
+   "published": "2026-07-14T17:29:56Z",
+   "modified": "2026-11-14T13:12:13.157756222Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/text@v0.28.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/text"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00475,
+   "epss_percentile": 0.4181,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Form.Append",
+    "symbol:Form.AppendString",
+    "symbol:Form.Bytes"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "internal/model/graph.go:293: return w.Bytes(), nil"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/sys",
+   "version": "v0.33.0",
+   "advisory": "GO-2026-5024",
+   "cves": [
+    "CVE-2026-39824"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.44.0",
+   "summary": "Invoking integer overflow in NewNTUnicodeString in golang.org/x/sys/windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-39824"
+   ],
+   "published": "2026-05-22T18:28:47Z",
+   "modified": "2026-06-09T18:59:22.740765220Z",
+   "purl": "pkg:golang/golang.org/x/sys@v0.33.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/sys"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00114,
+   "epss_percentile": 0.01528,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:NewNTUnicodeString"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "unknown",
+    "evidence": [
+     "internal/daemon/integrity_windows.go:9: \"golang.org/x/sys/windows\"",
+     "no call to NewNTUnicodeString found"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/text",
+   "version": "v0.28.0",
+   "advisory": "GO-2026-6629",
+   "cves": [
+    "CVE-2026-56851"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.41.0",
+   "summary": "Panic parsing crafted input in x/text/secure/precis in golang.org/x/text",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-56851"
+   ],
+   "published": "2026-10-07T14:09:43Z",
+   "modified": "2026-11-14T13:12:14.100810021Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/text@v0.28.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/text"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00466,
+   "epss_percentile": 0.41058,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Profile.Append",
+    "symbol:Profile.AppendCompareKey",
+    "symbol:Profile.Bytes"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

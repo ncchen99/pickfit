@@ -454,54 +454,16 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "npm:martty (fresh install, 338 packages)"
+      "npm:martty (fresh install, 339 packages)"
     ],
     "packages_checked": 330,
-    "findings_total": 4,
-    "advisories_total": 4,
+    "findings_total": 1,
+    "advisories_total": 1,
     "findings": [
-      {
-        "package": "npm:undici",
-        "version": "6.29.0",
-        "advisory": "GHSA-2m5v-pch6-74hx",
-        "cves": [
-          "CVE-2026-109383"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "6.29.1",
-        "summary": "undici vulnerable to TLS certificate validation bypass via dropped tls options in Agent",
-        "malicious": false
-      },
-      {
-        "package": "npm:undici",
-        "version": "6.29.0",
-        "advisory": "GHSA-qrxm-fqhp-jwvm",
-        "cves": [
-          "CVE-2026-87018"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "6.29.1",
-        "summary": "undici vulnerable to Denial of Service via TLS 1.2 certificate-changing renegotiation",
-        "malicious": false
-      },
-      {
-        "package": "npm:undici",
-        "version": "6.29.0",
-        "advisory": "GHSA-xjj6-f33q-929c",
-        "cves": [
-          "CVE-2026-109869"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "6.29.1",
-        "summary": "undici vulnerable to Denial of Service via unhandled error on excessive content-encodings",
-        "malicious": false
-      },
       {
         "package": "npm:zod",
         "version": "4.4.3",
@@ -512,23 +474,95 @@
         "severity": "HIGH",
         "fixed_in": "4.6.6",
         "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "registry:npm:martty",
+        "kev": false,
+        "fix_published_at": "2026-10-11T16:18:23Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "npm:martty > martty > @openma/deepseek-harness-acp > zod"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "registry_resolve",
+      "commit": null,
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "npm": 330
+      },
+      "scopes": {
+        "runtime": 320,
+        "peer": 3,
+        "build": 7
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 3,
+      "details": "security/martty.json",
+      "details_sha256": "e093658b0a5f650346dc1ba86b0173adf12135cdab58bc7241e0f6ed27fff20c"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-mrhx-c7xc-m3w5 npm:zod@4.4.3 (conditional)"
+      ],
+      "counts": {
+        "conditional": 1
+      },
+      "uncounted": 2,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "registry_resolve",
+      "packages_found": 330,
+      "packages_checked": 330,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "registry:npm:martty",
+          "status": "scanned",
+          "packages": 339,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 94.8,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.8125,
@@ -548,16 +582,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 94.8,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -898,5 +929,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:22+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

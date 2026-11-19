@@ -252,23 +252,54 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/Glad-Labs/poindexter@757ced00b7ab",
+      "github.com/Glad-Labs/poindexter@14e93ae92023",
+      "infrastructure/cloudflare/affiliate-redirect/package-lock.json",
+      "infrastructure/cloudflare/ls-webhook-relay/package-lock.json",
+      "infrastructure/cloudflare/page-views-beacon/package-lock.json",
+      "infrastructure/cloudflare/sentry-relay/package-lock.json",
+      "infrastructure/cloudflare/unsubscribe-relay/package-lock.json",
       "package-lock.json",
       "web/starter/package-lock.json",
       "mcp-server/pyproject.toml (resolved today)",
       "mcp-server-voice/pyproject.toml (resolved today)",
       "src/cofounder_agent/poetry.lock"
     ],
-    "packages_checked": 497,
-    "findings_total": 5,
-    "advisories_total": 5,
+    "packages_checked": 1468,
+    "findings_total": 9,
+    "advisories_total": 9,
     "findings": [
+      {
+        "package": "pypi:dnspython",
+        "version": "2.9.1",
+        "advisory": "GHSA-vvf4-9x63-8xvv",
+        "cves": [
+          "CVE-2026-128089"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.9.2",
+        "summary": "dnspython has excessive memory and CPU use",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "src/cofounder_agent/poetry.lock",
+        "kev": false,
+        "epss": 0.00527,
+        "fix_published_at": "2026-11-03T23:56:52Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "src/cofounder_agent/poetry.lock > dnspython"
+        ]
+      },
       {
         "package": "pypi:filelock",
         "version": "3.32.7",
@@ -279,7 +310,112 @@
         "severity": "HIGH",
         "fixed_in": "4.2.1",
         "summary": "filelock ReadWriteLock: SQLite reopens the lock database by name, so a planted symlink or journal file makes the lock user's process overwrite or unlink its own files",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "src/cofounder_agent/poetry.lock",
+        "kev": false,
+        "epss": 0.0019,
+        "fix_published_at": "2026-10-17T16:48:12Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access"
+        ],
+        "paths": [
+          "src/cofounder_agent/poetry.lock > filelock"
+        ]
+      },
+      {
+        "package": "pypi:oauthlib",
+        "version": "4.0.0",
+        "advisory": "GHSA-3jp2-3mrg-2vxc",
+        "cves": [
+          "CVE-2026-49272"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.0.1",
+        "summary": "OAuthLib: Bearer token can be retrieved as long as client knows a valid client ID for device workflow",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "src/cofounder_agent/poetry.lock",
+        "kev": false,
+        "epss": 0.00328,
+        "fix_published_at": "2026-10-31T09:52:56Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "src/cofounder_agent/poetry.lock > oauthlib"
+        ]
+      },
+      {
+        "package": "pypi:soupsieve",
+        "version": "2.9.2",
+        "advisory": "GHSA-6655-6qjp-jx7x",
+        "cves": [
+          "CVE-2026-126191"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.0.2",
+        "summary": "Soup Sieve: Exponential ReDoS in selector compilation via \\9-run in CSS_ESCAPES/IDENTIFIER",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "src/cofounder_agent/poetry.lock",
+        "kev": false,
+        "epss": 0.00434,
+        "fix_published_at": "2026-10-12T01:36:23Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:CSS_ESCAPES"
+        ],
+        "paths": [
+          "src/cofounder_agent/poetry.lock > soupsieve"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use CSS_ESCAPES, but other packages depend on soupsieve"
+          ]
+        }
+      },
+      {
+        "package": "pypi:soupsieve",
+        "version": "2.9.2",
+        "advisory": "GHSA-mmhr-3c5m-f64f",
+        "cves": [
+          "CVE-2026-126190"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.0.0",
+        "summary": "Soup Sieve: Polynomial-time denial of service in the descendant combinator",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "src/cofounder_agent/poetry.lock",
+        "kev": false,
+        "epss": 0.00538,
+        "fix_published_at": "2026-11-03T14:28:53Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "src/cofounder_agent/poetry.lock > soupsieve"
+        ]
       },
       {
         "package": "pypi:virtualenv",
@@ -291,7 +427,25 @@
         "severity": "HIGH",
         "fixed_in": "21.14.9",
         "summary": "virtualenv: Xonsh activation literals depend on the script decoding codec",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "src/cofounder_agent/poetry.lock",
+        "kev": false,
+        "epss": 0.00235,
+        "fix_published_at": "2026-10-17T16:09:40Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction",
+          "high_complexity"
+        ],
+        "paths": [
+          "src/cofounder_agent/poetry.lock > virtualenv"
+        ]
       },
       {
         "package": "pypi:virtualenv",
@@ -303,7 +457,25 @@
         "severity": "HIGH",
         "fixed_in": "21.14.9",
         "summary": "virtualenv: Bash prompt values can change meaning under older compatibility modes",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "src/cofounder_agent/poetry.lock",
+        "kev": false,
+        "epss": 0.00235,
+        "fix_published_at": "2026-10-17T16:09:40Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction",
+          "high_complexity"
+        ],
+        "paths": [
+          "src/cofounder_agent/poetry.lock > virtualenv"
+        ]
       },
       {
         "package": "pypi:virtualenv",
@@ -315,7 +487,24 @@
         "severity": "HIGH",
         "fixed_in": "21.14.9",
         "summary": "virtualenv: Generated POSIX console launchers interpret destination paths as shell syntax",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "src/cofounder_agent/poetry.lock",
+        "kev": false,
+        "epss": 0.00261,
+        "fix_published_at": "2026-10-17T16:09:40Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
+        ],
+        "paths": [
+          "src/cofounder_agent/poetry.lock > virtualenv"
+        ]
       },
       {
         "package": "pypi:virtualenv",
@@ -327,23 +516,186 @@
         "severity": "HIGH",
         "fixed_in": "21.14.7",
         "summary": "virtualenv bash activate runs commands from an environment name with a backslash before $",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "src/cofounder_agent/poetry.lock",
+        "kev": false,
+        "epss": 0.00277,
+        "fix_published_at": "2026-10-12T01:27:29Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
+        ],
+        "paths": [
+          "src/cofounder_agent/poetry.lock > virtualenv"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "14e93ae920232fa5cca9f09b1f950016845081e3",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "npm": 1129,
+        "pypi": 339
+      },
+      "scopes": {
+        "runtime": 386,
+        "platform": 6,
+        "peer": 9,
+        "dev": 670,
+        "workspace": 397
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 54,
+      "details": "security/poindexter.json",
+      "details_sha256": "ec87d9ae6bb8bb3f160e503b9f1b3fb7e2d1f50111b6927dbed05e732232968c"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-vvf4-9x63-8xvv pypi:dnspython@2.9.1 (conditional)",
+        "worst:GHSA-v4x8-3wr5-3wq8 pypi:filelock@3.32.7 (conditional)",
+        "worst:GHSA-3jp2-3mrg-2vxc pypi:oauthlib@4.0.0 (conditional)"
+      ],
+      "counts": {
+        "conditional": 9,
+        "not_shipped": 7
+      },
+      "uncounted": 38,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 1468,
+      "packages_checked": 1468,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "infrastructure/cloudflare/affiliate-redirect/package-lock.json",
+          "status": "scanned",
+          "packages": 175,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "infrastructure/cloudflare/ls-webhook-relay/package-lock.json",
+          "status": "scanned",
+          "packages": 175,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "infrastructure/cloudflare/page-views-beacon/package-lock.json",
+          "status": "scanned",
+          "packages": 92,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "infrastructure/cloudflare/sentry-relay/package-lock.json",
+          "status": "scanned",
+          "packages": 175,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "infrastructure/cloudflare/unsubscribe-relay/package-lock.json",
+          "status": "scanned",
+          "packages": 175,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "package-lock.json",
+          "status": "scanned",
+          "packages": 861,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "web/starter/package-lock.json",
+          "status": "scanned",
+          "packages": 437,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "mcp-server/pyproject.toml",
+          "status": "scanned",
+          "packages": 46,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "mcp-server-voice/pyproject.toml",
+          "status": "scanned",
+          "packages": 40,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "pyproject.toml",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "resolve.pyproject_failed"
+          ]
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "src/cofounder_agent/poetry.lock",
+          "status": "scanned",
+          "packages": 310,
+          "gaps": []
+        }
+      ],
+      "gaps": [
+        {
+          "code": "resolve.pyproject_failed",
+          "category": "resolve_failed",
+          "ecosystem": "pypi",
+          "component": "pyproject.toml",
+          "detail": "uv pip compile --no-build did not resolve it",
+          "capability": "resolve_in_sandbox",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 89.8,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.875,
@@ -363,16 +715,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 89.8,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -843,5 +1192,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:24+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

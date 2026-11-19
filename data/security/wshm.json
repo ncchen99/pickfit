@@ -1,0 +1,1516 @@
+{
+ "slug": "wshm",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "3c8a7ad36473b3ec9ef98d21567cefd122b73327",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 570,
+   "npm": 172
+  },
+  "scopes": {
+   "runtime": 440,
+   "optional": 177,
+   "platform": 4,
+   "peer": 62,
+   "dev": 59
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 32
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-xp3w-r5p5-63rr crates:openssl@0.10.78 (conditional)",
+   "worst:GHSA-68fv-2mgg-jv7q npm:source-map-js@1.2.1 (conditional)",
+   "worst:GHSA-3r8g-jcqq-3p5j npm:@sveltejs/kit@2.70.3 (not_shipped)"
+  ],
+  "counts": {
+   "conditional": 2,
+   "not_shipped": 2
+  },
+  "uncounted": 28,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "partial",
+  "target": "repo_lockfile",
+  "packages_found": 948,
+  "packages_checked": 742,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 570,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "web/bun.lock",
+    "status": "not_scanned",
+    "packages": 174,
+    "gaps": [
+     "lockfile.unsupported_format"
+    ]
+   },
+   {
+    "ecosystem": "npm",
+    "component": "web/diagram-viewer/bun.lock",
+    "status": "not_scanned",
+    "packages": 32,
+    "gaps": [
+     "lockfile.unsupported_format"
+    ]
+   },
+   {
+    "ecosystem": "npm",
+    "component": "web/package-lock.json",
+    "status": "scanned",
+    "packages": 172,
+    "gaps": []
+   }
+  ],
+  "gaps": [
+   {
+    "code": "lockfile.unsupported_format",
+    "category": "lockfile_unreadable",
+    "ecosystem": "npm",
+    "component": "web/bun.lock",
+    "detail": "bun_lock is not read yet",
+    "capability": "read_lockfile:bun_lock",
+    "found": 174,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   },
+   {
+    "code": "lockfile.unsupported_format",
+    "category": "lockfile_unreadable",
+    "ecosystem": "npm",
+    "component": "web/diagram-viewer/bun.lock",
+    "detail": "bun_lock is not read yet",
+    "capability": "read_lockfile:bun_lock",
+    "found": 32,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   }
+  ]
+ },
+ "sources": [
+  "github.com/wshm-dev/wshm@3c8a7ad36473",
+  "Cargo.lock",
+  "web/package-lock.json"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:openssl",
+   "version": "0.10.78",
+   "advisory": "GHSA-xp3w-r5p5-63rr",
+   "cves": [
+    "CVE-2026-42327"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.10.79",
+   "summary": "rust-openssl has undefined behavior in X509Ref::ocsp_responders for certificates with non-UTF-8 OCSP URLs",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42327",
+    "RUSTSEC-2026-0474"
+   ],
+   "published": "2026-05-05T21:46:38Z",
+   "modified": "2026-11-10T14:10:43.787985131Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/openssl@0.10.78",
+   "fix_published_at": "2026-05-04T00:19:55Z",
+   "scope": "runtime",
+   "paths": [
+    "wshm-core > openssl"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00211,
+   "epss_percentile": 0.11392,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:X509Ref::ocsp_responders"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use X509Ref::ocsp_responders, but other packages depend on openssl"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:source-map-js",
+   "version": "1.2.1",
+   "advisory": "GHSA-68fv-2mgg-jv7q",
+   "cves": [
+    "CVE-2026-93749"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.2.2",
+   "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-93749"
+   ],
+   "published": "2026-09-18T18:31:44Z",
+   "modified": "2026-10-05T23:45:07.974936711Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1284"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/source-map-js@1.2.1",
+   "fix_published_at": "2026-09-30T14:08:09Z",
+   "scope": "runtime",
+   "paths": [
+    ". > @tailwindcss/vite > @tailwindcss/node > source-map-js"
+   ],
+   "workspace": ".",
+   "found_in": "web/package-lock.json",
+   "kev": false,
+   "epss": 0.00455,
+   "epss_percentile": 0.40249,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:jsonwebtoken",
+   "version": "9.3.1",
+   "advisory": "GHSA-h395-gr6q-cpjc",
+   "cves": [
+    "CVE-2026-25537"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "10.3.0",
+   "summary": "jsonwebtoken has Type Confusion that leads to potential authorization bypass",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-25537"
+   ],
+   "published": "2026-02-03T18:47:40Z",
+   "modified": "2026-09-10T03:50:35.169824826Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N/E:P",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-843"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/jsonwebtoken@9.3.1",
+   "scope": "runtime",
+   "paths": [
+    "wshm-core > jsonwebtoken"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00496,
+   "epss_percentile": 0.4333,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:openssl",
+   "version": "0.10.78",
+   "advisory": "GHSA-phqj-4mhp-q6mq",
+   "cves": [
+    "CVE-2026-45784"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.10.80",
+   "summary": "rust-openssl: Potential out-of-bounds write in `CipherCtxRef::cipher_update_inplace` for AES-KW-PAD ciphers",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-45784",
+    "RUSTSEC-2026-0477"
+   ],
+   "published": "2026-05-19T19:50:11Z",
+   "modified": "2026-11-10T14:10:52.035417381Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-131",
+    "CWE-787"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/openssl@0.10.78",
+   "scope": "runtime",
+   "paths": [
+    "wshm-core > openssl"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00134,
+   "epss_percentile": 0.03001,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "symbol:CipherCtxRef::cipher_update_inplace"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use CipherCtxRef::cipher_update_inplace, but other packages depend on openssl"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:openssl",
+   "version": "0.10.78",
+   "advisory": "GHSA-xv59-967r-8726",
+   "cves": [
+    "CVE-2026-44662"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.10.79",
+   "summary": "rust-openssl vulnerable to heap buffer overflow when encrypting with AES key-wrap-with-padding",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-44662",
+    "RUSTSEC-2026-0476"
+   ],
+   "published": "2026-05-07T22:33:51Z",
+   "modified": "2026-11-10T14:11:00.353842596Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-122"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/openssl@0.10.78",
+   "scope": "runtime",
+   "paths": [
+    "wshm-core > openssl"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00172,
+   "epss_percentile": 0.06778,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:tar",
+   "version": "0.4.45",
+   "advisory": "GHSA-3pv8-6f4r-ffg2",
+   "severity": "MODERATE",
+   "fixed_in": "0.4.46",
+   "summary": "tar has a PAX header desynchronization issue",
+   "malicious": false,
+   "published": "2026-05-29T19:16:12Z",
+   "modified": "2026-09-10T03:51:04.454810375Z",
+   "cwes": [
+    "CWE-20",
+    "CWE-843"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/tar@0.4.45",
+   "scope": "runtime",
+   "paths": [
+    "wshm-core > tar"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:git2",
+   "version": "0.19.0",
+   "advisory": "GHSA-j39j-6gw9-jw6h",
+   "severity": "LOW",
+   "fixed_in": "0.20.4",
+   "summary": "git2 has potential undefined behavior when dereferencing Buf struct",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0008"
+   ],
+   "published": "2026-02-04T20:36:04Z",
+   "modified": "2026-09-10T03:50:35.308686138Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N/E:U",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-476"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/git2@0.19.0",
+   "scope": "runtime",
+   "paths": [
+    "wshm-core > git2"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:lru",
+   "version": "0.12.5",
+   "advisory": "GHSA-rhfx-m35p-ff5j",
+   "severity": "LOW",
+   "fixed_in": "0.16.3",
+   "summary": "`IterMut` violates Stacked Borrows by invalidating internal pointer",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0002"
+   ],
+   "published": "2026-01-07T20:38:57Z",
+   "modified": "2026-09-10T03:50:59.064354050Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N/E:U",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-476"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/lru@0.12.5",
+   "scope": "runtime",
+   "paths": [
+    "wshm-core > ratatui > lru"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:IterMut"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use IterMut, but other packages depend on lru"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:dompurify",
+   "version": "3.4.15",
+   "advisory": "GHSA-6688-9rhm-gjv2",
+   "cves": [
+    "CVE-2026-109345"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.4.16",
+   "summary": "DOMPurify: IN_PLACE returns a force-removed rawtext root whose text carries attacker markup — pure HTML reparse executes",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-109345"
+   ],
+   "published": "2026-10-05T23:43:53Z",
+   "modified": "2026-10-13T02:56:32.032824370Z",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/dompurify@3.4.15",
+   "scope": "runtime",
+   "paths": [
+    ". > dompurify"
+   ],
+   "workspace": ".",
+   "found_in": "web/package-lock.json",
+   "kev": false,
+   "epss": 0.0025,
+   "epss_percentile": 0.16542,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "option:IN_PLACE"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use IN_PLACE, but other packages depend on dompurify"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:dompurify",
+   "version": "3.4.15",
+   "advisory": "GHSA-c6gr-qvv4-5v3f",
+   "cves": [
+    "CVE-2026-116802"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.4.17",
+   "summary": "DOMPurify: SMIL attributeName=href guard is skipped when PARSER_MEDIA_TYPE is application/xhtml+xml",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116802"
+   ],
+   "published": "2026-10-22T16:24:23Z",
+   "modified": "2026-10-27T10:56:08.682782458Z",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/dompurify@3.4.15",
+   "scope": "runtime",
+   "paths": [
+    ". > dompurify"
+   ],
+   "workspace": ".",
+   "found_in": "web/package-lock.json",
+   "kev": false,
+   "epss": 0.00217,
+   "epss_percentile": 0.12291,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "option:PARSER_MEDIA_TYPE"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use PARSER_MEDIA_TYPE, but other packages depend on dompurify"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:dompurify",
+   "version": "3.4.15",
+   "advisory": "GHSA-cg2g-xh64-v4q7",
+   "cves": [
+    "CVE-2026-116804"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.4.17",
+   "summary": "DOMPurify SAFE_FOR_TEMPLATES bypass: split template expressions survive in attached shadow root content on DOM output modes",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116804"
+   ],
+   "published": "2026-10-22T16:25:31Z",
+   "modified": "2026-11-19T00:15:04.697883878Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/dompurify@3.4.15",
+   "scope": "runtime",
+   "paths": [
+    ". > dompurify"
+   ],
+   "workspace": ".",
+   "found_in": "web/package-lock.json",
+   "kev": false,
+   "epss": 0.00178,
+   "epss_percentile": 0.07525,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "option:SAFE_FOR_TEMPLATES"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use SAFE_FOR_TEMPLATES, but other packages depend on dompurify"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:dompurify",
+   "version": "3.4.15",
+   "advisory": "GHSA-mrv2-3pqr-j5jr",
+   "cves": [
+    "CVE-2026-116803"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.4.17",
+   "summary": "DOMPurify IN_PLACE: hook that removes a parent or sibling leaves the detached subtree's event handlers armed (incomplete fix for GHSA-p98j-92pf-mc4p)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116803"
+   ],
+   "published": "2026-10-22T16:24:52Z",
+   "modified": "2026-11-19T00:15:04.695368164Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-693",
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/dompurify@3.4.15",
+   "scope": "runtime",
+   "paths": [
+    ". > dompurify"
+   ],
+   "workspace": ".",
+   "found_in": "web/package-lock.json",
+   "kev": false,
+   "epss": 0.00164,
+   "epss_percentile": 0.05716,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "option:IN_PLACE"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use IN_PLACE, but other packages depend on dompurify"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:dompurify",
+   "version": "3.4.15",
+   "advisory": "GHSA-p98j-92pf-mc4p",
+   "cves": [
+    "CVE-2026-109344"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.4.16",
+   "summary": "DOMPurify: IN_PLACE: node-removing afterSanitize hook leaves detached subtree event handlers armed, causing DOM XSS",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-109344"
+   ],
+   "published": "2026-09-30T15:37:57Z",
+   "modified": "2026-10-13T02:56:22.039126210Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/dompurify@3.4.15",
+   "scope": "runtime",
+   "paths": [
+    ". > dompurify"
+   ],
+   "workspace": ".",
+   "found_in": "web/package-lock.json",
+   "kev": false,
+   "epss": 0.00188,
+   "epss_percentile": 0.08548,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "option:IN_PLACE"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use IN_PLACE, but other packages depend on dompurify"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:libsqlite3-sys",
+   "version": "0.30.1",
+   "advisory": "RUSTSEC-2026-0459",
+   "cves": [
+    "CVE-2026-119375"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.39.0",
+   "summary": "`libsqlite3-sys` via C SQLite CVE-2026-119375",
+   "malicious": false,
+   "aliases": [
+    "BIT-sqlite-2026-119375",
+    "CVE-2026-119375",
+    "GHSA-72w2-rjgg-q729",
+    "RUSTSEC-2026-0502"
+   ],
+   "published": "2026-10-30T12:00:00Z",
+   "modified": "2026-11-17T13:41:05.770775012Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/libsqlite3-sys@0.30.1",
+   "scope": "runtime",
+   "paths": [
+    "wshm-core > rusqlite > libsqlite3-sys"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00195,
+   "epss_percentile": 0.09275,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:libz-sys",
+   "version": "1.1.31",
+   "advisory": "RUSTSEC-2026-0544",
+   "cves": [
+    "CVE-2026-85091"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "1.1.33",
+   "summary": "libs-sys: heap buffer overflow",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-85091"
+   ],
+   "published": "2026-11-11T12:00:00Z",
+   "modified": "2026-11-17T10:15:02.362721160Z",
+   "purl": "pkg:cargo/libz-sys@1.1.31",
+   "scope": "runtime",
+   "paths": [
+    "wshm-core > flate2 > libz-sys"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00469,
+   "epss_percentile": 0.41324,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-udp",
+   "version": "0.5.14",
+   "advisory": "RUSTSEC-2026-0538",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.5.16",
+   "summary": "Receive loop can spin after a truncated datagram",
+   "malicious": false,
+   "aliases": [
+    "GHSA-6pp4-4cxf-xf88"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:08.844283231Z",
+   "purl": "pkg:cargo/quinn-udp@0.5.14",
+   "scope": "runtime",
+   "paths": [
+    "wshm-core > reqwest > quinn > quinn-udp"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@sveltejs/kit",
+   "version": "2.70.3",
+   "advisory": "GHSA-3r8g-jcqq-3p5j",
+   "cves": [
+    "CVE-2026-128120"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "3.1.1",
+   "summary": "SvelteKit: DoS while parsing form data from a remote functions `form`",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-128120"
+   ],
+   "published": "2026-11-16T14:57:35Z",
+   "modified": "2026-11-16T15:15:03.549428904Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/%40sveltejs/kit@2.70.3",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit"
+   ],
+   "workspace": ".",
+   "found_in": "web/package-lock.json",
+   "kev": false,
+   "epss": 0.00346,
+   "epss_percentile": 0.28769,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "6.4.3",
+   "advisory": "GHSA-587h-7wmj-h5pm",
+   "cves": [
+    "CVE-2026-112942"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "6.4.4",
+   "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112942"
+   ],
+   "published": "2026-10-20T19:48:25Z",
+   "modified": "2026-10-20T20:00:04.608979840Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-77"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@6.4.3",
+   "scope": "peer",
+   "paths": [
+    ". > @tailwindcss/vite > vite"
+   ],
+   "workspace": ".",
+   "found_in": "web/package-lock.json",
+   "kev": false,
+   "epss": 0.01694,
+   "epss_percentile": 0.77635,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:block-buffer",
+   "version": "0.12.0",
+   "advisory": "GHSA-qwgh-2vcv-g2f7",
+   "severity": "MODERATE",
+   "fixed_in": "0.12.1",
+   "summary": "block_buffer: panic corrupts inline buffer position",
+   "malicious": false,
+   "published": "2026-08-19T19:15:34Z",
+   "modified": "2026-10-30T15:45:11.580215361Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-119"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/block-buffer@0.12.0",
+   "scope": "optional",
+   "paths": [
+    "wshm-core > object_store > md-5 > digest > block-buffer"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:opentelemetry_sdk",
+   "version": "0.31.0",
+   "advisory": "GHSA-w9wp-h8wv-79jx",
+   "cves": [
+    "CVE-2026-48504"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.32.1",
+   "summary": "opentelemetry_sdk has unbounded memory allocation in W3C Baggage propagation",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-48504"
+   ],
+   "published": "2026-06-25T18:40:04Z",
+   "modified": "2026-09-10T03:50:50.807599062Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/opentelemetry_sdk@0.31.0",
+   "scope": "optional",
+   "paths": [
+    "wshm-core > google-cloud-secretmanager-v1 > google-cloud-gax-internal > opentelemetry_sdk"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00418,
+   "epss_percentile": 0.36858,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:serde_with",
+   "version": "3.18.0",
+   "advisory": "GHSA-7gcf-g7xr-8hxj",
+   "severity": "MODERATE",
+   "fixed_in": "3.21.0",
+   "summary": "serde_with: KeyValueMap serialization panics on empty sequence or map entries",
+   "malicious": false,
+   "published": "2026-07-15T22:41:01Z",
+   "modified": "2026-09-10T03:51:10.897685062Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/serde_with@3.18.0",
+   "scope": "optional",
+   "paths": [
+    "wshm-core > elasticsearch > serde_with"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@sveltejs/adapter-static",
+   "version": "3.0.10",
+   "advisory": "GHSA-jf9x-2fg2-hx4w",
+   "cves": [
+    "CVE-2026-128121"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "3.0.11",
+   "summary": "SvelteKit: Prerendered paths are interpreted as regular expressions in Vercel route config generated by @sveltejs/adapter-vercel and @sveltejs/adapter-static",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-128121"
+   ],
+   "published": "2026-11-13T20:43:23Z",
+   "modified": "2026-11-13T21:00:03.964829462Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-116",
+    "CWE-625"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40sveltejs/adapter-static@3.0.10",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/adapter-static"
+   ],
+   "workspace": ".",
+   "found_in": "web/package-lock.json",
+   "kev": false,
+   "epss": 0.0044,
+   "epss_percentile": 0.39015,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@sveltejs/kit",
+   "version": "2.70.3",
+   "advisory": "GHSA-6cf5-gc4q-fm3x",
+   "cves": [
+    "CVE-2026-128119"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "3.1.1",
+   "summary": "SvelteKit: Private `query.batch` functions could collide, producing unexpected parameter / function combinations",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-128119"
+   ],
+   "published": "2026-11-16T14:49:03Z",
+   "modified": "2026-11-16T15:00:09.762004719Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-863"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40sveltejs/kit@2.70.3",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit"
+   ],
+   "workspace": ".",
+   "found_in": "web/package-lock.json",
+   "kev": false,
+   "epss": 0.00285,
+   "epss_percentile": 0.21412,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@sveltejs/kit",
+   "version": "2.70.3",
+   "advisory": "GHSA-mw6w-2fmv-pvw3",
+   "cves": [
+    "CVE-2026-128117"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.70.4",
+   "summary": "SvelteKit: adapter-node crashes with an unhandled URIError when `reroute` rewrites malformed pathnames",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-128117"
+   ],
+   "published": "2026-11-13T20:51:44Z",
+   "modified": "2026-11-13T21:00:03.987248875Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/%40sveltejs/kit@2.70.3",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit"
+   ],
+   "workspace": ".",
+   "found_in": "web/package-lock.json",
+   "kev": false,
+   "epss": 0.00477,
+   "epss_percentile": 0.41995,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@sveltejs/kit",
+   "version": "2.70.3",
+   "advisory": "GHSA-rqp5-r3wg-vg35",
+   "cves": [
+    "CVE-2026-128116"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.70.4",
+   "summary": "SvelteKit: Protocol-relative module import during server-side route resolution allows cross-origin script execution",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-128116"
+   ],
+   "published": "2026-11-16T14:48:54Z",
+   "modified": "2026-11-16T15:00:10.447165173Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40sveltejs/kit@2.70.3",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit"
+   ],
+   "workspace": ".",
+   "found_in": "web/package-lock.json",
+   "kev": false,
+   "epss": 0.00264,
+   "epss_percentile": 0.18559,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "6.4.3",
+   "advisory": "GHSA-698v-4r3x-3vcv",
+   "cves": [
+    "CVE-2026-112943"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.4",
+   "summary": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112943"
+   ],
+   "published": "2026-10-20T18:30:24Z",
+   "modified": "2026-10-20T18:45:09.467993691Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-78"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@6.4.3",
+   "scope": "peer",
+   "paths": [
+    ". > @tailwindcss/vite > vite"
+   ],
+   "workspace": ".",
+   "found_in": "web/package-lock.json",
+   "kev": false,
+   "epss": 0.00414,
+   "epss_percentile": 0.36473,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "6.4.3",
+   "advisory": "GHSA-r825-w8mm-5pxw",
+   "cves": [
+    "CVE-2026-112944"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.4",
+   "summary": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112944"
+   ],
+   "published": "2026-10-20T19:51:52Z",
+   "modified": "2026-10-20T20:00:04.608907013Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-88"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@6.4.3",
+   "scope": "peer",
+   "paths": [
+    ". > @tailwindcss/vite > vite"
+   ],
+   "workspace": ".",
+   "found_in": "web/package-lock.json",
+   "kev": false,
+   "epss": 0.00705,
+   "epss_percentile": 0.54125,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "6.4.3",
+   "advisory": "GHSA-rq7h-c2jc-7f22",
+   "cves": [
+    "CVE-2026-112946"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.4",
+   "summary": "Vite: Files outside `server.fs.allow` could be served when project paths match system paths on non-Windows machine",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112946"
+   ],
+   "published": "2026-10-21T16:47:42Z",
+   "modified": "2026-10-21T17:00:06.336868869Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22",
+    "CWE-284"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@6.4.3",
+   "scope": "peer",
+   "paths": [
+    ". > @tailwindcss/vite > vite"
+   ],
+   "workspace": ".",
+   "found_in": "web/package-lock.json",
+   "kev": false,
+   "epss": 0.00852,
+   "epss_percentile": 0.59015,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@sveltejs/kit",
+   "version": "2.70.3",
+   "advisory": "GHSA-27mw-82g8-phjj",
+   "cves": [
+    "CVE-2026-114061"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.0.0",
+   "summary": "SvelteKit : XSS via untrusted cache-control header in prerendered page",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-114061"
+   ],
+   "published": "2026-10-23T20:43:30Z",
+   "modified": "2026-10-23T21:00:04.312966515Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:N/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40sveltejs/kit@2.70.3",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit"
+   ],
+   "workspace": ".",
+   "found_in": "web/package-lock.json",
+   "kev": false,
+   "epss": 0.00213,
+   "epss_percentile": 0.1168,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@sveltejs/kit",
+   "version": "2.70.3",
+   "advisory": "GHSA-pfhg-q3qv-9q6r",
+   "cves": [
+    "CVE-2026-114060"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.0.0",
+   "summary": "SvelteKit: URL redirection to untrusted site via enhanced form submission",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-114060"
+   ],
+   "published": "2026-10-23T20:58:24Z",
+   "modified": "2026-10-23T21:15:03.741776060Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-601"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40sveltejs/kit@2.70.3",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit"
+   ],
+   "workspace": ".",
+   "found_in": "web/package-lock.json",
+   "kev": false,
+   "epss": 0.00202,
+   "epss_percentile": 0.10192,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:cookie",
+   "version": "0.6.0",
+   "advisory": "GHSA-pxg6-pf52-xh8x",
+   "cves": [
+    "CVE-2024-47764"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.7.0",
+   "summary": "cookie accepts cookie name, path, and domain with out of bounds characters",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-47764"
+   ],
+   "published": "2024-10-04T20:31:00Z",
+   "modified": "2026-09-10T03:50:19.898971417Z",
+   "cwes": [
+    "CWE-74"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/cookie@0.6.0",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit > cookie"
+   ],
+   "workspace": ".",
+   "found_in": "web/package-lock.json",
+   "kev": false,
+   "epss": 0.00744,
+   "epss_percentile": 0.55539,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "6.4.3",
+   "advisory": "GHSA-9jrq-w75r-8gcw",
+   "cves": [
+    "CVE-2026-112945"
+   ],
+   "severity": "LOW",
+   "fixed_in": "6.4.4",
+   "summary": "Vite: Cross origin script execution through Vite custom middleware",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112945"
+   ],
+   "published": "2026-10-21T16:48:14Z",
+   "modified": "2026-10-21T17:00:26.569382874Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-80"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@6.4.3",
+   "scope": "peer",
+   "paths": [
+    ". > @tailwindcss/vite > vite"
+   ],
+   "workspace": ".",
+   "found_in": "web/package-lock.json",
+   "kev": false,
+   "epss": 0.00672,
+   "epss_percentile": 0.52858,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

@@ -215,20 +215,19 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/infercrane/infercrane@d12093f1007d",
+      "github.com/infercrane/infercrane@d506db249659",
       "go.mod",
       "integrations/terraform/go.mod",
-      "sdk/ai-sdk-provider/package-lock.json"
+      "sdk/ai-sdk-provider/package-lock.json",
+      "sdk/typescript/package-lock.json"
     ],
-    "packages_checked": 100,
-    "findings_total": 6,
-    "advisories_total": 6,
+    "packages_checked": 273,
+    "findings_total": 1,
+    "advisories_total": 1,
     "findings": [
       {
         "package": "go:github.com/go-jose/go-jose/v3",
@@ -240,83 +239,117 @@
         "severity": "HIGH",
         "fixed_in": null,
         "summary": "Go JOSE: DoS when parsing JWKs that contain RSA keys",
-        "malicious": false
-      },
-      {
-        "package": "npm:undici",
-        "version": "7.29.1",
-        "advisory": "GHSA-2m5v-pch6-74hx",
-        "cves": [
-          "CVE-2026-109383"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "kev": false,
+        "epss": 0.00489,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "7.30.1",
-        "summary": "undici vulnerable to TLS certificate validation bypass via dropped tls options in Agent",
-        "malicious": false
-      },
-      {
-        "package": "npm:undici",
-        "version": "7.29.1",
-        "advisory": "GHSA-4w7w-5xrc-9h26",
-        "cves": [
-          "CVE-2026-109829"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "7.30.1",
-        "summary": "undici vulnerable to cache poisoning and cross-user disclosure via cross-origin redirects",
-        "malicious": false
-      },
-      {
-        "package": "npm:undici",
-        "version": "7.29.1",
-        "advisory": "GHSA-qrxm-fqhp-jwvm",
-        "cves": [
-          "CVE-2026-87018"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "7.30.1",
-        "summary": "undici vulnerable to Denial of Service via TLS 1.2 certificate-changing renegotiation",
-        "malicious": false
-      },
-      {
-        "package": "npm:undici",
-        "version": "7.29.1",
-        "advisory": "GHSA-xjj6-f33q-929c",
-        "cves": [
-          "CVE-2026-109869"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "7.30.1",
-        "summary": "undici vulnerable to Denial of Service via unhandled error on excessive content-encodings",
-        "malicious": false
-      },
-      {
-        "package": "npm:zod",
-        "version": "4.6.5",
-        "advisory": "GHSA-mrhx-c7xc-m3w5",
-        "cves": [
-          "CVE-2023-54404"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.6.6",
-        "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
+        "paths": [
+          "go.mod > github.com/go-jose/go-jose/v3"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "d506db24965967b0262033704d5cb5ad6c902755",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "go": 92,
+        "npm": 181
+      },
+      "scopes": {
+        "runtime": 100,
+        "peer": 4,
+        "dev": 169
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 19,
+      "details": "security/infercrane.json",
+      "details_sha256": "8a16335473d8eaa6ec359f52daf734faf985ea1c018e8c5c2fb44b7baf4d8c03"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-mgcc-cww5-fp2q go:github.com/go-jose/go-jose/v3@v3.0.5 (conditional)"
+      ],
+      "counts": {
+        "conditional": 1
+      },
+      "uncounted": 18,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 273,
+      "packages_checked": 273,
+      "components": [
+        {
+          "ecosystem": "go",
+          "component": "go.mod",
+          "status": "scanned",
+          "packages": 40,
+          "gaps": []
+        },
+        {
+          "ecosystem": "go",
+          "component": "integrations/terraform/go.mod",
+          "status": "scanned",
+          "packages": 55,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "sdk/ai-sdk-provider/package-lock.json",
+          "status": "scanned",
+          "packages": 179,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "sdk/typescript/package-lock.json",
+          "status": "scanned",
+          "packages": 3,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 80.3,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.7225,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.75,
@@ -336,16 +369,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 80.3,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -668,5 +698,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:49:14+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

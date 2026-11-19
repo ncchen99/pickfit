@@ -119,16 +119,14 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
       "github.com/Open-Dev-Society/kitbash@00cca112a1be",
       "package-lock.json"
     ],
-    "packages_checked": 92,
+    "packages_checked": 115,
     "findings_total": 10,
     "advisories_total": 10,
     "findings": [
@@ -142,7 +140,31 @@
         "severity": "CRITICAL",
         "fixed_in": "2.0.8",
         "summary": "proxy-addr vulnerable to IP spoofing via IPv4-mapped IPv6 trust subnet",
-        "malicious": false
+        "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.0026,
+        "fix_published_at": "2026-09-15T06:12:45Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "entry:the MCP SDK's HTTP server transports"
+        ],
+        "paths": [
+          ". > @modelcontextprotocol/sdk > express > proxy-addr"
+        ],
+        "reachability": {
+          "method": "entry_point_grep",
+          "result": "reachable",
+          "evidence": [
+            "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+          ]
+        }
       },
       {
         "package": "npm:body-parser",
@@ -154,91 +176,32 @@
         "severity": "HIGH",
         "fixed_in": "2.4.0",
         "summary": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
-        "malicious": false
-      },
-      {
-        "package": "npm:fast-uri",
-        "version": "3.1.3",
-        "advisory": "GHSA-5jgf-p345-68v8",
-        "cves": [
-          "CVE-2026-75931"
+        "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00388,
+        "fix_published_at": "2026-10-22T11:39:38Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "entry:the MCP SDK's HTTP server transports"
         ],
-        "severity": "HIGH",
-        "fixed_in": "3.1.6",
-        "summary": "fast-uri vulnerable to host confusion via skipped IDN canonicalization on scheme-relative references",
-        "malicious": false
-      },
-      {
-        "package": "npm:fast-uri",
-        "version": "3.1.3",
-        "advisory": "GHSA-7p8r-x3mc-p8w7",
-        "cves": [
-          "CVE-2026-18446"
+        "paths": [
+          ". > @modelcontextprotocol/sdk > express > body-parser"
         ],
-        "severity": "HIGH",
-        "fixed_in": "3.1.5",
-        "summary": "fast-uri vulnerable to host confusion via backslash authority introducer",
-        "malicious": false
-      },
-      {
-        "package": "npm:fast-uri",
-        "version": "3.1.3",
-        "advisory": "GHSA-f65p-4m7j-42xc",
-        "cves": [
-          "CVE-2026-75975"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.1.6",
-        "summary": "fast-uri vulnerable to server-side request forgery via malformed IPv6 normalization",
-        "malicious": false
-      },
-      {
-        "package": "npm:fast-uri",
-        "version": "3.1.3",
-        "advisory": "GHSA-fph4-wmhf-6fwf",
-        "cves": [
-          "CVE-2026-75899"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.1.6",
-        "summary": "fast-uri vulnerable to server-side request forgery via repeated hostname percent-decoding",
-        "malicious": false
-      },
-      {
-        "package": "npm:fast-uri",
-        "version": "3.1.3",
-        "advisory": "GHSA-jqff-g426-hqxp",
-        "cves": [
-          "CVE-2026-76172"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.1.6",
-        "summary": "fast-uri vulnerable to host confusion via percent-encoded scheme normalization",
-        "malicious": false
-      },
-      {
-        "package": "npm:fast-uri",
-        "version": "3.1.3",
-        "advisory": "GHSA-qw65-cvwx-89v3",
-        "cves": [
-          "CVE-2026-84292"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.1.7",
-        "summary": "fast-uri vulnerable to authority injection via an unvalidated port in serialize",
-        "malicious": false
-      },
-      {
-        "package": "npm:fast-uri",
-        "version": "3.1.3",
-        "advisory": "GHSA-v2hh-gcrm-f6hx",
-        "cves": [
-          "CVE-2026-16221"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.1.4",
-        "summary": "fast-uri vulnerable to host confusion via literal backslash authority delimiter",
-        "malicious": false
+        "reachability": {
+          "method": "entry_point_grep",
+          "result": "reachable",
+          "evidence": [
+            "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+          ]
+        }
       },
       {
         "package": "npm:ip-address",
@@ -250,23 +213,287 @@
         "severity": "HIGH",
         "fixed_in": "10.3.1",
         "summary": "ip-address: Address4 decodes leading-zero octets as decimal while resolvers decode them as octal, allowing SSRF and trust-boundary bypass",
-        "malicious": false
+        "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00465,
+        "fix_published_at": "2026-07-25T08:00:07Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "entry:the MCP SDK's HTTP server transports"
+        ],
+        "paths": [
+          ". > @modelcontextprotocol/sdk > express-rate-limit > ip-address"
+        ],
+        "reachability": {
+          "method": "entry_point_grep",
+          "result": "reachable",
+          "evidence": [
+            "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
+          ]
+        }
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.3",
+        "advisory": "GHSA-5jgf-p345-68v8",
+        "cves": [
+          "CVE-2026-75931"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.6",
+        "summary": "fast-uri vulnerable to host confusion via skipped IDN canonicalization on scheme-relative references",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00398,
+        "fix_published_at": "2026-08-23T01:42:00Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+        ]
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.3",
+        "advisory": "GHSA-7p8r-x3mc-p8w7",
+        "cves": [
+          "CVE-2026-18446"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.5",
+        "summary": "fast-uri vulnerable to host confusion via backslash authority introducer",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.0038,
+        "fix_published_at": "2026-07-31T09:16:56Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+        ]
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.3",
+        "advisory": "GHSA-f65p-4m7j-42xc",
+        "cves": [
+          "CVE-2026-75975"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.6",
+        "summary": "fast-uri vulnerable to server-side request forgery via malformed IPv6 normalization",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.0022,
+        "fix_published_at": "2026-08-23T01:42:00Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+        ]
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.3",
+        "advisory": "GHSA-fph4-wmhf-6fwf",
+        "cves": [
+          "CVE-2026-75899"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.6",
+        "summary": "fast-uri vulnerable to server-side request forgery via repeated hostname percent-decoding",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.0022,
+        "fix_published_at": "2026-08-23T01:42:00Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+        ]
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.3",
+        "advisory": "GHSA-jqff-g426-hqxp",
+        "cves": [
+          "CVE-2026-76172"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.6",
+        "summary": "fast-uri vulnerable to host confusion via percent-encoded scheme normalization",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00232,
+        "fix_published_at": "2026-08-23T01:42:00Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+        ]
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.3",
+        "advisory": "GHSA-qw65-cvwx-89v3",
+        "cves": [
+          "CVE-2026-84292"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.7",
+        "summary": "fast-uri vulnerable to authority injection via an unvalidated port in serialize",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00239,
+        "fix_published_at": "2026-09-02T11:06:41Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+        ]
+      },
+      {
+        "package": "npm:fast-uri",
+        "version": "3.1.3",
+        "advisory": "GHSA-v2hh-gcrm-f6hx",
+        "cves": [
+          "CVE-2026-16221"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.1.4",
+        "summary": "fast-uri vulnerable to host confusion via literal backslash authority delimiter",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00436,
+        "fix_published_at": "2026-07-19T07:42:54Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "00cca112a1be1b0336fd101385d573c46cd8a542",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "npm": 115
+      },
+      "scopes": {
+        "runtime": 92,
+        "dev": 23
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 42,
+      "details": "security/kitbash.json",
+      "details_sha256": "d74a7c802303505673c62917089e4898a2812d9d2d59ca796f93ca6fc893ad0c"
+    },
+    "assessment": {
+      "level": "exposed",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-jqcg-44mw-7w3h npm:proxy-addr@2.0.7 (exposed)",
+        "worst:GHSA-27r3-jxmh-p828 npm:body-parser@2.3.0 (exposed)",
+        "worst:GHSA-mwp4-54f8-5fhr npm:ip-address@10.2.0 (exposed)"
+      ],
+      "counts": {
+        "exposed": 3,
+        "conditional": 7
+      },
+      "uncounted": 32,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 115,
+      "packages_checked": 115,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "package-lock.json",
+          "status": "scanned",
+          "packages": 115,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 63.1,
-      "raw_total": 63.1,
       "confidence": 0.4,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.75,
@@ -286,16 +513,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 63.1,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "exposed",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -637,5 +861,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:34+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

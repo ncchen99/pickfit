@@ -344,15 +344,13 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-16T01:23:54+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "npm:mongodb-mcp-server (fresh install, 437 packages)"
+      "npm:mongodb-mcp-server (fresh install, 440 packages)"
     ],
-    "packages_checked": 431,
+    "packages_checked": 434,
     "findings_total": 1,
     "advisories_total": 1,
     "findings": [
@@ -366,23 +364,98 @@
         "severity": "HIGH",
         "fixed_in": "6.2.1",
         "summary": "basic-ftp: Quadratic-time CPU denial of service in Client.list() Unix directory-listing parser (RE_LINE backtracking)",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "registry:npm:mongodb-mcp-server",
+        "kev": false,
+        "epss": 0.0037,
+        "fix_published_at": "2026-08-27T19:42:01Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "high_complexity",
+          "denial_of_service",
+          "option:RE_LINE"
+        ],
+        "paths": [
+          "npm:mongodb-mcp-server > mongodb-mcp-server > @mongodb-js/mcp-cli > @mongodb-js/mcp-fetch > @mongodb-js/devtools-proxy-support > pac-proxy-agent > get-uri > basic-ftp"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "registry_resolve",
+      "commit": null,
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "npm": 434
+      },
+      "scopes": {
+        "runtime": 402,
+        "peer": 1,
+        "build": 31
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 3,
+      "details": "security/mongodb-mcp-server.json",
+      "details_sha256": "63c90f3a7b473cb69cd4e52bfc599ee93ec28c2d7843a7e546dfb080f49a5548"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-c475-qrg2-pj4r npm:basic-ftp@5.3.1 (conditional)"
+      ],
+      "counts": {
+        "conditional": 1
+      },
+      "uncounted": 2,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "registry_resolve",
+      "packages_found": 434,
+      "packages_checked": 434,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "registry:npm:mongodb-mcp-server",
+          "status": "scanned",
+          "packages": 440,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 89.9,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.6875,
@@ -402,16 +475,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 89.9,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -856,5 +926,5 @@
     }
   ],
   "first_seen_at": "2026-11-16T01:20:43+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

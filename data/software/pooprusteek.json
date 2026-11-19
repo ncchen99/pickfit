@@ -253,9 +253,7 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -263,8 +261,8 @@
       "Cargo.lock"
     ],
     "packages_checked": 593,
-    "findings_total": 10,
-    "advisories_total": 10,
+    "findings_total": 7,
+    "advisories_total": 7,
     "findings": [
       {
         "package": "crates:wasmtime",
@@ -276,19 +274,21 @@
         "severity": "CRITICAL",
         "fixed_in": "36.0.19",
         "summary": "Wasmtime: Bit-packing in Cranelift compiler causes silent overflow and miscompilation",
-        "malicious": false
-      },
-      {
-        "package": "crates:wasmtime",
-        "version": "27.0.0",
-        "advisory": "GHSA-mghf-wjfp-p5xm",
-        "cves": [
-          "CVE-2026-115893"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "36.0.19",
-        "summary": "Wasmtime: Cranelift backend on aarch64 can jump to incorrect target on large Wasm `br_table` instruction",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00454,
+        "fix_published_at": "2026-10-19T19:05:13Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "pooprusteek > wasmtime"
+        ]
       },
       {
         "package": "crates:wasmtime",
@@ -300,7 +300,24 @@
         "severity": "CRITICAL",
         "fixed_in": "36.0.7",
         "summary": "Wasmtime with Winch compiler backend on aarch64 may allow a sandbox-escaping memory access",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00283,
+        "fix_published_at": "2026-04-09T16:02:48Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "pooprusteek > wasmtime"
+        ]
       },
       {
         "package": "crates:wasmtime",
@@ -312,27 +329,24 @@
         "severity": "CRITICAL",
         "fixed_in": "36.0.7",
         "summary": "Miscompiled guest heap access enables sandbox escape on aarch64 Cranelift",
-        "malicious": false
-      },
-      {
-        "package": "crates:pulldown-cmark",
-        "version": "0.13.4",
-        "advisory": "RUSTSEC-2026-0414",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.13.5",
-        "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
-        "malicious": false
-      },
-      {
-        "package": "crates:pulldown-cmark",
-        "version": "0.13.4",
-        "advisory": "RUSTSEC-2026-0433",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.13.6",
-        "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00324,
+        "fix_published_at": "2026-04-09T16:02:48Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "pooprusteek > wasmtime"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -342,7 +356,23 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "pooprusteek > syntect > plist > quick-xml"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -352,7 +382,31 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
+        ],
+        "paths": [
+          "pooprusteek > syntect > plist > quick-xml"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use NsReader, but other packages depend on quick-xml"
+          ]
+        }
       },
       {
         "package": "crates:quinn-proto",
@@ -362,7 +416,31 @@
         "severity": "HIGH",
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-09-14T10:08:32Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ACK_FREQUENCY"
+        ],
+        "paths": [
+          "pooprusteek > fastembed > hf-hub > reqwest > quinn > quinn-proto"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+          ]
+        }
       },
       {
         "package": "crates:quinn-proto",
@@ -372,23 +450,198 @@
         "severity": "HIGH",
         "fixed_in": "0.11.17",
         "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-08-17T17:32:41Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "pooprusteek > fastembed > hf-hub > reqwest > quinn > quinn-proto"
+        ]
+      },
+      {
+        "package": "crates:wasmtime",
+        "version": "27.0.0",
+        "advisory": "GHSA-mghf-wjfp-p5xm",
+        "cves": [
+          "CVE-2026-115893"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "36.0.19",
+        "summary": "Wasmtime: Cranelift backend on aarch64 can jump to incorrect target on large Wasm `br_table` instruction",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.0099,
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:br_table"
+        ],
+        "paths": [
+          "pooprusteek > wasmtime"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses br_table; only the project depends on wasmtime"
+          ]
+        }
+      },
+      {
+        "package": "crates:pulldown-cmark",
+        "version": "0.13.4",
+        "advisory": "RUSTSEC-2026-0414",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.13.5",
+        "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ENABLE_WIKILINKS"
+        ],
+        "paths": [
+          "pooprusteek > pulldown-cmark"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses ENABLE_WIKILINKS; only the project depends on pulldown-cmark"
+          ]
+        }
+      },
+      {
+        "package": "crates:pulldown-cmark",
+        "version": "0.13.4",
+        "advisory": "RUSTSEC-2026-0433",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.13.6",
+        "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ENABLE_WIKILINKS"
+        ],
+        "paths": [
+          "pooprusteek > pulldown-cmark"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses ENABLE_WIKILINKS; only the project depends on pulldown-cmark"
+          ]
+        }
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "6b7545fda93be9e5aaa6f7e2d319bf37e7ecbbdf",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 593
+      },
+      "scopes": {
+        "runtime": 549,
+        "optional": 44
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 51,
+      "details": "security/pooprusteek.json",
+      "details_sha256": "921437d16e2e5c43c9b33c9ed9b4e420b91e2113c9e427aad1a03dbeca4735fa"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-897f-g5gm-fmxm crates:wasmtime@27.0.0 (conditional)",
+        "worst:GHSA-xx5w-cvp6-jv83 crates:wasmtime@27.0.0 (conditional)",
+        "worst:RUSTSEC-2026-0096 crates:wasmtime@27.0.0 (conditional)"
+      ],
+      "counts": {
+        "conditional": 7,
+        "present_unreachable": 3
+      },
+      "uncounted": 41,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 593,
+      "packages_checked": 593,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 593,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 92.2,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.8125,
@@ -408,16 +661,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 92.2,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -772,5 +1022,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:46+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

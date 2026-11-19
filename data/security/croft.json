@@ -1,0 +1,329 @@
+{
+ "slug": "croft",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "5c5a0712e27dc03a1ebba2089ad10ff52dfb4fec",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 555
+  },
+  "scopes": {
+   "runtime": 540,
+   "optional": 1,
+   "dev": 11,
+   "workspace": 3
+  },
+  "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 7
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:RUSTSEC-2026-0194 crates:quick-xml@0.39.2 (conditional)",
+   "worst:RUSTSEC-2026-0195 crates:quick-xml@0.39.2 (conditional)",
+   "worst:RUSTSEC-2026-0414 crates:pulldown-cmark@0.13.4 (present_unreachable)"
+  ],
+  "counts": {
+   "conditional": 2,
+   "present_unreachable": 2
+  },
+  "uncounted": 3,
+  "assessed_at": "2026-11-20T00:06:03+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 555,
+  "packages_checked": 555,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 555,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/vitali87/croft@5c5a0712e27d",
+  "Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:quick-xml",
+   "version": "0.39.2",
+   "advisory": "RUSTSEC-2026-0194",
+   "severity": "HIGH",
+   "fixed_in": "0.41.0",
+   "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+   "malicious": false,
+   "published": "2026-06-29T12:00:00Z",
+   "modified": "2026-07-02T08:00:03.849273679Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quick-xml@0.39.2",
+   "fix_published_at": "2026-06-29T18:04:43Z",
+   "scope": "runtime",
+   "paths": [
+    "croft-software > quick-xml"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quick-xml",
+   "version": "0.39.2",
+   "advisory": "RUSTSEC-2026-0195",
+   "severity": "HIGH",
+   "fixed_in": "0.41.0",
+   "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+   "malicious": false,
+   "published": "2026-06-29T12:00:00Z",
+   "modified": "2026-07-02T09:00:04.037478193Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quick-xml@0.39.2",
+   "fix_published_at": "2026-06-29T18:04:43Z",
+   "scope": "runtime",
+   "paths": [
+    "croft-software > quick-xml"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:NsReader"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use NsReader, but other packages depend on quick-xml"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:crossbeam-epoch",
+   "version": "0.9.18",
+   "advisory": "RUSTSEC-2026-0204",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.9.20",
+   "summary": "Invalid pointer dereference in `fmt::Pointer` impl for `Atomic` and `Shared` when the underlying pointer is invalid",
+   "malicious": false,
+   "published": "2026-07-06T12:00:00Z",
+   "modified": "2026-07-06T22:30:04.159269138Z",
+   "purl": "pkg:cargo/crossbeam-epoch@0.9.18",
+   "scope": "runtime",
+   "paths": [
+    "croft-software > ignore > crossbeam-deque > crossbeam-epoch"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:fmt::Pointer",
+    "symbol:Atomic",
+    "symbol:Shared"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "src/app/agents_collab.rs:1610: self.status = String::from(\"Shared session link lost; reconnecting\");",
+     "named only in files that do not import crossbeam-epoch"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:ctutils",
+   "version": "0.4.2",
+   "advisory": "RUSTSEC-2026-0385",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.4.4",
+   "summary": "Non-constant-time mask generation and `u128` comparisons",
+   "malicious": false,
+   "published": "2026-10-23T12:00:00Z",
+   "modified": "2026-10-23T08:30:02.389575143Z",
+   "purl": "pkg:cargo/ctutils@0.4.2",
+   "scope": "runtime",
+   "paths": [
+    "croft-software > umya-spreadsheet > hmac > digest > ctutils"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:libsqlite3-sys",
+   "version": "0.38.2",
+   "advisory": "RUSTSEC-2026-0459",
+   "cves": [
+    "CVE-2026-119375"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.39.0",
+   "summary": "`libsqlite3-sys` via C SQLite CVE-2026-119375",
+   "malicious": false,
+   "aliases": [
+    "BIT-sqlite-2026-119375",
+    "CVE-2026-119375",
+    "GHSA-72w2-rjgg-q729",
+    "RUSTSEC-2026-0502"
+   ],
+   "published": "2026-10-30T12:00:00Z",
+   "modified": "2026-11-17T13:41:05.770775012Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/libsqlite3-sys@0.38.2",
+   "scope": "runtime",
+   "paths": [
+    "croft-software > rusqlite > libsqlite3-sys"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00195,
+   "epss_percentile": 0.09275,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:pulldown-cmark",
+   "version": "0.13.4",
+   "advisory": "RUSTSEC-2026-0414",
+   "severity": "HIGH",
+   "fixed_in": "0.13.5",
+   "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
+   "malicious": false,
+   "published": "2026-10-18T12:00:00Z",
+   "modified": "2026-10-28T09:00:02.341043798Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/pulldown-cmark@0.13.4",
+   "scope": "runtime",
+   "paths": [
+    "croft-software > pulldown-cmark"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "option:ENABLE_WIKILINKS"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses ENABLE_WIKILINKS; only the project depends on pulldown-cmark"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": true,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:pulldown-cmark",
+   "version": "0.13.4",
+   "advisory": "RUSTSEC-2026-0433",
+   "severity": "HIGH",
+   "fixed_in": "0.13.6",
+   "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
+   "malicious": false,
+   "published": "2026-10-28T12:00:00Z",
+   "modified": "2026-11-02T11:30:18.315201167Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/pulldown-cmark@0.13.4",
+   "scope": "runtime",
+   "paths": [
+    "croft-software > pulldown-cmark"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "option:ENABLE_WIKILINKS"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses ENABLE_WIKILINKS; only the project depends on pulldown-cmark"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": true,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

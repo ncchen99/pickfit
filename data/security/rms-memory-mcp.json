@@ -1,0 +1,589 @@
+{
+ "slug": "rms-memory-mcp",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "6ca1df2d4eb67aef1efc119ddbaacac68d2802fa",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 809
+  },
+  "scopes": {
+   "runtime": 807,
+   "dev": 2
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 15
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:RUSTSEC-2026-0194 crates:quick-xml@0.26.0 (conditional)",
+   "worst:RUSTSEC-2026-0195 crates:quick-xml@0.26.0 (conditional)",
+   "worst:RUSTSEC-2026-0340 crates:quinn-proto@0.11.16 (conditional)"
+  ],
+  "counts": {
+   "conditional": 4
+  },
+  "uncounted": 11,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 809,
+  "packages_checked": 809,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 809,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/max-ramas/rms-memory-mcp@6ca1df2d4eb6",
+  "Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:quick-xml",
+   "version": "0.26.0",
+   "advisory": "RUSTSEC-2026-0194",
+   "severity": "HIGH",
+   "fixed_in": "0.41.0",
+   "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+   "malicious": false,
+   "published": "2026-06-29T12:00:00Z",
+   "modified": "2026-07-02T08:00:03.849273679Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quick-xml@0.26.0",
+   "fix_published_at": "2026-06-29T18:04:43Z",
+   "scope": "runtime",
+   "paths": [
+    "rms-memory-index > lancedb > lance-testing > pprof > inferno > quick-xml"
+   ],
+   "workspace": "crates/rms-memory-index",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quick-xml",
+   "version": "0.26.0",
+   "advisory": "RUSTSEC-2026-0195",
+   "severity": "HIGH",
+   "fixed_in": "0.41.0",
+   "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+   "malicious": false,
+   "published": "2026-06-29T12:00:00Z",
+   "modified": "2026-07-02T09:00:04.037478193Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quick-xml@0.26.0",
+   "fix_published_at": "2026-06-29T18:04:43Z",
+   "scope": "runtime",
+   "paths": [
+    "rms-memory-index > lancedb > lance-testing > pprof > inferno > quick-xml"
+   ],
+   "workspace": "crates/rms-memory-index",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:NsReader"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use NsReader, but other packages depend on quick-xml"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0340",
+   "severity": "HIGH",
+   "fixed_in": "0.11.18",
+   "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+   "malicious": false,
+   "aliases": [
+    "GHSA-3g6h-r5qx-f6hq"
+   ],
+   "published": "2026-09-14T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.975478256Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "fix_published_at": "2026-09-14T10:08:32Z",
+   "scope": "runtime",
+   "paths": [
+    "rms-memory-index > fastembed > hf-hub > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "crates/rms-memory-index",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "option:ACK_FREQUENCY"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0341",
+   "severity": "HIGH",
+   "fixed_in": "0.11.17",
+   "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
+   "malicious": false,
+   "aliases": [
+    "GHSA-qfwj-vfxf-92j2"
+   ],
+   "published": "2026-08-17T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.969505433Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "fix_published_at": "2026-08-17T17:32:41Z",
+   "scope": "runtime",
+   "paths": [
+    "rms-memory-index > fastembed > hf-hub > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "crates/rms-memory-index",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:crossbeam-epoch",
+   "version": "0.9.18",
+   "advisory": "RUSTSEC-2026-0204",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.9.20",
+   "summary": "Invalid pointer dereference in `fmt::Pointer` impl for `Atomic` and `Shared` when the underlying pointer is invalid",
+   "malicious": false,
+   "published": "2026-07-06T12:00:00Z",
+   "modified": "2026-07-06T22:30:04.159269138Z",
+   "purl": "pkg:cargo/crossbeam-epoch@0.9.18",
+   "scope": "runtime",
+   "paths": [
+    "rms-memory-index > ignore > crossbeam-deque > crossbeam-epoch"
+   ],
+   "workspace": "crates/rms-memory-index",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:fmt::Pointer",
+    "symbol:Atomic",
+    "symbol:Shared"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "crates/rms-memory-index/src/indexer.rs:66: Shared(&'a tokio::sync::Mutex<Indexer>),",
+     "named only in files that do not import crossbeam-epoch"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0338",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.18",
+   "summary": "Remote peer can panic quinn-proto with zero-length STREAM frames during unordered reads",
+   "malicious": false,
+   "aliases": [
+    "GHSA-465w-v9q3-7j98"
+   ],
+   "published": "2026-09-14T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.969514645Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "scope": "runtime",
+   "paths": [
+    "rms-memory-index > fastembed > hf-hub > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "crates/rms-memory-index",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0339",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.17",
+   "summary": "Unbounded growth of pending connection ID retirements in quinn-proto",
+   "malicious": false,
+   "aliases": [
+    "GHSA-hmxj-32vh-65vr"
+   ],
+   "published": "2026-08-17T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.956822776Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "scope": "runtime",
+   "paths": [
+    "rms-memory-index > fastembed > hf-hub > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "crates/rms-memory-index",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0342",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.17",
+   "summary": "Zero-length DATAGRAM frames bypass the receive buffer limit in quinn-proto",
+   "malicious": false,
+   "aliases": [
+    "GHSA-2hv7-gw8g-gpq5"
+   ],
+   "published": "2026-08-17T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.956681478Z",
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "scope": "runtime",
+   "paths": [
+    "rms-memory-index > fastembed > hf-hub > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "crates/rms-memory-index",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0523",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.19",
+   "summary": "MAX_STREAM_DATA frame can open streams beyond the stream limit",
+   "malicious": false,
+   "aliases": [
+    "GHSA-53rm-773f-4q8c"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:04.789912316Z",
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "scope": "runtime",
+   "paths": [
+    "rms-memory-index > fastembed > hf-hub > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "crates/rms-memory-index",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "option:MAX_STREAM_DATA"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use MAX_STREAM_DATA, but other packages depend on quinn-proto"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0524",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.19",
+   "summary": "Long Retry token can panic or exhaust memory in a QUIC client",
+   "malicious": false,
+   "aliases": [
+    "GHSA-wppq-2f6r-wfvm"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:06.127108520Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "scope": "runtime",
+   "paths": [
+    "rms-memory-index > fastembed > hf-hub > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "crates/rms-memory-index",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-udp",
+   "version": "0.5.15",
+   "advisory": "RUSTSEC-2026-0538",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.5.16",
+   "summary": "Receive loop can spin after a truncated datagram",
+   "malicious": false,
+   "aliases": [
+    "GHSA-6pp4-4cxf-xf88"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:08.844283231Z",
+   "purl": "pkg:cargo/quinn-udp@0.5.15",
+   "scope": "runtime",
+   "paths": [
+    "rms-memory-index > fastembed > hf-hub > reqwest > quinn > quinn-udp"
+   ],
+   "workspace": "crates/rms-memory-index",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd",
+   "version": "0.13.3",
+   "advisory": "RUSTSEC-2026-0391",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.13.4",
+   "summary": "Data from an abandoned stream leaks into the next stream on a reused context",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-11-02T09:30:03.590733846Z",
+   "purl": "pkg:cargo/zstd@0.13.3",
+   "scope": "runtime",
+   "paths": [
+    "rms-memory-dialogs > zstd"
+   ],
+   "workspace": "crates/rms-memory-dialogs",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Decoder::with_context",
+    "symbol:Encoder::with_context"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use Decoder::with_context, Encoder::with_context, but other packages depend on zstd"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd-safe",
+   "version": "7.2.4",
+   "advisory": "RUSTSEC-2026-0398",
+   "severity": "UNKNOWN",
+   "fixed_in": "7.4.0",
+   "summary": "`Seekable::decompress` sets a `Vec` length beyond its capacity for offsets past the end",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-11-02T09:30:03.419709171Z",
+   "dos_only": false,
+   "purl": "pkg:cargo/zstd-safe@7.2.4",
+   "scope": "runtime",
+   "paths": [
+    "rms-memory-dialogs > zstd > zstd-safe"
+   ],
+   "workspace": "crates/rms-memory-dialogs",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Seekable::decompress",
+    "symbol:Vec",
+    "symbol:AdvancedSeekable::decompress"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "crates/rms-memory-cli/src/gc.rs:26: let mut to_delete = Vec::new();",
+     "named only in files that do not import zstd-safe"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd-safe",
+   "version": "7.2.4",
+   "advisory": "RUSTSEC-2026-0403",
+   "severity": "UNKNOWN",
+   "fixed_in": "7.4.0",
+   "summary": "Uninitialized memory exposed when streaming decompression of a legacy frame fails",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-11-02T09:30:04.136442771Z",
+   "purl": "pkg:cargo/zstd-safe@7.2.4",
+   "scope": "runtime",
+   "paths": [
+    "rms-memory-dialogs > zstd > zstd-safe"
+   ],
+   "workspace": "crates/rms-memory-dialogs",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:DCtx::decompress_stream"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use DCtx::decompress_stream, but other packages depend on zstd-safe"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd-sys",
+   "version": "2.0.16+zstd.1.5.7",
+   "advisory": "RUSTSEC-2026-0410",
+   "severity": "UNKNOWN",
+   "fixed_in": "2.1.2",
+   "summary": "WebAssembly allocator shim corrupts memory on allocation failure",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-10-26T14:00:05.788985783Z",
+   "purl": "pkg:cargo/zstd-sys@2.0.16%2Bzstd.1.5.7",
+   "scope": "runtime",
+   "paths": [
+    "rms-memory-dialogs > zstd > zstd-safe > zstd-sys"
+   ],
+   "workspace": "crates/rms-memory-dialogs",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

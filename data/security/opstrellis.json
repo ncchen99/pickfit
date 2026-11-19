@@ -1,0 +1,767 @@
+{
+ "slug": "opstrellis",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "d910c326dd347a1d097f077f6f4eba49dbc3a770",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 732,
+   "npm": 297
+  },
+  "scopes": {
+   "runtime": 735,
+   "optional": 13,
+   "platform": 2,
+   "peer": 2,
+   "dev": 277
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 16
+ },
+ "assessment": {
+  "level": "none",
+  "policy_version": "sec.v2",
+  "reasons": [],
+  "counts": {},
+  "uncounted": 16,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 1029,
+  "packages_checked": 1029,
+  "components": [
+   {
+    "ecosystem": "npm",
+    "component": "desktop/package-lock.json",
+    "status": "scanned",
+    "packages": 133,
+    "gaps": []
+   },
+   {
+    "ecosystem": "crates",
+    "component": "desktop/src-tauri/Cargo.lock",
+    "status": "scanned",
+    "packages": 732,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "server/package-lock.json",
+    "status": "scanned",
+    "packages": 211,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/mtr1920/opstrellis@d910c326dd34",
+  "desktop/package-lock.json",
+  "desktop/src-tauri/Cargo.lock",
+  "server/package-lock.json"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:glib",
+   "version": "0.18.5",
+   "advisory": "GHSA-wrw7-89jp-8q8g",
+   "severity": "MODERATE",
+   "fixed_in": "0.20.0",
+   "summary": "Unsoundness in `Iterator` and `DoubleEndedIterator` impls for `glib::VariantStrIter`",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2024-0429"
+   ],
+   "published": "2024-12-23T20:19:24Z",
+   "modified": "2025-10-28T06:29:26.473225Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/glib@0.18.5",
+   "scope": "runtime",
+   "paths": [
+    "opstrellis > gtk > glib"
+   ],
+   "workspace": "desktop/src-tauri",
+   "found_in": "desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Iterator",
+    "symbol:DoubleEndedIterator",
+    "symbol:glib::VariantStrIter"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "desktop/src-tauri/src/backup.rs:1082: fn dict_file(phrases: impl Iterator<Item = String>) -> String {",
+     "named only in files that do not import glib"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.45",
+   "advisory": "GHSA-c8m5-c952-6cm4",
+   "cves": [
+    "CVE-2026-123609"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.23.46",
+   "summary": "Rustls: Session Debug formatting exposes TLS master secrets and resumption PSKs",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123609",
+    "RUSTSEC-2026-0346"
+   ],
+   "published": "2026-10-27T16:08:47Z",
+   "modified": "2026-11-08T10:55:36.514447652Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:H/PR:H/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-212"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.23.45",
+   "scope": "runtime",
+   "paths": [
+    "opstrellis > tauri-plugin-updater > rustls"
+   ],
+   "workspace": "desktop/src-tauri",
+   "found_in": "desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "epss": 0.00101,
+   "epss_percentile": 0.00917,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction",
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@hono/node-server",
+   "version": "2.1.5",
+   "advisory": "GHSA-jpvv-r467-5p4w",
+   "cves": [
+    "CVE-2026-126210"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.1.6",
+   "summary": "@hono/node-server: Backslash in the request path is parsed as a path separator, bypassing path-based access control at a reverse proxy",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-126210"
+   ],
+   "published": "2026-11-12T21:28:02Z",
+   "modified": "2026-11-12T21:45:03.417268669Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-436"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40hono/node-server@2.1.5",
+   "scope": "runtime",
+   "paths": [
+    ". > @hono/node-server"
+   ],
+   "workspace": ".",
+   "found_in": "server/package-lock.json",
+   "kev": false,
+   "epss": 0.00375,
+   "epss_percentile": 0.32162,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:hono",
+   "version": "4.13.13",
+   "advisory": "GHSA-46wx-v44x-9hh2",
+   "cves": [
+    "CVE-2026-126355"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.13.16",
+   "summary": "Hono: `csrf()` does not check requests sent by hyperlink auditing (`text/ping`)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-126355"
+   ],
+   "published": "2026-11-12T23:31:25Z",
+   "modified": "2026-11-12T23:45:03.241008967Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-352"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/hono@4.13.13",
+   "scope": "runtime",
+   "paths": [
+    ". > hono"
+   ],
+   "workspace": ".",
+   "found_in": "server/package-lock.json",
+   "kev": false,
+   "epss": 0.00176,
+   "epss_percentile": 0.0728,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:hono",
+   "version": "4.13.13",
+   "advisory": "GHSA-4h7h-rv7c-7m2v",
+   "cves": [
+    "CVE-2026-126356"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.13.16",
+   "summary": "Hono: `validator('form')` skips validation for `multipart/form-data` requests with extra parameters",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-126356"
+   ],
+   "published": "2026-11-12T23:30:45Z",
+   "modified": "2026-11-12T23:45:03.255833027Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1471",
+    "CWE-20"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/hono@4.13.13",
+   "scope": "runtime",
+   "paths": [
+    ". > hono"
+   ],
+   "workspace": ".",
+   "found_in": "server/package-lock.json",
+   "kev": false,
+   "epss": 0.00392,
+   "epss_percentile": 0.34089,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:hono",
+   "version": "4.13.13",
+   "advisory": "GHSA-4m76-xfj5-7975",
+   "cves": [
+    "CVE-2026-126357"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.13.16",
+   "summary": "Hono: `mount()` and `app.mount()` can forward a path that bypasses middleware scoped inside the mount prefix",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-126357"
+   ],
+   "published": "2026-11-12T23:24:11Z",
+   "modified": "2026-11-12T23:30:03.867783771Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-288"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/hono@4.13.13",
+   "scope": "runtime",
+   "paths": [
+    ". > hono"
+   ],
+   "workspace": ".",
+   "found_in": "server/package-lock.json",
+   "kev": false,
+   "epss": 0.004,
+   "epss_percentile": 0.3495,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:hono",
+   "version": "4.13.13",
+   "advisory": "GHSA-h7mg-cq63-vhpq",
+   "cves": [
+    "CVE-2026-126358"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.13.16",
+   "summary": "Hono: RegExpRouter skips wildcard middleware for some route sets and for paths with an encoded line terminator",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-126358"
+   ],
+   "published": "2026-11-12T23:23:30Z",
+   "modified": "2026-11-12T23:30:03.867508007Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-863"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/hono@4.13.13",
+   "scope": "runtime",
+   "paths": [
+    ". > hono"
+   ],
+   "workspace": ".",
+   "found_in": "server/package-lock.json",
+   "kev": false,
+   "epss": 0.00347,
+   "epss_percentile": 0.28949,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.45",
+   "advisory": "GHSA-h2v8-394m-p7vv",
+   "cves": [
+    "CVE-2026-123610"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.23.46",
+   "summary": "Rustls: Brotli certificate decompression can allocate an attacker-controlled amount of memory up to 1 GiB before authentication.",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123610",
+    "RUSTSEC-2026-0348"
+   ],
+   "published": "2026-10-27T16:08:36Z",
+   "modified": "2026-11-08T10:55:59.261359726Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/rustls@0.23.45",
+   "scope": "runtime",
+   "paths": [
+    "opstrellis > tauri-plugin-updater > rustls"
+   ],
+   "workspace": "desktop/src-tauri",
+   "found_in": "desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "epss": 0.00165,
+   "epss_percentile": 0.0586,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.45",
+   "advisory": "GHSA-vp88-798v-h67f",
+   "cves": [
+    "CVE-2026-123612"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.23.46",
+   "summary": "rustls: ECH rejection can expose buffered application data to authenticated outer server before `ech_required` alert",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123612",
+    "RUSTSEC-2026-0347"
+   ],
+   "published": "2026-10-27T16:08:59Z",
+   "modified": "2026-11-08T10:55:39.094187294Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:L/PR:H/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-200"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.23.45",
+   "scope": "runtime",
+   "paths": [
+    "opstrellis > tauri-plugin-updater > rustls"
+   ],
+   "workspace": "desktop/src-tauri",
+   "found_in": "desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "epss": 0.0011,
+   "epss_percentile": 0.01297,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "high_privileges",
+    "symbol:ech_required"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ech_required, but other packages depend on rustls"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.45",
+   "advisory": "GHSA-w44r-93j7-qv28",
+   "cves": [
+    "CVE-2026-123611"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.23.46",
+   "summary": "rustls: An unauthenticated ServerHello poisons the per-name key-exchange record, so later ClientHellos carry only a classical X25519 share",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123611",
+    "RUSTSEC-2026-0349"
+   ],
+   "published": "2026-10-27T16:08:54Z",
+   "modified": "2026-11-08T10:55:46.312019109Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-757"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.23.45",
+   "scope": "runtime",
+   "paths": [
+    "opstrellis > tauri-plugin-updater > rustls"
+   ],
+   "workspace": "desktop/src-tauri",
+   "found_in": "desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "epss": 0.00188,
+   "epss_percentile": 0.08575,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:hono",
+   "version": "4.13.13",
+   "advisory": "GHSA-3gg2-335m-rxc6",
+   "cves": [
+    "CVE-2026-126359"
+   ],
+   "severity": "LOW",
+   "fixed_in": "4.13.16",
+   "summary": "Hono: `css` helper does not escape a closing tag split between the template and an interpolated value, allowing HTML injection",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-126359"
+   ],
+   "published": "2026-11-12T23:22:36Z",
+   "modified": "2026-11-12T23:30:03.858972167Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/hono@4.13.13",
+   "scope": "runtime",
+   "paths": [
+    ". > hono"
+   ],
+   "workspace": ".",
+   "found_in": "server/package-lock.json",
+   "kev": false,
+   "epss": 0.00262,
+   "epss_percentile": 0.18176,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:libsqlite3-sys",
+   "version": "0.35.0",
+   "advisory": "RUSTSEC-2026-0459",
+   "cves": [
+    "CVE-2026-119375"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.39.0",
+   "summary": "`libsqlite3-sys` via C SQLite CVE-2026-119375",
+   "malicious": false,
+   "aliases": [
+    "BIT-sqlite-2026-119375",
+    "CVE-2026-119375",
+    "GHSA-72w2-rjgg-q729",
+    "RUSTSEC-2026-0502"
+   ],
+   "published": "2026-10-30T12:00:00Z",
+   "modified": "2026-11-17T13:41:05.770775012Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/libsqlite3-sys@0.35.0",
+   "scope": "runtime",
+   "paths": [
+    "opstrellis > rusqlite > libsqlite3-sys"
+   ],
+   "workspace": "desktop/src-tauri",
+   "found_in": "desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "epss": 0.00195,
+   "epss_percentile": 0.09275,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls-webpki",
+   "version": "0.103.15",
+   "advisory": "RUSTSEC-2026-0382",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.103.16",
+   "summary": "Certificate verification may accept distrusted intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0381",
+    "RUSTSEC-2026-0383"
+   ],
+   "published": "2026-10-20T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/rustls-webpki@0.103.15",
+   "scope": "runtime",
+   "paths": [
+    "opstrellis > tauri-plugin-updater > rustls > rustls-webpki"
+   ],
+   "workspace": "desktop/src-tauri",
+   "found_in": "desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:webpki-roots",
+   "version": "1.0.9",
+   "advisory": "RUSTSEC-2026-0381",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "1.0.10",
+   "summary": "Bundled root certificates allow trust in distrusted emSign intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0382",
+    "RUSTSEC-2026-0383"
+   ],
+   "published": "2026-10-19T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/webpki-roots@1.0.9",
+   "scope": "runtime",
+   "paths": [
+    "opstrellis > sherpa-onnx > sherpa-onnx-sys > ureq > webpki-roots > webpki-roots"
+   ],
+   "workspace": "desktop/src-tauri",
+   "found_in": "desktop/src-tauri/Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@hono/node-server",
+   "version": "2.1.5",
+   "advisory": "GHSA-qv5m-9pm6-hqp3",
+   "cves": [
+    "CVE-2026-126343"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.1.6",
+   "summary": "@hono/node-server: Unhandled `ECONNRESET` on the socket during an asynchronous WebSocket upgrade crashes the process",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-126343"
+   ],
+   "published": "2026-11-12T21:32:48Z",
+   "modified": "2026-11-12T21:45:03.406890390Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/%40hono/node-server@2.1.5",
+   "scope": "runtime",
+   "paths": [
+    ". > @hono/node-server"
+   ],
+   "workspace": ".",
+   "found_in": "server/package-lock.json",
+   "kev": false,
+   "epss": 0.00453,
+   "epss_percentile": 0.40096,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:ECONNRESET"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses ECONNRESET; only the project depends on @hono/node-server"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:esbuild",
+   "version": "0.18.20",
+   "advisory": "GHSA-67mh-4wv8-2f99",
+   "severity": "MODERATE",
+   "fixed_in": "0.25.0",
+   "summary": "esbuild enables any website to send any requests to the development server and read the response",
+   "malicious": false,
+   "published": "2025-02-10T17:48:07Z",
+   "modified": "2026-09-10T03:50:22.418128505Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-346"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/esbuild@0.18.20",
+   "scope": "dev",
+   "paths": [
+    ". > drizzle-kit > @esbuild-kit/esm-loader > @esbuild-kit/core-utils > esbuild"
+   ],
+   "workspace": ".",
+   "found_in": "server/package-lock.json",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

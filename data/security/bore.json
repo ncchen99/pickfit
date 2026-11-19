@@ -1,0 +1,326 @@
+{
+ "slug": "bore",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "00a735a89917642df62d84336a90d9476fa175b5",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 125
+  },
+  "scopes": {
+   "runtime": 117,
+   "dev": 8
+  },
+  "advisories_fetched_at": "2026-11-20T00:58:54+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 6
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-r8w9-5wcg-vfj7 crates:mio@0.8.6 (conditional)"
+  ],
+  "counts": {
+   "conditional": 1
+  },
+  "uncounted": 5,
+  "assessed_at": "2026-11-20T00:58:54+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 125,
+  "packages_checked": 125,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 125,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/ekzhang/bore@00a735a89917",
+  "Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:mio",
+   "version": "0.8.6",
+   "advisory": "GHSA-r8w9-5wcg-vfj7",
+   "cves": [
+    "CVE-2024-27308"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.8.11",
+   "summary": "Mio's tokens for named pipes may be delivered after deregistration",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-27308",
+    "RUSTSEC-2024-0019"
+   ],
+   "published": "2024-03-04T20:44:35Z",
+   "modified": "2026-09-10T03:50:10.693636388Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-416",
+    "CWE-672"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/mio@0.8.6",
+   "fix_published_at": "2024-03-01T20:46:43Z",
+   "scope": "runtime",
+   "paths": [
+    "bore-cli > tokio > mio"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00881,
+   "epss_percentile": 0.59893,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:anstream",
+   "version": "0.3.1",
+   "advisory": "GHSA-2rxc-gjrp-vjhx",
+   "severity": "MODERATE",
+   "fixed_in": "0.6.8",
+   "summary": "Unsoundness in anstream",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2024-0404"
+   ],
+   "published": "2024-12-04T18:31:31Z",
+   "modified": "2026-09-10T03:50:21.162155425Z",
+   "purl": "pkg:cargo/anstream@0.3.1",
+   "scope": "runtime",
+   "paths": [
+    "bore-cli > clap > clap_builder > anstream"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:bytes",
+   "version": "1.4.0",
+   "advisory": "GHSA-434x-w66g-qw3r",
+   "cves": [
+    "CVE-2026-25541"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.11.1",
+   "summary": "bytes has integer overflow in BytesMut::reserve",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-25541",
+    "RUSTSEC-2026-0007"
+   ],
+   "published": "2026-02-03T19:17:46Z",
+   "modified": "2026-09-10T03:50:33.995841351Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:P",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-680"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/bytes@1.4.0",
+   "scope": "runtime",
+   "paths": [
+    "bore-cli > tokio > bytes"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00601,
+   "epss_percentile": 0.49581,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "denial_of_service",
+    "symbol:BytesMut::reserve"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use BytesMut::reserve, but other packages depend on bytes"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustix",
+   "version": "0.37.15",
+   "advisory": "GHSA-c827-hfw6-qwvm",
+   "cves": [
+    "CVE-2024-43806"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.37.25",
+   "summary": "rustix's `rustix::fs::Dir` iterator with the `linux_raw` backend can cause memory explosion",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-43806"
+   ],
+   "published": "2023-10-18T18:27:47Z",
+   "modified": "2026-09-10T03:50:03.698097046Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/rustix@0.37.15",
+   "scope": "runtime",
+   "paths": [
+    "bore-cli > clap > clap_builder > anstream > is-terminal > rustix"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.0048,
+   "epss_percentile": 0.42204,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:rustix::fs::Dir",
+    "symbol:linux_raw"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use rustix::fs::Dir, linux_raw, but other packages depend on rustix"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:tokio",
+   "version": "1.28.0",
+   "advisory": "GHSA-rr8g-9fpq-6wmg",
+   "severity": "LOW",
+   "fixed_in": "1.38.2",
+   "summary": "Tokio broadcast channel calls clone in parallel, but does not require `Sync`",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2025-0023"
+   ],
+   "published": "2025-04-07T21:12:50Z",
+   "modified": "2026-09-10T03:50:24.081979053Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N/E:U",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-664"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/tokio@1.28.0",
+   "scope": "runtime",
+   "paths": [
+    "bore-cli > tokio"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Sync"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use Sync, but other packages depend on tokio"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:tracing-subscriber",
+   "version": "0.3.19",
+   "advisory": "GHSA-xwfj-jgwm-7wp5",
+   "cves": [
+    "CVE-2025-58160"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.3.20",
+   "summary": "Tracing logging user input may result in poisoning logs with ANSI escape sequences",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-58160",
+    "RUSTSEC-2025-0055"
+   ],
+   "published": "2025-08-29T20:33:56Z",
+   "modified": "2026-09-10T03:50:27.766863705Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-150"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/tracing-subscriber@0.3.19",
+   "scope": "runtime",
+   "paths": [
+    "bore-cli > tracing-subscriber"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00372,
+   "epss_percentile": 0.3185,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

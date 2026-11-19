@@ -1,0 +1,104 @@
+{
+ "slug": "nine",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "658d53ef93f8c36a424f5315325f4b756e433e24",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "go": 54,
+   "npm": 276
+  },
+  "scopes": {
+   "runtime": 61,
+   "peer": 1,
+   "dev": 268
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 1
+ },
+ "assessment": {
+  "level": "none",
+  "policy_version": "sec.v2",
+  "reasons": [],
+  "counts": {},
+  "uncounted": 1,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 330,
+  "packages_checked": 330,
+  "components": [
+   {
+    "ecosystem": "go",
+    "component": "go.mod",
+    "status": "scanned",
+    "packages": 54,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "web/package-lock.json",
+    "status": "scanned",
+    "packages": 276,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/djordlucas/nine@658d53ef93f8",
+  "go.mod",
+  "web/package-lock.json"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "go:github.com/mark3labs/mcp-go",
+   "version": "v1.5.0",
+   "advisory": "GO-2026-6911",
+   "severity": "UNKNOWN",
+   "summary": "SSRF and credential leak via unvalidated Location header in github.com/mark3labs/mcp-go",
+   "malicious": false,
+   "published": "2026-11-05T22:55:15Z",
+   "modified": "2026-11-05T23:15:16.971949313Z",
+   "purl": "pkg:golang/github.com/mark3labs/mcp-go@v1.5.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/mark3labs/mcp-go"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:NewStreamableHTTP",
+    "symbol:StreamableHTTP.Close",
+    "symbol:StreamableHTTP.SendNotification"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "vendor/modules.txt does not list github.com/mark3labs/mcp-go/client/transport"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2",
+   "fixed_in": null
+  }
+ ]
+}

@@ -104,13 +104,11 @@
     "url": "https://microtone.cc"
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/Microtone-Project/Microtone.js@27bda472203c",
+      "github.com/Microtone-Project/Microtone.js@bcd547f6552c",
       "desktop/Cargo.lock"
     ],
     "packages_checked": 517,
@@ -127,7 +125,21 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "desktop",
+        "found_in": "desktop/Cargo.lock",
+        "kev": false,
+        "epss": 0.0032,
+        "fix_published_at": "2026-10-17T18:45:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "microtone > tauri-plugin-updater > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -137,7 +149,31 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "desktop",
+        "found_in": "desktop/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:ZipStreamReader::extract",
+          "symbol:ZipArchive::extract"
+        ],
+        "paths": [
+          "microtone > tauri-plugin-updater > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+          ]
+        }
       },
       {
         "package": "crates:zip",
@@ -149,7 +185,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "desktop",
+        "found_in": "desktop/Cargo.lock",
+        "kev": false,
+        "epss": 0.00461,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "microtone > tauri-plugin-updater > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -159,24 +212,98 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "desktop",
+        "found_in": "desktop/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
+        ],
+        "paths": [
+          "microtone > tauri-plugin-updater > zip"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "bcd547f6552cf0b7a8d6b3a93dc4a7a0c4c5b473",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 517
+      },
+      "scopes": {
+        "runtime": 517
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 13,
+      "details": "security/microtone.json",
+      "details_sha256": "3e423083455de950443cfe1ea24b5b6262b4415cb3d24ee1adaf1100f5c7e0ad"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-m665-v7pm-7grj crates:zip@4.6.1 (conditional)",
+        "worst:RUSTSEC-2026-0369 crates:zip@4.6.1 (conditional)",
+        "worst:GHSA-q7v9-x93c-xqv3 crates:zip@4.6.1 (conditional)"
+      ],
+      "counts": {
+        "conditional": 4
+      },
+      "uncounted": 9,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 517,
+      "packages_checked": 517,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "desktop/Cargo.lock",
+          "status": "scanned",
+          "packages": 517,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "web.v1",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": null,
       "confidence": 0.0,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
+        "engineering_hygiene": {
+          "score": null,
+          "weight": 0.0
+        },
         "sandbox_verification": {
           "score": null,
-          "weight": 50.0
+          "weight": 50
         },
-        "install_docs": {
+        "responsiveness": {
           "score": null,
           "weight": 0.0
         },
@@ -184,26 +311,22 @@
           "score": null,
           "weight": 0.0
         },
-        "engineering_hygiene": {
-          "score": null,
-          "weight": 0.0
-        },
-        "responsiveness": {
-          "score": null,
-          "weight": 0.0
-        },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
+          "weight": 10
+        },
+        "install_docs": {
+          "score": null,
+          "weight": 0.0
         },
         "browser_facts": {
           "score": null,
-          "weight": 40.0
+          "weight": 40
         }
       },
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -445,5 +568,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T23:46:31+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

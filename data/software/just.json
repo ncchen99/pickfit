@@ -270,19 +270,17 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-05T03:16:33+08:00",
-    "status": "vulnerable",
+    "version": "sec.v2",
+    "status": "clean",
     "unchecked_reason": null,
     "sources": [
       "pypi:rust-just (fresh install, 1 packages)",
-      "github.com/casey/just@7b7b51bec935",
+      "github.com/casey/just@62784c2a6e16",
       "Cargo.lock"
     ],
     "packages_checked": 153,
-    "findings_total": 2,
-    "advisories_total": 2,
+    "findings_total": 0,
+    "advisories_total": 0,
     "findings": [
       {
         "package": "crates:pulldown-cmark",
@@ -292,7 +290,30 @@
         "severity": "HIGH",
         "fixed_in": "0.13.5",
         "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
-        "malicious": false
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ENABLE_WIKILINKS"
+        ],
+        "paths": [
+          "just > pulldown-cmark"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses ENABLE_WIKILINKS; only the project depends on pulldown-cmark"
+          ]
+        }
       },
       {
         "package": "crates:pulldown-cmark",
@@ -302,23 +323,113 @@
         "severity": "HIGH",
         "fixed_in": "0.13.6",
         "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
-        "malicious": false
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ENABLE_WIKILINKS"
+        ],
+        "paths": [
+          "just > pulldown-cmark"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses ENABLE_WIKILINKS; only the project depends on pulldown-cmark"
+          ]
+        }
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "62784c2a6e169b8ca5f32bd69d5cfeb1d6b5e1fe",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 152,
+        "pypi": 1
+      },
+      "scopes": {
+        "runtime": 148,
+        "optional": 1,
+        "dev": 4
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 2,
+      "details": "security/just.json",
+      "details_sha256": "f6316516111e6903814bbcc1940e6f0b7dbb581893eace13a17bc2768b1d96c9"
+    },
+    "assessment": {
+      "level": "present_unreachable",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0414 crates:pulldown-cmark@0.13.4 (present_unreachable)",
+        "worst:RUSTSEC-2026-0433 crates:pulldown-cmark@0.13.4 (present_unreachable)"
+      ],
+      "counts": {
+        "present_unreachable": 2
+      },
+      "uncounted": 0,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 153,
+      "packages_checked": 153,
+      "components": [
+        {
+          "ecosystem": "pypi",
+          "component": "registry:pypi:rust-just",
+          "status": "partial",
+          "packages": 1,
+          "gaps": [
+            "binary.prebuilt_package"
+          ]
+        },
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 152,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
-      "total": 79.0,
-      "raw_total": 88.5,
+      "total": 88.5,
       "confidence": 0.9,
-      "cap": 79,
-      "cap_reason": "known_vulnerability",
+      "cap": null,
+      "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -338,17 +449,14 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 88.5,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
-        "effect": "capped",
+        "level": "present_unreachable",
+        "basis": "assessment",
+        "effect": "none",
         "deduction": 0.0
       }
     },
@@ -787,5 +895,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:58+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

@@ -283,55 +283,56 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/digitaldrywood/detent@c12741656ac5",
+      "github.com/digitaldrywood/detent@ea8c87bf2a4e",
       "go.mod",
+      "package-lock.json",
       "web/conversation/package-lock.json"
     ],
-    "packages_checked": 490,
-    "findings_total": 14,
-    "advisories_total": 14,
+    "packages_checked": 750,
+    "findings_total": 7,
+    "advisories_total": 7,
     "findings": [
       {
         "package": "go:github.com/labstack/echo/v4",
         "version": "v4.15.1",
-        "advisory": "GHSA-cxf3-9h37-7rr8",
+        "advisory": "GHSA-375p-5qhx-8wq4",
         "cves": [
-          "CVE-2026-118264"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "4.16.1",
-        "summary": "Echo: Rejected WebSocket upgrades can bypass Echo route-level access controls",
-        "malicious": false
-      },
-      {
-        "package": "go:github.com/getkin/kin-openapi",
-        "version": "v0.146.0",
-        "advisory": "GHSA-23vg-4cjm-66q5",
-        "cves": [
-          "CVE-2026-100351"
+          "CVE-2026-118650"
         ],
         "severity": "HIGH",
-        "fixed_in": "0.147.0",
-        "summary": "kin-openapi: ValidationHandler security-requirement bypass via encoded-path operation confusion",
-        "malicious": false
-      },
-      {
-        "package": "go:github.com/getkin/kin-openapi",
-        "version": "v0.146.0",
-        "advisory": "GHSA-g8cf-rcjf-c8cf",
-        "cves": [
-          "CVE-2026-100354"
+        "fixed_in": "4.16.0",
+        "summary": "Echo's middleware.Static: `%2F`-encoded path bypasses route/group middleware guarding a statically-served path",
+        "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "kev": false,
+        "epss": 0.00396,
+        "fix_published_at": "2026-09-27T22:45:34Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:MethodOverride",
+          "symbol:MethodOverrideWithConfig",
+          "symbol:Proxy"
         ],
-        "severity": "HIGH",
-        "fixed_in": "0.149.0",
-        "summary": "kin-openapi: Uncontrolled Recursion on Circular allOf/anyOf/oneOf Schemas Causes Fatal Process Crash",
-        "malicious": false
+        "paths": [
+          "go.mod > github.com/labstack/echo/v4"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "internal/artifact/http.go:54: func (h *HTTPServer) ServeHTTP(w http.ResponseWriter, r *http.Request) { h.echo.ServeHTTP(w, r) }"
+          ]
+        }
       },
       {
         "package": "go:github.com/getkin/kin-openapi",
@@ -343,19 +344,24 @@
         "severity": "HIGH",
         "fixed_in": "0.148.0",
         "summary": "kin-openapi: YAML NaN/Inf Values Bypass Built-in Guards and Panic via OAS 3.1 Validation Path",
-        "malicious": false
-      },
-      {
-        "package": "go:github.com/getkin/kin-openapi",
-        "version": "v0.146.0",
-        "advisory": "GHSA-vrcc-3ch7-hppw",
-        "cves": [
-          "CVE-2026-100353"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "kev": false,
+        "epss": 0.00595,
+        "fix_published_at": "2026-08-27T10:09:50Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "0.149.0",
-        "summary": "kin-openapi: Incomplete Fix for GHSA-p6wj-qrr4-pgh5: Three Unpatched nil-Items Panic Paths in openapi3filter",
-        "malicious": false
+        "paths": [
+          "go.mod > github.com/getkin/kin-openapi"
+        ]
       },
       {
         "package": "go:github.com/go-jose/go-jose/v4",
@@ -367,55 +373,24 @@
         "severity": "HIGH",
         "fixed_in": "4.1.6",
         "summary": "Go JOSE: DoS when parsing JWKs that contain RSA keys",
-        "malicious": false
-      },
-      {
-        "package": "go:github.com/labstack/echo/v4",
-        "version": "v4.15.1",
-        "advisory": "GHSA-375p-5qhx-8wq4",
-        "cves": [
-          "CVE-2026-118650"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "kev": false,
+        "epss": 0.00489,
+        "fix_published_at": "2026-10-14T22:46:21Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "4.16.0",
-        "summary": "Echo's middleware.Static: `%2F`-encoded path bypasses route/group middleware guarding a statically-served path",
-        "malicious": false
-      },
-      {
-        "package": "go:github.com/labstack/echo/v4",
-        "version": "v4.15.1",
-        "advisory": "GHSA-9969-6676-49h5",
-        "cves": [
-          "CVE-2026-118262"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.16.1",
-        "summary": "Echo: WebSocket proxy can retain connections and handlers after client disconnect",
-        "malicious": false
-      },
-      {
-        "package": "go:github.com/labstack/echo/v4",
-        "version": "v4.15.1",
-        "advisory": "GHSA-f48p-c9v4-h7xv",
-        "cves": [
-          "CVE-2026-118260"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.16.1",
-        "summary": "Echo: BodyDump captures request and response bodies without size limits in v4",
-        "malicious": false
-      },
-      {
-        "package": "go:github.com/labstack/echo/v4",
-        "version": "v4.15.1",
-        "advisory": "GHSA-h7wr-284f-5qvc",
-        "cves": [
-          "CVE-2026-118261"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.16.1",
-        "summary": "Echo: Decompress permits unbounded gzip expansion in v4",
-        "malicious": false
+        "paths": [
+          "go.mod > github.com/go-jose/go-jose/v4"
+        ]
       },
       {
         "package": "go:github.com/labstack/echo/v4",
@@ -427,7 +402,34 @@
         "severity": "HIGH",
         "fixed_in": "4.15.3",
         "summary": "Echo: Encoded slash (%2F) bypasses route-level protection and exposes static files",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "kev": false,
+        "epss": 0.00519,
+        "fix_published_at": "2026-06-14T16:16:56Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:Echo.Static",
+          "symbol:Echo.StaticFS",
+          "symbol:Group.Static"
+        ],
+        "paths": [
+          "go.mod > github.com/labstack/echo/v4"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "internal/artifact/http.go:16: \"github.com/labstack/echo/v4\"",
+            "no call to Echo.Static, Echo.StaticFS, Group.Static found"
+          ]
+        }
       },
       {
         "package": "npm:seroval",
@@ -439,7 +441,21 @@
         "severity": "HIGH",
         "fixed_in": "1.6.8",
         "summary": "Seroval: Deserialization invokes attacker-chosen callables: AsyncIteratorFactoryInstance calls source.on(listener) without type check",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web/conversation/package-lock.json",
+        "kev": false,
+        "epss": 0.00342,
+        "fix_published_at": "2026-09-29T05:57:53Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          ". > @tanstack/react-router > @tanstack/router-core > seroval"
+        ]
       },
       {
         "package": "npm:seroval",
@@ -451,7 +467,24 @@
         "severity": "HIGH",
         "fixed_in": "1.6.8",
         "summary": "Seroval: fromJSON deserializer trusts node-supplied array length and sequence doneAt (unauthenticated event-loop DoS)",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web/conversation/package-lock.json",
+        "kev": false,
+        "epss": 0.00451,
+        "fix_published_at": "2026-09-29T05:57:53Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > @tanstack/react-router > @tanstack/router-core > seroval"
+        ]
       },
       {
         "package": "npm:seroval",
@@ -463,23 +496,394 @@
         "severity": "HIGH",
         "fixed_in": "1.6.8",
         "summary": "Seroval `fromJSON`/`fromCrossJSON` denial of service via unvalidated array node length",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web/conversation/package-lock.json",
+        "kev": false,
+        "epss": 0.00365,
+        "fix_published_at": "2026-09-29T05:57:53Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:fromJSON",
+          "symbol:fromCrossJSON"
+        ],
+        "paths": [
+          ". > @tanstack/react-router > @tanstack/router-core > seroval"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use fromJSON, fromCrossJSON, but other packages depend on seroval"
+          ]
+        }
+      },
+      {
+        "package": "go:github.com/labstack/echo/v4",
+        "version": "v4.15.1",
+        "advisory": "GHSA-cxf3-9h37-7rr8",
+        "cves": [
+          "CVE-2026-118264"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "4.16.1",
+        "summary": "Echo: Rejected WebSocket upgrades can bypass Echo route-level access controls",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "kev": false,
+        "epss": 0.0043,
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity",
+          "symbol:BodyDump",
+          "symbol:BodyDumpWithConfig",
+          "symbol:Decompress"
+        ],
+        "paths": [
+          "go.mod > github.com/labstack/echo/v4"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no .go file imports github.com/labstack/echo/v4/middleware, github.com/labstack/echo/v5/middleware, github.com/labstack/echo/v5; go.mod requires github.com/labstack/echo/v4 directly"
+          ]
+        }
+      },
+      {
+        "package": "go:github.com/getkin/kin-openapi",
+        "version": "v0.146.0",
+        "advisory": "GHSA-23vg-4cjm-66q5",
+        "cves": [
+          "CVE-2026-100351"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.147.0",
+        "summary": "kin-openapi: ValidationHandler security-requirement bypass via encoded-path operation confusion",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "kev": false,
+        "epss": 0.00488,
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity",
+          "symbol:ValidationHandler.ServeHTTP",
+          "symbol:ValidationHandler.validateRequest"
+        ],
+        "paths": [
+          "go.mod > github.com/getkin/kin-openapi"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no .go file imports github.com/getkin/kin-openapi/openapi3filter; go.mod requires github.com/getkin/kin-openapi directly"
+          ]
+        }
+      },
+      {
+        "package": "go:github.com/getkin/kin-openapi",
+        "version": "v0.146.0",
+        "advisory": "GHSA-g8cf-rcjf-c8cf",
+        "cves": [
+          "CVE-2026-100354"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.149.0",
+        "summary": "kin-openapi: Uncontrolled Recursion on Circular allOf/anyOf/oneOf Schemas Causes Fatal Process Crash",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "kev": false,
+        "epss": 0.00435,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:Callback.Validate",
+          "symbol:CallbackRef.Validate",
+          "symbol:Components.Validate"
+        ],
+        "paths": [
+          "go.mod > github.com/getkin/kin-openapi"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no .go file imports github.com/getkin/kin-openapi/openapi3, github.com/getkin/kin-openapi/openapi3filter; go.mod requires github.com/getkin/kin-openapi directly"
+          ]
+        }
+      },
+      {
+        "package": "go:github.com/getkin/kin-openapi",
+        "version": "v0.146.0",
+        "advisory": "GHSA-vrcc-3ch7-hppw",
+        "cves": [
+          "CVE-2026-100353"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.149.0",
+        "summary": "kin-openapi: Incomplete Fix for GHSA-p6wj-qrr4-pgh5: Three Unpatched nil-Items Panic Paths in openapi3filter",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "kev": false,
+        "epss": 0.00335,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:MultipartBodyDecoder",
+          "symbol:UrlencodedBodyDecoder",
+          "symbol:ValidateParameter"
+        ],
+        "paths": [
+          "go.mod > github.com/getkin/kin-openapi"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no .go file imports github.com/getkin/kin-openapi/openapi3filter; go.mod requires github.com/getkin/kin-openapi directly"
+          ]
+        }
+      },
+      {
+        "package": "go:github.com/labstack/echo/v4",
+        "version": "v4.15.1",
+        "advisory": "GHSA-9969-6676-49h5",
+        "cves": [
+          "CVE-2026-118262"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.16.1",
+        "summary": "Echo: WebSocket proxy can retain connections and handlers after client disconnect",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "kev": false,
+        "epss": 0.00302,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "high_complexity",
+          "denial_of_service",
+          "symbol:BodyDump",
+          "symbol:BodyDumpWithConfig",
+          "symbol:Decompress"
+        ],
+        "paths": [
+          "go.mod > github.com/labstack/echo/v4"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no .go file imports github.com/labstack/echo/v4/middleware, github.com/labstack/echo/v5, github.com/labstack/echo/v5/middleware; go.mod requires github.com/labstack/echo/v4 directly"
+          ]
+        }
+      },
+      {
+        "package": "go:github.com/labstack/echo/v4",
+        "version": "v4.15.1",
+        "advisory": "GHSA-f48p-c9v4-h7xv",
+        "cves": [
+          "CVE-2026-118260"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.16.1",
+        "summary": "Echo: BodyDump captures request and response bodies without size limits in v4",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "kev": false,
+        "epss": 0.00372,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "high_complexity",
+          "denial_of_service",
+          "symbol:BodyDump",
+          "symbol:BodyDumpWithConfig",
+          "symbol:Decompress"
+        ],
+        "paths": [
+          "go.mod > github.com/labstack/echo/v4"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no .go file imports github.com/labstack/echo/v4/middleware; go.mod requires github.com/labstack/echo/v4 directly"
+          ]
+        }
+      },
+      {
+        "package": "go:github.com/labstack/echo/v4",
+        "version": "v4.15.1",
+        "advisory": "GHSA-h7wr-284f-5qvc",
+        "cves": [
+          "CVE-2026-118261"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.16.1",
+        "summary": "Echo: Decompress permits unbounded gzip expansion in v4",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "kev": false,
+        "epss": 0.00372,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "high_complexity",
+          "denial_of_service",
+          "symbol:BodyDump",
+          "symbol:BodyDumpWithConfig",
+          "symbol:Decompress"
+        ],
+        "paths": [
+          "go.mod > github.com/labstack/echo/v4"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no .go file imports github.com/labstack/echo/v4/middleware; go.mod requires github.com/labstack/echo/v4 directly"
+          ]
+        }
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "ea8c87bf2a4e31e928216a5b964882cce258c976",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "go": 112,
+        "npm": 638
+      },
+      "scopes": {
+        "runtime": 476,
+        "platform": 4,
+        "peer": 7,
+        "dev": 263
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 45,
+      "details": "security/detent.json",
+      "details_sha256": "f0eb559f26418967e13e9d15099fb03953651152340ae1f214c55717843257c5"
+    },
+    "assessment": {
+      "level": "exposed",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-375p-5qhx-8wq4 go:github.com/labstack/echo/v4@v4.15.1 (exposed)",
+        "worst:GHSA-rj39-cv6w-8wv7 go:github.com/getkin/kin-openapi@v0.146.0 (conditional)",
+        "worst:GHSA-mgcc-cww5-fp2q go:github.com/go-jose/go-jose/v4@v4.1.4 (conditional)"
+      ],
+      "counts": {
+        "exposed": 1,
+        "conditional": 6,
+        "present_unreachable": 7,
+        "not_shipped": 5
+      },
+      "uncounted": 26,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 750,
+      "packages_checked": 750,
+      "components": [
+        {
+          "ecosystem": "go",
+          "component": "go.mod",
+          "status": "scanned",
+          "packages": 112,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "package-lock.json",
+          "status": "scanned",
+          "packages": 73,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "web/conversation/package-lock.json",
+          "status": "scanned",
+          "packages": 594,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 82.7,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -499,16 +903,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 82.7,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "exposed",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -947,5 +1348,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

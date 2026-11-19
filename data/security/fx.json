@@ -1,0 +1,441 @@
+{
+ "slug": "fx",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "5d57637b00f4329b3cd563330e159d181e4ead85",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "go": 36
+  },
+  "scopes": {
+   "runtime": 36
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 8
+ },
+ "assessment": {
+  "level": "none",
+  "policy_version": "sec.v2",
+  "reasons": [],
+  "counts": {},
+  "uncounted": 8,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 36,
+  "packages_checked": 36,
+  "components": [
+   {
+    "ecosystem": "go",
+    "component": "go.mod",
+    "status": "scanned",
+    "packages": 36,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/antonmedv/fx@5d57637b00f4",
+  "go.mod"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.55.0",
+   "advisory": "GO-2026-6860",
+   "cves": [
+    "CVE-2026-78661"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.62.0",
+   "summary": "Avoid quadratic complexity when coalescing text nodes in html in golang.org/x/net",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-78661"
+   ],
+   "published": "2026-10-27T21:16:18Z",
+   "modified": "2026-10-27T21:30:04.890809062Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/net@v0.55.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/net"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00409,
+   "epss_percentile": 0.35903,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Parse",
+    "symbol:ParseFragment",
+    "symbol:ParseFragmentWithOptions"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "internal/html/html.go:28: doc, err := nethtml.Parse(bytes.NewReader(in))"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.55.0",
+   "advisory": "GO-2026-6866",
+   "cves": [
+    "CVE-2026-97045"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.62.0",
+   "summary": "Check all ancestor namespace transitions when rendering raw text in html in golang.org/x/net",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-97045"
+   ],
+   "published": "2026-10-27T21:16:18Z",
+   "modified": "2026-10-27T21:45:08.978077289Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.55.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/net"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00267,
+   "epss_percentile": 0.19116,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Render",
+    "symbol:childTextNodesAreLiteral"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "unknown",
+    "evidence": [
+     "internal/html/html.go:8: nethtml \"golang.org/x/net/html\"",
+     "no call to Render, childTextNodesAreLiteral found"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.55.0",
+   "advisory": "GO-2026-5942",
+   "cves": [
+    "CVE-2026-46600"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.56.0",
+   "summary": "Parsing an invalid SVCB or HTTPS RR can panic in golang.org/x/net/dns/dnsmessage",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-46600",
+    "CVE-2026-46600"
+   ],
+   "published": "2026-07-14T17:29:16Z",
+   "modified": "2026-08-17T12:25:32.471119200Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/net@v0.55.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/net"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00549,
+   "epss_percentile": 0.46761,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:LookupCNAME",
+    "symbol:Resolver.LookupCNAME",
+    "symbol:cgoResSearch"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports net, golang.org/x/net/dns/dnsmessage; go.mod requires golang.org/x/net directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.55.0",
+   "advisory": "GO-2026-6603",
+   "cves": [
+    "CVE-2026-78659"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "HTTP/2 server memory exhaustion due to Trailer headers in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-78659",
+    "CVE-2026-78659"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:13.462737073Z",
+   "dos_only": false,
+   "purl": "pkg:golang/golang.org/x/net@v0.55.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/net"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00866,
+   "epss_percentile": 0.59439,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:CanonicalHeaderKey",
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports net/http, net/http/internal/http2, golang.org/x/net/http2; go.mod requires golang.org/x/net directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.55.0",
+   "advisory": "GO-2026-6610",
+   "cves": [
+    "CVE-2026-78660"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "HTTP/2 transport accepts malformed framing-related headers in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-78660",
+    "CVE-2026-78660"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:14.502576208Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.55.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/net"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00542,
+   "epss_percentile": 0.46363,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do",
+    "symbol:Client.Get"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports net/http, net/http/internal/http2, golang.org/x/net/http2; go.mod requires golang.org/x/net directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.55.0",
+   "advisory": "GO-2026-6611",
+   "cves": [
+    "CVE-2026-78669"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "Excessive CPU consumption from repeated initial window changes in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-78669",
+    "CVE-2026-78669"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:14.349122729Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.55.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/net"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00847,
+   "epss_percentile": 0.58853,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:CanonicalHeaderKey",
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports net/http, net/http/internal/http2, golang.org/x/net/http2; go.mod requires golang.org/x/net directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.55.0",
+   "advisory": "GO-2026-6612",
+   "cves": [
+    "CVE-2026-78663"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "Double flow control refund on HTTP/2 server streams in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-78663",
+    "CVE-2026-78663"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:14.440833902Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.55.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/net"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00858,
+   "epss_percentile": 0.59203,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:CanonicalHeaderKey",
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports net/http, net/http/internal/http2, golang.org/x/net/http2; go.mod requires golang.org/x/net directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.55.0",
+   "advisory": "GO-2026-6617",
+   "cves": [
+    "CVE-2026-97032"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "HTTP/2 server crash due to HPACK encoder race in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-97032",
+    "CVE-2026-97032"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:14.222191133Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/net@v0.55.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/net"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00676,
+   "epss_percentile": 0.53036,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:CanonicalHeaderKey",
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports net/http, net/http/internal/http2, golang.org/x/net/http2; go.mod requires golang.org/x/net directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

@@ -1,0 +1,356 @@
+{
+ "slug": "unica",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "4aa82fa77a648ce57c506e46f8ead339efea3e2a",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 332
+  },
+  "scopes": {
+   "runtime": 279,
+   "optional": 53
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 7
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-m665-v7pm-7grj crates:zip@2.4.2 (conditional)",
+   "worst:RUSTSEC-2026-0369 crates:zip@2.4.2 (conditional)",
+   "worst:RUSTSEC-2020-0138 crates:lexer@0.4.6 (conditional)"
+  ],
+  "counts": {
+   "conditional": 5
+  },
+  "uncounted": 2,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 332,
+  "packages_checked": 332,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 332,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/IngvarConsulting/unica@4aa82fa77a64",
+  "Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:zip",
+   "version": "2.4.2",
+   "advisory": "GHSA-m665-v7pm-7grj",
+   "cves": [
+    "CVE-2026-115905"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "9.0.5",
+   "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115905",
+    "RUSTSEC-2026-0548"
+   ],
+   "published": "2026-10-28T21:09:50Z",
+   "modified": "2026-11-17T10:26:05.424821880Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20",
+    "CWE-436"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@2.4.2",
+   "fix_published_at": "2026-10-17T18:45:16Z",
+   "scope": "runtime",
+   "paths": [
+    "unica-artifact-delivery > zip"
+   ],
+   "workspace": "crates/unica-artifact-delivery",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.0032,
+   "epss_percentile": 0.25522,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "2.4.2",
+   "advisory": "RUSTSEC-2026-0369",
+   "severity": "CRITICAL",
+   "fixed_in": "9.0.0",
+   "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+   "malicious": false,
+   "aliases": [
+    "GHSA-4684-h2q9-2vcp"
+   ],
+   "published": "2026-10-10T12:00:00Z",
+   "modified": "2026-10-16T23:30:02.387698467Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:H",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@2.4.2",
+   "fix_published_at": "2026-10-09T04:48:51Z",
+   "scope": "runtime",
+   "paths": [
+    "unica-artifact-delivery > zip"
+   ],
+   "workspace": "crates/unica-artifact-delivery",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:ZipStreamReader::extract",
+    "symbol:ZipArchive::extract"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:lexer",
+   "version": "0.4.6",
+   "advisory": "RUSTSEC-2020-0138",
+   "cves": [
+    "CVE-2020-36458"
+   ],
+   "severity": "HIGH",
+   "summary": "ReaderResult should be bounded by Sync",
+   "malicious": false,
+   "aliases": [
+    "CVE-2020-36458",
+    "GHSA-f997-8gxg-r354"
+   ],
+   "published": "2020-11-10T12:00:00Z",
+   "modified": "2023-11-08T04:03:46.074313Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/lexer@0.4.6",
+   "scope": "runtime",
+   "paths": [
+    "unica-bsl-parser > parser > lexer"
+   ],
+   "workspace": "crates/unica-bsl-parser",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00833,
+   "epss_percentile": 0.58394,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2",
+   "fixed_in": null
+  },
+  {
+   "package": "crates:zip",
+   "version": "2.4.2",
+   "advisory": "GHSA-q7v9-x93c-xqv3",
+   "cves": [
+    "CVE-2026-115909"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "9.0.0",
+   "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115909",
+    "RUSTSEC-2026-0429"
+   ],
+   "published": "2026-10-29T16:40:01Z",
+   "modified": "2026-11-02T10:10:53.649189132Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-789"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/zip@2.4.2",
+   "fix_published_at": "2026-10-09T04:48:51Z",
+   "scope": "runtime",
+   "paths": [
+    "unica-artifact-delivery > zip"
+   ],
+   "workspace": "crates/unica-artifact-delivery",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00461,
+   "epss_percentile": 0.4071,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "2.4.2",
+   "advisory": "RUSTSEC-2026-0367",
+   "severity": "HIGH",
+   "fixed_in": "9.0.0",
+   "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+   "malicious": false,
+   "aliases": [
+    "GHSA-vv5m-jxxh-4627"
+   ],
+   "published": "2026-10-09T12:00:00Z",
+   "modified": "2026-10-16T23:30:02.392172556Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:L/PR:L/UI:R/S:U/C:H/I:H/A:H",
+   "attack_vector": "local",
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@2.4.2",
+   "fix_published_at": "2026-10-09T04:48:51Z",
+   "scope": "runtime",
+   "paths": [
+    "unica-artifact-delivery > zip"
+   ],
+   "workspace": "crates/unica-artifact-delivery",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "2.4.2",
+   "advisory": "GHSA-8hxf-qr8p-62x4",
+   "cves": [
+    "CVE-2026-115906"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "9.0.0",
+   "summary": "zip: AES Entry HMAC Authentication Bypass on Premature EOF",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115906",
+    "RUSTSEC-2026-0545"
+   ],
+   "published": "2026-10-29T16:40:07Z",
+   "modified": "2026-11-17T10:26:09.858808117Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1284",
+    "CWE-354"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/zip@2.4.2",
+   "scope": "runtime",
+   "paths": [
+    "unica-artifact-delivery > zip"
+   ],
+   "workspace": "crates/unica-artifact-delivery",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00151,
+   "epss_percentile": 0.04286,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zip",
+   "version": "2.4.2",
+   "advisory": "RUSTSEC-2026-0368",
+   "severity": "UNKNOWN",
+   "fixed_in": "9.0.0",
+   "summary": "zip: `ZipArchive::extract` creates symbolic links whose attacker-controlled targets are outside the destination directory",
+   "malicious": false,
+   "aliases": [
+    "GHSA-4v9h-p7m9-rh26"
+   ],
+   "published": "2026-10-09T12:00:00Z",
+   "modified": "2026-10-16T23:30:02.383750571Z",
+   "purl": "pkg:cargo/zip@2.4.2",
+   "scope": "runtime",
+   "paths": [
+    "unica-artifact-delivery > zip"
+   ],
+   "workspace": "crates/unica-artifact-delivery",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:ZipArchive::extract"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ZipArchive::extract, but other packages depend on zip"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

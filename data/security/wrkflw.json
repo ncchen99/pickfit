@@ -1,0 +1,763 @@
+{
+ "slug": "wrkflw",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "b0fdd8df3d8c4ce9156a97c86c336eac37cad64e",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 463
+  },
+  "scopes": {
+   "runtime": 373,
+   "optional": 48,
+   "dev": 42
+  },
+  "advisories_fetched_at": "2026-11-20T00:50:25+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 17
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-82j2-j2ch-gfr8 crates:rustls-webpki@0.101.7 (conditional)"
+  ],
+  "counts": {
+   "conditional": 1
+  },
+  "uncounted": 16,
+  "assessed_at": "2026-11-20T00:50:25+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 463,
+  "packages_checked": 463,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 463,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/bahdotsh/wrkflw@b0fdd8df3d8c",
+  "Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:tar",
+   "version": "0.4.44",
+   "advisory": "GHSA-j4xf-2g29-59ph",
+   "cves": [
+    "CVE-2026-33056"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.4.45",
+   "summary": "tar-rs `unpack_in` can chmod arbitrary directories by following symlinks",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-33056",
+    "RUSTSEC-2026-0067"
+   ],
+   "published": "2026-03-20T17:25:09Z",
+   "modified": "2026-09-10T03:50:39.751471613Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:H/A:N",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:A/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-61"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/tar@0.4.44",
+   "scope": "runtime",
+   "paths": [
+    "wrkflw-executor > tar"
+   ],
+   "workspace": "crates/executor",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00432,
+   "epss_percentile": 0.38269,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "symbol:unpack_in"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "crates/executor/src/kubernetes/sync.rs:201: entry.unpack_in(host)?;"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls-webpki",
+   "version": "0.101.7",
+   "advisory": "GHSA-82j2-j2ch-gfr8",
+   "cves": [
+    "CVE-2026-93599"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.103.13",
+   "summary": "rustls-webpki: Denial of service via panic on malformed CRL BIT STRING",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-93599",
+    "RUSTSEC-2026-0104"
+   ],
+   "published": "2026-04-24T16:20:17Z",
+   "modified": "2026-09-19T03:55:33.412079637Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-125"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/rustls-webpki@0.101.7",
+   "fix_published_at": "2026-04-21T10:25:37Z",
+   "scope": "runtime",
+   "paths": [
+    "wrkflw > reqwest > rustls > rustls-webpki"
+   ],
+   "workspace": "crates/wrkflw",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00346,
+   "epss_percentile": 0.2879,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:bytes",
+   "version": "1.10.1",
+   "advisory": "GHSA-434x-w66g-qw3r",
+   "cves": [
+    "CVE-2026-25541"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.11.1",
+   "summary": "bytes has integer overflow in BytesMut::reserve",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-25541",
+    "RUSTSEC-2026-0007"
+   ],
+   "published": "2026-02-03T19:17:46Z",
+   "modified": "2026-09-10T03:50:33.995841351Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:P",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-680"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/bytes@1.10.1",
+   "scope": "runtime",
+   "paths": [
+    "wrkflw > bollard > bytes"
+   ],
+   "workspace": "crates/wrkflw",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00601,
+   "epss_percentile": 0.49581,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "denial_of_service",
+    "symbol:BytesMut::reserve"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use BytesMut::reserve, but other packages depend on bytes"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.21.12",
+   "advisory": "GHSA-c8m5-c952-6cm4",
+   "cves": [
+    "CVE-2026-123609"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.23.46",
+   "summary": "Rustls: Session Debug formatting exposes TLS master secrets and resumption PSKs",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123609",
+    "RUSTSEC-2026-0346"
+   ],
+   "published": "2026-10-27T16:08:47Z",
+   "modified": "2026-11-08T10:55:36.514447652Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:H/PR:H/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-212"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.21.12",
+   "scope": "runtime",
+   "paths": [
+    "wrkflw > reqwest > rustls"
+   ],
+   "workspace": "crates/wrkflw",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00101,
+   "epss_percentile": 0.00917,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction",
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:serde_with",
+   "version": "2.3.3",
+   "advisory": "GHSA-7gcf-g7xr-8hxj",
+   "severity": "MODERATE",
+   "fixed_in": "3.21.0",
+   "summary": "serde_with: KeyValueMap serialization panics on empty sequence or map entries",
+   "malicious": false,
+   "published": "2026-07-15T22:41:01Z",
+   "modified": "2026-09-10T03:51:10.897685062Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/serde_with@2.3.3",
+   "scope": "runtime",
+   "paths": [
+    "wrkflw > bollard > bollard-stubs > serde_with"
+   ],
+   "workspace": "crates/wrkflw",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:tar",
+   "version": "0.4.44",
+   "advisory": "GHSA-3pv8-6f4r-ffg2",
+   "severity": "MODERATE",
+   "fixed_in": "0.4.46",
+   "summary": "tar has a PAX header desynchronization issue",
+   "malicious": false,
+   "published": "2026-05-29T19:16:12Z",
+   "modified": "2026-09-10T03:51:04.454810375Z",
+   "cwes": [
+    "CWE-20",
+    "CWE-843"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/tar@0.4.44",
+   "scope": "runtime",
+   "paths": [
+    "wrkflw-executor > tar"
+   ],
+   "workspace": "crates/executor",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:tar",
+   "version": "0.4.44",
+   "advisory": "GHSA-gchp-q4r4-x4ff",
+   "cves": [
+    "CVE-2026-33055"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.4.45",
+   "summary": "tar-rs incorrectly ignores PAX size headers if header size is nonzero",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-33055",
+    "RUSTSEC-2026-0068"
+   ],
+   "published": "2026-03-20T17:25:05Z",
+   "modified": "2026-09-10T03:50:39.204912381Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:N",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:A/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-843"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/tar@0.4.44",
+   "scope": "runtime",
+   "paths": [
+    "wrkflw-executor > tar"
+   ],
+   "workspace": "crates/executor",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00462,
+   "epss_percentile": 0.40837,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rand",
+   "version": "0.8.5",
+   "advisory": "GHSA-cq8v-f236-94qc",
+   "severity": "LOW",
+   "fixed_in": "0.8.6",
+   "summary": "Rand is unsound with a custom logger using rand::rng()",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0097"
+   ],
+   "published": "2026-04-14T01:03:36Z",
+   "modified": "2026-09-10T03:50:43.958966498Z",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rand@0.8.5",
+   "scope": "runtime",
+   "paths": [
+    "wrkflw-secrets > rand"
+   ],
+   "workspace": "crates/secrets",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.21.12",
+   "advisory": "GHSA-h2v8-394m-p7vv",
+   "cves": [
+    "CVE-2026-123610"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.23.46",
+   "summary": "Rustls: Brotli certificate decompression can allocate an attacker-controlled amount of memory up to 1 GiB before authentication.",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123610",
+    "RUSTSEC-2026-0348"
+   ],
+   "published": "2026-10-27T16:08:36Z",
+   "modified": "2026-11-08T10:55:59.261359726Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/rustls@0.21.12",
+   "scope": "runtime",
+   "paths": [
+    "wrkflw > reqwest > rustls"
+   ],
+   "workspace": "crates/wrkflw",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00165,
+   "epss_percentile": 0.0586,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.21.12",
+   "advisory": "GHSA-w44r-93j7-qv28",
+   "cves": [
+    "CVE-2026-123611"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.23.46",
+   "summary": "rustls: An unauthenticated ServerHello poisons the per-name key-exchange record, so later ClientHellos carry only a classical X25519 share",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123611",
+    "RUSTSEC-2026-0349"
+   ],
+   "published": "2026-10-27T16:08:54Z",
+   "modified": "2026-11-08T10:55:46.312019109Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-757"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.21.12",
+   "scope": "runtime",
+   "paths": [
+    "wrkflw > reqwest > rustls"
+   ],
+   "workspace": "crates/wrkflw",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00188,
+   "epss_percentile": 0.08575,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls-webpki",
+   "version": "0.101.7",
+   "advisory": "GHSA-965h-392x-2mh5",
+   "cves": [
+    "CVE-2026-93600"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.103.12",
+   "summary": "webpki: Name constraints for URI names were incorrectly accepted",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-93600",
+    "RUSTSEC-2026-0098"
+   ],
+   "published": "2026-04-16T21:16:22Z",
+   "modified": "2026-09-19T03:55:32.245575348Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-295"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls-webpki@0.101.7",
+   "scope": "runtime",
+   "paths": [
+    "wrkflw > reqwest > rustls > rustls-webpki"
+   ],
+   "workspace": "crates/wrkflw",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00203,
+   "epss_percentile": 0.104,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls-webpki",
+   "version": "0.101.7",
+   "advisory": "GHSA-xgp8-3hg3-c2mh",
+   "cves": [
+    "CVE-2026-93601"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.103.12",
+   "summary": "webpki: Name constraints were accepted for certificates asserting a wildcard name",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-93601",
+    "RUSTSEC-2026-0099"
+   ],
+   "published": "2026-04-16T21:17:12Z",
+   "modified": "2026-09-19T03:55:49.146112754Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-295"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls-webpki@0.101.7",
+   "scope": "runtime",
+   "paths": [
+    "wrkflw > reqwest > rustls > rustls-webpki"
+   ],
+   "workspace": "crates/wrkflw",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00203,
+   "epss_percentile": 0.104,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:crossbeam-epoch",
+   "version": "0.9.18",
+   "advisory": "RUSTSEC-2026-0204",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.9.20",
+   "summary": "Invalid pointer dereference in `fmt::Pointer` impl for `Atomic` and `Shared` when the underlying pointer is invalid",
+   "malicious": false,
+   "published": "2026-07-06T12:00:00Z",
+   "modified": "2026-07-06T22:30:04.159269138Z",
+   "purl": "pkg:cargo/crossbeam-epoch@0.9.18",
+   "scope": "runtime",
+   "paths": [
+    "wrkflw-executor > ignore > crossbeam-deque > crossbeam-epoch"
+   ],
+   "workspace": "crates/executor",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:fmt::Pointer",
+    "symbol:Atomic",
+    "symbol:Shared"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use fmt::Pointer, Atomic, Shared, but other packages depend on crossbeam-epoch"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:h2",
+   "version": "0.3.27",
+   "advisory": "RUSTSEC-2026-0258",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.4.16",
+   "summary": "h2 unbounded empty DATA frames",
+   "malicious": false,
+   "aliases": [
+    "GHSA-q83h-524g-xf6h"
+   ],
+   "published": "2026-08-17T12:00:00Z",
+   "modified": "2026-10-12T18:00:10.934581734Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/h2@0.3.27",
+   "scope": "runtime",
+   "paths": [
+    "wrkflw > reqwest > h2"
+   ],
+   "workspace": "crates/wrkflw",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls-webpki",
+   "version": "0.101.7",
+   "advisory": "RUSTSEC-2026-0382",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.103.16",
+   "summary": "Certificate verification may accept distrusted intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0381",
+    "RUSTSEC-2026-0383"
+   ],
+   "published": "2026-10-20T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/rustls-webpki@0.101.7",
+   "scope": "runtime",
+   "paths": [
+    "wrkflw > reqwest > rustls > rustls-webpki"
+   ],
+   "workspace": "crates/wrkflw",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:webpki-roots",
+   "version": "0.25.4",
+   "advisory": "RUSTSEC-2026-0381",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.26.11",
+   "summary": "Bundled root certificates allow trust in distrusted emSign intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0382",
+    "RUSTSEC-2026-0383"
+   ],
+   "published": "2026-10-19T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/webpki-roots@0.25.4",
+   "scope": "runtime",
+   "paths": [
+    "wrkflw > reqwest > webpki-roots"
+   ],
+   "workspace": "crates/wrkflw",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rand",
+   "version": "0.7.3",
+   "advisory": "GHSA-cq8v-f236-94qc",
+   "severity": "LOW",
+   "fixed_in": "0.8.6",
+   "summary": "Rand is unsound with a custom logger using rand::rng()",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0097"
+   ],
+   "published": "2026-04-14T01:03:36Z",
+   "modified": "2026-09-10T03:50:43.958966498Z",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rand@0.7.3",
+   "scope": "dev",
+   "paths": [
+    "wrkflw-executor > wiremock > http-types > rand"
+   ],
+   "workspace": "crates/executor",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

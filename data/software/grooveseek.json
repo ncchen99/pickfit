@@ -334,29 +334,17 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/alphabet-h/grooveseek@07f858b8b85e",
+      "github.com/alphabet-h/grooveseek@bbed6dc5d86b",
       "Cargo.lock"
     ],
     "packages_checked": 682,
     "findings_total": 6,
     "advisories_total": 6,
     "findings": [
-      {
-        "package": "crates:calamine",
-        "version": "0.37.0",
-        "advisory": "RUSTSEC-2026-0436",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.38.0",
-        "summary": "Panic and unbounded allocation (OOM) in the CFB/OLE2 parser on malformed input",
-        "malicious": false
-      },
       {
         "package": "crates:openssl",
         "version": "0.10.77",
@@ -367,7 +355,24 @@
         "severity": "HIGH",
         "fixed_in": "0.10.78",
         "summary": "rust-openssl has incorrect bounds assertion in aes key wrap",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "grooveseek",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00251,
+        "fix_published_at": "2026-04-19T20:02:38Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "grooveseek > fastembed > hf-hub > native-tls > openssl"
+        ]
       },
       {
         "package": "crates:openssl",
@@ -379,7 +384,21 @@
         "severity": "HIGH",
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: rustMdCtxRef::digest_final() writes past caller buffer with no length check",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "grooveseek",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00359,
+        "fix_published_at": "2026-04-19T20:02:38Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "grooveseek > fastembed > hf-hub > native-tls > openssl"
+        ]
       },
       {
         "package": "crates:openssl",
@@ -391,7 +410,24 @@
         "severity": "HIGH",
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: Unchecked callback length in PSK/cookie trampolines leaks adjacent memory to peer",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "grooveseek",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.0028,
+        "fix_published_at": "2026-04-19T20:02:38Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "grooveseek > fastembed > hf-hub > native-tls > openssl"
+        ]
       },
       {
         "package": "crates:openssl",
@@ -403,7 +439,33 @@
         "severity": "HIGH",
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: Deriver::derive and PkeyCtxRef::derive can overflow short buffers on OpenSSL 1.1.1",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "grooveseek",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00285,
+        "fix_published_at": "2026-04-19T20:02:38Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity",
+          "symbol:Deriver::derive",
+          "symbol:PkeyCtxRef::derive"
+        ],
+        "paths": [
+          "grooveseek > fastembed > hf-hub > native-tls > openssl"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use Deriver::derive, PkeyCtxRef::derive, but other packages depend on openssl"
+          ]
+        }
       },
       {
         "package": "crates:openssl",
@@ -415,23 +477,134 @@
         "severity": "HIGH",
         "fixed_in": "0.10.79",
         "summary": "rust-openssl has undefined behavior in X509Ref::ocsp_responders for certificates with non-UTF-8 OCSP URLs",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "grooveseek",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00211,
+        "fix_published_at": "2026-05-04T00:19:55Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:X509Ref::ocsp_responders"
+        ],
+        "paths": [
+          "grooveseek > fastembed > hf-hub > native-tls > openssl"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use X509Ref::ocsp_responders, but other packages depend on openssl"
+          ]
+        }
+      },
+      {
+        "package": "crates:rmcp",
+        "version": "3.1.2",
+        "advisory": "RUSTSEC-2026-0461",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "3.6.0",
+        "summary": "Unbounded tool schema cache in Streamable HTTP server transport",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "grooveseek",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-20T05:53:35Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "grooveseek > rmcp"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "bbed6dc5d86bf7b9647c475a726d33b1ba4ec60d",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 682
+      },
+      "scopes": {
+        "runtime": 547,
+        "optional": 6,
+        "platform": 106,
+        "build": 2,
+        "dev": 19,
+        "workspace": 2
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 14,
+      "details": "security/grooveseek.json",
+      "details_sha256": "056a8af5255c2de5420d2fc1ddd5a9b24843d706dd10ad1fe5ca521cc3847ba4"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-8c75-8mhr-p7r9 crates:openssl@0.10.77 (conditional)",
+        "worst:GHSA-ghm9-cr32-g9qj crates:openssl@0.10.77 (conditional)",
+        "worst:GHSA-hppc-g8h3-xhp3 crates:openssl@0.10.77 (conditional)"
+      ],
+      "counts": {
+        "conditional": 6
+      },
+      "uncounted": 8,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 682,
+      "packages_checked": 682,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 682,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 81.3,
       "confidence": 0.8,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5625,
@@ -451,16 +624,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 81.3,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -831,5 +1001,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:50:29+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

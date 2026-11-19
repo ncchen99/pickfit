@@ -553,17 +553,15 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
       "npm:agent-database-cli (fresh install, 6 packages)",
-      "github.com/sleepinginsummer/agent-database-cli@a37d66913bb0",
+      "github.com/sleepinginsummer/agent-database-cli@875fc23989fa",
       "Cargo.lock"
     ],
-    "packages_checked": 470,
+    "packages_checked": 477,
     "findings_total": 10,
     "advisories_total": 9,
     "findings": [
@@ -571,11 +569,55 @@
         "package": "crates:hickory-proto",
         "version": "0.25.2",
         "advisory": "GHSA-3v94-mw7p-v465",
-        "cves": [],
+        "cves": [
+          "CVE-2026-123607"
+        ],
         "severity": "HIGH",
         "fixed_in": null,
         "summary": "hickory-proto: NSEC3 closest-encloser proof validation enters unbounded loop on cross-zone responses",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00343,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "agent-database-cli > mongodb > hickory-proto"
+        ]
+      },
+      {
+        "package": "crates:hickory-proto",
+        "version": "0.25.2",
+        "advisory": "RUSTSEC-2026-0505",
+        "cves": [
+          "CVE-2026-123580"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.26.0-beta.1",
+        "summary": "NSEC3 owner names not checked against the zone in DNSSEC validation (hickory-proto)",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00255,
+        "fix_published_at": "2026-03-12T20:56:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "agent-database-cli > mongodb > hickory-proto"
+        ]
       },
       {
         "package": "crates:hickory-resolver",
@@ -587,7 +629,32 @@
         "severity": "HIGH",
         "fixed_in": "0.26.2",
         "summary": "hickory-resolver: Resolver::lookup() and Resolver::lookup_ip() APIs obscure DNSSEC validation failures",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00231,
+        "fix_published_at": "2026-09-03T19:35:39Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:Resolver::lookup",
+          "symbol:Resolver::lookup_ip"
+        ],
+        "paths": [
+          "agent-database-cli > mongodb > hickory-resolver"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use Resolver::lookup, Resolver::lookup_ip, but other packages depend on hickory-resolver"
+          ]
+        }
       },
       {
         "package": "crates:postgres-protocol",
@@ -597,7 +664,23 @@
         "severity": "HIGH",
         "fixed_in": "0.6.12",
         "summary": "postgres-protocol: Unbounded SCRAM iteration count allows a malicious server to cause CPU-exhaustion denial of service",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-12T15:34:01Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "agent-database-cli > tokio-postgres > postgres-protocol"
+        ]
       },
       {
         "package": "crates:russh",
@@ -609,7 +692,21 @@
         "severity": "HIGH",
         "fixed_in": "0.63.1",
         "summary": "russh: Client-side channel-scoped Handler callbacks fire for channel IDs the client never opened",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00317,
+        "fix_published_at": "2026-08-23T18:16:15Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "agent-database-cli > russh"
+        ]
       },
       {
         "package": "crates:russh",
@@ -621,7 +718,24 @@
         "severity": "HIGH",
         "fixed_in": "0.61.0",
         "summary": "Russh SSH message fields were decoded through allocation-first parsers before field-specific bounds",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00367,
+        "fix_published_at": "2026-05-20T22:36:26Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "agent-database-cli > russh"
+        ]
       },
       {
         "package": "crates:russh",
@@ -633,7 +747,24 @@
         "severity": "HIGH",
         "fixed_in": "0.60.1",
         "summary": "russh has pre-auth DoS via unbounded allocation in its keyboard-interactive auth handler",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00481,
+        "fix_published_at": "2026-04-20T16:03:30Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "agent-database-cli > russh"
+        ]
       },
       {
         "package": "crates:russh",
@@ -645,19 +776,24 @@
         "severity": "HIGH",
         "fixed_in": "0.60.3",
         "summary": "Russh: Unchecked CryptoVec allocation and growth handling is reachable",
-        "malicious": false
-      },
-      {
-        "package": "crates:russh",
-        "version": "0.45.0",
-        "advisory": "GHSA-vp5q-ff62-jwqv",
-        "cves": [
-          "CVE-2026-116794"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00263,
+        "fix_published_at": "2026-05-15T21:13:36Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "0.65",
-        "summary": "russh: Agent server never calls `Agent::confirm`, so keys added with the confirm constraint (`ssh-add -c`) sign without confirmation",
-        "malicious": false
+        "paths": [
+          "agent-database-cli > russh"
+        ]
       },
       {
         "package": "crates:russh",
@@ -669,7 +805,24 @@
         "severity": "HIGH",
         "fixed_in": "0.61.1",
         "summary": "russh: Post-decompression SSH packet size was not bounded, allowing remote oversized compressed packets",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00268,
+        "fix_published_at": "2026-05-23T07:53:09Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "agent-database-cli > russh"
+        ]
       },
       {
         "package": "crates:russh-cryptovec",
@@ -681,23 +834,144 @@
         "severity": "HIGH",
         "fixed_in": "0.60.3",
         "summary": "Russh: Unchecked CryptoVec allocation and growth handling is reachable",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00263,
+        "fix_published_at": "2026-05-15T21:12:48Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "agent-database-cli > russh > russh-cryptovec"
+        ]
+      },
+      {
+        "package": "crates:russh",
+        "version": "0.45.0",
+        "advisory": "GHSA-vp5q-ff62-jwqv",
+        "cves": [
+          "CVE-2026-116794"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.65",
+        "summary": "russh: Agent server never calls `Agent::confirm`, so keys added with the confirm constraint (`ssh-add -c`) sign without confirmation",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00156,
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "symbol:Agent::confirm"
+        ],
+        "paths": [
+          "agent-database-cli > russh"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses Agent::confirm; only the project depends on russh"
+          ]
+        }
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:06:03+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "875fc23989fa50af0513217e07ecb6c767c3f99d",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 471,
+        "npm": 6
+      },
+      "scopes": {
+        "runtime": 475,
+        "optional": 2
+      },
+      "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 63,
+      "details": "security/agent-database-cli.json",
+      "details_sha256": "6ed2fd67d13b7f0889692f25d008e1a1f12fd7202362c35c4b3dfe6f8255f5d8"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-3v94-mw7p-v465 crates:hickory-proto@0.25.2 (conditional)",
+        "worst:RUSTSEC-2026-0505 crates:hickory-proto@0.25.2 (conditional)",
+        "worst:GHSA-5j98-2g5x-46v6 crates:hickory-resolver@0.25.2 (conditional)"
+      ],
+      "counts": {
+        "conditional": 10,
+        "present_unreachable": 1
+      },
+      "uncounted": 52,
+      "assessed_at": "2026-11-20T00:06:03+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 477,
+      "packages_checked": 477,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "registry:npm:agent-database-cli",
+          "status": "partial",
+          "packages": 6,
+          "gaps": [
+            "binary.prebuilt_package"
+          ]
+        },
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 471,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 94.5,
       "confidence": 0.8,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.875,
@@ -717,16 +991,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 94.5,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -1091,5 +1362,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:55+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:06:03+08:00"
 }

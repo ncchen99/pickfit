@@ -1,0 +1,589 @@
+{
+ "slug": "anki",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "0402bcffe0b2a3525bf41d2d8636a657cfdd1ffb",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 582,
+   "pypi": 53
+  },
+  "scopes": {
+   "runtime": 518,
+   "optional": 20,
+   "build": 19,
+   "dev": 6,
+   "workspace": 72
+  },
+  "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 13
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:RUSTSEC-2026-0340 crates:quinn-proto@0.11.16 (conditional)",
+   "worst:RUSTSEC-2026-0341 crates:quinn-proto@0.11.16 (conditional)",
+   "worst:GHSA-8988-9cw3-xx77 pypi:urllib3@2.7.0 (conditional)"
+  ],
+  "counts": {
+   "conditional": 4
+  },
+  "uncounted": 9,
+  "assessed_at": "2026-11-20T00:06:03+08:00"
+ },
+ "coverage": {
+  "state": "partial",
+  "target": "repo_lockfile",
+  "packages_found": 1497,
+  "packages_checked": 635,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 582,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "yarn.lock",
+    "status": "not_scanned",
+    "packages": 862,
+    "gaps": [
+     "lockfile.unsupported_format"
+    ]
+   },
+   {
+    "ecosystem": "pypi",
+    "component": "pylib/pyproject.toml",
+    "status": "scanned",
+    "packages": 12,
+    "gaps": []
+   },
+   {
+    "ecosystem": "pypi",
+    "component": "uv.lock",
+    "status": "scanned",
+    "packages": 36,
+    "gaps": []
+   },
+   {
+    "ecosystem": "pypi",
+    "component": "qt/pyproject.toml",
+    "status": "scanned",
+    "packages": 30,
+    "gaps": []
+   }
+  ],
+  "gaps": [
+   {
+    "code": "lockfile.unsupported_format",
+    "category": "lockfile_unreadable",
+    "ecosystem": "npm",
+    "component": "yarn.lock",
+    "detail": "yarn_lock is not read yet",
+    "capability": "read_lockfile:yarn_lock",
+    "found": 862,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   }
+  ]
+ },
+ "sources": [
+  "github.com/ankitects/anki@0402bcffe0b2",
+  "Cargo.lock",
+  "pylib/pyproject.toml (resolved today)",
+  "uv.lock",
+  "qt/pyproject.toml (resolved today)"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0340",
+   "severity": "HIGH",
+   "fixed_in": "0.11.18",
+   "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+   "malicious": false,
+   "aliases": [
+    "GHSA-3g6h-r5qx-f6hq"
+   ],
+   "published": "2026-09-14T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.975478256Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "fix_published_at": "2026-09-14T10:08:32Z",
+   "scope": "runtime",
+   "paths": [
+    "anki > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "rslib",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "option:ACK_FREQUENCY"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0341",
+   "severity": "HIGH",
+   "fixed_in": "0.11.17",
+   "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
+   "malicious": false,
+   "aliases": [
+    "GHSA-qfwj-vfxf-92j2"
+   ],
+   "published": "2026-08-17T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.969505433Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "fix_published_at": "2026-08-17T17:32:41Z",
+   "scope": "runtime",
+   "paths": [
+    "anki > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "rslib",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "pypi:urllib3",
+   "version": "2.7.0",
+   "advisory": "GHSA-8988-9cw3-xx77",
+   "cves": [
+    "CVE-2026-97687"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.8.0",
+   "summary": "urllib3: HTTPS proxy TLS configuration may be ignored or overridden",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-97687",
+    "PYSEC-2026-4175"
+   ],
+   "published": "2026-09-30T14:46:04Z",
+   "modified": "2026-10-01T17:55:53.793608550Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-295",
+    "CWE-440"
+   ],
+   "dos_only": false,
+   "purl": "pkg:pypi/urllib3@2.7.0",
+   "fix_published_at": "2026-09-15T19:29:34Z",
+   "scope": "runtime",
+   "paths": [
+    "uv.lock > urllib3"
+   ],
+   "found_in": "uv.lock",
+   "kev": false,
+   "epss": 0.00206,
+   "epss_percentile": 0.10758,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "pypi:urllib3",
+   "version": "2.7.0",
+   "advisory": "GHSA-vxq7-64xx-v4gw",
+   "cves": [
+    "CVE-2026-97689"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.8.0",
+   "summary": "urllib3: HTTPResponse.stream()/read_chunked() buffers an unbounded chunk-size line into memory",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-97689",
+    "PYSEC-2026-4177"
+   ],
+   "published": "2026-09-30T14:46:18Z",
+   "modified": "2026-10-01T17:55:57.514829071Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:pypi/urllib3@2.7.0",
+   "fix_published_at": "2026-09-15T19:29:34Z",
+   "scope": "runtime",
+   "paths": [
+    "uv.lock > urllib3"
+   ],
+   "found_in": "uv.lock",
+   "kev": false,
+   "epss": 0.00335,
+   "epss_percentile": 0.27377,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:block-buffer",
+   "version": "0.12.0",
+   "advisory": "GHSA-qwgh-2vcv-g2f7",
+   "severity": "MODERATE",
+   "fixed_in": "0.12.1",
+   "summary": "block_buffer: panic corrupts inline buffer position",
+   "malicious": false,
+   "published": "2026-08-19T19:15:34Z",
+   "modified": "2026-10-30T15:45:11.580215361Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-119"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/block-buffer@0.12.0",
+   "scope": "runtime",
+   "paths": [
+    "anki > sha1 > digest > block-buffer"
+   ],
+   "workspace": "rslib",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "pypi:urllib3",
+   "version": "2.7.0",
+   "advisory": "GHSA-gh4c-6fx4-qh6g",
+   "cves": [
+    "CVE-2026-97688"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.8.0",
+   "summary": "urllib3: Chunked Deflate streaming can enter an infinite loop",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-97688",
+    "PYSEC-2026-4176"
+   ],
+   "published": "2026-09-30T15:00:38Z",
+   "modified": "2026-10-01T17:55:40.608255720Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-835"
+   ],
+   "dos_only": true,
+   "purl": "pkg:pypi/urllib3@2.7.0",
+   "scope": "runtime",
+   "paths": [
+    "uv.lock > urllib3"
+   ],
+   "found_in": "uv.lock",
+   "kev": false,
+   "epss": 0.00292,
+   "epss_percentile": 0.22149,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0338",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.18",
+   "summary": "Remote peer can panic quinn-proto with zero-length STREAM frames during unordered reads",
+   "malicious": false,
+   "aliases": [
+    "GHSA-465w-v9q3-7j98"
+   ],
+   "published": "2026-09-14T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.969514645Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "scope": "runtime",
+   "paths": [
+    "anki > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "rslib",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0339",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.17",
+   "summary": "Unbounded growth of pending connection ID retirements in quinn-proto",
+   "malicious": false,
+   "aliases": [
+    "GHSA-hmxj-32vh-65vr"
+   ],
+   "published": "2026-08-17T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.956822776Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "scope": "runtime",
+   "paths": [
+    "anki > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "rslib",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0342",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.17",
+   "summary": "Zero-length DATAGRAM frames bypass the receive buffer limit in quinn-proto",
+   "malicious": false,
+   "aliases": [
+    "GHSA-2hv7-gw8g-gpq5"
+   ],
+   "published": "2026-08-17T12:00:00Z",
+   "modified": "2026-10-12T18:15:01.956681478Z",
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "scope": "runtime",
+   "paths": [
+    "anki > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "rslib",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0523",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.19",
+   "summary": "MAX_STREAM_DATA frame can open streams beyond the stream limit",
+   "malicious": false,
+   "aliases": [
+    "GHSA-53rm-773f-4q8c"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:04.789912316Z",
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "scope": "runtime",
+   "paths": [
+    "anki > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "rslib",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "option:MAX_STREAM_DATA"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use MAX_STREAM_DATA, but other packages depend on quinn-proto"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-proto",
+   "version": "0.11.16",
+   "advisory": "RUSTSEC-2026-0524",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.11.19",
+   "summary": "Long Retry token can panic or exhaust memory in a QUIC client",
+   "malicious": false,
+   "aliases": [
+    "GHSA-wppq-2f6r-wfvm"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:06.127108520Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/quinn-proto@0.11.16",
+   "scope": "runtime",
+   "paths": [
+    "anki > reqwest > quinn > quinn-proto"
+   ],
+   "workspace": "rslib",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quinn-udp",
+   "version": "0.5.14",
+   "advisory": "RUSTSEC-2026-0538",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.5.16",
+   "summary": "Receive loop can spin after a truncated datagram",
+   "malicious": false,
+   "aliases": [
+    "GHSA-6pp4-4cxf-xf88"
+   ],
+   "published": "2026-09-30T12:00:00Z",
+   "modified": "2026-11-13T12:45:08.844283231Z",
+   "purl": "pkg:cargo/quinn-udp@0.5.14",
+   "scope": "runtime",
+   "paths": [
+    "anki > reqwest > quinn > quinn-udp"
+   ],
+   "workspace": "rslib",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rand",
+   "version": "0.8.5",
+   "advisory": "GHSA-cq8v-f236-94qc",
+   "severity": "LOW",
+   "fixed_in": "0.8.6",
+   "summary": "Rand is unsound with a custom logger using rand::rng()",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0097"
+   ],
+   "published": "2026-04-14T01:03:36Z",
+   "modified": "2026-09-10T03:50:43.958966498Z",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rand@0.8.5",
+   "scope": "workspace",
+   "paths": [
+    "linkchecker > linkcheck > html5ever > markup5ever > phf_codegen > phf_generator > rand"
+   ],
+   "workspace": "rslib/linkchecker",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

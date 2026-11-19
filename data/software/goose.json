@@ -244,20 +244,18 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-19T15:12:22+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/aaif-goose/goose@e19678113105",
+      "github.com/aaif-goose/goose@bf074d6d1146",
       "Cargo.lock",
       "documentation/package-lock.json",
       "ui/pnpm-lock.yaml"
     ],
-    "packages_checked": 2551,
-    "findings_total": 19,
-    "advisories_total": 18,
+    "packages_checked": 3310,
+    "findings_total": 16,
+    "advisories_total": 16,
     "findings": [
       {
         "package": "crates:zip",
@@ -269,7 +267,21 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/goose-mcp",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.0032,
+        "fix_published_at": "2026-10-17T18:45:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "goose-mcp > docx-rs > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -279,7 +291,31 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/goose-mcp",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:ZipStreamReader::extract",
+          "symbol:ZipArchive::extract"
+        ],
+        "paths": [
+          "goose-mcp > docx-rs > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+          ]
+        }
       },
       {
         "package": "npm:proxy-addr",
@@ -291,7 +327,21 @@
         "severity": "CRITICAL",
         "fixed_in": "2.0.8",
         "summary": "proxy-addr vulnerable to IP spoofing via IPv4-mapped IPv6 trust subnet",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "documentation/package-lock.json",
+        "kev": false,
+        "epss": 0.0026,
+        "fix_published_at": "2026-09-15T06:12:45Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          ". > @docusaurus/core > webpack-dev-server > express > proxy-addr"
+        ]
       },
       {
         "package": "npm:tinypool",
@@ -303,7 +353,24 @@
         "severity": "CRITICAL",
         "fixed_in": "2.1.1",
         "summary": "Tinypool: Prototype Pollution gadget in worker options leads to Remote Code Execution",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "documentation/package-lock.json",
+        "kev": false,
+        "epss": 0.00497,
+        "fix_published_at": "2026-08-23T14:26:13Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          ". > @docusaurus/core > tinypool"
+        ]
       },
       {
         "package": "npm:tinypool",
@@ -315,7 +382,24 @@
         "severity": "CRITICAL",
         "fixed_in": "2.1.2",
         "summary": "Tinypool: Prototype Pollution Gadget to RCE in run() options",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "documentation/package-lock.json",
+        "kev": false,
+        "epss": 0.00485,
+        "fix_published_at": "2026-08-23T15:03:47Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          ". > @docusaurus/core > tinypool"
+        ]
       },
       {
         "package": "crates:zip",
@@ -327,7 +411,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: legacy Shrink/Reduce/Implode decoder: denial of service from attacker-controlled ZIP64 uncompressed size",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/goose-mcp",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.0035,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "goose-mcp > docx-rs > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -339,7 +440,32 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/goose-mcp",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00432,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity",
+          "symbol:ZipArchive::extract"
+        ],
+        "paths": [
+          "goose-mcp > docx-rs > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ZipArchive::extract, but other packages depend on zip"
+          ]
+        }
       },
       {
         "package": "crates:zip",
@@ -351,7 +477,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/goose-mcp",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00461,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "goose-mcp > docx-rs > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -361,7 +504,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/goose-mcp",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
+        ],
+        "paths": [
+          "goose-mcp > docx-rs > zip"
+        ]
       },
       {
         "package": "npm:body-parser",
@@ -373,7 +533,24 @@
         "severity": "HIGH",
         "fixed_in": "1.20.9",
         "summary": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "documentation/package-lock.json",
+        "kev": false,
+        "epss": 0.00388,
+        "fix_published_at": "2026-10-22T11:38:27Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > @docusaurus/core > webpack-dev-server > express > body-parser"
+        ]
       },
       {
         "package": "npm:compression",
@@ -385,19 +562,24 @@
         "severity": "HIGH",
         "fixed_in": "1.8.2",
         "summary": "compression vulnerable to Denial of Service via memory leak on premature response close",
-        "malicious": false
-      },
-      {
-        "package": "npm:js-yaml",
-        "version": "4.3.1",
-        "advisory": "GHSA-2883-xcg3-v3hh",
-        "cves": [
-          "CVE-2026-84375"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "documentation/package-lock.json",
+        "kev": false,
+        "epss": 0.00477,
+        "fix_published_at": "2026-09-11T11:16:47Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "4.3.2",
-        "summary": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
-        "malicious": false
+        "paths": [
+          ". > @docusaurus/core > webpack-dev-server > compression"
+        ]
       },
       {
         "package": "npm:launch-editor",
@@ -409,7 +591,25 @@
         "severity": "HIGH",
         "fixed_in": "2.14.2",
         "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "documentation/package-lock.json",
+        "kev": false,
+        "epss": 0.01694,
+        "fix_published_at": "2026-10-06T03:12:21Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction",
+          "high_complexity"
+        ],
+        "paths": [
+          ". > @docusaurus/core > webpack-dev-server > launch-editor"
+        ]
       },
       {
         "package": "npm:nanoid",
@@ -421,19 +621,34 @@
         "severity": "HIGH",
         "fixed_in": "3.3.18",
         "summary": "nanoid: custom generators can loop indefinitely when size is zero",
-        "malicious": false
-      },
-      {
-        "package": "npm:path-to-regexp",
-        "version": "8.3.0",
-        "advisory": "GHSA-j3q9-mxjg-w52f",
-        "cves": [
-          "CVE-2026-4926"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "documentation/package-lock.json",
+        "kev": false,
+        "epss": 0.00331,
+        "fix_published_at": "2026-08-07T16:41:05Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "high_complexity",
+          "denial_of_service",
+          "symbol:customAlphabet",
+          "symbol:customRandom"
         ],
-        "severity": "HIGH",
-        "fixed_in": "8.4.0",
-        "summary": "path-to-regexp vulnerable to Denial of Service via sequential optional groups",
-        "malicious": false
+        "paths": [
+          ". > postcss > nanoid"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use customAlphabet, customRandom, but other packages depend on nanoid"
+          ]
+        }
       },
       {
         "package": "npm:serialize-javascript",
@@ -443,7 +658,23 @@
         "severity": "HIGH",
         "fixed_in": "7.0.3",
         "summary": "Serialize JavaScript is Vulnerable to RCE via RegExp.flags and Date.prototype.toISOString()",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "documentation/package-lock.json",
+        "kev": false,
+        "fix_published_at": "2026-02-27T14:38:27Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          ". > @docusaurus/core > @docusaurus/bundler > copy-webpack-plugin > serialize-javascript"
+        ]
       },
       {
         "package": "npm:webpack-dev-middleware",
@@ -455,7 +686,24 @@
         "severity": "HIGH",
         "fixed_in": "7.4.6",
         "summary": "webpack-dev-middleware vulnerable to Path Traversal via non-slash-terminated publicPath",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "documentation/package-lock.json",
+        "kev": false,
+        "epss": 0.00682,
+        "fix_published_at": "2026-09-03T13:23:58Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction"
+        ],
+        "paths": [
+          ". > @docusaurus/core > webpack-dev-server > webpack-dev-middleware"
+        ]
       },
       {
         "package": "npm:zod",
@@ -467,35 +715,157 @@
         "severity": "HIGH",
         "fixed_in": "4.6.6",
         "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
-      },
-      {
-        "package": "npm:zod",
-        "version": "3.25.76",
-        "advisory": "GHSA-mrhx-c7xc-m3w5",
-        "cves": [
-          "CVE-2023-54404"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "documentation/package-lock.json",
+        "kev": false,
+        "fix_published_at": "2026-10-11T16:18:23Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "4.6.6",
-        "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
+        "paths": [
+          ". > @docusaurus/preset-classic > @docusaurus/theme-search-algolia > @docsearch/react > zod"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:50:25+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "bf074d6d114690de6cbe7edc925cb26efdf6f16a",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 1088,
+        "npm": 2222
+      },
+      "scopes": {
+        "runtime": 1876,
+        "optional": 226,
+        "platform": 1,
+        "peer": 3,
+        "dev": 39,
+        "workspace": 1165
+      },
+      "advisories_fetched_at": "2026-11-20T00:50:25+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 133,
+      "details": "security/goose.json",
+      "details_sha256": "f91beee502272d1f32569fb29fbe438ab84c60cec6c63b970ae0bd2817f1a281"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-m665-v7pm-7grj crates:zip@8.6.0 (conditional)",
+        "worst:RUSTSEC-2026-0369 crates:zip@8.6.0 (conditional)",
+        "worst:GHSA-jqcg-44mw-7w3h npm:proxy-addr@2.0.7 (conditional)"
+      ],
+      "counts": {
+        "conditional": 16,
+        "not_shipped": 41
+      },
+      "uncounted": 76,
+      "assessed_at": "2026-11-20T00:50:25+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 3451,
+      "packages_checked": 3310,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 1088,
+          "gaps": []
+        },
+        {
+          "ecosystem": "maven",
+          "component": "crates/oi-kit-bindings/maven/build.gradle.kts",
+          "status": "not_scanned",
+          "packages": 2,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "documentation/package-lock.json",
+          "status": "scanned",
+          "packages": 1213,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "services/ask-ai-bot/bun.lock",
+          "status": "not_scanned",
+          "packages": 139,
+          "gaps": [
+            "lockfile.unsupported_format"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "ui/pnpm-lock.yaml",
+          "status": "scanned",
+          "packages": 1336,
+          "gaps": []
+        }
+      ],
+      "gaps": [
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "crates/oi-kit-bindings/maven/build.gradle.kts",
+          "detail": "no reader for build.gradle.kts",
+          "capability": "adapter:maven",
+          "found": 2,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "lockfile.unsupported_format",
+          "category": "lockfile_unreadable",
+          "ecosystem": "npm",
+          "component": "services/ask-ai-bot/bun.lock",
+          "detail": "bun_lock is not read yet",
+          "capability": "read_lockfile:bun_lock",
+          "found": 139,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T23:36:56+08:00",
+    "computed_at": "2026-11-20T00:50:25+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 80.1,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5625,
@@ -515,16 +885,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 80.1,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -847,5 +1214,5 @@
     }
   ],
   "first_seen_at": "2026-11-19T15:10:27+08:00",
-  "updated_at": "2026-11-19T23:36:56+08:00"
+  "updated_at": "2026-11-20T00:50:25+08:00"
 }

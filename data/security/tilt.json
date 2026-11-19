@@ -1,0 +1,1609 @@
+{
+ "slug": "tilt",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "30a5e684c83f2532ef60435c370a8853cdeceb03",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "go": 246
+  },
+  "scopes": {
+   "runtime": 246
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 34
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-33vj-92qq-66hc go:github.com/containerd/containerd/v2@v2.2.1 (conditional)",
+   "worst:GHSA-fqw6-gf59-qr4w go:github.com/containerd/containerd/v2@v2.2.1 (conditional)",
+   "worst:GHSA-p7v4-vr35-mj6f go:github.com/containerd/containerd/v2@v2.2.1 (conditional)"
+  ],
+  "counts": {
+   "conditional": 8
+  },
+  "uncounted": 26,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "partial",
+  "target": "repo_lockfile",
+  "packages_found": 2333,
+  "packages_checked": 246,
+  "components": [
+   {
+    "ecosystem": "go",
+    "component": "go.mod",
+    "status": "scanned",
+    "packages": 246,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "web/yarn.lock",
+    "status": "not_scanned",
+    "packages": 2087,
+    "gaps": [
+     "lockfile.unsupported_format"
+    ]
+   }
+  ],
+  "gaps": [
+   {
+    "code": "lockfile.unsupported_format",
+    "category": "lockfile_unreadable",
+    "ecosystem": "npm",
+    "component": "web/yarn.lock",
+    "detail": "yarn_lock is not read yet",
+    "capability": "read_lockfile:yarn_lock",
+    "found": 2087,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   }
+  ]
+ },
+ "sources": [
+  "github.com/tilt-dev/tilt@30a5e684c83f",
+  "go.mod"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.59.0",
+   "advisory": "GO-2026-6603",
+   "cves": [
+    "CVE-2026-78659"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "HTTP/2 server memory exhaustion due to Trailer headers in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-78659",
+    "CVE-2026-78659"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:13.462737073Z",
+   "dos_only": false,
+   "purl": "pkg:golang/golang.org/x/net@v0.59.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/net"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00866,
+   "epss_percentile": 0.59439,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:CanonicalHeaderKey",
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "internal/cli/utils.go:31: res, err := http.DefaultClient.Do(req)"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.59.0",
+   "advisory": "GO-2026-6610",
+   "cves": [
+    "CVE-2026-78660"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "HTTP/2 transport accepts malformed framing-related headers in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-78660",
+    "CVE-2026-78660"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:14.502576208Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.59.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/net"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00542,
+   "epss_percentile": 0.46363,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do",
+    "symbol:Client.Get"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "internal/cli/utils.go:31: res, err := http.DefaultClient.Do(req)"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.59.0",
+   "advisory": "GO-2026-6611",
+   "cves": [
+    "CVE-2026-78669"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "Excessive CPU consumption from repeated initial window changes in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-78669",
+    "CVE-2026-78669"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:14.349122729Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.59.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/net"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00847,
+   "epss_percentile": 0.58853,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:CanonicalHeaderKey",
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "internal/cli/utils.go:31: res, err := http.DefaultClient.Do(req)"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.59.0",
+   "advisory": "GO-2026-6612",
+   "cves": [
+    "CVE-2026-78663"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "Double flow control refund on HTTP/2 server streams in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-78663",
+    "CVE-2026-78663"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:14.440833902Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.59.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/net"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00858,
+   "epss_percentile": 0.59203,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:CanonicalHeaderKey",
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "internal/cli/utils.go:31: res, err := http.DefaultClient.Do(req)"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.59.0",
+   "advisory": "GO-2026-6617",
+   "cves": [
+    "CVE-2026-97032"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.60.0",
+   "summary": "HTTP/2 server crash due to HPACK encoder race in net/http",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-97032",
+    "CVE-2026-97032"
+   ],
+   "published": "2026-10-08T22:31:09Z",
+   "modified": "2026-11-14T13:12:14.222191133Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/net@v0.59.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/net"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00676,
+   "epss_percentile": 0.53036,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:CanonicalHeaderKey",
+    "symbol:Client.CloseIdleConnections",
+    "symbol:Client.Do"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "internal/cli/utils.go:31: res, err := http.DefaultClient.Do(req)"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/containerd/containerd/v2",
+   "version": "v2.2.1",
+   "advisory": "GHSA-33vj-92qq-66hc",
+   "cves": [
+    "CVE-2026-53492"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.2.5",
+   "summary": "containerd CRI checkpoint restore CDI annotation smuggling",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-53492",
+    "GO-2026-5064"
+   ],
+   "published": "2026-06-19T19:35:40Z",
+   "modified": "2026-09-10T03:51:07.626163412Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:H/VA:N/SC:H/SI:H/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20",
+    "CWE-863"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/containerd/containerd/v2@v2.2.1",
+   "fix_published_at": "2026-06-18T23:03:27Z",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/containerd/containerd/v2"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00353,
+   "epss_percentile": 0.29556,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/containerd/containerd/v2",
+   "version": "v2.2.1",
+   "advisory": "GHSA-fqw6-gf59-qr4w",
+   "cves": [
+    "CVE-2026-46680"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.2.4",
+   "summary": "containerd user ID handling bypass allows runAsNonRoot evasion",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-46680",
+    "GO-2026-5378"
+   ],
+   "published": "2026-05-21T21:40:36Z",
+   "modified": "2026-09-10T03:51:05.484639283Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:H",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:P/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-269",
+    "CWE-843"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/containerd/containerd/v2@v2.2.1",
+   "fix_published_at": "2026-05-20T23:39:32Z",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/containerd/containerd/v2"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00163,
+   "epss_percentile": 0.05555,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/containerd/containerd/v2",
+   "version": "v2.2.1",
+   "advisory": "GHSA-p7v4-vr35-mj6f",
+   "cves": [
+    "CVE-2026-95837"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.2.7",
+   "summary": "containerd CRI plugin: Checkpoint restore bypasses destination security context",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-95837",
+    "GO-2026-6791"
+   ],
+   "published": "2026-10-15T20:21:57Z",
+   "modified": "2026-10-19T21:41:22.608698004Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-269"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/containerd/containerd/v2@v2.2.1",
+   "fix_published_at": "2026-08-12T17:51:11Z",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/containerd/containerd/v2"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00106,
+   "epss_percentile": 0.01143,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/containerd/containerd/v2",
+   "version": "v2.2.1",
+   "advisory": "GHSA-rgh6-rfwx-v388",
+   "cves": [
+    "CVE-2026-53489"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.2.5",
+   "summary": "Arbitrary host CRI log file read via symlink following in CRI checkpoint restore",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-53489",
+    "GO-2026-5622"
+   ],
+   "published": "2026-06-19T19:35:36Z",
+   "modified": "2026-09-10T03:50:50.388984153Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-61"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/containerd/containerd/v2@v2.2.1",
+   "fix_published_at": "2026-06-18T23:03:27Z",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/containerd/containerd/v2"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00174,
+   "epss_percentile": 0.07023,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/containerd/containerd/v2",
+   "version": "v2.2.1",
+   "advisory": "GHSA-xhf5-7wjv-pqxp",
+   "cves": [
+    "CVE-2026-53488"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.2.5",
+   "summary": "containerd CRI — image-config `LABEL` flows to restart-monitor `binary://` logger: host-root command execution from an image pull",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-53488",
+    "GO-2026-5758"
+   ],
+   "published": "2026-06-19T19:35:31Z",
+   "modified": "2026-09-10T03:51:09.792384728Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-74"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/containerd/containerd/v2@v2.2.1",
+   "fix_published_at": "2026-06-18T23:03:27Z",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/containerd/containerd/v2"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00176,
+   "epss_percentile": 0.07269,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/klauspost/compress",
+   "version": "v1.19.1",
+   "advisory": "GO-2026-6865",
+   "cves": [
+    "CVE-2026-116591"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.20.2",
+   "summary": "Panic on two-block frames in github.com/klauspost/compress",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116591",
+    "GHSA-fpmh-frq8-7rj8"
+   ],
+   "published": "2026-11-05T22:54:32Z",
+   "modified": "2026-11-05T23:15:14.472777299Z",
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/klauspost/compress@v1.19.1",
+   "fix_published_at": "2026-10-12T09:34:06Z",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/klauspost/compress"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00333,
+   "epss_percentile": 0.27026,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Compress",
+    "symbol:Decompress",
+    "symbol:Scratch.readNCount"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/whilp/git-urls",
+   "version": "v1.0.0",
+   "advisory": "GHSA-3f2q-6294-fmq5",
+   "cves": [
+    "CVE-2023-46402"
+   ],
+   "severity": "HIGH",
+   "summary": "Inefficient Regular Expression Complexity in git-urls",
+   "malicious": false,
+   "aliases": [
+    "CVE-2023-46402"
+   ],
+   "published": "2023-11-18T00:30:17Z",
+   "modified": "2026-09-10T03:50:04.009495687Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1333"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/whilp/git-urls@v1.0.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/whilp/git-urls"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.01046,
+   "epss_percentile": 0.64877,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2",
+   "fixed_in": null
+  },
+  {
+   "package": "go:go.etcd.io/etcd/client/pkg/v3",
+   "version": "v3.7.0",
+   "advisory": "GO-2026-6107",
+   "cves": [
+    "CVE-2026-73500"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "3.7.1",
+   "summary": "Unbounded TLS handshake goroutines in go.etcd.io/etcd/client/pkg/v3",
+   "malicious": false,
+   "aliases": [
+    "BIT-etcd-2026-73500",
+    "CVE-2026-73500",
+    "GHSA-6vch-q96h-7gc3"
+   ],
+   "published": "2026-08-18T16:38:10Z",
+   "modified": "2026-08-19T21:41:59.273853582Z",
+   "dos_only": true,
+   "purl": "pkg:golang/go.etcd.io/etcd/client/pkg/v3@v3.7.0",
+   "fix_published_at": "2026-07-23T19:30:42Z",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > go.etcd.io/etcd/client/pkg/v3"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34593,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:NewListener",
+    "symbol:NewListenerWithOpts",
+    "symbol:NewTLSListener"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/containerd/containerd/v2",
+   "version": "v2.2.1",
+   "advisory": "GHSA-7jxh-36q5-gcqv",
+   "cves": [
+    "CVE-2026-53495"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.2.8",
+   "summary": "containerd: CRI ExecSync Goroutine Leak Leads to Node-Level Denial of Service",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-53495",
+    "GO-2026-6444"
+   ],
+   "published": "2026-09-09T18:01:33Z",
+   "modified": "2026-09-17T17:40:55.122822852Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/containerd/containerd/v2@v2.2.1",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/containerd/containerd/v2"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00162,
+   "epss_percentile": 0.05421,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/containerd/containerd/v2",
+   "version": "v2.2.1",
+   "advisory": "GHSA-cvxm-645q-p574",
+   "cves": [
+    "CVE-2026-50195"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.2.5",
+   "summary": "containerd: CRI checkpoint import allows local image tag poisoning",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-50195",
+    "GO-2026-5338"
+   ],
+   "published": "2026-06-19T19:35:23Z",
+   "modified": "2026-09-10T03:50:49.278604217Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:C/C:H/I:H/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:L/VA:N/SC:H/SI:H/SA:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-345",
+    "CWE-829"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/containerd/containerd/v2@v2.2.1",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/containerd/containerd/v2"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00303,
+   "epss_percentile": 0.23555,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/containerd/containerd/v2",
+   "version": "v2.2.1",
+   "advisory": "GHSA-jpcc-p29g-p8mq",
+   "cves": [
+    "CVE-2026-47262"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.2.5",
+   "summary": "containerd image-triggered runtime DoS via unbounded group parsing",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-47262",
+    "GO-2026-5475"
+   ],
+   "published": "2026-06-19T19:34:37Z",
+   "modified": "2026-09-10T03:50:50.032144703Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/containerd/containerd/v2@v2.2.1",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/containerd/containerd/v2"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00265,
+   "epss_percentile": 0.18651,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/containerd/containerd/v2",
+   "version": "v2.2.1",
+   "advisory": "GHSA-pg57-6jwg-q645",
+   "cves": [
+    "CVE-2026-53493"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.2.9",
+   "summary": "Containerd has image-pull DoS via crafted OCI index graph amplification",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-53493",
+    "GO-2026-6597"
+   ],
+   "published": "2026-09-25T19:27:59Z",
+   "modified": "2026-10-01T20:55:46.094271282Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-770",
+    "CWE-834"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/containerd/containerd/v2@v2.2.1",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/containerd/containerd/v2"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00356,
+   "epss_percentile": 0.30005,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/containerd/containerd/v2",
+   "version": "v2.2.1",
+   "advisory": "GHSA-rp3h-jf77-q9p4",
+   "cves": [
+    "CVE-2026-95838"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.2.8",
+   "summary": "containerd: Unpack DoS via repeated opaque whiteouts",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-95838",
+    "GO-2026-6796"
+   ],
+   "published": "2026-10-15T20:22:05Z",
+   "modified": "2026-10-19T21:40:52.337183596Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-400",
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/containerd/containerd/v2@v2.2.1",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/containerd/containerd/v2"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00223,
+   "epss_percentile": 0.13073,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/google/cel-go",
+   "version": "v0.29.2",
+   "advisory": "GO-2026-6094",
+   "severity": "MODERATE",
+   "fixed_in": "0.30.0",
+   "summary": "JSON private fields exposed via NativeTypes and ParseStructTag in github.com/google/cel-go",
+   "malicious": false,
+   "aliases": [
+    "GHSA-gcjh-h69q-9w9g"
+   ],
+   "published": "2026-08-18T16:38:10Z",
+   "modified": "2026-08-20T21:56:59.318294180Z",
+   "purl": "pkg:golang/github.com/google/cel-go@v0.29.2",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/google/cel-go"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:NativeTypes",
+    "symbol:ParseStructTag"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/in-toto/in-toto-golang",
+   "version": "v0.10.0",
+   "advisory": "GHSA-pmwq-pjrm-6p5r",
+   "severity": "MODERATE",
+   "fixed_in": "0.11.0",
+   "summary": "in-toto-golang and in-toto-python have inconsistent negation behavior",
+   "malicious": false,
+   "aliases": [
+    "GO-2026-5547"
+   ],
+   "published": "2026-05-08T22:24:19Z",
+   "modified": "2026-09-10T03:51:06.602952009Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:H/PR:H/UI:N/S:U/C:N/I:H/A:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-168"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/in-toto/in-toto-golang@v0.10.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/in-toto/in-toto-golang"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/moby/buildkit",
+   "version": "v0.28.1",
+   "advisory": "GHSA-7236-3392-c5c6",
+   "cves": [
+    "CVE-2026-61711"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.31.1",
+   "summary": "BuildKit: Custom frontend could bypass Seccomp/AppArmor",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-61711",
+    "GO-2026-6255"
+   ],
+   "published": "2026-08-19T20:23:50Z",
+   "modified": "2026-09-10T03:51:13.277422932Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/moby/buildkit@v0.28.1",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/moby/buildkit"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00357,
+   "epss_percentile": 0.3008,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/sigstore/sigstore-go",
+   "version": "v1.1.4",
+   "advisory": "GHSA-9vcr-p3rj-q5q6",
+   "cves": [
+    "CVE-2026-49834"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.2.0",
+   "summary": "sigstore-go has a multi-log threshold bypass via single compromised log",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-49834",
+    "GO-2026-5952"
+   ],
+   "published": "2026-07-09T23:20:30Z",
+   "modified": "2026-09-10T03:51:11.356574113Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-345",
+    "CWE-347"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/sigstore/sigstore-go@v1.1.4",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/sigstore/sigstore-go"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00181,
+   "epss_percentile": 0.07784,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:go.opentelemetry.io/otel/sdk",
+   "version": "v1.44.0",
+   "advisory": "GHSA-q7gw-24fr-5p69",
+   "cves": [
+    "CVE-2026-128085"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.47.0",
+   "summary": "opentelemetry-go: AttributeValueLengthLimit is fully bypassed by attribute values composed of valid U+FFFD runes",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-128085"
+   ],
+   "published": "2026-11-13T19:00:55Z",
+   "modified": "2026-11-13T19:15:05.908318974Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-135",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/go.opentelemetry.io/otel/sdk@v1.44.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > go.opentelemetry.io/otel/sdk"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00469,
+   "epss_percentile": 0.41317,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:go.opentelemetry.io/otel/trace",
+   "version": "v1.44.0",
+   "advisory": "GHSA-q7gw-24fr-5p69",
+   "cves": [
+    "CVE-2026-128085"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.47.0",
+   "summary": "opentelemetry-go: AttributeValueLengthLimit is fully bypassed by attribute values composed of valid U+FFFD runes",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-128085"
+   ],
+   "published": "2026-11-13T19:00:55Z",
+   "modified": "2026-11-13T19:15:05.908318974Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-135",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/go.opentelemetry.io/otel/trace@v1.44.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > go.opentelemetry.io/otel/trace"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00469,
+   "epss_percentile": 0.41317,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/sigstore/sigstore-go",
+   "version": "v1.1.4",
+   "advisory": "GHSA-wqqc-jjcq-vfxm",
+   "cves": [
+    "CVE-2026-54787"
+   ],
+   "severity": "LOW",
+   "fixed_in": "1.2.1",
+   "summary": "sigstore-go fails to check signature timestamps against a signing key's validity period",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-54787",
+    "GO-2026-6162"
+   ],
+   "published": "2026-07-31T21:58:39Z",
+   "modified": "2026-09-10T03:51:12.439713893Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-324"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/sigstore/sigstore-go@v1.1.4",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/sigstore/sigstore-go"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00134,
+   "epss_percentile": 0.02972,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:go.opentelemetry.io/otel/exporters/otlp/otlptrace",
+   "version": "v1.44.0",
+   "advisory": "GHSA-8wmf-6v46-5gfg",
+   "cves": [
+    "CVE-2026-81870"
+   ],
+   "severity": "LOW",
+   "fixed_in": "1.45.0",
+   "summary": "OpenTelemetry-Go: Exporter config logging may leak endpoint URLs in info logs",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-81870",
+    "GO-2026-6505"
+   ],
+   "published": "2026-09-17T20:31:06Z",
+   "modified": "2026-10-01T20:55:52.479756803Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-200",
+    "CWE-532"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/otlp/otlptrace@v1.44.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > go.opentelemetry.io/otel/exporters/otlp/otlptrace"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00266,
+   "epss_percentile": 0.18755,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc",
+   "version": "v1.44.0",
+   "advisory": "GHSA-8wmf-6v46-5gfg",
+   "cves": [
+    "CVE-2026-81870"
+   ],
+   "severity": "LOW",
+   "fixed_in": "1.45.0",
+   "summary": "OpenTelemetry-Go: Exporter config logging may leak endpoint URLs in info logs",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-81870",
+    "GO-2026-6505"
+   ],
+   "published": "2026-09-17T20:31:06Z",
+   "modified": "2026-10-01T20:55:52.479756803Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-200",
+    "CWE-532"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc@v1.44.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00266,
+   "epss_percentile": 0.18755,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:go.opentelemetry.io/otel/sdk",
+   "version": "v1.44.0",
+   "advisory": "GHSA-8wmf-6v46-5gfg",
+   "cves": [
+    "CVE-2026-81870"
+   ],
+   "severity": "LOW",
+   "fixed_in": "1.45.0",
+   "summary": "OpenTelemetry-Go: Exporter config logging may leak endpoint URLs in info logs",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-81870",
+    "GO-2026-6505"
+   ],
+   "published": "2026-09-17T20:31:06Z",
+   "modified": "2026-10-01T20:55:52.479756803Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:P/PR:L/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-200",
+    "CWE-532"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/go.opentelemetry.io/otel/sdk@v1.44.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > go.opentelemetry.io/otel/sdk"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00266,
+   "epss_percentile": 0.18755,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.59.0",
+   "advisory": "GO-2026-6860",
+   "cves": [
+    "CVE-2026-78661"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.62.0",
+   "summary": "Avoid quadratic complexity when coalescing text nodes in html in golang.org/x/net",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-78661"
+   ],
+   "published": "2026-10-27T21:16:18Z",
+   "modified": "2026-10-27T21:30:04.890809062Z",
+   "dos_only": true,
+   "purl": "pkg:golang/golang.org/x/net@v0.59.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/net"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00409,
+   "epss_percentile": 0.35903,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Parse",
+    "symbol:ParseFragment",
+    "symbol:ParseFragmentWithOptions"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/net",
+   "version": "v0.59.0",
+   "advisory": "GO-2026-6866",
+   "cves": [
+    "CVE-2026-97045"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.62.0",
+   "summary": "Check all ancestor namespace transitions when rendering raw text in html in golang.org/x/net",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-97045"
+   ],
+   "published": "2026-10-27T21:16:18Z",
+   "modified": "2026-10-27T21:45:08.978077289Z",
+   "purl": "pkg:golang/golang.org/x/net@v0.59.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/net"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00267,
+   "epss_percentile": 0.19116,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Render",
+    "symbol:childTextNodesAreLiteral"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/docker/distribution",
+   "version": "v2.8.3+incompatible",
+   "advisory": "GHSA-685w-q87j-wqw3",
+   "cves": [
+    "CVE-2026-85747"
+   ],
+   "severity": "MODERATE",
+   "summary": "Distribution: Client `manifests.Get()` does not verify returned content against requested digest",
+   "malicious": false,
+   "aliases": [
+    "BIT-distribution-2026-85747",
+    "CVE-2026-85747",
+    "GO-2026-6778"
+   ],
+   "published": "2026-10-15T20:22:02Z",
+   "modified": "2026-11-05T23:25:40.391377389Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:C/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-354"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/docker/distribution@v2.8.3%2Bincompatible",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/docker/distribution"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00218,
+   "epss_percentile": 0.12383,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "symbol:manifests.Get"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "vendor/modules.txt does not list github.com/distribution/distribution/registry/client, github.com/distribution/distribution/v3/internal/client, github.com/docker/distribution/registry/client"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2",
+   "fixed_in": null
+  },
+  {
+   "package": "go:helm.sh/helm/v3",
+   "version": "v3.18.5",
+   "advisory": "GHSA-hr2v-4r36-88hr",
+   "cves": [
+    "CVE-2026-35206"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "3.20.2",
+   "summary": "Helm Chart extraction output directory collapse via `Chart.yaml` name dot-segment",
+   "malicious": false,
+   "aliases": [
+    "BIT-helm-2026-35206",
+    "CVE-2026-35206",
+    "GO-2026-5435"
+   ],
+   "published": "2026-04-10T15:33:09Z",
+   "modified": "2026-09-10T03:51:02.108024621Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:N/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/helm.sh/helm/v3@v3.18.5",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > helm.sh/helm/v3"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00206,
+   "epss_percentile": 0.10855,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction",
+    "symbol:Expand",
+    "symbol:ExpandFile"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "vendor/modules.txt does not list helm.sh/helm/v3/pkg/chartutil"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/moby/buildkit",
+   "version": "v0.28.1",
+   "advisory": "GHSA-72x6-4j93-7w86",
+   "cves": [
+    "CVE-2026-61712"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.31.1",
+   "summary": "BuildKit has a possible runtime DoS via unbounded group parsing",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-61712",
+    "GO-2026-6256"
+   ],
+   "published": "2026-08-19T20:24:01Z",
+   "modified": "2026-09-10T03:51:13.226978985Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:P/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/moby/buildkit@v0.28.1",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/moby/buildkit"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00399,
+   "epss_percentile": 0.34816,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity",
+    "denial_of_service",
+    "symbol:BuildOp.CacheMap",
+    "symbol:BuildOp.Exec",
+    "symbol:ExecOp.CacheMap"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "vendor/modules.txt does not list github.com/moby/buildkit/solver/llbsolver/ops, github.com/moby/buildkit/executor/oci"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/crypto",
+   "version": "v0.57.0",
+   "advisory": "GO-2026-5932",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.58.1-0.20261009181718-2f1f834330b2",
+   "summary": "The golang.org/x/crypto/openpgp package is unmaintained, unsafe by design, and has known security issues",
+   "malicious": false,
+   "published": "2026-07-07T22:15:29Z",
+   "modified": "2026-11-02T22:15:06.677088389Z",
+   "purl": "pkg:golang/golang.org/x/crypto@v0.57.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/crypto"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:golang.org/x/crypto/openpgp",
+    "symbol:golang.org/x/crypto/openpgp/packet",
+    "symbol:golang.org/x/crypto/openpgp/armor"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "vendor/modules.txt does not list golang.org/x/crypto/openpgp, golang.org/x/crypto/openpgp/packet, golang.org/x/crypto/openpgp/armor"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

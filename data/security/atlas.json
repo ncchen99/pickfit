@@ -1,0 +1,1243 @@
+{
+ "slug": "atlas",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "269b533bc961461b2aea44cc36aec12105acc303",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 358,
+   "npm": 112
+  },
+  "scopes": {
+   "runtime": 316,
+   "optional": 17,
+   "dev": 136,
+   "workspace": 1
+  },
+  "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 26
+ },
+ "assessment": {
+  "level": "not_shipped",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-3r8g-jcqq-3p5j npm:@sveltejs/kit@2.70.2 (not_shipped)",
+   "worst:GHSA-j22f-vq7h-c4qm npm:devalue@5.9.0 (not_shipped)",
+   "worst:GHSA-mcm9-63f2-9j32 npm:devalue@5.9.0 (not_shipped)"
+  ],
+  "counts": {
+   "not_shipped": 9
+  },
+  "uncounted": 17,
+  "assessed_at": "2026-11-20T00:06:03+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 470,
+  "packages_checked": 470,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 342,
+    "gaps": []
+   },
+   {
+    "ecosystem": "crates",
+    "component": "crates/xgrammar/Cargo.lock",
+    "status": "scanned",
+    "packages": 44,
+    "gaps": []
+   },
+   {
+    "ecosystem": "npm",
+    "component": "dez/package-lock.json",
+    "status": "scanned",
+    "packages": 112,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/Atlas-Inf/atlas@269b533bc961",
+  "Cargo.lock",
+  "crates/xgrammar/Cargo.lock",
+  "dez/package-lock.json"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:lru",
+   "version": "0.12.5",
+   "advisory": "GHSA-rhfx-m35p-ff5j",
+   "severity": "LOW",
+   "fixed_in": "0.16.3",
+   "summary": "`IterMut` violates Stacked Borrows by invalidating internal pointer",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0002"
+   ],
+   "published": "2026-01-07T20:38:57Z",
+   "modified": "2026-09-10T03:50:59.064354050Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N/E:U",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-476"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/lru@0.12.5",
+   "scope": "runtime",
+   "paths": [
+    "spark-server > ratatui > lru"
+   ],
+   "workspace": "crates/spark-server",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:IterMut"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use IterMut, but other packages depend on lru"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:crossbeam-epoch",
+   "version": "0.9.18",
+   "advisory": "RUSTSEC-2026-0204",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.9.20",
+   "summary": "Invalid pointer dereference in `fmt::Pointer` impl for `Atomic` and `Shared` when the underlying pointer is invalid",
+   "malicious": false,
+   "published": "2026-07-06T12:00:00Z",
+   "modified": "2026-07-06T22:30:04.159269138Z",
+   "purl": "pkg:cargo/crossbeam-epoch@0.9.18",
+   "scope": "runtime",
+   "paths": [
+    "xgrammar > rayon > rayon-core > crossbeam-deque > crossbeam-epoch"
+   ],
+   "workspace": "crates/xgrammar",
+   "found_in": "crates/xgrammar/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:fmt::Pointer",
+    "symbol:Atomic",
+    "symbol:Shared"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "crates/spark-comm/src/nccl_backend/rdma_pair/cmd_ring.rs:97: struct Shared {",
+     "named only in files that do not import crossbeam-epoch"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@sveltejs/kit",
+   "version": "2.70.2",
+   "advisory": "GHSA-3r8g-jcqq-3p5j",
+   "cves": [
+    "CVE-2026-128120"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "3.1.1",
+   "summary": "SvelteKit: DoS while parsing form data from a remote functions `form`",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-128120"
+   ],
+   "published": "2026-11-16T14:57:35Z",
+   "modified": "2026-11-16T15:15:03.549428904Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/%40sveltejs/kit@2.70.2",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00346,
+   "epss_percentile": 0.28769,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:devalue",
+   "version": "5.9.0",
+   "advisory": "GHSA-j22f-vq7h-c4qm",
+   "cves": [
+    "CVE-2026-92708"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "5.9.3",
+   "summary": "devalue: `stringify`/`uneval` serialize shared memory",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-92708"
+   ],
+   "published": "2026-10-01T15:18:06Z",
+   "modified": "2026-10-01T15:30:12.678757365Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-226"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/devalue@5.9.0",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit > devalue"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00725,
+   "epss_percentile": 0.54857,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:devalue",
+   "version": "5.9.0",
+   "advisory": "GHSA-mcm9-63f2-9j32",
+   "cves": [
+    "CVE-2026-123565"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "5.9.3",
+   "summary": "devalue: Repeated primitive strings cause quadratic expansion in uneval",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123565"
+   ],
+   "published": "2026-10-01T15:17:29Z",
+   "modified": "2026-11-08T10:56:13.292191726Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-409"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/devalue@5.9.0",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit > devalue"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00343,
+   "epss_percentile": 0.28473,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:devalue",
+   "version": "5.9.0",
+   "advisory": "GHSA-r9w8-h9r3-54w4",
+   "cves": [
+    "CVE-2026-123563"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "5.9.3",
+   "summary": "devalue: Custom ArrayBuffer revivers can bypass typed-array allocation validation",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123563"
+   ],
+   "published": "2026-10-01T15:15:56Z",
+   "modified": "2026-11-08T10:56:12.205727459Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-789",
+    "CWE-843"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/devalue@5.9.0",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit > devalue"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00375,
+   "epss_percentile": 0.32203,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:devalue",
+   "version": "5.9.0",
+   "advisory": "GHSA-x5rw-q4pp-hg5g",
+   "cves": [
+    "CVE-2026-123562"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "5.9.3",
+   "summary": "devalue: stringifyAsync can cause an unhandled rejection despite a caught returned promise",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123562"
+   ],
+   "published": "2026-10-01T15:15:13Z",
+   "modified": "2026-11-08T10:56:11.899025413Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248",
+    "CWE-755"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/devalue@5.9.0",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit > devalue"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00343,
+   "epss_percentile": 0.28474,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:sharp",
+   "version": "0.35.3",
+   "advisory": "GHSA-rgj7-g3m4-5g8c",
+   "cves": [
+    "CVE-2026-114112"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.35.4",
+   "summary": "sharp: Vulnerabilities in libheif: GHSA-g89c-p67h-r497 and GHSA-2jg2-4ch7-h545",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-114112"
+   ],
+   "published": "2026-09-08T21:25:11Z",
+   "modified": "2026-10-21T10:57:29.264848152Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-122"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/sharp@0.35.3",
+   "scope": "dev",
+   "paths": [
+    ". > sharp"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00241,
+   "epss_percentile": 0.15496,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:sharp",
+   "version": "0.35.3",
+   "advisory": "GHSA-wq5f-xc86-pv6w",
+   "cves": [
+    "CVE-2026-114111"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.35.5",
+   "summary": "sharp : Vulnerability in librsvg dependency CVE-2026-96889",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-114111"
+   ],
+   "published": "2026-10-06T13:43:57Z",
+   "modified": "2026-10-21T10:57:27.441638733Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:H/SI:H/SA:H",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-1395",
+    "CWE-416"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/sharp@0.35.3",
+   "scope": "dev",
+   "paths": [
+    ". > sharp"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00129,
+   "epss_percentile": 0.02603,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:source-map-js",
+   "version": "1.2.1",
+   "advisory": "GHSA-68fv-2mgg-jv7q",
+   "cves": [
+    "CVE-2026-93749"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.2.2",
+   "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-93749"
+   ],
+   "published": "2026-09-18T18:31:44Z",
+   "modified": "2026-10-05T23:45:07.974936711Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1284"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/source-map-js@1.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > vite > postcss > source-map-js"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00455,
+   "epss_percentile": 0.40249,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "8.2.1",
+   "advisory": "GHSA-587h-7wmj-h5pm",
+   "cves": [
+    "CVE-2026-112942"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "8.2.4",
+   "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112942"
+   ],
+   "published": "2026-10-20T19:48:25Z",
+   "modified": "2026-10-20T20:00:04.608979840Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-77"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@8.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.01694,
+   "epss_percentile": 0.77635,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@sveltejs/adapter-static",
+   "version": "3.0.10",
+   "advisory": "GHSA-jf9x-2fg2-hx4w",
+   "cves": [
+    "CVE-2026-128121"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "3.0.11",
+   "summary": "SvelteKit: Prerendered paths are interpreted as regular expressions in Vercel route config generated by @sveltejs/adapter-vercel and @sveltejs/adapter-static",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-128121"
+   ],
+   "published": "2026-11-13T20:43:23Z",
+   "modified": "2026-11-13T21:00:03.964829462Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-116",
+    "CWE-625"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40sveltejs/adapter-static@3.0.10",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/adapter-static"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.0044,
+   "epss_percentile": 0.39015,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@sveltejs/kit",
+   "version": "2.70.2",
+   "advisory": "GHSA-6cf5-gc4q-fm3x",
+   "cves": [
+    "CVE-2026-128119"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "3.1.1",
+   "summary": "SvelteKit: Private `query.batch` functions could collide, producing unexpected parameter / function combinations",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-128119"
+   ],
+   "published": "2026-11-16T14:49:03Z",
+   "modified": "2026-11-16T15:00:09.762004719Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-863"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40sveltejs/kit@2.70.2",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00285,
+   "epss_percentile": 0.21412,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@sveltejs/kit",
+   "version": "2.70.2",
+   "advisory": "GHSA-mw6w-2fmv-pvw3",
+   "cves": [
+    "CVE-2026-128117"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.70.4",
+   "summary": "SvelteKit: adapter-node crashes with an unhandled URIError when `reroute` rewrites malformed pathnames",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-128117"
+   ],
+   "published": "2026-11-13T20:51:44Z",
+   "modified": "2026-11-13T21:00:03.987248875Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/%40sveltejs/kit@2.70.2",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00477,
+   "epss_percentile": 0.41995,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@sveltejs/kit",
+   "version": "2.70.2",
+   "advisory": "GHSA-rqp5-r3wg-vg35",
+   "cves": [
+    "CVE-2026-128116"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.70.4",
+   "summary": "SvelteKit: Protocol-relative module import during server-side route resolution allows cross-origin script execution",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-128116"
+   ],
+   "published": "2026-11-16T14:48:54Z",
+   "modified": "2026-11-16T15:00:10.447165173Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40sveltejs/kit@2.70.2",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00264,
+   "epss_percentile": 0.18559,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:devalue",
+   "version": "5.9.0",
+   "advisory": "GHSA-4q55-j62x-fr9h",
+   "cves": [
+    "CVE-2026-123561"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "5.9.3",
+   "summary": "devalue: Malformed null-prototype object keys bypass __proto__ rejection via property-key coercion",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123561"
+   ],
+   "published": "2026-10-01T15:13:23Z",
+   "modified": "2026-11-08T10:56:13.484927650Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:N/VA:N/SC:N/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/devalue@5.9.0",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit > devalue"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00249,
+   "epss_percentile": 0.16391,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:devalue",
+   "version": "5.9.0",
+   "advisory": "GHSA-9rgm-9g3h-6x36",
+   "cves": [
+    "CVE-2026-81176"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "5.9.2",
+   "summary": "Svelte devalue: DoS via malformed input",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-81176"
+   ],
+   "published": "2026-09-17T20:28:21Z",
+   "modified": "2026-09-17T20:45:04.992155900Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/devalue@5.9.0",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit > devalue"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00507,
+   "epss_percentile": 0.44008,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:devalue",
+   "version": "5.9.0",
+   "advisory": "GHSA-hx4r-w6wj-j8fg",
+   "cves": [
+    "CVE-2026-123566"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "5.9.3",
+   "summary": "devalue: Residual sparse-array CPU amplification in uneval",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123566"
+   ],
+   "published": "2026-10-01T15:17:42Z",
+   "modified": "2026-11-08T10:56:11.387612861Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/devalue@5.9.0",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit > devalue"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00343,
+   "epss_percentile": 0.28472,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "8.2.1",
+   "advisory": "GHSA-698v-4r3x-3vcv",
+   "cves": [
+    "CVE-2026-112943"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.2.4",
+   "summary": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112943"
+   ],
+   "published": "2026-10-20T18:30:24Z",
+   "modified": "2026-10-20T18:45:09.467993691Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-78"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@8.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00414,
+   "epss_percentile": 0.36473,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "8.2.1",
+   "advisory": "GHSA-r825-w8mm-5pxw",
+   "cves": [
+    "CVE-2026-112944"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.2.4",
+   "summary": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112944"
+   ],
+   "published": "2026-10-20T19:51:52Z",
+   "modified": "2026-10-20T20:00:04.608907013Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-88"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@8.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00705,
+   "epss_percentile": 0.54125,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "8.2.1",
+   "advisory": "GHSA-rq7h-c2jc-7f22",
+   "cves": [
+    "CVE-2026-112946"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.2.4",
+   "summary": "Vite: Files outside `server.fs.allow` could be served when project paths match system paths on non-Windows machine",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112946"
+   ],
+   "published": "2026-10-21T16:47:42Z",
+   "modified": "2026-10-21T17:00:06.336868869Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22",
+    "CWE-284"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@8.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00852,
+   "epss_percentile": 0.59015,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "8.2.1",
+   "advisory": "GHSA-vfpm-58rq-9qcg",
+   "cves": [
+    "CVE-2026-112947"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.2.4",
+   "summary": "Vite: First 4 bytes of files outside of `server.fs` setting is exposed by `?vite-wasm-instance`",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112947"
+   ],
+   "published": "2026-10-21T16:47:15Z",
+   "modified": "2026-10-21T17:00:07.443467820Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-209",
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@8.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00502,
+   "epss_percentile": 0.43727,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@sveltejs/kit",
+   "version": "2.70.2",
+   "advisory": "GHSA-27mw-82g8-phjj",
+   "cves": [
+    "CVE-2026-114061"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.0.0",
+   "summary": "SvelteKit : XSS via untrusted cache-control header in prerendered page",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-114061"
+   ],
+   "published": "2026-10-23T20:43:30Z",
+   "modified": "2026-10-23T21:00:04.312966515Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:N/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40sveltejs/kit@2.70.2",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00213,
+   "epss_percentile": 0.1168,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@sveltejs/kit",
+   "version": "2.70.2",
+   "advisory": "GHSA-pfhg-q3qv-9q6r",
+   "cves": [
+    "CVE-2026-114060"
+   ],
+   "severity": "LOW",
+   "fixed_in": "3.0.0",
+   "summary": "SvelteKit: URL redirection to untrusted site via enhanced form submission",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-114060"
+   ],
+   "published": "2026-10-23T20:58:24Z",
+   "modified": "2026-10-23T21:15:03.741776060Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-601"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40sveltejs/kit@2.70.2",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00202,
+   "epss_percentile": 0.10192,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:devalue",
+   "version": "5.9.0",
+   "advisory": "GHSA-wf3x-273g-mvxv",
+   "cves": [
+    "CVE-2026-123564"
+   ],
+   "severity": "LOW",
+   "fixed_in": "5.9.3",
+   "summary": "devalue: Sparse arrays emitted by uneval cause eager allocation when evaluated",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123564"
+   ],
+   "published": "2026-10-01T15:17:13Z",
+   "modified": "2026-11-08T10:56:08.686140515Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:N/UI:P/VC:N/VI:N/VA:N/SC:N/SI:N/SA:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-789"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/devalue@5.9.0",
+   "scope": "dev",
+   "paths": [
+    ". > @sveltejs/kit > devalue"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00343,
+   "epss_percentile": 0.28473,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "8.2.1",
+   "advisory": "GHSA-9jrq-w75r-8gcw",
+   "cves": [
+    "CVE-2026-112945"
+   ],
+   "severity": "LOW",
+   "fixed_in": "8.2.4",
+   "summary": "Vite: Cross origin script execution through Vite custom middleware",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112945"
+   ],
+   "published": "2026-10-21T16:48:14Z",
+   "modified": "2026-10-21T17:00:26.569382874Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-80"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@8.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > vite"
+   ],
+   "workspace": ".",
+   "found_in": "dez/package-lock.json",
+   "kev": false,
+   "epss": 0.00672,
+   "epss_percentile": 0.52858,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

@@ -156,13 +156,11 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/AynOps/AynOps@5694684ae1b3",
+      "github.com/AynOps/AynOps@f34e1687a043",
       "uv.lock"
     ],
     "packages_checked": 32,
@@ -179,35 +177,122 @@
         "severity": "HIGH",
         "fixed_in": "2.9.0",
         "summary": "dnspython dns.name.from_wire_parser() excessive CPU use",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "uv.lock",
+        "kev": false,
+        "epss": 0.00481,
+        "fix_published_at": "2026-10-09T00:07:22Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "uv.lock > dnspython"
+        ]
       },
       {
-        "package": "pypi:filelock",
-        "version": "3.29.7",
-        "advisory": "GHSA-v4x8-3wr5-3wq8",
+        "package": "pypi:dnspython",
+        "version": "2.8.0",
+        "advisory": "GHSA-vvf4-9x63-8xvv",
         "cves": [
-          "CVE-2026-112940"
+          "CVE-2026-128089"
         ],
         "severity": "HIGH",
-        "fixed_in": "4.2.1",
-        "summary": "filelock ReadWriteLock: SQLite reopens the lock database by name, so a planted symlink or journal file makes the lock user's process overwrite or unlink its own files",
-        "malicious": false
+        "fixed_in": "2.9.2",
+        "summary": "dnspython has excessive memory and CPU use",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "uv.lock",
+        "kev": false,
+        "epss": 0.00527,
+        "fix_published_at": "2026-11-03T23:56:52Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "uv.lock > dnspython"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:06:03+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "f34e1687a0430c6ccbcddaa734cc14ad8590fddc",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "pypi": 32
+      },
+      "scopes": {
+        "runtime": 32
+      },
+      "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 2,
+      "details": "security/aynops.json",
+      "details_sha256": "07ccd8334a3b02e25322c63c268f6e46ada71fbb114c8625ee4827f3c1b42210"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-45c3-73f7-pv4m pypi:dnspython@2.8.0 (conditional)",
+        "worst:GHSA-vvf4-9x63-8xvv pypi:dnspython@2.8.0 (conditional)"
+      ],
+      "counts": {
+        "conditional": 2
+      },
+      "uncounted": 0,
+      "assessed_at": "2026-11-20T00:06:03+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 32,
+      "packages_checked": 32,
+      "components": [
+        {
+          "ecosystem": "pypi",
+          "component": "uv.lock",
+          "status": "scanned",
+          "packages": 32,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 92.2,
       "confidence": 0.4,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.875,
@@ -227,16 +312,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 92.2,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -776,5 +858,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:50+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:06:03+08:00"
 }

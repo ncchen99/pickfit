@@ -143,28 +143,16 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
       "pypi:dda (fresh install, 51 packages)"
     ],
     "packages_checked": 51,
-    "findings_total": 2,
-    "advisories_total": 2,
+    "findings_total": 1,
+    "advisories_total": 1,
     "findings": [
-      {
-        "package": "pypi:uv",
-        "version": "0.11.33",
-        "advisory": "GHSA-hq85-5cpj-mr62",
-        "cves": [],
-        "severity": "CRITICAL",
-        "fixed_in": "0.13.4",
-        "summary": "uv's bundled CA store trusts an emSign root whose intermediate CA keys are compromised",
-        "malicious": false
-      },
       {
         "package": "pypi:filelock",
         "version": "3.32.7",
@@ -175,23 +163,90 @@
         "severity": "HIGH",
         "fixed_in": "4.2.1",
         "summary": "filelock ReadWriteLock: SQLite reopens the lock database by name, so a planted symlink or journal file makes the lock user's process overwrite or unlink its own files",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "registry:pypi:dda",
+        "kev": false,
+        "epss": 0.0019,
+        "fix_published_at": "2026-10-17T16:48:12Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:06:03+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "registry_resolve",
+      "commit": null,
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "pypi": 51
+      },
+      "scopes": {
+        "runtime": 51
+      },
+      "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 13,
+      "details": "security/datadog-agent-dev.json",
+      "details_sha256": "8f0f998ef426188b401633526fa0a06c8247cf4ecaba0da49e87391a0d89dd1e"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-v4x8-3wr5-3wq8 pypi:filelock@3.32.7 (conditional)"
+      ],
+      "counts": {
+        "conditional": 1
+      },
+      "uncounted": 12,
+      "assessed_at": "2026-11-20T00:06:03+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "registry_resolve",
+      "packages_found": 51,
+      "packages_checked": 51,
+      "components": [
+        {
+          "ecosystem": "pypi",
+          "component": "registry:pypi:dda",
+          "status": "scanned",
+          "packages": 51,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 45.3,
-      "raw_total": 45.3,
       "confidence": 0.4,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.125,
@@ -211,16 +266,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 45.3,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -480,5 +532,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:46:44+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:06:03+08:00"
 }

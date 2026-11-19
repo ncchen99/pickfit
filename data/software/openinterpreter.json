@@ -213,19 +213,18 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-05T03:16:33+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/openinterpreter/openinterpreter@f12ce327eeee",
+      "github.com/openinterpreter/openinterpreter@382f615b9072",
       "codex-rs/Cargo.lock",
+      "pnpm-lock.yaml",
       "sdk/python/uv.lock"
     ],
-    "packages_checked": 1356,
-    "findings_total": 16,
-    "advisories_total": 16,
+    "packages_checked": 1928,
+    "findings_total": 18,
+    "advisories_total": 18,
     "findings": [
       {
         "package": "crates:zip",
@@ -237,7 +236,21 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "codex-rs/core-plugins",
+        "found_in": "codex-rs/Cargo.lock",
+        "kev": false,
+        "epss": 0.0032,
+        "fix_published_at": "2026-10-17T18:45:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "codex-core-plugins > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -247,7 +260,31 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "codex-rs/core-plugins",
+        "found_in": "codex-rs/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:ZipStreamReader::extract",
+          "symbol:ZipArchive::extract"
+        ],
+        "paths": [
+          "codex-core-plugins > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+          ]
+        }
       },
       {
         "package": "crates:gix",
@@ -259,7 +296,34 @@
         "severity": "HIGH",
         "fixed_in": "0.83.0",
         "summary": "gitoxide: CommandForbiddenInModulesConfiguration Bypass in gix_submodule::File::update() Enables Arbitrary Command Execution via .gitmodules",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "codex-rs/git-utils",
+        "found_in": "codex-rs/Cargo.lock",
+        "kev": false,
+        "epss": 0.00651,
+        "fix_published_at": "2026-04-27T23:01:17Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction",
+          "symbol:File::update"
+        ],
+        "paths": [
+          "codex-git-utils > gix"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "codex-rs/codex-mcp/src/connection_manager_tests.rs:1379: assert!(updating_manager.update(",
+            "named only in files that do not import gix"
+          ]
+        }
       },
       {
         "package": "crates:gix",
@@ -271,7 +335,21 @@
         "severity": "HIGH",
         "fixed_in": "0.83.0",
         "summary": "gix and gitoxide: unvalidated submodule name traverses out of .git/modules and redirects state() / open() to another repository",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "codex-rs/git-utils",
+        "found_in": "codex-rs/Cargo.lock",
+        "kev": false,
+        "epss": 0.00522,
+        "fix_published_at": "2026-04-27T23:01:17Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "codex-git-utils > gix"
+        ]
       },
       {
         "package": "crates:gix",
@@ -283,7 +361,25 @@
         "severity": "HIGH",
         "fixed_in": "0.83.0",
         "summary": "gix's submodule name validation bypass + trust inheritance flaw enables path traversal and credential disclosure",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "codex-rs/git-utils",
+        "found_in": "codex-rs/Cargo.lock",
+        "kev": false,
+        "epss": 0.00657,
+        "fix_published_at": "2026-04-27T23:01:17Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction",
+          "high_complexity"
+        ],
+        "paths": [
+          "codex-git-utils > gix"
+        ]
       },
       {
         "package": "crates:gix",
@@ -295,7 +391,21 @@
         "severity": "HIGH",
         "fixed_in": "0.83.0",
         "summary": "gix and gitoxide's symlinked .gitmodules are followed and parsed from outside of the repository",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "codex-rs/git-utils",
+        "found_in": "codex-rs/Cargo.lock",
+        "kev": false,
+        "epss": 0.00522,
+        "fix_published_at": "2026-04-27T23:01:17Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "codex-git-utils > gix"
+        ]
       },
       {
         "package": "crates:gix-fs",
@@ -307,7 +417,25 @@
         "severity": "HIGH",
         "fixed_in": "0.21.1",
         "summary": "gix-fs: Symlink prefix-reuse allows worktree escape during checkout",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "codex-rs/git-utils",
+        "found_in": "codex-rs/Cargo.lock",
+        "kev": false,
+        "epss": 0.00291,
+        "fix_published_at": "2026-04-30T10:25:00Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
+        ],
+        "paths": [
+          "codex-git-utils > gix > gix-fs"
+        ]
       },
       {
         "package": "crates:gix-pack",
@@ -319,17 +447,78 @@
         "severity": "HIGH",
         "fixed_in": "0.69.0",
         "summary": "gix-pack has multiple DoS vectors: unchecked indexing panics and uncapped OOM allocations from crafted pack data",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "codex-rs/git-utils",
+        "found_in": "codex-rs/Cargo.lock",
+        "kev": false,
+        "epss": 0.00488,
+        "fix_published_at": "2026-04-24T08:59:19Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "codex-git-utils > gix > gix-pack"
+        ]
       },
       {
         "package": "crates:hickory-proto",
         "version": "0.25.2",
         "advisory": "GHSA-3v94-mw7p-v465",
-        "cves": [],
+        "cves": [
+          "CVE-2026-123607"
+        ],
         "severity": "HIGH",
         "fixed_in": null,
         "summary": "hickory-proto: NSEC3 closest-encloser proof validation enters unbounded loop on cross-zone responses",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "codex-rs/network-proxy",
+        "found_in": "codex-rs/Cargo.lock",
+        "kev": false,
+        "epss": 0.00343,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "codex-network-proxy > rama-dns > hickory-resolver > hickory-proto"
+        ]
+      },
+      {
+        "package": "crates:hickory-proto",
+        "version": "0.25.2",
+        "advisory": "RUSTSEC-2026-0505",
+        "cves": [
+          "CVE-2026-123580"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.26.0-beta.1",
+        "summary": "NSEC3 owner names not checked against the zone in DNSSEC validation (hickory-proto)",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "codex-rs/network-proxy",
+        "found_in": "codex-rs/Cargo.lock",
+        "kev": false,
+        "epss": 0.00255,
+        "fix_published_at": "2026-03-12T20:56:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "codex-network-proxy > rama-dns > hickory-resolver > hickory-proto"
+        ]
       },
       {
         "package": "crates:hickory-resolver",
@@ -341,7 +530,32 @@
         "severity": "HIGH",
         "fixed_in": "0.26.2",
         "summary": "hickory-resolver: Resolver::lookup() and Resolver::lookup_ip() APIs obscure DNSSEC validation failures",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "codex-rs/network-proxy",
+        "found_in": "codex-rs/Cargo.lock",
+        "kev": false,
+        "epss": 0.00231,
+        "fix_published_at": "2026-09-03T19:35:39Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:Resolver::lookup",
+          "symbol:Resolver::lookup_ip"
+        ],
+        "paths": [
+          "codex-network-proxy > rama-dns > hickory-resolver"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use Resolver::lookup, Resolver::lookup_ip, but other packages depend on hickory-resolver"
+          ]
+        }
       },
       {
         "package": "crates:quinn-proto",
@@ -351,7 +565,31 @@
         "severity": "HIGH",
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "codex-rs/tcp-tunnel",
+        "found_in": "codex-rs/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-09-14T10:08:32Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ACK_FREQUENCY"
+        ],
+        "paths": [
+          "codex-tcp-tunnel > quinn > quinn-proto"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+          ]
+        }
       },
       {
         "package": "crates:quinn-proto",
@@ -361,7 +599,23 @@
         "severity": "HIGH",
         "fixed_in": "0.11.18",
         "summary": "Outgoing datagram buffer accounting can panic the sender in quinn-proto",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "codex-rs/tcp-tunnel",
+        "found_in": "codex-rs/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-09-14T10:08:32Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "codex-tcp-tunnel > quinn > quinn-proto"
+        ]
       },
       {
         "package": "crates:rmcp",
@@ -373,7 +627,24 @@
         "severity": "HIGH",
         "fixed_in": "2.0.0",
         "summary": "RMCP: Missing Resource Field Validation in OAuth Protected Resource Metadata Discovery",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "codex-rs/acp-server",
+        "found_in": "codex-rs/Cargo.lock",
+        "kev": false,
+        "epss": 0.00195,
+        "fix_published_at": "2026-06-29T12:32:23Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction"
+        ],
+        "paths": [
+          "codex-acp-server > agent-client-protocol > rmcp"
+        ]
       },
       {
         "package": "crates:rmcp",
@@ -385,7 +656,50 @@
         "severity": "HIGH",
         "fixed_in": "2.0.0",
         "summary": "RMCP: Unauthenticated permanent session-table leak in rmcp Streamable HTTP server transport leads to remote denial-of-service",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "codex-rs/acp-server",
+        "found_in": "codex-rs/Cargo.lock",
+        "kev": false,
+        "epss": 0.00535,
+        "fix_published_at": "2026-06-29T12:32:23Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "codex-acp-server > agent-client-protocol > rmcp"
+        ]
+      },
+      {
+        "package": "crates:rmcp",
+        "version": "3.2.0",
+        "advisory": "RUSTSEC-2026-0461",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "3.6.0",
+        "summary": "Unbounded tool schema cache in Streamable HTTP server transport",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "codex-rs/app-server-protocol",
+        "found_in": "codex-rs/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-20T05:53:35Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "codex-app-server-protocol > rmcp"
+        ]
       },
       {
         "package": "crates:zip",
@@ -397,7 +711,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "codex-rs/core-plugins",
+        "found_in": "codex-rs/Cargo.lock",
+        "kev": false,
+        "epss": 0.00461,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "codex-core-plugins > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -407,23 +738,117 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "codex-rs/core-plugins",
+        "found_in": "codex-rs/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
+        ],
+        "paths": [
+          "codex-core-plugins > zip"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "382f615b907279be1b6518156ac2754d3c235ff4",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 1349,
+        "npm": 572,
+        "pypi": 7
+      },
+      "scopes": {
+        "runtime": 1244,
+        "optional": 74,
+        "build": 13,
+        "dev": 24,
+        "workspace": 573
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 166,
+      "details": "security/openinterpreter.json",
+      "details_sha256": "23bc680a60a7ce26765b08f7d042946e29f88989e6892f8b296bca6c2cc0849f"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-m665-v7pm-7grj crates:zip@2.4.2 (conditional)",
+        "worst:RUSTSEC-2026-0369 crates:zip@2.4.2 (conditional)",
+        "worst:GHSA-f26g-jm89-4g65 crates:gix@0.81.0 (conditional)"
+      ],
+      "counts": {
+        "conditional": 18,
+        "not_shipped": 41
+      },
+      "uncounted": 107,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 1928,
+      "packages_checked": 1928,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "codex-rs/Cargo.lock",
+          "status": "scanned",
+          "packages": 1349,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "pnpm-lock.yaml",
+          "status": "scanned",
+          "packages": 572,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "sdk/python/uv.lock",
+          "status": "scanned",
+          "packages": 7,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 80.1,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5625,
@@ -443,16 +868,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 80.1,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -856,5 +1278,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:02+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

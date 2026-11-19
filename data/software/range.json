@@ -406,9 +406,7 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "clean",
     "unchecked_reason": null,
     "sources": [
@@ -418,21 +416,113 @@
     "packages_checked": 23,
     "findings_total": 0,
     "advisories_total": 0,
-    "findings": []
+    "findings": [
+      {
+        "package": "go:github.com/klauspost/compress",
+        "version": "v1.20.0",
+        "advisory": "GO-2026-6865",
+        "cves": [
+          "CVE-2026-116591"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.2",
+        "summary": "Panic on two-block frames in github.com/klauspost/compress",
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "kev": false,
+        "epss": 0.00333,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:Compress",
+          "symbol:Decompress",
+          "symbol:Scratch.readNCount"
+        ],
+        "paths": [
+          "go.mod > github.com/klauspost/compress"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no .go file imports github.com/klauspost/compress/fse, github.com/klauspost/compress/huff0; go.mod requires github.com/klauspost/compress directly"
+          ]
+        }
+      }
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "ab8657a679e6ad55f9e534a0457eaff66e3ac00d",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "go": 23
+      },
+      "scopes": {
+        "runtime": 23
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 3,
+      "details": "security/range.json",
+      "details_sha256": "d4fe3196fd17d5d4590bdc17787a7b502e76fb475c24904137c51fa9b92158b6"
+    },
+    "assessment": {
+      "level": "present_unreachable",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GO-2026-6865 go:github.com/klauspost/compress@v1.20.0 (present_unreachable)"
+      ],
+      "counts": {
+        "present_unreachable": 1
+      },
+      "uncounted": 2,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 23,
+      "packages_checked": 23,
+      "components": [
+        {
+          "ecosystem": "go",
+          "component": "go.mod",
+          "status": "scanned",
+          "packages": 23,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 84.9,
-      "raw_total": 84.9,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.6875,
@@ -452,16 +542,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 84.9,
       "security": {
-        "level": "clean",
-        "basis": "status",
+        "level": "present_unreachable",
+        "basis": "assessment",
         "effect": "none",
         "deduction": 0.0
       }
@@ -806,5 +893,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T20:20:54+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

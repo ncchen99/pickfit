@@ -420,99 +420,6 @@
       }
     ]
   },
-  "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-05T03:16:33+08:00",
-    "status": "vulnerable",
-    "unchecked_reason": null,
-    "sources": [
-      "github.com/readest/readest@052bbc8e773e",
-      "Cargo.lock",
-      "pnpm-lock.yaml"
-    ],
-    "packages_checked": 2174,
-    "findings_total": 7,
-    "advisories_total": 7,
-    "findings": [
-      {
-        "package": "crates:zip",
-        "version": "4.6.1",
-        "advisory": "GHSA-m665-v7pm-7grj",
-        "cves": [
-          "CVE-2026-115905"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "9.0.5",
-        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "4.6.1",
-        "advisory": "RUSTSEC-2026-0369",
-        "cves": [],
-        "severity": "CRITICAL",
-        "fixed_in": "9.0.0",
-        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
-      },
-      {
-        "package": "crates:nix",
-        "version": "0.19.1",
-        "advisory": "GHSA-wgrg-5h56-jg27",
-        "cves": [
-          "CVE-2021-45707"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.20.2",
-        "summary": "Out-of-bounds write in nix::unistd::getgrouplist",
-        "malicious": false
-      },
-      {
-        "package": "crates:quinn-proto",
-        "version": "0.11.17",
-        "advisory": "RUSTSEC-2026-0340",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.11.18",
-        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
-      },
-      {
-        "package": "crates:quinn-proto",
-        "version": "0.11.17",
-        "advisory": "RUSTSEC-2026-0343",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.11.18",
-        "summary": "Outgoing datagram buffer accounting can panic the sender in quinn-proto",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "4.6.1",
-        "advisory": "GHSA-q7v9-x93c-xqv3",
-        "cves": [
-          "CVE-2026-115909"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "4.6.1",
-        "advisory": "RUSTSEC-2026-0367",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
-      }
-    ]
-  },
   "visual_check": {
     "version": "comfort.v1",
     "run_id": "verify-readest-20261104-232754-ca29",
@@ -526,19 +433,309 @@
     "checked_at": "2026-11-05T03:29:03+08:00",
     "cost_usd": 0.037104
   },
+  "security": {
+    "version": "sec.v2",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/readest/readest@fd26037986ab",
+      "Cargo.lock",
+      "pnpm-lock.yaml"
+    ],
+    "packages_checked": 2896,
+    "findings_total": 7,
+    "advisories_total": 7,
+    "findings": [
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "GHSA-m665-v7pm-7grj",
+        "cves": [
+          "CVE-2026-115905"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.5",
+        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/readest-app/src-tauri",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.0032,
+        "fix_published_at": "2026-10-17T18:45:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "Readest > tauri-plugin-updater > zip"
+        ]
+      },
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "RUSTSEC-2026-0369",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.0",
+        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/readest-app/src-tauri",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:ZipStreamReader::extract",
+          "symbol:ZipArchive::extract"
+        ],
+        "paths": [
+          "Readest > tauri-plugin-updater > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+          ]
+        }
+      },
+      {
+        "package": "crates:nix",
+        "version": "0.19.1",
+        "advisory": "GHSA-76w9-p8mg-j927",
+        "cves": [
+          "CVE-2021-45707"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.20.2",
+        "summary": "Out-of-bounds Write in nix",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/readest-app/src-tauri",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.0169,
+        "fix_published_at": "2021-09-29T04:25:30Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "high_privileges"
+        ],
+        "paths": [
+          "Readest > tauri-plugin-device-info > battery > nix"
+        ]
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.17",
+        "advisory": "RUSTSEC-2026-0340",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.18",
+        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/readest-app/src-tauri",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-09-14T10:08:32Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ACK_FREQUENCY"
+        ],
+        "paths": [
+          "Readest > reqwest > quinn > quinn-proto"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+          ]
+        }
+      },
+      {
+        "package": "crates:quinn-proto",
+        "version": "0.11.17",
+        "advisory": "RUSTSEC-2026-0343",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.11.18",
+        "summary": "Outgoing datagram buffer accounting can panic the sender in quinn-proto",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/readest-app/src-tauri",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-09-14T10:08:32Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "Readest > reqwest > quinn > quinn-proto"
+        ]
+      },
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "GHSA-q7v9-x93c-xqv3",
+        "cves": [
+          "CVE-2026-115909"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/readest-app/src-tauri",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00461,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "Readest > tauri-plugin-updater > zip"
+        ]
+      },
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "RUSTSEC-2026-0367",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "9.0.0",
+        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "apps/readest-app/src-tauri",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
+        ],
+        "paths": [
+          "Readest > tauri-plugin-updater > zip"
+        ]
+      }
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "fd26037986aba7e34e56c59129201ba7e6ea8b0b",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 1084,
+        "npm": 1812
+      },
+      "scopes": {
+        "runtime": 1846,
+        "optional": 71,
+        "peer": 161,
+        "build": 51,
+        "dev": 719,
+        "workspace": 48
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 19,
+      "details": "security/readest.json",
+      "details_sha256": "d63f4f138dd96e411a46c55c008c6ab8f8e2cd03d8728024bd8afbbbacfebec1"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-m665-v7pm-7grj crates:zip@4.6.1 (conditional)",
+        "worst:RUSTSEC-2026-0369 crates:zip@4.6.1 (conditional)",
+        "worst:GHSA-76w9-p8mg-j927 crates:nix@0.19.1 (conditional)"
+      ],
+      "counts": {
+        "conditional": 7
+      },
+      "uncounted": 12,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 2896,
+      "packages_checked": 2896,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 1084,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "pnpm-lock.yaml",
+          "status": "scanned",
+          "packages": 1812,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
+  },
   "scores": {
     "formula_version": "b3.v7+visual.v1",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 89.6,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -558,16 +755,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 89.6,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       },
@@ -982,5 +1176,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:43+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

@@ -235,17 +235,15 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
       "pypi:kern-llm (fresh install, 1 packages)",
-      "github.com/pegainfer-project/kern@83c3f62be263",
+      "github.com/pegainfer-project/kern@1adc277d95fc",
       "Cargo.lock"
     ],
-    "packages_checked": 574,
+    "packages_checked": 577,
     "findings_total": 2,
     "advisories_total": 2,
     "findings": [
@@ -257,7 +255,31 @@
         "severity": "HIGH",
         "fixed_in": "0.13.5",
         "summary": "Exponential event growth with `ENABLE_WIKILINKS`",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/kern-serve",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-21T19:45:37Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ENABLE_WIKILINKS"
+        ],
+        "paths": [
+          "kern-serve > infront-vllm > vllm-server > vllm-proto > tonic-prost-build > prost-build > pulldown-cmark"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ENABLE_WIKILINKS, but other packages depend on pulldown-cmark"
+          ]
+        }
       },
       {
         "package": "crates:pulldown-cmark",
@@ -267,23 +289,114 @@
         "severity": "HIGH",
         "fixed_in": "0.13.6",
         "summary": "Quadratic parsing of nested image wikilinks with `ENABLE_WIKILINKS`",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/kern-serve",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-30T08:50:18Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ENABLE_WIKILINKS"
+        ],
+        "paths": [
+          "kern-serve > infront-vllm > vllm-server > vllm-proto > tonic-prost-build > prost-build > pulldown-cmark"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ENABLE_WIKILINKS, but other packages depend on pulldown-cmark"
+          ]
+        }
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "1adc277d95fc5a6d38da3d9e2f070fb9659ab740",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 576,
+        "pypi": 1
+      },
+      "scopes": {
+        "runtime": 567,
+        "dev": 4,
+        "workspace": 6
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 16,
+      "details": "security/kern.json",
+      "details_sha256": "8a8a641b3885a6c2e3e92bb4ec4540dde9cf296316de182eac3f8f2898e54ebd"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0414 crates:pulldown-cmark@0.13.4 (conditional)",
+        "worst:RUSTSEC-2026-0433 crates:pulldown-cmark@0.13.4 (conditional)"
+      ],
+      "counts": {
+        "conditional": 2
+      },
+      "uncounted": 14,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 577,
+      "packages_checked": 577,
+      "components": [
+        {
+          "ecosystem": "pypi",
+          "component": "registry:pypi:kern-llm",
+          "status": "partial",
+          "packages": 1,
+          "gaps": [
+            "binary.prebuilt_package"
+          ]
+        },
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 576,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 78.5,
-      "raw_total": 78.5,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.7225,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.8125,
@@ -303,16 +416,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 78.5,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -737,5 +847,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:30+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

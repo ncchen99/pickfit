@@ -1,0 +1,174 @@
+{
+ "slug": "shimelinux",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "aaf6cbc6679b876f27e575afa250cc799bac96f5",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 67
+  },
+  "scopes": {
+   "runtime": 67
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 2
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:RUSTSEC-2026-0194 crates:quick-xml@0.39.4 (conditional)",
+   "worst:RUSTSEC-2026-0195 crates:quick-xml@0.39.4 (conditional)"
+  ],
+  "counts": {
+   "conditional": 2
+  },
+  "uncounted": 0,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "partial",
+  "target": "repo_lockfile",
+  "packages_found": 77,
+  "packages_checked": 67,
+  "components": [
+   {
+    "ecosystem": "maven",
+    "component": "build.gradle.kts",
+    "status": "not_scanned",
+    "packages": 5,
+    "gaps": [
+     "adapter.missing"
+    ]
+   },
+   {
+    "ecosystem": "maven",
+    "component": "flatpak/build.gradle.kts",
+    "status": "not_scanned",
+    "packages": 5,
+    "gaps": [
+     "adapter.missing"
+    ]
+   },
+   {
+    "ecosystem": "crates",
+    "component": "shimelinux_wayland/Cargo.lock",
+    "status": "scanned",
+    "packages": 67,
+    "gaps": []
+   }
+  ],
+  "gaps": [
+   {
+    "code": "adapter.missing",
+    "category": "no_adapter",
+    "ecosystem": "maven",
+    "component": "build.gradle.kts",
+    "detail": "no reader for build.gradle.kts",
+    "capability": "adapter:maven",
+    "found": 5,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   },
+   {
+    "code": "adapter.missing",
+    "category": "no_adapter",
+    "ecosystem": "maven",
+    "component": "flatpak/build.gradle.kts",
+    "detail": "no reader for build.gradle.kts",
+    "capability": "adapter:maven",
+    "found": 5,
+    "first_seen": "2026-11-20",
+    "last_seen": "2026-11-20"
+   }
+  ]
+ },
+ "sources": [
+  "github.com/BujjuIsABee/shimelinux@aaf6cbc6679b",
+  "shimelinux_wayland/Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:quick-xml",
+   "version": "0.39.4",
+   "advisory": "RUSTSEC-2026-0194",
+   "severity": "HIGH",
+   "fixed_in": "0.41.0",
+   "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+   "malicious": false,
+   "published": "2026-06-29T12:00:00Z",
+   "modified": "2026-07-02T08:00:03.849273679Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quick-xml@0.39.4",
+   "fix_published_at": "2026-06-29T18:04:43Z",
+   "scope": "runtime",
+   "paths": [
+    "shimelinux_wayland > smithay-client-toolkit > wayland-scanner > quick-xml"
+   ],
+   "workspace": "shimelinux_wayland",
+   "found_in": "shimelinux_wayland/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quick-xml",
+   "version": "0.39.4",
+   "advisory": "RUSTSEC-2026-0195",
+   "severity": "HIGH",
+   "fixed_in": "0.41.0",
+   "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+   "malicious": false,
+   "published": "2026-06-29T12:00:00Z",
+   "modified": "2026-07-02T09:00:04.037478193Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quick-xml@0.39.4",
+   "fix_published_at": "2026-06-29T18:04:43Z",
+   "scope": "runtime",
+   "paths": [
+    "shimelinux_wayland > smithay-client-toolkit > wayland-scanner > quick-xml"
+   ],
+   "workspace": "shimelinux_wayland",
+   "found_in": "shimelinux_wayland/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:NsReader"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use NsReader, but other packages depend on quick-xml"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

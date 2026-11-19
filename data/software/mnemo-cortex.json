@@ -105,21 +105,47 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/GuyMannDude/mnemo-cortex@b0d7070150b9",
+      "github.com/GuyMannDude/mnemo-cortex@2cc1ceb839f9",
       "integrations/mcp-bridge/package-lock.json",
       "integrations/openclaw-mcp/package-lock.json",
       "pyproject.toml (resolved today)"
     ],
     "packages_checked": 131,
-    "findings_total": 7,
-    "advisories_total": 7,
+    "findings_total": 1,
+    "advisories_total": 1,
     "findings": [
+      {
+        "package": "npm:zod",
+        "version": "4.4.3",
+        "advisory": "GHSA-mrhx-c7xc-m3w5",
+        "cves": [
+          "CVE-2023-54404"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.6.6",
+        "summary": "Zod can exhaust memory while validating oversized constrained collections",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "integrations/openclaw-mcp/package-lock.json",
+        "kev": false,
+        "fix_published_at": "2026-10-11T16:18:23Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > zod"
+        ]
+      },
       {
         "package": "npm:proxy-addr",
         "version": "2.0.7",
@@ -130,7 +156,30 @@
         "severity": "CRITICAL",
         "fixed_in": "2.0.8",
         "summary": "proxy-addr vulnerable to IP spoofing via IPv4-mapped IPv6 trust subnet",
-        "malicious": false
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "integrations/openclaw-mcp/package-lock.json",
+        "kev": false,
+        "epss": 0.0026,
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "entry:the MCP SDK's HTTP server transports"
+        ],
+        "paths": [
+          ". > @modelcontextprotocol/sdk > express > proxy-addr"
+        ],
+        "reachability": {
+          "method": "entry_point_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file imports the MCP SDK's HTTP server transports (@modelcontextprotocol/sdk entry points)"
+          ]
+        }
       },
       {
         "package": "npm:@modelcontextprotocol/sdk",
@@ -142,7 +191,30 @@
         "severity": "HIGH",
         "fixed_in": "1.32.0",
         "summary": "MCP TypeScript SDK: Experimental tasks were not tied to the session that created them",
-        "malicious": false
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "integrations/openclaw-mcp/package-lock.json",
+        "kev": false,
+        "epss": 0.00345,
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "entry:the MCP SDK's HTTP server transports"
+        ],
+        "paths": [
+          ". > @modelcontextprotocol/sdk"
+        ],
+        "reachability": {
+          "method": "entry_point_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file imports the MCP SDK's HTTP server transports (@modelcontextprotocol/sdk entry points)"
+          ]
+        }
       },
       {
         "package": "npm:@modelcontextprotocol/sdk",
@@ -154,7 +226,31 @@
         "severity": "HIGH",
         "fixed_in": "1.32.0",
         "summary": "MCP TypeScript SDK: One HTTP request within the default size limit could exhaust server memory during validation",
-        "malicious": false
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "integrations/openclaw-mcp/package-lock.json",
+        "kev": false,
+        "epss": 0.00598,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "entry:the MCP SDK's HTTP server transports"
+        ],
+        "paths": [
+          ". > @modelcontextprotocol/sdk"
+        ],
+        "reachability": {
+          "method": "entry_point_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file imports the MCP SDK's HTTP server transports (@modelcontextprotocol/sdk entry points)"
+          ]
+        }
       },
       {
         "package": "npm:@modelcontextprotocol/sdk",
@@ -166,7 +262,30 @@
         "severity": "HIGH",
         "fixed_in": "1.31.0",
         "summary": "MCP TypeScript SDK: OAuth client could send credentials to an authorization server chosen by the MCP server",
-        "malicious": false
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "integrations/openclaw-mcp/package-lock.json",
+        "kev": false,
+        "epss": 0.00282,
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "entry:the MCP SDK's HTTP client and OAuth"
+        ],
+        "paths": [
+          ". > @modelcontextprotocol/sdk"
+        ],
+        "reachability": {
+          "method": "entry_point_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file imports the MCP SDK's HTTP client and OAuth (@modelcontextprotocol/sdk entry points)"
+          ]
+        }
       },
       {
         "package": "npm:@modelcontextprotocol/sdk",
@@ -176,7 +295,30 @@
         "severity": "HIGH",
         "fixed_in": "1.30.1",
         "summary": "MCP TypeScript SDK: HTTP server transports and handlers did not limit request body size or JSON-RPC batch length",
-        "malicious": false
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "integrations/openclaw-mcp/package-lock.json",
+        "kev": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "entry:the MCP SDK's HTTP server transports"
+        ],
+        "paths": [
+          ". > @modelcontextprotocol/sdk"
+        ],
+        "reachability": {
+          "method": "entry_point_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file imports the MCP SDK's HTTP server transports (@modelcontextprotocol/sdk entry points)"
+          ]
+        }
       },
       {
         "package": "npm:body-parser",
@@ -188,35 +330,119 @@
         "severity": "HIGH",
         "fixed_in": "2.4.0",
         "summary": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
-        "malicious": false
-      },
-      {
-        "package": "npm:zod",
-        "version": "4.4.3",
-        "advisory": "GHSA-mrhx-c7xc-m3w5",
-        "cves": [
-          "CVE-2023-54404"
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "integrations/openclaw-mcp/package-lock.json",
+        "kev": false,
+        "epss": 0.00388,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "entry:the MCP SDK's HTTP server transports"
         ],
-        "severity": "HIGH",
-        "fixed_in": "4.6.6",
-        "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
+        "paths": [
+          ". > @modelcontextprotocol/sdk > express > body-parser"
+        ],
+        "reachability": {
+          "method": "entry_point_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file imports the MCP SDK's HTTP server transports (@modelcontextprotocol/sdk entry points)"
+          ]
+        }
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "2cc1ceb839f99bcf92564eea9b148cddf53b1c96",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "npm": 107,
+        "pypi": 24
+      },
+      "scopes": {
+        "runtime": 131
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 31,
+      "details": "security/mnemo-cortex.json",
+      "details_sha256": "3f93b24454791c449c9f082570d748be5ca34b45ebaa3bae83e67f23693f2100"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-mrhx-c7xc-m3w5 npm:zod@4.4.3 (conditional)",
+        "worst:GHSA-jqcg-44mw-7w3h npm:proxy-addr@2.0.7 (present_unreachable)",
+        "worst:GHSA-22jm-h49p-29qw npm:@modelcontextprotocol/sdk@1.29.0 (present_unreachable)"
+      ],
+      "counts": {
+        "conditional": 1,
+        "present_unreachable": 6
+      },
+      "uncounted": 24,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 131,
+      "packages_checked": 131,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "integrations/mcp-bridge/package-lock.json",
+          "status": "scanned",
+          "packages": 92,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "integrations/openclaw-mcp/package-lock.json",
+          "status": "scanned",
+          "packages": 92,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "pyproject.toml",
+          "status": "scanned",
+          "packages": 24,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 67.7,
-      "raw_total": 67.7,
       "confidence": 0.5,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5,
@@ -236,16 +462,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 67.7,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -617,5 +840,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T13:37:31+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

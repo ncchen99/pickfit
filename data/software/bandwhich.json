@@ -174,9 +174,7 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-05T03:16:33+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -184,30 +182,34 @@
       "Cargo.lock"
     ],
     "packages_checked": 423,
-    "findings_total": 8,
-    "advisories_total": 8,
+    "findings_total": 1,
+    "advisories_total": 1,
     "findings": [
       {
-        "package": "crates:zip",
-        "version": "8.6.0",
-        "advisory": "GHSA-m665-v7pm-7grj",
+        "package": "crates:hickory-net",
+        "version": "0.26.1",
+        "advisory": "RUSTSEC-2026-0509",
         "cves": [
-          "CVE-2026-115905"
+          "CVE-2026-123580"
         ],
-        "severity": "CRITICAL",
-        "fixed_in": "9.0.5",
-        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "8.6.0",
-        "advisory": "RUSTSEC-2026-0369",
-        "cves": [],
-        "severity": "CRITICAL",
-        "fixed_in": "9.0.0",
-        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
+        "severity": "HIGH",
+        "fixed_in": "0.26.2",
+        "summary": "NSEC3 records from another zone were accepted in proofs of nonexistence",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00255,
+        "fix_published_at": "2026-09-03T19:35:28Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "bandwhich > hickory-resolver > hickory-net"
+        ]
       },
       {
         "package": "crates:hickory-resolver",
@@ -219,79 +221,144 @@
         "severity": "HIGH",
         "fixed_in": "0.26.2",
         "summary": "hickory-resolver: Resolver::lookup() and Resolver::lookup_ip() APIs obscure DNSSEC validation failures",
-        "malicious": false
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00231,
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:Resolver::lookup",
+          "symbol:Resolver::lookup_ip"
+        ],
+        "paths": [
+          "bandwhich > hickory-resolver"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses Resolver::lookup, Resolver::lookup_ip; only the project depends on hickory-resolver"
+          ]
+        }
       },
       {
         "package": "crates:hickory-resolver",
         "version": "0.26.1",
         "advisory": "GHSA-6w6g-hm98-mhgm",
-        "cves": [],
+        "cves": [
+          "CVE-2026-123604"
+        ],
         "severity": "HIGH",
         "fixed_in": "0.26.2",
         "summary": "hickory-resolver: Unbounded TC-retry loop in `NameServerPool::try_send` (resource-exhaustion DoS)",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "8.6.0",
-        "advisory": "GHSA-9hj8-73fh-9963",
-        "cves": [
-          "CVE-2026-115907"
+        "malicious": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00343,
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NameServerPool::try_send"
         ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: legacy Shrink/Reduce/Implode decoder: denial of service from attacker-controlled ZIP64 uncompressed size",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "8.6.0",
-        "advisory": "GHSA-hjqx-j4rw-g7xv",
-        "cves": [
-          "CVE-2026-115908"
+        "paths": [
+          "bandwhich > hickory-resolver"
         ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: Arbitrary file write outside the extraction directory, because ZipArchive::extract validates symlink targets lexically.",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "8.6.0",
-        "advisory": "GHSA-q7v9-x93c-xqv3",
-        "cves": [
-          "CVE-2026-115909"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "8.6.0",
-        "advisory": "RUSTSEC-2026-0367",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "not_reachable",
+          "evidence": [
+            "no source file uses NameServerPool::try_send; only the project depends on hickory-resolver"
+          ]
+        }
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:06:03+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "1899870cea8bb377948f05cfea64733ec6ea2cd6",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 423
+      },
+      "scopes": {
+        "runtime": 309,
+        "optional": 42,
+        "build": 57,
+        "dev": 15
+      },
+      "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 41,
+      "details": "security/bandwhich.json",
+      "details_sha256": "15fc82c6ec9175c481b469e08161b1ea308bfbee69af855c724540d8b6f93ae4"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0509 crates:hickory-net@0.26.1 (conditional)",
+        "worst:GHSA-5j98-2g5x-46v6 crates:hickory-resolver@0.26.1 (present_unreachable)",
+        "worst:GHSA-6w6g-hm98-mhgm crates:hickory-resolver@0.26.1 (present_unreachable)"
+      ],
+      "counts": {
+        "conditional": 1,
+        "present_unreachable": 2,
+        "not_shipped": 6
+      },
+      "uncounted": 32,
+      "assessed_at": "2026-11-20T00:06:03+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 423,
+      "packages_checked": 423,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 423,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 59.5,
-      "raw_total": 59.5,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5625,
@@ -311,16 +378,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 59.5,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -687,5 +751,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:04:56+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:06:03+08:00"
 }

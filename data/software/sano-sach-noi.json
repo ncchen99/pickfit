@@ -79,9 +79,7 @@
     "runs": []
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -90,7 +88,7 @@
       "desktop/go.mod",
       "go.mod"
     ],
-    "packages_checked": 98,
+    "packages_checked": 220,
     "findings_total": 5,
     "advisories_total": 5,
     "findings": [
@@ -104,7 +102,27 @@
         "severity": "CRITICAL",
         "fixed_in": "4.16.1",
         "summary": "Echo: Rejected WebSocket upgrades can bypass Echo route-level access controls",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "desktop",
+        "found_in": "desktop/go.mod",
+        "kev": false,
+        "epss": 0.0043,
+        "fix_published_at": "2026-10-22T16:32:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity",
+          "symbol:BodyDump",
+          "symbol:BodyDumpWithConfig",
+          "symbol:Decompress"
+        ],
+        "paths": [
+          "desktop/go.mod > github.com/labstack/echo/v4"
+        ]
       },
       {
         "package": "go:github.com/labstack/echo/v4",
@@ -116,7 +134,26 @@
         "severity": "HIGH",
         "fixed_in": "4.16.0",
         "summary": "Echo's middleware.Static: `%2F`-encoded path bypasses route/group middleware guarding a statically-served path",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "desktop",
+        "found_in": "desktop/go.mod",
+        "kev": false,
+        "epss": 0.00396,
+        "fix_published_at": "2026-09-27T22:45:34Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:MethodOverride",
+          "symbol:MethodOverrideWithConfig",
+          "symbol:Proxy"
+        ],
+        "paths": [
+          "desktop/go.mod > github.com/labstack/echo/v4"
+        ]
       },
       {
         "package": "go:github.com/labstack/echo/v4",
@@ -128,7 +165,28 @@
         "severity": "HIGH",
         "fixed_in": "4.16.1",
         "summary": "Echo: WebSocket proxy can retain connections and handlers after client disconnect",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "desktop",
+        "found_in": "desktop/go.mod",
+        "kev": false,
+        "epss": 0.00302,
+        "fix_published_at": "2026-10-22T16:32:16Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "high_complexity",
+          "denial_of_service",
+          "symbol:BodyDump",
+          "symbol:BodyDumpWithConfig",
+          "symbol:Decompress"
+        ],
+        "paths": [
+          "desktop/go.mod > github.com/labstack/echo/v4"
+        ]
       },
       {
         "package": "go:github.com/labstack/echo/v4",
@@ -140,7 +198,28 @@
         "severity": "HIGH",
         "fixed_in": "4.16.1",
         "summary": "Echo: BodyDump captures request and response bodies without size limits in v4",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "desktop",
+        "found_in": "desktop/go.mod",
+        "kev": false,
+        "epss": 0.00372,
+        "fix_published_at": "2026-10-22T16:32:16Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "high_complexity",
+          "denial_of_service",
+          "symbol:BodyDump",
+          "symbol:BodyDumpWithConfig",
+          "symbol:Decompress"
+        ],
+        "paths": [
+          "desktop/go.mod > github.com/labstack/echo/v4"
+        ]
       },
       {
         "package": "go:github.com/labstack/echo/v4",
@@ -152,23 +231,119 @@
         "severity": "HIGH",
         "fixed_in": "4.16.1",
         "summary": "Echo: Decompress permits unbounded gzip expansion in v4",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "desktop",
+        "found_in": "desktop/go.mod",
+        "kev": false,
+        "epss": 0.00372,
+        "fix_published_at": "2026-10-22T16:32:16Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "high_complexity",
+          "denial_of_service",
+          "symbol:BodyDump",
+          "symbol:BodyDumpWithConfig",
+          "symbol:Decompress"
+        ],
+        "paths": [
+          "desktop/go.mod > github.com/labstack/echo/v4"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "6ade9ca85322d0b9c9521e2b0d9349538bbc2201",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "go": 42,
+        "npm": 178
+      },
+      "scopes": {
+        "runtime": 94,
+        "peer": 1,
+        "build": 3,
+        "dev": 122
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 26,
+      "details": "security/sano-sach-noi.json",
+      "details_sha256": "4a6041970f4a417d4030231d8a2933d76fcb222f526d076b68165749d590b3fb"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-cxf3-9h37-7rr8 go:github.com/labstack/echo/v4@v4.15.4 (conditional)",
+        "worst:GHSA-375p-5qhx-8wq4 go:github.com/labstack/echo/v4@v4.15.4 (conditional)",
+        "worst:GHSA-9969-6676-49h5 go:github.com/labstack/echo/v4@v4.15.4 (conditional)"
+      ],
+      "counts": {
+        "conditional": 5,
+        "not_shipped": 1
+      },
+      "uncounted": 20,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 220,
+      "packages_checked": 220,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "desktop/frontend/package-lock.json",
+          "status": "scanned",
+          "packages": 178,
+          "gaps": []
+        },
+        {
+          "ecosystem": "go",
+          "component": "desktop/go.mod",
+          "status": "scanned",
+          "packages": 42,
+          "gaps": []
+        },
+        {
+          "ecosystem": "go",
+          "component": "go.mod",
+          "status": "scanned",
+          "packages": 8,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 67.5,
-      "raw_total": 67.5,
       "confidence": 0.5,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.75,
@@ -188,16 +363,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 67.5,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -594,5 +766,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:24+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

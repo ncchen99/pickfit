@@ -240,9 +240,7 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -250,9 +248,9 @@
       "Cargo.lock",
       "openclaw-plugin/package-lock.json"
     ],
-    "packages_checked": 470,
-    "findings_total": 7,
-    "advisories_total": 7,
+    "packages_checked": 473,
+    "findings_total": 6,
+    "advisories_total": 6,
     "findings": [
       {
         "package": "crates:openssl",
@@ -264,7 +262,24 @@
         "severity": "HIGH",
         "fixed_in": "0.10.78",
         "summary": "rust-openssl has incorrect bounds assertion in aes key wrap",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "cortex-mcp-server",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00251,
+        "fix_published_at": "2026-04-19T20:02:38Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "cortex-mcp-server > ureq > native-tls > openssl"
+        ]
       },
       {
         "package": "crates:openssl",
@@ -276,7 +291,21 @@
         "severity": "HIGH",
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: rustMdCtxRef::digest_final() writes past caller buffer with no length check",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "cortex-mcp-server",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00359,
+        "fix_published_at": "2026-04-19T20:02:38Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "cortex-mcp-server > ureq > native-tls > openssl"
+        ]
       },
       {
         "package": "crates:openssl",
@@ -288,7 +317,24 @@
         "severity": "HIGH",
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: Unchecked callback length in PSK/cookie trampolines leaks adjacent memory to peer",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "cortex-mcp-server",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.0028,
+        "fix_published_at": "2026-04-19T20:02:38Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "cortex-mcp-server > ureq > native-tls > openssl"
+        ]
       },
       {
         "package": "crates:openssl",
@@ -300,7 +346,33 @@
         "severity": "HIGH",
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: Deriver::derive and PkeyCtxRef::derive can overflow short buffers on OpenSSL 1.1.1",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "cortex-mcp-server",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00285,
+        "fix_published_at": "2026-04-19T20:02:38Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity",
+          "symbol:Deriver::derive",
+          "symbol:PkeyCtxRef::derive"
+        ],
+        "paths": [
+          "cortex-mcp-server > ureq > native-tls > openssl"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use Deriver::derive, PkeyCtxRef::derive, but other packages depend on openssl"
+          ]
+        }
       },
       {
         "package": "crates:openssl",
@@ -312,17 +384,31 @@
         "severity": "HIGH",
         "fixed_in": "0.10.79",
         "summary": "rust-openssl has undefined behavior in X509Ref::ocsp_responders for certificates with non-UTF-8 OCSP URLs",
-        "malicious": false
-      },
-      {
-        "package": "crates:pyo3",
-        "version": "0.23.5",
-        "advisory": "GHSA-36hh-v3qg-5jq4",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.29.0",
-        "summary": "PyO3 has an Out-of-bounds Read in `nth` / `nth_back` for `PyList` and `PyTuple` iterators",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "cortex-mcp-server",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00211,
+        "fix_published_at": "2026-05-04T00:19:55Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:X509Ref::ocsp_responders"
+        ],
+        "paths": [
+          "cortex-mcp-server > ureq > native-tls > openssl"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use X509Ref::ocsp_responders, but other packages depend on openssl"
+          ]
+        }
       },
       {
         "package": "crates:rustls-webpki",
@@ -334,23 +420,129 @@
         "severity": "HIGH",
         "fixed_in": "0.103.13",
         "summary": "rustls-webpki: Denial of service via panic on malformed CRL BIT STRING",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "cortex-mcp-server",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.00346,
+        "fix_published_at": "2026-04-21T10:25:37Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "cortex-mcp-server > ureq > rustls > rustls-webpki"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "de02006c7e81f8955ddc25489440f73cd829492e",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 469,
+        "npm": 4
+      },
+      "scopes": {
+        "runtime": 328,
+        "optional": 133,
+        "dev": 3,
+        "workspace": 9
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 34,
+      "details": "security/gambletan-cortex.json",
+      "details_sha256": "dc41229760a3361dbec927b6994db59590c5ceb0a7e6c9fa0e84826f6ed8c5ea"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-8c75-8mhr-p7r9 crates:openssl@0.10.75 (conditional)",
+        "worst:GHSA-ghm9-cr32-g9qj crates:openssl@0.10.75 (conditional)",
+        "worst:GHSA-hppc-g8h3-xhp3 crates:openssl@0.10.75 (conditional)"
+      ],
+      "counts": {
+        "conditional": 6,
+        "not_shipped": 1
+      },
+      "uncounted": 27,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 473,
+      "packages_checked": 473,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 469,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "openclaw-plugin/package-lock.json",
+          "status": "scanned",
+          "packages": 4,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "cortex-python/pyproject.toml",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "resolve.pyproject_failed"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "code": "resolve.pyproject_failed",
+          "category": "resolve_failed",
+          "ecosystem": "pypi",
+          "component": "cortex-python/pyproject.toml",
+          "detail": "uv pip compile --no-build did not resolve it",
+          "capability": "resolve_in_sandbox",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 79.5,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -370,16 +562,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 79.5,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -750,5 +939,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:51:54+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

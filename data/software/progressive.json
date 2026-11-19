@@ -220,9 +220,7 @@
     "cost_usd": 0.016476
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -230,9 +228,9 @@
       "package-lock.json",
       "src-tauri/Cargo.lock"
     ],
-    "packages_checked": 779,
-    "findings_total": 52,
-    "advisories_total": 38,
+    "packages_checked": 870,
+    "findings_total": 42,
+    "advisories_total": 37,
     "findings": [
       {
         "package": "crates:zip",
@@ -244,7 +242,21 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.0032,
+        "fix_published_at": "2026-10-17T18:45:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "progressive > tauri-plugin-updater > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -254,7 +266,31 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:ZipStreamReader::extract",
+          "symbol:ZipArchive::extract"
+        ],
+        "paths": [
+          "progressive > tauri-plugin-updater > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+          ]
+        }
       },
       {
         "package": "npm:tar",
@@ -266,7 +302,24 @@
         "severity": "CRITICAL",
         "fixed_in": "7.5.19",
         "summary": "node-tar: Decompression/parse DoS via unlimited input",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00582,
+        "fix_published_at": "2026-06-27T22:59:56Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > npm > tar"
+        ]
       },
       {
         "package": "crates:openssl",
@@ -278,7 +331,24 @@
         "severity": "HIGH",
         "fixed_in": "0.10.78",
         "summary": "rust-openssl has incorrect bounds assertion in aes key wrap",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00251,
+        "fix_published_at": "2026-04-19T20:02:38Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "progressive > tauri > reqwest > native-tls > openssl"
+        ]
       },
       {
         "package": "crates:openssl",
@@ -290,7 +360,21 @@
         "severity": "HIGH",
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: rustMdCtxRef::digest_final() writes past caller buffer with no length check",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00359,
+        "fix_published_at": "2026-04-19T20:02:38Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "progressive > tauri > reqwest > native-tls > openssl"
+        ]
       },
       {
         "package": "crates:openssl",
@@ -302,7 +386,24 @@
         "severity": "HIGH",
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: Unchecked callback length in PSK/cookie trampolines leaks adjacent memory to peer",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.0028,
+        "fix_published_at": "2026-04-19T20:02:38Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          "progressive > tauri > reqwest > native-tls > openssl"
+        ]
       },
       {
         "package": "crates:openssl",
@@ -314,7 +415,33 @@
         "severity": "HIGH",
         "fixed_in": "0.10.78",
         "summary": "rust-openssl: Deriver::derive and PkeyCtxRef::derive can overflow short buffers on OpenSSL 1.1.1",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00285,
+        "fix_published_at": "2026-04-19T20:02:38Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity",
+          "symbol:Deriver::derive",
+          "symbol:PkeyCtxRef::derive"
+        ],
+        "paths": [
+          "progressive > tauri > reqwest > native-tls > openssl"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use Deriver::derive, PkeyCtxRef::derive, but other packages depend on openssl"
+          ]
+        }
       },
       {
         "package": "crates:openssl",
@@ -326,7 +453,31 @@
         "severity": "HIGH",
         "fixed_in": "0.10.79",
         "summary": "rust-openssl has undefined behavior in X509Ref::ocsp_responders for certificates with non-UTF-8 OCSP URLs",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00211,
+        "fix_published_at": "2026-05-04T00:19:55Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:X509Ref::ocsp_responders"
+        ],
+        "paths": [
+          "progressive > tauri > reqwest > native-tls > openssl"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use X509Ref::ocsp_responders, but other packages depend on openssl"
+          ]
+        }
       },
       {
         "package": "crates:quick-xml",
@@ -336,17 +487,23 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
-        "malicious": false
-      },
-      {
-        "package": "crates:quick-xml",
-        "version": "0.38.4",
-        "advisory": "RUSTSEC-2026-0194",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.41.0",
-        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "progressive > tauri-plugin-dialog > rfd > ashpd > wayland-client > wayland-scanner > quick-xml"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -356,7 +513,57 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
+        ],
+        "paths": [
+          "progressive > tauri-plugin-dialog > rfd > ashpd > wayland-client > wayland-scanner > quick-xml"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use NsReader, but other packages depend on quick-xml"
+          ]
+        }
+      },
+      {
+        "package": "crates:quick-xml",
+        "version": "0.38.4",
+        "advisory": "RUSTSEC-2026-0194",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "0.41.0",
+        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "progressive > tauri > plist > quick-xml"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -366,7 +573,31 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
+        ],
+        "paths": [
+          "progressive > tauri > plist > quick-xml"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use NsReader, but other packages depend on quick-xml"
+          ]
+        }
       },
       {
         "package": "crates:quinn-proto",
@@ -378,7 +609,24 @@
         "severity": "HIGH",
         "fixed_in": "0.11.15",
         "summary": "Quinn: Remote memory exhaustion in quinn-proto from unbounded out-of-order stream reassembly",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00841,
+        "fix_published_at": "2026-06-22T09:43:03Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "progressive > tauri > reqwest > quinn > quinn-proto"
+        ]
       },
       {
         "package": "crates:quinn-proto",
@@ -390,7 +638,24 @@
         "severity": "HIGH",
         "fixed_in": "0.11.14",
         "summary": "Quinn affected by unauthenticated remote DoS via panic in QUIC transport parameter parsing",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00574,
+        "fix_published_at": "2026-03-09T10:22:45Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "progressive > tauri > reqwest > quinn > quinn-proto"
+        ]
       },
       {
         "package": "crates:quinn-proto",
@@ -400,7 +665,31 @@
         "severity": "HIGH",
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-09-14T10:08:32Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ACK_FREQUENCY"
+        ],
+        "paths": [
+          "progressive > tauri > reqwest > quinn > quinn-proto"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+          ]
+        }
       },
       {
         "package": "crates:rustls-webpki",
@@ -412,7 +701,24 @@
         "severity": "HIGH",
         "fixed_in": "0.103.13",
         "summary": "rustls-webpki: Denial of service via panic on malformed CRL BIT STRING",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00346,
+        "fix_published_at": "2026-04-21T10:25:37Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "progressive > tauri > reqwest > rustls > rustls-webpki"
+        ]
       },
       {
         "package": "crates:zip",
@@ -424,7 +730,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "epss": 0.00461,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "progressive > tauri-plugin-updater > zip"
+        ]
       },
       {
         "package": "crates:zip",
@@ -434,7 +757,24 @@
         "severity": "HIGH",
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
+        ],
+        "paths": [
+          "progressive > tauri-plugin-updater > zip"
+        ]
       },
       {
         "package": "npm:@isaacs/brace-expansion",
@@ -446,19 +786,24 @@
         "severity": "HIGH",
         "fixed_in": "5.0.1",
         "summary": "@isaacs/brace-expansion has Uncontrolled Resource Consumption",
-        "malicious": false
-      },
-      {
-        "package": "npm:brace-expansion",
-        "version": "1.1.12",
-        "advisory": "GHSA-3jxr-9vmj-r5cp",
-        "cves": [
-          "CVE-2026-13149"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00538,
+        "fix_published_at": "2026-02-03T17:40:11Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "1.1.16",
-        "summary": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
-        "malicious": false
+        "paths": [
+          ". > npm > minimatch > @isaacs/brace-expansion"
+        ]
       },
       {
         "package": "npm:brace-expansion",
@@ -470,395 +815,107 @@
         "severity": "HIGH",
         "fixed_in": "2.1.2",
         "summary": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
-        "malicious": false
-      },
-      {
-        "package": "npm:brace-expansion",
-        "version": "1.1.12",
-        "advisory": "GHSA-6j4f-fj2g-mc7p",
-        "cves": [
-          "CVE-2026-102276"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00364,
+        "fix_published_at": "2026-07-08T06:53:30Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "1.1.19",
-        "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
-        "malicious": false
-      },
-      {
-        "package": "npm:brace-expansion",
-        "version": "2.0.2",
-        "advisory": "GHSA-6j4f-fj2g-mc7p",
-        "cves": [
-          "CVE-2026-102276"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "2.1.5",
-        "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
-        "malicious": false
-      },
-      {
-        "package": "npm:brace-expansion",
-        "version": "1.1.12",
-        "advisory": "GHSA-mh99-v99m-4gvg",
-        "cves": [
-          "CVE-2026-14257"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.1.17",
-        "summary": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
-        "malicious": false
-      },
-      {
-        "package": "npm:brace-expansion",
-        "version": "2.0.2",
-        "advisory": "GHSA-mh99-v99m-4gvg",
-        "cves": [
-          "CVE-2026-14257"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "2.1.3",
-        "summary": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
-        "malicious": false
-      },
-      {
-        "package": "npm:brace-expansion",
-        "version": "1.1.12",
-        "advisory": "GHSA-qhr7-859c-m2p7",
-        "cves": [
-          "CVE-2026-102278"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.1.20",
-        "summary": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
-        "malicious": false
-      },
-      {
-        "package": "npm:brace-expansion",
-        "version": "2.0.2",
-        "advisory": "GHSA-qhr7-859c-m2p7",
-        "cves": [
-          "CVE-2026-102278"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "2.1.6",
-        "summary": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
-        "malicious": false
-      },
-      {
-        "package": "npm:brace-expansion",
-        "version": "1.1.12",
-        "advisory": "GHSA-rgw5-rvv9-x895",
-        "cves": [
-          "CVE-2026-69152"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.1.18",
-        "summary": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
-        "malicious": false
-      },
-      {
-        "package": "npm:brace-expansion",
-        "version": "2.0.2",
-        "advisory": "GHSA-rgw5-rvv9-x895",
-        "cves": [
-          "CVE-2026-69152"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "2.1.4",
-        "summary": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
-        "malicious": false
-      },
-      {
-        "package": "npm:glob",
-        "version": "11.0.3",
-        "advisory": "GHSA-5j98-mcp5-4vw2",
-        "cves": [
-          "CVE-2025-64756"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "11.1.0",
-        "summary": "glob CLI: Command injection via -c/--cmd executes matches with shell:true",
-        "malicious": false
-      },
-      {
-        "package": "npm:glob",
-        "version": "10.4.5",
-        "advisory": "GHSA-5j98-mcp5-4vw2",
-        "cves": [
-          "CVE-2025-64756"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "10.5.0",
-        "summary": "glob CLI: Command injection via -c/--cmd executes matches with shell:true",
-        "malicious": false
-      },
-      {
-        "package": "npm:ip-address",
-        "version": "10.0.1",
-        "advisory": "GHSA-mwp4-54f8-5fhr",
-        "cves": [
-          "CVE-2026-69192"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "10.3.1",
-        "summary": "ip-address: Address4 decodes leading-zero octets as decimal while resolvers decode them as octal, allowing SSRF and trust-boundary bypass",
-        "malicious": false
-      },
-      {
-        "package": "npm:minimatch",
-        "version": "3.1.2",
-        "advisory": "GHSA-23c5-xmqv-rm74",
-        "cves": [
-          "CVE-2026-27904"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.1.4",
-        "summary": "minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions",
-        "malicious": false
-      },
-      {
-        "package": "npm:minimatch",
-        "version": "9.0.5",
-        "advisory": "GHSA-23c5-xmqv-rm74",
-        "cves": [
-          "CVE-2026-27904"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.7",
-        "summary": "minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions",
-        "malicious": false
-      },
-      {
-        "package": "npm:minimatch",
-        "version": "10.0.3",
-        "advisory": "GHSA-23c5-xmqv-rm74",
-        "cves": [
-          "CVE-2026-27904"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "10.2.3",
-        "summary": "minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions",
-        "malicious": false
-      },
-      {
-        "package": "npm:minimatch",
-        "version": "3.1.2",
-        "advisory": "GHSA-3ppc-4f35-3m26",
-        "cves": [
-          "CVE-2026-26996"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.1.3",
-        "summary": "minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern",
-        "malicious": false
-      },
-      {
-        "package": "npm:minimatch",
-        "version": "9.0.5",
-        "advisory": "GHSA-3ppc-4f35-3m26",
-        "cves": [
-          "CVE-2026-26996"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.6",
-        "summary": "minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern",
-        "malicious": false
-      },
-      {
-        "package": "npm:minimatch",
-        "version": "10.0.3",
-        "advisory": "GHSA-3ppc-4f35-3m26",
-        "cves": [
-          "CVE-2026-26996"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "10.2.1",
-        "summary": "minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern",
-        "malicious": false
-      },
-      {
-        "package": "npm:minimatch",
-        "version": "3.1.2",
-        "advisory": "GHSA-7r86-cg39-jmmj",
-        "cves": [
-          "CVE-2026-27903"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.1.3",
-        "summary": "minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments",
-        "malicious": false
-      },
-      {
-        "package": "npm:minimatch",
-        "version": "9.0.5",
-        "advisory": "GHSA-7r86-cg39-jmmj",
-        "cves": [
-          "CVE-2026-27903"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.7",
-        "summary": "minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments",
-        "malicious": false
-      },
-      {
-        "package": "npm:minimatch",
-        "version": "10.0.3",
-        "advisory": "GHSA-7r86-cg39-jmmj",
-        "cves": [
-          "CVE-2026-27903"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "10.2.3",
-        "summary": "minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments",
-        "malicious": false
-      },
-      {
-        "package": "npm:pacote",
-        "version": "21.0.3",
-        "advisory": "GHSA-w4pp-8pjf-rmxw",
-        "cves": [
-          "CVE-2026-9496"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "21.5.1",
-        "summary": "pacote is vulnerable to Denial of Service (DoS) via the addGitSha function",
-        "malicious": false
-      },
-      {
-        "package": "npm:picomatch",
-        "version": "4.0.3",
-        "advisory": "GHSA-c2c7-rcm5-vvqj",
-        "cves": [
-          "CVE-2026-33671"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.0.4",
-        "summary": "Picomatch has a ReDoS vulnerability via extglob quantifiers",
-        "malicious": false
-      },
-      {
-        "package": "npm:sigstore",
-        "version": "4.0.0",
-        "advisory": "GHSA-52v5-jr5w-gjxr",
-        "cves": [
-          "CVE-2026-48815"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.1.1",
-        "summary": "sigstore's `certificateOIDs` verification constraints are silently dropped and never enforced",
-        "malicious": false
-      },
-      {
-        "package": "npm:tar",
-        "version": "7.5.1",
-        "advisory": "GHSA-34x7-hfp2-rc4v",
-        "cves": [
-          "CVE-2026-24842"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "7.5.7",
-        "summary": "node-tar Vulnerable to Arbitrary File Creation/Overwrite via Hardlink Path Traversal",
-        "malicious": false
-      },
-      {
-        "package": "npm:tar",
-        "version": "7.5.1",
-        "advisory": "GHSA-83g3-92jg-28cx",
-        "cves": [
-          "CVE-2026-26960"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "7.5.8",
-        "summary": "Arbitrary File Read/Write via Hardlink Target Escape Through Symlink Chain in node-tar Extraction",
-        "malicious": false
-      },
-      {
-        "package": "npm:tar",
-        "version": "7.5.1",
-        "advisory": "GHSA-8qq5-rm4j-mr97",
-        "cves": [
-          "CVE-2026-23745"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "7.5.3",
-        "summary": "node-tar is Vulnerable to Arbitrary File Overwrite and Symlink Poisoning via Insufficient Path Sanitization",
-        "malicious": false
-      },
-      {
-        "package": "npm:tar",
-        "version": "7.5.1",
-        "advisory": "GHSA-8x88-c5mf-7j5w",
-        "cves": [
-          "CVE-2026-59874"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "7.5.18",
-        "summary": "node-tar: Negative tar entry size causes infinite loop in archive replace",
-        "malicious": false
-      },
-      {
-        "package": "npm:tar",
-        "version": "7.5.1",
-        "advisory": "GHSA-9ppj-qmqm-q256",
-        "cves": [
-          "CVE-2026-31802"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "7.5.11",
-        "summary": "node-tar Symlink Path Traversal via Drive-Relative Linkpath",
-        "malicious": false
-      },
-      {
-        "package": "npm:tar",
-        "version": "7.5.1",
-        "advisory": "GHSA-qffp-2rhf-9h96",
-        "cves": [
-          "CVE-2026-29786"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "7.5.10",
-        "summary": "tar has Hardlink Path Traversal via Drive-Relative Linkpath",
-        "malicious": false
-      },
-      {
-        "package": "npm:tar",
-        "version": "7.5.1",
-        "advisory": "GHSA-r292-9mhp-454m",
-        "cves": [
-          "CVE-2026-73566"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "7.5.21",
-        "summary": "node-tar: Uncontrolled recursion in mapHas/filesFilter allows uncatchable stack-overflow DoS via crafted long-path tar with member selection",
-        "malicious": false
-      },
-      {
-        "package": "npm:tar",
-        "version": "7.5.1",
-        "advisory": "GHSA-r6q2-hw4h-h46w",
-        "cves": [
-          "CVE-2026-23950"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "7.5.4",
-        "summary": "Race Condition in node-tar Path Reservations via Unicode Ligature Collisions on macOS APFS",
-        "malicious": false
+        "paths": [
+          ". > npm > @sigstore/tuf > tuf-js > @tufjs/models > minimatch > brace-expansion"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "bed3bb89f05388594ca8b3bbe1951ef9720fb1aa",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 568,
+        "npm": 302
+      },
+      "scopes": {
+        "runtime": 755,
+        "build": 14,
+        "dev": 101
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 137,
+      "details": "security/progressive.json",
+      "details_sha256": "a387b6870b6427dfc2ab3b614c457446e7474d38a408f0fbd5cd17a519c18985"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-m665-v7pm-7grj crates:zip@4.6.1 (conditional)",
+        "worst:RUSTSEC-2026-0369 crates:zip@4.6.1 (conditional)",
+        "worst:GHSA-23hp-3jrh-7fpw npm:tar@7.5.1 (conditional)"
+      ],
+      "counts": {
+        "conditional": 42,
+        "not_shipped": 20
+      },
+      "uncounted": 75,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 870,
+      "packages_checked": 870,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "package-lock.json",
+          "status": "scanned",
+          "packages": 302,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "src-tauri/Cargo.lock",
+          "status": "scanned",
+          "packages": 568,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7+visual.v1",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 78.5,
-      "raw_total": 78.5,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.6875,
@@ -878,16 +935,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 78.5,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       },
@@ -1205,5 +1259,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:43+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

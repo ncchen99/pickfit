@@ -1,0 +1,349 @@
+{
+ "slug": "termshark",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "e8a1ec6e4f2d517f646d3bba35a2ec4926e0202c",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "go": 30
+  },
+  "scopes": {
+   "runtime": 30
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 6
+ },
+ "assessment": {
+  "level": "exposed",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-4f99-4q7p-p3gh go:github.com/sirupsen/logrus@v1.7.0 (exposed)",
+   "worst:GHSA-65xw-vw82-r86x go:github.com/antchfx/xpath@v1.1.11 (conditional)",
+   "worst:GHSA-h395-qcrw-5vmq go:github.com/gin-gonic/gin@v1.7.0 (conditional)"
+  ],
+  "counts": {
+   "exposed": 1,
+   "conditional": 2
+  },
+  "uncounted": 3,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 30,
+  "packages_checked": 30,
+  "components": [
+   {
+    "ecosystem": "go",
+    "component": "go.mod",
+    "status": "scanned",
+    "packages": 30,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/gcla/termshark@e8a1ec6e4f2d",
+  "go.mod"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "go:github.com/sirupsen/logrus",
+   "version": "v1.7.0",
+   "advisory": "GHSA-4f99-4q7p-p3gh",
+   "cves": [
+    "CVE-2025-65637"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.8.3",
+   "summary": "Logrus is vulnerable to DoS when using Entry.Writer()",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-65637",
+    "GO-2025-4188"
+   ],
+   "published": "2025-12-04T21:31:04Z",
+   "modified": "2026-09-10T03:50:31.284939045Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/sirupsen/logrus@v1.7.0",
+   "fix_published_at": "2023-05-15T10:31:28Z",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/sirupsen/logrus"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00675,
+   "epss_percentile": 0.52986,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Entry.Writer",
+    "symbol:Entry.WriterLevel",
+    "symbol:Entry.writerScanner"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "reachable",
+    "evidence": [
+     "utils.go:683: return log.NewEntry(l).WithField(key, val).WriterLevel(log.ErrorLevel)"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": true,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/antchfx/xpath",
+   "version": "v1.1.11",
+   "advisory": "GHSA-65xw-vw82-r86x",
+   "cves": [
+    "CVE-2026-32287"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.3.6",
+   "summary": "XPath: Boolean expression infinite loop leads to denial of service via CPU exhaustion",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-32287",
+    "GO-2026-4526"
+   ],
+   "published": "2026-03-29T15:19:45Z",
+   "modified": "2026-09-10T03:50:37.723005087Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-835"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/antchfx/xpath@v1.1.11",
+   "fix_published_at": "2026-02-21T13:32:17Z",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/antchfx/xpath"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00551,
+   "epss_percentile": 0.46837,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:Expr.Evaluate",
+    "symbol:NodeIterator.MoveNext",
+    "symbol:ancestorQuery.Evaluate"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/gin-gonic/gin",
+   "version": "v1.7.0",
+   "advisory": "GHSA-h395-qcrw-5vmq",
+   "cves": [
+    "CVE-2020-28483"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.7.7",
+   "summary": "Inconsistent Interpretation of HTTP Requests in github.com/gin-gonic/gin",
+   "malicious": false,
+   "aliases": [
+    "CVE-2020-28483",
+    "GO-2021-0052",
+    "SNYK-GOLANG-GITHUBCOMGINGONICGIN-1041736"
+   ],
+   "published": "2021-06-23T17:53:21Z",
+   "modified": "2026-09-10T03:49:05.801847827Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-113",
+    "CWE-444"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/gin-gonic/gin@v1.7.0",
+   "fix_published_at": "2021-11-24T13:54:13Z",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/gin-gonic/gin"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.01332,
+   "epss_percentile": 0.71735,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "symbol:Context.ClientIP",
+    "symbol:Context.Next",
+    "symbol:Context.RemoteIP"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/gin-gonic/gin",
+   "version": "v1.7.0",
+   "advisory": "GHSA-2c4m-59x9-fr2g",
+   "cves": [
+    "CVE-2023-29401"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.9.1",
+   "summary": "Gin Web Framework does not properly sanitize filename parameter of Context.FileAttachment function",
+   "malicious": false,
+   "aliases": [
+    "CVE-2023-29401",
+    "GO-2023-1737"
+   ],
+   "published": "2023-05-12T20:19:25Z",
+   "modified": "2023-11-08T04:12:18.674169Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-494"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/gin-gonic/gin@v1.7.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/gin-gonic/gin"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00482,
+   "epss_percentile": 0.42314,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "symbol:Context.FileAttachment"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/gin-gonic/gin",
+   "version": "v1.7.0",
+   "advisory": "GHSA-3vp4-m3rf-835h",
+   "cves": [
+    "CVE-2023-26125"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.9.0",
+   "summary": "Improper input validation in github.com/gin-gonic/gin",
+   "malicious": false,
+   "aliases": [
+    "CVE-2023-26125"
+   ],
+   "published": "2023-05-04T06:30:12Z",
+   "modified": "2023-11-08T04:11:58.943766Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20",
+    "CWE-77"
+   ],
+   "dos_only": false,
+   "purl": "pkg:golang/github.com/gin-gonic/gin@v1.7.0",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/gin-gonic/gin"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00905,
+   "epss_percentile": 0.6057,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:golang.org/x/sys",
+   "version": "v0.0.0-20220520151302-bc2c85ada10a",
+   "advisory": "GO-2026-5024",
+   "cves": [
+    "CVE-2026-39824"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.44.0",
+   "summary": "Invoking integer overflow in NewNTUnicodeString in golang.org/x/sys/windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-39824"
+   ],
+   "published": "2026-05-22T18:28:47Z",
+   "modified": "2026-06-09T18:59:22.740765220Z",
+   "purl": "pkg:golang/golang.org/x/sys@v0.0.0-20220520151302-bc2c85ada10a",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > golang.org/x/sys"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00114,
+   "epss_percentile": 0.01528,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:NewNTUnicodeString"
+   ],
+   "reachability": {
+    "method": "import_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no .go file imports golang.org/x/sys/windows; go.mod requires golang.org/x/sys directly"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

@@ -250,43 +250,20 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/llmmanorg/llmman@2b9a7cc22d5b",
+      "github.com/llmmanorg/llmman@8cb3e0a30721",
       "Cargo.lock",
       "app/package-lock.json",
+      "csi/go.mod",
       "go-shim/go.mod"
     ],
-    "packages_checked": 1345,
-    "findings_total": 15,
-    "advisories_total": 15,
+    "packages_checked": 1685,
+    "findings_total": 5,
+    "advisories_total": 5,
     "findings": [
-      {
-        "package": "crates:zip",
-        "version": "2.4.2",
-        "advisory": "GHSA-m665-v7pm-7grj",
-        "cves": [
-          "CVE-2026-115905"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "9.0.5",
-        "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "2.4.2",
-        "advisory": "RUSTSEC-2026-0369",
-        "cves": [],
-        "severity": "CRITICAL",
-        "fixed_in": "9.0.0",
-        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
-      },
       {
         "package": "crates:quinn-proto",
         "version": "0.11.16",
@@ -295,7 +272,31 @@
         "severity": "HIGH",
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-09-14T10:08:32Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ACK_FREQUENCY"
+        ],
+        "paths": [
+          "llmman > hf-xet > xet-client > reqwest > quinn > quinn-proto"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+          ]
+        }
       },
       {
         "package": "crates:quinn-proto",
@@ -305,41 +306,54 @@
         "severity": "HIGH",
         "fixed_in": "0.11.17",
         "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-08-17T17:32:41Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "llmman > hf-xet > xet-client > reqwest > quinn > quinn-proto"
+        ]
       },
       {
-        "package": "crates:zip",
-        "version": "2.4.2",
-        "advisory": "GHSA-q7v9-x93c-xqv3",
+        "package": "go:github.com/klauspost/compress",
+        "version": "v1.18.7",
+        "advisory": "GO-2026-6865",
         "cves": [
-          "CVE-2026-115909"
+          "CVE-2026-116591"
         ],
         "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "2.4.2",
-        "advisory": "RUSTSEC-2026-0367",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
-      },
-      {
-        "package": "go:github.com/go-jose/go-jose/v4",
-        "version": "v4.1.4",
-        "advisory": "GHSA-mgcc-cww5-fp2q",
-        "cves": [
-          "CVE-2026-116587"
+        "fixed_in": "1.20.2",
+        "summary": "Panic on two-block frames in github.com/klauspost/compress",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "go-shim",
+        "found_in": "go-shim/go.mod",
+        "kev": false,
+        "epss": 0.00333,
+        "fix_published_at": "2026-10-12T09:34:06Z",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:Compress",
+          "symbol:Decompress",
+          "symbol:Scratch.readNCount"
         ],
-        "severity": "HIGH",
-        "fixed_in": "4.1.6",
-        "summary": "Go JOSE: DoS when parsing JWKs that contain RSA keys",
-        "malicious": false
+        "paths": [
+          "go-shim/go.mod > github.com/klauspost/compress"
+        ]
       },
       {
         "package": "npm:decode-uri-component",
@@ -351,80 +365,25 @@
         "severity": "HIGH",
         "fixed_in": "0.5.1",
         "summary": "decode-uri-component vulnerable to denial of service via quadratic replacement of percent-encoded runs",
-        "malicious": false
-      },
-      {
-        "package": "npm:node-forge",
-        "version": "1.4.0",
-        "advisory": "GHSA-5x38-2vff-x55p",
-        "cves": [
-          "CVE-2026-119190"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "app/package-lock.json",
+        "kev": false,
+        "epss": 0.00318,
+        "fix_published_at": "2026-10-23T12:48:46Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "high_complexity",
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "1.4.1",
-        "summary": "Forge: X.509 basicConstraints bypass in verifyCertificateChain() via deprecated extension OIDs 2.5.29.10 and 2.5.29.13",
-        "malicious": false
-      },
-      {
-        "package": "npm:node-forge",
-        "version": "1.4.0",
-        "advisory": "GHSA-7wch-p9px-956x",
-        "cves": [
-          "CVE-2026-118779"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.4.1",
-        "summary": "Forge: Regular expression denial of service in PEM decoding (pem.decode)",
-        "malicious": false
-      },
-      {
-        "package": "npm:node-forge",
-        "version": "1.4.0",
-        "advisory": "GHSA-86w9-cpqp-85rv",
-        "cves": [
-          "CVE-2026-33894",
-          "CVE-2026-85393"
-        ],
-        "severity": "HIGH",
-        "fixed_in": null,
-        "summary": "node-forge RSA PKCS#1 v1.5 signature verification accepts extra nested DigestAlgorithm elements",
-        "malicious": false
-      },
-      {
-        "package": "npm:node-forge",
-        "version": "1.4.0",
-        "advisory": "GHSA-8hrf-8g6f-7xwp",
-        "cves": [
-          "CVE-2026-119188"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.4.1",
-        "summary": "Forge: Denial of service in TLS record processing via a record interleaved with a fragmented handshake message",
-        "malicious": false
-      },
-      {
-        "package": "npm:node-forge",
-        "version": "1.4.0",
-        "advisory": "GHSA-hqq3-7jhf-c5jx",
-        "cves": [
-          "CVE-2026-119187"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.4.1",
-        "summary": "Forge: Denial of service in TLS record processing via call stack exhaustion",
-        "malicious": false
-      },
-      {
-        "package": "npm:node-forge",
-        "version": "1.4.0",
-        "advisory": "GHSA-jc66-7q78-782g",
-        "cves": [
-          "CVE-2026-118782"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.4.1",
-        "summary": "Forge: PKCS#12 MAC forgery and constant-key PBE via zero iteration count",
-        "malicious": false
+        "paths": [
+          ". > expo-router > query-string > decode-uri-component"
+        ]
       },
       {
         "package": "npm:zod",
@@ -436,23 +395,192 @@
         "severity": "HIGH",
         "fixed_in": "4.6.6",
         "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "app/package-lock.json",
+        "kev": false,
+        "fix_published_at": "2026-10-11T16:18:23Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > expo > @expo/cli > zod"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "8cb3e0a307210a4a16a045b5ac871a279d8d8d8e",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 530,
+        "go": 100,
+        "npm": 1055
+      },
+      "scopes": {
+        "runtime": 1171,
+        "peer": 175,
+        "dev": 339
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 30,
+      "details": "security/llmman.json",
+      "details_sha256": "739d21a60a38cabb5073fb6c05c925fc1ca578741a09442233640071a3bafe9b"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0340 crates:quinn-proto@0.11.16 (conditional)",
+        "worst:RUSTSEC-2026-0341 crates:quinn-proto@0.11.16 (conditional)",
+        "worst:GO-2026-6865 go:github.com/klauspost/compress@v1.18.7 (conditional)"
+      ],
+      "counts": {
+        "conditional": 5
+      },
+      "uncounted": 25,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 1688,
+      "packages_checked": 1685,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 530,
+          "gaps": []
+        },
+        {
+          "ecosystem": "maven",
+          "component": "android/app/build.gradle.kts",
+          "status": "not_scanned",
+          "packages": 3,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "android/build.gradle.kts",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "app/package-lock.json",
+          "status": "scanned",
+          "packages": 1055,
+          "gaps": []
+        },
+        {
+          "ecosystem": "go",
+          "component": "csi/go.mod",
+          "status": "scanned",
+          "packages": 7,
+          "gaps": []
+        },
+        {
+          "ecosystem": "go",
+          "component": "go-shim/go.mod",
+          "status": "scanned",
+          "packages": 93,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "vllm-plugin/pyproject.toml",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "resolve.pyproject_failed"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "android/app/build.gradle.kts",
+          "detail": "no reader for build.gradle.kts",
+          "capability": "adapter:maven",
+          "found": 3,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "android/build.gradle.kts",
+          "detail": "no reader for build.gradle.kts",
+          "capability": "adapter:maven",
+          "found": 0,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "resolve.pyproject_failed",
+          "category": "resolve_failed",
+          "ecosystem": "pypi",
+          "component": "vllm-plugin/pyproject.toml",
+          "detail": "uv pip compile --no-build did not resolve it",
+          "capability": "resolve_in_sandbox",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "resolve.registry_failed",
+          "category": "resolve_failed",
+          "ecosystem": "crates",
+          "component": "crates:llmman",
+          "detail": "HTTPError: HTTP Error 404: Not Found",
+          "capability": "resolve_in_sandbox",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 82.8,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.6875,
@@ -472,16 +600,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 82.8,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -782,5 +907,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

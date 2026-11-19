@@ -1,0 +1,2666 @@
+{
+ "slug": "agent-database-cli",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "875fc23989fa50af0513217e07ecb6c767c3f99d",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 471,
+   "npm": 6
+  },
+  "scopes": {
+   "runtime": 475,
+   "optional": 2
+  },
+  "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 63
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:GHSA-3v94-mw7p-v465 crates:hickory-proto@0.25.2 (conditional)",
+   "worst:RUSTSEC-2026-0505 crates:hickory-proto@0.25.2 (conditional)",
+   "worst:GHSA-5j98-2g5x-46v6 crates:hickory-resolver@0.25.2 (conditional)"
+  ],
+  "counts": {
+   "conditional": 10,
+   "present_unreachable": 1
+  },
+  "uncounted": 52,
+  "assessed_at": "2026-11-20T00:06:03+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 477,
+  "packages_checked": 477,
+  "components": [
+   {
+    "ecosystem": "npm",
+    "component": "registry:npm:agent-database-cli",
+    "status": "partial",
+    "packages": 6,
+    "gaps": [
+     "binary.prebuilt_package"
+    ]
+   },
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 471,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "npm:agent-database-cli (fresh install, 6 packages)",
+  "github.com/sleepinginsummer/agent-database-cli@875fc23989fa",
+  "Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-35g8-35p8-c8fw",
+   "cves": [
+    "CVE-2026-102821"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.63.2",
+   "summary": "Russh: Unbounded memory exhaustion via CHANNEL_OPEN flood during a client-stalled rekey",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-102821"
+   ],
+   "published": "2026-09-30T23:40:43Z",
+   "modified": "2026-10-01T00:00:04.683452538Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00358,
+   "epss_percentile": 0.30209,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "option:CHANNEL_OPEN"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "reachable",
+    "evidence": [
+     "rust/src/ssh_tunnel.rs:214: .channel_open_direct_tcpip(endpoint.host.clone(), endpoint.port.into(), \"127.0.0.1\", 0)"
+    ]
+   },
+   "vex": {
+    "status": "affected"
+   },
+   "counted": false,
+   "level": "exposed",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:hickory-proto",
+   "version": "0.25.2",
+   "advisory": "GHSA-3v94-mw7p-v465",
+   "cves": [
+    "CVE-2026-123607"
+   ],
+   "severity": "HIGH",
+   "summary": "hickory-proto: NSEC3 closest-encloser proof validation enters unbounded loop on cross-zone responses",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123607",
+    "RUSTSEC-2026-0118",
+    "RUSTSEC-2026-0120"
+   ],
+   "published": "2026-05-07T02:59:20Z",
+   "modified": "2026-11-08T10:55:55.393700581Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-835"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/hickory-proto@0.25.2",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mongodb > hickory-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00343,
+   "epss_percentile": 0.28469,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2",
+   "fixed_in": null
+  },
+  {
+   "package": "crates:hickory-proto",
+   "version": "0.25.2",
+   "advisory": "RUSTSEC-2026-0505",
+   "cves": [
+    "CVE-2026-123580"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.26.0-beta.1",
+   "summary": "NSEC3 owner names not checked against the zone in DNSSEC validation (hickory-proto)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123580",
+    "GHSA-p2jv-r3m3-7wf4",
+    "RUSTSEC-2026-0509"
+   ],
+   "published": "2026-09-03T12:00:00Z",
+   "modified": "2026-11-12T14:10:38.251619656Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/hickory-proto@0.25.2",
+   "fix_published_at": "2026-03-12T20:56:51Z",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mongodb > hickory-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00255,
+   "epss_percentile": 0.17322,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:hickory-resolver",
+   "version": "0.25.2",
+   "advisory": "GHSA-5j98-2g5x-46v6",
+   "cves": [
+    "CVE-2026-93657"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.26.2",
+   "summary": "hickory-resolver: Resolver::lookup() and Resolver::lookup_ip() APIs obscure DNSSEC validation failures",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-93657",
+    "RUSTSEC-2026-0514"
+   ],
+   "published": "2026-10-05T22:54:35Z",
+   "modified": "2026-11-12T14:40:54.257337988Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-347"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/hickory-resolver@0.25.2",
+   "fix_published_at": "2026-09-03T19:35:39Z",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mongodb > hickory-resolver"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00231,
+   "epss_percentile": 0.14085,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Resolver::lookup",
+    "symbol:Resolver::lookup_ip"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use Resolver::lookup, Resolver::lookup_ip, but other packages depend on hickory-resolver"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:postgres-protocol",
+   "version": "0.6.11",
+   "advisory": "GHSA-5x78-73v4-xg6w",
+   "severity": "HIGH",
+   "fixed_in": "0.6.12",
+   "summary": "postgres-protocol: Unbounded SCRAM iteration count allows a malicious server to cause CPU-exhaustion denial of service",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0179"
+   ],
+   "published": "2026-08-24T19:43:31Z",
+   "modified": "2026-09-10T03:51:13.131342432Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/postgres-protocol@0.6.11",
+   "fix_published_at": "2026-06-12T15:34:01Z",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > tokio-postgres > postgres-protocol"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-47hw-gvq5-r2gm",
+   "cves": [
+    "CVE-2026-102823"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.63.1",
+   "summary": "russh: Client-side channel-scoped Handler callbacks fire for channel IDs the client never opened",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-102823",
+    "RUSTSEC-2026-0492"
+   ],
+   "published": "2026-09-30T23:27:17Z",
+   "modified": "2026-11-12T08:11:07.434997782Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "fix_published_at": "2026-08-23T18:16:15Z",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00317,
+   "epss_percentile": 0.25161,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-4r3c-5hpg-58qr",
+   "cves": [
+    "CVE-2026-48110"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.61.0",
+   "summary": "Russh SSH message fields were decoded through allocation-first parsers before field-specific bounds",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-48110",
+    "RUSTSEC-2026-0494"
+   ],
+   "published": "2026-06-11T20:33:21Z",
+   "modified": "2026-11-12T08:11:03.596034180Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "fix_published_at": "2026-05-20T22:36:26Z",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00367,
+   "epss_percentile": 0.31175,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-f5v4-2wr6-hqmg",
+   "cves": [
+    "CVE-2026-42189"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.60.1",
+   "summary": "russh has pre-auth DoS via unbounded allocation in its keyboard-interactive auth handler",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42189",
+    "RUSTSEC-2026-0496"
+   ],
+   "published": "2026-04-24T15:39:37Z",
+   "modified": "2026-11-12T08:10:55.931337482Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770",
+    "CWE-789"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "fix_published_at": "2026-04-20T16:03:30Z",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00481,
+   "epss_percentile": 0.42256,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-g9f8-wqj9-fjw5",
+   "cves": [
+    "CVE-2026-46673"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.60.3",
+   "summary": "Russh: Unchecked CryptoVec allocation and growth handling is reachable",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-46673",
+    "RUSTSEC-2026-0153",
+    "RUSTSEC-2026-0154"
+   ],
+   "published": "2026-05-21T20:49:07Z",
+   "modified": "2026-09-10T03:51:05.593041447Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "fix_published_at": "2026-05-15T21:13:36Z",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00263,
+   "epss_percentile": 0.1831,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-wwx6-x28x-8259",
+   "cves": [
+    "CVE-2026-46702"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.61.1",
+   "summary": "russh: Post-decompression SSH packet size was not bounded, allowing remote oversized compressed packets",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-46702",
+    "RUSTSEC-2026-0493"
+   ],
+   "published": "2026-05-29T19:37:14Z",
+   "modified": "2026-11-12T08:10:46.231203956Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "fix_published_at": "2026-05-23T07:53:09Z",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00268,
+   "epss_percentile": 0.19237,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh-cryptovec",
+   "version": "0.7.3",
+   "advisory": "GHSA-g9f8-wqj9-fjw5",
+   "cves": [
+    "CVE-2026-46673"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.60.3",
+   "summary": "Russh: Unchecked CryptoVec allocation and growth handling is reachable",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-46673",
+    "RUSTSEC-2026-0153",
+    "RUSTSEC-2026-0154"
+   ],
+   "published": "2026-05-21T20:49:07Z",
+   "modified": "2026-09-10T03:51:05.593041447Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/russh-cryptovec@0.7.3",
+   "fix_published_at": "2026-05-15T21:12:48Z",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh > russh-cryptovec"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00263,
+   "epss_percentile": 0.1831,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:block-buffer",
+   "version": "0.12.0",
+   "advisory": "GHSA-qwgh-2vcv-g2f7",
+   "severity": "MODERATE",
+   "fixed_in": "0.12.1",
+   "summary": "block_buffer: panic corrupts inline buffer position",
+   "malicious": false,
+   "published": "2026-08-19T19:15:34Z",
+   "modified": "2026-10-30T15:45:11.580215361Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-119"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/block-buffer@0.12.0",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > tokio-postgres > postgres-protocol > hmac > digest > block-buffer"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:cmov",
+   "version": "0.5.3",
+   "advisory": "GHSA-3rjw-m598-pq24",
+   "cves": [
+    "CVE-2026-50185"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.5.4",
+   "summary": "Cmov/CmovEq on aarch64 can produce wrong results if high-bits of registers are set",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-50185"
+   ],
+   "published": "2026-07-02T17:18:11Z",
+   "modified": "2026-09-10T03:51:10.250390903Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N/E:P",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-758"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/cmov@0.5.3",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > tokio-postgres > postgres-protocol > hmac > digest > ctutils > cmov"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00157,
+   "epss_percentile": 0.04968,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:hickory-proto",
+   "version": "0.25.2",
+   "advisory": "GHSA-q2qq-hmj6-3wpp",
+   "cves": [
+    "CVE-2026-123608"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.26.1",
+   "summary": "hickory-proto vulnerable to CPU exhaustion during message encoding due to O(n²) name compression",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123608",
+    "RUSTSEC-2026-0119"
+   ],
+   "published": "2026-05-07T02:59:48Z",
+   "modified": "2026-11-08T10:56:05.969001606Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-407",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/hickory-proto@0.25.2",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mongodb > hickory-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00409,
+   "epss_percentile": 0.3597,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:hickory-proto",
+   "version": "0.25.2",
+   "advisory": "RUSTSEC-2026-0512",
+   "cves": [
+    "CVE-2026-123581"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.26.0-beta.1",
+   "summary": "DNSSEC validation accepted an unrelated signed RRset as the answer (hickory-proto)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123581",
+    "GHSA-929p-gjf6-5hqj",
+    "RUSTSEC-2026-0520"
+   ],
+   "published": "2026-09-03T12:00:00Z",
+   "modified": "2026-11-12T14:40:54.645975781Z",
+   "cvss_v3": "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/hickory-proto@0.25.2",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mongodb > hickory-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00126,
+   "epss_percentile": 0.02351,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:hickory-proto",
+   "version": "0.25.2",
+   "advisory": "RUSTSEC-2026-0531",
+   "cves": [
+    "CVE-2026-123591"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.26.0-beta.1",
+   "summary": "Child-side NSEC or NSEC3 record accepted as proof that a delegation has no DS record (hickory-proto)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123591",
+    "GHSA-7php-9j59-g3ch",
+    "RUSTSEC-2026-0540"
+   ],
+   "published": "2026-09-03T12:00:00Z",
+   "modified": "2026-11-13T12:55:54.316294846Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/hickory-proto@0.25.2",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mongodb > hickory-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00134,
+   "epss_percentile": 0.03001,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:hickory-resolver",
+   "version": "0.25.2",
+   "advisory": "GHSA-6f2x-v7q7-m7m5",
+   "cves": [
+    "CVE-2026-123585"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.26.2",
+   "summary": "hickory-resolver follows irrelevant CNAME records",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123585"
+   ],
+   "published": "2026-10-05T22:55:18Z",
+   "modified": "2026-11-08T10:56:17.173884253Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/hickory-resolver@0.25.2",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mongodb > hickory-resolver"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00304,
+   "epss_percentile": 0.23675,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:postgres-protocol",
+   "version": "0.6.11",
+   "advisory": "GHSA-rgqc-3x5p-6gwg",
+   "severity": "MODERATE",
+   "fixed_in": "0.6.12",
+   "summary": "postgres-protocol: Panic decoding a malformed `hstore` value allows denial of service",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0180"
+   ],
+   "published": "2026-08-24T19:47:49Z",
+   "modified": "2026-09-10T03:51:14.529550977Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20",
+    "CWE-248"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/postgres-protocol@0.6.11",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > tokio-postgres > postgres-protocol"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rsa",
+   "version": "0.9.10",
+   "advisory": "RUSTSEC-2023-0071",
+   "cves": [
+    "CVE-2023-49092"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.10.0",
+   "summary": "Marvin Attack: potential key recovery through timing sidechannels",
+   "malicious": false,
+   "aliases": [
+    "CVE-2023-49092",
+    "GHSA-4grx-2x9w-596c",
+    "GHSA-c38w-74pg-36hr"
+   ],
+   "published": "2023-11-22T12:00:00Z",
+   "modified": "2026-11-08T23:15:02.609337046Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/rsa@0.9.10",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh-keys > rsa"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.0061,
+   "epss_percentile": 0.5003,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-4wc5-f2rc-q74m",
+   "cves": [
+    "CVE-2026-111061"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.64.1",
+   "summary": "russh: Unbounded memory allocation in agent protocol server via crafted constraint records",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-111061"
+   ],
+   "published": "2026-10-19T17:06:46Z",
+   "modified": "2026-10-19T17:15:04.083911581Z",
+   "cvss_v3": "CVSS:3.1/AV:A/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "adjacent",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00347,
+   "epss_percentile": 0.28878,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "adjacent_network",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-5xvq-cp9x-6p6r",
+   "cves": [
+    "CVE-2026-73430"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.62.4",
+   "summary": "Russh: Pre-auth remote panic via all-zero Curve25519 peer public value (encode_mpint OOB)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-73430"
+   ],
+   "published": "2026-07-24T16:45:26Z",
+   "modified": "2026-09-10T03:51:10.498100204Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-754"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00597,
+   "epss_percentile": 0.49366,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-76r6-x97p-67vr",
+   "cves": [
+    "CVE-2026-48108"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.61.0",
+   "summary": "Russh: SSH identification parsing accepted non-canonical client banners and did not bound pre-banner input",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-48108"
+   ],
+   "published": "2026-06-11T20:29:14Z",
+   "modified": "2026-06-11T20:56:30.300679Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00277,
+   "epss_percentile": 0.2042,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-cqjc-rmpq-xprq",
+   "cves": [
+    "CVE-2026-73489"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.62.4",
+   "summary": "Russh: Post-auth remote panic via pty-req with more than 130 terminal-mode records",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-73489"
+   ],
+   "published": "2026-07-24T16:46:13Z",
+   "modified": "2026-09-10T03:51:11.455167573Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-129"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00451,
+   "epss_percentile": 0.39916,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-g9g7-5cgw-6v28",
+   "cves": [
+    "CVE-2026-48107"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.61.0",
+   "summary": "Russh: Unchecked keyboard-interactive prompt count in client auth path",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-48107"
+   ],
+   "published": "2026-06-11T20:28:56Z",
+   "modified": "2026-06-11T20:56:30.154485Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00232,
+   "epss_percentile": 0.14222,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-h5rc-j5f5-3gcm",
+   "cves": [
+    "CVE-2025-54804"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.54.1",
+   "summary": "russh is missing overflow checks during channel windows adjust",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-54804"
+   ],
+   "published": "2025-08-04T20:28:36Z",
+   "modified": "2026-09-10T03:50:27.096647420Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-190"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.0045,
+   "epss_percentile": 0.39831,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-hpv4-5h6f-wqr3",
+   "cves": [
+    "CVE-2026-46705"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.61.0",
+   "summary": "russh server userauth state is not reset when authentication principal changes",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-46705"
+   ],
+   "published": "2026-05-29T19:39:41Z",
+   "modified": "2026-09-10T03:51:05.855394597Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-287"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00218,
+   "epss_percentile": 0.12436,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-m65r-rprj-r5rg",
+   "cves": [
+    "CVE-2026-68930"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.62.5",
+   "summary": "Russh: Channel-scoped server callbacks can be reached without an open channel",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-68930"
+   ],
+   "published": "2026-08-03T15:35:00Z",
+   "modified": "2026-09-10T03:51:14.445371576Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-666",
+    "CWE-696",
+    "CWE-863"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00376,
+   "epss_percentile": 0.32277,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-w3jg-pjxf-73p4",
+   "cves": [
+    "CVE-2026-102824"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.63.0",
+   "summary": "Russh: Missing X25519 zero-point validation in hybrid ML-KEM key exchange",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-102824"
+   ],
+   "published": "2026-09-30T23:26:48Z",
+   "modified": "2026-09-30T23:30:05.967728464Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-327"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00141,
+   "epss_percentile": 0.0355,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.40",
+   "advisory": "GHSA-2mjx-qc3c-rqvc",
+   "cves": [
+    "CVE-2026-123613"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.23.45",
+   "summary": "Rustls: TLS 1.3 handshake messages incorrectly accepted across encryption level boundaries",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123613",
+    "RUSTSEC-2026-0285"
+   ],
+   "published": "2026-10-05T23:30:17Z",
+   "modified": "2026-11-08T10:55:54.395419388Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.23.40",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > rustls"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00156,
+   "epss_percentile": 0.04813,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.40",
+   "advisory": "GHSA-c8m5-c952-6cm4",
+   "cves": [
+    "CVE-2026-123609"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.23.46",
+   "summary": "Rustls: Session Debug formatting exposes TLS master secrets and resumption PSKs",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123609",
+    "RUSTSEC-2026-0346"
+   ],
+   "published": "2026-10-27T16:08:47Z",
+   "modified": "2026-11-08T10:55:36.514447652Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:H/PR:H/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-212"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.23.40",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > rustls"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00101,
+   "epss_percentile": 0.00917,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction",
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:serde_with",
+   "version": "3.20.0",
+   "advisory": "GHSA-7gcf-g7xr-8hxj",
+   "severity": "MODERATE",
+   "fixed_in": "3.21.0",
+   "summary": "serde_with: KeyValueMap serialization panics on empty sequence or map entries",
+   "malicious": false,
+   "published": "2026-07-15T22:41:01Z",
+   "modified": "2026-09-10T03:51:10.897685062Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/serde_with@3.20.0",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mongodb > serde_with"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:tokio-postgres",
+   "version": "0.7.17",
+   "advisory": "GHSA-3gjw-f78c-vvpw",
+   "severity": "MODERATE",
+   "fixed_in": "0.7.18",
+   "summary": "tokio-postgres: Panic on a `DataRow` with fewer fields than columns allows denial of service",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0178"
+   ],
+   "published": "2026-08-24T19:49:17Z",
+   "modified": "2026-08-25T02:55:59.557390596Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-125"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/tokio-postgres@0.7.17",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > tokio-postgres"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:DataRow"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use DataRow, but other packages depend on tokio-postgres"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:lru",
+   "version": "0.12.5",
+   "advisory": "GHSA-rhfx-m35p-ff5j",
+   "severity": "LOW",
+   "fixed_in": "0.16.3",
+   "summary": "`IterMut` violates Stacked Borrows by invalidating internal pointer",
+   "malicious": false,
+   "aliases": [
+    "RUSTSEC-2026-0002"
+   ],
+   "published": "2026-01-07T20:38:57Z",
+   "modified": "2026-09-10T03:50:59.064354050Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N/E:U",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-476"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/lru@0.12.5",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mysql_async > lru"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:IterMut"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use IterMut, but other packages depend on lru"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-j7h2-66j4-ghjf",
+   "cves": [
+    "CVE-2026-111062"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.64.0",
+   "summary": "A russh SSH server accepts a publickey authentication whose signature uses a different algorithm than the one named in the request",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-111062"
+   ],
+   "published": "2026-10-19T17:06:29Z",
+   "modified": "2026-10-19T17:15:04.300380668Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:L/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-347"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00354,
+   "epss_percentile": 0.29711,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-p8qx-h547-fjw9",
+   "cves": [
+    "CVE-2026-102822"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.63.1",
+   "summary": "russh: negotiating a MAC-requiring block cipher (CTR/CBC) with mac=none causes a slice-index-out-of-range panic",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-102822"
+   ],
+   "published": "2026-09-30T23:27:30Z",
+   "modified": "2026-09-30T23:45:04.010001283Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-129"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00327,
+   "epss_percentile": 0.26273,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.40",
+   "advisory": "GHSA-h2v8-394m-p7vv",
+   "cves": [
+    "CVE-2026-123610"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.23.46",
+   "summary": "Rustls: Brotli certificate decompression can allocate an attacker-controlled amount of memory up to 1 GiB before authentication.",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123610",
+    "RUSTSEC-2026-0348"
+   ],
+   "published": "2026-10-27T16:08:36Z",
+   "modified": "2026-11-08T10:55:59.261359726Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/rustls@0.23.40",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > rustls"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00165,
+   "epss_percentile": 0.0586,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls",
+   "version": "0.23.40",
+   "advisory": "GHSA-w44r-93j7-qv28",
+   "cves": [
+    "CVE-2026-123611"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.23.46",
+   "summary": "rustls: An unauthenticated ServerHello poisons the per-name key-exchange record, so later ClientHellos carry only a classical X25519 share",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123611",
+    "RUSTSEC-2026-0349"
+   ],
+   "published": "2026-10-27T16:08:54Z",
+   "modified": "2026-11-08T10:55:46.312019109Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-757"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/rustls@0.23.40",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > rustls"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00188,
+   "epss_percentile": 0.08575,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:crossbeam-epoch",
+   "version": "0.9.18",
+   "advisory": "RUSTSEC-2026-0204",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.9.20",
+   "summary": "Invalid pointer dereference in `fmt::Pointer` impl for `Atomic` and `Shared` when the underlying pointer is invalid",
+   "malicious": false,
+   "published": "2026-07-06T12:00:00Z",
+   "modified": "2026-07-06T22:30:04.159269138Z",
+   "purl": "pkg:cargo/crossbeam-epoch@0.9.18",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mysql_async > crossbeam > crossbeam-epoch"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:fmt::Pointer",
+    "symbol:Atomic",
+    "symbol:Shared"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use fmt::Pointer, Atomic, Shared, but other packages depend on crossbeam-epoch"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:crypto-bigint",
+   "version": "0.5.5",
+   "advisory": "RUSTSEC-2026-0387",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.7.6",
+   "summary": "Multiple timing variability issues in operations intended to be constant-time",
+   "malicious": false,
+   "published": "2026-10-23T12:00:00Z",
+   "modified": "2026-10-24T03:45:02.365137418Z",
+   "purl": "pkg:cargo/crypto-bigint@0.5.5",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh > elliptic-curve > crypto-bigint"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:ctutils",
+   "version": "0.4.2",
+   "advisory": "RUSTSEC-2026-0385",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.4.4",
+   "summary": "Non-constant-time mask generation and `u128` comparisons",
+   "malicious": false,
+   "published": "2026-10-23T12:00:00Z",
+   "modified": "2026-10-23T08:30:02.389575143Z",
+   "purl": "pkg:cargo/ctutils@0.4.2",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > tokio-postgres > postgres-protocol > hmac > digest > ctutils"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:hickory-proto",
+   "version": "0.25.2",
+   "advisory": "RUSTSEC-2026-0487",
+   "cves": [
+    "CVE-2026-123572"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.26.2",
+   "summary": "Panic on a malformed `alpn` value when parsing SVCB or HTTPS records from text",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123572",
+    "GHSA-hx8c-fjhc-hmf5"
+   ],
+   "published": "2026-09-03T12:00:00Z",
+   "modified": "2026-11-12T09:45:02.502326297Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/hickory-proto@0.25.2",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mongodb > hickory-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00343,
+   "epss_percentile": 0.2847,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:hickory-proto",
+   "version": "0.25.2",
+   "advisory": "RUSTSEC-2026-0489",
+   "cves": [
+    "CVE-2026-123573"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.26.2",
+   "summary": "Panic when an SVCB or HTTPS parameter value is a single quote character",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123573",
+    "GHSA-wgfr-mphw-j5g4"
+   ],
+   "published": "2026-09-03T12:00:00Z",
+   "modified": "2026-11-12T09:45:02.524857780Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/hickory-proto@0.25.2",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mongodb > hickory-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00343,
+   "epss_percentile": 0.28469,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:hickory-proto",
+   "version": "0.25.2",
+   "advisory": "RUSTSEC-2026-0490",
+   "cves": [
+    "CVE-2026-123574"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.26.2",
+   "summary": "Zone file lexer panics on a token of 4096 or more characters",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123574",
+    "GHSA-4rph-pmrw-mwpw"
+   ],
+   "published": "2026-09-03T12:00:00Z",
+   "modified": "2026-11-12T09:31:57Z",
+   "dos_only": true,
+   "purl": "pkg:cargo/hickory-proto@0.25.2",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mongodb > hickory-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00343,
+   "epss_percentile": 0.28469,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:hickory-proto",
+   "version": "0.25.2",
+   "advisory": "RUSTSEC-2026-0491",
+   "cves": [
+    "CVE-2026-123570"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.26.2",
+   "summary": "Memory amplification from record counts in the DNS message header",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123570",
+    "GHSA-67wc-6jq8-ghrc"
+   ],
+   "published": "2026-09-03T12:00:00Z",
+   "modified": "2026-11-12T09:45:02.494262633Z",
+   "purl": "pkg:cargo/hickory-proto@0.25.2",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mongodb > hickory-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00409,
+   "epss_percentile": 0.3597,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:hickory-proto",
+   "version": "0.25.2",
+   "advisory": "RUSTSEC-2026-0504",
+   "cves": [
+    "CVE-2026-123601"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.26.0-beta.1",
+   "summary": "Inverted NSEC3 comparison in DNSSEC validation (hickory-proto 0.25)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123601",
+    "GHSA-588m-chg6-8jqj",
+    "RUSTSEC-2026-0506"
+   ],
+   "published": "2026-09-03T12:00:00Z",
+   "modified": "2026-11-12T14:10:49.815536430Z",
+   "purl": "pkg:cargo/hickory-proto@0.25.2",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mongodb > hickory-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00279,
+   "epss_percentile": 0.2077,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:hickory-proto",
+   "version": "0.25.2",
+   "advisory": "RUSTSEC-2026-0511",
+   "cves": [
+    "CVE-2026-123594"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.26.0-beta.1",
+   "summary": "NXDOMAIN accepted for a proven empty non-terminal (hickory-proto)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123594",
+    "GHSA-86vr-jm6c-7cpg",
+    "RUSTSEC-2026-0519"
+   ],
+   "published": "2026-09-03T12:00:00Z",
+   "modified": "2026-11-12T14:40:42.050905197Z",
+   "purl": "pkg:cargo/hickory-proto@0.25.2",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mongodb > hickory-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.0012,
+   "epss_percentile": 0.01869,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:hickory-proto",
+   "version": "0.25.2",
+   "advisory": "RUSTSEC-2026-0530",
+   "cves": [
+    "CVE-2026-123596"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.26.0-beta.1",
+   "summary": "Parent-side NSEC at a zone cut accepted as proof of nonexistence (hickory-proto)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123596",
+    "GHSA-3r6v-f3jh-vvqm",
+    "RUSTSEC-2026-0539"
+   ],
+   "published": "2026-09-03T12:00:00Z",
+   "modified": "2026-11-13T12:55:36.653610929Z",
+   "purl": "pkg:cargo/hickory-proto@0.25.2",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mongodb > hickory-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00185,
+   "epss_percentile": 0.08185,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:hickory-proto",
+   "version": "0.25.2",
+   "advisory": "RUSTSEC-2026-0532",
+   "cves": [
+    "CVE-2026-123595"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.26.0-beta.1",
+   "summary": "Parent-side NSEC3 at a zone cut accepted as proof of nonexistence (hickory-proto 0.25)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123595",
+    "GHSA-624w-vvww-xvpw",
+    "RUSTSEC-2026-0541"
+   ],
+   "published": "2026-09-03T12:00:00Z",
+   "modified": "2026-11-13T12:55:46.260287377Z",
+   "purl": "pkg:cargo/hickory-proto@0.25.2",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mongodb > hickory-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00185,
+   "epss_percentile": 0.08185,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:hickory-proto",
+   "version": "0.25.2",
+   "advisory": "RUSTSEC-2026-0549",
+   "cves": [
+    "CVE-2026-123600"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.26.0-beta.1",
+   "summary": "NSEC3 NODATA at a zone apex accepted without an NSEC3 record matching the query name (hickory-proto)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123600",
+    "GHSA-3jvh-8vj5-65rq",
+    "RUSTSEC-2026-0556"
+   ],
+   "published": "2026-09-03T12:00:00Z",
+   "modified": "2026-11-17T10:25:34.470342084Z",
+   "purl": "pkg:cargo/hickory-proto@0.25.2",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mongodb > hickory-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00201,
+   "epss_percentile": 0.10084,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:hickory-proto",
+   "version": "0.25.2",
+   "advisory": "RUSTSEC-2026-0550",
+   "cves": [
+    "CVE-2026-123590"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.26.0-beta.1",
+   "summary": "Unsigned NSEC or NSEC3 record used in a nonexistence proof (hickory-proto)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123590",
+    "GHSA-57pw-897j-v4j6",
+    "RUSTSEC-2026-0557"
+   ],
+   "published": "2026-09-03T12:00:00Z",
+   "modified": "2026-11-17T10:25:41.214979058Z",
+   "purl": "pkg:cargo/hickory-proto@0.25.2",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mongodb > hickory-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00158,
+   "epss_percentile": 0.05059,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:hickory-proto",
+   "version": "0.25.2",
+   "advisory": "RUSTSEC-2026-0551",
+   "cves": [
+    "CVE-2026-123599"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.26.0-beta.1",
+   "summary": "Records with a DNS class other than the query's marked secure without being validated (hickory-proto)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-123599",
+    "GHSA-wjgj-fvg9-65w9",
+    "RUSTSEC-2026-0558"
+   ],
+   "published": "2026-09-03T12:00:00Z",
+   "modified": "2026-11-17T10:25:38.558562434Z",
+   "purl": "pkg:cargo/hickory-proto@0.25.2",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mongodb > hickory-proto"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.0012,
+   "epss_percentile": 0.01892,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rkyv",
+   "version": "0.7.46",
+   "advisory": "RUSTSEC-2026-0235",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.8.17",
+   "summary": "Insufficient archive validation can cause out-of-bounds reads in archives containing Rc/Arc",
+   "malicious": false,
+   "published": "2026-05-13T12:00:00Z",
+   "modified": "2026-08-04T09:30:04.382146100Z",
+   "purl": "pkg:cargo/rkyv@0.7.46",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mysql_async > mysql_common > rust_decimal > rkyv"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rustls-webpki",
+   "version": "0.103.13",
+   "advisory": "RUSTSEC-2026-0382",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "0.103.16",
+   "summary": "Certificate verification may accept distrusted intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0381",
+    "RUSTSEC-2026-0383"
+   ],
+   "published": "2026-10-20T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/rustls-webpki@0.103.13",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > rustls > rustls-webpki"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:webpki-roots",
+   "version": "1.0.7",
+   "advisory": "RUSTSEC-2026-0381",
+   "cves": [
+    "CVE-2026-111943"
+   ],
+   "severity": "UNKNOWN",
+   "fixed_in": "1.0.10",
+   "summary": "Bundled root certificates allow trust in distrusted emSign intermediates",
+   "malicious": false,
+   "aliases": [
+    "BIT-golang-2026-111943",
+    "CVE-2026-111943",
+    "GO-2026-6809",
+    "RUSTSEC-2026-0382",
+    "RUSTSEC-2026-0383"
+   ],
+   "published": "2026-10-19T12:00:00Z",
+   "modified": "2026-10-29T10:55:54.096394276Z",
+   "purl": "pkg:cargo/webpki-roots@1.0.7",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mongodb > webpki-roots"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34519,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd",
+   "version": "0.13.3",
+   "advisory": "RUSTSEC-2026-0391",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.13.4",
+   "summary": "Data from an abandoned stream leaks into the next stream on a reused context",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-11-02T09:30:03.590733846Z",
+   "purl": "pkg:cargo/zstd@0.13.3",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mysql_async > mysql_common > zstd"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Decoder::with_context",
+    "symbol:Encoder::with_context"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use Decoder::with_context, Encoder::with_context, but other packages depend on zstd"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd-safe",
+   "version": "7.2.4",
+   "advisory": "RUSTSEC-2026-0398",
+   "severity": "UNKNOWN",
+   "fixed_in": "7.4.0",
+   "summary": "`Seekable::decompress` sets a `Vec` length beyond its capacity for offsets past the end",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-11-02T09:30:03.419709171Z",
+   "dos_only": false,
+   "purl": "pkg:cargo/zstd-safe@7.2.4",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mysql_async > mysql_common > zstd > zstd-safe"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:Seekable::decompress",
+    "symbol:Vec",
+    "symbol:AdvancedSeekable::decompress"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "rust/src/adapters/mongodb.rs:32: async fn run_operation(&mut self, operation: &str, payload: &Value) -> Result<Vec<Value>> {",
+     "named only in files that do not import zstd-safe"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd-safe",
+   "version": "7.2.4",
+   "advisory": "RUSTSEC-2026-0403",
+   "severity": "UNKNOWN",
+   "fixed_in": "7.4.0",
+   "summary": "Uninitialized memory exposed when streaming decompression of a legacy frame fails",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-11-02T09:30:04.136442771Z",
+   "purl": "pkg:cargo/zstd-safe@7.2.4",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mysql_async > mysql_common > zstd > zstd-safe"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:DCtx::decompress_stream"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use DCtx::decompress_stream, but other packages depend on zstd-safe"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:zstd-sys",
+   "version": "2.0.16+zstd.1.5.7",
+   "advisory": "RUSTSEC-2026-0410",
+   "severity": "UNKNOWN",
+   "fixed_in": "2.1.2",
+   "summary": "WebAssembly allocator shim corrupts memory on allocation failure",
+   "malicious": false,
+   "published": "2026-10-16T12:00:00Z",
+   "modified": "2026-10-26T14:00:05.788985783Z",
+   "purl": "pkg:cargo/zstd-sys@2.0.16%2Bzstd.1.5.7",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > mysql_async > mysql_common > zstd > zstd-safe > zstd-sys"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-vp5q-ff62-jwqv",
+   "cves": [
+    "CVE-2026-116794"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.65",
+   "summary": "russh: Agent server never calls `Agent::confirm`, so keys added with the confirm constraint (`ssh-add -c`) sign without confirmation",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116794",
+    "RUSTSEC-2026-0495"
+   ],
+   "published": "2026-10-30T22:59:08Z",
+   "modified": "2026-11-12T08:10:57.732791399Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:L/UI:N/VC:N/VI:H/VA:N/SC:H/SI:H/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-862"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00156,
+   "epss_percentile": 0.0486,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "symbol:Agent::confirm"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses Agent::confirm; only the project depends on russh"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": true,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-4p9f-7p9m-5vfg",
+   "cves": [
+    "CVE-2026-116773"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.65",
+   "summary": "russh's SSH client is susceptible to unbounded allocations via EXT_INFO packets",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116773"
+   ],
+   "published": "2026-10-30T22:58:39Z",
+   "modified": "2026-10-30T23:15:07.424167384Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00258,
+   "epss_percentile": 0.17687,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "denial_of_service",
+    "option:EXT_INFO"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses EXT_INFO; only the project depends on russh"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-g9hv-x236-4qp3",
+   "cves": [
+    "CVE-2026-73429"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.62.4",
+   "summary": "Russh: client wrong-length X25519 `clone_from_slice` panic (pre-auth DoS)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-73429"
+   ],
+   "published": "2026-07-24T16:47:16Z",
+   "modified": "2026-09-10T03:50:52.133373647Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-704",
+    "CWE-754"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00507,
+   "epss_percentile": 0.44007,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:clone_from_slice"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses clone_from_slice; only the project depends on russh"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-9wfm-jcj8-jfv9",
+   "cves": [
+    "CVE-2026-116696"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.65.0",
+   "summary": "russh's SSH agent server is susceptible to unbound allocations via repeated SSH_AGENT_CONSTRAIN_CONFIRM messages",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-116696"
+   ],
+   "published": "2026-10-30T22:58:47Z",
+   "modified": "2026-10-30T23:15:07.421353309Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.0011,
+   "epss_percentile": 0.01305,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "denial_of_service",
+    "option:SSH_AGENT_CONSTRAIN_CONFIRM"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses SSH_AGENT_CONSTRAIN_CONFIRM; only the project depends on russh"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:russh",
+   "version": "0.45.0",
+   "advisory": "GHSA-g6xm-f9xp-qq35",
+   "cves": [
+    "CVE-2026-102825"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.62.6",
+   "summary": "Russh: Configured server auth-attempt cap is not enforced in the USERAUTH_REQUEST runtime path",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-102825"
+   ],
+   "published": "2026-09-30T23:26:17Z",
+   "modified": "2026-09-30T23:30:05.964211406Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-307"
+   ],
+   "dos_only": false,
+   "purl": "pkg:cargo/russh@0.45.0",
+   "scope": "runtime",
+   "paths": [
+    "agent-database-cli > russh"
+   ],
+   "workspace": ".",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "epss": 0.00353,
+   "epss_percentile": 0.29576,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "option:USERAUTH_REQUEST"
+   ],
+   "reachability": {
+    "method": "option_grep",
+    "result": "not_reachable",
+    "evidence": [
+     "no source file uses USERAUTH_REQUEST; only the project depends on russh"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "vulnerable_code_not_in_execute_path"
+   },
+   "counted": false,
+   "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

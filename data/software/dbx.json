@@ -383,14 +383,12 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-19T15:44:13+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
       "npm:@dbx-app/cli (fresh install, 7 packages)",
-      "github.com/t8y2/dbx@20ac9fe8edd2",
+      "github.com/t8y2/dbx@d98c2c23e253",
       "Cargo.lock",
       "agents/drivers/argo-go/go.mod",
       "agents/drivers/cassandra-go/go.mod",
@@ -410,11 +408,147 @@
       "agents/drivers/zookeeper/go.mod",
       "agents/go-common/go-gssapi/go.mod"
     ],
-    "packages_checked": 1529,
-    "findings_total": 83,
-    "advisories_total": 41,
+    "packages_checked": 2250,
+    "findings_total": 81,
+    "advisories_total": 39,
     "findings": [
       {
+        "package": "go:golang.org/x/net",
+        "version": "v0.10.0",
+        "advisory": "GHSA-4374-p667-p6c8",
+        "cves": [
+          "CVE-2023-39325"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.17.0",
+        "summary": "HTTP/2 rapid reset can cause excessive work in net/http",
+        "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agents/drivers/cassandra-go",
+        "found_in": "agents/drivers/cassandra-go/go.mod",
+        "kev": false,
+        "epss": 0.03796,
+        "fix_published_at": "2023-10-10T15:45:19Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:ListenAndServe",
+          "symbol:ListenAndServeTLS",
+          "symbol:Serve"
+        ],
+        "paths": [
+          "agents/drivers/cassandra-go/go.mod > golang.org/x/net"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "agents/go-common/gohive/browser_auth.go:69: _ = server.Serve(listener)"
+          ]
+        }
+      },
+      {
+        "package": "go:golang.org/x/net",
+        "version": "v0.7.0",
+        "advisory": "GHSA-4374-p667-p6c8",
+        "cves": [
+          "CVE-2023-39325"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.17.0",
+        "summary": "HTTP/2 rapid reset can cause excessive work in net/http",
+        "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agents/drivers/zookeeper",
+        "found_in": "agents/drivers/zookeeper/go.mod",
+        "kev": false,
+        "epss": 0.03796,
+        "fix_published_at": "2023-10-10T15:45:19Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:ListenAndServe",
+          "symbol:ListenAndServeTLS",
+          "symbol:Serve"
+        ],
+        "paths": [
+          "agents/drivers/zookeeper/go.mod > golang.org/x/net"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "agents/go-common/gohive/browser_auth.go:69: _ = server.Serve(listener)"
+          ]
+        }
+      },
+      {
+        "package": "go:golang.org/x/net",
+        "version": "v0.10.0",
+        "advisory": "GHSA-qppj-fm5r-hxr3",
+        "cves": [
+          "CVE-2023-44487"
+        ],
+        "severity": "MODERATE",
+        "fixed_in": "0.17.0",
+        "summary": "HTTP/2 Stream Cancellation Attack",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agents/drivers/cassandra-go",
+        "found_in": "agents/drivers/cassandra-go/go.mod",
+        "kev": true,
+        "epss": 0.99999,
+        "fix_published_at": "2023-10-10T15:45:19Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "agents/drivers/cassandra-go/go.mod > golang.org/x/net"
+        ]
+      },
+      {
+        "package": "go:golang.org/x/net",
+        "version": "v0.7.0",
+        "advisory": "GHSA-qppj-fm5r-hxr3",
+        "cves": [
+          "CVE-2023-44487"
+        ],
+        "severity": "MODERATE",
+        "fixed_in": "0.17.0",
+        "summary": "HTTP/2 Stream Cancellation Attack",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agents/drivers/zookeeper",
+        "found_in": "agents/drivers/zookeeper/go.mod",
+        "kev": true,
+        "epss": 0.99999,
+        "fix_published_at": "2023-10-10T15:45:19Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "agents/drivers/zookeeper/go.mod > golang.org/x/net"
+        ]
+      },
+      {
         "package": "crates:zip",
         "version": "4.6.1",
         "advisory": "GHSA-m665-v7pm-7grj",
@@ -424,7 +558,55 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "epss": 0.0032,
+        "fix_published_at": "2026-10-17T18:45:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "dbx > zip"
+        ]
+      },
+      {
+        "package": "crates:zip",
+        "version": "4.6.1",
+        "advisory": "RUSTSEC-2026-0369",
+        "cves": [],
+        "severity": "CRITICAL",
+        "fixed_in": "9.0.0",
+        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "src-tauri",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:ZipStreamReader::extract",
+          "symbol:ZipArchive::extract"
+        ],
+        "paths": [
+          "dbx > zip"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+          ]
+        }
       },
       {
         "package": "crates:zip",
@@ -436,51 +618,55 @@
         "severity": "CRITICAL",
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agents/drivers/duckdb",
+        "found_in": "agents/drivers/duckdb/Cargo.lock",
+        "kev": false,
+        "epss": 0.0032,
+        "fix_published_at": "2026-10-17T18:45:16Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "dbx-duckdb-driver > duckdb > libduckdb-sys > zip"
+        ]
       },
       {
         "package": "crates:zip",
-        "version": "4.6.1",
+        "version": "6.0.0",
         "advisory": "RUSTSEC-2026-0369",
         "cves": [],
         "severity": "CRITICAL",
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "6.0.0",
-        "advisory": "RUSTSEC-2026-0369",
-        "cves": [],
-        "severity": "CRITICAL",
-        "fixed_in": "9.0.0",
-        "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.39.0",
-        "advisory": "GHSA-5cgq-3rg8-m6cv",
-        "cves": [
-          "CVE-2026-42508"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agents/drivers/duckdb",
+        "found_in": "agents/drivers/duckdb/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:ZipStreamReader::extract",
+          "symbol:ZipArchive::extract"
         ],
-        "severity": "CRITICAL",
-        "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto vulnerable to auth bypass via unenforced @revoked status",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.11.0",
-        "advisory": "GHSA-5cgq-3rg8-m6cv",
-        "cves": [
-          "CVE-2026-42508"
+        "paths": [
+          "dbx-duckdb-driver > duckdb > libduckdb-sys > zip"
         ],
-        "severity": "CRITICAL",
-        "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto vulnerable to auth bypass via unenforced @revoked status",
-        "malicious": false
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
+          ]
+        }
       },
       {
         "package": "go:golang.org/x/crypto",
@@ -492,43 +678,24 @@
         "severity": "CRITICAL",
         "fixed_in": "0.52.0",
         "summary": "golang.org/x/crypto vulnerable to auth bypass via unenforced @revoked status",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.6.0",
-        "advisory": "GHSA-5cgq-3rg8-m6cv",
-        "cves": [
-          "CVE-2026-42508"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agents/drivers/vastbase-go",
+        "found_in": "agents/drivers/vastbase-go/go.mod",
+        "kev": false,
+        "epss": 0.0691,
+        "fix_published_at": "2026-05-22T00:26:06Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:hostKeyDB.IsRevoked"
         ],
-        "severity": "CRITICAL",
-        "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto vulnerable to auth bypass via unenforced @revoked status",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.39.0",
-        "advisory": "GHSA-89gr-r52h-f8rx",
-        "cves": [
-          "CVE-2026-39831"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto: FIDO/U2F security key physical presence check can be bypassed",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.11.0",
-        "advisory": "GHSA-89gr-r52h-f8rx",
-        "cves": [
-          "CVE-2026-39831"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto: FIDO/U2F security key physical presence check can be bypassed",
-        "malicious": false
+        "paths": [
+          "agents/drivers/vastbase-go/go.mod > golang.org/x/crypto"
+        ]
       },
       {
         "package": "go:golang.org/x/crypto",
@@ -540,43 +707,26 @@
         "severity": "CRITICAL",
         "fixed_in": "0.52.0",
         "summary": "golang.org/x/crypto: FIDO/U2F security key physical presence check can be bypassed",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.6.0",
-        "advisory": "GHSA-89gr-r52h-f8rx",
-        "cves": [
-          "CVE-2026-39831"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agents/drivers/vastbase-go",
+        "found_in": "agents/drivers/vastbase-go/go.mod",
+        "kev": false,
+        "epss": 0.00478,
+        "fix_published_at": "2026-05-22T00:26:06Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:CertChecker.Authenticate",
+          "symbol:CertChecker.CheckCert",
+          "symbol:CertChecker.CheckHostKey"
         ],
-        "severity": "CRITICAL",
-        "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto: FIDO/U2F security key physical presence check can be bypassed",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.39.0",
-        "advisory": "GHSA-f5wc-c3c7-36mc",
-        "cves": [
-          "CVE-2026-39832"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto doesn't drop invoking agent constraints when forwarding keys",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.11.0",
-        "advisory": "GHSA-f5wc-c3c7-36mc",
-        "cves": [
-          "CVE-2026-39832"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto doesn't drop invoking agent constraints when forwarding keys",
-        "malicious": false
+        "paths": [
+          "agents/drivers/vastbase-go/go.mod > golang.org/x/crypto"
+        ]
       },
       {
         "package": "go:golang.org/x/crypto",
@@ -588,43 +738,25 @@
         "severity": "CRITICAL",
         "fixed_in": "0.52.0",
         "summary": "golang.org/x/crypto doesn't drop invoking agent constraints when forwarding keys",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.6.0",
-        "advisory": "GHSA-f5wc-c3c7-36mc",
-        "cves": [
-          "CVE-2026-39832"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agents/drivers/vastbase-go",
+        "found_in": "agents/drivers/vastbase-go/go.mod",
+        "kev": false,
+        "epss": 0.00683,
+        "fix_published_at": "2026-05-22T00:26:06Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:client.Add",
+          "symbol:keyring.Add"
         ],
-        "severity": "CRITICAL",
-        "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto doesn't drop invoking agent constraints when forwarding keys",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.39.0",
-        "advisory": "GHSA-jppx-rxg9-jmrx",
-        "cves": [
-          "CVE-2026-39833"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto doesn't enforce invoking key constraints",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.11.0",
-        "advisory": "GHSA-jppx-rxg9-jmrx",
-        "cves": [
-          "CVE-2026-39833"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto doesn't enforce invoking key constraints",
-        "malicious": false
+        "paths": [
+          "agents/drivers/vastbase-go/go.mod > golang.org/x/crypto"
+        ]
       },
       {
         "package": "go:golang.org/x/crypto",
@@ -636,43 +768,24 @@
         "severity": "CRITICAL",
         "fixed_in": "0.52.0",
         "summary": "golang.org/x/crypto doesn't enforce invoking key constraints",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.6.0",
-        "advisory": "GHSA-jppx-rxg9-jmrx",
-        "cves": [
-          "CVE-2026-39833"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agents/drivers/vastbase-go",
+        "found_in": "agents/drivers/vastbase-go/go.mod",
+        "kev": false,
+        "epss": 0.00469,
+        "fix_published_at": "2026-05-22T00:26:06Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:keyring.Add"
         ],
-        "severity": "CRITICAL",
-        "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto doesn't enforce invoking key constraints",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.39.0",
-        "advisory": "GHSA-rm3j-f69w-wqmq",
-        "cves": [
-          "CVE-2026-39834"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto vulnerable to infinite loop on large channel writes",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.11.0",
-        "advisory": "GHSA-rm3j-f69w-wqmq",
-        "cves": [
-          "CVE-2026-39834"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto vulnerable to infinite loop on large channel writes",
-        "malicious": false
+        "paths": [
+          "agents/drivers/vastbase-go/go.mod > golang.org/x/crypto"
+        ]
       },
       {
         "package": "go:golang.org/x/crypto",
@@ -684,31 +797,26 @@
         "severity": "CRITICAL",
         "fixed_in": "0.52.0",
         "summary": "golang.org/x/crypto vulnerable to infinite loop on large channel writes",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.6.0",
-        "advisory": "GHSA-rm3j-f69w-wqmq",
-        "cves": [
-          "CVE-2026-39834"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agents/drivers/vastbase-go",
+        "found_in": "agents/drivers/vastbase-go/go.mod",
+        "kev": false,
+        "epss": 0.00597,
+        "fix_published_at": "2026-05-22T00:26:06Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:Dial",
+          "symbol:NewClientConn",
+          "symbol:NewServerConn"
         ],
-        "severity": "CRITICAL",
-        "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto vulnerable to infinite loop on large channel writes",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.11.0",
-        "advisory": "GHSA-v778-237x-gjrc",
-        "cves": [
-          "CVE-2024-45337"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "0.31.0",
-        "summary": "Misuse of ServerConfig.PublicKeyCallback may cause authorization bypass in golang.org/x/crypto",
-        "malicious": false
+        "paths": [
+          "agents/drivers/vastbase-go/go.mod > golang.org/x/crypto"
+        ]
       },
       {
         "package": "go:golang.org/x/crypto",
@@ -720,23 +828,30 @@
         "severity": "CRITICAL",
         "fixed_in": "0.31.0",
         "summary": "Misuse of ServerConfig.PublicKeyCallback may cause authorization bypass in golang.org/x/crypto",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.6.0",
-        "advisory": "GHSA-v778-237x-gjrc",
-        "cves": [
-          "CVE-2024-45337"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agents/drivers/vastbase-go",
+        "found_in": "agents/drivers/vastbase-go/go.mod",
+        "kev": false,
+        "epss": 0.03788,
+        "fix_published_at": "2024-12-11T17:50:49Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:NewServerConn",
+          "symbol:ServerConfig.PublicKeyCallback",
+          "symbol:connection.serverAuthenticate"
         ],
-        "severity": "CRITICAL",
-        "fixed_in": "0.31.0",
-        "summary": "Misuse of ServerConfig.PublicKeyCallback may cause authorization bypass in golang.org/x/crypto",
-        "malicious": false
+        "paths": [
+          "agents/drivers/vastbase-go/go.mod > golang.org/x/crypto"
+        ]
       },
       {
         "package": "go:golang.org/x/crypto",
-        "version": "v0.39.0",
+        "version": "v0.0.0-20210711020723-a769d52b0f97",
         "advisory": "GHSA-vgwf-h737-ff37",
         "cves": [
           "CVE-2026-39830"
@@ -744,391 +859,836 @@
         "severity": "CRITICAL",
         "fixed_in": "0.52.0",
         "summary": "golang.org/x/crypto: Invoking client can cause server deadlock on unexpected responses",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agents/drivers/vastbase-go",
+        "found_in": "agents/drivers/vastbase-go/go.mod",
+        "kev": false,
+        "epss": 0.00683,
+        "fix_published_at": "2026-05-22T00:26:06Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:Client.Listen",
+          "symbol:Client.ListenTCP",
+          "symbol:Client.ListenUnix"
+        ],
+        "paths": [
+          "agents/drivers/vastbase-go/go.mod > golang.org/x/crypto"
+        ]
+      },
+      {
+        "package": "go:golang.org/x/crypto",
+        "version": "v0.0.0-20210711020723-a769d52b0f97",
+        "advisory": "GHSA-x527-x647-q7gg",
+        "cves": [
+          "CVE-2026-46595"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.52.0",
+        "summary": "golang.org/x/crypto: Invoking VerifiedPublicKeyCallback permissions skip enforcement",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agents/drivers/vastbase-go",
+        "found_in": "agents/drivers/vastbase-go/go.mod",
+        "kev": false,
+        "epss": 0.00556,
+        "fix_published_at": "2026-05-22T00:26:06Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:NewServerConn",
+          "symbol:connection.serverAuthenticate"
+        ],
+        "paths": [
+          "agents/drivers/vastbase-go/go.mod > golang.org/x/crypto"
+        ]
       },
       {
         "package": "go:golang.org/x/crypto",
         "version": "v0.11.0",
-        "advisory": "GHSA-vgwf-h737-ff37",
+        "advisory": "GHSA-5cgq-3rg8-m6cv",
         "cves": [
-          "CVE-2026-39830"
+          "CVE-2026-42508"
         ],
         "severity": "CRITICAL",
         "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto: Invoking client can cause server deadlock on unexpected responses",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.0.0-20210711020723-a769d52b0f97",
-        "advisory": "GHSA-vgwf-h737-ff37",
-        "cves": [
-          "CVE-2026-39830"
+        "summary": "golang.org/x/crypto vulnerable to auth bypass via unenforced @revoked status",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agents/drivers/cassandra-go",
+        "found_in": "agents/drivers/cassandra-go/go.mod",
+        "kev": false,
+        "epss": 0.0691,
+        "fix_published_at": "2026-05-22T00:26:06Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:hostKeyDB.IsRevoked"
         ],
-        "severity": "CRITICAL",
-        "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto: Invoking client can cause server deadlock on unexpected responses",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.6.0",
-        "advisory": "GHSA-vgwf-h737-ff37",
-        "cves": [
-          "CVE-2026-39830"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto: Invoking client can cause server deadlock on unexpected responses",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.39.0",
-        "advisory": "GHSA-x527-x647-q7gg",
-        "cves": [
-          "CVE-2026-46595"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto: Invoking VerifiedPublicKeyCallback permissions skip enforcement",
-        "malicious": false
+        "paths": [
+          "agents/drivers/cassandra-go/go.mod > golang.org/x/crypto"
+        ]
       },
       {
         "package": "go:golang.org/x/crypto",
         "version": "v0.11.0",
-        "advisory": "GHSA-x527-x647-q7gg",
+        "advisory": "GHSA-89gr-r52h-f8rx",
         "cves": [
-          "CVE-2026-46595"
+          "CVE-2026-39831"
         ],
         "severity": "CRITICAL",
         "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto: Invoking VerifiedPublicKeyCallback permissions skip enforcement",
-        "malicious": false
+        "summary": "golang.org/x/crypto: FIDO/U2F security key physical presence check can be bypassed",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agents/drivers/cassandra-go",
+        "found_in": "agents/drivers/cassandra-go/go.mod",
+        "kev": false,
+        "epss": 0.00478,
+        "fix_published_at": "2026-05-22T00:26:06Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:CertChecker.Authenticate",
+          "symbol:CertChecker.CheckCert",
+          "symbol:CertChecker.CheckHostKey"
+        ],
+        "paths": [
+          "agents/drivers/cassandra-go/go.mod > golang.org/x/crypto"
+        ]
       },
       {
         "package": "go:golang.org/x/crypto",
-        "version": "v0.0.0-20210711020723-a769d52b0f97",
-        "advisory": "GHSA-x527-x647-q7gg",
+        "version": "v0.11.0",
+        "advisory": "GHSA-f5wc-c3c7-36mc",
         "cves": [
-          "CVE-2026-46595"
+          "CVE-2026-39832"
         ],
         "severity": "CRITICAL",
         "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto: Invoking VerifiedPublicKeyCallback permissions skip enforcement",
-        "malicious": false
+        "summary": "golang.org/x/crypto doesn't drop invoking agent constraints when forwarding keys",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agents/drivers/cassandra-go",
+        "found_in": "agents/drivers/cassandra-go/go.mod",
+        "kev": false,
+        "epss": 0.00683,
+        "fix_published_at": "2026-05-22T00:26:06Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:client.Add",
+          "symbol:keyring.Add"
+        ],
+        "paths": [
+          "agents/drivers/cassandra-go/go.mod > golang.org/x/crypto"
+        ]
       },
       {
         "package": "go:golang.org/x/crypto",
-        "version": "v0.6.0",
-        "advisory": "GHSA-x527-x647-q7gg",
+        "version": "v0.11.0",
+        "advisory": "GHSA-jppx-rxg9-jmrx",
         "cves": [
-          "CVE-2026-46595"
+          "CVE-2026-39833"
         ],
         "severity": "CRITICAL",
         "fixed_in": "0.52.0",
-        "summary": "golang.org/x/crypto: Invoking VerifiedPublicKeyCallback permissions skip enforcement",
-        "malicious": false
-      },
-      {
-        "package": "crates:calamine",
-        "version": "0.30.1",
-        "advisory": "RUSTSEC-2026-0436",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.38.0",
-        "summary": "Panic and unbounded allocation (OOM) in the CFB/OLE2 parser on malformed input",
-        "malicious": false
-      },
-      {
-        "package": "crates:hickory-net",
-        "version": "0.26.1",
-        "advisory": "RUSTSEC-2026-0509",
-        "cves": [
-          "CVE-2026-123580"
+        "summary": "golang.org/x/crypto doesn't enforce invoking key constraints",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "agents/drivers/cassandra-go",
+        "found_in": "agents/drivers/cassandra-go/go.mod",
+        "kev": false,
+        "epss": 0.00469,
+        "fix_published_at": "2026-05-22T00:26:06Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "symbol:keyring.Add"
         ],
-        "severity": "HIGH",
-        "fixed_in": "0.26.2",
-        "summary": "NSEC3 records from another zone were accepted in proofs of nonexistence",
-        "malicious": false
-      },
-      {
-        "package": "crates:hickory-resolver",
-        "version": "0.26.1",
-        "advisory": "GHSA-5j98-2g5x-46v6",
-        "cves": [
-          "CVE-2026-93657"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.26.2",
-        "summary": "hickory-resolver: Resolver::lookup() and Resolver::lookup_ip() APIs obscure DNSSEC validation failures",
-        "malicious": false
-      },
-      {
-        "package": "crates:hickory-resolver",
-        "version": "0.26.1",
-        "advisory": "GHSA-6w6g-hm98-mhgm",
-        "cves": [
-          "CVE-2026-123604"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.26.2",
-        "summary": "hickory-resolver: Unbounded TC-retry loop in `NameServerPool::try_send` (resource-exhaustion DoS)",
-        "malicious": false
-      },
-      {
-        "package": "crates:quick-xml",
-        "version": "0.37.5",
-        "advisory": "RUSTSEC-2026-0194",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.41.0",
-        "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
-        "malicious": false
-      },
-      {
-        "package": "crates:quick-xml",
-        "version": "0.37.5",
-        "advisory": "RUSTSEC-2026-0195",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.41.0",
-        "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
-        "malicious": false
-      },
-      {
-        "package": "crates:quinn-proto",
-        "version": "0.11.16",
-        "advisory": "RUSTSEC-2026-0340",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.11.18",
-        "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
-      },
-      {
-        "package": "crates:quinn-proto",
-        "version": "0.11.16",
-        "advisory": "RUSTSEC-2026-0341",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "0.11.17",
-        "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
-        "malicious": false
-      },
-      {
-        "package": "crates:rmcp",
-        "version": "3.5.1",
-        "advisory": "RUSTSEC-2026-0461",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "3.6.0",
-        "summary": "Unbounded tool schema cache in Streamable HTTP server transport",
-        "malicious": false
-      },
-      {
-        "package": "crates:russh",
-        "version": "0.60.3",
-        "advisory": "GHSA-47hw-gvq5-r2gm",
-        "cves": [
-          "CVE-2026-102823"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.63.1",
-        "summary": "russh: Client-side channel-scoped Handler callbacks fire for channel IDs the client never opened",
-        "malicious": false
-      },
-      {
-        "package": "crates:russh",
-        "version": "0.60.3",
-        "advisory": "GHSA-4r3c-5hpg-58qr",
-        "cves": [
-          "CVE-2026-48110"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.61.0",
-        "summary": "Russh SSH message fields were decoded through allocation-first parsers before field-specific bounds",
-        "malicious": false
-      },
-      {
-        "package": "crates:russh",
-        "version": "0.60.3",
-        "advisory": "GHSA-vp5q-ff62-jwqv",
-        "cves": [
-          "CVE-2026-116794"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.65",
-        "summary": "russh: Agent server never calls `Agent::confirm`, so keys added with the confirm constraint (`ssh-add -c`) sign without confirmation",
-        "malicious": false
-      },
-      {
-        "package": "crates:russh",
-        "version": "0.60.3",
-        "advisory": "GHSA-wwx6-x28x-8259",
-        "cves": [
-          "CVE-2026-46702"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.61.1",
-        "summary": "russh: Post-decompression SSH packet size was not bounded, allowing remote oversized compressed packets",
-        "malicious": false
-      },
-      {
-        "package": "crates:rustls-webpki",
-        "version": "0.101.7",
-        "advisory": "GHSA-82j2-j2ch-gfr8",
-        "cves": [
-          "CVE-2026-93599"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.103.13",
-        "summary": "rustls-webpki: Denial of service via panic on malformed CRL BIT STRING",
-        "malicious": false
-      },
-      {
-        "package": "crates:rustls-webpki",
-        "version": "0.102.8",
-        "advisory": "GHSA-82j2-j2ch-gfr8",
-        "cves": [
-          "CVE-2026-93599"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.103.13",
-        "summary": "rustls-webpki: Denial of service via panic on malformed CRL BIT STRING",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "6.0.0",
-        "advisory": "GHSA-9hj8-73fh-9963",
-        "cves": [
-          "CVE-2026-115907"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: legacy Shrink/Reduce/Implode decoder: denial of service from attacker-controlled ZIP64 uncompressed size",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "4.6.1",
-        "advisory": "GHSA-q7v9-x93c-xqv3",
-        "cves": [
-          "CVE-2026-115909"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "6.0.0",
-        "advisory": "GHSA-q7v9-x93c-xqv3",
-        "cves": [
-          "CVE-2026-115909"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "4.6.1",
-        "advisory": "RUSTSEC-2026-0367",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
-      },
-      {
-        "package": "crates:zip",
-        "version": "6.0.0",
-        "advisory": "RUSTSEC-2026-0367",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "9.0.0",
-        "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
-        "malicious": false
-      },
-      {
-        "package": "go:github.com/apache/thrift",
-        "version": "v0.22.0",
-        "advisory": "GHSA-8wv5-x4w7-5gww",
-        "cves": [
-          "CVE-2026-43871"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.24.0",
-        "summary": "Apache Thrift Python, Go, PHP and Java bindings have an Infinite Loop",
-        "malicious": false
-      },
-      {
-        "package": "go:github.com/apache/thrift",
-        "version": "v0.22.0",
-        "advisory": "GHSA-wf45-q9ch-q8gh",
-        "cves": [
-          "CVE-2026-41602"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.23.0",
-        "summary": "Apache Thrift TFramedTransport Go language implementation has an Integer Overflow or Wraparound vulnerability",
-        "malicious": false
-      },
-      {
-        "package": "go:github.com/klauspost/compress",
-        "version": "v1.18.0",
-        "advisory": "GHSA-259r-337f-4rfw",
-        "cves": [
-          "CVE-2026-63209"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.18.7",
-        "summary": "Compress/s2: Integer Overflow or Wraparound and Out-of-bounds Write in compress",
-        "malicious": false
-      },
-      {
-        "package": "go:github.com/klauspost/compress",
-        "version": "v1.18.0",
-        "advisory": "GO-2026-6865",
-        "cves": [
-          "CVE-2026-116591"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.20.2",
-        "summary": "Panic on two-block frames in github.com/klauspost/compress",
-        "malicious": false
-      },
-      {
-        "package": "go:golang.org/x/crypto",
-        "version": "v0.0.0-20210711020723-a769d52b0f97",
-        "advisory": "GHSA-8c26-wmh5-6g9v",
-        "cves": [
-          "CVE-2022-27191"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.0.0-20220314234659-1baeb1ce4c0b",
-        "summary": "golang.org/x/crypto/ssh Denial of service via crafted Signer",
-        "malicious": false
+        "paths": [
+          "agents/drivers/cassandra-go/go.mod > golang.org/x/crypto"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:50:25+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "d98c2c23e2537c596b953089f99d92936577b838",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 1160,
+        "go": 124,
+        "npm": 966
+      },
+      "scopes": {
+        "runtime": 1425,
+        "optional": 61,
+        "peer": 1,
+        "build": 3,
+        "dev": 722,
+        "workspace": 38
+      },
+      "advisories_fetched_at": "2026-11-20T00:50:25+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 318,
+      "details": "security/dbx.json",
+      "details_sha256": "ef8c6fca1db440fa731bc16029195a0bf5a25a9cc0c4230b548cafd71f329a03"
+    },
+    "assessment": {
+      "level": "exposed",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-4374-p667-p6c8 go:golang.org/x/net@v0.10.0 (exposed)",
+        "worst:GHSA-4374-p667-p6c8 go:golang.org/x/net@v0.7.0 (exposed)",
+        "kev:GHSA-qppj-fm5r-hxr3 go:golang.org/x/net@v0.10.0 (conditional)"
+      ],
+      "counts": {
+        "exposed": 2,
+        "conditional": 79,
+        "not_shipped": 8
+      },
+      "uncounted": 229,
+      "assessed_at": "2026-11-20T00:50:25+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 2333,
+      "packages_checked": 2250,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "registry:npm:@dbx-app/cli",
+          "status": "partial",
+          "packages": 7,
+          "gaps": [
+            "binary.prebuilt_package"
+          ]
+        },
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 1062,
+          "gaps": []
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/build.gradle",
+          "status": "not_scanned",
+          "packages": 3,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/common/build.gradle",
+          "status": "not_scanned",
+          "packages": 1,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/drivers/access/build.gradle",
+          "status": "not_scanned",
+          "packages": 2,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "go",
+          "component": "agents/drivers/argo-go/go.mod",
+          "status": "scanned",
+          "packages": 20,
+          "gaps": []
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/drivers/bigquery/build.gradle",
+          "status": "not_scanned",
+          "packages": 1,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/drivers/cache/build.gradle",
+          "status": "not_scanned",
+          "packages": 1,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "go",
+          "component": "agents/drivers/cassandra-go/go.mod",
+          "status": "scanned",
+          "packages": 24,
+          "gaps": []
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/drivers/dameng/build.gradle",
+          "status": "not_scanned",
+          "packages": 2,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/drivers/databend/build.gradle",
+          "status": "not_scanned",
+          "packages": 1,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/drivers/databricks/build.gradle",
+          "status": "not_scanned",
+          "packages": 2,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/drivers/db2/build.gradle",
+          "status": "not_scanned",
+          "packages": 3,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "crates",
+          "component": "agents/drivers/duckdb/Cargo.lock",
+          "status": "scanned",
+          "packages": 652,
+          "gaps": []
+        },
+        {
+          "ecosystem": "go",
+          "component": "agents/drivers/etcd-go/go.mod",
+          "status": "scanned",
+          "packages": 16,
+          "gaps": []
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/drivers/exasol/build.gradle",
+          "status": "not_scanned",
+          "packages": 2,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/drivers/firebird/build.gradle",
+          "status": "not_scanned",
+          "packages": 2,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/drivers/gbase8a/build.gradle",
+          "status": "not_scanned",
+          "packages": 1,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/drivers/gbase8c/build.gradle",
+          "status": "not_scanned",
+          "packages": 1,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/drivers/gbase8s/build.gradle",
+          "status": "not_scanned",
+          "packages": 1,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/drivers/goldendb/build.gradle",
+          "status": "not_scanned",
+          "packages": 2,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/drivers/h2/build.gradle",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/drivers/h2-legacy/build.gradle",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/drivers/highgo/build.gradle",
+          "status": "not_scanned",
+          "packages": 2,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "go",
+          "component": "agents/drivers/hive-go/go.mod",
+          "status": "scanned",
+          "packages": 20,
+          "gaps": []
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/drivers/ignite/build.gradle",
+          "status": "not_scanned",
+          "packages": 2,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/drivers/ignite3/build.gradle",
+          "status": "not_scanned",
+          "packages": 1,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/drivers/informix/build.gradle",
+          "status": "not_scanned",
+          "packages": 2,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "go",
+          "component": "agents/drivers/iotdb/go.mod",
+          "status": "scanned",
+          "packages": 2,
+          "gaps": []
+        },
+        {
+          "ecosystem": "maven",
+          "component": "agents/drivers/iris/build.gradle",
+          "status": "not_scanned",
+          "packages": 1,
+          "gaps": [
+            "adapter.missing"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 3,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/common/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 1,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/access/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 2,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/bigquery/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 1,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/cache/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 1,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/dameng/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 2,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/databend/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 1,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/databricks/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 2,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/db2/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 3,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/exasol/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 2,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/firebird/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 2,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/gbase8a/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 1,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/gbase8c/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 1,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/gbase8s/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 1,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/goldendb/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 2,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/h2/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 0,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/h2-legacy/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 0,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/highgo/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 2,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/ignite/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 2,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/ignite3/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 1,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/informix/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 2,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/iris/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 1,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/kafka/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 5,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/kylin/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 2,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/mongodb/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 3,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/oceanbase-oracle/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 3,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/oscar/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 1,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/saphana/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 2,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/snowflake/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 2,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "agents/drivers/spanner/build.gradle",
+          "detail": "no reader for build.gradle",
+          "capability": "adapter:maven",
+          "found": 1,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T23:36:56+08:00",
+    "computed_at": "2026-11-20T00:50:25+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 84.5,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5625,
@@ -1148,16 +1708,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 84.5,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "exposed",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -1506,5 +2063,5 @@
     }
   ],
   "first_seen_at": "2026-11-19T14:29:20+08:00",
-  "updated_at": "2026-11-19T23:36:56+08:00"
+  "updated_at": "2026-11-20T00:50:25+08:00"
 }

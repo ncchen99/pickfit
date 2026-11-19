@@ -83,19 +83,17 @@
     "tools": []
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/whshang/herdr-mcp@0e6529bf12cd",
+      "github.com/whshang/herdr-mcp@36b4554133bb",
       "Cargo.lock",
       "package-lock.json"
     ],
-    "packages_checked": 439,
-    "findings_total": 5,
-    "advisories_total": 4,
+    "packages_checked": 355,
+    "findings_total": 2,
+    "advisories_total": 2,
     "findings": [
       {
         "package": "crates:quinn-proto",
@@ -105,7 +103,31 @@
         "severity": "HIGH",
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/herdr-mcp",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-09-14T10:08:32Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "option:ACK_FREQUENCY"
+        ],
+        "paths": [
+          "herdr-mcp > reqwest > quinn > quinn-proto"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
+          ]
+        }
       },
       {
         "package": "crates:quinn-proto",
@@ -115,59 +137,103 @@
         "severity": "HIGH",
         "fixed_in": "0.11.18",
         "summary": "Outgoing datagram buffer accounting can panic the sender in quinn-proto",
-        "malicious": false
-      },
-      {
-        "package": "npm:body-parser",
-        "version": "2.3.0",
-        "advisory": "GHSA-27r3-jxmh-p828",
-        "cves": [
-          "CVE-2026-111181"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/herdr-mcp",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-09-14T10:08:32Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "2.4.0",
-        "summary": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
-        "malicious": false
-      },
-      {
-        "package": "npm:body-parser",
-        "version": "1.20.8",
-        "advisory": "GHSA-27r3-jxmh-p828",
-        "cves": [
-          "CVE-2026-111181"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.20.9",
-        "summary": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
-        "malicious": false
-      },
-      {
-        "package": "npm:zod",
-        "version": "4.4.3",
-        "advisory": "GHSA-mrhx-c7xc-m3w5",
-        "cves": [
-          "CVE-2023-54404"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.6.6",
-        "summary": "Zod can exhaust memory while validating oversized constrained collections",
-        "malicious": false
+        "paths": [
+          "herdr-mcp > reqwest > quinn > quinn-proto"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "36b4554133bbd8073d7b06daf30a916203ce305a",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 321,
+        "npm": 34
+      },
+      "scopes": {
+        "runtime": 321,
+        "dev": 34
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 13,
+      "details": "security/herdr-mcp.json",
+      "details_sha256": "227fe304875aeaf5b893b68137a439a3ffcabacd4dd7ec9c5d1966778be4e685"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0340 crates:quinn-proto@0.11.17 (conditional)",
+        "worst:RUSTSEC-2026-0343 crates:quinn-proto@0.11.17 (conditional)"
+      ],
+      "counts": {
+        "conditional": 2
+      },
+      "uncounted": 11,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 355,
+      "packages_checked": 355,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 321,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "package-lock.json",
+          "status": "scanned",
+          "packages": 34,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 78.0,
-      "raw_total": 78.0,
       "confidence": 0.4,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.6875,
@@ -187,16 +253,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 78.0,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -520,5 +583,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:27+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

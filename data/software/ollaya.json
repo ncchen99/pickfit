@@ -288,37 +288,159 @@
     "tools": []
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
-    "status": "clean",
+    "version": "sec.v2",
+    "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/ollaya-dev/ollaya@5b319dcc7e0f",
+      "github.com/ollaya-dev/ollaya@f9cfe2e2fab6",
       "Cargo.lock",
+      "desktop/package-lock.json",
       "desktop/src-tauri/Cargo.lock",
       "web/package-lock.json",
       "convert/pyproject.toml (resolved today)",
       "train/pyproject.toml (resolved today)"
     ],
-    "packages_checked": 702,
-    "findings_total": 0,
-    "advisories_total": 0,
-    "findings": []
+    "packages_checked": 842,
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "crates:rmcp",
+        "version": "3.4.1",
+        "advisory": "RUSTSEC-2026-0461",
+        "cves": [],
+        "severity": "HIGH",
+        "fixed_in": "3.6.0",
+        "summary": "Unbounded tool schema cache in Streamable HTTP server transport",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "crates/ollaya",
+        "found_in": "Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-20T05:53:35Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "ollaya > rmcp"
+        ]
+      }
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "f9cfe2e2fab6ea87bdbcea77f4e5701dfdfdac4c",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 631,
+        "npm": 144,
+        "pypi": 67
+      },
+      "scopes": {
+        "runtime": 690,
+        "optional": 14,
+        "dev": 133,
+        "workspace": 5
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 15,
+      "details": "security/ollaya.json",
+      "details_sha256": "626b2e43370e394c092ef238a2eb64c276dcc737148db84fe1134f9f5c7b2554"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0461 crates:rmcp@3.4.1 (conditional)",
+        "worst:GHSA-68fv-2mgg-jv7q npm:source-map-js@1.2.1 (not_shipped)"
+      ],
+      "counts": {
+        "conditional": 1,
+        "not_shipped": 1
+      },
+      "uncounted": 13,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 842,
+      "packages_checked": 842,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 386,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "desktop/package-lock.json",
+          "status": "scanned",
+          "packages": 126,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "desktop/src-tauri/Cargo.lock",
+          "status": "scanned",
+          "packages": 484,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "web/package-lock.json",
+          "status": "scanned",
+          "packages": 18,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "convert/pyproject.toml",
+          "status": "scanned",
+          "packages": 67,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "train/pyproject.toml",
+          "status": "scanned",
+          "packages": 57,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
-      "total": 95.1,
-      "raw_total": 95.1,
+      "total": 79.0,
       "confidence": 0.9,
-      "cap": null,
-      "cap_reason": null,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.875,
@@ -338,17 +460,14 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 95.1,
       "security": {
-        "level": "clean",
-        "basis": "status",
-        "effect": "none",
+        "level": "conditional",
+        "basis": "assessment",
+        "effect": "capped",
         "deduction": 0.0
       }
     },
@@ -368,7 +487,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 12.65
+      "value": 10.51
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -718,5 +837,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

@@ -239,30 +239,186 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-19T12:25:03+08:00",
+    "version": "sec.v2",
     "status": "unchecked",
     "unchecked_reason": "resolve_failed",
-    "sources": [],
-    "packages_checked": 0,
+    "sources": [
+      "pypi:ast-grep-cli (fresh install, 1 packages)",
+      "github.com/ast-grep/ast-grep@8a92260ad4b6",
+      "Cargo.lock"
+    ],
+    "packages_checked": 288,
     "findings_total": 0,
     "advisories_total": 0,
-    "findings": []
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:50:25+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "8a92260ad4b65cf4b716518a76b919e6f0d051b8",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 287,
+        "pypi": 1
+      },
+      "scopes": {
+        "runtime": 248,
+        "dev": 10,
+        "workspace": 30
+      },
+      "advisories_fetched_at": "2026-11-20T00:50:25+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 0,
+      "details": "security/ast-grep.json",
+      "details_sha256": "1a0aea75c3afa7291ad004474b639af4db15f28b84622f53dde8e228002286aa"
+    },
+    "assessment": {
+      "level": "none",
+      "policy_version": "sec.v2",
+      "reasons": [],
+      "counts": {},
+      "uncounted": 0,
+      "assessed_at": "2026-11-20T00:50:25+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 797,
+      "packages_checked": 288,
+      "components": [
+        {
+          "ecosystem": "pypi",
+          "component": "registry:pypi:ast-grep-cli",
+          "status": "partial",
+          "packages": 1,
+          "gaps": [
+            "binary.prebuilt_package"
+          ]
+        },
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 287,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "crates/napi/yarn.lock",
+          "status": "not_scanned",
+          "packages": 353,
+          "gaps": [
+            "lockfile.unsupported_format"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "crates/wasm/yarn.lock",
+          "status": "not_scanned",
+          "packages": 146,
+          "gaps": [
+            "lockfile.unsupported_format"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "npm/package.json",
+          "status": "not_scanned",
+          "packages": 10,
+          "gaps": [
+            "lockfile.missing"
+          ]
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "pyproject.toml",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "resolve.pyproject_failed"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "code": "lockfile.unsupported_format",
+          "category": "lockfile_unreadable",
+          "ecosystem": "npm",
+          "component": "crates/napi/yarn.lock",
+          "detail": "yarn_lock is not read yet",
+          "capability": "read_lockfile:yarn_lock",
+          "found": 353,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "lockfile.unsupported_format",
+          "category": "lockfile_unreadable",
+          "ecosystem": "npm",
+          "component": "crates/wasm/yarn.lock",
+          "detail": "yarn_lock is not read yet",
+          "capability": "read_lockfile:yarn_lock",
+          "found": 146,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "lockfile.missing",
+          "category": "lockfile_missing",
+          "ecosystem": "npm",
+          "component": "npm/package.json",
+          "detail": "package.json without a lockfile",
+          "capability": "lockfile_from_manifest:npm",
+          "found": 10,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "resolve.pyproject_failed",
+          "category": "resolve_failed",
+          "ecosystem": "pypi",
+          "component": "pyproject.toml",
+          "detail": "uv pip compile --no-build did not resolve it",
+          "capability": "resolve_in_sandbox",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "binary.prebuilt_package",
+          "category": "binary_no_metadata",
+          "ecosystem": "pypi",
+          "component": "pypi:ast-grep-cli",
+          "detail": "the package wraps a compiled binary",
+          "capability": "sbom_binary",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:06:03+08:00",
     "quality": {
       "total": 87.8,
-      "raw_total": 87.8,
       "confidence": 0.9,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5625,
@@ -282,16 +438,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 87.8,
       "security": {
-        "level": "unchecked",
-        "basis": "status",
+        "level": "none",
+        "basis": "assessment",
         "effect": "none",
         "deduction": 0.0
       }
@@ -601,5 +754,5 @@
     }
   ],
   "first_seen_at": "2026-11-19T12:23:56+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:50:25+08:00"
 }

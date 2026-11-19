@@ -140,9 +140,7 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -151,9 +149,9 @@
       "web_sota/package-lock.json",
       "pyproject.toml (resolved today)"
     ],
-    "packages_checked": 688,
-    "findings_total": 16,
-    "advisories_total": 15,
+    "packages_checked": 903,
+    "findings_total": 8,
+    "advisories_total": 8,
     "findings": [
       {
         "package": "crates:quick-xml",
@@ -163,7 +161,23 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "native",
+        "found_in": "native/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "sdr-mcp-native > tauri > plist > quick-xml"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -173,91 +187,31 @@
         "severity": "HIGH",
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
-        "malicious": false
-      },
-      {
-        "package": "npm:nanoid",
-        "version": "3.3.11",
-        "advisory": "GHSA-28wg-ghj8-5hjv",
-        "cves": [
-          "CVE-2026-67214"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "native",
+        "found_in": "native/Cargo.lock",
+        "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
         ],
-        "severity": "HIGH",
-        "fixed_in": "3.3.16",
-        "summary": "nanoid: non-secure generators can loop indefinitely with negative size",
-        "malicious": false
-      },
-      {
-        "package": "npm:nanoid",
-        "version": "3.3.11",
-        "advisory": "GHSA-2v37-7h3g-55p8",
-        "cves": [
-          "CVE-2026-67213"
+        "paths": [
+          "sdr-mcp-native > tauri > plist > quick-xml"
         ],
-        "severity": "HIGH",
-        "fixed_in": "3.3.18",
-        "summary": "nanoid: custom generators can loop indefinitely when size is zero",
-        "malicious": false
-      },
-      {
-        "package": "npm:nanoid",
-        "version": "3.3.11",
-        "advisory": "GHSA-xwg4-73v4-xw9w",
-        "cves": [
-          "CVE-2026-73086"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "3.3.12",
-        "summary": "nanoid: Integer Overflow or Wraparound",
-        "malicious": false
-      },
-      {
-        "package": "npm:picomatch",
-        "version": "2.3.1",
-        "advisory": "GHSA-c2c7-rcm5-vvqj",
-        "cves": [
-          "CVE-2026-33671"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "2.3.2",
-        "summary": "Picomatch has a ReDoS vulnerability via extglob quantifiers",
-        "malicious": false
-      },
-      {
-        "package": "npm:picomatch",
-        "version": "4.0.3",
-        "advisory": "GHSA-c2c7-rcm5-vvqj",
-        "cves": [
-          "CVE-2026-33671"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "4.0.4",
-        "summary": "Picomatch has a ReDoS vulnerability via extglob quantifiers",
-        "malicious": false
-      },
-      {
-        "package": "npm:postcss",
-        "version": "8.5.6",
-        "advisory": "GHSA-6g55-p6wh-862q",
-        "cves": [
-          "CVE-2026-45623"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "8.5.12",
-        "summary": "PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments",
-        "malicious": false
-      },
-      {
-        "package": "npm:postcss",
-        "version": "8.5.6",
-        "advisory": "GHSA-r28c-9q8g-f849",
-        "cves": [
-          "CVE-2026-73646"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "8.5.18",
-        "summary": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
-        "malicious": false
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use NsReader, but other packages depend on quick-xml"
+          ]
+        }
       },
       {
         "package": "npm:react-router",
@@ -269,7 +223,32 @@
         "severity": "HIGH",
         "fixed_in": "7.14.2",
         "summary": "React Router's vendored turbo-stream v2 allows arbitrary constructor invocation via TYPE_ERROR deserialization leading to Unauth RCE",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web_sota/package-lock.json",
+        "kev": false,
+        "epss": 0.00416,
+        "fix_published_at": "2026-04-21T14:15:49Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity",
+          "option:TYPE_ERROR"
+        ],
+        "paths": [
+          ". > react-router-dom > react-router"
+        ],
+        "reachability": {
+          "method": "option_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use TYPE_ERROR, but other packages depend on react-router"
+          ]
+        }
       },
       {
         "package": "npm:react-router",
@@ -281,7 +260,25 @@
         "severity": "HIGH",
         "fixed_in": "7.13.2",
         "summary": "React Router vulnerable to XSS in unstable RSC redirect handling via javascript: redirect targets",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web_sota/package-lock.json",
+        "kev": false,
+        "epss": 0.00189,
+        "fix_published_at": "2026-03-23T13:50:39Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction",
+          "high_complexity"
+        ],
+        "paths": [
+          ". > react-router-dom > react-router"
+        ]
       },
       {
         "package": "npm:react-router",
@@ -293,7 +290,24 @@
         "severity": "HIGH",
         "fixed_in": "7.15.0",
         "summary": "React Router vulnerable to DoS via unbounded path expansion in __manifest endpoint",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web_sota/package-lock.json",
+        "kev": false,
+        "epss": 0.00299,
+        "fix_published_at": "2026-05-05T14:32:57Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > react-router-dom > react-router"
+        ]
       },
       {
         "package": "npm:react-router",
@@ -305,7 +319,24 @@
         "severity": "HIGH",
         "fixed_in": "7.18.0",
         "summary": "React Router: Unauthenticated Denial of Service via Inefficient Route Matching",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web_sota/package-lock.json",
+        "kev": false,
+        "epss": 0.00708,
+        "fix_published_at": "2026-06-16T14:12:39Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > react-router-dom > react-router"
+        ]
       },
       {
         "package": "npm:react-router",
@@ -315,7 +346,23 @@
         "severity": "HIGH",
         "fixed_in": "7.18.2",
         "summary": "React Router: RSC Mode CSRF Bypass Allows Action Execution Before 400 Response",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web_sota/package-lock.json",
+        "kev": false,
+        "fix_published_at": "2026-07-28T21:53:08Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction"
+        ],
+        "paths": [
+          ". > react-router-dom > react-router"
+        ]
       },
       {
         "package": "npm:react-router",
@@ -327,35 +374,115 @@
         "severity": "HIGH",
         "fixed_in": "7.14.0",
         "summary": "React Router vulnerable to Denial of Service via reflected user input in single-fetch",
-        "malicious": false
-      },
-      {
-        "package": "npm:source-map-js",
-        "version": "1.2.1",
-        "advisory": "GHSA-68fv-2mgg-jv7q",
-        "cves": [
-          "CVE-2026-93749"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web_sota/package-lock.json",
+        "kev": false,
+        "epss": 0.00294,
+        "fix_published_at": "2026-04-02T20:32:25Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
         ],
-        "severity": "HIGH",
-        "fixed_in": "1.2.2",
-        "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
-        "malicious": false
+        "paths": [
+          ". > react-router-dom > react-router"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "b098b6adb4fa46f4bf90dd9e92e77cc1892510e0",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 459,
+        "npm": 366,
+        "pypi": 78
+      },
+      "scopes": {
+        "runtime": 612,
+        "peer": 76,
+        "dev": 215
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 76,
+      "details": "security/sdr-mcp.json",
+      "details_sha256": "de4adce9b4f43edbb1ebc31392b393adab6987461cc9aeed90c7a25e57291ba3"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:RUSTSEC-2026-0194 crates:quick-xml@0.39.4 (conditional)",
+        "worst:RUSTSEC-2026-0195 crates:quick-xml@0.39.4 (conditional)",
+        "worst:GHSA-49rj-9fvp-4h2h npm:react-router@7.13.0 (conditional)"
+      ],
+      "counts": {
+        "conditional": 8,
+        "not_shipped": 36
+      },
+      "uncounted": 32,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 903,
+      "packages_checked": 903,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "native/Cargo.lock",
+          "status": "scanned",
+          "packages": 459,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "web_sota/package-lock.json",
+          "status": "scanned",
+          "packages": 366,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "pyproject.toml",
+          "status": "scanned",
+          "packages": 78,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 56.4,
-      "raw_total": 56.4,
       "confidence": 0.4,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5625,
@@ -375,16 +502,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 56.4,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -726,5 +850,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:50+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

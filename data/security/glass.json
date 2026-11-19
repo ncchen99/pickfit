@@ -1,0 +1,277 @@
+{
+ "slug": "glass",
+ "version": "sec.v2",
+ "observation": {
+  "scanner": "pickfit-security",
+  "scanner_version": "sec.v2",
+  "target": "repo_lockfile",
+  "commit": "b89429c986b3c901ae6aca87cb9de16c3d620547",
+  "run_id": null,
+  "tool_version": null,
+  "artifact_sha256": [],
+  "packages": {
+   "crates": 775
+  },
+  "scopes": {
+   "runtime": 704,
+   "optional": 8,
+   "build": 32,
+   "dev": 28,
+   "workspace": 3
+  },
+  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "kev_catalog": "2026.11.18",
+  "epss_date": "2026-11-20",
+  "findings_total": 6
+ },
+ "assessment": {
+  "level": "conditional",
+  "policy_version": "sec.v2",
+  "reasons": [
+   "worst:RUSTSEC-2026-0194 crates:quick-xml@0.39.4 (conditional)",
+   "worst:RUSTSEC-2026-0195 crates:quick-xml@0.39.4 (conditional)"
+  ],
+  "counts": {
+   "conditional": 2
+  },
+  "uncounted": 4,
+  "assessed_at": "2026-11-20T00:17:01+08:00"
+ },
+ "coverage": {
+  "state": "complete",
+  "target": "repo_lockfile",
+  "packages_found": 775,
+  "packages_checked": 775,
+  "components": [
+   {
+    "ecosystem": "crates",
+    "component": "Cargo.lock",
+    "status": "scanned",
+    "packages": 506,
+    "gaps": []
+   },
+   {
+    "ecosystem": "crates",
+    "component": "crates/glass-fixture-egui/Cargo.lock",
+    "status": "scanned",
+    "packages": 411,
+    "gaps": []
+   }
+  ],
+  "gaps": []
+ },
+ "sources": [
+  "github.com/fixed-width/glass@b89429c986b3",
+  "Cargo.lock",
+  "crates/glass-fixture-egui/Cargo.lock"
+ ],
+ "installed": [],
+ "findings": [
+  {
+   "package": "crates:quick-xml",
+   "version": "0.39.4",
+   "advisory": "RUSTSEC-2026-0194",
+   "severity": "HIGH",
+   "fixed_in": "0.41.0",
+   "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
+   "malicious": false,
+   "published": "2026-06-29T12:00:00Z",
+   "modified": "2026-07-02T08:00:03.849273679Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quick-xml@0.39.4",
+   "fix_published_at": "2026-06-29T18:04:43Z",
+   "scope": "runtime",
+   "paths": [
+    "glass-fixture-egui > eframe > winit > smithay-client-toolkit > wayland-scanner > quick-xml"
+   ],
+   "workspace": "crates/glass-fixture-egui",
+   "found_in": "crates/glass-fixture-egui/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:quick-xml",
+   "version": "0.39.4",
+   "advisory": "RUSTSEC-2026-0195",
+   "severity": "HIGH",
+   "fixed_in": "0.41.0",
+   "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
+   "malicious": false,
+   "published": "2026-06-29T12:00:00Z",
+   "modified": "2026-07-02T09:00:04.037478193Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/quick-xml@0.39.4",
+   "fix_published_at": "2026-06-29T18:04:43Z",
+   "scope": "runtime",
+   "paths": [
+    "glass-fixture-egui > eframe > winit > smithay-client-toolkit > wayland-scanner > quick-xml"
+   ],
+   "workspace": "crates/glass-fixture-egui",
+   "found_in": "crates/glass-fixture-egui/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service",
+    "symbol:NsReader"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use NsReader, but other packages depend on quick-xml"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rmcp",
+   "version": "2.2.0",
+   "advisory": "RUSTSEC-2026-0462",
+   "severity": "MODERATE",
+   "fixed_in": "3.9.0",
+   "summary": "Unbounded response body buffering in Streamable HTTP clients",
+   "malicious": false,
+   "aliases": [
+    "GHSA-c9f9-cp8h-jcj5"
+   ],
+   "published": "2026-11-05T12:00:00Z",
+   "modified": "2026-11-09T10:30:02.590803911Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "dos_only": true,
+   "purl": "pkg:cargo/rmcp@2.2.0",
+   "scope": "runtime",
+   "paths": [
+    "glass-mcp > rmcp"
+   ],
+   "workspace": "crates/glass-mcp",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:crypto-bigint",
+   "version": "0.6.1",
+   "advisory": "RUSTSEC-2026-0387",
+   "severity": "UNKNOWN",
+   "fixed_in": "0.7.6",
+   "summary": "Multiple timing variability issues in operations intended to be constant-time",
+   "malicious": false,
+   "published": "2026-10-23T12:00:00Z",
+   "modified": "2026-10-24T03:45:02.365137418Z",
+   "purl": "pkg:cargo/crypto-bigint@0.6.1",
+   "scope": "runtime",
+   "paths": [
+    "glass-macos > crypto-bigint"
+   ],
+   "workspace": "crates/glass-macos",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:rmcp",
+   "version": "2.2.0",
+   "advisory": "RUSTSEC-2026-0457",
+   "severity": "UNKNOWN",
+   "fixed_in": "3.7.0",
+   "summary": "OAuth client SSRF filter checks host strings, not resolved addresses",
+   "malicious": false,
+   "aliases": [
+    "GHSA-5p52-q7pq-9fq2"
+   ],
+   "published": "2026-10-22T12:00:00Z",
+   "modified": "2026-11-09T10:00:02.336894229Z",
+   "purl": "pkg:cargo/rmcp@2.2.0",
+   "scope": "runtime",
+   "paths": [
+    "glass-mcp > rmcp"
+   ],
+   "workspace": "crates/glass-mcp",
+   "found_in": "Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "crates:webbrowser",
+   "version": "1.2.1",
+   "advisory": "RUSTSEC-2026-0257",
+   "severity": "UNKNOWN",
+   "fixed_in": "1.2.2",
+   "summary": "Unix `BROWSER` handling allows browser argument injection",
+   "malicious": false,
+   "aliases": [
+    "GHSA-2ph8-5cr8-hr33"
+   ],
+   "published": "2026-07-29T12:00:00Z",
+   "modified": "2026-10-12T18:00:10.938749232Z",
+   "purl": "pkg:cargo/webbrowser@1.2.1",
+   "scope": "runtime",
+   "paths": [
+    "glass-fixture-egui > eframe > egui-winit > webbrowser"
+   ],
+   "workspace": "crates/glass-fixture-egui",
+   "found_in": "crates/glass-fixture-egui/Cargo.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:BROWSER",
+    "symbol:webbrowser::open",
+    "symbol:webbrowser::open_browser"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use BROWSER, webbrowser::open, webbrowser::open_browser, webbrowser::open_browser_with_options, but other packages depend on webbrowser"
+    ]
+   },
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  }
+ ]
+}

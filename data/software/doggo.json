@@ -307,9 +307,7 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-16T00:27:31+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -330,23 +328,96 @@
         "severity": "CRITICAL",
         "fixed_in": "1.2.7",
         "summary": "Excessive memory allocation when decompressing crafted streams in github.com/andybalholm/brotli",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "kev": true,
+        "epss": 0.8237,
+        "fix_published_at": "2026-10-23T17:03:27Z",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:Reader.Read",
+          "symbol:decodeBlockTypeAndLength",
+          "symbol:decodeCommandBlockSwitch"
+        ],
+        "paths": [
+          "go.mod > github.com/andybalholm/brotli"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "7f318144623b1c09b22262b87bcb4e339e5d6bb3",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "go": 39
+      },
+      "scopes": {
+        "runtime": 39
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 4,
+      "details": "security/doggo.json",
+      "details_sha256": "050c0e69b67c64aca8ae39bb23c319082c03506e72eaeabe2589577430ad6b18"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "kev:GO-2026-6888 go:github.com/andybalholm/brotli@v1.2.6 (conditional)"
+      ],
+      "counts": {
+        "conditional": 1
+      },
+      "uncounted": 3,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 39,
+      "packages_checked": 39,
+      "components": [
+        {
+          "ecosystem": "go",
+          "component": "go.mod",
+          "status": "scanned",
+          "packages": 39,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 82.4,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -366,16 +437,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 82.4,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -732,5 +800,5 @@
     }
   ],
   "first_seen_at": "2026-11-16T00:25:38+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

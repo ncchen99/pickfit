@@ -134,9 +134,7 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-05T03:16:33+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
@@ -152,15 +150,117 @@
       "packages/continue-sdk/package-lock.json",
       "packages/continue-sdk/typescript/package-lock.json",
       "packages/fetch/package-lock.json",
+      "packages/llm-info/package-lock.json",
       "packages/openai-adapters/package-lock.json",
       "packages/terminal-security/package-lock.json",
       "sync/Cargo.lock",
       "manual-testing-sandbox/requirements.txt"
     ],
-    "packages_checked": 2046,
-    "findings_total": 389,
-    "advisories_total": 334,
+    "packages_checked": 3899,
+    "findings_total": 372,
+    "advisories_total": 322,
     "findings": [
+      {
+        "package": "npm:@modelcontextprotocol/sdk",
+        "version": "1.28.0",
+        "advisory": "GHSA-6qxp-vccf-f47h",
+        "cves": [
+          "CVE-2026-104850"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.31.0",
+        "summary": "MCP TypeScript SDK: OAuth client could send credentials to an authorization server chosen by the MCP server",
+        "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "../core",
+        "found_in": "gui/package-lock.json",
+        "kev": false,
+        "epss": 0.00282,
+        "fix_published_at": "2026-09-28T18:59:36Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "entry:the MCP SDK's HTTP client and OAuth"
+        ],
+        "paths": [
+          "../core > @modelcontextprotocol/sdk"
+        ],
+        "reachability": {
+          "method": "entry_point_grep",
+          "result": "reachable",
+          "evidence": [
+            "core/context/mcp/MCPConnection.ts:13: } from \"@modelcontextprotocol/sdk/client/sse.js\";"
+          ]
+        }
+      },
+      {
+        "package": "npm:@modelcontextprotocol/sdk",
+        "version": "1.29.0",
+        "advisory": "GHSA-6qxp-vccf-f47h",
+        "cves": [
+          "CVE-2026-104850"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.31.0",
+        "summary": "MCP TypeScript SDK: OAuth client could send credentials to an authorization server chosen by the MCP server",
+        "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "core/package-lock.json",
+        "kev": false,
+        "epss": 0.00282,
+        "fix_published_at": "2026-09-28T18:59:36Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "entry:the MCP SDK's HTTP client and OAuth"
+        ],
+        "paths": [
+          ". > @modelcontextprotocol/sdk"
+        ],
+        "reachability": {
+          "method": "entry_point_grep",
+          "result": "reachable",
+          "evidence": [
+            "core/context/mcp/MCPConnection.ts:13: } from \"@modelcontextprotocol/sdk/client/sse.js\";"
+          ]
+        }
+      },
+      {
+        "package": "pypi:pillow",
+        "version": "8.3.2",
+        "advisory": "GHSA-j7hp-h8jx-5ppr",
+        "cves": [
+          "CVE-2023-4863",
+          "CVE-2023-5129"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "10.0.1",
+        "summary": "libwebp: OOB write in BuildHuffmanTable",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual-testing-sandbox/requirements.txt",
+        "kev": true,
+        "epss": 0.99979,
+        "fix_published_at": "2023-09-15T13:58:23Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction"
+        ],
+        "paths": [
+          "manual-testing-sandbox/requirements.txt > pillow"
+        ]
+      },
       {
         "package": "npm:handlebars",
         "version": "4.7.8",
@@ -171,7 +271,76 @@
         "severity": "CRITICAL",
         "fixed_in": "4.7.9",
         "summary": "Handlebars.js has JavaScript Injection via AST Type Confusion",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "gui/package-lock.json",
+        "kev": false,
+        "epss": 0.0195,
+        "fix_published_at": "2026-03-26T20:46:39Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          ". > handlebars"
+        ]
+      },
+      {
+        "package": "npm:handlebars",
+        "version": "4.7.8",
+        "advisory": "GHSA-8r5x-fm3f-whwj",
+        "cves": [
+          "CVE-2026-106446"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "4.7.10",
+        "summary": "Handlebars: JavaScript Injection via AST Type Confusion in compile (bypass of CVE-2026-33937)",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "gui/package-lock.json",
+        "kev": false,
+        "epss": 0.00786,
+        "fix_published_at": "2026-10-05T22:37:37Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          ". > handlebars"
+        ]
+      },
+      {
+        "package": "npm:handlebars",
+        "version": "4.7.8",
+        "advisory": "GHSA-p8wg-vrv2-v86f",
+        "cves": [
+          "CVE-2026-106445"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "4.7.10",
+        "summary": "Handlebars: JavaScript Injection via Own Property Check Bypass",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "gui/package-lock.json",
+        "kev": false,
+        "epss": 0.00589,
+        "fix_published_at": "2026-10-05T22:37:37Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          ". > handlebars"
+        ]
       },
       {
         "package": "npm:handlebars",
@@ -183,19 +352,21 @@
         "severity": "CRITICAL",
         "fixed_in": "4.7.10",
         "summary": "Handlebars: JavaScript Injection via AST Type Confusion in compile (bypass of CVE-2026-33937)",
-        "malicious": false
-      },
-      {
-        "package": "npm:handlebars",
-        "version": "4.7.8",
-        "advisory": "GHSA-8r5x-fm3f-whwj",
-        "cves": [
-          "CVE-2026-106446"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "4.7.10",
-        "summary": "Handlebars: JavaScript Injection via AST Type Confusion in compile (bypass of CVE-2026-33937)",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "../core",
+        "found_in": "binary/package-lock.json",
+        "kev": false,
+        "epss": 0.00786,
+        "fix_published_at": "2026-10-05T22:37:37Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "../core > handlebars"
+        ]
       },
       {
         "package": "npm:handlebars",
@@ -207,71 +378,24 @@
         "severity": "CRITICAL",
         "fixed_in": "4.7.10",
         "summary": "Handlebars: JavaScript Injection via Own Property Check Bypass",
-        "malicious": false
-      },
-      {
-        "package": "npm:handlebars",
-        "version": "4.7.8",
-        "advisory": "GHSA-p8wg-vrv2-v86f",
-        "cves": [
-          "CVE-2026-106445"
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "../core",
+        "found_in": "binary/package-lock.json",
+        "kev": false,
+        "epss": 0.00589,
+        "fix_published_at": "2026-10-05T22:37:37Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
         ],
-        "severity": "CRITICAL",
-        "fixed_in": "4.7.10",
-        "summary": "Handlebars: JavaScript Injection via Own Property Check Bypass",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "16.2.0",
-        "advisory": "GHSA-2464-fhr4-w9xw",
-        "cves": [],
-        "severity": "CRITICAL",
-        "fixed_in": "16.4.1",
-        "summary": "Next.js: Unauthenticated Remote Code Execution in Image Optimization API when SVG files are used",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "16.2.0",
-        "advisory": "GHSA-2xp9-vwfh-vxw4",
-        "cves": [],
-        "severity": "CRITICAL",
-        "fixed_in": "16.3.3",
-        "summary": "Next.js: Unauthenticated Remote Code Execution in Image Optimization API when AVIF files are used",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "16.2.0",
-        "advisory": "GHSA-673q-mjm6-r5xr",
-        "cves": [],
-        "severity": "CRITICAL",
-        "fixed_in": "16.4.1",
-        "summary": "Next.js: Unauthenticated Remote Code Execution in `use cache` functions returning typed arrays",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "16.2.0",
-        "advisory": "GHSA-p293-qw3h-jr36",
-        "cves": [
-          "CVE-2026-75604"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "16.3.3",
-        "summary": "Next.js: Unauthenticated Remote Code Execution on windows-hosted servers",
-        "malicious": false
-      },
-      {
-        "package": "npm:next",
-        "version": "16.2.0",
-        "advisory": "GHSA-vcvr-r3jv-pc5j",
-        "cves": [],
-        "severity": "CRITICAL",
-        "fixed_in": "16.3.6",
-        "summary": "Next.js: Remote Code Execution in next/og ImageResponse",
-        "malicious": false
+        "paths": [
+          "../core > handlebars"
+        ]
       },
       {
         "package": "npm:protobufjs",
@@ -283,7 +407,21 @@
         "severity": "CRITICAL",
         "fixed_in": "7.5.5",
         "summary": "protobufjs has an arbitrary code execution issue",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "packages/openai-adapters/package-lock.json",
+        "kev": false,
+        "epss": 0.00804,
+        "fix_published_at": "2026-04-15T04:40:17Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          ". > @google/genai > protobufjs"
+        ]
       },
       {
         "package": "npm:proxy-addr",
@@ -295,19 +433,21 @@
         "severity": "CRITICAL",
         "fixed_in": "2.0.8",
         "summary": "proxy-addr vulnerable to IP spoofing via IPv4-mapped IPv6 trust subnet",
-        "malicious": false
-      },
-      {
-        "package": "npm:shell-quote",
-        "version": "1.8.4",
-        "advisory": "GHSA-pqg4-j6r4-53mv",
-        "cves": [
-          "CVE-2026-102422"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "1.11.0",
-        "summary": "shell-quote: `quote()` command injection via a line terminator in a token after a `{ comment }` token",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "core/package-lock.json",
+        "kev": false,
+        "epss": 0.0026,
+        "fix_published_at": "2026-09-15T06:12:45Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          ". > @modelcontextprotocol/sdk > express > proxy-addr"
+        ]
       },
       {
         "package": "npm:shell-quote",
@@ -319,7 +459,53 @@
         "severity": "CRITICAL",
         "fixed_in": "1.8.4",
         "summary": "shell-quote quote() does not escape newlines in object .op values",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "packages/continue-sdk/package-lock.json",
+        "kev": false,
+        "epss": 0.00793,
+        "fix_published_at": "2026-05-22T13:13:48Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          ". > @openapitools/openapi-generator-cli > concurrently > shell-quote"
+        ]
+      },
+      {
+        "package": "npm:shell-quote",
+        "version": "1.8.4",
+        "advisory": "GHSA-pqg4-j6r4-53mv",
+        "cves": [
+          "CVE-2026-102422"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "1.11.0",
+        "summary": "shell-quote: `quote()` command injection via a line terminator in a token after a `{ comment }` token",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "core/package-lock.json",
+        "kev": false,
+        "epss": 0.0048,
+        "fix_published_at": "2026-09-29T02:34:24Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          ". > shell-quote"
+        ]
       },
       {
         "package": "npm:tar",
@@ -331,7 +517,24 @@
         "severity": "CRITICAL",
         "fixed_in": "7.5.19",
         "summary": "node-tar: Decompression/parse DoS via unlimited input",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "binary/package-lock.json",
+        "kev": false,
+        "epss": 0.00582,
+        "fix_published_at": "2026-06-27T22:59:56Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > tar"
+        ]
       },
       {
         "package": "pypi:httpx",
@@ -343,7 +546,20 @@
         "severity": "CRITICAL",
         "fixed_in": "0.23.0",
         "summary": "Improper Input Validation in httpx",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual-testing-sandbox/requirements.txt",
+        "kev": false,
+        "epss": 0.02118,
+        "fix_published_at": "2022-05-23T15:32:35Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "manual-testing-sandbox/requirements.txt > httpx"
+        ]
       },
       {
         "package": "pypi:keras",
@@ -355,7 +571,20 @@
         "severity": "CRITICAL",
         "fixed_in": "2.13.1rc0",
         "summary": "Keras code injection vulnerability",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual-testing-sandbox/requirements.txt",
+        "kev": false,
+        "epss": 0.01745,
+        "fix_published_at": "2023-05-02T18:17:19Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "manual-testing-sandbox/requirements.txt > keras"
+        ]
       },
       {
         "package": "pypi:nltk",
@@ -367,7 +596,20 @@
         "severity": "CRITICAL",
         "fixed_in": "3.9.3",
         "summary": "NLTK has a Zip Slip Vulnerability",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual-testing-sandbox/requirements.txt",
+        "kev": false,
+        "epss": 0.01021,
+        "fix_published_at": "2026-02-24T12:05:46Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "manual-testing-sandbox/requirements.txt > nltk"
+        ]
       },
       {
         "package": "pypi:nltk",
@@ -379,7 +621,20 @@
         "severity": "CRITICAL",
         "fixed_in": "3.10.3",
         "summary": "NLTK: JVM argument injection bypass via per-call options in the NLTK Stanford wrappers (incomplete fix of CVE-2026-12841)",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual-testing-sandbox/requirements.txt",
+        "kev": false,
+        "epss": 0.00775,
+        "fix_published_at": "2026-08-12T23:44:13Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "manual-testing-sandbox/requirements.txt > nltk"
+        ]
       },
       {
         "package": "pypi:nltk",
@@ -391,7 +646,23 @@
         "severity": "CRITICAL",
         "fixed_in": "3.10.0",
         "summary": "NLTK: Unsafe Pickle Deserialization in TransitionParser Allows Remote Code Execution",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual-testing-sandbox/requirements.txt",
+        "kev": false,
+        "epss": 0.0051,
+        "fix_published_at": "2026-07-08T02:39:09Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction"
+        ],
+        "paths": [
+          "manual-testing-sandbox/requirements.txt > nltk"
+        ]
       },
       {
         "package": "pypi:nltk",
@@ -403,7 +674,20 @@
         "severity": "CRITICAL",
         "fixed_in": "3.10.3",
         "summary": "NLTK: Allowlisted pickle loaders still permit code execution in current source",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual-testing-sandbox/requirements.txt",
+        "kev": false,
+        "epss": 0.01546,
+        "fix_published_at": "2026-08-12T23:44:13Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "manual-testing-sandbox/requirements.txt > nltk"
+        ]
       },
       {
         "package": "pypi:nltk",
@@ -415,473 +699,225 @@
         "severity": "CRITICAL",
         "fixed_in": "3.9.3",
         "summary": "NLTK versions <=3.9.2 are vulnerable to arbitrary code execution due to improper input validation in the StanfordSegmenter module. The module dynamically loads external Java .jar files without verific",
-        "malicious": false
-      },
-      {
-        "package": "pypi:pillow",
-        "version": "8.3.2",
-        "advisory": "GHSA-332p-7hrc-92wf",
-        "cves": [
-          "CVE-2026-112393"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "13.0.0",
-        "summary": "Pillow: Heap buffer overflow in _tiffWriteProc when saving TIFF to BytesIO",
-        "malicious": false
-      },
-      {
-        "package": "pypi:pillow",
-        "version": "8.3.2",
-        "advisory": "GHSA-3f63-hfp8-52jq",
-        "cves": [
-          "CVE-2023-50447"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "10.2.0",
-        "summary": "Arbitrary Code Execution in Pillow",
-        "malicious": false
-      },
-      {
-        "package": "pypi:pillow",
-        "version": "8.3.2",
-        "advisory": "GHSA-5x8w-8jj5-q52h",
-        "cves": [
-          "CVE-2026-112398"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "13.0.0",
-        "summary": "Pillow: Heap buffer overflow in FlashPix (FPX) JPEG decoding leads to code execution",
-        "malicious": false
-      },
-      {
-        "package": "pypi:pillow",
-        "version": "8.3.2",
-        "advisory": "GHSA-8g5g-8vmr-9782",
-        "cves": [
-          "CVE-2026-112403"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "13.0.0",
-        "summary": "Pillow: Heap buffer overflow in ImagingJpegDecode",
-        "malicious": false
-      },
-      {
-        "package": "pypi:pillow",
-        "version": "8.3.2",
-        "advisory": "GHSA-8vj2-vxx3-667w",
-        "cves": [
-          "CVE-2022-22817"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "9.0.1",
-        "summary": "Arbitrary expression injection in Pillow",
-        "malicious": false
-      },
-      {
-        "package": "pypi:pillow",
-        "version": "8.3.2",
-        "advisory": "GHSA-w889-685w-c8fh",
-        "cves": [
-          "CVE-2026-112900"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "13.0.0",
-        "summary": "Pillow: Argument Injection in Ghostscript call, potentially leading into RCE",
-        "malicious": false
-      },
-      {
-        "package": "pypi:scipy",
-        "version": "1.7.1",
-        "advisory": "PYSEC-2023-114",
-        "cves": [
-          "CVE-2023-29824"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "1.8.0",
-        "summary": "** DISPUTED ** A use-after-free issue was discovered in Py_FindObjects() function in SciPy versions prior to 1.8.0. NOTE: the vendor and discoverer indicate that this is not a security issue.",
-        "malicious": false
-      },
-      {
-        "package": "pypi:tensorflow",
-        "version": "2.6.0",
-        "advisory": "GHSA-57wx-m983-2f88",
-        "cves": [
-          "CVE-2021-41208"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "2.6.1",
-        "summary": "Incomplete validation in boosted trees code",
-        "malicious": false
-      },
-      {
-        "package": "pypi:tensorflow",
-        "version": "2.6.0",
-        "advisory": "GHSA-gw97-ff7c-9v96",
-        "cves": [
-          "CVE-2023-25668"
-        ],
-        "severity": "CRITICAL",
-        "fixed_in": "2.11.1",
-        "summary": "TensorFlow has a heap out-of-buffer read vulnerability in the QuantizeAndDequantize operation",
-        "malicious": false
-      },
-      {
-        "package": "pypi:tensorflow",
-        "version": "2.6.0",
-        "advisory": "GHSA-h6gw-r52c-724r",
-        "cves": [],
-        "severity": "CRITICAL",
-        "fixed_in": "2.6.3",
-        "summary": "NULL Pointer Dereference and Access of Uninitialized Pointer in TensorFlow",
-        "malicious": false
-      },
-      {
-        "package": "npm:@azure/msal-node",
-        "version": "5.2.3",
-        "advisory": "GHSA-xcx6-jx8p-x3h5",
-        "cves": [
-          "CVE-2026-109461"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "7.1.0",
-        "summary": "MSAL Node authorization code flow may disclose parameters to an attacker-controlled endpoint",
-        "malicious": false
-      },
-      {
-        "package": "npm:@modelcontextprotocol/sdk",
-        "version": "1.29.0",
-        "advisory": "GHSA-22jm-h49p-29qw",
-        "cves": [
-          "CVE-2026-111767"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.32.0",
-        "summary": "MCP TypeScript SDK: Experimental tasks were not tied to the session that created them",
-        "malicious": false
-      },
-      {
-        "package": "npm:@modelcontextprotocol/sdk",
-        "version": "1.28.0",
-        "advisory": "GHSA-22jm-h49p-29qw",
-        "cves": [
-          "CVE-2026-111767"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.32.0",
-        "summary": "MCP TypeScript SDK: Experimental tasks were not tied to the session that created them",
-        "malicious": false
-      },
-      {
-        "package": "npm:@modelcontextprotocol/sdk",
-        "version": "1.29.0",
-        "advisory": "GHSA-46jr-4wx8-v453",
-        "cves": [
-          "CVE-2026-111768"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.32.0",
-        "summary": "MCP TypeScript SDK: One HTTP request within the default size limit could exhaust server memory during validation",
-        "malicious": false
-      },
-      {
-        "package": "npm:@modelcontextprotocol/sdk",
-        "version": "1.28.0",
-        "advisory": "GHSA-46jr-4wx8-v453",
-        "cves": [
-          "CVE-2026-111768"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.32.0",
-        "summary": "MCP TypeScript SDK: One HTTP request within the default size limit could exhaust server memory during validation",
-        "malicious": false
-      },
-      {
-        "package": "npm:@modelcontextprotocol/sdk",
-        "version": "1.29.0",
-        "advisory": "GHSA-6qxp-vccf-f47h",
-        "cves": [
-          "CVE-2026-104850"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.31.0",
-        "summary": "MCP TypeScript SDK: OAuth client could send credentials to an authorization server chosen by the MCP server",
-        "malicious": false
-      },
-      {
-        "package": "npm:@modelcontextprotocol/sdk",
-        "version": "1.28.0",
-        "advisory": "GHSA-6qxp-vccf-f47h",
-        "cves": [
-          "CVE-2026-104850"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.31.0",
-        "summary": "MCP TypeScript SDK: OAuth client could send credentials to an authorization server chosen by the MCP server",
-        "malicious": false
-      },
-      {
-        "package": "npm:@modelcontextprotocol/sdk",
-        "version": "1.29.0",
-        "advisory": "GHSA-f897-62hf-6gxq",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "1.30.1",
-        "summary": "MCP TypeScript SDK: HTTP server transports and handlers did not limit request body size or JSON-RPC batch length",
-        "malicious": false
-      },
-      {
-        "package": "npm:@modelcontextprotocol/sdk",
-        "version": "1.28.0",
-        "advisory": "GHSA-f897-62hf-6gxq",
-        "cves": [],
-        "severity": "HIGH",
-        "fixed_in": "1.30.1",
-        "summary": "MCP TypeScript SDK: HTTP server transports and handlers did not limit request body size or JSON-RPC batch length",
-        "malicious": false
-      },
-      {
-        "package": "npm:@xmldom/xmldom",
-        "version": "0.9.10",
-        "advisory": "GHSA-27p8-2357-5qqv",
-        "cves": [
-          "CVE-2026-83608"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.9.12",
-        "summary": "xmldom: DocType `name` Injection Bypasses requireWellFormed",
-        "malicious": false
-      },
-      {
-        "package": "npm:@xmldom/xmldom",
-        "version": "0.9.10",
-        "advisory": "GHSA-3px3-54cx-rmw9",
-        "cves": [
-          "CVE-2026-83609"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.9.12",
-        "summary": "xmldom: Creation-time XML Name/QName validation is bypassable via an embedded line terminator, allowing injection on the default serialization path",
-        "malicious": false
-      },
-      {
-        "package": "npm:@xmldom/xmldom",
-        "version": "0.9.10",
-        "advisory": "GHSA-4w3w-2rp5-g8jm",
-        "cves": [
-          "CVE-2026-83605"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.9.11",
-        "summary": "xmldom: Attribute name injection via setAttribute() bypasses requireWellFormed",
-        "malicious": false
-      },
-      {
-        "package": "npm:@xmldom/xmldom",
-        "version": "0.9.10",
-        "advisory": "GHSA-6mj3-qw4j-hgrw",
-        "cves": [
-          "CVE-2026-83612"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.9.12",
-        "summary": "xmldom: HTML raw-text closing-tag case mismatch causes output amplification",
-        "malicious": false
-      },
-      {
-        "package": "npm:@xmldom/xmldom",
-        "version": "0.9.10",
-        "advisory": "GHSA-8344-3jmq-59r6",
-        "cves": [
-          "CVE-2026-83613"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.9.12",
-        "summary": "xmldom: Quadratic-time attribute deduplication",
-        "malicious": false
-      },
-      {
-        "package": "npm:@xmldom/xmldom",
-        "version": "0.9.10",
-        "advisory": "GHSA-93r5-fhx6-vmg9",
-        "cves": [
-          "CVE-2026-83614"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.9.12",
-        "summary": "xmldom: Quadratic-time parsing via the malformed-input recovery path — `parseElementStartPart` re-scan and `normalize()` adjacent-text merge",
-        "malicious": false
-      },
-      {
-        "package": "npm:@xmldom/xmldom",
-        "version": "0.9.10",
-        "advisory": "GHSA-965w-775f-mr7g",
-        "cves": [
-          "CVE-2026-83615"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.9.12",
-        "summary": "xmldom: Quadratic-memory consumption",
-        "malicious": false
-      },
-      {
-        "package": "npm:@xmldom/xmldom",
-        "version": "0.9.10",
-        "advisory": "GHSA-c7q8-3ch8-vqpv",
-        "cves": [
-          "CVE-2026-83616"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.9.12",
-        "summary": "xmldom: Processing Instruction Target Injection Bypasses requireWellFormed",
-        "malicious": false
-      },
-      {
-        "package": "npm:@xmldom/xmldom",
-        "version": "0.9.10",
-        "advisory": "GHSA-g53g-w8rj-fmg7",
-        "cves": [
-          "CVE-2026-83606"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.9.11",
-        "summary": "xmldom PI grammar regex ReDoS: quadratic backtracking on unterminated processing instructions",
-        "malicious": false
-      },
-      {
-        "package": "npm:@xmldom/xmldom",
-        "version": "0.9.10",
-        "advisory": "GHSA-vr34-hp96-76pp",
-        "cves": [
-          "CVE-2026-83618"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.9.12",
-        "summary": "xmldom: requireWellFormed DocType publicId/systemId validation is bypassable via an embedded line terminator",
-        "malicious": false
-      },
-      {
-        "package": "npm:@xmldom/xmldom",
-        "version": "0.9.10",
-        "advisory": "GHSA-w2rr-34g9-rvrj",
-        "cves": [
-          "CVE-2026-83607"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.9.11",
-        "summary": "xmldom: Element name injection via createElement() bypasses requireWellFormed",
-        "malicious": false
-      },
-      {
-        "package": "npm:adm-zip",
-        "version": "0.5.17",
-        "advisory": "GHSA-7q85-xj36-vmfc",
-        "cves": [
-          "CVE-2026-77301"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.6.1",
-        "summary": "adm-zip: Uncontrolled memory allocation via the declared uncompressed size (DoS)",
-        "malicious": false
-      },
-      {
-        "package": "npm:adm-zip",
-        "version": "0.5.17",
-        "advisory": "GHSA-8238-w5pm-2374",
-        "cves": [
-          "CVE-2026-114102"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.6.1",
-        "summary": "adm-zip: Unhandled error event in async DEFLATE decompression crashes Node.js process (DoS)",
-        "malicious": false
-      },
-      {
-        "package": "npm:adm-zip",
-        "version": "0.5.17",
-        "advisory": "GHSA-j5f4-cc29-5x44",
-        "cves": [
-          "CVE-2026-102282"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.6.1",
-        "summary": "adm-zip extraction preserves SUID/SGID bits from untrusted ZIPs -> local privilege escalation",
-        "malicious": false
-      },
-      {
-        "package": "npm:adm-zip",
-        "version": "0.5.17",
-        "advisory": "GHSA-rcw4-f5rp-g42v",
-        "cves": [
-          "CVE-2026-92000"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.6.1",
-        "summary": "adm-zip: Decompression-bomb protection (fix for CVE-2026-39244) can be bypassed by declaring uncompressed size as 0",
-        "malicious": false
-      },
-      {
-        "package": "npm:adm-zip",
-        "version": "0.5.17",
-        "advisory": "GHSA-xcpc-8h2w-3j85",
-        "cves": [
-          "CVE-2026-39244"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "0.6.0",
-        "summary": "adm-zip: Crafted ZIP file triggers 4GB memory allocation",
-        "malicious": false
-      },
-      {
-        "package": "npm:axios",
-        "version": "1.13.6",
-        "advisory": "GHSA-35jp-ww65-95wh",
-        "cves": [
-          "CVE-2026-44494"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.16.0",
-        "summary": "axios Vulnerable to Full Man-in-the-Middle via Prototype Pollution Gadget in `config.proxy`",
-        "malicious": false
-      },
-      {
-        "package": "npm:axios",
-        "version": "1.13.6",
-        "advisory": "GHSA-3g43-6gmg-66jw",
-        "cves": [
-          "CVE-2026-44495"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.15.2",
-        "summary": "axios Vulnerable to Credential Theft and Response Hijacking via Prototype Pollution Gadget in Config Merge",
-        "malicious": false
-      },
-      {
-        "package": "npm:axios",
-        "version": "1.17.0",
-        "advisory": "GHSA-3pq3-5fj3-cg6v",
-        "cves": [
-          "CVE-2026-101898"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "1.20.0",
-        "summary": "Axios: HTTP/2 adapter bypasses configured DNS lookup and proxy controls",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "manual-testing-sandbox/requirements.txt",
+        "kev": false,
+        "epss": 0.00841,
+        "fix_published_at": "2026-02-24T12:05:46Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "manual-testing-sandbox/requirements.txt > nltk"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "5522c6f44ca0ac3528b37244818fbfa39b5af470",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 141,
+        "npm": 3728,
+        "pypi": 30
+      },
+      "scopes": {
+        "runtime": 1790,
+        "peer": 195,
+        "build": 69,
+        "dev": 1845
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 1242,
+      "details": "security/continue.json",
+      "details_sha256": "9ea39c3f8a6de3e5bd67246ef0deabf96e32c707ab27c486712169c59f713550"
+    },
+    "assessment": {
+      "level": "exposed",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-6qxp-vccf-f47h npm:@modelcontextprotocol/sdk@1.28.0 (exposed)",
+        "worst:GHSA-6qxp-vccf-f47h npm:@modelcontextprotocol/sdk@1.29.0 (exposed)",
+        "kev:GHSA-j7hp-h8jx-5ppr pypi:pillow@8.3.2 (conditional)"
+      ],
+      "counts": {
+        "exposed": 2,
+        "conditional": 370,
+        "not_shipped": 171
+      },
+      "uncounted": 699,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 3899,
+      "packages_checked": 3899,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "binary/package-lock.json",
+          "status": "scanned",
+          "packages": 513,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "core/package-lock.json",
+          "status": "scanned",
+          "packages": 1376,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "docs-site/package-lock.json",
+          "status": "scanned",
+          "packages": 383,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "extensions/cli/package-lock.json",
+          "status": "scanned",
+          "packages": 1223,
+          "gaps": []
+        },
+        {
+          "ecosystem": "maven",
+          "component": "extensions/intellij/build.gradle.kts",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "gui/package-lock.json",
+          "status": "scanned",
+          "packages": 1178,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "package-lock.json",
+          "status": "scanned",
+          "packages": 302,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "packages/config-types/package-lock.json",
+          "status": "scanned",
+          "packages": 4,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "packages/config-yaml/package-lock.json",
+          "status": "scanned",
+          "packages": 808,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "packages/continue-sdk/package-lock.json",
+          "status": "scanned",
+          "packages": 201,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "packages/continue-sdk/typescript/package-lock.json",
+          "status": "scanned",
+          "packages": 313,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "packages/fetch/package-lock.json",
+          "status": "scanned",
+          "packages": 680,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "packages/llm-info/package-lock.json",
+          "status": "scanned",
+          "packages": 574,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "packages/openai-adapters/package-lock.json",
+          "status": "scanned",
+          "packages": 1038,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "packages/terminal-security/package-lock.json",
+          "status": "scanned",
+          "packages": 105,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "sync/Cargo.lock",
+          "status": "scanned",
+          "packages": 141,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "manual-testing-sandbox/requirements.txt",
+          "status": "scanned",
+          "packages": 30,
+          "gaps": []
+        }
+      ],
+      "gaps": [
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "extensions/intellij/build.gradle.kts",
+          "detail": "no reader for build.gradle.kts",
+          "capability": "adapter:maven",
+          "found": 0,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 64.3,
-      "raw_total": 64.3,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.1875,
@@ -901,16 +937,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 64.3,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "exposed",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -1234,5 +1267,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:02+08:00",
-  "updated_at": "2026-11-20T00:05:29+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

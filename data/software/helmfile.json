@@ -355,13 +355,11 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-16T00:54:52+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/helmfile/helmfile@53456973ca54",
+      "github.com/helmfile/helmfile@91295c59e005",
       "go.mod"
     ],
     "packages_checked": 380,
@@ -378,23 +376,96 @@
         "severity": "HIGH",
         "fixed_in": "1.20.2",
         "summary": "Panic on two-block frames in github.com/klauspost/compress",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "kev": false,
+        "epss": 0.00333,
+        "fix_published_at": "2026-10-12T09:34:06Z",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:Compress",
+          "symbol:Decompress",
+          "symbol:Scratch.readNCount"
+        ],
+        "paths": [
+          "go.mod > github.com/klauspost/compress"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "91295c59e005463ded7326471d2563723af23a6b",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "go": 380
+      },
+      "scopes": {
+        "runtime": 380
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 2,
+      "details": "security/helmfile.json",
+      "details_sha256": "e5be9b9fa87099ab3cbcdabf6506eb41bf9a26f0a1d764b9ba916ed2112e1c83"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GO-2026-6865 go:github.com/klauspost/compress@v1.19.1 (conditional)"
+      ],
+      "counts": {
+        "conditional": 1
+      },
+      "uncounted": 1,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 380,
+      "packages_checked": 380,
+      "components": [
+        {
+          "ecosystem": "go",
+          "component": "go.mod",
+          "status": "scanned",
+          "packages": 380,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 80.6,
       "confidence": 0.9,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.595,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.625,
@@ -414,16 +485,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 80.6,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -780,5 +848,5 @@
     }
   ],
   "first_seen_at": "2026-11-16T00:52:47+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

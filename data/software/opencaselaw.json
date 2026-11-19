@@ -305,18 +305,16 @@
     ]
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
       "pypi:opencaselaw-cli (fresh install, 1 packages)",
-      "github.com/jonashertner/opencaselaw@3919f1ef71a4",
+      "github.com/jonashertner/opencaselaw@b769b538a419",
       "web_ui/package-lock.json",
       "pyproject.toml (resolved today)"
     ],
-    "packages_checked": 159,
+    "packages_checked": 266,
     "findings_total": 2,
     "advisories_total": 2,
     "findings": [
@@ -330,7 +328,33 @@
         "severity": "HIGH",
         "fixed_in": "5.1.16",
         "summary": "nanoid: non-secure generators can loop indefinitely with negative size",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web_ui/package-lock.json",
+        "kev": false,
+        "epss": 0.0033,
+        "fix_published_at": "2026-06-24T18:37:08Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "high_complexity",
+          "denial_of_service",
+          "symbol:nanoid/non-secure"
+        ],
+        "paths": [
+          ". > docx > nanoid"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "the project's source does not use nanoid/non-secure, but other packages depend on nanoid"
+          ]
+        }
       },
       {
         "package": "npm:nanoid",
@@ -342,23 +366,116 @@
         "severity": "HIGH",
         "fixed_in": "5.1.11",
         "summary": "nanoid: Integer Overflow or Wraparound",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web_ui/package-lock.json",
+        "kev": false,
+        "epss": 0.00296,
+        "fix_published_at": "2026-04-30T22:06:42Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          ". > docx > nanoid"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "b769b538a4197abddcf6178603fcce43065f2a10",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "npm": 235,
+        "pypi": 31
+      },
+      "scopes": {
+        "runtime": 156,
+        "peer": 2,
+        "dev": 108
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 26,
+      "details": "security/opencaselaw.json",
+      "details_sha256": "2dda5e32fcd1e2a1a059cfcc91dc310dcdd7dd76e877814d3de909e9161a8d0e"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-28wg-ghj8-5hjv npm:nanoid@5.1.6 (conditional)",
+        "worst:GHSA-xwg4-73v4-xw9w npm:nanoid@5.1.6 (conditional)",
+        "worst:GHSA-73wf-gq98-2v4g npm:browserslist@4.28.1 (not_shipped)"
+      ],
+      "counts": {
+        "conditional": 2,
+        "not_shipped": 12
+      },
+      "uncounted": 12,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 266,
+      "packages_checked": 266,
+      "components": [
+        {
+          "ecosystem": "pypi",
+          "component": "registry:pypi:opencaselaw-cli",
+          "status": "partial",
+          "packages": 1,
+          "gaps": [
+            "binary.prebuilt_package"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "web_ui/package-lock.json",
+          "status": "scanned",
+          "packages": 235,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "pyproject.toml",
+          "status": "scanned",
+          "packages": 30,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 79.0,
-      "raw_total": 92.6,
       "confidence": 0.5,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.9375,
@@ -378,16 +495,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 92.6,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       }
@@ -881,5 +995,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:11+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }

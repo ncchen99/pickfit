@@ -183,19 +183,76 @@
     "cost_usd": 0.016696
   },
   "security": {
-    "version": "sec.v1",
-    "database": "OSV.dev",
-    "checked_at": "2026-11-03T21:41:45+08:00",
+    "version": "sec.v2",
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
       "github.com/klembot/twinejs@2c3b80144ba6",
       "package-lock.json"
     ],
-    "packages_checked": 77,
-    "findings_total": 2,
-    "advisories_total": 2,
+    "packages_checked": 1271,
+    "findings_total": 4,
+    "advisories_total": 4,
     "findings": [
+      {
+        "package": "npm:electron",
+        "version": "43.4.1",
+        "advisory": "GHSA-jr5w-w6x2-84p9",
+        "cves": [
+          "CVE-2026-115570"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "43.8.1",
+        "summary": "Electron: Mitigation for compromised eMudhra intermediate certificates",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00377,
+        "fix_published_at": "2026-10-20T02:54:21Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          ". > electron"
+        ]
+      },
+      {
+        "package": "npm:electron",
+        "version": "43.4.1",
+        "advisory": "GHSA-qmv3-fv6v-rmhq",
+        "cves": [
+          "CVE-2026-102677"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "43.5.0",
+        "summary": "Electron: Sandboxed preload code cache can be poisoned by a compromised renderer",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00099,
+        "fix_published_at": "2026-08-31T02:51:42Z",
+        "attack_vector": "local",
+        "dos_only": false,
+        "preconditions": [
+          "local_access",
+          "high_complexity"
+        ],
+        "paths": [
+          ". > electron"
+        ]
+      },
       {
         "package": "npm:lodash",
         "version": "4.17.21",
@@ -206,7 +263,24 @@
         "severity": "HIGH",
         "fixed_in": "4.18.0",
         "summary": "lodash vulnerable to Code Injection via `_.template` imports key names",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.0287,
+        "fix_published_at": "2026-03-31T18:18:42Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "paths": [
+          ". > lodash"
+        ]
       },
       {
         "package": "npm:path-to-regexp",
@@ -219,23 +293,99 @@
         "severity": "HIGH",
         "fixed_in": "1.9.0",
         "summary": "path-to-regexp outputs backtracking regular expressions",
-        "malicious": false
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "package-lock.json",
+        "kev": false,
+        "epss": 0.00932,
+        "fix_published_at": "2024-09-10T21:25:48Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > react-router-dom > react-router > path-to-regexp"
+        ]
       }
-    ]
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T00:17:01+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "2c3b80144ba6f1fe9d8a4e5e11a2349ba55fc310",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "npm": 1271
+      },
+      "scopes": {
+        "runtime": 81,
+        "build": 7,
+        "dev": 1183
+      },
+      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 130,
+      "details": "security/twinejs.json",
+      "details_sha256": "413cf6635ea3cfe9772bf2cdb9c198a67bb5f679689e136b05c10e3c807f66e5"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-jr5w-w6x2-84p9 npm:electron@43.4.1 (conditional)",
+        "worst:GHSA-qmv3-fv6v-rmhq npm:electron@43.4.1 (conditional)",
+        "worst:GHSA-r5fr-rjxr-66jc npm:lodash@4.17.21 (conditional)"
+      ],
+      "counts": {
+        "conditional": 4,
+        "not_shipped": 58
+      },
+      "uncounted": 68,
+      "assessed_at": "2026-11-20T00:17:01+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 1271,
+      "packages_checked": 1271,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "package-lock.json",
+          "status": "scanned",
+          "packages": 1271,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
   },
   "scores": {
     "formula_version": "b3.v7+visual.v1",
-    "computed_at": "2026-11-19T17:04:21+08:00",
+    "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 76.3,
-      "raw_total": 76.3,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.5,
@@ -255,16 +405,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 76.3,
       "security": {
-        "level": "vulnerable",
-        "basis": "status",
+        "level": "conditional",
+        "basis": "assessment",
         "effect": "capped",
         "deduction": 0.0
       },
@@ -542,5 +689,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:46:48+08:00",
-  "updated_at": "2026-11-19T17:04:21+08:00"
+  "updated_at": "2026-11-20T00:17:01+08:00"
 }
