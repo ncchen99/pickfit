@@ -118,6 +118,8 @@ if cmd == "stop":
 if cmd == "delete" and env("FAKE_DELETE_FAIL"):
     sys.stderr.write("Error: cannot delete\n"); sys.exit(1)
 if cmd == "get":
+    if env("FAKE_BASE_EXISTS"):
+        print(env("FAKE_GET", ""))
     sys.exit(0 if env("FAKE_BASE_EXISTS") else 1)
 if cmd == "list":
     print(env("FAKE_LIST", "[]"))

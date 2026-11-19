@@ -109,7 +109,8 @@ def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64", 
         from pickfit.verify.tart_box import GUI_COMMAND_S, TartBox
 
         longer = {"max_command_s": GUI_COMMAND_S} if display else {}
-        return lambda run_id, role: TartBox(limits=BoxLimits(lifetime_s=lifetime_s, **longer), display=display)
+        return lambda run_id, role: TartBox(limits=BoxLimits(lifetime_s=lifetime_s, **longer), display=display,
+                                            tags={"pickfit.run": run_id, "pickfit.role": role})
     if runner == "vbox":
         if gpu:
             raise ValueError("--gpu needs --runner modal")
