@@ -326,21 +326,66 @@ export interface VisualCheck {
 /** Why pickfit could not check a tool for known vulnerabilities; not_run = no check yet. */
 export type SecurityReason = 'no_source' | 'no_lockfile' | 'lockfile_not_supported' | 'resolve_failed' | 'not_run';
 
-/** One known vulnerability in a package a fresh install brings. */
+/** A sec.v2 check's level (pickfit/security.py): its worst known finding's, or none. It says nothing about what could
+ * not be checked (SecurityCoverage). blocked, exposed and conditional read as status vulnerable. */
+export type SecurityLevel = 'blocked' | 'exposed' | 'conditional' | 'present_unreachable' | 'not_shipped' | 'none';
+export const SECURITY_LEVELS = ['blocked', 'exposed', 'conditional', 'present_unreachable', 'not_shipped', 'none'] as const;
+/** A finding's level: the first five. */
+export type FindingLevel = 'blocked' | 'exposed' | 'conditional' | 'present_unreachable' | 'not_shipped';
+/** Why something could not be checked: the gap taxonomy's categories (pickfit/security.py). */
+export type GapCategory =
+  | 'advisory_db'
+  | 'lockfile_missing'
+  | 'lockfile_unreadable'
+  | 'resolve_failed'
+  | 'no_adapter'
+  | 'binary_no_metadata'
+  | 'no_source'
+  | 'tool_error'
+  | 'platform_unsupported';
+
+/** How much of a sec.v2 check could be checked, apart from what it found: an unknown is never a vulnerability. */
+export interface SecurityCoverage {
+  state: 'complete' | 'partial' | 'unchecked';
+  packages_checked: number;
+  /** Checked plus what the gaps are known to hide (a lower bound). */
+  packages_found: number;
+  /** The first gaps: a stable code, its category, the ecosystem. */
+  gaps: { code: string; category: GapCategory; ecosystem: string }[];
+}
+
+/** One known vulnerability in a package the tool brings. */
 export interface SecurityFinding {
   /** Ecosystem and name, e.g. npm:undici. */
   package: string;
   version: string;
   /** GHSA-…, RUSTSEC-…, MAL-…: its page is https://osv.dev/vulnerability/<advisory>. */
   advisory: string;
-  severity: 'CRITICAL' | 'HIGH';
+  /** sec.v1 lists only CRITICAL and HIGH; sec.v2 also lists a lower one on CISA's exploited list. */
+  severity: 'CRITICAL' | 'HIGH' | 'MODERATE' | 'LOW' | 'UNKNOWN';
   fixed_in: string | null;
   summary: string;
   malicious: boolean;
+  /** sec.v2 only: the finding's level, where the package sits, whether CISA lists it as exploited. */
+  level?: FindingLevel;
+  scope?: string | null;
+  kev?: boolean | null;
+  /** sec.v2 only: what must hold for it to matter, as codes (user_interaction, local_access, option:NAME, ...). */
+  preconditions?: string[];
 }
 
-/** The vulnerability check, as the quality score applied it: "vulnerable" capped quality at 79 (so never a hidden gem),
- * "clean" changed nothing, "unchecked" changed nothing and says why. */
+/** A sec.v2 finding present in what installs but not reached, and how pickfit knows (method, the first evidence). */
+export interface UnreachableFinding {
+  package: string;
+  version: string;
+  advisory: string;
+  severity: SecurityFinding['severity'];
+  method: string | null;
+  evidence: string[];
+}
+
+/** The vulnerability check. sec.v1: "vulnerable" capped quality at 79 (so never a hidden gem), "clean" changed nothing,
+ * "unchecked" changed nothing and says why. sec.v2 adds the level the scoring reads and the counts per level. */
 export interface SecurityCheck {
   status: 'vulnerable' | 'clean' | 'unchecked';
   /** Only when unchecked. */
@@ -354,6 +399,15 @@ export interface SecurityCheck {
    * absent on a check from before 11/3 evening, which reads as count. */
   advisories?: number;
   findings?: SecurityFinding[];
+  /** sec.v2 only (absent on an older check). */
+  level?: SecurityLevel;
+  policy_version?: string;
+  /** Counted findings (high, critical, malicious or exploited) per finding level. */
+  counts?: Partial<Record<FindingLevel, number>>;
+  /** What was scanned: the installed artifact's SBOM, a fresh registry install, or the repository's lockfiles. */
+  target?: 'installed_artifact' | 'registry_resolve' | 'repo_lockfile';
+  unreachable?: UnreachableFinding[];
+  coverage?: SecurityCoverage;
 }
 
 /** An entry's security check; an index from before the check has none, which reads as not checked yet. */

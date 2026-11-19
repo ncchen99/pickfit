@@ -111,12 +111,16 @@ def test_full_pass_is_replayed_offline_and_judged(tmp_path: Path):
     assert [role for role, _ in boxes.made] == ["agent", "replay"]
     assert all(box.closed for _, box in boxes.made)
     replay_box = boxes.made[1][1]
-    assert [c for c, _ in replay_box.ran] == ["uv tool install graphtty", GRAPH, "graphtty --version",
-                                              "graphtty graph.json"]
+    ran = [c for c, _ in replay_box.ran]
+    assert ran[:4] == ["uv tool install graphtty", GRAPH, "graphtty --version", "graphtty graph.json"]
+    # Then, before the replay box closes, the SBOM of what it installed (pickfit/sbom.py), tied to the run.
+    assert len(ran) == 5 and ran[4].startswith("mkdir -p /tmp/pickfit-sbom")
+    sbom = json.loads((outcome.evidence_dir / "sbom.json").read_text(encoding="utf-8"))
+    assert (sbom["run_id"], sbom["tool_version"]) == ("verify-graphtty-20261029-000000-abcd", "0.4.1")
     # Evidence next to the agent's report.
     saved = VerificationRun.model_validate_json((outcome.evidence_dir / "verification_run.json").read_text(encoding="utf-8"))
     assert saved == run
-    for name in ("report.json", "replay.json", "judge.json", "outcome.json", "check-1-cmd4.judged.png"):
+    for name in ("report.json", "replay.json", "judge.json", "outcome.json", "check-1-cmd4.judged.png", "sbom.json"):
         assert (outcome.evidence_dir / name).exists(), name
     assert json.loads((outcome.evidence_dir / "outcome.json").read_text(encoding="utf-8"))["offline"] is True
     assert lines[-1].startswith("result · graphtty · level function · replayed True · judge working · "

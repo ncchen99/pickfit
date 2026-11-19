@@ -126,27 +126,60 @@ def _visual(record: SoftwareRecord) -> dict[str, Any] | None:
             "checked_at": _iso(check.checked_at)[:10], "model": check.model}
 
 
+SECURITY_WARN_LEVELS = frozenset({"blocked", "exposed", "conditional"})
+
+
 def _security(record: SoftwareRecord) -> dict[str, Any]:
-    """Known high or critical vulnerabilities in what a fresh install brings (record field security, sec.v1):
-    "vulnerable" (quality capped at 79, the advisories listed, malicious ones first), "clean", or "unchecked" with
-    why (no repository or package, a lockfile pickfit cannot read, nothing resolved). A record not run yet is
-    "unchecked" too, reason "not_run"."""
+    """Known vulnerabilities in what the software brings (record field security): "vulnerable" (the advisories that
+    warn listed, malicious ones first), "clean", or "unchecked" with why (no repository or package, a lockfile pickfit
+    cannot read, nothing resolved). A record not run yet is "unchecked" too, reason "not_run". A sec.v2 check adds the
+    level of its known findings (blocked, exposed, conditional, present_unreachable, not_shipped, none), the counted
+    findings per level, each listed finding's level, scope and preconditions, the findings present but unreachable
+    with how pickfit knows, and its coverage apart: complete, partial or unchecked, packages checked of those found,
+    and the first gaps' codes."""
     check = record.security
     if check is None:
         return {"status": "unchecked", "reason": "not_run"}
     out: dict[str, Any] = {"status": check.status, "checked_at": _iso(check.checked_at)[:10]}
+    assessment = getattr(check, "assessment", None)
+    if assessment is not None:
+        out["level"] = assessment.level
+        out["policy_version"] = assessment.policy_version
+        if assessment.counts:
+            out["counts"] = dict(assessment.counts)
+        out["target"] = check.observation.target
+        cover = check.coverage
+        out["coverage"] = {"state": cover.state, "packages_checked": cover.packages_checked,
+                           "packages_found": cover.packages_found,
+                           "gaps": [{"code": g.code, "category": g.category, "ecosystem": g.ecosystem}
+                                    for g in cover.gaps[:5]]}
     if check.status == "unchecked":
         out["reason"] = check.unchecked_reason
+        if assessment is not None and check.packages_checked:
+            out["packages_checked"] = check.packages_checked
         return out
     out["packages_checked"] = check.packages_checked
-    if check.findings:
-        out["count"] = max(check.findings_total, len(check.findings))
+    warn = [f for f in check.findings if assessment is None or getattr(f, "level", None) in SECURITY_WARN_LEVELS]
+    if warn:
+        out["count"] = max(check.findings_total, len(warn))
         if check.advisories_total:  # distinct vulnerabilities; count is findings (one per package version)
             out["advisories"] = check.advisories_total
-        out["findings"] = [{"package": f.package, "version": f.version, "advisory": f.advisory, "severity": f.severity,
-                            "fixed_in": f.fixed_in, "summary": f.summary, "malicious": f.malicious}
-                           for f in check.findings[:10]]
+        out["findings"] = [_security_finding(f, assessment is not None) for f in warn[:10]]
+    unreachable = [f for f in check.findings if getattr(f, "level", None) == "present_unreachable"]
+    if unreachable:
+        out["unreachable"] = [{"package": f.package, "version": f.version, "advisory": f.advisory,
+                               "severity": f.severity, "method": f.reachability.method if f.reachability else None,
+                               "evidence": (f.reachability.evidence[:1] if f.reachability else [])}
+                              for f in unreachable[:10]]
     return out
+
+
+def _security_finding(f: Any, v2: bool) -> dict[str, Any]:
+    row = {"package": f.package, "version": f.version, "advisory": f.advisory, "severity": f.severity,
+           "fixed_in": f.fixed_in, "summary": f.summary, "malicious": f.malicious}
+    if v2:
+        row |= {"level": f.level, "scope": f.scope, "kev": f.kev, "preconditions": list(f.preconditions)[:4]}
+    return row
 
 
 def _web(record: SoftwareRecord) -> dict[str, Any] | None:

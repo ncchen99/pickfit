@@ -349,11 +349,21 @@ def _add_score_command(sub: argparse._SubParsersAction) -> None:
 def _add_security_command(sub: argparse._SubParsersAction) -> None:
     from pickfit.security import main_security
 
-    s = sub.add_parser("security", help="known high or critical vulnerabilities in what a fresh install brings "
-                                        "(OSV.dev, no model call, $0); --write adds security and caps quality at 79")
+    s = sub.add_parser("security", help="known vulnerabilities in what the software brings, judged by where they sit "
+                                        "and whether they run (sec.v2: OSV.dev, CISA KEV, FIRST EPSS; no model call, "
+                                        "$0); --write stores security and data/security/<slug>.json")
     s.add_argument("--slug", action="append", help="check this record (repeatable)")
     s.add_argument("--all", action="store_true", help="every listed record")
     s.add_argument("--unchecked", action="store_true", help="listed records not checked yet or left unchecked")
+    s.add_argument("--stale-days", type=int, default=None, metavar="N",
+                   help="listed records not checked in the last N days (advisories keep changing; e.g. 14)")
+    s.add_argument("--reassess", action="store_true",
+                   help="print each record's sec.v2 level from what it already stores (no package lookups); "
+                        "never writes")
+    s.add_argument("--offline-intel", action="store_true", help="skip CISA KEV and FIRST EPSS (kev, epss stay null)")
+    s.add_argument("--gaps", action="store_true",
+                   help="print what could not be checked, grouped by gap code, ecosystem, category and platform "
+                        "(every listed record unless --slug/--all narrow it); reads only, never writes")
     s.add_argument("--data-dir", default=None, help="records (default data/software)")
     s.add_argument("--workers", type=int, default=6, help="records checked at once")
     s.add_argument("--write", action="store_true", help="store each check in its record and refresh its scores")
