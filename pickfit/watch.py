@@ -1263,10 +1263,10 @@ class Watcher:
         return self.db.prescreen_decisions().get(candidate["repo_id"])
 
     def _extract(self, candidate: dict[str, Any], run_id: str, job: Job) -> dict[str, Any]:
-        from pickfit.extract import build_sources, sources_sha
+        from pickfit.extract import extraction_is_current
 
         last = self.db.last_extraction(candidate["repo_id"], MODEL)
-        if last and last["status"] in DONE_EXTRACTIONS and last["sources_sha"] == sources_sha(build_sources(candidate)):
+        if last and last["status"] in DONE_EXTRACTIONS and extraction_is_current(dict(last), candidate):
             job.notes.append("extraction reused")
             return last
         rows = self.steps.extract(candidate, run_id)
