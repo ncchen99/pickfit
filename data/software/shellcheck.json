@@ -1,0 +1,1363 @@
+{
+  "schema_version": "software.v1",
+  "slug": "shellcheck",
+  "repo_id": "gh:6731432",
+  "name": "ShellCheck",
+  "summary": "A static analysis tool that gives warnings and suggestions for bash/sh shell scripts.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "bash",
+    "developer-tools",
+    "haskell",
+    "linter",
+    "shell",
+    "static-analysis"
+  ],
+  "use_cases": [
+    "lint shell scripts in a CI build or Makefile",
+    "see shell script warnings inline in an editor",
+    "check scripts for portability to sh"
+  ],
+  "alternatives_to": [
+    "checkbashisms"
+  ],
+  "features": [
+    "detect beginner syntax errors in shell scripts",
+    "detect semantic problems in shell scripts",
+    "recognize incorrect quoting",
+    "warn about portability issues per shebang",
+    "output JSON, CheckStyle XML or GCC formats"
+  ],
+  "capabilities": [
+    {
+      "label": "Lint bash/sh shell scripts for warnings",
+      "area": "analysis"
+    },
+    {
+      "label": "Output formats for results",
+      "items": [
+        "checkstyle",
+        "diff",
+        "gcc",
+        "json",
+        "json1",
+        "quiet",
+        "tty"
+      ],
+      "area": "output"
+    },
+    {
+      "label": "Check scripts in specific shell dialects",
+      "items": [
+        "sh",
+        "bash",
+        "dash",
+        "ksh",
+        "busybox"
+      ],
+      "area": "dialects"
+    },
+    {
+      "label": "Editor integration",
+      "items": [
+        "Vim",
+        "Emacs",
+        "Sublime",
+        "Pulsar Edit",
+        "VSCode"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Fail builds via exit codes in CI",
+      "area": "integrations"
+    },
+    {
+      "label": "Run as pre-commit hook",
+      "area": "integrations"
+    },
+    {
+      "label": "Check scripts online in browser",
+      "area": "web"
+    },
+    {
+      "label": "Detect incorrect quoting",
+      "area": "checks"
+    },
+    {
+      "label": "Detect incorrect test statements",
+      "area": "checks"
+    },
+    {
+      "label": "Detect misused commands",
+      "area": "checks"
+    },
+    {
+      "label": "Suggest style improvements",
+      "area": "checks"
+    },
+    {
+      "label": "Warn about portability issues",
+      "area": "checks"
+    },
+    {
+      "label": "Suggest robustness improvements",
+      "area": "checks"
+    },
+    {
+      "label": "Ignore issues via directives or options",
+      "area": "configuration"
+    },
+    {
+      "label": "Include or exclude warning codes",
+      "area": "filtering"
+    },
+    {
+      "label": "Filter by minimum severity",
+      "items": [
+        "error",
+        "warning",
+        "info",
+        "style"
+      ],
+      "area": "filtering"
+    },
+    {
+      "label": "Enable optional checks",
+      "area": "configuration"
+    },
+    {
+      "label": "Check sourced files",
+      "area": "analysis"
+    },
+    {
+      "label": "Perform dataflow analysis",
+      "area": "analysis"
+    },
+    {
+      "label": "Use .shellcheckrc configuration files",
+      "area": "configuration"
+    },
+    {
+      "label": "Colored terminal output",
+      "area": "output"
+    }
+  ],
+  "why_worth_it": null,
+  "homepage": "https://www.shellcheck.net",
+  "repo": {
+    "url": "https://github.com/koalaman/shellcheck",
+    "full_name": "koalaman/shellcheck",
+    "created_at": "2012-11-17T03:15:11Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "xz (to unpack pre-compiled binaries)"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install shellcheck",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "shellcheck --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-shellcheck-20261120-201258-6c3e",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/sc.tar.xz https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.linux.x86_64.tar.xz && tar -xJf /tmp/sc.tar.xz -C /tmp && mkdir -p ~/.local/bin && cp /tmp/shellcheck-stable/shellcheck ~/.local/bin/",
+          "purpose": "Download the README's pre-compiled Linux x86_64 stable binary and copy it into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "shellcheck --version",
+        "expected_signal": "ShellCheck - shell script analysis tool"
+      },
+      "first_task": "shellcheck t/syntax.sh"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "choco install shellcheck",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "shellcheck --version"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "GPL-3.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v0.11.0",
+    "published_at": "2025-08-04T00:27:19Z",
+    "url": "https://github.com/koalaman/shellcheck/releases/tag/v0.11.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-20T20:13:42.713325+08:00",
+    "runs": [
+      {
+        "id": "verify-shellcheck-20261120-201258-6c3e",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:01363ad5a469",
+        "checked_at": "2026-11-20T20:13:42.713325+08:00",
+        "tool_version": "0.11.0",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/sc.tar.xz https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.linux.x86_64.tar.xz && tar -xJf /tmp/sc.tar.xz -C /tmp && mkdir -p ~/.local/bin && cp /tmp/shellcheck-stable/shellcheck ~/.local/bin/",
+            "purpose": "Download the README's pre-compiled Linux x86_64 stable binary and copy it into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "shellcheck --version",
+            "expected_signal": "ShellCheck - shell script analysis tool",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ShellCheck - shell script analysis tool",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "shellcheck t/syntax.sh",
+            "expected_signal": "SC1046 (error): Couldn't find 'fi' for this 'if'.",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "^-- SC1046 (error): Couldn't find 'fi' for this 'if'.",
+            "setup": [
+              {
+                "command": "mkdir -p t && cat > t/syntax.sh <<'EOF'\n#!/bin/bash\nif [ $# -eq 0 ]\nthen\n  echo \"none\"\nelse\n  echo \"some\"\nEOF\ncat > t/semantic.sh <<'EOF'\n#!/bin/bash\nvar = 42\necho $((n/180*100))\nfor f in $(ls *.txt); do echo \"$f\"; done\nEOF\ncat > t/quote.sh <<'EOF'\n#!/bin/bash\necho 'Path is $PATH'\nrm \"~/my file.txt\"\nEOF\ncat > t/port.sh <<'EOF'\n#!/bin/sh\necho {1..10}\n[[ $1 == x ]] && echo yes\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "shellcheck t/semantic.sh",
+            "expected_signal": "SC2045 (error): Iterating over ls output is fragile. Use globs.",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "^---------^ SC2045 (error): Iterating over ls output is fragile. Use globs.",
+            "setup": [
+              {
+                "command": "mkdir -p t && cat > t/syntax.sh <<'EOF'\n#!/bin/bash\nif [ $# -eq 0 ]\nthen\n  echo \"none\"\nelse\n  echo \"some\"\nEOF\ncat > t/semantic.sh <<'EOF'\n#!/bin/bash\nvar = 42\necho $((n/180*100))\nfor f in $(ls *.txt); do echo \"$f\"; done\nEOF\ncat > t/quote.sh <<'EOF'\n#!/bin/bash\necho 'Path is $PATH'\nrm \"~/my file.txt\"\nEOF\ncat > t/port.sh <<'EOF'\n#!/bin/sh\necho {1..10}\n[[ $1 == x ]] && echo yes\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "shellcheck t/quote.sh",
+            "expected_signal": "SC2088 (warning): Tilde does not expand in quotes. Use $HOME.",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "^-----------^ SC2088 (warning): Tilde does not expand in quotes. Use $HOME.",
+            "setup": [
+              {
+                "command": "mkdir -p t && cat > t/syntax.sh <<'EOF'\n#!/bin/bash\nif [ $# -eq 0 ]\nthen\n  echo \"none\"\nelse\n  echo \"some\"\nEOF\ncat > t/semantic.sh <<'EOF'\n#!/bin/bash\nvar = 42\necho $((n/180*100))\nfor f in $(ls *.txt); do echo \"$f\"; done\nEOF\ncat > t/quote.sh <<'EOF'\n#!/bin/bash\necho 'Path is $PATH'\nrm \"~/my file.txt\"\nEOF\ncat > t/port.sh <<'EOF'\n#!/bin/sh\necho {1..10}\n[[ $1 == x ]] && echo yes\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "shellcheck t/port.sh",
+            "expected_signal": "SC3010 (warning): In POSIX sh, [[ ]] is undefined.",
+            "exit_code": 1,
+            "passed": true,
+            "observed_excerpt": "^-----------^ SC3010 (warning): In POSIX sh, [[ ]] is undefined.",
+            "setup": [
+              {
+                "command": "mkdir -p t && cat > t/syntax.sh <<'EOF'\n#!/bin/bash\nif [ $# -eq 0 ]\nthen\n  echo \"none\"\nelse\n  echo \"some\"\nEOF\ncat > t/semantic.sh <<'EOF'\n#!/bin/bash\nvar = 42\necho $((n/180*100))\nfor f in $(ls *.txt); do echo \"$f\"; done\nEOF\ncat > t/quote.sh <<'EOF'\n#!/bin/bash\necho 'Path is $PATH'\nrm \"~/my file.txt\"\nEOF\ncat > t/port.sh <<'EOF'\n#!/bin/sh\necho {1..10}\n[[ $1 == x ]] && echo yes\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "sudo apt install shellcheck (and pacman/dnf/cabal/conda/nix)",
+            "actually_needed": "No root or those package managers here, so I used the README's pre-compiled static binary tarball and put it in ~/.local/bin",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "cp \"shellcheck-${scversion}/shellcheck\" /usr/bin/",
+            "actually_needed": "Copying to ~/.local/bin (on PATH) works without root",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "ShellCheck makes canonical use of exit codes",
+            "actually_needed": "It exits 1 when it finds issues; that is the expected result for the feature checks",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "ShellCheck reported the expected parse error SC1046 and semantic error SC2045 with the expected exit code 1, and printed its version 0.11.0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-shellcheck-20261120-201258-6c3e/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-shellcheck-20261120-201258-6c3e/check-1-cmd4.judged.png",
+            "runs/verify/verify-shellcheck-20261120-201258-6c3e/check-2-cmd5.judged.png",
+            "runs/verify/verify-shellcheck-20261120-201258-6c3e/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.132114,
+        "features": [
+          {
+            "feature": "detect beginner syntax errors in shell scripts",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "detect semantic problems in shell scripts",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "recognize incorrect quoting",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "warn about portability issues per shebang",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "output JSON, CheckStyle XML or GCC formats",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v2",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T20:13:49+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "51d5cb2be3c24f8c87b2f2e972ab3c448af95af5",
+      "run_id": "verify-shellcheck-20261120-201258-6c3e",
+      "tool_version": "0.11.0",
+      "artifact_sha256": [
+        "4da528ddb3a4d1b7b24a59d4e16eb2f5fd960f4bd9a3708a15baddbdf1d5a55b"
+      ],
+      "packages": {},
+      "scopes": {},
+      "advisories_fetched_at": "2026-11-20T20:13:49+08:00",
+      "kev_catalog": null,
+      "epss_date": null,
+      "findings_total": 0,
+      "details": "security/shellcheck.json",
+      "details_sha256": "f52469b3bc28cb2a3c1dacbc76caabfba4fd2f978ff6d2e009a7b72571316437"
+    },
+    "assessment": {
+      "level": "none",
+      "policy_version": "sec.v2",
+      "reasons": [],
+      "counts": {},
+      "uncounted": 0,
+      "assessed_at": "2026-11-20T20:13:49+08:00"
+    },
+    "coverage": {
+      "state": "unchecked",
+      "target": null,
+      "packages_found": 0,
+      "packages_checked": 0,
+      "components": [],
+      "gaps": [
+        {
+          "code": "lockfile.none_found",
+          "category": "lockfile_missing",
+          "ecosystem": "unknown",
+          "component": null,
+          "detail": "no manifest or lockfile pickfit recognizes",
+          "capability": "manifest_detection",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "tool.sbom_error",
+          "category": "tool_error",
+          "ecosystem": "unknown",
+          "component": "sbom:verify-shellcheck-20261120-201258-6c3e",
+          "detail": "npm exited 254: \nnpm error enoent This is related to npm not being able to find a file.\nnpm error enoent\nnpm error A complete log of this run can be found in: /home/sbx/.npm/_logs/2026-11-20T12_13_33_",
+          "capability": "fix_sbom_tool",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
+  },
+  "scores": {
+    "formula_version": "b3.v7",
+    "computed_at": "2026-11-20T20:13:49+08:00",
+    "quality": {
+      "total": 81.3,
+      "raw_total": 81.3,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 0.455,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8636,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      },
+      "security": {
+        "level": "none",
+        "basis": "assessment",
+        "effect": "none",
+        "deduction": 0.0
+      }
+    },
+    "popularity": {
+      "score": 100.0,
+      "signals": {
+        "stars": 40360,
+        "monthly_downloads": 38176,
+        "forks": 1979,
+        "dependents": null,
+        "release_downloads": 63267365,
+        "hn_top_score": 399,
+        "registries_count": 1
+      },
+      "age_days": 5116,
+      "packages": [
+        "homebrew:shellcheck"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.0
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:13:42.834244+08:00",
+      "sources_sha": "9cbf53396809b248e2725285f14f37a646e52125dd507ffb40477b15551c52f8",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "ShellCheck is a GPLv3 tool that gives warnings and suggestions for bash/sh shell scripts:"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "To point out and clarify typical beginner's syntax issues that cause a shell\n  to give cryptic error messages."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "The pre-compiled binaries come in `tar.xz` files. To decompress them, make sure\n`xz` is installed."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "On macOS (OS X) with Homebrew:\n\n    brew install shellcheck"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Run `shellcheck yourscript` in your terminal for instant output, as seen above."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Issues can be ignored via environmental variable, command line, individually or globally within a file:"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "make sure to use a TrueType font, not a Raster font, and set the active\ncodepage to UTF-8 (65001) with `chcp`:"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "ShellCheck is licensed under the GNU General Public License, v3."
+        }
+      },
+      "unquoted": [],
+      "input_sha": "269b0e5a444a0f05768cfe736ddd16318fcaff52f64efa2d317f0c946f81f1ea",
+      "prompt_version": "rubric-p1",
+      "renderer_version": "r1",
+      "grader": "anthropic"
+    },
+    "inputs": {
+      "version": "inputs.v1",
+      "github": {
+        "source": "pipeline_db",
+        "fetched_at": "2026-11-20T20:12:39+08:00",
+        "stars": 40360,
+        "forks": 1979,
+        "open_issues": 1078,
+        "created_at": "2012-11-17T03:15:11Z",
+        "pushed_at": "2026-11-20T05:53:17Z",
+        "releases": [
+          {
+            "tag": "v0.11.0",
+            "published_at": "2025-08-04T00:27:19Z",
+            "prerelease": false,
+            "notes_chars": 1711,
+            "downloads": 20267980
+          },
+          {
+            "tag": "v0.10.0",
+            "published_at": "2024-03-08T02:37:35Z",
+            "prerelease": false,
+            "notes_chars": 144,
+            "downloads": 20097423
+          },
+          {
+            "tag": "v0.9.0",
+            "published_at": "2022-12-13T06:40:14Z",
+            "prerelease": false,
+            "notes_chars": 122,
+            "downloads": 9214301
+          },
+          {
+            "tag": "v0.8.0",
+            "published_at": "2021-11-07T04:37:16Z",
+            "prerelease": false,
+            "notes_chars": 141,
+            "downloads": 5924621
+          },
+          {
+            "tag": "v0.7.2",
+            "published_at": "2021-04-19T22:39:09Z",
+            "prerelease": false,
+            "notes_chars": 92,
+            "downloads": 2791316
+          },
+          {
+            "tag": "v0.7.1",
+            "published_at": "2020-04-05T01:07:17Z",
+            "prerelease": false,
+            "notes_chars": 141,
+            "downloads": 4368384
+          },
+          {
+            "tag": "v0.7.0",
+            "published_at": "2020-03-05T03:38:42Z",
+            "prerelease": false,
+            "notes_chars": 144,
+            "downloads": 520495
+          },
+          {
+            "tag": "v0.6.0",
+            "published_at": "2020-03-07T19:14:31Z",
+            "prerelease": false,
+            "notes_chars": 143,
+            "downloads": 54248
+          },
+          {
+            "tag": "v0.5.0",
+            "published_at": "2020-03-07T19:15:03Z",
+            "prerelease": false,
+            "notes_chars": 134,
+            "downloads": 26105
+          },
+          {
+            "tag": "v0.4.7",
+            "published_at": "2020-03-07T19:16:34Z",
+            "prerelease": false,
+            "notes_chars": 137,
+            "downloads": 2492
+          }
+        ],
+        "contributors": null,
+        "files": {
+          "count": 99,
+          "truncated": false,
+          "ci": ".github/workflows/build.yml",
+          "tests": "test/buildtest",
+          "changelog": "CHANGELOG.md",
+          "lockfile": null
+        }
+      },
+      "issues": {
+        "source": "github_live",
+        "fetched_at": "2026-11-20T20:13:42+08:00",
+        "items": [
+          {
+            "created_at": "2026-11-20T08:55:18Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T21:42:25Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-18T09:01:51Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T04:05:21Z",
+            "closed_at": "2026-11-17T04:59:43Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-16T01:43:03Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-14T01:08:34Z",
+            "closed_at": "2026-11-15T08:40:45Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-07T06:24:51Z",
+            "closed_at": "2026-11-08T11:25:53Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-02T20:21:17Z",
+            "closed_at": "2026-11-17T04:05:59Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-31T08:37:20Z",
+            "closed_at": "2026-10-31T10:22:32Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-30T06:57:52Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-29T15:37:31Z",
+            "closed_at": null,
+            "association": "COLLABORATOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-25T17:56:18Z",
+            "closed_at": null,
+            "association": "COLLABORATOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-25T10:14:58Z",
+            "closed_at": "2026-11-20T06:04:23Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-24T16:09:08Z",
+            "closed_at": null,
+            "association": "COLLABORATOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-24T07:02:00Z",
+            "closed_at": null,
+            "association": "COLLABORATOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-22T09:59:12Z",
+            "closed_at": "2026-11-08T22:52:33Z",
+            "association": "COLLABORATOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-22T09:46:05Z",
+            "closed_at": null,
+            "association": "COLLABORATOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-22T09:31:06Z",
+            "closed_at": null,
+            "association": "COLLABORATOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-22T09:01:49Z",
+            "closed_at": null,
+            "association": "COLLABORATOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-21T01:33:47Z",
+            "closed_at": null,
+            "association": "COLLABORATOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-20T13:06:47Z",
+            "closed_at": "2026-10-21T01:03:29Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-18T16:18:59Z",
+            "closed_at": "2026-10-18T21:49:22Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-18T06:40:26Z",
+            "closed_at": null,
+            "association": "COLLABORATOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-16T03:48:27Z",
+            "closed_at": "2026-10-20T07:48:52Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-12T16:36:53Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-09T21:36:28Z",
+            "closed_at": "2026-11-09T00:43:59Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-08T21:25:43Z",
+            "closed_at": "2026-10-26T00:59:27Z",
+            "association": "COLLABORATOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-08T19:22:07Z",
+            "closed_at": "2026-10-18T01:01:31Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-27T04:24:22Z",
+            "closed_at": "2026-09-27T05:38:00Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-26T01:54:59Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-25T23:07:04Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-21T08:27:21Z",
+            "closed_at": "2026-10-09T00:40:55Z",
+            "association": "COLLABORATOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-18T04:04:27Z",
+            "closed_at": "2026-10-09T00:40:54Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-06T03:56:03Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-02T05:43:31Z",
+            "closed_at": "2026-09-02T08:14:35Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-02T05:43:27Z",
+            "closed_at": "2026-09-02T08:14:17Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-02T05:42:56Z",
+            "closed_at": "2026-09-02T08:14:09Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-08-23T09:45:31Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          }
+        ],
+        "pull_requests": 62,
+        "page_full": true
+      }
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/koalaman/shellcheck",
+      "fetched_at": "2026-11-20T20:12:41+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/koalaman/shellcheck/blob/master/README.md",
+      "fetched_at": "2026-11-20T20:12:39+08:00"
+    },
+    {
+      "id": "release:v0.11.0",
+      "kind": "release",
+      "url": "https://github.com/koalaman/shellcheck/releases/tag/v0.11.0",
+      "fetched_at": "2026-11-20T20:12:39+08:00"
+    },
+    {
+      "id": "help:verify-shellcheck-20261120-201258-6c3e:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T20:14:01+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Run `shellcheck yourscript` in your terminal for instant output, as seen above.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:12:52+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "While ShellCheck is mostly intended for interactive use",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:12:52+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "ShellCheck, a static analysis tool for shell scripts",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:12:52+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "ShellCheck is a GPLv3 tool that gives warnings and suggestions for bash/sh shell scripts:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:12:52+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# ShellCheck - A shell script static analysis tool",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:12:52+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "The pre-compiled binaries come in `tar.xz` files. To decompress them, make sure\n`xz` is installed.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:12:52+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T20:12:41+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T20:12:41+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-20T20:12:41+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T20:12:41+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T20:12:41+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.11.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T20:12:39+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "release:v0.11.0",
+      "quote": "name: Stable version v0.11.0",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:12:52+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "it can easily be added to builds or test suites.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:12:52+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "You can see ShellCheck suggestions directly in a variety of editors.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:12:52+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "ShellCheck will warn when using features not supported by the shebang.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:12:52+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "ShellCheck will warn about portability issues similar to `checkbashisms`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:12:52+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "To point out and clarify typical beginner's syntax issues that cause a shell\n  to give cryptic error messages.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:12:52+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "To point out and clarify typical intermediate level semantic problems",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:12:52+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "ShellCheck can recognize several types of incorrect quoting:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:12:52+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "ShellCheck will warn when using features not supported by the shebang.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:12:52+08:00"
+    },
+    {
+      "field": "/features/4",
+      "source_id": "readme",
+      "quote": "ShellCheck can output simple JSON, CheckStyle compatible XML,\nGCC compatible warnings as well as human readable text",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:12:52+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install shellcheck",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:12:52+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "sudo apt install shellcheck",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:12:52+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "choco install shellcheck",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:12:52+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "gives warnings and suggestions for bash/sh shell scripts",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "help:verify-shellcheck-20261120-201258-6c3e:1",
+      "quote": "Output format (checkstyle, diff, gcc, json, json1, quiet, tty)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "help:verify-shellcheck-20261120-201258-6c3e:1",
+      "quote": "Specify dialect (sh, bash, dash, ksh, busybox)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "You can see ShellCheck suggestions directly in a variety of editors.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "It makes canonical use of exit codes, so you can just add a `shellcheck` command as part of the process.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "To run ShellCheck via [pre-commit](https://pre-commit.com/), add the hook",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "Paste a shell script on <https://www.shellcheck.net> for instant feedback.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "ShellCheck can recognize several types of incorrect quoting",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "ShellCheck can recognize many types of incorrect test statements.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "ShellCheck can recognize instances where commands are used incorrectly",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "ShellCheck can make suggestions to improve style",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "ShellCheck will warn when using features not supported by the shebang.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "ShellCheck can make suggestions for improving the robustness of a script",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "Issues can be ignored via environmental variable, command line, individually or globally within a file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "help:verify-shellcheck-20261120-201258-6c3e:1",
+      "quote": "Exclude types of warnings",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "help:verify-shellcheck-20261120-201258-6c3e:1",
+      "quote": "Minimum severity of errors to consider (error, warning, info, style)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "help:verify-shellcheck-20261120-201258-6c3e:1",
+      "quote": "List of optional checks to enable (or 'all')",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "help:verify-shellcheck-20261120-201258-6c3e:1",
+      "quote": "Include warnings from sourced files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "help:verify-shellcheck-20261120-201258-6c3e:1",
+      "quote": "Perform dataflow analysis (default true)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "help:verify-shellcheck-20261120-201258-6c3e:1",
+      "quote": "Prefer the specified configuration file over searching for one",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "help:verify-shellcheck-20261120-201258-6c3e:1",
+      "quote": "Use color (auto, always, never)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:14:01+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-20T20:12:39+08:00",
+  "updated_at": "2026-11-20T20:14:01+08:00"
+}
