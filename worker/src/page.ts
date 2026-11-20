@@ -843,7 +843,7 @@ export function renderResults(
   result: SearchResult,
   form: FormValues,
   catalog: Catalog,
-  opts: { cached?: boolean; budget?: BudgetStop | null } = {},
+  opts: { cached?: boolean; cachedAt?: string; budget?: BudgetStop | null } = {},
 ): string {
   const { out } = result;
   const parts: string[] = [];
@@ -970,7 +970,9 @@ export function renderResults(
     parts.unshift(head);
     if (outside) parts.push(outside);
   }
-  if (opts.cached)
+  if (opts.cachedAt)
+    parts.push(`<p class="quiet small">${L(`Shown from the same search made on ${esc(day(opts.cachedAt))}, on the same data.`, `這是 ${esc(day(opts.cachedAt))} 同一個搜尋的結果，資料沒有變。`)}</p>`);
+  else if (opts.cached)
     parts.push(`<p class="quiet small">${L('Shown from the same search made in the last few minutes.', '這是幾分鐘前同一個搜尋的結果。')}</p>`);
   return parts.join('');
 }

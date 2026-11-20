@@ -251,7 +251,7 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
 
 ## D1（`migrations/`）
 
-`0001_init.sql`：`events`、`submissions`、`reverify_queue`、`meta_budget`。`0002_outcome_once_by_result.sql`：回報的去重索引加上 `success`。`0003_model_attempts.sql`：`events` 加 `degraded_reason`、`model_attempts`、`model_statuses`。`0004_last_used.sql`：`events` 加 `last_used`（只收 `this_week`、`this_month`、`older`、`unknown`）。`0005_later_stage_reports.sql`：`still_using` 這個 stage 移出去重索引，改由 Worker 對最新一筆去重。**一定要先套到最新的 migration（現在是 `0005`）再部署這版**，否則每一筆事件都寫不進去：
+`0001_init.sql`：`events`、`submissions`、`reverify_queue`、`meta_budget`。`0002_outcome_once_by_result.sql`：回報的去重索引加上 `success`。`0003_model_attempts.sql`：`events` 加 `degraded_reason`、`model_attempts`、`model_statuses`。`0004_last_used.sql`：`events` 加 `last_used`（只收 `this_week`、`this_month`、`older`、`unknown`）。`0005_later_stage_reports.sql`：`still_using` 這個 stage 移出去重索引，改由 Worker 對最新一筆去重。`0006_search_cache.sql`：網頁搜尋的共用快取 `search_cache`（key 含搜尋條件、介面語言和 index 的 `data_sha256`，保留 7 天）；這張表還沒建好時，搜尋照常進行、只是不快取。**一定要先套到最新的 migration（現在是 `0006`）再部署這版**，否則每一筆事件都寫不進去：
 
 - `report_outcome` 會整個失敗：它等事件寫完才回應，寫入錯誤會讓每次呼叫都回錯誤。
 - `find_*`、`get_install_guide`、`submit_software` 照常回應，但事件寫入失敗，只在 Workers log 留下 `d1_write_failed`。`rec_id` 不會進 `events`，之後拿這些 `rec_id` 回報也不能計分。
@@ -265,7 +265,7 @@ Worker 自己的帳在 D1 `meta_budget`（和本機管線的 `~/.pickfit/ledger.
 **先決條件**：`data/software/` 有真的 profile 並已 commit（P2.6），而且念誠同意部署。下面的指令都在**主 checkout** 的 `worker/` 下跑（`.env` 在主 checkout 根目錄）。
 
 1. **建 D1**：`npx wrangler d1 create pickfit`，把輸出的 `database_id` 填進 `wrangler.jsonc`（取代全 0 的佔位），commit。
-2. **遠端建表**：`npx wrangler d1 migrations apply pickfit --remote`（`0001`–`0005` 都要套，而且**要在部署這版之前套**；之後 `migrations/` 有新檔，也是先套再部署。**`pickfit publish` 不會幫你跑**；`eval` 等 env 的 D1 也要各自套）。
+2. **遠端建表**：`npx wrangler d1 migrations apply pickfit --remote`（`0001`–`0006` 都要套，而且**要在部署這版之前套**；之後 `migrations/` 有新檔，也是先套再部署。**`pickfit publish` 不會幫你跑**；`eval` 等 env 的 D1 也要各自套）。
 3. **`ALLOWED_HOSTS`**：在 `wrangler.jsonc` 的 `vars` 填 `pickfit-mcp.<workers.dev 子網域>.workers.dev`（子網域就是 P0.5 hello 部署用的那個，dashboard 的 Workers & Pages 也看得到），commit。沒填的話遠端每個請求都是 403，`pickfit publish` 也會拒絕部署。
 4. **先 dry run**：在 repo 根目錄 `uv run pickfit publish --dry-run`。它會驗 `data/software/` 每一筆、確認不是 fixture、資料都已 commit、`wrangler.jsonc` 已填好；任何一項不過就列出問題、exit 1。
 5. **部署**：`uv run pickfit publish`。它用真資料重建 `worker/src/generated/index.json`，再跑 `npx wrangler deploy`。（之後本機要回到假資料：`npm run build:index -- --data test/fixtures/software`。）

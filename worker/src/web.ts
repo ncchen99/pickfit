@@ -17,7 +17,8 @@
  *   nothing is reserved and the search goes straight to the model;
  * - at most MAX_IN_FLIGHT model searches at once in an isolate; identical
  *   searches in flight share one call, and finished ones are kept 10 minutes
- *   (this isolate only; the MCP path never reads any of it).
+ *   in this isolate and 7 days in D1 for every instance (keyed by the index's
+ *   data too); the MCP path never reads any of it.
  * Shown install guides are not logged as install_guide events: the person has
  * not picked a tool yet, and that event means a pick in the MCP flow.
  */
@@ -44,6 +45,8 @@ import { SLUG } from './ui/html.ts';
 /** Searches per visitor per minute; wrangler.jsonc's WEB_RATE_LIMITER uses the same number. */
 export const SEARCHES_PER_MINUTE = 6;
 export const CACHE_TTL_MS = 10 * 60_000;
+/** The shared cache in D1 (migrations/0006): an answer for the same search on the same data is kept this long. */
+export const SHARED_TTL_DAYS = 7;
 const CACHE_MAX = 64;
 /** Bytes: a 500-character need is up to 6,000 bytes once percent-encoded (4-byte characters), plus the other fields. */
 export const BODY_MAX_BYTES = 8192;
@@ -207,6 +210,26 @@ export function zhRuleClaim(claim: string, map: Record<string, string> | undefin
   return null;
 }
 
+/** A search answered earlier on this data, from any instance; null on a miss or when D1 cannot answer (a cache
+ * that fails is a miss, never an error). */
+async function readShared(db: D1Database, key: string, now: Date): Promise<{ result: SearchResult; at: string } | null> {
+  try {
+    const since = new Date(now.getTime() - SHARED_TTL_DAYS * 86_400_000).toISOString();
+    const row = await db.prepare('SELECT result, created_at FROM search_cache WHERE key = ?1 AND created_at >= ?2').bind(key, since).first<{ result: string; created_at: string }>();
+    return row ? { result: JSON.parse(row.result) as SearchResult, at: row.created_at } : null;
+  } catch (err) {
+    console.error(JSON.stringify({ event: 'search_cache_read_failed', error: String(err) }));
+    return null;
+  }
+}
+
+async function writeShared(db: D1Database, key: string, result: SearchResult, now: Date): Promise<void> {
+  const since = new Date(now.getTime() - SHARED_TTL_DAYS * 86_400_000).toISOString();
+  // Two statements, not a batch: the Cloud Run binding speaks D1's REST API one statement at a time.
+  await db.prepare('INSERT OR REPLACE INTO search_cache (key, result, created_at) VALUES (?1, ?2, ?3)').bind(key, JSON.stringify(result), now.toISOString()).run();
+  await db.prepare('DELETE FROM search_cache WHERE created_at < ?1').bind(since).run();
+}
+
 export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
   const showcase = catalogShowcase(catalog);
   // The zh-TW pages read a copy of the catalog with each tool's sentences in Chinese; search always runs on `catalog`.
@@ -328,12 +351,21 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
     }
 
     const t = now().getTime();
-    const key = await sha256(searchKey(form, lang));
+    // The index's data is part of the key, so an answer is never shown against data it was not made from.
+    const key = await sha256(searchKey(form, lang) + (catalog.data_sha256 ?? ''));
     for (;;) {
       const hit = cache.get(key);
       if (hit && t - hit.at < CACHE_TTL_MS) {
         console.log(JSON.stringify({ event: 'web_search', cached: true, picks: hit.result.out.picks.length }));
         return respond(form, results(hit.result, form, { cached: true }));
+      }
+      if (!running.has(key)) {
+        const shared = await readShared(env.DB, key, now());
+        if (shared) {
+          cache.set(key, { at: t, result: shared.result });
+          console.log(JSON.stringify({ event: 'web_search', cached: 'shared', picks: shared.result.out.picks.length }));
+          return respond(form, results(shared.result, form, { cached: true, cachedAt: shared.at }));
+        }
       }
       const same = running.get(key);
       if (!same) break;
@@ -399,6 +431,7 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
     const { result, budget } = searched;
     // A degraded answer is not kept: the next identical search should get to try the model again.
     if (!result.out.degraded) {
+      ctx.waitUntil(writeShared(env.DB, key, result, now()).catch((err) => console.error(JSON.stringify({ event: 'search_cache_write_failed', error: String(err) }))));
       cache.set(key, { at: t, result });
       for (const [k, v] of cache) if (cache.size > CACHE_MAX || t - v.at >= CACHE_TTL_MS) cache.delete(k);
     }
