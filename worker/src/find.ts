@@ -26,7 +26,7 @@ import { toCard, type Card } from './cards.ts';
 import { checkBudget, recordSpend } from './budget.ts';
 import { ranSentence, videoSentence } from './evidence.ts';
 import { featureSentence, featuresOut, type FeaturesOut } from './features.ts';
-import { securityOut, type SecurityOut } from './security.ts';
+import { securityLine, securityOut, type SecurityOut } from './security.ts';
 import type { Settings } from './env.ts';
 import { logEvent, logFailure, newId, type Reporter } from './events.ts';
 import { englishKeywords, EXPAND_TIMEOUT_MS, type Expansion } from './expand.ts';
@@ -100,6 +100,10 @@ export interface PickOut {
   scores: { quality: number | null; popularity: number | null; treasure: boolean };
   /** Known high or critical vulnerabilities (OSV.dev) in what a fresh install brings; unchecked says why not. */
   security: SecurityOut;
+  /** The one line about security to say before recommending it; null when there is nothing to say. */
+  security_warning: string | null;
+  /** Where the README's install instructions were wrong on the shown run: "README says X; actually needed Y". */
+  readme_wrong: string[];
   /** null for a web app with no public repository. */
   repo: string | null;
   homepage: string | null;
@@ -134,6 +138,9 @@ export interface AlternativesOutput extends FindOutput {
   current: { matched_slug: string | null; known: boolean };
   keep_current: { recommended: boolean; reason: string } | null;
 }
+
+/** How many README mistakes a pick names; get_install_guide lists them all. */
+const README_WRONG_MAX = 2;
 
 function howWeKnow(entry: Entry, guide: InstallGuide | null, matchedBy: string, considered: number, videoBase?: string | null): string {
   const parts: string[] = [];
@@ -183,6 +190,7 @@ function pickOut(
   const web = isWebApp(entry) ? webCheck(entry) : null;
   // A web app opens in any browser: no install steps ran on any OS.
   const onUserOs = isWebApp(entry) ? null : verifiedOnUserSystem(entry, os, arch);
+  const security = securityOut(entry);
   const tradeoffs = [...chosen.tradeoffs];
   if (os && !onUserOs && guide) {
     // Run on the user's OS but another CPU architecture, or on another OS.
@@ -228,7 +236,12 @@ function pickOut(
       popularity: entry.scores?.popularity ?? null,
       treasure: entry.scores?.treasure ?? false,
     },
-    security: securityOut(entry),
+    security,
+    security_warning: securityLine(security, isWebApp(entry)),
+    readme_wrong: (guide?.pitfalls ?? [])
+      .filter((p) => p.kind === 'readme_wrong' || !p.kind)
+      .slice(0, README_WRONG_MAX)
+      .map((p) => `README says ${clip(p.readme_said, 160) ?? ""}; actually needed ${clip(p.actually_needed, 160) ?? ""}`),
     repo: entry.repo_url,
     homepage: entry.homepage,
     web_app: webAppOut(entry),

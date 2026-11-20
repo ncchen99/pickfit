@@ -210,6 +210,11 @@ const pick = z.object({
     treasure: z.boolean().describe('High quality, low popularity'),
   }),
   security,
+  security_warning: z
+    .string()
+    .nullable()
+    .describe('Say this to the user before recommending the tool (vulnerable, unchecked or partly checked); null: nothing to say'),
+  readme_wrong: z.array(z.string()).describe("Where the README's install instructions were wrong in pickfit's run; mention before the user follows the README"),
   repo: z.string().nullable(),
   homepage: z.string().nullable(),
   web_app: webApp,

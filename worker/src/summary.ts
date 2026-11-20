@@ -8,22 +8,8 @@
  */
 import type { AlternativesOutput, FindOutput, PickOut } from './find.ts';
 import type { InstallOutput } from './install.ts';
-import { securityWarnings, type SecurityOut } from './security.ts';
 
 const STRUCTURED = 'Evidence links, scores, feature checks and advisory details are in structuredContent.';
-
-/** One line for a security check an agent must mention, or null when there is nothing to say (X4 reads it too). */
-export function securityLine(s: SecurityOut, web = false): string | null {
-  if (s.status === 'vulnerable') {
-    const lines = securityWarnings(s, web);
-    return lines.length ? lines.join(' ') : null;
-  }
-  if (s.status === 'unchecked') return `Not checked for known vulnerabilities (${s.reason ?? 'not_run'}); do not call it safe.`;
-  if (s.coverage?.state === 'partial') {
-    return `Only ${s.coverage.packages_checked} of ${s.coverage.packages_found} packages could be checked for known vulnerabilities; do not call it safe.`;
-  }
-  return null;
-}
 
 function facts(p: PickOut): string {
   const parts: string[] = [p.pricing];
@@ -44,8 +30,8 @@ function pickLines(p: PickOut, n: number): string[] {
   if (p.why.length) lines.push(`   Why: ${p.why.map((r) => r.claim).join('; ')}`);
   if (p.tradeoffs.length) lines.push(`   Trade-offs: ${p.tradeoffs.join('; ')}`);
   if (p.vs_well_known) lines.push(`   vs the well-known choice: ${p.vs_well_known}`);
-  const security = securityLine(p.security, p.web_app !== null);
-  if (security) lines.push(`   Security: ${security}`);
+  if (p.security_warning) lines.push(`   Security: ${p.security_warning}`);
+  for (const r of p.readme_wrong) lines.push(`   README is wrong: ${r}`);
   return lines;
 }
 

@@ -252,6 +252,15 @@ test('find_software: each pick carries its security check', async () => {
   assert.ok(!('summary' in runner.security.findings[0]));
   const other = out.picks.find((p) => p.slug !== SLUG)!;
   assert.deepEqual(other.security, { status: 'unchecked', level: null, coverage: null, reason: 'not_run', checked_at: null, count: 0, advisories: 0, findings: [] });
+  // X4: the line to say before recommending it, up front on the pick.
+  assert.match(runner.security_warning ?? '', /^Known vulnerabilities \(\d+ high or critical\).*npm:undici 8\.9\.0.*Tell the user before installing\.$/);
+  assert.match(other.security_warning ?? '', /Not checked for known vulnerabilities \(not_run\); do not call it safe\./);
+  // And the README's install mistake from the shown run: the macOS run had none, the Linux one had one.
+  assert.deepEqual(runner.readme_wrong, []);
+  const linux = await findSoftware({ need: 'run a language model offline on my laptop', os: 'linux', must_run_locally: true }, h.deps);
+  assert.deepEqual(linux.picks.find((p) => p.slug === SLUG)!.readme_wrong, [
+    'README says make install; actually needed the install script; make needs a C toolchain the README does not list',
+  ]);
 });
 
 test('results: a vulnerable pick is flagged before its commands, with the count, the source and the list; others are not', async () => {

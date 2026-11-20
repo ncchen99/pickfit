@@ -573,6 +573,8 @@ function pick(overrides: Partial<PickOut> = {}): PickOut {
     features: { recorded: false, checked: [], not_checked: [] },
     scores: { quality: 80, popularity: 10, treasure: false },
     security: { status: 'unchecked', level: null, coverage: null, reason: 'not_run', checked_at: null, count: 0, advisories: 0, findings: [] },
+    security_warning: null,
+    readme_wrong: [],
     repo: 'https://github.com/a/tool',
     homepage: null,
     web_app: null,
