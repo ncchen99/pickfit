@@ -1,0 +1,1612 @@
+{
+  "schema_version": "software.v1",
+  "slug": "prometheus-prometheus",
+  "repo_id": "gh:6838921",
+  "name": "Prometheus",
+  "summary": "A systems and service monitoring system that scrapes metrics from targets, stores them as time series, evaluates rules and triggers alerts.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "infra_devops",
+  "kind": "server_daemon",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "alerting",
+    "graphing",
+    "hacktoberfest",
+    "metrics",
+    "monitoring",
+    "prometheus",
+    "time-series"
+  ],
+  "use_cases": [
+    "collect metrics from services at regular intervals",
+    "trigger alerts when metric conditions are met",
+    "query time series data with PromQL"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "multi-dimensional time series data model",
+    "query metrics with PromQL",
+    "pull metrics over HTTP",
+    "discover targets via service discovery",
+    "graphing and dashboarding",
+    "hierarchical and horizontal federation"
+  ],
+  "capabilities": [
+    {
+      "label": "Collect metrics from configured targets",
+      "area": "monitoring"
+    },
+    {
+      "label": "Query time series with PromQL",
+      "area": "query"
+    },
+    {
+      "label": "Trigger alerts on specified conditions",
+      "area": "alerting"
+    },
+    {
+      "label": "Evaluate rule expressions",
+      "area": "alerting"
+    },
+    {
+      "label": "Store multi-dimensional time series data",
+      "area": "storage"
+    },
+    {
+      "label": "Push time series via gateway",
+      "area": "ingestion"
+    },
+    {
+      "label": "Accept remote write requests",
+      "area": "integrations"
+    },
+    {
+      "label": "Accept OTLP write requests",
+      "area": "integrations"
+    },
+    {
+      "label": "Run in Agent mode",
+      "area": "modes"
+    },
+    {
+      "label": "Send notifications to Alertmanager",
+      "area": "alerting"
+    },
+    {
+      "label": "Automatically reload configuration file",
+      "area": "configuration"
+    },
+    {
+      "label": "Enable TLS or authentication",
+      "area": "security"
+    },
+    {
+      "label": "Serve console templates",
+      "area": "output"
+    },
+    {
+      "label": "Admin control API endpoints",
+      "area": "api"
+    },
+    {
+      "label": "Run rule tests with promtool",
+      "area": "subcommands"
+    }
+  ],
+  "why_worth_it": null,
+  "homepage": "https://prometheus.io/",
+  "repo": {
+    "url": "https://github.com/prometheus/prometheus",
+    "full_name": "prometheus/prometheus",
+    "created_at": "2012-11-24T11:14:12Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "Go (version in go.mod or greater), for building from source",
+      "NodeJS (version in .nvmrc or greater), for building from source",
+      "npm>=10, for building from source"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-prometheus-prometheus-20261120-195305-848d",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone --depth 1 https://github.com/prometheus/prometheus.git ~/prometheus",
+          "purpose": "git clone --depth 1 the repository"
+        },
+        {
+          "command": "cd ~/prometheus && go install github.com/prometheus/prometheus/cmd/...",
+          "purpose": "go install github.com/prometheus/prometheus/cmd/... from the clone"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "~/go/bin/prometheus --version",
+        "expected_signal": "prometheus, version"
+      },
+      "first_task": "sleep 6 && curl -sf http://127.0.0.1:9090/-/healthy && curl -sf 'http://127.0.0.1:9090/api/v1/targets?state=active' | python3 -c 'import json,sys; [print(t[\"discoveredLabels\"].get(\"__meta_filepath\",\"\"), t[\"labels\"], t[\"health\"], t[\"scrapeUrl\"]) for t in json.load(sys.stdin)[\"data\"][\"activeTargets\"]]"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v3.16.0",
+    "published_at": "2026-11-05T16:06:52Z",
+    "url": "https://github.com/prometheus/prometheus/releases/tag/v3.16.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-20T20:01:56.707979+08:00",
+    "runs": [
+      {
+        "id": "verify-prometheus-prometheus-20261120-195305-848d",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-build:895c1564de8e",
+        "checked_at": "2026-11-20T20:01:56.707979+08:00",
+        "tool_version": null,
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone --depth 1 https://github.com/prometheus/prometheus.git ~/prometheus",
+            "purpose": "git clone --depth 1 the repository"
+          },
+          {
+            "command": "cd ~/prometheus && go install github.com/prometheus/prometheus/cmd/...",
+            "purpose": "go install github.com/prometheus/prometheus/cmd/... from the clone"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "~/go/bin/prometheus --version",
+            "expected_signal": "prometheus, version",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "prometheus, version (branch: , revision: 2b311b9762bb5834a17374fcf45a8e5b2043293f)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "sleep 6 && curl -sf http://127.0.0.1:9090/-/healthy && curl -sf 'http://127.0.0.1:9090/api/v1/targets?state=active' | python3 -c 'import json,sys; [print(t[\"discoveredLabels\"].get(\"__meta_filepath\",\"\"), t[\"labels\"], t[\"health\"], t[\"scrapeUrl\"]) for t in json.load(sys.stdin)[\"data\"][\"activeTargets\"]]'",
+            "expected_signal": "Prometheus Server is Healthy.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Prometheus Server is Healthy.",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/prom && cat > /tmp/prom/targets.json <<'EOF'\n[{\"targets\":[\"127.0.0.1:9090\"],\"labels\":{\"env\":\"demo\",\"team\":\"sre\"}}]\nEOF\ncat > /tmp/prom/your_config.yml <<'EOF'\nglobal:\n  scrape_interval: 2s\nscrape_configs:\n  - job_name: prometheus\n    static_configs:\n      - targets: [\"localhost:9090\"]\n  - job_name: filesd\n    file_sd_configs:\n      - files: [\"/tmp/prom/targets.json\"]\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd ~/prometheus && ~/go/bin/prometheus --config.file=/tmp/prom/your_config.yml --storage.tsdb.path=/tmp/prom/data",
+                "background": true,
+                "port": 9090
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -sf http://127.0.0.1:9090/api/v1/query --data-urlencode 'query=up{team=\"sre\"}' && echo && curl -sf http://127.0.0.1:9090/api/v1/query --data-urlencode 'query=count by (job) (up == 1)'",
+            "expected_signal": "\"status\":\"success\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"status\":\"success\",\"data\":{\"resultType\":\"vector\",\"result\":[{\"metric\":{\"__name__\":\"up\",\"env\":\"demo\",\"instance\":\"127.0.0.1:9090\",\"job\":\"filesd\",\"team\":\"sre\"},\"value\":[1795176099.047,\"1\"]}]}}",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/prom && cat > /tmp/prom/targets.json <<'EOF'\n[{\"targets\":[\"127.0.0.1:9090\"],\"labels\":{\"env\":\"demo\",\"team\":\"sre\"}}]\nEOF\ncat > /tmp/prom/your_config.yml <<'EOF'\nglobal:\n  scrape_interval: 2s\nscrape_configs:\n  - job_name: prometheus\n    static_configs:\n      - targets: [\"localhost:9090\"]\n  - job_name: filesd\n    file_sd_configs:\n      - files: [\"/tmp/prom/targets.json\"]\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd ~/prometheus && ~/go/bin/prometheus --config.file=/tmp/prom/your_config.yml --storage.tsdb.path=/tmp/prom/data",
+                "background": true,
+                "port": 9090
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "go install github.com/prometheus/prometheus/cmd/... then run `prometheus`",
+            "actually_needed": "Binaries go to ~/go/bin, which is not on PATH by default; called as ~/go/bin/prometheus. Version string is empty (no ldflags) with go install.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Building from source needs Go",
+            "actually_needed": "Go toolchain (box had Go 1.27.4); build took ~150s. Server was run from the repo root, as the README advises for go install builds (web assets).",
+            "kind": "note"
+          },
+          {
+            "readme_said": "prometheus --config.file=your_config.yml",
+            "actually_needed": "Wrote own config; also passed --storage.tsdb.path=/tmp/prom/data to keep data out of the repo dir.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Prometheus reports healthy, both file-SD and static targets are up, PromQL queries return success with expected results, and --version prints build info (empty version string from a source build).",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-prometheus-prometheus-20261120-195305-848d/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-prometheus-prometheus-20261120-195305-848d/check-1-cmd6.judged.png",
+            "runs/verify/verify-prometheus-prometheus-20261120-195305-848d/check-2-cmd7.judged.png",
+            "runs/verify/verify-prometheus-prometheus-20261120-195305-848d/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.173308,
+        "features": [
+          {
+            "feature": "multi-dimensional time series data model",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "query metrics with PromQL",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "pull metrics over HTTP",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "discover targets via service discovery",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "graphing and dashboarding",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          },
+          {
+            "feature": "hierarchical and horizontal federation",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v2",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/prometheus/prometheus@2b311b9762bb",
+      "compliance/go.mod",
+      "go.mod",
+      "web/ui/pnpm-lock.yaml",
+      "web/ui/react-app/pnpm-lock.yaml",
+      "sbom:verify-prometheus-prometheus-20261120-195305-848d (452 packages installed)"
+    ],
+    "packages_checked": 2014,
+    "findings_total": 12,
+    "advisories_total": 12,
+    "findings": [
+      {
+        "package": "go:github.com/prometheus/prometheus",
+        "version": "v0.0.0-20261119150326-2b311b9762bb",
+        "advisory": "GHSA-8rm2-7qqf-34qm",
+        "cves": [
+          "CVE-2026-42154"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.305.2",
+        "summary": "Prometheus: Remote read endpoint allows denial of service via crafted snappy payload",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-04-13T11:32:08Z",
+        "scope": "runtime",
+        "paths": [
+          "installed > /go/bin/prometheus > github.com/prometheus/prometheus"
+        ],
+        "found_in": "sbom:verify-prometheus-prometheus-20261120-195305-848d",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00813,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "reachability": {
+          "method": "govulncheck_binary",
+          "result": "reachable",
+          "evidence": [
+            "govulncheck -mode=binary symbol level, /home/sbx/go/bin/prometheus: labelGenericQueriers.SplitByHalf"
+          ]
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2021-0142",
+        "cves": [
+          "CVE-2020-16845"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.13.15",
+        "summary": "Unbounded read from invalid inputs in encoding/binary",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /go/bin/prometheus > stdlib"
+        ],
+        "found_in": "sbom:verify-prometheus-prometheus-20261120-195305-848d",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04861,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:ReadUvarint",
+          "symbol:ReadVarint"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "storage/remote/chunked.go:114: size, err := binary.ReadUvarint(r.b)"
+          ]
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2023-1571",
+        "cves": [
+          "CVE-2022-41723"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.19.6",
+        "summary": "Denial of service via crafted HTTP/2 stream in net/http and golang.org/x/net",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /go/bin/prometheus > stdlib"
+        ],
+        "found_in": "sbom:verify-prometheus-prometheus-20261120-195305-848d",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04561,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:Client.Do",
+          "symbol:Client.Get",
+          "symbol:Client.Head"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "cmd/prometheus/main.go:1320: reloadReady.once.Do(func() {"
+          ]
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2022-0535",
+        "cves": [
+          "CVE-2020-0601"
+        ],
+        "severity": "UNKNOWN",
+        "fixed_in": "1.12.16",
+        "summary": "Certificate validation bypass on Windows in crypto/x509",
+        "malicious": false,
+        "scope": "runtime",
+        "paths": [
+          "installed > /go/bin/prometheus > stdlib"
+        ],
+        "found_in": "sbom:verify-prometheus-prometheus-20261120-195305-848d",
+        "in_artifact": true,
+        "kev": true,
+        "epss": 0.89078,
+        "preconditions": [
+          "symbol:Certificate.systemVerify"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2025-3563",
+        "cves": [
+          "CVE-2025-22871"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "1.23.8",
+        "summary": "Request smuggling due to acceptance of invalid chunked data in net/http",
+        "malicious": false,
+        "scope": "runtime",
+        "paths": [
+          "installed > /go/bin/prometheus > stdlib"
+        ],
+        "found_in": "sbom:verify-prometheus-prometheus-20261120-195305-848d",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00842,
+        "preconditions": [
+          "symbol:chunkedReader.Read",
+          "symbol:readChunkLine"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2022-0229",
+        "cves": [
+          "CVE-2020-7919"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.12.16",
+        "summary": "Panic in certificate parsing in crypto/x509 and golang.org/x/crypto/cryptobyte",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /go/bin/prometheus > stdlib"
+        ],
+        "found_in": "sbom:verify-prometheus-prometheus-20261120-195305-848d",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.02647,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:crypto/x509",
+          "symbol:golang.org/x/crypto/cryptobyte"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2022-0288",
+        "cves": [
+          "CVE-2021-44716"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.16.12",
+        "summary": "Unbounded memory growth in net/http and golang.org/x/net/http2",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /go/bin/prometheus > stdlib"
+        ],
+        "found_in": "sbom:verify-prometheus-prometheus-20261120-195305-848d",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04254,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:http2serverConn.canonicalHeader",
+          "symbol:Server.ServeConn",
+          "symbol:serverConn.canonicalHeader"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "cmd/prometheus/main.go:26: \"net/http\"",
+            "no call to http2serverConn.canonicalHeader, Server.ServeConn, serverConn.canonicalHeader found"
+          ]
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2022-0536",
+        "cves": [
+          "CVE-2019-9512",
+          "CVE-2019-9514"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.11.13",
+        "summary": "Reset flood in net/http and golang.org/x/net/http",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /go/bin/prometheus > stdlib"
+        ],
+        "found_in": "sbom:verify-prometheus-prometheus-20261120-195305-848d",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.83958,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:http2serverConn.scheduleFrameWrite",
+          "symbol:http2serverConn.serve",
+          "symbol:http2serverConn.writeFrame"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "cmd/prometheus/main.go:26: \"net/http\"",
+            "no call to http2serverConn.scheduleFrameWrite, http2serverConn.serve, http2serverConn.writeFrame found"
+          ]
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2022-0969",
+        "cves": [
+          "CVE-2022-27664"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.18.6",
+        "summary": "Denial of service in net/http and golang.org/x/net/http2",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /go/bin/prometheus > stdlib"
+        ],
+        "found_in": "sbom:verify-prometheus-prometheus-20261120-195305-848d",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.03487,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:ListenAndServe",
+          "symbol:ListenAndServeTLS",
+          "symbol:Serve"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "cmd/prometheus/main.go:26: \"net/http\"",
+            "no call to ListenAndServe, ListenAndServeTLS, Serve found"
+          ]
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2023-2102",
+        "cves": [
+          "CVE-2023-39325"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.10",
+        "summary": "HTTP/2 rapid reset can cause excessive work in net/http",
+        "malicious": false,
+        "scope": "runtime",
+        "paths": [
+          "installed > /go/bin/prometheus > stdlib"
+        ],
+        "found_in": "sbom:verify-prometheus-prometheus-20261120-195305-848d",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.03796,
+        "preconditions": [
+          "symbol:ListenAndServe",
+          "symbol:ListenAndServeTLS",
+          "symbol:Serve"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "cmd/prometheus/main.go:26: \"net/http\"",
+            "no call to ListenAndServe, ListenAndServeTLS, Serve found"
+          ]
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "npm:immutable",
+        "version": "5.1.5",
+        "advisory": "GHSA-v56q-mh7h-f735",
+        "cves": [
+          "CVE-2026-59879"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.1.8",
+        "summary": "Immutable.js `List` 32-bit trie overflow → unrecoverable DoS",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-25T22:57:29Z",
+        "scope": "runtime",
+        "paths": [
+          "web/ui/react-app > sass > immutable"
+        ],
+        "workspace": ".",
+        "found_in": "web/ui/react-app/pnpm-lock.yaml",
+        "kev": false,
+        "epss": 0.00575,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:List"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "unknown",
+          "evidence": [
+            "web/ui/mantine-ui/src/pages/query/ExplainViews/BinaryExpr/VectorVector.tsx:19: List,",
+            "named only in files that do not import immutable"
+          ]
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "npm:immutable",
+        "version": "5.1.5",
+        "advisory": "GHSA-xvcm-6775-5m9r",
+        "cves": [
+          "CVE-2026-59880"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.1.8",
+        "summary": "Immutable: Hash-collision algorithmic complexity denial of service in Immutable.Map/Set",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-25T22:57:29Z",
+        "scope": "runtime",
+        "paths": [
+          "web/ui/react-app > sass > immutable"
+        ],
+        "workspace": ".",
+        "found_in": "web/ui/react-app/pnpm-lock.yaml",
+        "kev": false,
+        "epss": 0.00665,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      }
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T20:02:11+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "installed_artifact",
+      "commit": "2b311b9762bb5834a17374fcf45a8e5b2043293f",
+      "run_id": "verify-prometheus-prometheus-20261120-195305-848d",
+      "tool_version": "prometheus, version (revision 2b311b9762bb5834a17374fcf45a8e",
+      "artifact_sha256": [
+        "d796781db65ff4c38e8e0ddd7460ac5b2bfeb8cf3d2c3abee0f1abb4d1134160",
+        "d1c1f91fa4a719421142f0f4b42ac30a9c1c23a42fe76cc534bf4e69dd63afb2"
+      ],
+      "packages": {
+        "go": 260,
+        "npm": 1754
+      },
+      "scopes": {
+        "runtime": 473,
+        "peer": 106,
+        "dev": 1435
+      },
+      "advisories_fetched_at": "2026-11-20T20:02:11+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 300,
+      "details": "security/prometheus-prometheus.json",
+      "details_sha256": "200a7b3fa5abc15588d9b4926338806ce017619a59b390a784b76c1ade02c514"
+    },
+    "assessment": {
+      "level": "exposed",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-8rm2-7qqf-34qm go:github.com/prometheus/prometheus@v0.0.0-20261119150326-2b311b9762bb (exposed)",
+        "worst:GO-2021-0142 go:stdlib@go1.27.4 (exposed)",
+        "worst:GO-2023-1571 go:stdlib@go1.27.4 (exposed)"
+      ],
+      "counts": {
+        "exposed": 3,
+        "conditional": 9,
+        "not_shipped": 65
+      },
+      "uncounted": 223,
+      "assessed_at": "2026-11-20T20:02:11+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "installed_artifact",
+      "packages_found": 2014,
+      "packages_checked": 2014,
+      "components": [
+        {
+          "ecosystem": "go",
+          "component": "compliance/go.mod",
+          "status": "scanned",
+          "packages": 105,
+          "gaps": []
+        },
+        {
+          "ecosystem": "go",
+          "component": "go.mod",
+          "status": "scanned",
+          "packages": 252,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "web/ui/pnpm-lock.yaml",
+          "status": "scanned",
+          "packages": 702,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "web/ui/react-app/pnpm-lock.yaml",
+          "status": "scanned",
+          "packages": 1397,
+          "gaps": []
+        },
+        {
+          "ecosystem": "go",
+          "component": "sbom:verify-prometheus-prometheus-20261120-195305-848d",
+          "status": "scanned",
+          "packages": 447,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
+  },
+  "scores": {
+    "formula_version": "b3.v7",
+    "computed_at": "2026-11-20T20:02:11+08:00",
+    "quality": {
+      "total": 79.0,
+      "raw_total": 85.1,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.75,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      },
+      "security": {
+        "level": "exposed",
+        "basis": "assessment",
+        "effect": "capped",
+        "deduction": 0.0
+      }
+    },
+    "popularity": {
+      "score": 98.0,
+      "signals": {
+        "stars": 67736,
+        "monthly_downloads": 2418,
+        "forks": 11050,
+        "dependents": null,
+        "release_downloads": 1753403,
+        "hn_top_score": 287,
+        "registries_count": 1
+      },
+      "age_days": 5109,
+      "packages": [
+        "homebrew:prometheus"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 1.58
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:01:56.720079+08:00",
+      "sources_sha": "12f694a8c0ad7b0c46b3c5f6d7392de5bab2e27c63ee80781d63377f2268da50",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "It collects metrics\nfrom configured targets at given intervals, evaluates rule expressions,\ndisplays the results, and can trigger alerts when specified conditions are observed."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "is a systems and service monitoring system"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "* Go: Version specified in [go.mod](./go.mod) or greater."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "docker run --name prometheus -d -p 127.0.0.1:9090:9090 prom/prometheus"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "Prometheus will now be reachable at <http://localhost:9090/>."
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "An example of the above configuration file can be found [here.]"
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Apache License 2.0, see [LICENSE](https://github.com/prometheus/prometheus/blob/main/LICENSE)."
+        }
+      },
+      "unquoted": [],
+      "input_sha": "781ada5ff00a1af1c335852645d39564d6a5f3f922661da95b514e2b08765ed5",
+      "prompt_version": "rubric-p1",
+      "renderer_version": "r1",
+      "grader": "anthropic"
+    },
+    "inputs": {
+      "version": "inputs.v1",
+      "github": {
+        "source": "pipeline_db",
+        "fetched_at": "2026-11-20T19:52:48+08:00",
+        "stars": 67736,
+        "forks": 11050,
+        "open_issues": 1131,
+        "created_at": "2012-11-24T11:14:12Z",
+        "pushed_at": "2026-11-20T05:18:50Z",
+        "releases": [
+          {
+            "tag": "v3.16.0",
+            "published_at": "2026-11-05T16:06:52Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 201553
+          },
+          {
+            "tag": "v3.16.0-rc.4",
+            "published_at": "2026-11-03T19:23:03Z",
+            "prerelease": true,
+            "notes_chars": 4000,
+            "downloads": 914
+          },
+          {
+            "tag": "v3.16.0-rc.2",
+            "published_at": "2026-10-28T16:47:18Z",
+            "prerelease": true,
+            "notes_chars": 3999,
+            "downloads": 1782
+          },
+          {
+            "tag": "v3.15.1",
+            "published_at": "2026-10-21T16:15:57Z",
+            "prerelease": false,
+            "notes_chars": 461,
+            "downloads": 421227
+          },
+          {
+            "tag": "v3.13.5",
+            "published_at": "2026-10-21T12:06:36Z",
+            "prerelease": false,
+            "notes_chars": 638,
+            "downloads": 83739
+          },
+          {
+            "tag": "v3.13.4",
+            "published_at": "2026-10-02T14:46:21Z",
+            "prerelease": false,
+            "notes_chars": 558,
+            "downloads": 73430
+          },
+          {
+            "tag": "v3.15.0",
+            "published_at": "2026-09-25T08:56:22Z",
+            "prerelease": false,
+            "notes_chars": 3999,
+            "downloads": 857146
+          },
+          {
+            "tag": "v3.15.0-rc.1",
+            "published_at": "2026-09-22T10:07:36Z",
+            "prerelease": true,
+            "notes_chars": 84,
+            "downloads": 1626
+          },
+          {
+            "tag": "v3.15.0-rc.0",
+            "published_at": "2026-09-14T19:17:49Z",
+            "prerelease": true,
+            "notes_chars": 3999,
+            "downloads": 2624
+          },
+          {
+            "tag": "v3.13.3",
+            "published_at": "2026-09-07T14:18:03Z",
+            "prerelease": false,
+            "notes_chars": 956,
+            "downloads": 109362
+          }
+        ],
+        "contributors": null,
+        "files": {
+          "count": 1776,
+          "truncated": false,
+          "ci": ".github/workflows/approve-workflows.yml",
+          "tests": ".agents/skills/contributor-trust/scripts/test_score_contributors.py",
+          "changelog": "CHANGELOG.md",
+          "lockfile": "compliance/go.sum"
+        }
+      },
+      "issues": {
+        "source": "github_live",
+        "fetched_at": "2026-11-20T20:01:56+08:00",
+        "items": [
+          {
+            "created_at": "2026-11-20T11:21:46Z",
+            "closed_at": null,
+            "association": "MEMBER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T00:46:45Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T23:53:50Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T14:20:29Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T09:27:56Z",
+            "closed_at": "2026-11-19T09:31:50Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T08:20:47Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T06:16:50Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T06:03:08Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T06:01:27Z",
+            "closed_at": "2026-11-19T15:03:28Z",
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T05:52:36Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T05:40:15Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T05:18:51Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-18T07:07:31Z",
+            "closed_at": "2026-11-19T08:24:04Z",
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T21:20:26Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T20:29:02Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T18:56:31Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T17:34:34Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T12:19:43Z",
+            "closed_at": null,
+            "association": "MEMBER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-16T12:11:25Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-14T23:14:26Z",
+            "closed_at": "2026-11-16T10:43:00Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-14T12:59:51Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-14T00:39:54Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-13T14:54:42Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-13T14:54:41Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-13T06:26:26Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-13T06:25:45Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-12T17:41:24Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-11T19:02:46Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          }
+        ],
+        "pull_requests": 72,
+        "page_full": true
+      }
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/prometheus/prometheus",
+      "fetched_at": "2026-11-20T19:52:50+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/prometheus/prometheus/blob/main/README.md",
+      "fetched_at": "2026-11-20T19:52:48+08:00"
+    },
+    {
+      "id": "release:v3.16.0",
+      "kind": "release",
+      "url": "https://github.com/prometheus/prometheus/releases/tag/v3.16.0",
+      "fetched_at": "2026-11-20T19:52:48+08:00"
+    },
+    {
+      "id": "help:verify-prometheus-prometheus-20261120-195305-848d:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T20:04:56+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "The [prometheus/prometheus](https://github.com/prometheus/prometheus) repository builds a stand-alone program and is not\ndesigned for use as a library.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:52:59+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "builds a stand-alone program and is not\ndesigned for use as a library",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:52:59+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "is a systems and service monitoring system",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:52:59+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "It collects metrics\nfrom configured targets at given intervals, evaluates rule expressions,\ndisplays the results, and can trigger alerts when specified conditions are observed.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:52:59+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "github_api",
+      "quote": "The Prometheus monitoring system and time series database.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:52:59+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "* Go: Version specified in [go.mod](./go.mod) or greater.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:52:59+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/1",
+      "source_id": "readme",
+      "quote": "* NodeJS: Version specified in [.nvmrc](./web/ui/.nvmrc) or greater.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:52:59+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/2",
+      "source_id": "readme",
+      "quote": "* npm: Version 10 or greater",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:52:59+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:52:50+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:52:50+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-20T19:52:50+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:52:50+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:52:50+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v3.16.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:52:48+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "Using the latest production release binary\nis the recommended way to install Prometheus.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:52:59+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "It collects metrics\nfrom configured targets at given intervals",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:52:59+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "can trigger alerts when specified conditions are observed",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:52:59+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "PromQL, a **powerful and flexible query language** to leverage this dimensionality",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:52:59+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "A **multi-dimensional** data model (time series defined by metric name and set of key/value dimensions)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:52:59+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "PromQL, a **powerful and flexible query language** to leverage this dimensionality",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:52:59+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "An HTTP **pull model** for time series collection",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:52:59+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Targets are discovered via **service discovery** or **static configuration**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:52:59+08:00"
+    },
+    {
+      "field": "/features/4",
+      "source_id": "readme",
+      "quote": "Multiple modes of **graphing and dashboarding support**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:52:59+08:00"
+    },
+    {
+      "field": "/features/5",
+      "source_id": "readme",
+      "quote": "Support for hierarchical and horizontal **federation**",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:52:59+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "It collects metrics\nfrom configured targets at given intervals",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:04:56+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "PromQL, a **powerful and flexible query language** to leverage this dimensionality",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:04:56+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "can trigger alerts when specified conditions are observed",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:04:56+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "evaluates rule expressions",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:04:56+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "A **multi-dimensional** data model (time series defined by metric name and set of key/value dimensions)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:04:56+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "**Pushing time series** is supported via an intermediary gateway for batch jobs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:04:56+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "help:verify-prometheus-prometheus-20261120-195305-848d:1",
+      "quote": "Enable API endpoint accepting remote write requests.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:04:56+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "help:verify-prometheus-prometheus-20261120-195305-848d:1",
+      "quote": "Enable API endpoint accepting OTLP write requests.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:04:56+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "release:v3.16.0",
+      "quote": "Support metadata-wal-records in Prometheus Agent mode.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:04:56+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "help:verify-prometheus-prometheus-20261120-195305-848d:1",
+      "quote": "Minimum amount of time to wait before resending an alert to\n                                 Alertmanager.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:04:56+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "help:verify-prometheus-prometheus-20261120-195305-848d:1",
+      "quote": "Enable automatic configuration file reloading.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:04:56+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "help:verify-prometheus-prometheus-20261120-195305-848d:1",
+      "quote": "Path to configuration file that can enable TLS or\n                                 authentication.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:04:56+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "help:verify-prometheus-prometheus-20261120-195305-848d:1",
+      "quote": "Path to the console template directory, available at /consoles.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:04:56+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "help:verify-prometheus-prometheus-20261120-195305-848d:1",
+      "quote": "Enable API endpoints for admin control actions.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:04:56+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "release:v3.16.0",
+      "quote": "print test filename during promtool tests",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:04:56+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-20T19:52:48+08:00",
+  "updated_at": "2026-11-20T20:04:56+08:00"
+}
