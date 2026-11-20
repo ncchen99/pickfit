@@ -3,6 +3,8 @@
  * sandbox, or done by hand on a real machine). No model call. README claims
  * that were never run are not in the index, so they cannot leak out here.
  */
+import { withLang } from './i18n.ts';
+import { releasedAfter } from './freshness.ts';
 import {
   bestGuide,
   isWebApp,
@@ -245,6 +247,10 @@ export function installGuide(catalog: Catalog, input: InstallInput, now = new Da
   if (steps.some((s) => s.needs_sudo)) {
     warnings.push('A step uses sudo. Ask the user before running it.');
   }
+  // A release after the check: say so before the steps (English, like the rest). How old the check is stays on
+  // find_software's pick (freshness), where the clock is the request's.
+  const stale = run ? withLang('en', () => releasedAfter(run.checked_at, entry.last_release)) : null;
+  if (stale) warnings.push(`${stale} If a step fails, tell the user the steps predate it and report_outcome.`);
   return {
     // A rec_id from find_* is kept; otherwise this guide issues one, so report_outcome can cite it.
     rec_id: input.rec_id && REC_ID.test(input.rec_id) ? input.rec_id : newId('rec'),

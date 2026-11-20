@@ -37,6 +37,8 @@ import { renderCompare } from './pages/compare.ts';
 import { renderAbout, renderAgents, renderHow, renderNotFound } from './pages/info.ts';
 import { renderSubmissionLive, renderSubmissionPage, renderSubmitForm, type SubmissionView } from './pages/submit.ts';
 import { renderTool } from './pages/tool.ts';
+import { reportOutcome, type OutcomeInput } from './outcome.ts';
+import { reporterFrom } from './events.ts';
 import { findInput } from './server.ts';
 import { submissionById, SubmitError, submitSoftware } from './submit.ts';
 import { osName } from './ui/facts.ts';
@@ -520,6 +522,24 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
           return failed(withLang(lang, () => L('That isn’t a link Fitz can take. Paste a GitHub repository, like github.com/you/your-app, or the https address of a public web app.', '這個連結 Fitz 收不了。請貼上 GitHub 專案，例如 github.com/you/your-app，或公開網頁應用的 https 網址。')), 400);
         }
       }
+      if (url.pathname === '/report' && request.method === 'POST') {
+        // F1: the tool page's "It didn't install for me". Same guard as a search; the rate limit is the search's.
+        if (!validateHostHeader(request.headers.get('host') ?? url.host, hosts).ok || !validateOriginHeader(request.headers.get('origin'), hosts).ok) {
+          return new Response('Forbidden', { status: 403 });
+        }
+        const text = await readBody(request, BODY_MAX_BYTES);
+        const form = new URLSearchParams(text ?? '');
+        const slug = (form.get('slug') ?? '').toLowerCase();
+        const os = form.get('os') ?? '';
+        if (text === null || !SLUG.test(slug) || !catalog.bySlug.has(slug) || !OS_VALUES.has(os)) return new Response('Bad request', { status: 400 });
+        if (!(await allow(request, env))) return new Response('Too many reports from here; try again in a minute.', { status: 429, headers: { 'retry-after': '60' } });
+        // No rec_id: stored for people to read, not counted and no re-run queued (outcome.ts); the page says so.
+        await reportOutcome(
+          { slug, stage: 'install_failed', os: os as OutcomeInput['os'], ...(form.get('error')?.trim() ? { error_excerpt: form.get('error')!.trim() } : {}) },
+          { catalog, db: env.DB, now, reporter: reporterFrom(request.headers.get('x-pickfit-reporter')), client: 'web' },
+        );
+        return new Response(null, { status: 303, headers: { location: `/tool/${slug}?reported=1#report`, 'cache-control': 'no-store', ...keep } });
+      }
       const submission = /^\/submit\/(sub_[a-z0-9]{1,64})\/?$/.exec(url.pathname);
       if (submission && (request.method === 'GET' || request.method === 'HEAD')) {
         const row = await submissionById(env.DB, submission[1]);
@@ -543,7 +563,7 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
         if (tool) {
           const slug = decodeURIComponent(tool[1]).toLowerCase();
           const entry = SLUG.test(slug) ? shown.bySlug.get(slug) : undefined;
-          return entry ? render((nonce) => renderTool(shown, entry, nonce)) : render((nonce) => renderNotFound(nonce), 404);
+          return entry ? render((nonce) => renderTool(shown, entry, nonce, { reported: url.searchParams.get('reported') === '1' })) : render((nonce) => renderNotFound(nonce), 404);
         }
         if (url.pathname === '/browse') return render((nonce) => renderBrowse(shown, url.searchParams, nonce));
         if (url.pathname === '/compare') return render((nonce) => renderCompare(shown, url.searchParams, nonce));

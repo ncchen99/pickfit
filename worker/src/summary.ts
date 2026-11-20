@@ -31,6 +31,7 @@ function pickLines(p: PickOut, n: number): string[] {
   if (p.tradeoffs.length) lines.push(`   Trade-offs: ${p.tradeoffs.join('; ')}`);
   if (p.vs_well_known) lines.push(`   vs the well-known choice: ${p.vs_well_known}`);
   if (p.security_warning) lines.push(`   Security: ${p.security_warning}`);
+  if (p.freshness.warning) lines.push(`   Freshness: ${p.freshness.warning}`);
   for (const r of p.readme_wrong) lines.push(`   README is wrong: ${r}`);
   return lines;
 }

@@ -202,6 +202,13 @@ const pick = z.object({
     gui: gui,
   }),
   features,
+  freshness: z
+    .object({
+      age_days: z.number().int().nullable().describe('Days since pickfit ran the shown steps (or opened the web app)'),
+      last_release: z.string().nullable().describe("The project's last release date"),
+      warning: z.string().nullable().describe('When the check may be out of date (a newer release, or over 90 days old): mention it before the steps'),
+    })
+    .describe('How fresh the check is'),
   how_we_know: z.string(),
   evidence_url: z.string().nullable(),
   scores: z.object({

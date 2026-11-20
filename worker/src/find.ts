@@ -38,6 +38,8 @@ import { instructions, matchInput, matchSchema, type MatchKind, type ModelAnswer
 import { dropNegated, queryTerms, rulesRelevance, rulesTerms, termsAsSaid } from './relevance.ts';
 import { leansInstall, rankByRules, templateReasons } from './rules.ts';
 import { webAppOut, webRanSentence, type WebAppOut } from './webapp.ts';
+import { freshness, type Freshness } from './freshness.ts';
+import { withLang } from './i18n.ts';
 
 /** The language the web page asks the model to write its sentences in; MCP answers stay English. */
 export type AnswerLanguage = 'zh-TW';
@@ -99,6 +101,8 @@ export interface PickOut {
   };
   /** Advertised features the run behind the shown guide exercised, and the ones it did not, with why. */
   features: FeaturesOut;
+  /** How old the shown check is, the last release, and a warning when the steps may be out of date. */
+  freshness: Freshness;
   how_we_know: string;
   evidence_url: string | null;
   scores: { quality: number | null; popularity: number | null; treasure: boolean };
@@ -188,6 +192,7 @@ function pickOut(
   arch: Arch | undefined,
   matchedBy: string,
   considered: number,
+  now: Date,
   videoBase?: string | null,
 ): PickOut {
   const guide = bestGuide(entry, os);
@@ -233,6 +238,8 @@ function pickOut(
       gui: guide?.run.gui ?? null,
     },
     features: featuresOut(entry, guide),
+    // English for agents, like the rest of the answer.
+    freshness: withLang('en', () => freshness(guide?.run.checked_at ?? web?.checked_at ?? null, isWebApp(entry) ? null : entry.last_release, now)),
     how_we_know: howWeKnow(entry, guide, matchedBy, considered, videoBase),
     evidence_url: guide?.run.evidence_url ?? web?.evidence_url ?? null,
     scores: {
@@ -582,7 +589,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     model_attempts: statuses.length,
     model_http_status: httpStatus,
     considered: passed,
-    picks: choice.picks.map((chosen) => pickOut(entries.get(chosen.slug)!, chosen, cond.os, cond.arch, matchedBy, passed, deps.videoBase)),
+    picks: choice.picks.map((chosen) => pickOut(entries.get(chosen.slug)!, chosen, cond.os, cond.arch, matchedBy, passed, now, deps.videoBase)),
     best_free: choice.bestFree,
     no_install_option: choice.noInstall,
     well_known_option: choice.wellKnown.option
