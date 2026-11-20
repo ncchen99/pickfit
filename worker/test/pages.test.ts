@@ -335,3 +335,27 @@ test('the tool page words what pickfit saw for a reader: why a feature was not t
   assert.doesNotMatch(fold, /Chromium|Muse Spark|Claude|visited once|sandboxed browser/);
   assert.match(await get('/tool/fixture-web-sketch?lang=zh-TW'), /pickfit 於 2026年11月2日 在瀏覽器中打開它時，頁面已載入主畫面。/);
 });
+
+test('/agents: one tab per client, each in that client’s own format', async () => {
+  const html = await (await site().get('/agents')).text();
+  const mcp = 'http://127.0.0.1:8787/mcp';
+  for (const id of ['claude_code', 'cursor', 'vscode', 'claude_desktop', 'codex', 'gemini']) {
+    assert.match(html, new RegExp(`role="tab" id="tab-${id}"`), id);
+    assert.match(html, new RegExp(`id="client-${id}" role="tabpanel"`), id);
+  }
+  const text = commandText(html)
+    .replace(/<[^>]+>/g, '')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&#x27;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&');
+  assert.ok(text.includes(`claude mcp add --transport http pickfit ${mcp}`));
+  assert.ok(text.includes(`code --add-mcp '{"name":"pickfit","type":"http","url":"${mcp}"}'`));
+  assert.ok(text.includes(`[mcp_servers.pickfit]\nurl = "${mcp}"`));
+  assert.ok(text.includes(`gemini mcp add --transport http -s user pickfit ${mcp}`));
+  // Cursor's remote entry is just a url; Claude Desktop takes a remote server as a connector, not in its config file.
+  assert.ok(text.includes(JSON.stringify({ mcpServers: { pickfit: { url: mcp } } }, null, 2)));
+  assert.match(html, /Add custom connector/);
+  assert.ok(!text.includes('"type": "http"'), 'no Claude Code-style JSON offered to other clients');
+});

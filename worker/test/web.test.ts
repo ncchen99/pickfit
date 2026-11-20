@@ -689,7 +689,7 @@ test('an MCP server pick shows its handshake and how to add it to an agent', asy
   assert.match(pick, /An MCP client called one of its tools<\/p>/);
   assert.match(pick, /An MCP client handshake over stdio listed its 2 tools \(search_notes, read_note\), and a call to search_notes returned a result\./);
   assert.match(pick, /<h4>Add it to your agent<\/h4><div class="cmd"><pre translate="no"><code>claude mcp add/);
-  assert.match(pick, /JSON for Claude Desktop, Cursor and other clients/);
+  assert.match(pick, /Other clients: Cursor, VS Code, Claude Desktop, Codex, Gemini/);
   assert.match(pick, /<code translate="no">NOTES_SYNC_TOKEN<\/code>: sync service token \(required\)/);
 });
 

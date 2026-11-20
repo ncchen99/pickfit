@@ -232,7 +232,12 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
       : '';
     agent =
       `<h4>${L('Add it to your agent', '加進你的 agent')}</h4>${command(cfg.claude_code)}` +
-      `<details class="json"><summary class="small">${L('JSON for Claude Desktop, Cursor and other clients', 'Claude Desktop、Cursor 等用戶端用的 JSON')}</summary>${command(cfg.json)}</details>` +
+      `<details class="json"><summary class="small">${L('Other clients: Cursor, VS Code, Claude Desktop, Codex, Gemini', '其他用戶端：Cursor、VS Code、Claude Desktop、Codex、Gemini')}</summary>` +
+      cfg.clients
+        .filter((c) => c.client !== 'claude_code')
+        .map((c) => `<h5>${esc(c.label)}</h5><p class="quiet small">${esc(c.where)}</p>${c.text ? command(c.text) : ''}`)
+        .join('') +
+      `</details>` +
       env +
       (cfg.note ? `<p class="quiet small">${esc(cfg.note)}</p>` : '');
   }

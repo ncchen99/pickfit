@@ -392,7 +392,17 @@ export const installOutput = z.object({
       args: z.array(z.string()),
       url: z.string().nullable().describe('streamable_http: where the client connects once the server runs'),
       claude_code: z.string().describe('A `claude mcp add` line for Claude Code'),
-      json: z.string().describe('An mcpServers entry (JSON text) for Claude Desktop, Cursor and other clients'),
+      json: z.string().describe('An mcpServers entry (JSON text); clients has the right format for each client'),
+      clients: z
+        .array(
+          z.object({
+            client: z.enum(['claude_code', 'cursor', 'vscode', 'claude_desktop', 'codex', 'gemini']),
+            label: z.string(),
+            where: z.string().describe('Where the text goes: a terminal, a config file, or the app settings'),
+            text: z.string().nullable().describe('What to run or paste; null when that client cannot add this server'),
+          }),
+        )
+        .describe("How to add it to the user's client, in that client's own format"),
       env: z.array(
         z.object({
           name: z.string(),
@@ -561,7 +571,7 @@ export function buildServer(deps: Deps): McpServer {
       description:
         'Use after the user picks a tool from find_software or find_alternatives. Returns install steps pickfit actually ran (replayed in a fresh sandbox, or by hand), with the OS, date and evidence (verification.video: a short clip of the run, if any), ' +
         'the steps only the user can do (permissions, accounts), a command to verify the install and a first task to try. ' +
-        'For an MCP server, mcp_client_config gives the `claude mcp add` line and the mcpServers JSON for the launch command pickfit started, with placeholders for user keys. ' +
+        'For an MCP server, mcp_client_config.clients says how to add it to each common client, from the launch command pickfit started, with placeholders for user keys. ' +
         'Show each command to the user before running it, and ask before any step that needs sudo or pipes a script into a shell. ' +
         'If applies_to_user_system.match is not "exact", tell the user the steps were checked on a different system. ' +
         'For a web app (web_app set) there are no steps: give the user its URL and the facts pickfit checked.' +

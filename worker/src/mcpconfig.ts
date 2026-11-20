@@ -8,6 +8,7 @@
  * for its test become placeholders. The record keeps the argv exactly as run.
  */
 import type { Entry, InstallGuide } from './catalog.ts';
+import { clientSetups, type ClientSetup } from './clients.ts';
 import { L } from './i18n.ts';
 
 export interface McpClientConfig {
@@ -19,8 +20,10 @@ export interface McpClientConfig {
   url: string | null;
   /** One line for Claude Code. */
   claude_code: string;
-  /** An mcpServers entry for Claude Desktop, Cursor and other clients that read that JSON. */
+  /** An mcpServers entry: a stdio server for Claude Desktop, Cursor and Gemini CLI; an HTTP one for Cursor-style clients. */
   json: string;
+  /** How to add it to each common client, in that client's own format (clients.ts). */
+  clients: ClientSetup[];
   env: { name: string; required: boolean | null; purpose: string | null; placeholder: string }[];
   /** Tool names the handshake listed in the sandbox. */
   tools: string[];
@@ -142,6 +145,10 @@ export function clientConfig(entry: Entry, guide: InstallGuide | null): McpClien
     url: http ? handshake.url! : null,
     claude_code: claude,
     json: JSON.stringify({ mcpServers: { [name]: server } }, null, 2),
+    clients: clientSetups(
+      name,
+      http ? { url: handshake.url! } : { command, args, ...(server.env ? { env: server.env as Record<string, string> } : {}) },
+    ),
     env,
     tools: handshake.tools,
     tool_count: handshake.tool_count,
