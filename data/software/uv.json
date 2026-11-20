@@ -1,0 +1,1281 @@
+{
+  "schema_version": "software.v1",
+  "slug": "uv",
+  "repo_id": "gh:699532645",
+  "name": "uv",
+  "summary": "A Python package and project manager written in Rust that handles dependencies, lockfiles, scripts, tools and Python versions.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "packaging",
+    "python",
+    "resolver",
+    "uv"
+  ],
+  "use_cases": [
+    "manage Python project dependencies with a lockfile",
+    "run a single-file script with inline dependencies",
+    "install multiple Python versions",
+    "compile requirements into a platform-independent file"
+  ],
+  "alternatives_to": [
+    "pip",
+    "poetry",
+    "pipx",
+    "pyenv",
+    "virtualenv"
+  ],
+  "features": [
+    "manage projects with a universal lockfile",
+    "run scripts with inline dependency metadata",
+    "install and manage Python versions",
+    "run and install Python-packaged tools",
+    "use a pip-compatible interface",
+    "organize projects as Cargo-style workspaces"
+  ],
+  "capabilities": [
+    {
+      "label": "manage project dependencies and environments",
+      "area": "projects"
+    },
+    {
+      "label": "project subcommands",
+      "items": [
+        "init",
+        "add",
+        "run",
+        "lock",
+        "sync"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "build and publish projects",
+      "area": "projects"
+    },
+    {
+      "label": "run tools in ephemeral environments",
+      "area": "tools"
+    },
+    {
+      "label": "install command-line tools from Python packages",
+      "area": "tools"
+    },
+    {
+      "label": "install and switch Python versions",
+      "area": "python versions"
+    },
+    {
+      "label": "pin Python version for a directory",
+      "area": "python versions"
+    },
+    {
+      "label": "pip-compatible interface",
+      "items": [
+        "pip",
+        "pip-tools",
+        "virtualenv"
+      ],
+      "area": "pip interface"
+    },
+    {
+      "label": "compile platform-independent requirements files",
+      "area": "pip interface"
+    },
+    {
+      "label": "create virtual environments",
+      "area": "environments"
+    },
+    {
+      "label": "install locked requirements",
+      "area": "pip interface"
+    },
+    {
+      "label": "universal lockfile",
+      "area": "projects"
+    },
+    {
+      "label": "Cargo-style workspaces",
+      "area": "projects"
+    },
+    {
+      "label": "global cache for dependency deduplication",
+      "area": "cache"
+    },
+    {
+      "label": "dependency version overrides",
+      "area": "resolution"
+    },
+    {
+      "label": "self-update to latest version",
+      "area": "subcommands"
+    }
+  ],
+  "why_worth_it": null,
+  "homepage": "https://docs.astral.sh/uv",
+  "repo": {
+    "url": "https://github.com/astral-sh/uv",
+    "full_name": "astral-sh/uv",
+    "created_at": "2023-10-02T20:24:11Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -LsSf https://astral.sh/uv/install.sh | sh",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "uv init example",
+        "expected_signal": "Initialized project `example` at `/home/user/example`"
+      },
+      "first_task": "uv init example"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-uv-20261120-192702-6165",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install uv && ~/.local/bin/uv --version",
+          "purpose": "uv tool install uv"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "which uv uvx && uv --version",
+        "expected_signal": "uv 0.13.9"
+      },
+      "first_task": "rm -rf /tmp/example && cd /tmp && uv init example && cd example && uv add six && uv lock && grep -A2 'name = \"six\"' uv.lock && uv run python -c \"import six; print('six ok', six.__version__)\""
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "powershell -ExecutionPolicy ByPass -c \"irm https://astral.sh/uv/install.ps1 | iex\"",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "uv init example",
+        "expected_signal": "Initialized project `example` at `/home/user/example`"
+      },
+      "first_task": "uv init example"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "0.13.9",
+    "published_at": "2026-11-17T09:57:55Z",
+    "url": "https://github.com/astral-sh/uv/releases/tag/0.13.9"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-20T19:28:32.351900+08:00",
+    "runs": [
+      {
+        "id": "verify-uv-20261120-192702-6165",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:01363ad5a469",
+        "checked_at": "2026-11-20T19:28:32.351900+08:00",
+        "tool_version": "uv 0.13.9 (x86_64-unknown-linux-gnu)",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install uv && ~/.local/bin/uv --version",
+            "purpose": "uv tool install uv"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "which uv uvx && uv --version",
+            "expected_signal": "uv 0.13.9",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "uv 0.13.9 (x86_64-unknown-linux-gnu)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "rm -rf /tmp/example && cd /tmp && uv init example && cd example && uv add six && uv lock && grep -A2 'name = \"six\"' uv.lock && uv run python -c \"import six; print('six ok', six.__version__)\"",
+            "expected_signal": "six ok 1.17.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "six ok 1.17.0",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "uv run /tmp/ex.py",
+            "expected_signal": "six version 1.17.0 PY3: True",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "six version 1.17.0 PY3: True",
+            "setup": [
+              {
+                "command": "cat > /tmp/ex.py <<'EOF'\n# /// script\n# dependencies = [\"six\"]\n# ///\nimport six\nprint(\"six version\", six.__version__, \"PY3:\", six.PY3)\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": false
+          },
+          {
+            "command": "uv python install 3.11 && uv run --python 3.11 -- python --version",
+            "expected_signal": "Python 3.11.18",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Python 3.11.18",
+            "setup": [],
+            "offline": false
+          },
+          {
+            "command": "uvx pycowsay 'hello world!'",
+            "expected_signal": "< hello world! >",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "< hello world! >",
+            "setup": [],
+            "offline": false
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install uv / curl installer",
+            "actually_needed": "uv tool install uv worked (box already had uv; the new install shadows it in ~/.local/bin)",
+            "kind": "note"
+          },
+          {
+            "readme_said": "uv add, uv run script, uv python install, uvx",
+            "actually_needed": "These download from PyPI / python-build-standalone, so they need network access unless the packages are already cached",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exited 0 and printed their expected signals: six imported at 1.17.0 in the project, the script ran, and uv 0.13.9 was found.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-uv-20261120-192702-6165/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-uv-20261120-192702-6165/check-1-cmd4.judged.png",
+            "runs/verify/verify-uv-20261120-192702-6165/check-2-cmd5.judged.png",
+            "runs/verify/verify-uv-20261120-192702-6165/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.121792,
+        "features": [
+          {
+            "feature": "manage projects with a universal lockfile",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "run scripts with inline dependency metadata",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: The script ran and printed six's version after installing a package, but the check never shows the script's inline dependency metadata, so it cannot be confirmed that the feature drove the install."
+          },
+          {
+            "feature": "install and manage Python versions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "other",
+            "failure": null,
+            "note": "its check did not pass in the log; Installed cpython 3.11.18 and ran it"
+          },
+          {
+            "feature": "run and install Python-packaged tools",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "use a pip-compatible interface",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          },
+          {
+            "feature": "organize projects as Cargo-style workspaces",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v2",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "pypi:uv (fresh install, 1 packages)",
+      "github.com/astral-sh/uv@c99faeeeeb83",
+      "Cargo.lock",
+      "crates/uv-trampoline/Cargo.lock",
+      "crates/uv-trampoline/toolchain/uv.lock",
+      "sbom:verify-uv-20261120-192702-6165 (1065 packages installed)"
+    ],
+    "packages_checked": 756,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T19:28:38+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "installed_artifact",
+      "commit": "c99faeeeeb8318d874007b4c48635d009838c1a0",
+      "run_id": "verify-uv-20261120-192702-6165",
+      "tool_version": "uv 0.13.9 (x86_64-unknown-linux-gnu)",
+      "artifact_sha256": [
+        "b8c56091244cc8a0ad37f60d3ecf4d7a2ca4a9127bb4bcb4c396a26e8ea46b68",
+        "b73acdf73b96c3ac9e56d2fa933427b3ee6a901e3cce6ba1e3ecb3f91ca0d86a",
+        "d5fbc16089c2c31c076b2d61b4f1f455cdebcdef16f5306d4852ef2ce6e117bc"
+      ],
+      "packages": {
+        "crates": 754,
+        "pypi": 2
+      },
+      "scopes": {
+        "runtime": 670,
+        "optional": 53,
+        "build": 2,
+        "dev": 14,
+        "workspace": 17
+      },
+      "advisories_fetched_at": "2026-11-20T19:28:38+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 12,
+      "details": "security/uv.json",
+      "details_sha256": "554952eaa55671bacc3a777fbed929756e2b2960fa054f9eb99075b8020a1345"
+    },
+    "assessment": {
+      "level": "none",
+      "policy_version": "sec.v2",
+      "reasons": [],
+      "counts": {},
+      "uncounted": 12,
+      "assessed_at": "2026-11-20T19:28:38+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "installed_artifact",
+      "packages_found": 756,
+      "packages_checked": 756,
+      "components": [
+        {
+          "ecosystem": "pypi",
+          "component": "registry:pypi:uv",
+          "status": "partial",
+          "packages": 1,
+          "gaps": [
+            "binary.prebuilt_package"
+          ]
+        },
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 653,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "crates/uv-trampoline/Cargo.lock",
+          "status": "scanned",
+          "packages": 21,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "pyproject.toml",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "resolve.pyproject_failed"
+          ]
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "crates/uv-trampoline/toolchain/uv.lock",
+          "status": "scanned",
+          "packages": 1,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "sbom:verify-uv-20261120-192702-6165",
+          "status": "scanned",
+          "packages": 1064,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "sbom:verify-uv-20261120-192702-6165",
+          "status": "scanned",
+          "packages": 1,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
+  },
+  "scores": {
+    "formula_version": "b3.v7",
+    "computed_at": "2026-11-20T19:28:38+08:00",
+    "quality": {
+      "total": 92.0,
+      "raw_total": 92.0,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.9091,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      },
+      "security": {
+        "level": "none",
+        "basis": "assessment",
+        "effect": "none",
+        "deduction": 0.0
+      }
+    },
+    "popularity": {
+      "score": 100.0,
+      "signals": {
+        "stars": 92443,
+        "monthly_downloads": 194240908,
+        "forks": 3943,
+        "dependents": null,
+        "release_downloads": 151988026,
+        "hn_top_score": 753,
+        "registries_count": 2
+      },
+      "age_days": 1144,
+      "packages": [
+        "pypi:uv",
+        "homebrew:uv"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.0
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:28:32.362268+08:00",
+      "sources_sha": "fc6d9357fe69385121d8826fa18fbd5aebfcd9c5bffc99fb471fb682a475a8e8",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "- A single tool to replace `pip`, `pip-tools`, `pipx`, `poetry`, `pyenv`, `twine`, `virtualenv`, and\n  more."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "uv manages project dependencies and environments, with support for lockfiles, workspaces, and more,\nsimilar to `rye` or `poetry`:"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "- Installable without Rust or Python via `curl` or `pip`."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl -LsSf https://astral.sh/uv/install.sh | sh"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "$ uv init example\nInitialized project `example` at `/home/user/example`"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "uv self update"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "- Supports macOS, Linux, and Windows."
+        }
+      },
+      "unquoted": [],
+      "input_sha": "2864bfa49463554b344b483c7273b1a9f3257f9b5ca1b3310be3d5ad1d2e92f5",
+      "prompt_version": "rubric-p1",
+      "renderer_version": "r1",
+      "grader": "anthropic"
+    },
+    "inputs": {
+      "version": "inputs.v1",
+      "github": {
+        "source": "pipeline_db",
+        "fetched_at": "2026-11-20T19:24:51+08:00",
+        "stars": 92443,
+        "forks": 3943,
+        "open_issues": 3083,
+        "created_at": "2023-10-02T20:24:11Z",
+        "pushed_at": "2026-11-20T00:23:19Z",
+        "releases": [
+          {
+            "tag": "0.13.9",
+            "published_at": "2026-11-17T09:57:55Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 12107964
+          },
+          {
+            "tag": "0.13.8",
+            "published_at": "2026-11-12T17:03:07Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 14159505
+          },
+          {
+            "tag": "0.13.7",
+            "published_at": "2026-11-03T02:45:04Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 33850972
+          },
+          {
+            "tag": "0.13.6",
+            "published_at": "2026-10-27T00:47:49Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 23751016
+          },
+          {
+            "tag": "0.13.5",
+            "published_at": "2026-10-22T01:35:54Z",
+            "prerelease": false,
+            "notes_chars": 3999,
+            "downloads": 21221846
+          },
+          {
+            "tag": "0.13.4",
+            "published_at": "2026-10-20T15:24:59Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 13554019
+          },
+          {
+            "tag": "0.13.3",
+            "published_at": "2026-10-20T01:15:17Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 2257936
+          },
+          {
+            "tag": "0.13.2",
+            "published_at": "2026-10-19T21:02:37Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 688394
+          },
+          {
+            "tag": "0.13.1",
+            "published_at": "2026-10-14T05:15:30Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 18067683
+          },
+          {
+            "tag": "0.13.0",
+            "published_at": "2026-10-09T19:49:55Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 12328691
+          }
+        ],
+        "contributors": null,
+        "files": {
+          "count": 1895,
+          "truncated": false,
+          "ci": ".github/workflows/ai-policy.yml",
+          "tests": "crates/uv-cache/tests/removal.rs",
+          "changelog": "CHANGELOG.md",
+          "lockfile": "Cargo.lock"
+        }
+      },
+      "issues": {
+        "source": "github_live",
+        "fetched_at": "2026-11-20T19:28:32+08:00",
+        "items": [
+          {
+            "created_at": "2026-11-19T13:15:12Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T12:10:15Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T11:49:36Z",
+            "closed_at": "2026-11-20T08:58:19Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T09:06:59Z",
+            "closed_at": "2026-11-19T19:02:10Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T06:27:22Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T02:37:32Z",
+            "closed_at": "2026-11-19T03:22:00Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-18T14:20:26Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T18:17:20Z",
+            "closed_at": "2026-11-17T19:00:47Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T17:15:20Z",
+            "closed_at": "2026-11-17T18:26:20Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T11:44:37Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T08:21:06Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T08:11:11Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T06:22:32Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T00:32:20Z",
+            "closed_at": "2026-11-19T15:15:05Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-16T20:54:13Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-16T17:47:46Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-15T19:27:38Z",
+            "closed_at": "2026-11-19T15:32:24Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-14T03:53:24Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-13T18:08:24Z",
+            "closed_at": null,
+            "association": "COLLABORATOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-12T17:15:54Z",
+            "closed_at": "2026-11-12T17:19:07Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-12T15:42:41Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-11T23:02:07Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-11T13:56:55Z",
+            "closed_at": "2026-11-12T14:49:09Z",
+            "association": "NONE",
+            "bot": false
+          }
+        ],
+        "pull_requests": 77,
+        "page_full": true
+      }
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/astral-sh/uv",
+      "fetched_at": "2026-11-20T19:24:52+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/astral-sh/uv/blob/main/README.md",
+      "fetched_at": "2026-11-20T19:24:51+08:00"
+    },
+    {
+      "id": "release:0.13.9",
+      "kind": "release",
+      "url": "https://github.com/astral-sh/uv/releases/tag/0.13.9",
+      "fetched_at": "2026-11-20T19:24:51+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Includes a [pip-compatible interface](#the-pip-interface) for a performance boost with a familiar\n  CLI.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Installable without Rust or Python via `curl` or `pip`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "A single tool to replace `pip`, `pip-tools`, `pipx`, `poetry`, `pyenv`, `twine`, `virtualenv`, and\n  more.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "An extremely fast Python package and project manager, written in Rust.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# uv",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Supports macOS, Linux, and Windows.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:24:52+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:24:52+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-20T19:24:52+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:24:52+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:24:52+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:0.13.9",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:24:51+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "Yes, uv is stable and widely used in production.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "uv manages project dependencies and environments, with support for lockfiles, workspaces, and more",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "uv manages dependencies and environments for single-file scripts.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Install multiple Python versions:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Compile requirements into a platform-independent requirements file:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "A single tool to replace `pip`, `pip-tools`, `pipx`, `poetry`, `pyenv`, `twine`, `virtualenv`, and\n  more.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "similar to `rye` or `poetry`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "similar to `pipx`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/alternatives_to/3",
+      "source_id": "readme",
+      "quote": "A single tool to replace `pip`, `pip-tools`, `pipx`, `poetry`, `pyenv`, `twine`, `virtualenv`, and\n  more.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/alternatives_to/4",
+      "source_id": "readme",
+      "quote": "uv provides a drop-in replacement for common `pip`, `pip-tools`, and `virtualenv` commands.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Provides [comprehensive project management](#projects), with a\n  [universal lockfile]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "[Runs scripts](#scripts), with support for\n  [inline dependency metadata]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "[Installs and manages](#python-versions) Python versions.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "[Runs and installs](#tools) tools published as Python packages.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/features/4",
+      "source_id": "readme",
+      "quote": "Includes a [pip-compatible interface](#the-pip-interface)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/features/5",
+      "source_id": "readme",
+      "quote": "Supports Cargo-style [workspaces](https://docs.astral.sh/uv/concepts/projects/workspaces) for\n  scalable projects.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -LsSf https://astral.sh/uv/install.sh | sh",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -LsSf https://astral.sh/uv/install.sh | sh",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "powershell -ExecutionPolicy ByPass -c \"irm https://astral.sh/uv/install.ps1 | iex\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:25:04+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "uv manages project dependencies and environments, with support for lockfiles, workspaces, and more",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:29:16+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "$ uv init example",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:29:16+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "uv also supports building and publishing projects, even if they're not managed with uv.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:29:16+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Run a tool in an ephemeral environment using `uvx` (an alias for `uv tool run`):",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:29:16+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "Install a tool with `uv tool install`:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:29:16+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "uv installs Python and allows quickly switching between versions.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:29:16+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "Pinned `.python-version` to `3.11`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:29:16+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "uv provides a drop-in replacement for common `pip`, `pip-tools`, and `virtualenv` commands.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:29:16+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Compile requirements into a platform-independent requirements file:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:29:16+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Create a virtual environment:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:29:16+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "Install the locked requirements:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:29:16+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "with a\n  [universal lockfile]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:29:16+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "Supports Cargo-style [workspaces]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:29:16+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "Disk-space efficient, with a [global cache](https://docs.astral.sh/uv/concepts/cache) for\n  dependency deduplication.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:29:16+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "such as dependency version overrides,\nplatform-independent resolutions, reproducible resolutions, alternative resolution strategies",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:29:16+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "uv self update",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:29:16+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-20T19:24:51+08:00",
+  "updated_at": "2026-11-20T19:29:16+08:00"
+}
