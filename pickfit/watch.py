@@ -760,6 +760,7 @@ class Watcher:
         self._slugs_in_flight: set[str] = set()
         self._repos_in_flight: dict[str, str] = {}  # repo_id -> the submission URL taking it
         self._live_sha = live_sha or (lambda: None)
+        self._index_error: str | None = None  # the last data/software load error _mark_deployed logged
         self._log_lock = threading.Lock()
         self.spent_usd = 0.0
         self.reverifier = reverifier  # pickfit.reverify.Reverifier: also take the reverify queue
@@ -1711,8 +1712,16 @@ class Watcher:
             return []
         try:
             _, local = load_records(self.s.data_dir)
-        except IndexBuildError:
+        except IndexBuildError as err:
+            # One record the current code cannot load (11/19: a score written before a schema change) keeps every
+            # ready record from being listed; say so once per error instead of waiting in silence.
+            why = str(err)[:300]
+            if why != self._index_error:
+                self._index_error = why
+                self.log(f"[watch] {len(waiting)} ready record(s) cannot be marked listed: data/software does not "
+                         f"load: {why}")
             return []
+        self._index_error = None
         live = self._live_sha()
         if live == local:
             ready = waiting

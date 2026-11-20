@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -612,7 +613,8 @@ def _watch_lanes(args: argparse.Namespace, lanes: tuple[str, ...]) -> dict[str, 
         out["macos"] = MacLane(model=MODEL, policy=Policy(min_batch=args.mac_batch,
                                                           max_wait=timedelta(hours=args.mac_max_wait_hours)),
                                rent=args.mac_rent, provider=args.mac_provider, zone=args.mac_zone,
-                               root_from_provider=args.mac_root_from_provider, max_rentals=args.mac_max_rentals)
+                               root_from_provider=args.mac_root_from_provider, max_rentals=args.mac_max_rentals,
+                               key=Path(args.mac_key).expanduser() if args.mac_key else None)
     return out
 
 
@@ -708,6 +710,10 @@ def _add_queue_commands(sub: argparse._SubParsersAction) -> None:
     w.add_argument("--mac-rent", action="store_true",
                    help="macOS: rent a Mac when no known host is ready (Scaleway: billed 24 h at least, about EUR 6)")
     w.add_argument("--mac-max-rentals", type=int, default=1, help="macOS: at most this many rentals a week (default 1)")
+    w.add_argument("--mac-key", default=os.environ.get("PICKFIT_MAC_KEY"),
+                   help="macOS: the SSH key a rented Mac is reached with (default PICKFIT_MAC_KEY, else "
+                        "~/.pickfit/ssh/mac-host). Give one already in the Scaleway project when the API key may not "
+                        "list or add SSH keys"),
     w.add_argument("--mac-provider", default="scaleway", help="macOS: who rents the Mac (default scaleway)")
     w.add_argument("--mac-zone", default=None, help="macOS: the provider's zone (Scaleway default fr-par-1)")
     w.add_argument("--mac-root-from-provider", action="store_true",

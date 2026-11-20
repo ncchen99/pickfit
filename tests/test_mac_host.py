@@ -45,6 +45,8 @@ if args[:3] in (["apple-silicon", "server", "wait"], ["apple-silicon", "server",
     out(server)
 if args[:3] == ["apple-silicon", "server", "delete"]:
     out(None)
+if args[:3] == ["iam", "ssh-key", "list"] and os.environ.get("FAKE_IAM_ERROR"):
+    sys.stderr.write(os.environ["FAKE_IAM_ERROR"] + "\n"); sys.exit(1)
 if args[:3] == ["iam", "ssh-key", "list"]:
     out(json.loads(os.environ.get("FAKE_KEYS", "[]")))
 if args[:3] == ["iam", "ssh-key", "create"]:
@@ -333,3 +335,21 @@ def test_the_same_configuration_error_twice_needs_an_operator(tmp_path: Path, mo
     assert "try its hosts again" in capsys.readouterr().out and mh.operator_hold(tmp_path) is None
     assert mh.main_command(SimpleNamespace(mac_command="clear")) == 0
     assert "holds nothing" in capsys.readouterr().out
+
+
+@POSIX_ONLY
+def test_an_api_key_that_may_not_list_ssh_keys_still_rents_with_a_registered_key(scw: Path,
+                                                                                monkeypatch: pytest.MonkeyPatch):
+    # 11/20: the watch's IAM application has Apple silicon rights only, so `scw iam ssh-key list` is refused; the
+    # rental used to stop there. Now it goes on with the key as one already in the project (--mac-key).
+    monkeypatch.setenv("FAKE_IAM_ERROR", '{"error":"scaleway-sdk-go: insufficient permissions: list ssh_key"}')
+    logs: list[str] = []
+    rec = mh.ScalewayProvider(scw=str(scw)).create("mac1", 15, PUBLIC_KEY, logs.append)
+    calls = _scw_calls(scw)
+    assert rec.server_id == "srv-1"
+    assert not any(c[:3] == ["iam", "ssh-key", "create"] for c in calls)
+    assert any("may not list the project's SSH keys" in line for line in logs)
+    # Any other failure to list keys still stops the rental.
+    monkeypatch.setenv("FAKE_IAM_ERROR", "connection refused")
+    with pytest.raises(BoxError, match="connection refused"):
+        mh.ScalewayProvider(scw=str(scw)).create("mac2", 15, PUBLIC_KEY, print)
