@@ -35,6 +35,13 @@ It rebuilds `src/generated/` and runs `gcloud run deploy --source .` from `worke
 `.gcloudignore`). The domain mapping `pickfit.app` → `pickfit` was made once with
 `gcloud beta run domain-mappings create`; DNS for pickfit.app (Cloudflare, DNS only) points at Google.
 
+`ALLOWED_HOSTS` comes from `../wrangler.jsonc` (top-level `vars`) plus the run.app host (`config.ts`); change the
+host list there, not in `deploy.sh`.
+
+CI (`.github/workflows/worker.yml`, job `deploy-cloudrun`) runs the same script on pushes to `main` that change
+the site, then checks pickfit.app serves the new data and rolls back if not (`scripts/cloudrun_deploy.py`). It
+needs a one-time GCP setup: [setup-ci-wif.md](setup-ci-wif.md).
+
 ## Local run
 
 ```bash
