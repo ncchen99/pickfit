@@ -1,0 +1,1969 @@
+{
+  "schema_version": "software.v1",
+  "slug": "dolt",
+  "repo_id": "gh:198683574",
+  "name": "Dolt",
+  "summary": "A MySQL-compatible SQL database with Git-style version control: fork, clone, branch, merge, push and pull tables.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "data_db",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "agent-memory",
+    "agent-memory-server",
+    "ai-agents",
+    "ai-database",
+    "data-version-control",
+    "data-versioning",
+    "database",
+    "database-version-control",
+    "database-versioning",
+    "decentralized-database"
+  ],
+  "use_cases": [
+    "import CSV files into a versioned database",
+    "undo an accidentally dropped table",
+    "store agent memory for multi-agent workflows"
+  ],
+  "alternatives_to": [
+    "MySQL"
+  ],
+  "features": [
+    "branch, merge, push and pull databases",
+    "run a MySQL-compatible SQL server",
+    "version control via SQL system tables and procedures",
+    "diff tables between commits or branches",
+    "show row-level blame history"
+  ],
+  "capabilities": [
+    {
+      "label": "Version control a SQL database like Git",
+      "area": "versioning"
+    },
+    {
+      "label": "Run a MySQL-compatible database server",
+      "area": "server"
+    },
+    {
+      "label": "Connect with any MySQL client",
+      "area": "integrations"
+    },
+    {
+      "label": "Import CSV files from the command line",
+      "area": "formats"
+    },
+    {
+      "label": "Git-like CLI subcommands",
+      "items": [
+        "init",
+        "status",
+        "add",
+        "diff",
+        "reset",
+        "clean",
+        "commit",
+        "sql",
+        "sql-server",
+        "log",
+        "show",
+        "branch",
+        "checkout",
+        "merge",
+        "conflicts",
+        "cherry-pick",
+        "revert",
+        "clone",
+        "fetch",
+        "pull",
+        "push",
+        "config",
+        "remote",
+        "backup",
+        "login",
+        "creds",
+        "ls",
+        "schema",
+        "table",
+        "tag",
+        "blame",
+        "constraints",
+        "read-tables",
+        "gc",
+        "fsck",
+        "filter-branch",
+        "merge-base",
+        "version",
+        "dump",
+        "docs",
+        "stash",
+        "profile",
+        "query-diff",
+        "reflog",
+        "rebase",
+        "ci",
+        "debug",
+        "rm"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Diff tables between branches or commits",
+      "area": "diff"
+    },
+    {
+      "label": "Query historical data with AS OF",
+      "area": "sql"
+    },
+    {
+      "label": "Undo changes and restore dropped databases",
+      "area": "recovery"
+    },
+    {
+      "label": "Show who last modified each row",
+      "area": "history"
+    },
+    {
+      "label": "Export all tables to a file",
+      "area": "export"
+    },
+    {
+      "label": "View and resolve merge conflicts",
+      "area": "merging"
+    },
+    {
+      "label": "Manage server backups",
+      "area": "backup"
+    },
+    {
+      "label": "Verify and repair database corruption",
+      "area": "maintenance"
+    },
+    {
+      "label": "Diff results of two queries",
+      "area": "diff"
+    },
+    {
+      "label": "Rewrite commit history with a query",
+      "area": "history"
+    },
+    {
+      "label": "Support foreign keys, triggers, stored procedures",
+      "items": [
+        "foreign keys",
+        "secondary indexes",
+        "triggers",
+        "check constraints",
+        "stored procedures"
+      ],
+      "area": "sql"
+    },
+    {
+      "label": "Share databases on DoltHub",
+      "area": "integrations"
+    },
+    {
+      "label": "Store agent memory",
+      "area": "ai"
+    }
+  ],
+  "why_worth_it": null,
+  "homepage": "https://www.dolthub.com",
+  "repo": {
+    "url": "https://github.com/dolthub/dolt",
+    "full_name": "dolthub/dolt",
+    "created_at": "2019-07-24T17:46:25Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install dolt",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "dolt",
+        "expected_signal": "Valid commands for dolt are"
+      },
+      "first_task": "dolt version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-dolt-20261121-063844-5bb3",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -fsSL -o /tmp/dolt.tar.gz https://github.com/dolthub/dolt/releases/latest/download/dolt-linux-amd64.tar.gz && tar -xzf /tmp/dolt.tar.gz -C /tmp && mkdir -p ~/.local/bin && cp /tmp/dolt-linux-amd64/bin/dolt ~/.local/bin/dolt",
+          "purpose": "Download the dolt-linux-amd64 release tarball, unpack it and copy the binary to ~/.local/bin (no sudo)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "dolt version",
+        "expected_signal": "dolt version 2.7.5"
+      },
+      "first_task": "dolt version"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "source",
+      "steps": [
+        {
+          "command": "go install ./cmd/dolt",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "dolt",
+        "expected_signal": "Valid commands for dolt are"
+      },
+      "first_task": "dolt version"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v2.7.5",
+    "published_at": "2026-11-18T01:23:29Z",
+    "url": "https://github.com/dolthub/dolt/releases/tag/v2.7.5"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-21T06:39:53.215512+08:00",
+    "runs": [
+      {
+        "id": "verify-dolt-20261121-063844-5bb3",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:01363ad5a469",
+        "checked_at": "2026-11-21T06:39:53.215512+08:00",
+        "tool_version": "dolt version 2.7.5",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL -o /tmp/dolt.tar.gz https://github.com/dolthub/dolt/releases/latest/download/dolt-linux-amd64.tar.gz && tar -xzf /tmp/dolt.tar.gz -C /tmp && mkdir -p ~/.local/bin && cp /tmp/dolt-linux-amd64/bin/dolt ~/.local/bin/dolt",
+            "purpose": "Download the dolt-linux-amd64 release tarball, unpack it and copy the binary to ~/.local/bin (no sudo)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "dolt version",
+            "expected_signal": "dolt version 2.7.5",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "dolt version 2.7.5",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "bash /tmp/f1.sh",
+            "expected_signal": "| 3 | carol |",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "| 3 | carol |",
+            "setup": [
+              {
+                "command": "dolt config --global --add user.email sbx@example.com && dolt config --global --add user.name \"Sbx Tester\" && cat > /tmp/f1.sh <<'EOF'\nset -e\nrm -rf /tmp/f1 && mkdir -p /tmp/f1/db /tmp/f1/remote && cd /tmp/f1/db\ndolt init\ndolt sql -q \"create table t (id int primary key, name varchar(20)); insert into t values (1,'alice');\"\ndolt add . && dolt commit -m \"first\"\ndolt checkout -b feature\ndolt sql -q \"insert into t values (2,'bob');\"\ndolt commit -am \"add bob\"\ndolt checkout main\ndolt merge feature\ndolt remote add origin file:///tmp/f1/remote\ndolt push origin main\ncd /tmp/f1 && dolt clone file:///tmp/f1/remote cloned && cd cloned\ndolt sql -q \"select * from t order by id\"\ncd /tmp/f1/db && dolt sql -q \"insert into t values (3,'carol');\" && dolt commit -am \"add carol\" && dolt push origin main\ncd /tmp/f1/cloned && dolt pull origin main && dolt sql -q \"select * from t order by id\"\ndolt log --oneline\nEOF\ncat > /tmp/f34.sh <<'EOF'\nset -e\nrm -rf /tmp/f34 && mkdir -p /tmp/f34 && cd /tmp/f34 && dolt init >/dev/null\ndolt sql -q \"create table emp (id int primary key, name varchar(20)); insert into emp values (1,'tim'); call dolt_add('-A'); call dolt_commit('-m','init emp'); call dolt_checkout('-b','br'); update emp set name='timothy' where id=1; insert into emp values (2,'aaron'); call dolt_commit('-am','edit on br'); call dolt_checkout('main');\"\ndolt sql -q \"select message from dolt_log order by date\"\ndolt sql -q \"select name from dolt_branches order by name\"\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "bash /tmp/f34.sh",
+            "expected_signal": "Switched to branch 'br'",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "| 0 | Switched to branch 'br' |",
+            "setup": [
+              {
+                "command": "dolt config --global --add user.email sbx@example.com && dolt config --global --add user.name \"Sbx Tester\" && cat > /tmp/f1.sh <<'EOF'\nset -e\nrm -rf /tmp/f1 && mkdir -p /tmp/f1/db /tmp/f1/remote && cd /tmp/f1/db\ndolt init\ndolt sql -q \"create table t (id int primary key, name varchar(20)); insert into t values (1,'alice');\"\ndolt add . && dolt commit -m \"first\"\ndolt checkout -b feature\ndolt sql -q \"insert into t values (2,'bob');\"\ndolt commit -am \"add bob\"\ndolt checkout main\ndolt merge feature\ndolt remote add origin file:///tmp/f1/remote\ndolt push origin main\ncd /tmp/f1 && dolt clone file:///tmp/f1/remote cloned && cd cloned\ndolt sql -q \"select * from t order by id\"\ncd /tmp/f1/db && dolt sql -q \"insert into t values (3,'carol');\" && dolt commit -am \"add carol\" && dolt push origin main\ncd /tmp/f1/cloned && dolt pull origin main && dolt sql -q \"select * from t order by id\"\ndolt log --oneline\nEOF\ncat > /tmp/f34.sh <<'EOF'\nset -e\nrm -rf /tmp/f34 && mkdir -p /tmp/f34 && cd /tmp/f34 && dolt init >/dev/null\ndolt sql -q \"create table emp (id int primary key, name varchar(20)); insert into emp values (1,'tim'); call dolt_add('-A'); call dolt_commit('-m','init emp'); call dolt_checkout('-b','br'); update emp set name='timothy' where id=1; insert into emp values (2,'aaron'); call dolt_commit('-am','edit on br'); call dolt_checkout('main');\"\ndolt sql -q \"select message from dolt_log order by date\"\ndolt sql -q \"select name from dolt_branches order by name\"\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp/f34 && dolt sql -q \"select to_name, from_name, to_id, diff_type from dolt_diff('main','br','emp') order by to_id\"",
+            "expected_signal": "| timothy | tim | 1 | modified |",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "| timothy | tim | 1 | modified |",
+            "setup": [
+              {
+                "command": "dolt config --global --add user.email sbx@example.com && dolt config --global --add user.name \"Sbx Tester\" && cat > /tmp/f1.sh <<'EOF'\nset -e\nrm -rf /tmp/f1 && mkdir -p /tmp/f1/db /tmp/f1/remote && cd /tmp/f1/db\ndolt init\ndolt sql -q \"create table t (id int primary key, name varchar(20)); insert into t values (1,'alice');\"\ndolt add . && dolt commit -m \"first\"\ndolt checkout -b feature\ndolt sql -q \"insert into t values (2,'bob');\"\ndolt commit -am \"add bob\"\ndolt checkout main\ndolt merge feature\ndolt remote add origin file:///tmp/f1/remote\ndolt push origin main\ncd /tmp/f1 && dolt clone file:///tmp/f1/remote cloned && cd cloned\ndolt sql -q \"select * from t order by id\"\ncd /tmp/f1/db && dolt sql -q \"insert into t values (3,'carol');\" && dolt commit -am \"add carol\" && dolt push origin main\ncd /tmp/f1/cloned && dolt pull origin main && dolt sql -q \"select * from t order by id\"\ndolt log --oneline\nEOF\ncat > /tmp/f34.sh <<'EOF'\nset -e\nrm -rf /tmp/f34 && mkdir -p /tmp/f34 && cd /tmp/f34 && dolt init >/dev/null\ndolt sql -q \"create table emp (id int primary key, name varchar(20)); insert into emp values (1,'tim'); call dolt_add('-A'); call dolt_commit('-m','init emp'); call dolt_checkout('-b','br'); update emp set name='timothy' where id=1; insert into emp values (2,'aaron'); call dolt_commit('-am','edit on br'); call dolt_checkout('main');\"\ndolt sql -q \"select message from dolt_log order by date\"\ndolt sql -q \"select name from dolt_branches order by name\"\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "bash /tmp/f34.sh",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp && dolt --host 127.0.0.1 --port 3306 --no-tls -u root -p \"\" sql -q \"create database getting_started; use getting_started; create table teams (id int primary key, team_name varchar(20)); insert into teams values (0,'Engineering'); select * from teams; select @@version_comment\"",
+            "expected_signal": "| 0 | Engineering |",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "| 0 | Engineering |",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/srv && cd /tmp/srv && dolt sql-server --host 127.0.0.1 --port 3306",
+                "background": true,
+                "port": 3306
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "sudo bash -c 'curl -L .../install.sh | bash' installs to /usr/local/bin",
+            "actually_needed": "Without root, download dolt-linux-amd64.tar.gz from releases/latest and copy bin/dolt to ~/.local/bin (the README mentions this as its no-root fallback)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Configure user.email and user.name before committing",
+            "actually_needed": "dolt config --global --add user.email/user.name were needed before dolt commit (done in setup command 3)",
+            "kind": "note"
+          },
+          {
+            "readme_said": "dolt -u root -p \"\" sql connects to the running server",
+            "actually_needed": "Used dolt --host 127.0.0.1 --port 3306 --no-tls -u root -p \"\" sql -q ... against the server, run from a directory that is not a dolt repo",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exit 0 and show their expected signals: the cloned table includes row 3 carol after push/pull, the SQL checkout returns \"Switched to branch 'br'\", and dolt version prints 2.7.5 (with only a harmless offline update-check warning).",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-dolt-20261121-063844-5bb3/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-dolt-20261121-063844-5bb3/check-1-cmd4.judged.png",
+            "runs/verify/verify-dolt-20261121-063844-5bb3/check-2-cmd5.judged.png",
+            "runs/verify/verify-dolt-20261121-063844-5bb3/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.188481,
+        "features": [
+          {
+            "feature": "branch, merge, push and pull databases",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "run a MySQL-compatible SQL server",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "version control via SQL system tables and procedures",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "diff tables between commits or branches",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "show row-level blame history",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v2",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/dolthub/dolt@9cca83e97613",
+      "go/go.mod",
+      "integration-tests/go-sql-server-driver/go.mod",
+      "integration-tests/mysql-client-tests/go/go.mod",
+      "integration-tests/mysql-client-tests/go-mysql/go.mod",
+      "integration-tests/mysql-client-tests/node/package-lock.json",
+      "integration-tests/transactions/go.mod",
+      "proto/go.mod",
+      "sbom:verify-dolt-20261121-063844-5bb3 (165 packages installed)"
+    ],
+    "packages_checked": 282,
+    "findings_total": 13,
+    "advisories_total": 13,
+    "findings": [
+      {
+        "package": "go:github.com/klauspost/compress",
+        "version": "v1.18.0",
+        "advisory": "GHSA-259r-337f-4rfw",
+        "cves": [
+          "CVE-2026-63209"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.18.7",
+        "summary": "Compress/s2: Integer Overflow or Wraparound and Out-of-bounds Write in compress",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-30T09:38:05Z",
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/dolt > github.com/klauspost/compress"
+        ],
+        "found_in": "sbom:verify-dolt-20261121-063844-5bb3",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00572,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "reachability": {
+          "method": "govulncheck_binary",
+          "result": "reachable",
+          "evidence": [
+            "govulncheck -mode=binary symbol level, /home/sbx/.local/bin/dolt: NewDict"
+          ]
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:github.com/klauspost/compress",
+        "version": "v1.18.0",
+        "advisory": "GO-2026-6865",
+        "cves": [
+          "CVE-2026-116591"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.2",
+        "summary": "Panic on two-block frames in github.com/klauspost/compress",
+        "malicious": false,
+        "dos_only": true,
+        "fix_published_at": "2026-10-12T09:34:06Z",
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/dolt > github.com/klauspost/compress"
+        ],
+        "found_in": "sbom:verify-dolt-20261121-063844-5bb3",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00333,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "reachability": {
+          "method": "govulncheck_binary",
+          "result": "reachable",
+          "evidence": [
+            "govulncheck -mode=binary symbol level, /home/sbx/.local/bin/dolt: Decompress"
+          ]
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:google.golang.org/grpc",
+        "version": "v1.83.1",
+        "advisory": "GHSA-2v4p-qf9q-27wj",
+        "cves": [
+          "CVE-2026-84445"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.83.2",
+        "summary": "gRPC-Go xDS servers: Denial of Service (DoS) via crash due to missing `:authority` and `Host` headers",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-08-25T15:47:16Z",
+        "scope": "runtime",
+        "paths": [
+          "go/go.mod > google.golang.org/grpc"
+        ],
+        "workspace": "go",
+        "found_in": "go/go.mod",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00641,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "reachability": {
+          "method": "govulncheck_binary",
+          "result": "reachable",
+          "evidence": [
+            "govulncheck -mode=binary symbol level, /home/sbx/.local/bin/dolt: http2Server.HandleStreams"
+          ]
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2022-0969",
+        "cves": [
+          "CVE-2022-27664"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.18.6",
+        "summary": "Denial of service in net/http and golang.org/x/net/http2",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/dolt > stdlib"
+        ],
+        "found_in": "sbom:verify-dolt-20261121-063844-5bb3",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.03487,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:ListenAndServe",
+          "symbol:ListenAndServeTLS",
+          "symbol:Serve"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "go/cmd/dolt/dolt.go:308: err := http.ListenAndServe(\"0.0.0.0:6060\", nil)"
+          ]
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2023-1571",
+        "cves": [
+          "CVE-2022-41723"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.19.6",
+        "summary": "Denial of service via crafted HTTP/2 stream in net/http and golang.org/x/net",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/dolt > stdlib"
+        ],
+        "found_in": "sbom:verify-dolt-20261121-063844-5bb3",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04561,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:Client.Do",
+          "symbol:Client.Get",
+          "symbol:Client.Head"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "go/cmd/dolt/commands/assist.go:417: response, err := client.Do(req)"
+          ]
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2023-2102",
+        "cves": [
+          "CVE-2023-39325"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.10",
+        "summary": "HTTP/2 rapid reset can cause excessive work in net/http",
+        "malicious": false,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/dolt > stdlib"
+        ],
+        "found_in": "sbom:verify-dolt-20261121-063844-5bb3",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.03796,
+        "preconditions": [
+          "symbol:ListenAndServe",
+          "symbol:ListenAndServeTLS",
+          "symbol:Serve"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "go/cmd/dolt/dolt.go:308: err := http.ListenAndServe(\"0.0.0.0:6060\", nil)"
+          ]
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2022-0535",
+        "cves": [
+          "CVE-2020-0601"
+        ],
+        "severity": "UNKNOWN",
+        "fixed_in": "1.12.16",
+        "summary": "Certificate validation bypass on Windows in crypto/x509",
+        "malicious": false,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/dolt > stdlib"
+        ],
+        "found_in": "sbom:verify-dolt-20261121-063844-5bb3",
+        "in_artifact": true,
+        "kev": true,
+        "epss": 0.89078,
+        "preconditions": [
+          "symbol:Certificate.systemVerify"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "go/libraries/doltcore/servercfg/serverconfig.go:19: \"crypto/x509\"",
+            "no call to Certificate.systemVerify found"
+          ]
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2025-3563",
+        "cves": [
+          "CVE-2025-22871"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "1.23.8",
+        "summary": "Request smuggling due to acceptance of invalid chunked data in net/http",
+        "malicious": false,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/dolt > stdlib"
+        ],
+        "found_in": "sbom:verify-dolt-20261121-063844-5bb3",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00842,
+        "preconditions": [
+          "symbol:chunkedReader.Read",
+          "symbol:readChunkLine"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:github.com/go-jose/go-jose/v4",
+        "version": "v4.1.4",
+        "advisory": "GHSA-mgcc-cww5-fp2q",
+        "cves": [
+          "CVE-2026-116587"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.1.6",
+        "summary": "Go JOSE: DoS when parsing JWKs that contain RSA keys",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-14T22:46:21Z",
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/dolt > github.com/go-jose/go-jose/v4"
+        ],
+        "found_in": "sbom:verify-dolt-20261121-063844-5bb3",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00489,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2021-0142",
+        "cves": [
+          "CVE-2020-16845"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.13.15",
+        "summary": "Unbounded read from invalid inputs in encoding/binary",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/dolt > stdlib"
+        ],
+        "found_in": "sbom:verify-dolt-20261121-063844-5bb3",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04861,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:ReadUvarint",
+          "symbol:ReadVarint"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "go/cmd/dolt/dolt.go:20: \"encoding/binary\"",
+            "no call to ReadUvarint, ReadVarint found"
+          ]
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2022-0229",
+        "cves": [
+          "CVE-2020-7919"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.12.16",
+        "summary": "Panic in certificate parsing in crypto/x509 and golang.org/x/crypto/cryptobyte",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/dolt > stdlib"
+        ],
+        "found_in": "sbom:verify-dolt-20261121-063844-5bb3",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.02647,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:crypto/x509",
+          "symbol:golang.org/x/crypto/cryptobyte"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "go/libraries/doltcore/servercfg/serverconfig.go:19: \"crypto/x509\"",
+            "the advisory names no function"
+          ]
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2022-0288",
+        "cves": [
+          "CVE-2021-44716"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.16.12",
+        "summary": "Unbounded memory growth in net/http and golang.org/x/net/http2",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/dolt > stdlib"
+        ],
+        "found_in": "sbom:verify-dolt-20261121-063844-5bb3",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04254,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:http2serverConn.canonicalHeader",
+          "symbol:Server.ServeConn",
+          "symbol:serverConn.canonicalHeader"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "go/cmd/dolt/commands/assist.go:23: \"net/http\"",
+            "no call to http2serverConn.canonicalHeader, Server.ServeConn, serverConn.canonicalHeader found"
+          ]
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2022-0536",
+        "cves": [
+          "CVE-2019-9512",
+          "CVE-2019-9514"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.11.13",
+        "summary": "Reset flood in net/http and golang.org/x/net/http",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/dolt > stdlib"
+        ],
+        "found_in": "sbom:verify-dolt-20261121-063844-5bb3",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.83958,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:http2serverConn.scheduleFrameWrite",
+          "symbol:http2serverConn.serve",
+          "symbol:http2serverConn.writeFrame"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "go/cmd/dolt/commands/assist.go:23: \"net/http\"",
+            "no call to http2serverConn.scheduleFrameWrite, http2serverConn.serve, http2serverConn.writeFrame found"
+          ]
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      }
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-21T06:40:00+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "installed_artifact",
+      "commit": "9cca83e976136781be36b4a4c1a5950395370cf0",
+      "run_id": "verify-dolt-20261121-063844-5bb3",
+      "tool_version": "dolt version 2.7.5",
+      "artifact_sha256": [
+        "ca68e6ed5c8360000e54ea5879f4534855f8943b2e5253c567e5253b48143a9c"
+      ],
+      "packages": {
+        "go": 231,
+        "npm": 51
+      },
+      "scopes": {
+        "runtime": 282
+      },
+      "advisories_fetched_at": "2026-11-21T06:40:00+08:00",
+      "kev_catalog": "2026.11.20",
+      "epss_date": "2026-11-21",
+      "findings_total": 188,
+      "details": "security/dolt.json",
+      "details_sha256": "708fd451e6d15e3ff074c4d84934337a4d389fba546e9d8f16377197572ee0c6"
+    },
+    "assessment": {
+      "level": "exposed",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-259r-337f-4rfw go:github.com/klauspost/compress@v1.18.0 (exposed)",
+        "worst:GO-2026-6865 go:github.com/klauspost/compress@v1.18.0 (exposed)",
+        "worst:GHSA-2v4p-qf9q-27wj go:google.golang.org/grpc@v1.83.1 (exposed)"
+      ],
+      "counts": {
+        "exposed": 6,
+        "conditional": 7,
+        "not_shipped": 1
+      },
+      "uncounted": 174,
+      "assessed_at": "2026-11-21T06:40:00+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "installed_artifact",
+      "packages_found": 294,
+      "packages_checked": 282,
+      "components": [
+        {
+          "ecosystem": "go",
+          "component": "go/go.mod",
+          "status": "scanned",
+          "packages": 198,
+          "gaps": []
+        },
+        {
+          "ecosystem": "go",
+          "component": "integration-tests/go-sql-server-driver/go.mod",
+          "status": "scanned",
+          "packages": 19,
+          "gaps": []
+        },
+        {
+          "ecosystem": "go",
+          "component": "integration-tests/mysql-client-tests/go/go.mod",
+          "status": "scanned",
+          "packages": 1,
+          "gaps": []
+        },
+        {
+          "ecosystem": "go",
+          "component": "integration-tests/mysql-client-tests/go-mysql/go.mod",
+          "status": "scanned",
+          "packages": 13,
+          "gaps": []
+        },
+        {
+          "ecosystem": "maven",
+          "component": "integration-tests/mysql-client-tests/java/pom.xml",
+          "status": "not_scanned",
+          "packages": 3,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "integration-tests/mysql-client-tests/node/package-lock.json",
+          "status": "scanned",
+          "packages": 51,
+          "gaps": []
+        },
+        {
+          "ecosystem": "rubygems",
+          "component": "integration-tests/mysql-client-tests/ruby/Gemfile",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "swift",
+          "component": "integration-tests/mysql-client-tests/swift/Package.swift",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "adapter.missing"
+          ]
+        },
+        {
+          "ecosystem": "go",
+          "component": "integration-tests/transactions/go.mod",
+          "status": "scanned",
+          "packages": 6,
+          "gaps": []
+        },
+        {
+          "ecosystem": "go",
+          "component": "proto/go.mod",
+          "status": "scanned",
+          "packages": 6,
+          "gaps": []
+        },
+        {
+          "ecosystem": "crates",
+          "component": "integration-tests/mysql-client-tests/rust/Cargo.toml",
+          "status": "not_scanned",
+          "packages": 1,
+          "gaps": [
+            "lockfile.missing"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "integration-tests/orm-tests/mikro-orm/package.json",
+          "status": "not_scanned",
+          "packages": 3,
+          "gaps": [
+            "lockfile.missing"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "integration-tests/orm-tests/prisma/package.json",
+          "status": "not_scanned",
+          "packages": 2,
+          "gaps": [
+            "lockfile.missing"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "integration-tests/orm-tests/typeorm/package.json",
+          "status": "not_scanned",
+          "packages": 3,
+          "gaps": [
+            "lockfile.missing"
+          ]
+        },
+        {
+          "ecosystem": "go",
+          "component": "sbom:verify-dolt-20261121-063844-5bb3",
+          "status": "scanned",
+          "packages": 165,
+          "gaps": []
+        }
+      ],
+      "gaps": [
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "maven",
+          "component": "integration-tests/mysql-client-tests/java/pom.xml",
+          "detail": "no reader for pom.xml",
+          "capability": "adapter:maven",
+          "found": 3,
+          "first_seen": "2026-11-21",
+          "last_seen": "2026-11-21"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "rubygems",
+          "component": "integration-tests/mysql-client-tests/ruby/Gemfile",
+          "detail": "no reader for Gemfile",
+          "capability": "adapter:rubygems",
+          "found": null,
+          "first_seen": "2026-11-21",
+          "last_seen": "2026-11-21"
+        },
+        {
+          "code": "adapter.missing",
+          "category": "no_adapter",
+          "ecosystem": "swift",
+          "component": "integration-tests/mysql-client-tests/swift/Package.swift",
+          "detail": "no reader for Package.swift",
+          "capability": "adapter:swift",
+          "found": null,
+          "first_seen": "2026-11-21",
+          "last_seen": "2026-11-21"
+        },
+        {
+          "code": "lockfile.missing",
+          "category": "lockfile_missing",
+          "ecosystem": "crates",
+          "component": "integration-tests/mysql-client-tests/rust/Cargo.toml",
+          "detail": "Cargo.toml without a lockfile",
+          "capability": "lockfile_from_manifest:crates",
+          "found": 1,
+          "first_seen": "2026-11-21",
+          "last_seen": "2026-11-21"
+        },
+        {
+          "code": "lockfile.missing",
+          "category": "lockfile_missing",
+          "ecosystem": "npm",
+          "component": "integration-tests/orm-tests/mikro-orm/package.json",
+          "detail": "package.json without a lockfile",
+          "capability": "lockfile_from_manifest:npm",
+          "found": 3,
+          "first_seen": "2026-11-21",
+          "last_seen": "2026-11-21"
+        },
+        {
+          "code": "lockfile.missing",
+          "category": "lockfile_missing",
+          "ecosystem": "npm",
+          "component": "integration-tests/orm-tests/prisma/package.json",
+          "detail": "package.json without a lockfile",
+          "capability": "lockfile_from_manifest:npm",
+          "found": 2,
+          "first_seen": "2026-11-21",
+          "last_seen": "2026-11-21"
+        },
+        {
+          "code": "lockfile.missing",
+          "category": "lockfile_missing",
+          "ecosystem": "npm",
+          "component": "integration-tests/orm-tests/typeorm/package.json",
+          "detail": "package.json without a lockfile",
+          "capability": "lockfile_from_manifest:npm",
+          "found": 3,
+          "first_seen": "2026-11-21",
+          "last_seen": "2026-11-21"
+        }
+      ]
+    }
+  },
+  "scores": {
+    "formula_version": "b3.v7",
+    "computed_at": "2026-11-21T06:40:00+08:00",
+    "quality": {
+      "total": 79.0,
+      "raw_total": 91.5,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      },
+      "security": {
+        "level": "exposed",
+        "basis": "assessment",
+        "effect": "capped",
+        "deduction": 0.0
+      }
+    },
+    "popularity": {
+      "score": 99.1,
+      "signals": {
+        "stars": 24948,
+        "monthly_downloads": 5391,
+        "forks": 925,
+        "dependents": null,
+        "release_downloads": 107803,
+        "hn_top_score": 901,
+        "registries_count": 1
+      },
+      "age_days": 2676,
+      "packages": [
+        "homebrew:dolt"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.71
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:39:53.230216+08:00",
+      "sources_sha": "54c2d8c65b007c0b9bd066087b0ae018f357e6c8acf17056e6ea9f3baaebb999",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Dolt is a SQL database that you can fork, clone, branch, merge, push\nand pull just like a Git repository. "
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "It's the best database \nfor agent memory, especially as you move up the ladder to multi-agent and \nmulti-machine workflows."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Make sure you have Go installed, and that `go` is in your path. Dolt has a dependency on [cgo](https://pkg.go.dev/cmd/cgo), so you will need a working C compiler and toolchain as well."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "choco install dolt"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "dolt sql-server\nStarting server with Config HP=\"localhost:3306\"|T=\"28800000\"|R=\"false\"|L=\"info\""
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "$ dolt config --global --add user.email YOU@DOMAIN.COM\n$ dolt config --global --add user.name \"YOUR NAME\""
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "The 9.0 release changes authentication support and isn't able to connect to a Dolt SQL server by default."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "To install on Linux or Mac based systems run this command in your\nterminal:"
+        }
+      },
+      "unquoted": [],
+      "input_sha": "60a456cea752f9269b714ffca9816893bb97d18938816022048c8738a8e0fe32",
+      "prompt_version": "rubric-p1",
+      "renderer_version": "r1",
+      "grader": "anthropic"
+    },
+    "inputs": {
+      "version": "inputs.v1",
+      "github": {
+        "source": "pipeline_db",
+        "fetched_at": "2026-11-21T06:38:30+08:00",
+        "stars": 24948,
+        "forks": 925,
+        "open_issues": 658,
+        "created_at": "2019-07-24T17:46:25Z",
+        "pushed_at": "2026-11-20T22:15:04Z",
+        "releases": [
+          {
+            "tag": "v2.7.5",
+            "published_at": "2026-11-18T01:23:29Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 5717
+          },
+          {
+            "tag": "v2.7.4",
+            "published_at": "2026-11-16T18:15:12Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 2954
+          },
+          {
+            "tag": "v2.7.3",
+            "published_at": "2026-11-11T02:04:40Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 11257
+          },
+          {
+            "tag": "v2.7.2",
+            "published_at": "2026-11-05T20:30:33Z",
+            "prerelease": false,
+            "notes_chars": 3999,
+            "downloads": 10171
+          },
+          {
+            "tag": "v2.7.1",
+            "published_at": "2026-11-05T03:48:09Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 1196
+          },
+          {
+            "tag": "v2.7.0",
+            "published_at": "2026-11-04T22:24:02Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 507
+          },
+          {
+            "tag": "v2.6.2",
+            "published_at": "2026-10-31T16:59:19Z",
+            "prerelease": false,
+            "notes_chars": 3999,
+            "downloads": 10361
+          },
+          {
+            "tag": "v2.6.1",
+            "published_at": "2026-10-26T17:35:56Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 20516
+          },
+          {
+            "tag": "v2.6.0",
+            "published_at": "2026-10-23T04:08:12Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 38991
+          },
+          {
+            "tag": "v2.5.1",
+            "published_at": "2026-10-20T19:23:39Z",
+            "prerelease": false,
+            "notes_chars": 1346,
+            "downloads": 6133
+          }
+        ],
+        "contributors": null,
+        "files": {
+          "count": 2593,
+          "truncated": false,
+          "ci": ".github/workflows/bump-dependency.yaml",
+          "tests": ".github/actions/check-deferred-ci/cancellation.test.js",
+          "changelog": "go/performance/sysbench/testdata/history.yaml",
+          "lockfile": ".github/actions/check-deferred-ci/package-lock.json"
+        }
+      },
+      "issues": {
+        "source": "github_live",
+        "fetched_at": "2026-11-21T06:39:53+08:00",
+        "items": [
+          {
+            "created_at": "2026-11-20T19:27:20Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T17:10:27Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T16:34:34Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T16:00:16Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T15:36:44Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T13:42:48Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T12:45:06Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T19:42:39Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T13:17:43Z",
+            "closed_at": "2026-11-19T21:09:12Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-18T22:59:08Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-18T21:36:21Z",
+            "closed_at": "2026-11-18T22:50:44Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-18T20:50:17Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T23:22:23Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T19:57:01Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T19:56:21Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T19:54:22Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T19:54:05Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T19:54:01Z",
+            "closed_at": "2026-11-19T18:53:53Z",
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T17:27:23Z",
+            "closed_at": "2026-11-18T01:00:10Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T17:18:00Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T16:28:57Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T01:01:39Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-16T17:17:39Z",
+            "closed_at": "2026-11-17T21:24:31Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-16T12:44:46Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-16T12:08:13Z",
+            "closed_at": "2026-11-18T23:37:52Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-16T11:37:04Z",
+            "closed_at": "2026-11-17T22:21:37Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-15T09:56:24Z",
+            "closed_at": "2026-11-18T19:14:39Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-14T23:57:43Z",
+            "closed_at": "2026-11-18T00:58:54Z",
+            "association": "NONE",
+            "bot": false
+          }
+        ],
+        "pull_requests": 72,
+        "page_full": true
+      }
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/dolthub/dolt",
+      "fetched_at": "2026-11-21T06:38:31+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/dolthub/dolt/blob/main/README.md",
+      "fetched_at": "2026-11-21T06:38:30+08:00"
+    },
+    {
+      "id": "release:v2.7.5",
+      "kind": "release",
+      "url": "https://github.com/dolthub/dolt/releases/tag/v2.7.5",
+      "fetched_at": "2026-11-21T06:38:30+08:00"
+    },
+    {
+      "id": "help:verify-dolt-20261121-063844-5bb3:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-21T06:43:52+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "use the Git-like command line interface to import CSV files, commit \nyour changes, push them to a remote, or merge your teammate's changes.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:38:40+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Connect to Dolt just like any MySQL database to read or modify schema \nand data.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:38:40+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Dolt is a SQL database",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:38:40+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Dolt is a SQL database that you can fork, clone, branch, merge, push\nand pull just like a Git repository.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:38:40+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "Dolt is Git for Data!",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:38:40+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "To install on Linux or Mac based systems run this command",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:38:40+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:38:31+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:38:31+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-21T06:38:31+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:38:31+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:38:31+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.7.5",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:38:30+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "import CSV files, commit \nyour changes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:38:40+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "In Dolt, you're one command away from getting your table back.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:38:40+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "It's the best database \nfor agent memory",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:38:40+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "It's like Git and MySQL had a\nbaby.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:38:40+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "fork, clone, branch, merge, push\nand pull just like a Git repository",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:38:40+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "sql-server - Start a MySQL-compatible server.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:38:40+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Version control functionality is exposed in SQL via system \ntables, functions, and procedures.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:38:40+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "I can use the `dolt_diff()` table function",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:38:40+08:00"
+    },
+    {
+      "field": "/features/4",
+      "source_id": "readme",
+      "quote": "blame - Show what revision and author last modified each row of a table.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:38:40+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install dolt",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:38:40+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "sudo bash -c 'curl -L https://github.com/dolthub/dolt/releases/latest/download/install.sh | bash'",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:38:40+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "go install ./cmd/dolt",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:38:40+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Dolt ships with a MySQL compatible database server built in.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:38:40+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "Dolt is a SQL database that you can fork, clone, branch, merge, push\nand pull just like a Git repository.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:43:52+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "sql-server - Start a MySQL-compatible server.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:43:52+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Dolt supports any MySQL-compatible client.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:43:52+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "use the Git-like command line interface to import CSV files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:43:52+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "The `dolt` CLI has the same commands as `git`, with some extras.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:43:52+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "If I'd like to see the diff between the two branches, I can use the `dolt_diff()` table function.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:43:52+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "I can query the branch no matter what I have checked out using SQL `as of` syntax.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:43:52+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Dolt lets you undo that by calling the [`dolt_undrop()` stored procedure]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:43:52+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "blame - Show what revision and author last modified each row of a table.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:43:52+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "dump - Export all tables in the working set into a file.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:43:52+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "conflicts - Commands for viewing and resolving merge conflicts.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:43:52+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "backup - Manage a set of server backups.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:43:52+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "help:verify-dolt-20261121-063844-5bb3:1",
+      "quote": "fsck - Verifies the contents of the database are not corrupted. Provides repair when possible.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:43:52+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "help:verify-dolt-20261121-063844-5bb3:1",
+      "quote": "query-diff - Shows table diff between two queries.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:43:52+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "filter-branch - Edits the commit history using the provided query.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:43:52+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "Dolt supports foreign keys, secondary indexes, triggers, check constraints, and stored procedures.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:43:52+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "We also built [DoltHub](https://www.dolthub.com), a place to share\nDolt databases.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:43:52+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "It's the best database \nfor agent memory",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:43:52+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-21T06:38:30+08:00",
+  "updated_at": "2026-11-21T06:43:52+08:00"
+}
