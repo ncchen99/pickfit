@@ -952,3 +952,57 @@ def test_a_capabilities_step_that_fails_does_not_stop_the_landing(env: dict[str,
     submit(env["d1"], "sub_2", "https://github.com/someone/other")
     [job] = run_once(env, pipeline)
     assert job.result == "ready" and any("extraction schema_error" in n for n in job.notes)
+
+
+# --- O4 (11/20): a deploy that began before the latest commits, and ready records that stay unlisted --------------
+
+
+def test_the_history_digest_is_load_records_digest(env: dict[str, Any]) -> None:
+    from pickfit.index import load_records
+    from pickfit.watch import data_digest_at
+
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    make(env, Pipeline(env["tmp"])).run(once=True)
+    head = git(env["data"], "rev-parse", "HEAD").strip()
+    assert data_digest_at(env["data"], head) == load_records(env["data"])[1]
+
+
+def test_a_deploy_that_began_before_a_later_commit_still_lists_what_it_serves(env: dict[str, Any]) -> None:
+    from pickfit.watch import data_digest_at
+
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    [job] = make(env, Pipeline(env["tmp"])).run(once=True)
+    assert job.result == "ready" and job.commit
+    served = data_digest_at(env["data"], git(env["data"], "rev-parse", "HEAD").strip())  # the deploy starts here
+    # The watch lands another record while that deploy is still running: data/software moves on.
+    (env["data"] / "zzz-later.json").write_text(json.dumps({**EXAMPLE, "slug": "zzz-later", "repo_id": "gh:99"}))
+    git(env["data"], "add", "zzz-later.json")
+    git(env["data"], "-c", "user.name=t", "-c", "user.email=t@t", "commit", "-qm", "Add zzz-later")
+    w = make(env, Pipeline(env["tmp"]), live_sha=lambda: served)
+    assert w._mark_deployed() == ["sub_1"]  # live is an older commit's data, which holds tinyq: listed
+    assert submission(env["d1"], "sub_1")["status"] == "listed"
+
+
+def test_a_ready_record_the_live_site_never_serves_is_not_listed(env: dict[str, Any]) -> None:
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    make(env, Pipeline(env["tmp"])).run(once=True)
+    w = make(env, Pipeline(env["tmp"]), live_sha=lambda: "a sha no commit has")
+    assert w._mark_deployed() == []
+    assert submission(env["d1"], "sub_1")["reason"] == READY_REASON
+
+
+def test_ready_for_over_two_hours_is_logged_once(env: dict[str, Any]) -> None:
+    from pickfit.watch import READY_ALERT
+
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    make(env, Pipeline(env["tmp"])).run(once=True)
+    lines: list[str] = []
+    w = make(env, Pipeline(env["tmp"]), lines=lines, live_sha=lambda: "an older deploy")
+    w._mark_deployed()
+    assert not any("not live" in line for line in lines)  # just ready: no alarm
+    later = NOW + READY_ALERT + timedelta(minutes=1)
+    w.now = lambda: later  # type: ignore[method-assign]
+    w._mark_deployed()
+    w._mark_deployed()
+    alerts = [line for line in lines if "ready but not live for over 2h" in line]
+    assert len(alerts) == 1 and "tinyq" in alerts[0] and "is the deploy stuck?" in alerts[0]

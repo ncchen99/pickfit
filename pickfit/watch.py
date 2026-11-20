@@ -54,6 +54,7 @@ counted from submitted_at, land in runs/watch/jobs/<submission>.json.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import shutil
@@ -124,6 +125,11 @@ WORST_CASE_BASETEN_USD = 0.0
 REASON_MAX = 300  # submissions.reason CHECK
 DONE_EXTRACTIONS = ("ok", "quotes_dropped")
 READY_REASON = "Installed, replayed in a fresh sandbox and checked; goes live at pickfit's next publish."
+# A ready record the live site has not served for this long is logged once: the deploy (CI, or a manual publish)
+# may be stuck. And how many data/software commits back a live data_sha256 is looked for: a deploy that started
+# before the latest commits serves an older state, which still lists every ready record committed before it.
+READY_ALERT = timedelta(hours=2)
+DEPLOY_HISTORY = 40
 
 # The Worker's normalization (worker/src/submit.ts), so both sides agree on what a repository URL is.
 _NOT_OWNERS = frozenset(
@@ -645,6 +651,35 @@ def git(repo: Path, *args: str) -> str:
     return subprocess.run(["git", *args], cwd=repo, check=True, capture_output=True, text=True).stdout
 
 
+def data_digest_at(data_dir: Path, commit: str) -> str | None:
+    """pickfit.index.load_records' digest of data_dir as it was at `commit` (the data_sha256 a deploy of that commit
+    serves), read from git without a checkout; None when the commit has no records there."""
+    listing = subprocess.run(["git", "ls-tree", "-z", commit, "."], cwd=data_dir, check=True,
+                             capture_output=True).stdout
+    entries: list[tuple[bytes, bytes]] = []
+    for item in listing.split(b"\0"):
+        if not item:
+            continue
+        meta, name = item.split(b"\t", 1)
+        _mode, kind, oid = meta.split()
+        if kind == b"blob" and name.endswith(b".json") and b"/" not in name:
+            entries.append((name, oid))
+    if not entries:
+        return None
+    entries.sort()  # load_records reads sorted(data_dir.glob("*.json")): the same order for these names
+    blobs = subprocess.run(["git", "cat-file", "--batch"], cwd=data_dir, check=True, capture_output=True,
+                           input=b"".join(oid + b"\n" for _, oid in entries)).stdout
+    digest = hashlib.sha256()
+    pos = 0
+    for name, _oid in entries:
+        newline = blobs.index(b"\n", pos)
+        size = int(blobs[pos:newline].split()[2])
+        start = newline + 1
+        digest.update(name + b"\0" + blobs[start:start + size] + b"\0")
+        pos = start + size + 1
+    return digest.hexdigest()
+
+
 def live_data_sha(worker_dir: Path) -> Callable[[], str | None]:
     """data_sha256 of what the deployed Worker serves (GET / on its first ALLOWED_HOSTS name), or None."""
     from pickfit.publish import check_wrangler
@@ -718,6 +753,8 @@ class Watcher:
         self.jobs_dir = settings.runs_dir / "watch" / "jobs"
         self.jobs_dir.mkdir(parents=True, exist_ok=True)
         self._git_lock = threading.Lock()
+        self._digests: dict[str, str | None] = {}  # commit -> data_digest_at (a commit never changes)
+        self._ready_alerted: set[str] = set()
         self._state_lock = threading.Lock()
         self._running: dict[str, Future[Job]] = {}
         self._slugs_in_flight: set[str] = set()
@@ -1622,20 +1659,68 @@ class Watcher:
             job.result = "listed"
             self._status(job, "listed", reason=None)
 
+    def _deployed_commit(self, live: str) -> str | None:
+        """The data/software commit, among the last DEPLOY_HISTORY, whose records the live site serves (its
+        data_sha256), or None."""
+        try:
+            with self._git_lock:
+                commits = git(self.s.data_dir, "log", f"-n{DEPLOY_HISTORY}", "--format=%H", "--", ".").split()
+                for commit in commits:
+                    if commit not in self._digests:
+                        self._digests[commit] = data_digest_at(self.s.data_dir, commit)
+                    if self._digests[commit] == live:
+                        return commit
+        except (subprocess.CalledProcessError, OSError, ValueError, IndexError) as err:
+            self.log(f"[watch] could not read data/software's history for the live data_sha256: {err}")
+        return None
+
+    def _contains(self, commit: str, job: Job) -> bool:
+        """Whether the job's own commit is in `commit`'s history (so the deploy of `commit` serves its record)."""
+        if not job.commit:
+            return False
+        try:
+            subprocess.run(["git", "merge-base", "--is-ancestor", job.commit, commit], cwd=self.s.data_dir,
+                           check=True, capture_output=True)
+            return True
+        except (subprocess.CalledProcessError, OSError):
+            return False
+
+    def _alert_ready(self, waiting: list[Job], live: str | None, local: str) -> None:
+        """Log, once each, the ready records the live site has not served for READY_ALERT."""
+        now = self.now()
+        late = [j for j in waiting if j.submission_id not in self._ready_alerted and j.ready_at
+                and now - _parse_time(j.ready_at) > READY_ALERT]
+        if not late:
+            return
+        self._ready_alerted.update(j.submission_id for j in late)
+        hours = max((now - _parse_time(j.ready_at)).total_seconds() for j in late) / 3600
+        self.log(f"[watch] ready but not live for over {READY_ALERT.total_seconds() / 3600:.0f}h "
+                 f"(up to {hours:.1f}h): {', '.join(j.slug or j.submission_id for j in late)}; the live data_sha256 "
+                 f"is {(live or 'unreadable')[:12]}, data/software's {local[:12]}: is the deploy stuck?")
+
     def _mark_deployed(self) -> list[str]:
-        """Ready records the live Worker now serves (its data_sha256 is data/software's) become listed."""
+        """Ready records the live site now serves become listed: all of them when its data_sha256 is data/software's,
+        else those committed at or before the recent commit whose data it serves (a deploy that began before the
+        latest commits). Ready records still not live after READY_ALERT are logged once."""
         from pickfit.index import IndexBuildError, load_records
 
         with self._state_lock:
             running = set(self._running)
-        ready = [j for j in self.saved_jobs() if j.result == "ready" and j.submission_id not in running]
-        if not ready:
+        waiting = [j for j in self.saved_jobs() if j.result == "ready" and j.submission_id not in running]
+        if not waiting:
             return []
         try:
             _, local = load_records(self.s.data_dir)
         except IndexBuildError:
             return []
-        if self._live_sha() != local:
+        live = self._live_sha()
+        if live == local:
+            ready = waiting
+        else:
+            commit = self._deployed_commit(live) if live else None
+            ready = [j for j in waiting if commit and self._contains(commit, j)]
+        self._alert_ready([j for j in waiting if j not in ready], live, local)
+        if not ready:
             return []
         try:
             self._mark_listed(ready)
