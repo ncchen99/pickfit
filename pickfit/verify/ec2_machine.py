@@ -1127,12 +1127,15 @@ class Ec2Box(LinuxBox):
     """An EC2 instance driven like a DockerBox: LinuxBox on an Ec2Machine. Always a VM."""
 
     def __init__(self, *, limits: BoxLimits = BoxLimits(), tags: dict[str, str] | None = None,
-                 display: bool = False, audio: bool = False, toolchain: bool = False, region: str | None = None,
+                 display: bool = False, audio: bool = False, toolchain: bool = False, services: bool = False,
+                 region: str | None = None,
                  ec2: Any = None, control: str | None = None, log: Callable[[str], None] = print) -> None:
         machine = Ec2Machine(cores=limits.cpus, memory_mb=limits.memory_mb, lifetime_s=limits.lifetime_s,
-                             recipe=image_recipe("vm", display, audio, toolchain), tags=tags, region=region, ec2=ec2,
+                             recipe=image_recipe("vm", display, audio, toolchain, services), tags=tags,
+                             region=region, ec2=ec2,
                              control=control, log=lambda line: self.log(line))
-        super().__init__(machine, limits=limits, display=display, audio=audio, toolchain=toolchain, log=log)
+        super().__init__(machine, limits=limits, display=display, audio=audio, toolchain=toolchain,
+                         services=services, log=log)
 
     def _size(self) -> None:
         """The machine's size follows the box's limits, read when they are used."""

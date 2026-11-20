@@ -155,13 +155,13 @@ def cpu_request(cores: float, *, toolchain: bool = False) -> float:
 
 
 def image_layers(runtime: str = "gvisor", display: bool = False, audio: bool = False,
-                 toolchain: bool = False) -> tuple[str, tuple[str, ...]]:
+                 toolchain: bool = False, services: bool = False) -> tuple[str, tuple[str, ...]]:
     """(published image name, apt packages added on top of sandbox.Dockerfile) for a kind of box.
 
     The plain box keeps `pickfit-sbx:<Dockerfile hash>`; a variant hashes the Dockerfile, its packages and the
     commands that install what is not a package (VirtualGL, the build box's Rust and Go).
     """
-    recipe = image_recipe(runtime, display, audio, toolchain)
+    recipe = image_recipe(runtime, display, audio, toolchain, services)
     return recipe.tag(sandbox_image_tag()), recipe.packages
 
 
@@ -172,15 +172,16 @@ def modal_client() -> Any:
 
 
 def publish_image(client: Any, app: Any, *, log: Callable[[str], None] = print, runtime: str = "gvisor",
-                  display: bool = False, audio: bool = False, toolchain: bool = False) -> str:
+                  display: bool = False, audio: bool = False, toolchain: bool = False,
+                  services: bool = False) -> str:
     """Build the sandbox image from sandbox.Dockerfile (plus the variant's packages) and publish it.
 
     Modal caches the build, so an unchanged Dockerfile takes a few seconds.
     """
     import modal
 
-    recipe = image_recipe(runtime, display, audio, toolchain)
-    name = image_layers(runtime, display, audio, toolchain)[0]
+    recipe = image_recipe(runtime, display, audio, toolchain, services)
+    name = image_layers(runtime, display, audio, toolchain, services)[0]
     began = time.monotonic()
     image = modal.Image.from_dockerfile(SANDBOX_DOCKERFILE, context_dir=SANDBOX_DOCKERFILE.parent,
                                         ignore=lambda path: True)
@@ -195,13 +196,15 @@ def publish_image(client: Any, app: Any, *, log: Callable[[str], None] = print, 
 
 
 def ensure_published_image(log: Callable[[str], None] = print, *, runtime: str = "gvisor",
-                           display: bool = False, audio: bool = False, toolchain: bool = False) -> str:
+                           display: bool = False, audio: bool = False, toolchain: bool = False,
+                           services: bool = False) -> str:
     """Publish the image for the current Dockerfile before parallel boxes start; returns its name."""
     import modal
 
     client = modal_client()
     app = modal.App.lookup(APP_NAME, create_if_missing=True, client=client)
-    return publish_image(client, app, log=log, runtime=runtime, display=display, audio=audio, toolchain=toolchain)
+    return publish_image(client, app, log=log, runtime=runtime, display=display, audio=audio, toolchain=toolchain,
+                         services=services)
 
 
 def _missing_image(err: Exception) -> bool:
@@ -333,7 +336,7 @@ class ModalBox(LinuxBox):
     def __init__(self, *, limits: BoxLimits = BoxLimits(), tags: dict[str, str] | None = None,
                  app_name: str = APP_NAME, client: Any = None, gpu: str | None = None,
                  runtime: str = "gvisor", display: bool = False, audio: bool = False, toolchain: bool = False,
-                 log: Callable[[str], None] = print) -> None:
+                 services: bool = False, log: Callable[[str], None] = print) -> None:
         if gpu is not None and gpu not in GPU_USD_PER_S:
             raise ValueError(f"gpu must be one of {sorted(GPU_USD_PER_S)}, got {gpu!r}")
         if runtime not in RUNTIMES:
@@ -345,11 +348,13 @@ class ModalBox(LinuxBox):
             cores=limits.cpus / 2, memory_mb=limits.memory_mb, lifetime_s=limits.lifetime_s, runtime=runtime,
             gpu=gpu, tags={"pickfit": "verify", **(tags or {})}, app_name=app_name, client=client,
             log=lambda line: self.log(line),
-            image_name=lambda: image_layers(self.runtime, self.display is not None, self.audio, self.toolchain)[0],
+            image_name=lambda: image_layers(self.runtime, self.display is not None, self.audio, self.toolchain,
+                                            self.services)[0],
             publish=lambda client, app: publish_image(client, app, log=self.log, runtime=self.runtime,
                                                       display=self.display is not None, audio=self.audio,
-                                                      toolchain=self.toolchain))
-        super().__init__(machine, limits=limits, display=display, audio=audio, toolchain=toolchain, log=log)
+                                                      toolchain=self.toolchain, services=self.services))
+        super().__init__(machine, limits=limits, display=display, audio=audio, toolchain=toolchain,
+                         services=services, log=log)
 
     # -- what was the box's own before the split, now the machine's
 

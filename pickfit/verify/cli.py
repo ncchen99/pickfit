@@ -68,6 +68,9 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
                    help="Modal: a build box, for a tool whose only install path here is a build from source: gcc, "
                         "g++, clang, make, cmake, Rust and Go in the image, 4 vCPU, 6 GiB and 30 minutes per command "
                         "(the agent gets 45 minutes). The box user is still not root")
+    v.add_argument("--services", action="store_true",
+                   help="Modal, EC2: PostgreSQL, Redis and an HTTP mock the box user starts with pickfit-services, on "
+                        "127.0.0.1 only (verify/services.py)")
     v.add_argument("--memory-mb", type=int, default=None,
                    help="Modal: the box's memory (default 2048), for a model that needs more")
     v.add_argument("--file-mb", type=int, default=None,
@@ -92,12 +95,15 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
 
 def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64", gpu: str | None = None,
                 runtime: str = "gvisor", display: bool = False, audio: bool = False, memory_mb: int | None = None,
-                file_mb: int | None = None, toolchain: bool = False):
-    """(run_id, role) -> an unstarted box of the chosen runner."""
+                file_mb: int | None = None, toolchain: bool = False, services: bool = False):
+    """(run_id, role) -> an unstarted box of the chosen runner. services: PostgreSQL, Redis and an HTTP mock the
+    box user can start (verify/services.py), Modal and EC2 only."""
     from pickfit.verify.box import TOOLCHAIN_LIMITS, BoxLimits, DockerBox
 
-    if runner not in ("modal", "ec2") and (runtime != "gvisor" or audio or memory_mb or file_mb or toolchain):
-        raise ValueError("--runtime, --audio, --toolchain, --memory-mb and --file-mb need --runner modal or ec2")
+    if runner not in ("modal", "ec2") and (runtime != "gvisor" or audio or memory_mb or file_mb or toolchain
+                                           or services):
+        raise ValueError("--runtime, --audio, --toolchain, --services, --memory-mb and --file-mb need --runner modal "
+                         "or ec2")
     if display and runner not in ("modal", "ec2", "tart", "ec2-windows"):
         raise ValueError("--display needs --runner modal, ec2, ec2-windows or tart")
     sized = {k: v for k, v in (("memory_mb", memory_mb), ("home_mb", file_mb)) if v}
@@ -131,13 +137,14 @@ def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64", 
 
         return lambda run_id, role: Ec2Box(tags={"pickfit.run": run_id, "pickfit.role": role},
                                            limits=BoxLimits(lifetime_s=lifetime_s, **sized), display=display,
-                                           audio=audio, toolchain=toolchain)
+                                           audio=audio, toolchain=toolchain, services=services)
     if runner == "modal":
         from pickfit.verify.modal_box import ModalBox
 
         return lambda run_id, role: ModalBox(tags={"pickfit.run": run_id, "pickfit.role": role},
                                              limits=BoxLimits(lifetime_s=lifetime_s, **sized), gpu=gpu,
-                                             runtime=runtime, display=display, audio=audio, toolchain=toolchain)
+                                             runtime=runtime, display=display, audio=audio, toolchain=toolchain,
+                                             services=services)
     if gpu:
         raise ValueError("--gpu needs --runner modal")
     return lambda run_id, role: DockerBox(platform=platform, labels={"pickfit.run": run_id, "pickfit.role": role},
@@ -177,9 +184,10 @@ def run(args: argparse.Namespace) -> int:
         return 0
     if args.rejudge_features:
         return _rejudge(args)
-    if (args.runtime != "gvisor" or args.audio or args.memory_mb or args.file_mb or args.toolchain) \
-            and args.runner not in ("modal", "ec2"):
-        print("pickfit verify: --runtime, --audio, --toolchain, --memory-mb and --file-mb need --runner modal or ec2")
+    if (args.runtime != "gvisor" or args.audio or args.memory_mb or args.file_mb or args.toolchain
+            or args.services) and args.runner not in ("modal", "ec2"):
+        print("pickfit verify: --runtime, --audio, --toolchain, --services, --memory-mb and --file-mb need --runner "
+              "modal or ec2")
         return 2
     if args.display and args.runner not in ("modal", "ec2", "tart", "ec2-windows"):
         print("pickfit verify: --display needs --runner modal, ec2, ec2-windows or tart")
@@ -201,7 +209,7 @@ def run(args: argparse.Namespace) -> int:
         results, _ = limits_test(box_factory(args.runner, 900, platform=args.platform, gpu=args.gpu,
                                              runtime=args.runtime, display=args.display, audio=args.audio,
                                              memory_mb=args.memory_mb, file_mb=args.file_mb,
-                                             toolchain=args.toolchain), _runs_dir(None))
+                                             toolchain=args.toolchain, services=args.services), _runs_dir(None))
         return 0 if all(r.ok for r in results) else 1
     if not args.fixture and not args.batch:
         print("pickfit verify: give --fixture or --batch N")
@@ -222,7 +230,8 @@ def run(args: argparse.Namespace) -> int:
         limits = replace(limits, max_seconds=max(limits.max_seconds, TOOLCHAIN_AGENT_S))
     make_box = box_factory(args.runner, int(limits.max_seconds) + LIFETIME_MARGIN_S, platform=args.platform,
                            gpu=args.gpu, runtime=args.runtime, display=args.display, audio=args.audio,
-                           memory_mb=args.memory_mb, file_mb=args.file_mb, toolchain=args.toolchain)
+                           memory_mb=args.memory_mb, file_mb=args.file_mb, toolchain=args.toolchain,
+                           services=args.services)
     if args.batch:
         if args.concurrency is None:
             args.concurrency = EC2_CONCURRENCY if args.runner in ("ec2", "ec2-windows") else 5
@@ -325,12 +334,12 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
         from pickfit.verify.modal_box import ensure_published_image
 
         ensure_published_image(runtime=args.runtime, display=args.display, audio=args.audio,
-                               toolchain=args.toolchain)
+                               toolchain=args.toolchain, services=args.services)
     if args.runner == "ec2":  # bake or find the AMI once, not in every thread
         from pickfit.verify.ec2_machine import ensure_image
         from pickfit.verify.linux_box import image_recipe
 
-        ensure_image(recipe=image_recipe("vm", args.display, args.audio, args.toolchain))
+        ensure_image(recipe=image_recipe("vm", args.display, args.audio, args.toolchain, args.services))
     if args.runner == "ec2-windows":
         from pickfit.verify.ec2_windows import ensure_win_image
 
