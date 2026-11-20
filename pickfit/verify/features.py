@@ -31,6 +31,7 @@ from typing import TYPE_CHECKING, Any, get_args
 from pydantic import BaseModel, field_validator
 
 from pickfit.schema import (
+    COMMAND_MAX,
     SETUP_MAX,
     VERIFY_FEATURES_MAX,
     FeatureCheck,
@@ -92,7 +93,13 @@ Feature checks: the task lists the tool's main advertised features (F1, F2, ...)
 smoke tests are for: after one --version or --help check (not both, and not again), spend the commands \
 on one check per feature, its README example as written or the smallest input that uses it; a README \
 example that uses no listed feature can wait. Plan these from the README, which is free to read, not from --help runs. Let each \
-check print its result to stdout (it is shown to you); do not send it to a file to read back. Write an \
+check print its result to stdout (it is shown to you); do not send it to a file to read back. A judge \
+reads only that output, so it must show the feature doing its job: the converted text, the found matches, \
+the answer. A --help or config text, a list of tools or settings, a status line, `echo done` or a line \
+count after writing a file show nothing and do not check a feature. Give the check input with something to \
+find or change (an empty folder or index shows nothing), keep its output short (the judge reads the start \
+and the end of a long one), and for a feature that colours its output, force colour (such as \
+--color=always). Write an \
 input file in a run_command of its own (a heredoc that exits 0) and cite it in setup_ids of every check \
 and server that reads it: a fresh box runs only the cited commands. Checks that do not depend on each \
 other can go in one turn as several run_command calls. Cite every feature check as a smoke test, also \
@@ -102,7 +109,10 @@ listed feature: checked, not_checked with the reason when this box cannot exerci
 when its check failed after a working install. Never invent an account, an API key or an outside \
 service's answer to get a feature through; that is not_checked. If commands run short, keep the install \
 check and one README example first, then cover as many features as the budget allows; report the rest \
-as not_attempted."""
+as not_attempted.""" + (
+    f" A check longer than {COMMAND_MAX} characters cannot be kept in the record, so it checks nothing: write a "
+    f"longer script into a file in a setup command of its own (up to {SETUP_MAX} characters) and let the check "
+    "run that file.")
 
 MCP_GUIDE = """\
 Feature checks for an MCP server go through pickfit's probe, never through ad-hoc commands: exercise each \

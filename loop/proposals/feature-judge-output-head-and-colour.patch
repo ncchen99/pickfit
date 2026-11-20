@@ -1,0 +1,84 @@
+diff --git a/pickfit/verify/feature_judge.py b/pickfit/verify/feature_judge.py
+index d3acdf0f..9bf88be7 100644
+--- a/pickfit/verify/feature_judge.py
++++ b/pickfit/verify/feature_judge.py
+@@ -33,9 +33,14 @@ if TYPE_CHECKING:
+ STAGE = "verify-feature-judge"
+ REASONING_EFFORT = "low"
+ MAX_OUTPUT_TOKENS = 3_000
+-OUTPUT_CHARS = 1_500  # per check: the end of its output
++# Per check: all of an output up to OUTPUT_CHARS; a longer one keeps its start and its end. Until 11/20 only the last
++# 1,500 characters went, so a result printed first (a table's header, the first matches) was cut off: of the 53
++# not_shown features whose runs this machine kept, 16 had printed more than 3,000 characters.
++OUTPUT_CHARS = 3_000
++OUTPUT_HEAD = 1_200
+ 
+ _ANSI = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b[@-Z\\-_]")
++_SGR = re.compile(r"\x1b\[[0-9;]*m")  # colour and style codes
+ 
+ INSTRUCTIONS = """\
+ You are pickfit's feature judge. pickfit installed a piece of software in a disposable sandbox, then ran \
+@@ -91,9 +96,18 @@ def _escape(text: str) -> str:
+     return text.replace("</source", "<\\/source")
+ 
+ 
+-def _tail(text: str, limit: int) -> str:
++def _tail(text: str, limit: int, head: int = 0) -> str:
++    """The output as the judge reads it: terminal codes removed, and, when it is longer than `limit`, its first `head`
++    characters and its last `limit - head`. Colour codes are named before they are removed: a feature that colours
++    its output (syntax highlighting, coloured results) could not be shown working without them."""
++    colours = sum(1 for code in _SGR.findall(text) if code not in ("\x1b[m", "\x1b[0m"))
+     text = _ANSI.sub("", text).strip()
+-    return text if len(text) <= limit else "…" + text[-limit:]
++    if len(text) > limit:
++        tail = limit - head
++        text = (text[:head] + f"\n… {len(text) - limit} characters omitted …\n" if head else "…") + text[-tail:]
++    if colours:
++        text = f"[pickfit: the output carried {colours} terminal colour or style codes, removed here]\n{text}"
++    return text
+ 
+ 
+ def _operation(run: Any) -> str:
+@@ -113,7 +127,7 @@ def build_input(name: str, items: list[tuple[str, str, list[CheckResult]]]) -> l
+         for check in checks:
+             run = check.run
+             output = _tail(_operation(run) if getattr(check, "kind", "") == "gui_op" else
+-                           f"{run.stdout}\n{run.stderr}" if run else "", OUTPUT_CHARS)
++                           f"{run.stdout}\n{run.stderr}" if run else "", OUTPUT_CHARS, OUTPUT_HEAD)
+             lines += [f"check: `{_escape(check.command[:600])}` exit code {run.exit_code if run else '-'}",
+                       f'<source kind="output">\n{_escape(output)}\n</source>']
+         lines.append("")
+diff --git a/tests/test_verify_features.py b/tests/test_verify_features.py
+index d4b0b2de..1ec2b384 100644
+--- a/tests/test_verify_features.py
++++ b/tests/test_verify_features.py
+@@ -426,6 +426,29 @@ def test_the_feature_judge_reads_the_readme_quote_and_the_fresh_box_output():
+     assert "When unsure, choose does_not_show" in INSTRUCTIONS
+ 
+ 
++def test_the_feature_judge_sees_a_long_outputs_start_and_end_and_is_told_about_colours():
++    from types import SimpleNamespace
++
++    from pickfit.verify.feature_judge import OUTPUT_CHARS, build_input
++
++    def text_for(stdout: str) -> str:
++        run = SimpleNamespace(stdout=stdout, stderr="", exit_code=0)
++        check = SimpleNamespace(command_id=4, command="tool run", passed=True, run=run)
++        return build_input("tool", [("render a table", "Renders tables", [check])])[0]["content"][0]["text"]
++
++    long = "RESULT HEADER: 3 rows\n" + "x" * 5_000 + "\nlast line"
++    text = text_for(long)
++    assert "RESULT HEADER: 3 rows" in text and "last line" in text and "characters omitted" in text
++    assert len(text) < len(long)
++    short = "a small result"
++    assert short in text_for(short) and "omitted" not in text_for(short)
++    coloured = text_for("\x1b[1;31mred\x1b[0m and \x1b[32mgreen\x1b[0m")
++    assert "red and green" in coloured and "\x1b" not in coloured
++    assert "[pickfit: the output carried 2 terminal colour or style codes, removed here]" in coloured
++    assert "colour" not in text_for("plain\x1b[0m")  # a reset alone is not colour
++    assert OUTPUT_CHARS >= 3_000
++
++
+ def test_runs_checked_before_the_feature_judge_are_judged_from_their_evidence(tmp_path: Path):
+     from pickfit.verify.feature_judge import rejudge_record
+ 

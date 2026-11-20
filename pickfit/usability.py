@@ -1179,6 +1179,49 @@ def visual_one(path: Path, evidence_dir: Path, log: Callable[[str], None] = lamb
     return inspected["cost_usd"], None
 
 
+def needs_ease(record: dict[str, Any], evidence_dir: Path = EVIDENCE_DIR) -> Bundle | None:
+    """The run to judge for ease, or None: a desktop or web app with a passed run whose screenshots pickfit kept, and no
+    ease judgment of that run yet (coverage's usability.not_judged and usability.stale). A first look already judged
+    on the same run is not asked again: the same screens would get the same answer."""
+    if record.get("kind") not in ("desktop_app", "web_app"):
+        return None
+    bundle = bundle_for(record, evidence_dir)
+    if bundle is None:
+        return None
+    judged = record.get("usability") or {}
+    return None if judged.get("run_id") == bundle.run_id else bundle
+
+
+def ease_one(path: Path, evidence_dir: Path, log: Callable[[str], None] = lambda line: None, *,
+             ask: Ask | None = None, comfort: Ask | None = None, finder: TextFinder | None = None
+             ) -> tuple[float, str | None]:
+    """The ease judgment for one record, for a pipeline that has just run it (as visual_one is for the visual check):
+    what it cost, and why it did not write one (None when it wrote `usability`). The same calls and the same record
+    field as the usability command with --write; a record with nothing to judge costs nothing."""
+    from pickfit.schema import SoftwareRecord, Usability
+
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    bundle = needs_ease(raw, evidence_dir)
+    if bundle is None:
+        return 0.0, "nothing to judge (no kept screenshots of a passed run, or already judged)"
+    ask = ask or meta_ask(MODEL, STAGE_CAP_USD)
+    comfort = comfort or meta_ask(COMFORT_MODEL, STAGE_CAP_USD, effort=COMFORT_EFFORT,
+                                  max_output_tokens=COMFORT_MAX_TOKENS)
+    result = judge(bundle, ask, finder or TextFinder(), samples=SAMPLES, log=log, comfort=comfort)
+    if result["errors"] and all(r["answer"] is None for r in result["raw"]):
+        return result["cost_usd"], str(result["errors"][0])[:200]
+    raw["usability"] = Usability.model_validate(record_usability(result)).model_dump(mode="json")
+    SoftwareRecord.model_validate(raw)
+    path.write_text(json.dumps(raw, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    return result["cost_usd"], None
+
+
+def pending_slugs(data_dir: Path, evidence_dir: Path = EVIDENCE_DIR) -> list[str]:
+    """The records needs_ease would judge, in slug order (the usability command's --pending)."""
+    return [p.stem for p in sorted(data_dir.glob("*.json"))
+            if needs_ease(json.loads(p.read_text(encoding="utf-8")), evidence_dir) is not None]
+
+
 def pilot_slugs(repo: Path) -> list[str]:
     return [a["slug"] for a in json.loads((repo / "data" / "calibration" / "ease-pilot.json").read_text())["apps"]]
 
@@ -1194,8 +1237,12 @@ def main_usability(args: Any) -> int:
     slugs = list(args.slug or [])
     if args.pilot:
         slugs += pilot_slugs(REPO_ROOT)
+    if getattr(args, "pending", False):
+        slugs += [s for s in pending_slugs(data_dir) if s not in slugs]
+    if getattr(args, "limit", None):
+        slugs = slugs[: args.limit]
     if not slugs:
-        print("pickfit usability: name --slug or --pilot", file=sys.stderr)
+        print("pickfit usability: name --slug, --pilot or --pending (none pending)", file=sys.stderr)
         return 2
     out_dir = Path(args.out) if args.out else RESULTS_DIR
     out_dir.mkdir(parents=True, exist_ok=True)

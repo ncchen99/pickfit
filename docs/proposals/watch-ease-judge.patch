@@ -1,0 +1,134 @@
+diff --git a/pickfit/watch.py b/pickfit/watch.py
+index 9553e998..70279f4f 100644
+--- a/pickfit/watch.py
++++ b/pickfit/watch.py
+@@ -450,6 +450,9 @@ class Steps:
+     display: bool = False
+     security: Callable[[Path, str], str | None] | None = None
+     visual: Callable[[Path, str, Callable[[str], None]], tuple[float, str | None]] | None = None
++    # ease(data_dir, slug, log) -> (cost, why it wrote nothing or None): the ease judgment of a desktop or web app from
++    # the screenshots its run just took (pickfit.usability.ease_one); None: skipped, the record stays not judged
++    ease: Callable[[Path, str, Callable[[str], None]], tuple[float, str | None]] | None = None
+     docs: Callable[[dict[str, Any]], dict[str, Any]] | None = None
+     lanes: dict[str, Any] = field(default_factory=dict)
+     site: Any = None
+@@ -521,6 +524,15 @@ def live_steps(*, runner: str = "modal") -> Steps:
+         except Exception as err:  # noqa: BLE001 - OCR, a budget or a model answer must not lose a finished run
+             return 0.0, f"{type(err).__name__}: {str(err)[:200]}"
+ 
++    def ease(data_dir: Path, slug: str, log: Callable[[str], None]) -> tuple[float, str | None]:
++        from pickfit.discover.github import runs_dir
++        from pickfit.usability import ease_one
++
++        try:
++            return ease_one(data_dir / f"{slug}.json", runs_dir() / "verify", log)
++        except Exception as err:  # noqa: BLE001 - OCR, a budget or a model answer must not lose a finished run
++            return 0.0, f"{type(err).__name__}: {str(err)[:200]}"
++
+     github = GitHub(github_token())
+ 
+     def docs(candidate: dict[str, Any]) -> dict[str, Any]:
+@@ -533,7 +545,7 @@ def live_steps(*, runner: str = "modal") -> Steps:
+                  prescreen=lambda c, run_id: screen_and_review(c, run_id=run_id),
+                  extract=lambda c, run_id: extract_with_retries(c, model=MODEL, run_id=run_id,
+                                                                 reasoning_effort=EXTRACT_EFFORT),
+-                 verify=verify, score=score, display=display, security=security, visual=visual, docs=docs,
++                 verify=verify, score=score, display=display, security=security, visual=visual, ease=ease, docs=docs,
+                  capabilities=lambda c, run_id: extract_with_retries(c, model=MODEL, run_id=run_id,
+                                                                      reasoning_effort=EXTRACT_EFFORT,
+                                                                      capabilities_only=True))
+@@ -1013,13 +1025,15 @@ class Watcher:
+         self._tail(job, record_dir, f"the sandbox run did not pass ({run.unverified_reason or run.level})", log)
+ 
+     def _tail(self, job: Job, record_dir: Path, not_passed: str | None, log: Callable[[str], None]) -> None:
+-        """Scores, the vulnerability check, the visual check, the documented capabilities, then the record lands."""
++        """Scores, the vulnerability check, the visual check, the ease judgment, the documented capabilities, then the
++        record lands."""
+         with self._stage(job, "score"):
+             error = self.steps.score(record_dir, job.slug)
+         if error:
+             raise Retry(f"scores: {error}")
+         self._security(job, record_dir, log)
+         self._visual(job, record_dir, log)
++        self._ease(job, record_dir, log)
+         self._capabilities(job, record_dir, log)
+         self._land(job, record_dir, not_passed, log)
+ 
+@@ -1267,6 +1281,22 @@ class Watcher:
+             job.notes.append(f"visual check did not finish: {error}")
+             log(f"visual check did not finish: {error}")
+ 
++    def _ease(self, job: Job, record_dir: Path, log: Callable[[str], None]) -> None:
++        """The ease judgment of a desktop or web app from the screenshots its run just took (pickfit.usability.ease_one).
++        Never stops a landing: a judgment that cannot finish leaves the record not judged, for a later
++        `--pending` run of the usability command."""
++        if self.steps.ease is None or not job.run_id:
++            return
++        if json.loads((record_dir / f"{job.slug}.json").read_text(encoding="utf-8")).get("kind") not in (
++                "desktop_app", "web_app"):
++            return
++        with self._stage(job, "ease"):
++            cost, error = self.steps.ease(record_dir, job.slug, log)
++        job.spent("model", cost)
++        if error:
++            job.notes.append(f"ease judgment not added: {error}")
++            log(f"ease judgment not added: {error}")
++
+     def _refuse_known(self, job: Job) -> None:
+         """A repository another submission took (or is taking) is refused; one already in data/software
+         takes that record's status."""
+diff --git a/tests/test_watch.py b/tests/test_watch.py
+index c7c782f8..83baee38 100644
+--- a/tests/test_watch.py
++++ b/tests/test_watch.py
+@@ -60,6 +60,7 @@ class Pipeline:
+         self.calls: list[str] = []
+         self.security: Any = None
+         self.visual: Any = None
++        self.ease: Any = None
+         self.pages: list[dict[str, Any]] | None = None  # install pages the docs step reads; None: no docs step
+         self.result_with_docs: dict[str, Any] | None = None  # what extraction answers once it has them
+         self.capabilities: Any = None  # the capabilities-only extraction step; None: no such step
+@@ -88,7 +89,7 @@ class Pipeline:
+             return self.score_error
+ 
+         return Steps(github=self.github, prescreen=prescreen, extract=extract, verify=verify, score=score,
+-                     display=self.display, security=self.security, visual=self.visual,
++                     display=self.display, security=self.security, visual=self.visual, ease=self.ease,
+                      docs=docs if self.pages is not None else None, capabilities=self.capabilities)
+ 
+ 
+@@ -707,6 +708,33 @@ def test_a_visual_check_runs_and_is_paid_for_on_a_desktop_app_and_cannot_lose_th
+     assert any("visual check did not finish" in line for line in lines)
+ 
+ 
++def test_a_desktop_app_gets_its_ease_judgment_after_the_visual_check_and_a_failure_cannot_lose_the_run(
++        env: dict[str, Any]) -> None:
++    pipeline = Pipeline(env["tmp"], display=True, result=extraction(
++        kind=cited("desktop_app", "A tiny jq-like query tool"),
++        category=cited("other", "A tiny jq-like query tool for JSON Lines.")),
++        runs=[passed_run("run-20261030-linux-7", ["cargo install tinyq"], method="cargo", level="install")])
++    order: list[str] = []
++    pipeline.visual = lambda data_dir, slug, log: (order.append("visual"), (0.02, None))[1]
++    pipeline.ease = lambda data_dir, slug, log: (order.append("ease"), (0.07, "HTTP 529 overloaded"))[1]
++    lines: list[str] = []
++    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
++    [job] = run_once(env, pipeline, lines=lines)
++    assert order == ["visual", "ease"] and "ease" in job.stages
++    assert job.cost_usd["model"] >= 0.09
++    assert (env["data"] / "tinyq.json").exists() and job.result == "ready"
++    assert any("ease judgment not added: HTTP 529" in n for n in job.notes)
++
++
++def test_a_command_line_tool_gets_no_ease_judgment(env: dict[str, Any]) -> None:
++    pipeline = Pipeline(env["tmp"])
++    asked: list[str] = []
++    pipeline.ease = lambda data_dir, slug, log: (asked.append(slug), (0.07, None))[1]
++    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
++    [job] = run_once(env, pipeline)
++    assert asked == [] and "ease" not in job.stages
++
++
+ def test_the_live_steps_give_desktop_apps_a_display_box_on_ec2_too(monkeypatch: pytest.MonkeyPatch) -> None:
+     from pickfit import watch
+     from pickfit.discover import github as gh

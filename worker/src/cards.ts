@@ -71,16 +71,17 @@ type CoreField = (typeof CORE_FIELDS)[number];
 export const CARD_FIELDS = [...CORE_FIELDS, ...WEB_FIELDS, ...MATCHED_FIELDS] as const;
 export type CardField = (typeof CARD_FIELDS)[number];
 
+/** "linux x86_64: function check passed 2026-10-28, sandbox, replayed": the OS first (rules and the guard read it). */
 function runLabel(entry: Entry, os: OS): string {
   const guide = entry.install[os]!;
-  const how = guide.basis === 'replayed' ? 'sandbox install, replayed from scratch' : 'installed by hand';
-  return `${os} ${guide.run.arch}: ${how}, ${guide.run.level} check passed, ${runDay(guide.run.checked_at)}`;
+  const how = guide.basis === 'replayed' ? 'sandbox, replayed' : 'by hand';
+  return `${os} ${guide.run.arch}: ${guide.run.level} check passed ${runDay(guide.run.checked_at)}, ${how}`;
 }
 
 /** A web app's browser run, as verified_on says it: no OS, any browser. */
 function webLabel(entry: Entry): string[] {
   const check = webCheck(entry);
-  return check ? [`any OS, in a browser: opened in pickfit's sandboxed browser, ${check.level} check passed, ${check.checked_at.slice(0, 10)}`] : [];
+  return check ? [`any OS, in a browser: ${check.level} check passed ${check.checked_at.slice(0, 10)}, sandboxed browser`] : [];
 }
 
 function webFields(entry: Entry): Partial<Record<WebField, CardValue>> {
@@ -113,7 +114,9 @@ export function toCard(entry: Entry, os?: OS, arch?: Arch, query: readonly strin
     tags: entry.tags,
     use_cases: entry.use_cases,
     features_checked: features.checked.map((f) => f.feature),
-    features_not_checked: features.not_checked.map((f) => `${f.feature} (${f.reason})`),
+    // The reason only when it says something about the tool (needs a GPU, failed its test); not that the run did not
+    // get to it, checked only four, or predates feature checks.
+    features_not_checked: features.not_checked.map((f) => (SILENT_REASONS.has(f.reason) ? f.feature : `${f.feature} (${f.reason})`)),
     alternatives_to: entry.alternatives_to,
     platforms: entry.platforms,
     verified_on: web ? webLabel(entry) : verifiedOn(entry).map((name) => runLabel(entry, name)),
@@ -142,6 +145,29 @@ export function toCard(entry: Entry, os?: OS, arch?: Arch, query: readonly strin
     ...webFields(entry),
     ...matchedFields(entry, query),
   };
+}
+
+/** Why a feature was not checked, when it says nothing about the tool itself. */
+const SILENT_REASONS = new Set<string>(['not_attempted', 'beyond_budget', 'not_recorded', 'other']);
+
+/** Card fields the prompt never carries: popularity is never a reason (prompt rule 3). */
+const NOT_SENT = new Set<string>(['popularity']);
+/** Fields whose false is their default, sent only when true. Every other false says something (open_source false). */
+const FALSE_IS_DEFAULT = new Set<string>(['apple_silicon_only']);
+
+/**
+ * The card as the matcher reads it: the same values, less what says nothing (null, an empty list or string, a false
+ * that is the default, popularity). The guard and the rules still read the whole card, and every value sent is the
+ * card's own, so a reason the model copies from it holds against the card. About a third smaller.
+ */
+export function promptCard(card: Card): Record<string, CardValue> {
+  const out: Record<string, CardValue> = {};
+  for (const [key, value] of Object.entries(card) as [string, CardValue][]) {
+    if (NOT_SENT.has(key) || value === null || value === '' || (Array.isArray(value) && value.length === 0)) continue;
+    if (value === false && FALSE_IS_DEFAULT.has(key)) continue;
+    out[key] = value;
+  }
+  return out;
 }
 
 function matchedFields(entry: Entry, query: readonly string[]): Partial<Record<MatchedField, CardValue>> {

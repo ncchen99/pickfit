@@ -19,8 +19,10 @@ export interface Conditions {
 export const needsOffline = (cond: Conditions) => cond.must_run_locally === true || cond.offline === true;
 export const needsLocalData = (cond: Conditions) => cond.must_run_locally === true || cond.data_stays_local === true;
 
-/** Hard filters never relax; MAX_CARDS bounds what one model call reads (architecture F.2 C). */
-export const MAX_CARDS = 60;
+/** Hard filters never relax; MAX_CARDS bounds what one model call reads (architecture F.2 C). 50 since 11/20: on
+ * worker/bench (128 capability queries, 65 controls, the fit-fresh dev shortlist) it lost one query of 128 and one or
+ * two of 89 labeled tools against 60, for a sixth fewer cards; 40 lost three to five queries and three to five tools. */
+export const MAX_CARDS = 50;
 
 export function runsLocally(entry: Entry): boolean {
   const { network, api_keys } = entry.prerequisites;
@@ -56,8 +58,9 @@ function fits(entry: Entry, cond: Conditions): boolean {
   return true;
 }
 
-/** Shortlist slots kept for the highest treasure values, so good general picks are not lost to keyword matches. */
-export const TREASURE_SLOTS = 10;
+/** Shortlist slots kept for the highest treasure values, so good general picks are not lost to keyword matches. 3 since
+ * 11/20: with fewer cards, ten such slots pushed out more fitting tools than they let in (bench, as for MAX_CARDS). */
+export const TREASURE_SLOTS = 3;
 
 /** What the shortlist ranks by: request terms (relevance.ts) and, for find_alternatives, the current tool. */
 export interface Query {

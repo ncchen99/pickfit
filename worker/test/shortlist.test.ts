@@ -88,7 +88,7 @@ test('shortlist keeps TREASURE_SLOTS for the highest treasure values when many t
   const { candidates, byRelevance } = hardFilter([...matching, ...general], {}, { terms: queryTerms('transcribe audio') });
   assert.equal(byRelevance, MAX_CARDS - TREASURE_SLOTS);
   const kept = slugsOf(candidates).filter((s) => s.startsWith('general-'));
-  assert.deepEqual(kept, Array.from({ length: TREASURE_SLOTS }, (_, i) => `general-${String(5 + i).padStart(2, '0')}`));
+  assert.deepEqual(kept, Array.from({ length: TREASURE_SLOTS }, (_, i) => `general-${String(15 - TREASURE_SLOTS + i).padStart(2, '0')}`));
   // Among equal matches the higher treasure values win the relevance slots.
   assert.ok(slugsOf(candidates).includes('match-64'));
   assert.ok(!slugsOf(candidates).includes('match-00'));
@@ -154,7 +154,7 @@ test('a request over MAX_CARDS gets English keywords from claude-opus-5-5 first 
   assert.ok(match.output_config.format.schema.properties.picks.items.properties.slug.enum.includes('quiet-transcriber'));
   assert.equal(out.matched_by, MATCH_MODEL);
   assert.deepEqual(out.picks.map((p) => p.slug), ['quiet-transcriber']);
-  assert.match(out.coverage_note ?? '', /72 tools met the conditions; the 60 compared were the 1 whose profiles best match/);
+  assert.match(out.coverage_note ?? '', new RegExp(`72 tools met the conditions; the ${MAX_CARDS} compared were the 1 whose profiles best match`));
 
   const row = h.sqlite.prepare('SELECT * FROM events WHERE type = ?').get('find') as any;
   assert.deepEqual(JSON.parse(row.need).shortlist, { by_relevance: 1, keywords: 'ok' });
