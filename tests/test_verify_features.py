@@ -426,6 +426,29 @@ def test_the_feature_judge_reads_the_readme_quote_and_the_fresh_box_output():
     assert "When unsure, choose does_not_show" in INSTRUCTIONS
 
 
+def test_the_feature_judge_sees_a_long_outputs_start_and_end_and_is_told_about_colours():
+    from types import SimpleNamespace
+
+    from pickfit.verify.feature_judge import OUTPUT_CHARS, build_input
+
+    def text_for(stdout: str) -> str:
+        run = SimpleNamespace(stdout=stdout, stderr="", exit_code=0)
+        check = SimpleNamespace(command_id=4, command="tool run", passed=True, run=run)
+        return build_input("tool", [("render a table", "Renders tables", [check])])[0]["content"][0]["text"]
+
+    long = "RESULT HEADER: 3 rows\n" + "x" * 5_000 + "\nlast line"
+    text = text_for(long)
+    assert "RESULT HEADER: 3 rows" in text and "last line" in text and "characters omitted" in text
+    assert len(text) < len(long)
+    short = "a small result"
+    assert short in text_for(short) and "omitted" not in text_for(short)
+    coloured = text_for("\x1b[1;31mred\x1b[0m and \x1b[32mgreen\x1b[0m")
+    assert "red and green" in coloured and "\x1b" not in coloured
+    assert "[pickfit: the output carried 2 terminal colour or style codes, removed here]" in coloured
+    assert "colour" not in text_for("plain\x1b[0m")  # a reset alone is not colour
+    assert OUTPUT_CHARS >= 3_000
+
+
 def test_runs_checked_before_the_feature_judge_are_judged_from_their_evidence(tmp_path: Path):
     from pickfit.verify.feature_judge import rejudge_record
 

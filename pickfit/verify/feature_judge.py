@@ -33,9 +33,14 @@ if TYPE_CHECKING:
 STAGE = "verify-feature-judge"
 REASONING_EFFORT = "low"
 MAX_OUTPUT_TOKENS = 3_000
-OUTPUT_CHARS = 1_500  # per check: the end of its output
+# Per check: all of an output up to OUTPUT_CHARS; a longer one keeps its start and its end. Until 11/20 only the last
+# 1,500 characters went, so a result printed first (a table's header, the first matches) was cut off: of the 53
+# not_shown features whose runs this machine kept, 16 had printed more than 3,000 characters.
+OUTPUT_CHARS = 3_000
+OUTPUT_HEAD = 1_200
 
 _ANSI = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b[@-Z\\-_]")
+_SGR = re.compile(r"\x1b\[[0-9;]*m")  # colour and style codes
 
 INSTRUCTIONS = """\
 You are pickfit's feature judge. pickfit installed a piece of software in a disposable sandbox, then ran \
@@ -91,9 +96,18 @@ def _escape(text: str) -> str:
     return text.replace("</source", "<\\/source")
 
 
-def _tail(text: str, limit: int) -> str:
+def _tail(text: str, limit: int, head: int = 0) -> str:
+    """The output as the judge reads it: terminal codes removed, and, when it is longer than `limit`, its first `head`
+    characters and its last `limit - head`. Colour codes are named before they are removed: a feature that colours
+    its output (syntax highlighting, coloured results) could not be shown working without them."""
+    colours = sum(1 for code in _SGR.findall(text) if code not in ("\x1b[m", "\x1b[0m"))
     text = _ANSI.sub("", text).strip()
-    return text if len(text) <= limit else "…" + text[-limit:]
+    if len(text) > limit:
+        tail = limit - head
+        text = (text[:head] + f"\n… {len(text) - limit} characters omitted …\n" if head else "…") + text[-tail:]
+    if colours:
+        text = f"[pickfit: the output carried {colours} terminal colour or style codes, removed here]\n{text}"
+    return text
 
 
 def _operation(run: Any) -> str:
@@ -113,7 +127,7 @@ def build_input(name: str, items: list[tuple[str, str, list[CheckResult]]]) -> l
         for check in checks:
             run = check.run
             output = _tail(_operation(run) if getattr(check, "kind", "") == "gui_op" else
-                           f"{run.stdout}\n{run.stderr}" if run else "", OUTPUT_CHARS)
+                           f"{run.stdout}\n{run.stderr}" if run else "", OUTPUT_CHARS, OUTPUT_HEAD)
             lines += [f"check: `{_escape(check.command[:600])}` exit code {run.exit_code if run else '-'}",
                       f'<source kind="output">\n{_escape(output)}\n</source>']
         lines.append("")
