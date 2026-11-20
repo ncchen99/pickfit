@@ -1,0 +1,1257 @@
+{
+  "schema_version": "software.v1",
+  "slug": "ansible",
+  "repo_id": "gh:3638964",
+  "name": "Ansible",
+  "summary": "Agentless IT automation system for configuration management, application deployment, cloud provisioning and orchestration over SSH.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "infra_devops",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "ansible",
+    "python"
+  ],
+  "use_cases": [
+    "deploy applications to remote servers",
+    "manage configuration of many machines over SSH",
+    "perform zero-downtime rolling updates with load balancers",
+    "automate network device configuration"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "configuration management",
+    "application deployment",
+    "cloud provisioning",
+    "ad-hoc task execution",
+    "network automation",
+    "multi-node orchestration"
+  ],
+  "capabilities": [
+    {
+      "label": "zero-downtime rolling updates with load balancers",
+      "area": "automation"
+    },
+    {
+      "label": "manage remote machines agentlessly over SSH",
+      "area": "connections"
+    },
+    {
+      "label": "manage nodes via PowerShell remoting",
+      "area": "connections"
+    },
+    {
+      "label": "run a single task against hosts",
+      "area": "subcommands"
+    },
+    {
+      "label": "command line utilities",
+      "items": [
+        "ansible",
+        "ansible-config",
+        "ansible-console",
+        "ansible-doc",
+        "ansible-galaxy",
+        "ansible-inventory",
+        "ansible-playbook",
+        "ansible-pull",
+        "ansible-vault"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "dry-run predicting changes",
+      "area": "execution"
+    },
+    {
+      "label": "show diffs of changed files",
+      "area": "output"
+    },
+    {
+      "label": "run tasks in parallel processes",
+      "area": "execution"
+    },
+    {
+      "label": "run tasks asynchronously in background",
+      "area": "execution"
+    },
+    {
+      "label": "privilege escalation on target hosts",
+      "area": "security"
+    },
+    {
+      "label": "use vault passwords for secrets",
+      "area": "security"
+    },
+    {
+      "label": "list matching inventory hosts",
+      "area": "inventory"
+    },
+    {
+      "label": "pass extra variables as YAML/JSON",
+      "area": "input"
+    },
+    {
+      "label": "log output to a directory",
+      "area": "output"
+    },
+    {
+      "label": "write modules in any dynamic language",
+      "area": "extensibility"
+    },
+    {
+      "label": "install community Ansible Collections",
+      "area": "extensibility"
+    },
+    {
+      "label": "shell completion for command line utilities",
+      "items": [
+        "bash",
+        "zsh",
+        "tcsh"
+      ],
+      "area": "shell"
+    },
+    {
+      "label": "run as non-root user"
+    }
+  ],
+  "why_worth_it": null,
+  "homepage": "https://www.ansible.com/",
+  "repo": {
+    "url": "https://github.com/ansible/ansible",
+    "full_name": "ansible/ansible",
+    "created_at": "2012-03-06T14:58:02Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "python"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "pipx",
+      "steps": [
+        {
+          "command": "pipx install --include-deps ansible",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "ansible --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-ansible-20261120-192106-4eb1",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install ansible",
+          "purpose": "uv tool install ansible (installs only ansible-community)"
+        },
+        {
+          "command": "uv tool install --force ansible --with-executables-from ansible-core",
+          "purpose": "reinstall exposing ansible-core executables (ansible, ansible-playbook, ...)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "ansible --version",
+        "expected_signal": "ansible [core 2.21.6]"
+      },
+      "first_task": "cd /home/sbx/work/demo && ansible local -i inventory.ini -m ansible.builtin.shell -a 'echo hello-from-$(whoami); uname -s'"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "GPL-3.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v2.22.0",
+    "published_at": "2026-11-02T17:35:29Z",
+    "url": "https://github.com/ansible/ansible/releases/tag/v2.22.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-20T19:22:33.621931+08:00",
+    "runs": [
+      {
+        "id": "verify-ansible-20261120-192106-4eb1",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:01363ad5a469",
+        "checked_at": "2026-11-20T19:22:33.621931+08:00",
+        "tool_version": null,
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install ansible",
+            "purpose": "uv tool install ansible (installs only ansible-community)"
+          },
+          {
+            "command": "uv tool install --force ansible --with-executables-from ansible-core",
+            "purpose": "reinstall exposing ansible-core executables (ansible, ansible-playbook, ...)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "ansible --version",
+            "expected_signal": "ansible [core 2.21.6]",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "ansible [core 2.21.6]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /home/sbx/work/demo && ansible local -i inventory.ini -m ansible.builtin.shell -a 'echo hello-from-$(whoami); uname -s'",
+            "expected_signal": "hello-from-sbx",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hello-from-sbx",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/demo/app && cd /home/sbx/work/demo && cat > inventory.ini <<'EOF'\n[local]\nlocalhost ansible_connection=local ansible_python_interpreter=/usr/bin/python3\nEOF\ncat > config.yml <<'EOF'\n- hosts: local\n  gather_facts: false\n  tasks:\n    - name: Ensure config file has setting\n      ansible.builtin.lineinfile:\n        path: /tmp/ansible_demo/app.conf\n        line: \"max_connections=100\"\n        create: true\n    - name: Show config\n      ansible.builtin.command: cat /tmp/ansible_demo/app.conf\n      register: out\n      changed_when: false\n    - ansible.builtin.debug:\n        var: out.stdout\nEOF\ncat > app/index.html.j2 <<'EOF'\n<h1>{{ app_name }} version {{ app_version }}</h1>\nEOF\ncat > deploy.yml <<'EOF'\n- hosts: local\n  gather_facts: false\n  vars:\n    app_name: demoapp\n    app_version: \"1.2.3\"\n  tasks:\n    - name: Create release dir\n      ansible.builtin.file:\n        path: \"/tmp/ansible_demo/releases/{{ app_version }}\"\n        state: directory\n    - name: Deploy templated page\n      ansible.builtin.template:\n        src: app/index.html.j2\n        dest: \"/tmp/ansible_demo/releases/{{ app_version }}/index.html\"\n    - name: Link current release\n      ansible.builtin.file:\n        src: \"/tmp/ansible_demo/releases/{{ app_version }}\"\n        dest: /tmp/ansible_demo/current\n        state: link\n    - ansible.builtin.slurp:\n        src: /tmp/ansible_demo/current/index.html\n      register: page\n    - ansible.builtin.debug:\n        msg: \"{{ page.content | b64decode }}\"\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /home/sbx/work/demo && cat > inventory.ini <<'EOF'\n[local]\nlocalhost ansible_connection=local ansible_python_interpreter=\"{{ ansible_playbook_python }}\"\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /home/sbx/work/demo && ansible-playbook -i inventory.ini config.yml",
+            "expected_signal": "\"out.stdout\": \"max_connections=100\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"out.stdout\": \"max_connections=100\"",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/demo/app && cd /home/sbx/work/demo && cat > inventory.ini <<'EOF'\n[local]\nlocalhost ansible_connection=local ansible_python_interpreter=/usr/bin/python3\nEOF\ncat > config.yml <<'EOF'\n- hosts: local\n  gather_facts: false\n  tasks:\n    - name: Ensure config file has setting\n      ansible.builtin.lineinfile:\n        path: /tmp/ansible_demo/app.conf\n        line: \"max_connections=100\"\n        create: true\n    - name: Show config\n      ansible.builtin.command: cat /tmp/ansible_demo/app.conf\n      register: out\n      changed_when: false\n    - ansible.builtin.debug:\n        var: out.stdout\nEOF\ncat > app/index.html.j2 <<'EOF'\n<h1>{{ app_name }} version {{ app_version }}</h1>\nEOF\ncat > deploy.yml <<'EOF'\n- hosts: local\n  gather_facts: false\n  vars:\n    app_name: demoapp\n    app_version: \"1.2.3\"\n  tasks:\n    - name: Create release dir\n      ansible.builtin.file:\n        path: \"/tmp/ansible_demo/releases/{{ app_version }}\"\n        state: directory\n    - name: Deploy templated page\n      ansible.builtin.template:\n        src: app/index.html.j2\n        dest: \"/tmp/ansible_demo/releases/{{ app_version }}/index.html\"\n    - name: Link current release\n      ansible.builtin.file:\n        src: \"/tmp/ansible_demo/releases/{{ app_version }}\"\n        dest: /tmp/ansible_demo/current\n        state: link\n    - ansible.builtin.slurp:\n        src: /tmp/ansible_demo/current/index.html\n      register: page\n    - ansible.builtin.debug:\n        msg: \"{{ page.content | b64decode }}\"\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /home/sbx/work/demo && cat > inventory.ini <<'EOF'\n[local]\nlocalhost ansible_connection=local ansible_python_interpreter=\"{{ ansible_playbook_python }}\"\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /home/sbx/work/demo && ansible-playbook -i inventory.ini deploy.yml",
+            "expected_signal": "<h1>demoapp version 1.2.3</h1>",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\"msg\": \"<h1>demoapp version 1.2.3</h1>\\n\"",
+            "setup": [
+              {
+                "command": "mkdir -p /home/sbx/work/demo/app && cd /home/sbx/work/demo && cat > inventory.ini <<'EOF'\n[local]\nlocalhost ansible_connection=local ansible_python_interpreter=/usr/bin/python3\nEOF\ncat > config.yml <<'EOF'\n- hosts: local\n  gather_facts: false\n  tasks:\n    - name: Ensure config file has setting\n      ansible.builtin.lineinfile:\n        path: /tmp/ansible_demo/app.conf\n        line: \"max_connections=100\"\n        create: true\n    - name: Show config\n      ansible.builtin.command: cat /tmp/ansible_demo/app.conf\n      register: out\n      changed_when: false\n    - ansible.builtin.debug:\n        var: out.stdout\nEOF\ncat > app/index.html.j2 <<'EOF'\n<h1>{{ app_name }} version {{ app_version }}</h1>\nEOF\ncat > deploy.yml <<'EOF'\n- hosts: local\n  gather_facts: false\n  vars:\n    app_name: demoapp\n    app_version: \"1.2.3\"\n  tasks:\n    - name: Create release dir\n      ansible.builtin.file:\n        path: \"/tmp/ansible_demo/releases/{{ app_version }}\"\n        state: directory\n    - name: Deploy templated page\n      ansible.builtin.template:\n        src: app/index.html.j2\n        dest: \"/tmp/ansible_demo/releases/{{ app_version }}/index.html\"\n    - name: Link current release\n      ansible.builtin.file:\n        src: \"/tmp/ansible_demo/releases/{{ app_version }}\"\n        dest: /tmp/ansible_demo/current\n        state: link\n    - ansible.builtin.slurp:\n        src: /tmp/ansible_demo/current/index.html\n      register: page\n    - ansible.builtin.debug:\n        msg: \"{{ page.content | b64decode }}\"\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /home/sbx/work/demo && cat > inventory.ini <<'EOF'\n[local]\nlocalhost ansible_connection=local ansible_python_interpreter=\"{{ ansible_playbook_python }}\"\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install ansible (candidate: uv tool install ansible)",
+            "actually_needed": "`uv tool install ansible` installs only the ansible-community executable; the ansible/ansible-playbook commands come from the ansible-core dependency and need `uv tool install ansible --with-executables-from ansible-core`",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "(no mention)",
+            "actually_needed": "This box has no /usr/bin/python3, so local-connection tasks must set ansible_python_interpreter (here to {{ ansible_playbook_python }}) in the inventory",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks succeeded: the ad-hoc shell command printed hello-from-sbx, the playbook ran with failed=0 and showed the expected stdout, and the version printed ansible [core 2.21.6].",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-ansible-20261120-192106-4eb1/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-ansible-20261120-192106-4eb1/check-1-cmd9.judged.png",
+            "runs/verify/verify-ansible-20261120-192106-4eb1/check-2-cmd10.judged.png",
+            "runs/verify/verify-ansible-20261120-192106-4eb1/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.156184,
+        "features": [
+          {
+            "feature": "configuration management",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "application deployment",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "cloud provisioning",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_account",
+            "failure": null,
+            "note": "cloud provisioning modules need a cloud provider account/credentials"
+          },
+          {
+            "feature": "ad-hoc task execution",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "network automation",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          },
+          {
+            "feature": "multi-node orchestration",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v2",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "pypi:ansible-core (fresh install, 9 packages)",
+      "pypi:ansible (fresh install, 10 packages)",
+      "sbom:verify-ansible-20261120-192106-4eb1 (12 packages installed)"
+    ],
+    "packages_checked": 12,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T19:22:40+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "installed_artifact",
+      "commit": null,
+      "run_id": "verify-ansible-20261120-192106-4eb1",
+      "tool_version": "ansible [core 2.21.6] (ansible 14.6.0)",
+      "artifact_sha256": [
+        "f8d5f2e2d1cc1dd48bd80a01c897aea04d78262c11dcc61add6ee45cbd1509db",
+        "9dc1df3b9f05e06b4578d916182cf862133c61ba8d2174a0eb838c90cf07b123",
+        "03751c8abd0d02005d14a5d1f41504f92fbd9d40a5bc809cd05e37f74dd4c556",
+        "d6843d880c9979d956ed3c65e7e6a65596c592a16538a7a109780a942efcab49",
+        "17b0585e7f22045b7e12e62f6113141f36bb36da19f39f665fece18be1044023",
+        "93cbb8afba935fffbf8f17d33ca8fa083468588cd64d732057ec94fb21fd2238",
+        "284d29efcd3e28d0c3840d69ed2e105c288df6833e83f00f64b769ff18767b32",
+        "67afdcf3a5ec4606cbb698ad9eb43fad0e6da0dd56b39bc53495576fa8615d2f",
+        "3334e67d0d3d0185f4eae0350a2deeaf099059a71dd7c90da5c97cecce88081a",
+        "9e99ec22a39d4d7ba00bd36be276c7a7af84a40b005fb17bd9aa67ed5241a001",
+        "694055eed1f8eb84b8af21e6ec395fe0bf62d93fc74316b98a20c0060e31108a"
+      ],
+      "packages": {
+        "npm": 2,
+        "pypi": 10
+      },
+      "scopes": {
+        "runtime": 12
+      },
+      "advisories_fetched_at": "2026-11-20T19:22:40+08:00",
+      "kev_catalog": null,
+      "epss_date": null,
+      "findings_total": 0,
+      "details": "security/ansible.json",
+      "details_sha256": "0e1ca544246cf887d5a4e6b795d06f055315eab1c8c519a07c9af5662fdaed88"
+    },
+    "assessment": {
+      "level": "none",
+      "policy_version": "sec.v2",
+      "reasons": [],
+      "counts": {},
+      "uncounted": 0,
+      "assessed_at": "2026-11-20T19:22:40+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "installed_artifact",
+      "packages_found": 12,
+      "packages_checked": 12,
+      "components": [
+        {
+          "ecosystem": "pypi",
+          "component": "registry:pypi:ansible-core",
+          "status": "scanned",
+          "packages": 9,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "registry:pypi:ansible",
+          "status": "scanned",
+          "packages": 10,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "sbom:verify-ansible-20261120-192106-4eb1",
+          "status": "scanned",
+          "packages": 10,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
+  },
+  "scores": {
+    "formula_version": "b3.v7",
+    "computed_at": "2026-11-20T19:22:40+08:00",
+    "quality": {
+      "total": 83.5,
+      "raw_total": 83.5,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.6,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.7941,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      },
+      "security": {
+        "level": "none",
+        "basis": "assessment",
+        "effect": "none",
+        "deduction": 0.0
+      }
+    },
+    "popularity": {
+      "score": 100.0,
+      "signals": {
+        "stars": 71525,
+        "monthly_downloads": 18081487,
+        "forks": 24478,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 265,
+        "registries_count": 2
+      },
+      "age_days": 5371,
+      "packages": [
+        "pypi:ansible-core",
+        "homebrew:ansible"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.0
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:33.687326+08:00",
+      "sources_sha": "94a40949fa5749f6c620adb9bf5a2fc06bad763153e1b5a5f0c9b47a8c98ec4a",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "It handles\nconfiguration management, application deployment, cloud provisioning,\nad-hoc task execution, network automation, and multi-node orchestration."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Power users and developers can run the `devel` branch"
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "For your control node (the machine that runs Ansible), you can use nearly any UNIX-like machine with Python installed."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "$ python3 -m pip install --user ansible"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "$ ansible --version"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "$ python3 -m pip install --upgrade --user ansible"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "This includes Red Hat, Debian, Ubuntu, macOS, BSDs, and Windows under a Windows Subsystem for Linux (WSL) distribution."
+        }
+      },
+      "unquoted": [],
+      "input_sha": "8424d4e6aa09a43d22bb606314520823d888700fd70b8d7ada34d7feb5eb9d5b",
+      "prompt_version": "rubric-p1",
+      "renderer_version": "r1",
+      "grader": "anthropic"
+    },
+    "inputs": {
+      "version": "inputs.v1",
+      "github": {
+        "source": "pipeline_db",
+        "fetched_at": "2026-11-20T19:20:28+08:00",
+        "stars": 71525,
+        "forks": 24478,
+        "open_issues": 880,
+        "created_at": "2012-03-06T14:58:02Z",
+        "pushed_at": "2026-11-19T21:15:12Z",
+        "releases": [
+          {
+            "tag": "v2.22.0",
+            "published_at": "2026-11-02T17:35:29Z",
+            "prerelease": false,
+            "notes_chars": 781,
+            "downloads": null
+          },
+          {
+            "tag": "v2.21.6",
+            "published_at": "2026-11-02T17:33:52Z",
+            "prerelease": false,
+            "notes_chars": 781,
+            "downloads": null
+          },
+          {
+            "tag": "v2.20.11",
+            "published_at": "2026-11-02T17:13:46Z",
+            "prerelease": false,
+            "notes_chars": 786,
+            "downloads": null
+          },
+          {
+            "tag": "v2.19.15",
+            "published_at": "2026-11-02T17:12:26Z",
+            "prerelease": false,
+            "notes_chars": 786,
+            "downloads": null
+          },
+          {
+            "tag": "v2.18.20",
+            "published_at": "2026-11-02T16:22:30Z",
+            "prerelease": false,
+            "notes_chars": 786,
+            "downloads": null
+          },
+          {
+            "tag": "v2.16.20",
+            "published_at": "2026-11-02T16:11:11Z",
+            "prerelease": false,
+            "notes_chars": 786,
+            "downloads": null
+          },
+          {
+            "tag": "v2.22.0rc2",
+            "published_at": "2026-10-27T18:54:27Z",
+            "prerelease": true,
+            "notes_chars": 796,
+            "downloads": null
+          },
+          {
+            "tag": "v2.21.6rc1",
+            "published_at": "2026-10-27T18:53:12Z",
+            "prerelease": true,
+            "notes_chars": 796,
+            "downloads": null
+          },
+          {
+            "tag": "v2.20.11rc1",
+            "published_at": "2026-10-27T18:51:37Z",
+            "prerelease": true,
+            "notes_chars": 801,
+            "downloads": null
+          },
+          {
+            "tag": "v2.19.15rc1",
+            "published_at": "2026-10-27T18:50:31Z",
+            "prerelease": true,
+            "notes_chars": 801,
+            "downloads": null
+          }
+        ],
+        "contributors": null,
+        "files": {
+          "count": 5928,
+          "truncated": false,
+          "ci": null,
+          "tests": "hacking/tests/gen_distribution_version_testcase.py",
+          "changelog": "changelogs/changelog.yaml",
+          "lockfile": null
+        }
+      },
+      "issues": {
+        "source": "github_live",
+        "fetched_at": "2026-11-20T19:22:33+08:00",
+        "items": [
+          {
+            "created_at": "2026-11-20T01:08:18Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T01:08:17Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T01:08:16Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T00:57:36Z",
+            "closed_at": "2026-11-20T01:00:59Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T00:57:35Z",
+            "closed_at": "2026-11-20T01:00:55Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T00:57:34Z",
+            "closed_at": "2026-11-20T01:00:50Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T14:17:30Z",
+            "closed_at": "2026-11-19T18:32:57Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T09:10:52Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T06:56:26Z",
+            "closed_at": "2026-11-19T19:16:08Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-18T18:52:33Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-18T18:43:38Z",
+            "closed_at": "2026-11-18T18:47:15Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T20:52:24Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-14T06:08:36Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-13T07:55:36Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-12T12:57:22Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-12T02:54:12Z",
+            "closed_at": "2026-11-12T19:06:36Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-11T00:14:46Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-09T06:47:51Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-07T14:33:22Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-05T01:37:24Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-04T18:54:39Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-04T16:08:32Z",
+            "closed_at": "2026-11-04T16:11:03Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-04T10:20:16Z",
+            "closed_at": "2026-11-04T16:24:37Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-03T10:07:27Z",
+            "closed_at": "2026-11-10T15:12:47Z",
+            "association": "NONE",
+            "bot": false
+          }
+        ],
+        "pull_requests": 76,
+        "page_full": true
+      }
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/ansible/ansible",
+      "fetched_at": "2026-11-20T19:20:30+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/ansible/ansible/blob/devel/README.md",
+      "fetched_at": "2026-11-20T19:20:28+08:00"
+    },
+    {
+      "id": "release:v2.22.0",
+      "kind": "release",
+      "url": "https://github.com/ansible/ansible/releases/tag/v2.22.0",
+      "fetched_at": "2026-11-20T19:20:28+08:00"
+    },
+    {
+      "id": "docs1",
+      "kind": "website",
+      "url": "https://docs.ansible.com/projects/ansible/latest/installation_guide/intro_installation.html",
+      "fetched_at": "2026-11-20T19:20:45+08:00"
+    },
+    {
+      "id": "help:verify-ansible-20261120-192106-4eb1:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T19:22:50+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "docs1",
+      "quote": "all from a simple command-line interface with no databases or daemons required.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:02+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "You can install a released version of Ansible with `pip` or a package manager.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:02+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Ansible is a radically simple IT automation system.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:02+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Ansible is a radically simple IT automation system. It handles\nconfiguration management, application deployment, cloud provisioning,",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:02+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Ansible",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:02+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "docs1",
+      "quote": "This includes Red Hat, Debian, Ubuntu, macOS, BSDs, and Windows under a Windows Subsystem for Linux (WSL) distribution.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:02+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "docs1",
+      "quote": "you can use nearly any UNIX-like machine with Python installed.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:02+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:20:30+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:20:30+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-20T19:20:30+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:20:30+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:20:30+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.22.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:20:28+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "The `stable-2.X` branches correspond to stable releases.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:02+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "application deployment",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:02+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "configuration management",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:02+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "zero-downtime rolling updates with load balancers",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:02+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "network automation",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:02+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "configuration management",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:02+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "application deployment",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:02+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "cloud provisioning",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:02+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "ad-hoc task execution",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:02+08:00"
+    },
+    {
+      "field": "/features/4",
+      "source_id": "readme",
+      "quote": "network automation",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:02+08:00"
+    },
+    {
+      "field": "/features/5",
+      "source_id": "readme",
+      "quote": "multi-node orchestration",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:02+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "docs1",
+      "quote": "pipx install --include-deps ansible",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:02+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "docs1",
+      "quote": "pipx install --include-deps ansible",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:02+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "zero-downtime rolling updates with load balancers",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:50+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "github_api",
+      "quote": "using SSH, with no agents to install on remote systems",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:50+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "docs1",
+      "quote": "remotely with SSH, Powershell remoting, and numerous other transports",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:50+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "help:verify-ansible-20261120-192106-4eb1:1",
+      "quote": "Define and run a single task 'playbook' against a set of hosts",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:50+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "docs1",
+      "quote": "eval $(register-python-argcomplete ansible-playbook)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:50+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "help:verify-ansible-20261120-192106-4eb1:1",
+      "quote": "don't make any changes; instead, try to predict some of the changes that",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:50+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "help:verify-ansible-20261120-192106-4eb1:1",
+      "quote": "when changing (small) files and templates, show the differences in those",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:50+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "help:verify-ansible-20261120-192106-4eb1:1",
+      "quote": "specify number of parallel processes to use (default=5)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:50+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "help:verify-ansible-20261120-192106-4eb1:1",
+      "quote": "run asynchronously, failing after X seconds (default=N/A)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:50+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "help:verify-ansible-20261120-192106-4eb1:1",
+      "quote": "privilege escalation method to use (default=sudo)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:50+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "help:verify-ansible-20261120-192106-4eb1:1",
+      "quote": "the vault identity to use.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:50+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "help:verify-ansible-20261120-192106-4eb1:1",
+      "quote": "outputs a list of matching hosts; does not execute anything else",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:50+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "help:verify-ansible-20261120-192106-4eb1:1",
+      "quote": "set additional variables as key=value or YAML/JSON",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:50+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "help:verify-ansible-20261120-192106-4eb1:1",
+      "quote": "log output to this directory",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:50+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "Allow module development in any dynamic language, not just Python.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:50+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "docs1",
+      "quote": "adds a community-curated selection of Ansible Collections for automating a wide variety of devices",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:50+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "docs1",
+      "quote": "It supports bash, and has limited support for zsh and tcsh.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:50+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "Be usable as non-root.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:50+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-20T19:20:28+08:00",
+  "updated_at": "2026-11-20T19:22:50+08:00"
+}
