@@ -1,0 +1,1229 @@
+{
+  "schema_version": "software.v1",
+  "slug": "llama-cpp",
+  "repo_id": "gh:612354784",
+  "name": "llama.cpp",
+  "summary": "C/C++ engine for running large language model inference on a wide range of hardware, with a CLI and an OpenAI-compatible API server.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "ggml"
+  ],
+  "use_cases": [
+    "download and chat with a model from Hugging Face in the terminal",
+    "serve a local model through an OpenAI-compatible API"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "run models directly from Hugging Face",
+    "launch an OpenAI-compatible API server",
+    "built-in chat web app",
+    "text-to-speech models",
+    "constrain output with GBNF grammars"
+  ],
+  "capabilities": [
+    {
+      "label": "Run LLM inference locally",
+      "area": "inference"
+    },
+    {
+      "label": "Download and run models from Hugging Face",
+      "area": "models"
+    },
+    {
+      "label": "Launch OpenAI-compatible API server",
+      "area": "server"
+    },
+    {
+      "label": "Command-line subcommands",
+      "items": [
+        "serve",
+        "cli",
+        "update",
+        "download",
+        "version",
+        "licenses",
+        "help"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Interactive command-line chat",
+      "area": "subcommands"
+    },
+    {
+      "label": "Download a model",
+      "area": "subcommands"
+    },
+    {
+      "label": "Update to the latest release",
+      "area": "subcommands"
+    },
+    {
+      "label": "Built-in web chat app",
+      "area": "interface"
+    },
+    {
+      "label": "Vision-language model sessions",
+      "area": "multimodal"
+    },
+    {
+      "label": "Multi-GPU usage",
+      "area": "hardware"
+    },
+    {
+      "label": "GPU and accelerator backends",
+      "items": [
+        "Vulkan",
+        "CUDA 12",
+        "CUDA 13",
+        "ROCm 10.0",
+        "OpenVINO",
+        "SYCL FP32",
+        "SYCL FP16",
+        "zDNN"
+      ],
+      "area": "hardware"
+    },
+    {
+      "label": "Run with Docker",
+      "area": "deployment"
+    },
+    {
+      "label": "iOS XCFramework library",
+      "area": "integrations"
+    },
+    {
+      "label": "C/C++ library API",
+      "area": "integrations"
+    }
+  ],
+  "why_worth_it": null,
+  "homepage": "https://llama.app",
+  "repo": {
+    "url": "https://github.com/ggml-org/llama.cpp",
+    "full_name": "ggml-org/llama.cpp",
+    "created_at": "2023-03-10T18:58:00Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": false,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-llama-cpp-20261120-192102-8a3f",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -LsSf -o /tmp/llama-install.sh https://llama.app/install.sh",
+          "purpose": "download llama.app install.sh"
+        },
+        {
+          "command": "sh /tmp/llama-install.sh",
+          "purpose": "run install script (installs prebuilt CPU binary to ~/.local/bin/llama)"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "llama version",
+        "expected_signal": "version: 1.0.0-dev"
+      },
+      "first_task": "llama version"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "script",
+      "steps": [
+        {
+          "command": "irm https://llama.app/install.ps1 | iex",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": null,
+  "verification": {
+    "level": "inference",
+    "unverified_reason": null,
+    "checked_at": "2026-11-20T19:22:16.805797+08:00",
+    "runs": [
+      {
+        "id": "verify-llama-cpp-20261120-192102-8a3f",
+        "level": "inference",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:01363ad5a469",
+        "checked_at": "2026-11-20T19:22:16.805797+08:00",
+        "tool_version": "1.0.0-dev (build 12375, commit 9d25e0014)",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -LsSf -o /tmp/llama-install.sh https://llama.app/install.sh",
+            "purpose": "download llama.app install.sh"
+          },
+          {
+            "command": "sh /tmp/llama-install.sh",
+            "purpose": "run install script (installs prebuilt CPU binary to ~/.local/bin/llama)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "llama version",
+            "expected_signal": "version: 1.0.0-dev",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "version: 1.0.0-dev (build 12375, commit 9d25e0014)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "llama cli -hf bartowski/SmolLM2-135M-Instruct-GGUF:Q8_0 -p \"What is the capital of France?\" -n 16 --temp 0 -st",
+            "expected_signal": "model : bartowski/SmolLM2-135M-Instruct-GGUF:Q8_0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "model : bartowski/SmolLM2-135M-Instruct-GGUF:Q8_0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -sf http://127.0.0.1:8080/v1/models",
+            "expected_signal": "\"owned_by\":\"llamacpp\"",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"models\":[{\"name\":\"bartowski/SmolLM2-135M-Instruct-GGUF:Q8_0\",\"model\":\"bartowski/SmolLM2-135M-Instruct-GGUF:Q8_0\",\"modified_at\":\"\",\"size\":\"\",\"digest\":\"\",\"type\":\"model\",\"description\":\"\",\"tags\":[\"\"],\"capabilities\":[\"completion\"],\"parameters\":\"\",\"details\":{\"parent_model\":\"\",\"format\":\"gguf\",\"family\":\"…",
+            "setup": [
+              {
+                "command": "llama cli -hf bartowski/SmolLM2-135M-Instruct-GGUF:Q8_0 -p \"What is the capital of France?\" -n 16 --temp 0 -st",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "llama serve -hf bartowski/SmolLM2-135M-Instruct-GGUF:Q8_0 --port 8080",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -sf http://127.0.0.1:8080/v1/chat/completions -H 'Content-Type: application/json' -d '{\"messages\":[{\"role\":\"user\",\"content\":\"What is the capital of France?\"}],\"temperature\":0,\"max_tokens\":16}'",
+            "expected_signal": "\"completion_tokens\":16",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"choices\":[{\"finish_reason\":\"length\",\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"The capital of France is Paris. It is a city known for its historical landmarks\"}}],\"created\":1795173726,\"model\":\"bartowski/SmolLM2-135M-Instruct-GGUF:Q8_0\",\"system_fingerprint\":\"b12375-9d25e0014\",\"object\":\"cha…",
+            "setup": [
+              {
+                "command": "llama cli -hf bartowski/SmolLM2-135M-Instruct-GGUF:Q8_0 -p \"What is the capital of France?\" -n 16 --temp 0 -st",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "llama serve -hf bartowski/SmolLM2-135M-Instruct-GGUF:Q8_0 --port 8080",
+                "background": true,
+                "port": 8080
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -LsSf https://llama.app/install.sh | sh",
+            "actually_needed": "Script works as given; it downloads opaque probe binaries (cuda-probe, rocm-probe, vulkan-probe, featcode) and the llama binary from a Hugging Face bucket, which cannot be read before running.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "llama cli -hf ggml-org/Qwen3.5-0.8B-GGUF",
+            "actually_needed": "Used the smaller bartowski/SmolLM2-135M-Instruct-GGUF:Q8_0 with -p ... -n 16 -st for a non-interactive single-turn run; the default cli is an interactive chat.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "The CLI loaded the cached model and answered 'Paris', the server listed the model with owned_by llamacpp, and the version command printed 1.0.0-dev; the only error is a harmless network commit-check failure because network is off.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-llama-cpp-20261120-192102-8a3f/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-llama-cpp-20261120-192102-8a3f/check-1-cmd4.judged.png",
+            "runs/verify/verify-llama-cpp-20261120-192102-8a3f/check-2-cmd6.judged.png",
+            "runs/verify/verify-llama-cpp-20261120-192102-8a3f/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.205021,
+        "features": [
+          {
+            "feature": "run models directly from Hugging Face",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "launch an OpenAI-compatible API server",
+            "status": "checked",
+            "smoke_tests": [
+              2,
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "built-in chat web app",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_display",
+            "failure": null,
+            "note": "The server returned the web app's HTML at / (the title grep found nothing, exit 1). Using the chat UI needs a browser."
+          },
+          {
+            "feature": "text-to-speech models",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_more_resources",
+            "failure": null,
+            "note": "TTS needs the OuteTTS-500M and WavTokenizer models, more than the ~300 MB download limit"
+          },
+          {
+            "feature": "constrain output with GBNF grammars",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v2",
+    "status": "unchecked",
+    "unchecked_reason": "resolve_failed",
+    "sources": [
+      "github.com/ggml-org/llama.cpp@4783b1145c70",
+      "ui/apps/chat/package-lock.json",
+      "ui/lib/ui/package-lock.json",
+      "gguf-py/pyproject.toml (resolved today)"
+    ],
+    "packages_checked": 975,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T19:22:23+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "4783b1145c7073bb809f4c282ff4853cbfe42954",
+      "run_id": "verify-llama-cpp-20261120-192102-8a3f",
+      "tool_version": "1.0.0-dev (build 12375, commit 9d25e0014)",
+      "artifact_sha256": [
+        "12f215b2214344ccf76a2ac00595cf7826d4dd7686966e0df1560c5cd2c3eb06"
+      ],
+      "packages": {
+        "npm": 967,
+        "pypi": 8
+      },
+      "scopes": {
+        "runtime": 35,
+        "peer": 115,
+        "dev": 825
+      },
+      "advisories_fetched_at": "2026-11-20T19:22:23+08:00",
+      "kev_catalog": null,
+      "epss_date": null,
+      "findings_total": 0,
+      "details": "security/llama-cpp.json",
+      "details_sha256": "50ba3a1304861f4e69823bf51528dbc14e70d8bed6317f6da71acf3c24695f29"
+    },
+    "assessment": {
+      "level": "none",
+      "policy_version": "sec.v2",
+      "reasons": [],
+      "counts": {},
+      "uncounted": 0,
+      "assessed_at": "2026-11-20T19:22:23+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 975,
+      "packages_checked": 975,
+      "components": [
+        {
+          "ecosystem": "c/c++",
+          "component": "CMakeLists.txt",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "advisory_db.no_ecosystem"
+          ]
+        },
+        {
+          "ecosystem": "c/c++",
+          "component": "app/CMakeLists.txt",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "advisory_db.no_ecosystem"
+          ]
+        },
+        {
+          "ecosystem": "c/c++",
+          "component": "common/CMakeLists.txt",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "advisory_db.no_ecosystem"
+          ]
+        },
+        {
+          "ecosystem": "c/c++",
+          "component": "ggml/CMakeLists.txt",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "advisory_db.no_ecosystem"
+          ]
+        },
+        {
+          "ecosystem": "c/c++",
+          "component": "pocs/CMakeLists.txt",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "advisory_db.no_ecosystem"
+          ]
+        },
+        {
+          "ecosystem": "c/c++",
+          "component": "src/CMakeLists.txt",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "advisory_db.no_ecosystem"
+          ]
+        },
+        {
+          "ecosystem": "npm",
+          "component": "ui/apps/chat/package-lock.json",
+          "status": "scanned",
+          "packages": 809,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "ui/lib/ui/package-lock.json",
+          "status": "scanned",
+          "packages": 445,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "gguf-py/pyproject.toml",
+          "status": "scanned",
+          "packages": 8,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "pyproject.toml",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "resolve.pyproject_failed"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "code": "advisory_db.no_ecosystem",
+          "category": "advisory_db",
+          "ecosystem": "c/c++",
+          "component": "CMakeLists.txt",
+          "detail": "CMakeLists.txt: no advisory ecosystem for C/C++ libraries",
+          "capability": "advisory_source:c/c++",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "advisory_db.no_ecosystem",
+          "category": "advisory_db",
+          "ecosystem": "c/c++",
+          "component": "app/CMakeLists.txt",
+          "detail": "CMakeLists.txt: no advisory ecosystem for C/C++ libraries",
+          "capability": "advisory_source:c/c++",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "advisory_db.no_ecosystem",
+          "category": "advisory_db",
+          "ecosystem": "c/c++",
+          "component": "common/CMakeLists.txt",
+          "detail": "CMakeLists.txt: no advisory ecosystem for C/C++ libraries",
+          "capability": "advisory_source:c/c++",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "advisory_db.no_ecosystem",
+          "category": "advisory_db",
+          "ecosystem": "c/c++",
+          "component": "ggml/CMakeLists.txt",
+          "detail": "CMakeLists.txt: no advisory ecosystem for C/C++ libraries",
+          "capability": "advisory_source:c/c++",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "advisory_db.no_ecosystem",
+          "category": "advisory_db",
+          "ecosystem": "c/c++",
+          "component": "pocs/CMakeLists.txt",
+          "detail": "CMakeLists.txt: no advisory ecosystem for C/C++ libraries",
+          "capability": "advisory_source:c/c++",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "advisory_db.no_ecosystem",
+          "category": "advisory_db",
+          "ecosystem": "c/c++",
+          "component": "src/CMakeLists.txt",
+          "detail": "CMakeLists.txt: no advisory ecosystem for C/C++ libraries",
+          "capability": "advisory_source:c/c++",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "resolve.pyproject_failed",
+          "category": "resolve_failed",
+          "ecosystem": "pypi",
+          "component": "pyproject.toml",
+          "detail": "uv pip compile --no-build did not resolve it",
+          "capability": "resolve_in_sandbox",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
+  },
+  "scores": {
+    "formula_version": "b3.v7",
+    "computed_at": "2026-11-20T19:22:23+08:00",
+    "quality": {
+      "total": 87.8,
+      "raw_total": 87.8,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      },
+      "security": {
+        "level": "none",
+        "basis": "assessment",
+        "effect": "none",
+        "deduction": 0.0
+      }
+    },
+    "popularity": {
+      "score": 100.0,
+      "signals": {
+        "stars": 135819,
+        "monthly_downloads": 38037,
+        "forks": 25818,
+        "dependents": null,
+        "release_downloads": 35688,
+        "hn_top_score": 839,
+        "registries_count": 1
+      },
+      "age_days": 1350,
+      "packages": [
+        "homebrew:llama.cpp"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.0
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:16.818600+08:00",
+      "sources_sha": "c3fcfb0957acbbc688de7227ba8c91489e865770a798b94219d082a18aed5fb2",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "The main goal of `llama.cpp` is to enable LLM (and MLLM) inference with minimal setup and state-of-the-art performance on a wide range of hardware - locally and in the cloud."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Download and run a model directly from Hugging Face"
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "# curl\ncurl -LsSf https://llama.app/install.sh | sh\n\n# powershell\nirm https://llama.app/install.ps1 | iex"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "llama cli -hf ggml-org/Qwen3.5-0.8B-GGUF"
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "[Performance troubleshooting](docs/development/token_generation_performance_tips.md)"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)"
+        }
+      },
+      "unquoted": [],
+      "input_sha": "d038ccf69ba4084ae0336265af9870566af28effab65b30e7a13bac324831adf",
+      "prompt_version": "rubric-p1",
+      "renderer_version": "r1",
+      "grader": "anthropic"
+    },
+    "inputs": {
+      "version": "inputs.v1",
+      "github": {
+        "source": "pipeline_db",
+        "fetched_at": "2026-11-20T19:20:49+08:00",
+        "stars": 135819,
+        "forks": 25818,
+        "open_issues": 2608,
+        "created_at": "2023-03-10T18:58:00Z",
+        "pushed_at": "2026-11-20T11:18:49Z",
+        "releases": [
+          {
+            "tag": "b12562",
+            "published_at": "2026-11-20T11:19:42Z",
+            "prerelease": true,
+            "notes_chars": 4000,
+            "downloads": 0
+          },
+          {
+            "tag": "b12561",
+            "published_at": "2026-11-20T10:46:42Z",
+            "prerelease": true,
+            "notes_chars": 4000,
+            "downloads": 1148
+          },
+          {
+            "tag": "b12560",
+            "published_at": "2026-11-20T09:27:26Z",
+            "prerelease": true,
+            "notes_chars": 4000,
+            "downloads": 3782
+          },
+          {
+            "tag": "b12559",
+            "published_at": "2026-11-20T06:56:27Z",
+            "prerelease": true,
+            "notes_chars": 4000,
+            "downloads": 7890
+          },
+          {
+            "tag": "b12558",
+            "published_at": "2026-11-20T06:38:02Z",
+            "prerelease": true,
+            "notes_chars": 4000,
+            "downloads": 1270
+          },
+          {
+            "tag": "b12556",
+            "published_at": "2026-11-19T23:12:54Z",
+            "prerelease": true,
+            "notes_chars": 4000,
+            "downloads": 15823
+          },
+          {
+            "tag": "b12555",
+            "published_at": "2026-11-19T22:54:26Z",
+            "prerelease": true,
+            "notes_chars": 4000,
+            "downloads": 1492
+          },
+          {
+            "tag": "b12554",
+            "published_at": "2026-11-19T22:19:53Z",
+            "prerelease": true,
+            "notes_chars": 4000,
+            "downloads": 1799
+          },
+          {
+            "tag": "b12553",
+            "published_at": "2026-11-19T22:06:25Z",
+            "prerelease": true,
+            "notes_chars": 4000,
+            "downloads": 1366
+          },
+          {
+            "tag": "b12552",
+            "published_at": "2026-11-19T21:51:28Z",
+            "prerelease": true,
+            "notes_chars": 3999,
+            "downloads": 1118
+          }
+        ],
+        "contributors": null,
+        "files": {
+          "count": 4496,
+          "truncated": false,
+          "ci": ".github/workflows/ai-issues.yml",
+          "tests": "examples/llama.android/lib/src/androidTest/java/android/llama/cpp/ExampleInstrumentedTest.kt",
+          "changelog": null,
+          "lockfile": "ui/apps/chat/package-lock.json"
+        }
+      },
+      "issues": {
+        "source": "github_live",
+        "fetched_at": "2026-11-20T19:22:16+08:00",
+        "items": [
+          {
+            "created_at": "2026-11-20T07:01:52Z",
+            "closed_at": "2026-11-20T07:03:21Z",
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T06:34:45Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T06:18:33Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T03:36:45Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T22:14:33Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T19:48:07Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T19:44:47Z",
+            "closed_at": null,
+            "association": "MEMBER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T19:27:09Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T13:34:23Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T11:20:01Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T10:02:41Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T07:22:47Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T03:46:56Z",
+            "closed_at": "2026-11-20T08:13:03Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T01:26:32Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-18T22:41:37Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-18T22:17:29Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-18T17:46:45Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-18T17:40:44Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-18T16:25:41Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          }
+        ],
+        "pull_requests": 81,
+        "page_full": true
+      }
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/ggml-org/llama.cpp",
+      "fetched_at": "2026-11-20T19:20:51+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/ggml-org/llama.cpp/blob/master/README.md",
+      "fetched_at": "2026-11-20T19:20:49+08:00"
+    },
+    {
+      "id": "release:b12562",
+      "kind": "release",
+      "url": "https://github.com/ggml-org/llama.cpp/releases/tag/b12562",
+      "fetched_at": "2026-11-20T19:20:49+08:00"
+    },
+    {
+      "id": "help:verify-llama-cpp-20261120-192102-8a3f:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T19:22:43+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "llama cli -hf ggml-org/Qwen3.5-0.8B-GGUF",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:20:58+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "A few options to get `llama.cpp` installed on your machine:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:20:58+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "LLM inference in C/C++",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:20:58+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "The main goal of `llama.cpp` is to enable LLM (and MLLM) inference with minimal setup and state-of-the-art performance on a wide range of hardware - locally and in the cloud.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:20:58+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# llama.cpp",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:20:58+08:00"
+    },
+    {
+      "field": "/prerequisites/apple_silicon_only",
+      "source_id": "release:b12562",
+      "quote": "[macOS Intel (x64)]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:20:58+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:20:51+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:20:51+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-20T19:20:51+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:20:51+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:20:51+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "# Download and run a model directly from Hugging Face",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:20:58+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "# Launch OpenAI-compatible API server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:20:58+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "# Download and run a model directly from Hugging Face",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:20:58+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "# Launch OpenAI-compatible API server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:20:58+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Llama Chat, the built-in chat app, against <b>llama serve</b>",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:20:58+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Text-to-speech (TTS) models",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:20:58+08:00"
+    },
+    {
+      "field": "/features/4",
+      "source_id": "readme",
+      "quote": "[GBNF grammars](grammars/README.md)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:20:58+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "irm https://llama.app/install.ps1 | iex",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:20:58+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "locally and in the cloud",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:20:58+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "enable LLM (and MLLM) inference with minimal setup",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:43+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "Download and run a model directly from Hugging Face",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:43+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Launch OpenAI-compatible API server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:43+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "help:verify-llama-cpp-20261120-192102-8a3f:1",
+      "quote": "Available commands:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:43+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "help:verify-llama-cpp-20261120-192102-8a3f:1",
+      "quote": "cli             Command-line interactive interface",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:43+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "help:verify-llama-cpp-20261120-192102-8a3f:1",
+      "quote": "download        Download a model",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:43+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "help:verify-llama-cpp-20261120-192102-8a3f:1",
+      "quote": "update          Update llama to the latest release",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:43+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Llama Chat, the built-in chat app",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:43+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "VLM session with `llama cli`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:43+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Multi-GPU usage",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:43+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "release:b12562",
+      "quote": "Ubuntu x64 (Vulkan)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:43+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "Run with Docker",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:43+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "release:b12562",
+      "quote": "iOS XCFramework",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:43+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "lib llama API",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:22:43+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-20T19:20:49+08:00",
+  "updated_at": "2026-11-20T19:22:43+08:00"
+}
