@@ -1,0 +1,1397 @@
+{
+  "schema_version": "software.v1",
+  "slug": "vllm",
+  "repo_id": "gh:599547518",
+  "name": "vLLM",
+  "summary": "An inference and serving engine for large language models with an OpenAI-compatible API server and support for many hardware backends.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "server_daemon",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "amd",
+    "blackwell",
+    "cuda",
+    "deepseek",
+    "deepseek-v3",
+    "gpt",
+    "gpt-oss",
+    "inference",
+    "kimi",
+    "llama"
+  ],
+  "use_cases": [
+    "serve Hugging Face LLMs through an OpenAI-compatible API",
+    "run distributed inference across multiple GPUs"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "serve LLMs via OpenAI-compatible API",
+    "run quantized models (FP8, INT4, GPTQ, GGUF)",
+    "distributed inference with multiple parallelism types",
+    "generate structured outputs",
+    "serve multiple LoRA adapters",
+    "speculative decoding"
+  ],
+  "capabilities": [
+    {
+      "label": "Serve LLMs via OpenAI-compatible API server",
+      "items": [
+        "OpenAI-compatible API",
+        "Anthropic Messages API",
+        "gRPC"
+      ],
+      "area": "serving"
+    },
+    {
+      "label": "Run LLM inference with high throughput",
+      "area": "inference"
+    },
+    {
+      "label": "Manage attention KV memory with PagedAttention",
+      "area": "memory"
+    },
+    {
+      "label": "Continuous batching, chunked prefill, prefix caching",
+      "area": "inference"
+    },
+    {
+      "label": "Run quantized models",
+      "items": [
+        "FP8",
+        "MXFP8/MXFP4",
+        "NVFP4",
+        "INT8",
+        "INT4",
+        "GPTQ/AWQ",
+        "GGUF",
+        "compressed-tensors",
+        "ModelOpt",
+        "TorchAO"
+      ],
+      "area": "quantization"
+    },
+    {
+      "label": "Load Hugging Face models",
+      "area": "integrations"
+    },
+    {
+      "label": "Parallel sampling and beam search decoding",
+      "items": [
+        "parallel sampling",
+        "beam search"
+      ],
+      "area": "decoding"
+    },
+    {
+      "label": "Stream outputs",
+      "area": "output"
+    },
+    {
+      "label": "Tool calling and reasoning parsing",
+      "area": "serving"
+    },
+    {
+      "label": "Disaggregated prefill, decode, and encode",
+      "area": "distributed"
+    },
+    {
+      "label": "Run on various hardware accelerators",
+      "items": [
+        "NVIDIA GPUs",
+        "AMD GPUs",
+        "Intel GPUs",
+        "x86/ARM/PowerPC CPUs",
+        "Google TPUs",
+        "Intel Gaudi",
+        "IBM Spyre",
+        "Huawei Ascend",
+        "Apple Silicon"
+      ],
+      "area": "hardware"
+    },
+    {
+      "label": "Serve multi-modal and embedding models",
+      "items": [
+        "Decoder-only LLMs",
+        "Mixture-of-Expert LLMs",
+        "Hybrid attention and state-space models",
+        "Multi-modal models",
+        "Embedding and retrieval models",
+        "Reward and classification models"
+      ],
+      "area": "models"
+    },
+    {
+      "label": "Transcribe audio via API endpoint",
+      "area": "audio"
+    },
+    {
+      "label": "Download precompiled kernels",
+      "items": [
+        "download-kernels"
+      ],
+      "area": "subcommands"
+    }
+  ],
+  "why_worth_it": null,
+  "homepage": "https://vllm.ai",
+  "repo": {
+    "url": "https://github.com/vllm-project/vllm",
+    "full_name": "vllm-project/vllm",
+    "created_at": "2023-02-09T11:23:20Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": "optional",
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.34.0",
+    "published_at": "2026-11-16T23:22:00Z",
+    "url": "https://github.com/vllm-project/vllm/releases/tag/v0.34.0"
+  },
+  "verification": {
+    "level": "unverified",
+    "unverified_reason": "needs_gpu",
+    "checked_at": "2026-11-21T06:29:43.889733+08:00",
+    "runs": [
+      {
+        "id": "verify-vllm-20261121-062800-b013",
+        "level": "unverified",
+        "unverified_reason": "needs_gpu",
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:01363ad5a469",
+        "checked_at": "2026-11-21T06:29:43.889733+08:00",
+        "tool_version": "0.34.0",
+        "install_method": "uv",
+        "replayed": false,
+        "steps": [
+          {
+            "command": "uv venv ~/vllm-env && uv pip install --python ~/vllm-env/bin/python vllm",
+            "purpose": "Create venv and uv pip install vllm (CUDA wheel from PyPI)"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "~/vllm-env/bin/python -c \"import vllm; print(vllm.__version__)\"",
+            "expected_signal": "0.34.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "0.34.0",
+            "setup": [],
+            "offline": null
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "uv pip install vllm",
+            "actually_needed": "The PyPI wheel is the CUDA build. On a machine with no GPU, every `vllm` CLI command, including --version, fails with 'RuntimeError: Failed to infer device type'. CPU-only use needs vLLM's separate CPU wheel, which the README doesn't mention.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "uv pip install vllm (no environment mentioned)",
+            "actually_needed": "Without an active virtual environment, uv pip install needs a venv. This run used `uv venv ~/vllm-env` and `--python ~/vllm-env/bin/python`.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": null,
+        "evidence": {
+          "trace_path": "runs/verify/verify-vllm-20261121-062800-b013/report.json",
+          "log_path": null,
+          "screenshot_paths": [],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.120012
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v2",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "pypi:vllm (fresh install, 187 packages)"
+    ],
+    "packages_checked": 187,
+    "findings_total": 20,
+    "advisories_total": 20,
+    "findings": [
+      {
+        "package": "pypi:vllm",
+        "version": "0.21.0",
+        "advisory": "GHSA-94f4-hr76-p5j6",
+        "cves": [
+          "CVE-2026-48746"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "0.22.0",
+        "summary": "vLLM: OpenAI auth bypass",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-05-29T10:33:10Z",
+        "scope": "runtime",
+        "found_in": "registry:pypi:vllm",
+        "kev": false,
+        "epss": 0.01152,
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "pypi:transformers",
+        "version": "4.57.6",
+        "advisory": "GHSA-29pf-2h5f-8g72",
+        "cves": [
+          "CVE-2026-4372"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.3.0",
+        "summary": "HuggingFace transformers vulnerable to remote code execution",
+        "malicious": false,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-03-04T17:41:42Z",
+        "scope": "runtime",
+        "found_in": "registry:pypi:vllm",
+        "kev": false,
+        "epss": 0.00696,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "pypi:transformers",
+        "version": "4.57.6",
+        "advisory": "GHSA-fgcw-684q-jj6r",
+        "cves": [
+          "CVE-2026-5241"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.5.0",
+        "summary": "huggingface/transformers: Arbitrary Code Execution During Model Initialization in the LightGlue Model Loading Path",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-02T16:13:03Z",
+        "scope": "runtime",
+        "found_in": "registry:pypi:vllm",
+        "kev": false,
+        "epss": 0.00597,
+        "preconditions": [
+          "user_interaction",
+          "high_complexity"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "pypi:transformers",
+        "version": "4.57.6",
+        "advisory": "GHSA-x9r9-c232-4q39",
+        "cves": [
+          "CVE-2026-80047"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "Hugging Face Transformers downloads custom generation code before trust consent",
+        "malicious": false,
+        "attack_vector": "local",
+        "dos_only": false,
+        "scope": "runtime",
+        "found_in": "registry:pypi:vllm",
+        "kev": false,
+        "epss": 0.00099,
+        "preconditions": [
+          "local_access"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "pypi:transformers",
+        "version": "4.57.6",
+        "advisory": "GHSA-xrqw-3rrv-vx5w",
+        "cves": [
+          "CVE-2026-9856"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "5.10.0",
+        "summary": "Transformers save_pretrained path traversal allows arbitrary file writes through chat template names",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-06-03T15:16:02Z",
+        "scope": "runtime",
+        "found_in": "registry:pypi:vllm",
+        "kev": false,
+        "epss": 0.0046,
+        "preconditions": [
+          "user_interaction"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "pypi:transformers",
+        "version": "4.57.6",
+        "advisory": "PYSEC-2025-217",
+        "cves": [
+          "CVE-2025-14929"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "Hugging Face Transformers X-CLIP Checkpoint Conversion Deserialization of Untrusted Data Remote Code Execution Vulnerability. This vulnerability allows remote attackers to execute arbitrary code on af",
+        "malicious": false,
+        "attack_vector": "local",
+        "dos_only": false,
+        "scope": "runtime",
+        "found_in": "registry:pypi:vllm",
+        "kev": false,
+        "epss": 0.00366,
+        "preconditions": [
+          "local_access",
+          "user_interaction"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "pypi:vllm",
+        "version": "0.21.0",
+        "advisory": "GHSA-33cg-gxv8-3p8g",
+        "cves": [
+          "CVE-2026-55514"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.24.0",
+        "summary": "vLLM denial of service via prompt embeds on M-RoPE models",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-30T01:18:18Z",
+        "scope": "runtime",
+        "found_in": "registry:pypi:vllm",
+        "kev": false,
+        "epss": 0.00665,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "pypi:vllm",
+        "version": "0.21.0",
+        "advisory": "GHSA-6757-hggm-hp2w",
+        "cves": [
+          "CVE-2026-115912"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.32.0",
+        "summary": "vLLM: Public multimodal SHM handle forgery reaches worker-side `pickle.loads()` with insecure serialization disabled",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-18T10:03:52Z",
+        "scope": "runtime",
+        "found_in": "registry:pypi:vllm",
+        "kev": false,
+        "epss": 0.0051,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "pypi:vllm",
+        "version": "0.21.0",
+        "advisory": "GHSA-8wr5-jm2h-8r4f",
+        "cves": [
+          "CVE-2026-54234"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.24.0",
+        "summary": "vLLM has Remote DoS via Invalid Recovered Token Reinjection",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-30T01:18:18Z",
+        "scope": "runtime",
+        "found_in": "registry:pypi:vllm",
+        "kev": false,
+        "epss": 0.00616,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "pypi:vllm",
+        "version": "0.21.0",
+        "advisory": "GHSA-gx7p-2j49-hfq4",
+        "cves": [
+          "CVE-2026-114055"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.31.0",
+        "summary": "vLLM : DoS via unvalidated mm_processor_kwargs in multimodal image processors (Isaac, InternVL, H2OVL, etc.)",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-05T07:40:41Z",
+        "scope": "runtime",
+        "found_in": "registry:pypi:vllm",
+        "kev": false,
+        "epss": 0.0042,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "pypi:vllm",
+        "version": "0.21.0",
+        "advisory": "GHSA-h3rc-6mm3-gc2m",
+        "cves": [
+          "CVE-2026-114053"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.31.0",
+        "summary": "vLLM: Request-controlled mm_processor_kwargs.code_revision allows remote code execution",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-05T07:40:41Z",
+        "scope": "runtime",
+        "found_in": "registry:pypi:vllm",
+        "kev": false,
+        "epss": 0.00462,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "pypi:vllm",
+        "version": "0.21.0",
+        "advisory": "GHSA-h3rc-j82p-2c3h",
+        "cves": [
+          "CVE-2026-115915"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.32.0",
+        "summary": "vLLM: Untrusted EPS inputs can trigger denial of service or Ghostscript RCE",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-18T10:03:52Z",
+        "scope": "runtime",
+        "found_in": "registry:pypi:vllm",
+        "kev": false,
+        "epss": 0.0066,
+        "preconditions": [
+          "high_complexity"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "pypi:vllm",
+        "version": "0.21.0",
+        "advisory": "GHSA-q8gq-377p-jq3r",
+        "cves": [
+          "CVE-2026-41523"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.22.0",
+        "summary": "vLLM: Security Check Bypass via assert Statement in Activation Function Loading Allows Arbitrary Code Execution",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-05-29T10:33:10Z",
+        "scope": "runtime",
+        "found_in": "registry:pypi:vllm",
+        "kev": false,
+        "epss": 0.00913,
+        "preconditions": [
+          "user_interaction",
+          "high_complexity"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "pypi:vllm",
+        "version": "0.21.0",
+        "advisory": "GHSA-rwxx-mrjm-wc2m",
+        "cves": [
+          "CVE-2026-55574"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.24.0",
+        "summary": "vLLM: ReDoS via structured_outputs.regex compiled without timeout in xgrammar and outlines backends",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-30T01:18:18Z",
+        "scope": "runtime",
+        "found_in": "registry:pypi:vllm",
+        "kev": false,
+        "epss": 0.00583,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "pypi:vllm",
+        "version": "0.21.0",
+        "advisory": "PYSEC-2026-227",
+        "cves": [
+          "CVE-2026-54232"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.22.1",
+        "summary": "vLLM is an inference and serving engine for large language models (LLMs). Prior to 0.22.1, the vLLM Dockerfile is vulnerable to a dependency confusion attack through the flashinfer-jit-cache package.",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-06-05T10:13:34Z",
+        "scope": "runtime",
+        "found_in": "registry:pypi:vllm",
+        "kev": false,
+        "epss": 0.00563,
+        "preconditions": [
+          "user_interaction"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "pypi:vllm",
+        "version": "0.21.0",
+        "advisory": "PYSEC-2026-4186",
+        "cves": [
+          "CVE-2026-103241"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.27.0",
+        "summary": "A flaw has been found in vllm-project vLLM up to 0.26.0. This vulnerability affects unknown code of the file rust/src/parser/src/unified/gemma4.rs of the component Gemma4UnifiedParser. Executing a man",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-08-10T21:31:00Z",
+        "scope": "runtime",
+        "found_in": "registry:pypi:vllm",
+        "kev": false,
+        "epss": 0.00714,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "pypi:vllm",
+        "version": "0.21.0",
+        "advisory": "PYSEC-2026-4325",
+        "cves": [
+          "CVE-2026-105759"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.30.0",
+        "summary": "vLLM is an inference and serving engine for large language models. Prior to 0.30.0, the Rust frontend's track_http_metrics middleware records the raw HTTP method token as a Prometheus label for reques",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-22T05:22:50Z",
+        "scope": "runtime",
+        "found_in": "registry:pypi:vllm",
+        "kev": false,
+        "epss": 0.00411,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "pypi:vllm",
+        "version": "0.21.0",
+        "advisory": "PYSEC-2026-4351",
+        "cves": [
+          "CVE-2026-116176"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.24.0",
+        "summary": "vLLM from 0.9.2 before 0.24.0 contains a server-side request forgery vulnerability that allows API callers to force outbound connections by embedding a decode address in the X-Request-Id header. Attac",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-06-30T01:18:18Z",
+        "scope": "runtime",
+        "found_in": "registry:pypi:vllm",
+        "kev": false,
+        "epss": 0.00318,
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "pypi:vllm",
+        "version": "0.21.0",
+        "advisory": "PYSEC-2026-4352",
+        "cves": [
+          "CVE-2026-116177"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.25.0",
+        "summary": "vLLM from 0.10.2 before 0.25.0 contains an uncontrolled resource consumption vulnerability that allows unauthenticated attackers to exhaust memory because the Nemotron-VL processors globally set Image",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-07-11T20:02:21Z",
+        "scope": "runtime",
+        "found_in": "registry:pypi:vllm",
+        "kev": false,
+        "epss": 0.00291,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "pypi:vllm",
+        "version": "0.21.0",
+        "advisory": "PYSEC-2026-4353",
+        "cves": [
+          "CVE-2026-116178"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "0.30.0",
+        "summary": "vLLM from 0.20.0 before 0.30.0 contains a denial of service vulnerability that allows remote attackers to crash the engine by sending inconsistent multimodal metadata to the disaggregated /inference/v",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-22T05:22:50Z",
+        "scope": "runtime",
+        "found_in": "registry:pypi:vllm",
+        "kev": false,
+        "epss": 0.00331,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      }
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-21T06:29:51+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "registry_resolve",
+      "commit": null,
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "pypi": 187
+      },
+      "scopes": {
+        "runtime": 187
+      },
+      "advisories_fetched_at": "2026-11-21T06:29:51+08:00",
+      "kev_catalog": "2026.11.20",
+      "epss_date": "2026-11-21",
+      "findings_total": 68,
+      "details": "security/vllm.json",
+      "details_sha256": "89c56c81a3ffe2a7f6244b02980a224aebee0b76028a3ddb78ffb1268e82fd0a"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-94f4-hr76-p5j6 pypi:vllm@0.21.0 (conditional)",
+        "worst:GHSA-29pf-2h5f-8g72 pypi:transformers@4.57.6 (conditional)",
+        "worst:GHSA-fgcw-684q-jj6r pypi:transformers@4.57.6 (conditional)"
+      ],
+      "counts": {
+        "conditional": 20
+      },
+      "uncounted": 48,
+      "assessed_at": "2026-11-21T06:29:51+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "registry_resolve",
+      "packages_found": 187,
+      "packages_checked": 187,
+      "components": [
+        {
+          "ecosystem": "pypi",
+          "component": "registry:pypi:vllm",
+          "status": "scanned",
+          "packages": 187,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
+  },
+  "scores": {
+    "formula_version": "b3.v7",
+    "computed_at": "2026-11-21T06:29:51+08:00",
+    "quality": {
+      "total": 68.8,
+      "raw_total": 68.8,
+      "confidence": 0.4,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": null,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.5,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
+        }
+      },
+      "security": {
+        "level": "conditional",
+        "basis": "assessment",
+        "effect": "note",
+        "deduction": 0.0
+      }
+    },
+    "popularity": {
+      "score": 100.0,
+      "signals": {
+        "stars": 97278,
+        "monthly_downloads": 2732584,
+        "forks": 25080,
+        "dependents": null,
+        "release_downloads": 1015431,
+        "hn_top_score": 295,
+        "registries_count": 1
+      },
+      "age_days": 1380,
+      "packages": [
+        "pypi:vllm"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.0,
+      "blocked_by": "unverified"
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:29:43.896905+08:00",
+      "sources_sha": "f4ecca6ff700932f6b2b044567082ef70f67eada986be36304c97fe0ff53f44f",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "vLLM is a fast and easy-to-use library for LLM inference and serving."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Easy, fast, and cheap LLM serving for everyone"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "`huggingface_hub >= 2.0.0` required | Also requires `tokenizers >= 0.23.3` and `timm >= 1.0.30`."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "uv pip install vllm"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Use `--quantization humming` with `VLLM_HUMMING_INPUT_QUANT_CONFIG` instead of `VLLM_MARLIN_INPUT_DTYPE`."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "## Before you upgrade"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Support for NVIDIA GPUs, AMD GPUs, Intel GPUs, and x86/ARM/PowerPC CPUs."
+        }
+      },
+      "unquoted": [],
+      "input_sha": "6165c7e023ba0705bab3b90f131afaeefb9df0ed095da685524aa25af96bbf72",
+      "prompt_version": "rubric-p1",
+      "renderer_version": "r1",
+      "grader": "anthropic"
+    },
+    "inputs": {
+      "version": "inputs.v1",
+      "github": {
+        "source": "pipeline_db",
+        "fetched_at": "2026-11-21T06:27:42+08:00",
+        "stars": 97278,
+        "forks": 25080,
+        "open_issues": 10783,
+        "created_at": "2023-02-09T11:23:20Z",
+        "pushed_at": "2026-11-20T22:19:04Z",
+        "releases": [
+          {
+            "tag": "v0.34.0",
+            "published_at": "2026-11-16T23:22:00Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 4809
+          },
+          {
+            "tag": "v0.33.0rc3",
+            "published_at": "2026-11-02T10:10:05Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 37013
+          },
+          {
+            "tag": "v0.32.0",
+            "published_at": "2026-10-18T06:50:48Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 139390
+          },
+          {
+            "tag": "v0.31.0",
+            "published_at": "2026-10-05T06:44:55Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 129297
+          },
+          {
+            "tag": "v0.30.0",
+            "published_at": "2026-09-22T05:20:54Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 136177
+          },
+          {
+            "tag": "v0.29.0",
+            "published_at": "2026-09-09T08:54:49Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 78087
+          },
+          {
+            "tag": "v0.28.0",
+            "published_at": "2026-08-26T09:46:30Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 102767
+          },
+          {
+            "tag": "v0.27.1",
+            "published_at": "2026-08-11T10:47:49Z",
+            "prerelease": false,
+            "notes_chars": 94,
+            "downloads": 54207
+          },
+          {
+            "tag": "v0.27.0",
+            "published_at": "2026-08-10T21:18:11Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 4617
+          },
+          {
+            "tag": "v0.26.0",
+            "published_at": "2026-07-27T01:06:58Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 329067
+          }
+        ],
+        "contributors": null,
+        "files": {
+          "count": 9705,
+          "truncated": false,
+          "ci": ".buildkite/.pipeline_gen_v2",
+          "tests": ".buildkite/lm-eval-harness/test_lm_eval_correctness.py",
+          "changelog": null,
+          "lockfile": "rust/Cargo.lock"
+        }
+      },
+      "issues": {
+        "source": "github_live",
+        "fetched_at": "2026-11-21T06:29:43+08:00",
+        "items": [
+          {
+            "created_at": "2026-11-20T21:27:19Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T20:28:27Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T19:16:58Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T18:06:02Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T17:26:18Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T13:38:53Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-20T12:15:11Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          }
+        ],
+        "pull_requests": 93,
+        "page_full": true
+      }
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/vllm-project/vllm",
+      "fetched_at": "2026-11-21T06:27:45+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/vllm-project/vllm/blob/main/README.md",
+      "fetched_at": "2026-11-21T06:27:42+08:00"
+    },
+    {
+      "id": "release:v0.34.0",
+      "kind": "release",
+      "url": "https://github.com/vllm-project/vllm/releases/tag/v0.34.0",
+      "fetched_at": "2026-11-21T06:27:42+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "OpenAI-compatible API server, plus Anthropic Messages API and gRPC support",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:27:53+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "OpenAI-compatible API server, plus Anthropic Messages API and gRPC support",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:27:53+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "A high-throughput and memory-efficient inference and serving engine for LLMs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:27:53+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "A high-throughput and memory-efficient inference and serving engine for LLMs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:27:53+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "vLLM is a fast and easy-to-use library for LLM inference and serving.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:27:53+08:00"
+    },
+    {
+      "field": "/prerequisites/gpu",
+      "source_id": "readme",
+      "quote": "Support for NVIDIA GPUs, AMD GPUs, Intel GPUs, and x86/ARM/PowerPC CPUs.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:27:53+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:27:45+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:27:45+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-21T06:27:45+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:27:45+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:27:45+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.34.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:27:42+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "OpenAI-compatible API server, plus Anthropic Messages API and gRPC support",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:27:53+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Tensor, pipeline, data, expert, and context parallelism for distributed inference",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:27:53+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "OpenAI-compatible API server, plus Anthropic Messages API and gRPC support",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:27:53+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Quantization: FP8, MXFP8/MXFP4, NVFP4, INT8, INT4, GPTQ/AWQ, GGUF, compressed-tensors, ModelOpt, TorchAO, and [more]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:27:53+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Tensor, pipeline, data, expert, and context parallelism for distributed inference",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:27:53+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Generation of structured outputs using xgrammar or guidance",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:27:53+08:00"
+    },
+    {
+      "field": "/features/4",
+      "source_id": "readme",
+      "quote": "Efficient multi-LoRA support for dense and MoE layers",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:27:53+08:00"
+    },
+    {
+      "field": "/features/5",
+      "source_id": "readme",
+      "quote": "Speculative decoding including n-gram, suffix, EAGLE, DFlash",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:27:53+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Support for NVIDIA GPUs, AMD GPUs, Intel GPUs, and x86/ARM/PowerPC CPUs.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:27:53+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "OpenAI-compatible API server, plus Anthropic Messages API and gRPC support",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:30:33+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "State-of-the-art serving throughput",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:30:33+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Efficient management of attention key and value memory with [**PagedAttention**]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:30:33+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Continuous batching of incoming requests, chunked prefill, prefix caching",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:30:33+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "Quantization: FP8, MXFP8/MXFP4, NVFP4, INT8, INT4, GPTQ/AWQ, GGUF, compressed-tensors, ModelOpt, TorchAO",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:30:33+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "Seamless integration with popular Hugging Face models",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:30:33+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "various decoding algorithms, including *parallel sampling*, *beam search*, and more",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:30:33+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Streaming outputs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:30:33+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Tool calling and reasoning parsers",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:30:33+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Disaggregated prefill, decode, and encode",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:30:33+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "Support for NVIDIA GPUs, AMD GPUs, Intel GPUs, and x86/ARM/PowerPC CPUs.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:30:33+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "Multi-modal models (e.g., LLaVA, Qwen-VL, Pixtral)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:30:33+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "release:v0.34.0",
+      "quote": "audio chat and `/v1/audio/transcriptions`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:30:33+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "vllm download-kernels  # precompiled kernels for faster startup",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:30:33+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-21T06:27:42+08:00",
+  "updated_at": "2026-11-21T06:30:33+08:00"
+}
