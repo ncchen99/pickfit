@@ -10,6 +10,7 @@ import { logEvent, logFailure } from './events.ts';
 import { ERROR_EXCERPT_MAX, LAST_USED, NOTE_MAX, reportOutcome, STAGES, UnknownToolError } from './outcome.ts';
 import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './submit.ts';
 import { NO_INSTALL_LABEL } from './webapp.ts';
+import { findSummary, installSummary } from './summary.ts';
 
 const ABOUT =
   "pickfit matches software to the user's need; each was installed and tested in a sandbox. Scope: dev CLIs, local AI tools, MCP servers, DevOps, security, data, docs and media tools, desktop GUI apps, web apps. ";
@@ -491,9 +492,10 @@ function toolError(message: string) {
   return { content: [{ type: 'text' as const, text: message }], isError: true };
 }
 
-function result(out: object) {
+/** The full answer once, in structuredContent; the text block is `text` (summary.ts) when given, else the JSON for a small answer. */
+function result(out: object, text?: string) {
   return {
-    content: [{ type: 'text' as const, text: JSON.stringify(out) }],
+    content: [{ type: 'text' as const, text: text ?? JSON.stringify(out) }],
     structuredContent: out as Record<string, unknown>,
   };
 }
@@ -521,7 +523,10 @@ export function buildServer(deps: Deps): McpServer {
       outputSchema: findOutput,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    async (args) => result(await findSoftware(args, deps)),
+    async (args) => {
+      const out = await findSoftware(args, deps);
+      return result(out, findSummary(out, readonly));
+    },
   );
 
   server.registerTool(
@@ -538,7 +543,10 @@ export function buildServer(deps: Deps): McpServer {
       outputSchema: alternativesOutput,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    async (args) => result(await findAlternatives(args, deps)),
+    async (args) => {
+      const out = await findAlternatives(args, deps);
+      return result(out, findSummary(out, readonly));
+    },
   );
 
   server.registerTool(
@@ -576,7 +584,7 @@ export function buildServer(deps: Deps): McpServer {
             client: deps.client ?? null,
           }).catch(logFailure('install_guide', out.rec_id)),
         );
-        return result(out);
+        return result(out, installSummary(out, readonly));
       } catch (err) {
         if (err instanceof UnknownSlugError) return toolError(err.message);
         throw err;
