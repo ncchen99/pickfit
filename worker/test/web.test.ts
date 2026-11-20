@@ -10,7 +10,7 @@ import type { FindOutput, PickOut } from '../src/find.ts';
 import { runDay } from '../src/evidence.ts';
 import { catalogStats, EMPTY_FORM, esc, guiSentence, levelLabel, ranSentence, renderResults, safeUrl, yourSystem, type FormValues } from '../src/page.ts';
 import { withLang } from '../src/i18n.ts';
-import { BODY_MAX_BYTES, MAX_IN_FLIGHT, SEARCHES_PER_MINUTE, visitorKey, WEB_RESERVE_USD } from '../src/web.ts';
+import { BODY_MAX_BYTES, MAX_IN_FLIGHT, searchKey, SEARCHES_PER_MINUTE, visitorKey, WEB_RESERVE_USD } from '../src/web.ts';
 import { command } from '../src/ui/kit.ts';
 import { makeWorker } from '../src/worker.ts';
 import { costUsd } from '../src/meta.ts';
@@ -284,10 +284,23 @@ test('identical web searches share one model call; MCP calls are never cached', 
   // Different conditions are a different search.
   await s.search({ ...MAC_LLM, os: 'linux' });
   assert.equal(s.modelCalls.length, 2);
+  // "Keep my data on this machine" too: without it in the key, a private search got the answer made without it.
+  const priv = { need: 'take notes', os: 'macos' };
+  await s.search(priv);
+  await s.search({ ...priv, private: '1' });
+  assert.equal(s.modelCalls.length, 4);
 
   await s.mcpFind({ need: 'run a language model offline on my laptop', os: 'macos', must_run_locally: true });
   await s.mcpFind({ need: 'run a language model offline on my laptop', os: 'macos', must_run_locally: true });
-  assert.equal(s.modelCalls.length, 4);
+  assert.equal(s.modelCalls.length, 6);
+});
+
+test('the search key holds every condition the form sends to find_software', () => {
+  const base: FormValues = { ...EMPTY_FORM, need: 'Take  Notes' };
+  assert.equal(searchKey(base), searchKey({ ...base, need: 'take notes' }));
+  for (const change of [{ os: 'linux' }, { arch: 'arm64' }, { free_only: true }, { offline: true }, { private: true }] as Partial<FormValues>[]) {
+    assert.notEqual(searchKey(base), searchKey({ ...base, ...change }), JSON.stringify(change));
+  }
 });
 
 test('a degraded answer is not cached, so the next identical search tries the model again', async () => {

@@ -99,6 +99,14 @@ export function toFindArgs(form: FormValues): Record<string, unknown> {
   };
 }
 
+/**
+ * What makes two searches the same one: the need with its case and spacing evened out, and every condition the form
+ * sends to find_software. A condition left out here would let a search reuse an answer made without it.
+ */
+export function searchKey(form: FormValues): string {
+  return JSON.stringify([form.need.toLowerCase().replace(/\s+/g, ' '), form.os, form.arch, form.free_only, form.offline, form.private]);
+}
+
 /** The rate limiter's subject: an IPv4 address, or an IPv6 address's /64 (one household or host can hold all of it). */
 export function visitorKey(ip: string): string {
   const mapped = /^::ffff:(\d+\.\d+\.\d+\.\d+)$/i.exec(ip);
@@ -317,7 +325,7 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
     }
 
     const t = now().getTime();
-    const key = await sha256(JSON.stringify([form.need.toLowerCase().replace(/\s+/g, ' '), form.os, form.arch, form.free_only, form.offline]));
+    const key = await sha256(searchKey(form));
     for (;;) {
       const hit = cache.get(key);
       if (hit && t - hit.at < CACHE_TTL_MS) {
