@@ -1026,3 +1026,29 @@ def test_ready_for_over_two_hours_is_logged_once(env: dict[str, Any]) -> None:
     w._mark_deployed()
     alerts = [line for line in lines if "ready but not live for over 2h" in line]
     assert len(alerts) == 1 and "tinyq" in alerts[0] and "is the deploy stuck?" in alerts[0]
+
+
+def test_an_extraction_from_an_older_prompt_is_read_again(env: dict[str, Any], tmp_path: Path, monkeypatch) -> None:
+    from pickfit import extract
+    from pickfit.watch import Job
+
+    seen: list[str | None] = []
+
+    def current(row: dict[str, Any], candidate: dict[str, Any], refresh_before: str | None = None) -> bool:
+        seen.append(refresh_before)
+        return not extract.older_than(row, refresh_before)
+
+    monkeypatch.setattr(extract, "extraction_is_current", current)
+    pipeline = Pipeline(tmp_path)
+    w = watcher(env, pipeline)
+    old = {**extraction_row("gh:7", "r1", extraction()), "prompt_version": "p5"}
+    rows = [old]
+    monkeypatch.setattr(w.db, "last_extraction", lambda *a, **k: rows[-1])
+    monkeypatch.setattr(w.db, "save_extraction", lambda **row: rows.append({**row, "prompt_version":
+                                                                           extract.PROMPT_VERSION}))
+    job = Job(submission_id="sub_1", url="https://github.com/someone/tinyq", submitted_at=NOW.isoformat(),
+              started_at=NOW.isoformat())
+    w._extract({"repo_id": "gh:7"}, "r2", job)
+    assert seen == [extract.PROMPT_VERSION] and pipeline.calls == ["extract"]  # p5 is older: read again
+    w._extract({"repo_id": "gh:7"}, "r3", job)
+    assert pipeline.calls == ["extract"] and "extraction reused" in job.notes  # the p6 row stands

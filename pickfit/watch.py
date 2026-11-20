@@ -1440,10 +1440,13 @@ class Watcher:
         return self.db.prescreen_decisions().get(candidate["repo_id"])
 
     def _extract(self, candidate: dict[str, Any], run_id: str, job: Job) -> dict[str, Any]:
-        from pickfit.extract import extraction_is_current
+        from pickfit.extract import PROMPT_VERSION, extraction_is_current
 
         last = self.db.last_extraction(candidate["repo_id"], MODEL, exclude=SIDE_STATUSES)
-        if last and last["status"] in DONE_EXTRACTIONS and extraction_is_current(dict(last), candidate):
+        # An extraction read with an older prompt does not stand: a submission sent again after a prompt fix
+        # (11/20: duckdb, opentofu under p5, sent again for p6) must be read with the prompt that has the fix.
+        if last and last["status"] in DONE_EXTRACTIONS and extraction_is_current(dict(last), candidate,
+                                                                                refresh_before=PROMPT_VERSION):
             job.notes.append("extraction reused")
             return last
         rows = self.steps.extract(candidate, run_id)
