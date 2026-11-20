@@ -1,0 +1,1265 @@
+{
+  "schema_version": "software.v1",
+  "slug": "macmon",
+  "repo_id": "gh:815813101",
+  "name": "macmon",
+  "summary": "Terminal monitor for Apple Silicon Macs showing CPU/GPU/ANE power, temperatures and memory without sudo, with JSON and Prometheus output.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "infra_devops",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "apple-silicon",
+    "cli",
+    "cpu",
+    "cpu-monitoring",
+    "gpu",
+    "gpu-monitoring",
+    "grafana",
+    "m1",
+    "m2",
+    "m3"
+  ],
+  "use_cases": [
+    "monitor CPU, GPU and ANE power usage in real time without sudo",
+    "export Mac hardware metrics to Prometheus and Grafana",
+    "pipe metrics as JSON into scripts",
+    "generate CPU/GPU load to test metrics"
+  ],
+  "alternatives_to": [
+    "htop",
+    "btop",
+    "asitop",
+    "mactop"
+  ],
+  "features": [
+    "view real-time CPU/GPU/ANE power usage",
+    "view RAM, swap and memory pressure",
+    "list processes with CPU, memory, power, GPU",
+    "serve metrics over HTTP in Prometheus format"
+  ],
+  "capabilities": [
+    {
+      "label": "Monitor CPU/GPU/ANE power in real time",
+      "area": "monitoring"
+    },
+    {
+      "label": "Run without sudo",
+      "area": "monitoring"
+    },
+    {
+      "label": "Show CPU and GPU temperatures",
+      "area": "monitoring"
+    },
+    {
+      "label": "Show RAM, swap and memory pressure",
+      "area": "monitoring"
+    },
+    {
+      "label": "Show per-cluster CPU frequency ratios",
+      "area": "monitoring"
+    },
+    {
+      "label": "Historical charts with average and max",
+      "area": "tui"
+    },
+    {
+      "label": "Filter process list with queries",
+      "items": [
+        "cpu:",
+        "gpu:",
+        "power:",
+        "mem:",
+        "time:",
+        "user:",
+        "path:",
+        "dir:",
+        "cmd:",
+        "app:",
+        "port:"
+      ],
+      "area": "tui"
+    },
+    {
+      "label": "Pause the process list",
+      "area": "tui"
+    },
+    {
+      "label": "Interactive terminal UI",
+      "area": "tui"
+    },
+    {
+      "label": "Follow terminal color scheme",
+      "area": "tui"
+    },
+    {
+      "label": "Output metrics as JSON",
+      "area": "output"
+    },
+    {
+      "label": "Serve metrics over HTTP",
+      "items": [
+        "GET /json",
+        "GET /metrics"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Export metrics in Prometheus format",
+      "area": "integrations"
+    },
+    {
+      "label": "Integrate with Prometheus and Grafana",
+      "items": [
+        "Prometheus",
+        "Grafana"
+      ],
+      "area": "integrations"
+    },
+    {
+      "label": "Install metrics server as launchd service",
+      "items": [
+        "LaunchDaemon",
+        "LaunchAgent"
+      ],
+      "area": "service"
+    },
+    {
+      "label": "Generate CPU/GPU/ANE stress load",
+      "items": [
+        "pulse",
+        "cpu",
+        "gpu",
+        "ane",
+        "all"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Print debug information",
+      "area": "subcommands"
+    },
+    {
+      "label": "Find CLPC power counters",
+      "area": "subcommands"
+    },
+    {
+      "label": "Use as Rust library for metrics",
+      "area": "library"
+    },
+    {
+      "label": "Report network, disk, uptime and battery",
+      "area": "output"
+    },
+    {
+      "label": "Report fan speeds",
+      "area": "monitoring"
+    },
+    {
+      "label": "Report GPU memory usage",
+      "area": "monitoring"
+    },
+    {
+      "label": "Include SoC information in output",
+      "area": "output"
+    }
+  ],
+  "why_worth_it": null,
+  "homepage": "https://docs.rs/macmon",
+  "repo": {
+    "url": "https://github.com/vladkens/macmon",
+    "full_name": "vladkens/macmon",
+    "created_at": "2024-06-16T08:34:34Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": true,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "replayed",
+      "run_id": "verify-macmon-20261121-062758-43f0",
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install macmon",
+          "purpose": "brew install macmon"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "macmon --version",
+        "expected_signal": "macmon 0.12.0"
+      },
+      "first_task": "bash -o pipefail -c 'macmon pipe -s 10 -i 500 | jq -c \"{memory, cpu_power, gpu_power, ane_power, cpu_active_ratio}\"'"
+    },
+    "linux": null,
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.12.0",
+    "published_at": "2026-11-15T17:45:58Z",
+    "url": "https://github.com/vladkens/macmon/releases/tag/v0.12.0"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-21T06:31:11.838800+08:00",
+    "runs": [
+      {
+        "id": "verify-macmon-20261121-062758-43f0",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "macos",
+        "arch": "arm64",
+        "method": "sandbox",
+        "runner": "tart-vz",
+        "image": "cirruslabs/macos-sequoia-base@sha256:8386ef670c04 macOS 15.7.7 (24G720) +pickfit-macos-15@c527abc36c62",
+        "checked_at": "2026-11-21T06:31:11.838800+08:00",
+        "tool_version": "macmon 0.12.0",
+        "install_method": "brew",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "brew install macmon",
+            "purpose": "brew install macmon"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "macmon --version",
+            "expected_signal": "macmon 0.12.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "macmon 0.12.0",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "bash -o pipefail -c 'macmon pipe -s 10 -i 500 | jq -c \"{memory, cpu_power, gpu_power, ane_power, cpu_active_ratio}\"'",
+            "expected_signal": "\"memory\":{\"pressure_level\":",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "{\"memory\":{\"pressure_level\":0,\"pressure_percent\":10,\"ram_total\":8589934592,\"ram_usage\":4334321664,\"swap_total\":0,\"swap_usage\":0},\"cpu_power\":0.0,\"gpu_power\":0.0,\"ane_power\":0.0,\"cpu_active_ratio\":0.004808}",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "TERM=xterm-256color expect -c 'set stty_init \"rows 40 cols 120\"; spawn macmon; sleep 6; send \"q\"; expect eof'",
+            "expected_signal": "launchd",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "\u001b[?1049h\u001b[?1004h\u001b[1;1H\u001b[38;5;8;49m╭─\u001b[1;4H\u001b[39;49mApple\u001b[1;10HM4\u001b[1;13H(Virtual)\u001b[38;5;8;49m (4CPU 8GB)\u001b[1;34H─────────────────────────────────────────────────────────────────────\u001b[1;104H\u001b[39;49mmacmon\u001b[1;111Hv0.12.0\u001b[1;119H\u001b[38;5;8;49m─╮\u001b[2;1H│╭─\u001b[2;5H\u001b[1m\u001b[39;49mCPU\u001b[2;9H\u001b[22m\u001b[38;5;2;49m0%\u001b[2;12…",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -sf http://127.0.0.1:9090/metrics",
+            "expected_signal": "# TYPE macmon_cpu_active_ratio gauge",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "# TYPE macmon_cpu_active_ratio gauge",
+            "setup": [
+              {
+                "command": "macmon serve --host 127.0.0.1 -p 9090",
+                "background": true,
+                "port": 9090
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "macmon pipe -s 10 -i 500 | jq",
+            "actually_needed": "Works as written (jq ships with macOS 15); run under bash -o pipefail so macmon's exit code is not hidden by the pipe",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Run `macmon` without a subcommand to open the terminal UI",
+            "actually_needed": "The TUI needs a terminal; in the headless box it was run inside a pty via `expect` (spawn macmon, send q)",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Real-time CPU / GPU / ANE power usage",
+            "actually_needed": "In a macOS VM power and frequency read 0 (as the README states), so power cannot be shown here",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Check 1 prints 10 JSON lines with memory pressure_level fields, check 2 shows the macmon TUI with a process list that includes launchd before exiting on 'q', and check 3 prints 'macmon 0.12.0'; all exit 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-macmon-20261121-062758-43f0/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-macmon-20261121-062758-43f0/check-1-cmd4.judged.png",
+            "runs/verify/verify-macmon-20261121-062758-43f0/check-2-cmd10.judged.png",
+            "runs/verify/verify-macmon-20261121-062758-43f0/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.285258,
+        "features": [
+          {
+            "feature": "view real-time CPU/GPU/ANE power usage",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "macOS VM reports cpu_power/gpu_power/ane_power as 0.0, as README documents; needs real Apple Silicon hardware"
+          },
+          {
+            "feature": "view RAM, swap and memory pressure",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "list processes with CPU, memory, power, GPU",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "serve metrics over HTTP in Prometheus format",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v2",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/vladkens/macmon@52eb7799fa81",
+      "Cargo.lock"
+    ],
+    "packages_checked": 227,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-21T06:31:19+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "52eb7799fa815cb512de9e4bf4bf801825365e7d",
+      "run_id": null,
+      "tool_version": null,
+      "artifact_sha256": [],
+      "packages": {
+        "crates": 227
+      },
+      "scopes": {
+        "runtime": 148,
+        "optional": 78,
+        "dev": 1
+      },
+      "advisories_fetched_at": "2026-11-21T06:31:19+08:00",
+      "kev_catalog": null,
+      "epss_date": null,
+      "findings_total": 0,
+      "details": "security/macmon.json",
+      "details_sha256": "349ff1a0eea9ba685061eded5fb36fba4e19cd638887c6560d0bdb11e7b00ad1"
+    },
+    "assessment": {
+      "level": "none",
+      "policy_version": "sec.v2",
+      "reasons": [],
+      "counts": {},
+      "uncounted": 0,
+      "assessed_at": "2026-11-21T06:31:19+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "repo_lockfile",
+      "packages_found": 227,
+      "packages_checked": 227,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 227,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
+  },
+  "scores": {
+    "formula_version": "b3.v7",
+    "computed_at": "2026-11-21T06:31:19+08:00",
+    "quality": {
+      "total": 87.0,
+      "raw_total": 87.0,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.75,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.5786,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      },
+      "security": {
+        "level": "none",
+        "basis": "assessment",
+        "effect": "none",
+        "deduction": 0.0
+      }
+    },
+    "popularity": {
+      "score": 94.6,
+      "signals": {
+        "stars": 2134,
+        "monthly_downloads": 5570,
+        "forks": 103,
+        "dependents": null,
+        "release_downloads": 15568,
+        "hn_top_score": 2,
+        "registries_count": 2
+      },
+      "age_days": 885,
+      "packages": [
+        "crates:macmon",
+        "homebrew:macmon"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 4.7
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:11.863620+08:00",
+      "sources_sha": "5e8aef02b919cbe2ad91c18580fec50976357f102863bb34dec2e5a0694f66b0",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "`macmon` is a sudoless performance monitor for Apple Silicon Macs. It reads real-time CPU / GPU / ANE power usage, temperatures, and memory stats through a private macOS API"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "This is useful for integrating with monitoring systems like [Prometheus](https://prometheus.io/) and [Grafana](https://grafana.com/)."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Tested on macOS 14 and later; older versions may work too."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install macmon"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "macmon pipe | jq"
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "-i, --interval <INTERVAL>  Update interval in milliseconds [default: 1000]"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "zero CPU/ANE readings can mean unavailable counters rather than zero consumption"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "Distributed under the [MIT License](LICENSE)."
+        }
+      },
+      "unquoted": [],
+      "input_sha": "84f2944514e342c001c2efd342e6f4d19ff9a695bd23497b8f770ed323e0af4f",
+      "prompt_version": "rubric-p1",
+      "renderer_version": "r1",
+      "grader": "anthropic"
+    },
+    "inputs": {
+      "version": "inputs.v1",
+      "github": {
+        "source": "pipeline_db",
+        "fetched_at": "2026-11-19T15:05:33+08:00",
+        "stars": 2134,
+        "forks": 103,
+        "open_issues": 8,
+        "created_at": "2024-06-16T08:34:34Z",
+        "pushed_at": "2026-11-18T11:02:14Z",
+        "releases": [
+          {
+            "tag": "v0.12.0",
+            "published_at": "2026-11-15T17:45:58Z",
+            "prerelease": false,
+            "notes_chars": 2408,
+            "downloads": 606
+          },
+          {
+            "tag": "dev",
+            "published_at": "2026-10-07T18:15:09Z",
+            "prerelease": true,
+            "notes_chars": 90,
+            "downloads": 2
+          },
+          {
+            "tag": "v0.11.0",
+            "published_at": "2026-11-06T18:41:44Z",
+            "prerelease": false,
+            "notes_chars": 1603,
+            "downloads": 1131
+          },
+          {
+            "tag": "v0.10.0",
+            "published_at": "2026-10-14T21:11:08Z",
+            "prerelease": false,
+            "notes_chars": 1864,
+            "downloads": 2690
+          },
+          {
+            "tag": "v0.9.0",
+            "published_at": "2026-10-07T20:25:16Z",
+            "prerelease": false,
+            "notes_chars": 955,
+            "downloads": 1099
+          },
+          {
+            "tag": "v0.8.2",
+            "published_at": "2026-08-04T16:28:49Z",
+            "prerelease": false,
+            "notes_chars": 178,
+            "downloads": 3096
+          },
+          {
+            "tag": "v0.8.1",
+            "published_at": "2026-07-31T02:27:03Z",
+            "prerelease": false,
+            "notes_chars": 622,
+            "downloads": 312
+          },
+          {
+            "tag": "v0.8.0",
+            "published_at": "2026-07-24T01:22:08Z",
+            "prerelease": false,
+            "notes_chars": 1079,
+            "downloads": 401
+          },
+          {
+            "tag": "v0.7.2",
+            "published_at": "2026-05-02T12:42:47Z",
+            "prerelease": false,
+            "notes_chars": 191,
+            "downloads": 5171
+          },
+          {
+            "tag": "v0.7.1",
+            "published_at": "2026-04-15T22:40:18Z",
+            "prerelease": false,
+            "notes_chars": 371,
+            "downloads": 1060
+          }
+        ],
+        "contributors": null,
+        "files": {
+          "count": 68,
+          "truncated": false,
+          "ci": ".github/workflows/main.yml",
+          "tests": null,
+          "changelog": "changelog.md",
+          "lockfile": "Cargo.lock"
+        }
+      },
+      "issues": {
+        "source": "github_live",
+        "fetched_at": "2026-11-21T06:31:11+08:00",
+        "items": [
+          {
+            "created_at": "2026-11-10T19:05:02Z",
+            "closed_at": "2026-11-14T02:10:43Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-10T10:06:03Z",
+            "closed_at": "2026-11-10T23:42:52Z",
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-10T10:06:01Z",
+            "closed_at": "2026-11-13T14:21:00Z",
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-09T16:47:48Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-08T21:03:03Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-01T01:55:23Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-31T05:38:52Z",
+            "closed_at": "2026-11-01T02:30:09Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-07T19:09:53Z",
+            "closed_at": "2026-10-10T23:17:41Z",
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-26T15:45:56Z",
+            "closed_at": "2026-10-04T19:04:46Z",
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-15T23:34:05Z",
+            "closed_at": "2026-11-14T01:59:13Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-05T05:32:28Z",
+            "closed_at": "2026-10-08T06:22:40Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-07-30T23:29:26Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-07-27T10:16:28Z",
+            "closed_at": "2026-08-04T11:59:02Z",
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-07-13T09:54:52Z",
+            "closed_at": "2026-11-11T14:14:53Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-07-08T15:52:39Z",
+            "closed_at": "2026-07-25T12:04:36Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-07-05T13:50:48Z",
+            "closed_at": "2026-10-04T19:00:28Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-06-28T23:33:30Z",
+            "closed_at": "2026-06-30T18:36:48Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-04-18T20:30:37Z",
+            "closed_at": "2026-06-09T16:40:23Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-04-05T21:39:26Z",
+            "closed_at": "2026-06-09T16:40:32Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-03-20T23:39:26Z",
+            "closed_at": "2026-04-07T20:23:33Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-03-13T02:45:42Z",
+            "closed_at": "2026-03-31T13:32:45Z",
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-03-10T09:59:21Z",
+            "closed_at": "2026-10-05T14:55:14Z",
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-03-05T06:53:29Z",
+            "closed_at": "2026-03-31T21:26:13Z",
+            "association": "NONE",
+            "bot": false
+          }
+        ],
+        "pull_requests": 77,
+        "page_full": true
+      }
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/vladkens/macmon",
+      "fetched_at": "2026-11-19T15:05:33+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/vladkens/macmon/blob/main/readme.md",
+      "fetched_at": "2026-11-19T15:05:33+08:00"
+    },
+    {
+      "id": "release:v0.12.0",
+      "kind": "release",
+      "url": "https://github.com/vladkens/macmon/releases/tag/v0.12.0",
+      "fetched_at": "2026-11-19T15:05:33+08:00"
+    },
+    {
+      "id": "help:verify-macmon-20261121-062758-43f0:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "id": "help:verify-macmon-20261121-062758-43f0:2",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "id": "help:verify-macmon-20261121-062758-43f0:3",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-21T06:31:34+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Run `macmon` without a subcommand to open the terminal UI",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Install [`macmon`](https://formulae.brew.sh/formula/macmon) using [brew](https://brew.sh/):",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Real-time system monitor for Apple Silicon Macs.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "`macmon` is a sudoless performance monitor for Apple Silicon Macs. It reads real-time CPU / GPU / ANE power usage, temperatures, and memory stats",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# `macmon` – Mac Monitor",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "github_api",
+      "quote": "Real-time system monitor for Apple Silicon Macs.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/prerequisites/apple_silicon_only",
+      "source_id": "readme",
+      "quote": "sudoless performance monitor for Apple Silicon Macs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:05:33+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:05:33+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-19T15:05:33+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:05:33+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:05:33+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.12.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-19T15:05:33+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "⚡ Real-time CPU / GPU / ANE power usage",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "This is useful for integrating with monitoring systems like [Prometheus](https://prometheus.io/) and [Grafana](https://grafana.com/).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "You can use the `pipe` subcommand to output metrics in JSON format",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Use `macmon stress` to generate load while checking metric behavior",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "## ⚖️ Compared to htop and btop",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "## ⚖️ Compared to htop and btop",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/alternatives_to/2",
+      "source_id": "readme",
+      "quote": "[tlkh/asitop](https://github.com/tlkh/asitop) – The original tool.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/alternatives_to/3",
+      "source_id": "readme",
+      "quote": "[context-labs/mactop](https://github.com/context-labs/mactop) – Written in Go, requires sudo.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "⚡ Real-time CPU / GPU / ANE power usage",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "💾 RAM / Swap usage and memory pressure",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "📋 Process list with per-process CPU, memory, power and GPU usage",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "You can use the `serve` subcommand to expose metrics over HTTP.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install macmon",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "through a private macOS API — the same data `powermetrics` exposes — without requiring root access",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-19T15:05:46+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "⚡ Real-time CPU / GPU / ANE power usage",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "🚫 Runs without sudo",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "🌡️ Average CPU / GPU temperature",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "💾 RAM / Swap usage and memory pressure",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "📊 CPU frequency-scaled and active ratios per cluster",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "📈 Historical charts with average and max values",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "Press `/` to filter the process list",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Press `Space` to pause the process list",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Run `macmon` without a subcommand to open the terminal UI",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "🎨 Follows your terminal's color scheme",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "pipe    Output metrics in JSON format",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "serve   Serve metrics over HTTP",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "The `/metrics` endpoint exposes metrics in Prometheus format.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "integrating with monitoring systems like [Prometheus](https://prometheus.io/) and [Grafana](https://grafana.com/)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "help:verify-macmon-20261121-062758-43f0:3",
+      "quote": "Install as a LaunchDaemon that starts at boot (needs sudo)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "stress     Generate load for testing metrics",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "debug      Print debug information",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "help:verify-macmon-20261121-062758-43f0:1",
+      "quote": "find-clpc  Find CLPC power counters with CPU/GPU/ANE loads",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "`macmon` can be used as a Rust library to collect Apple Silicon metrics in your own applications.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "Network, disk, uptime and battery are data only",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "readme",
+      "quote": "macmon_fan_speed_rpm Fan speed in revolutions per minute",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "release:v0.12.0",
+      "quote": "Added `gpu_mem_alloc` and `gpu_mem_in_use`, GPU memory in bytes",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    },
+    {
+      "field": "/capabilities/22/label",
+      "source_id": "help:verify-macmon-20261121-062758-43f0:2",
+      "quote": "Include SoC information in the output",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:31:34+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-19T15:05:33+08:00",
+  "updated_at": "2026-11-21T06:31:34+08:00"
+}
