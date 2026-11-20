@@ -1,0 +1,1480 @@
+{
+  "schema_version": "software.v1",
+  "slug": "dbmate",
+  "repo_id": "gh:46880661",
+  "name": "Dbmate",
+  "summary": "A standalone command-line database migration tool that applies plain SQL migrations to keep database schemas in sync across developers and servers.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "data_db",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "clickhouse",
+    "cpp",
+    "database",
+    "database-migrations",
+    "database-schema",
+    "docker",
+    "go",
+    "golang",
+    "migration",
+    "migrations"
+  ],
+  "use_cases": [
+    "apply pending SQL migrations to a database",
+    "roll back the most recent migration",
+    "drop and recreate a test database before a test suite",
+    "wait for a database server to become available in scripts"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "write schema migrations in plain SQL",
+    "run migrations atomically in transactions",
+    "create and drop databases",
+    "save schema.sql file for git diffs",
+    "timestamp-versioned migration files",
+    "read database URL from .env file"
+  ],
+  "capabilities": [
+    {
+      "label": "Run pending database migrations",
+      "area": "subcommands"
+    },
+    {
+      "label": "Generate a new migration file",
+      "area": "subcommands"
+    },
+    {
+      "label": "Create database and run migrations",
+      "area": "subcommands"
+    },
+    {
+      "label": "Roll back the most recent migration",
+      "area": "subcommands"
+    },
+    {
+      "label": "Show status of all migrations",
+      "area": "subcommands"
+    },
+    {
+      "label": "Dump database schema to schema.sql",
+      "area": "schema"
+    },
+    {
+      "label": "Load schema.sql file into database",
+      "area": "schema"
+    },
+    {
+      "label": "Wait for database server availability",
+      "area": "subcommands"
+    },
+    {
+      "label": "Supported databases",
+      "items": [
+        "MySQL",
+        "MariaDB",
+        "PostgreSQL",
+        "SQLite",
+        "ClickHouse",
+        "BigQuery",
+        "Spanner"
+      ],
+      "area": "databases"
+    },
+    {
+      "label": "Write migrations in plain SQL",
+      "area": "migrations"
+    },
+    {
+      "label": "Timestamp-versioned migrations",
+      "area": "migrations"
+    },
+    {
+      "label": "Disable transactions per migration",
+      "area": "migrations"
+    },
+    {
+      "label": "Read environment variables from .env files",
+      "area": "configuration"
+    },
+    {
+      "label": "Hold migration lock for concurrent instances",
+      "area": "migrations"
+    },
+    {
+      "label": "Fail on out-of-order migrations",
+      "area": "migrations"
+    },
+    {
+      "label": "Connect to ClickHouse over TCP or HTTP",
+      "area": "databases"
+    },
+    {
+      "label": "Support ClickHouse cluster migrations",
+      "area": "databases"
+    },
+    {
+      "label": "Use dbmate as a Go library",
+      "area": "library"
+    },
+    {
+      "label": "Print each statement execution result",
+      "area": "output"
+    }
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/amacneil/dbmate",
+    "full_name": "amacneil/dbmate",
+    "created_at": "2015-11-25T18:58:30Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "pg_dump, mysqldump or sqlite3 (for schema dumps)"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install dbmate",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "dbmate --help"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-dbmate-20261121-063308-3002",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "pickfit-services start postgres",
+          "purpose": "start throwaway PostgreSQL"
+        },
+        {
+          "command": "npm install -g dbmate",
+          "purpose": "npm install -g dbmate"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "dbmate --version",
+        "expected_signal": "dbmate version"
+      },
+      "first_task": "dbmate create && dbmate drop && dbmate create"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "scoop install dbmate",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "dbmate --help"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v2.38.2",
+    "published_at": "2026-11-19T17:32:40Z",
+    "url": "https://github.com/amacneil/dbmate/releases/tag/v2.38.2"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-21T06:34:20.207617+08:00",
+    "runs": [
+      {
+        "id": "verify-dbmate-20261121-063308-3002",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-svc:119a3d869a3a",
+        "checked_at": "2026-11-21T06:34:20.207617+08:00",
+        "tool_version": "2.38.2",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pickfit-services start postgres",
+            "purpose": "start throwaway PostgreSQL"
+          },
+          {
+            "command": "npm install -g dbmate",
+            "purpose": "npm install -g dbmate"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "dbmate --version",
+            "expected_signal": "dbmate version",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "dbmate version 2.38.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "dbmate create && dbmate drop && dbmate create",
+            "expected_signal": "Dropping: dbmate_demo",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Dropping: dbmate_demo",
+            "setup": [
+              {
+                "command": "mkdir -p db/migrations && cat > db/migrations/20240101000000_create_users_table.sql <<'EOF'\n-- migrate:up\ncreate table users (\n  id integer primary key,\n  name varchar(255),\n  email varchar(255) not null\n);\n\n-- migrate:down\ndrop table users;\nEOF\ncat > .env <<'EOF'\nDATABASE_URL=\"postgres://pickfit@127.0.0.1:5432/dbmate_demo?sslmode=disable\"\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "dbmate --no-dump-schema up --verbose && dbmate status",
+            "expected_signal": "Applied: 1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Applied: 1",
+            "setup": [
+              {
+                "command": "mkdir -p db/migrations && cat > db/migrations/20240101000000_create_users_table.sql <<'EOF'\n-- migrate:up\ncreate table users (\n  id integer primary key,\n  name varchar(255),\n  email varchar(255) not null\n);\n\n-- migrate:down\ndrop table users;\nEOF\ncat > .env <<'EOF'\nDATABASE_URL=\"postgres://pickfit@127.0.0.1:5432/dbmate_demo?sslmode=disable\"\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "dbmate dump && cat db/schema.sql",
+            "expected_signal": "CREATE TABLE public.users (",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "CREATE TABLE public.users (",
+            "setup": [
+              {
+                "command": "mkdir -p db/migrations && cat > db/migrations/20240101000000_create_users_table.sql <<'EOF'\n-- migrate:up\ncreate table users (\n  id integer primary key,\n  name varchar(255),\n  email varchar(255) not null\n);\n\n-- migrate:down\ndrop table users;\nEOF\ncat > .env <<'EOF'\nDATABASE_URL=\"postgres://pickfit@127.0.0.1:5432/dbmate_demo?sslmode=disable\"\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "dbmate --no-dump-schema up --verbose && dbmate status",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "./atomic_check.sh",
+            "expected_signal": "posts table absent: rolled back",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "posts table absent: rolled back",
+            "setup": [
+              {
+                "command": "mkdir -p db/atomic && cat > db/atomic/20240202000000_broken.sql <<'EOF'\n-- migrate:up\ncreate table posts (id integer primary key);\ninsert into posts values (1);\nselect * from table_that_does_not_exist;\n\n-- migrate:down\ndrop table posts;\nEOF\ncat > atomic_check.sh <<'EOF'\n#!/bin/bash\nset -e\nU=\"postgres://pickfit@127.0.0.1:5432/dbmate_atomic?sslmode=disable\"\ndbmate -u \"$U\" -d db/atomic --no-dump-schema create\nif dbmate -u \"$U\" -d db/atomic --no-dump-schema migrate; then echo \"UNEXPECTED: migration succeeded\"; exit 1; fi\necho \"--- posts table after failed migration (empty = rolled back):\"\npsql \"$U\" -tAc \"select coalesce(to_regclass('public.posts')::text, 'posts table absent: rolled back')\"\ndbmate -u \"$U\" -d db/atomic status --exit-code || echo \"status: migration still pending\"\ndbmate -u \"$U\" -d db/atomic drop\nEOF\nchmod +x atomic_check.sh",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "dbmate -d /tmp/newmig new create_users_table && cat /tmp/newmig/*_create_users_table.sql",
+            "expected_signal": "-- migrate:up",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "-- migrate:up",
+            "setup": [],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "npm install --save-dev dbmate; npx dbmate --help",
+            "actually_needed": "Used npm install -g dbmate (prefix ~/.local) so dbmate is on PATH directly; local --save-dev + npx would also apply",
+            "kind": "note"
+          },
+          {
+            "readme_said": "pg_dump needed for schema dumps",
+            "actually_needed": "pg_dump was already present in the box (/usr/bin/pg_dump 17.12); dump output starts with \\restrict lines from that pg_dump version",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks succeeded: the database was created, dropped and recreated, the migration was applied with status showing Applied: 1, and the version printed as 2.38.2.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-dbmate-20261121-063308-3002/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-dbmate-20261121-063308-3002/check-1-cmd6.judged.png",
+            "runs/verify/verify-dbmate-20261121-063308-3002/check-2-cmd7.judged.png",
+            "runs/verify/verify-dbmate-20261121-063308-3002/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.188084,
+        "features": [
+          {
+            "feature": "write schema migrations in plain SQL",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "run migrations atomically in transactions",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "create and drop databases",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "save schema.sql file for git diffs",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "timestamp-versioned migration files",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          },
+          {
+            "feature": "read database URL from .env file",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v2",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "npm:dbmate (fresh install, 8 packages)",
+      "github.com/amacneil/dbmate@1c606dda86a8",
+      "go.mod",
+      "typescript/package-lock.json",
+      "sbom:verify-dbmate-20261121-063308-3002 (71 packages installed)"
+    ],
+    "packages_checked": 383,
+    "findings_total": 9,
+    "advisories_total": 9,
+    "findings": [
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2022-0535",
+        "cves": [
+          "CVE-2020-0601"
+        ],
+        "severity": "UNKNOWN",
+        "fixed_in": "1.12.16",
+        "summary": "Certificate validation bypass on Windows in crypto/x509",
+        "malicious": false,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/lib/node_modules/dbmate/node_modules/@dbmate/linux-x64/bin/dbmate > stdlib"
+        ],
+        "found_in": "sbom:verify-dbmate-20261121-063308-3002",
+        "in_artifact": true,
+        "kev": true,
+        "epss": 0.89078,
+        "preconditions": [
+          "symbol:Certificate.systemVerify"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2025-3563",
+        "cves": [
+          "CVE-2025-22871"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "1.23.8",
+        "summary": "Request smuggling due to acceptance of invalid chunked data in net/http",
+        "malicious": false,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/lib/node_modules/dbmate/node_modules/@dbmate/linux-x64/bin/dbmate > stdlib"
+        ],
+        "found_in": "sbom:verify-dbmate-20261121-063308-3002",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00842,
+        "preconditions": [
+          "symbol:chunkedReader.Read",
+          "symbol:readChunkLine"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2021-0142",
+        "cves": [
+          "CVE-2020-16845"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.13.15",
+        "summary": "Unbounded read from invalid inputs in encoding/binary",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/lib/node_modules/dbmate/node_modules/@dbmate/linux-x64/bin/dbmate > stdlib"
+        ],
+        "found_in": "sbom:verify-dbmate-20261121-063308-3002",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04861,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:ReadUvarint",
+          "symbol:ReadVarint"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2022-0229",
+        "cves": [
+          "CVE-2020-7919"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.12.16",
+        "summary": "Panic in certificate parsing in crypto/x509 and golang.org/x/crypto/cryptobyte",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/lib/node_modules/dbmate/node_modules/@dbmate/linux-x64/bin/dbmate > stdlib"
+        ],
+        "found_in": "sbom:verify-dbmate-20261121-063308-3002",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.02647,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:crypto/x509",
+          "symbol:golang.org/x/crypto/cryptobyte"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2022-0288",
+        "cves": [
+          "CVE-2021-44716"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.16.12",
+        "summary": "Unbounded memory growth in net/http and golang.org/x/net/http2",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/lib/node_modules/dbmate/node_modules/@dbmate/linux-x64/bin/dbmate > stdlib"
+        ],
+        "found_in": "sbom:verify-dbmate-20261121-063308-3002",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04254,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:http2serverConn.canonicalHeader",
+          "symbol:Server.ServeConn",
+          "symbol:serverConn.canonicalHeader"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2022-0536",
+        "cves": [
+          "CVE-2019-9512",
+          "CVE-2019-9514"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.11.13",
+        "summary": "Reset flood in net/http and golang.org/x/net/http",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/lib/node_modules/dbmate/node_modules/@dbmate/linux-x64/bin/dbmate > stdlib"
+        ],
+        "found_in": "sbom:verify-dbmate-20261121-063308-3002",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.83958,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:http2serverConn.scheduleFrameWrite",
+          "symbol:http2serverConn.serve",
+          "symbol:http2serverConn.writeFrame"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2022-0969",
+        "cves": [
+          "CVE-2022-27664"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.18.6",
+        "summary": "Denial of service in net/http and golang.org/x/net/http2",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/lib/node_modules/dbmate/node_modules/@dbmate/linux-x64/bin/dbmate > stdlib"
+        ],
+        "found_in": "sbom:verify-dbmate-20261121-063308-3002",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.03487,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:ListenAndServe",
+          "symbol:ListenAndServeTLS",
+          "symbol:Serve"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2023-1571",
+        "cves": [
+          "CVE-2022-41723"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.19.6",
+        "summary": "Denial of service via crafted HTTP/2 stream in net/http and golang.org/x/net",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/lib/node_modules/dbmate/node_modules/@dbmate/linux-x64/bin/dbmate > stdlib"
+        ],
+        "found_in": "sbom:verify-dbmate-20261121-063308-3002",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04561,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:Client.Do",
+          "symbol:Client.Get",
+          "symbol:Client.Head"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2023-2102",
+        "cves": [
+          "CVE-2023-39325"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.10",
+        "summary": "HTTP/2 rapid reset can cause excessive work in net/http",
+        "malicious": false,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/lib/node_modules/dbmate/node_modules/@dbmate/linux-x64/bin/dbmate > stdlib"
+        ],
+        "found_in": "sbom:verify-dbmate-20261121-063308-3002",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.03796,
+        "preconditions": [
+          "symbol:ListenAndServe",
+          "symbol:ListenAndServeTLS",
+          "symbol:Serve"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      }
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-21T06:34:26+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "installed_artifact",
+      "commit": "1c606dda86a8b2d6cf2e50e8fd3d1b52d16fa032",
+      "run_id": "verify-dbmate-20261121-063308-3002",
+      "tool_version": "2.38.2",
+      "artifact_sha256": [
+        "119f60e0d8843de24cee5dd2d8f885a607e919f6b065baeef190388f24236b1e",
+        "be3fc2392bd0331e94aa5ef2b75ac805efccf150fd300b62938b032c37d447b9"
+      ],
+      "packages": {
+        "go": 73,
+        "npm": 310
+      },
+      "scopes": {
+        "runtime": 81,
+        "dev": 302
+      },
+      "advisories_fetched_at": "2026-11-21T06:34:26+08:00",
+      "kev_catalog": "2026.11.20",
+      "epss_date": "2026-11-21",
+      "findings_total": 164,
+      "details": "security/dbmate.json",
+      "details_sha256": "ca2f5438e18049e6f09d8b91ee14f04171a81bae2085009b8e392379a75f96bb"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "kev:GO-2022-0535 go:stdlib@go1.27.4 (conditional)",
+        "worst:GO-2025-3563 go:stdlib@go1.27.4 (conditional)",
+        "worst:GO-2021-0142 go:stdlib@go1.27.4 (conditional)"
+      ],
+      "counts": {
+        "conditional": 9
+      },
+      "uncounted": 155,
+      "assessed_at": "2026-11-21T06:34:26+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "installed_artifact",
+      "packages_found": 383,
+      "packages_checked": 383,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "registry:npm:dbmate",
+          "status": "partial",
+          "packages": 8,
+          "gaps": [
+            "binary.prebuilt_package"
+          ]
+        },
+        {
+          "ecosystem": "go",
+          "component": "go.mod",
+          "status": "scanned",
+          "packages": 71,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "typescript/package-lock.json",
+          "status": "scanned",
+          "packages": 302,
+          "gaps": []
+        },
+        {
+          "ecosystem": "go",
+          "component": "sbom:verify-dbmate-20261121-063308-3002",
+          "status": "scanned",
+          "packages": 67,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "sbom:verify-dbmate-20261121-063308-3002",
+          "status": "scanned",
+          "packages": 4,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
+  },
+  "scores": {
+    "formula_version": "b3.v7",
+    "computed_at": "2026-11-21T06:34:26+08:00",
+    "quality": {
+      "total": 91.6,
+      "raw_total": 91.6,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.8125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.7091,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      },
+      "security": {
+        "level": "conditional",
+        "basis": "assessment",
+        "effect": "note",
+        "deduction": 0.0
+      }
+    },
+    "popularity": {
+      "score": 100.0,
+      "signals": {
+        "stars": 7560,
+        "monthly_downloads": 2279648,
+        "forks": 390,
+        "dependents": null,
+        "release_downloads": 3111993,
+        "hn_top_score": 79,
+        "registries_count": 2
+      },
+      "age_days": 4013,
+      "packages": [
+        "npm:dbmate",
+        "homebrew:dbmate"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.0
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:34:20.216994+08:00",
+      "sources_sha": "d26e5a81909fa8454ae00dbb662ee57b1010969c015e1eba3f4768d9e5cec021",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Dbmate is a database migration tool that will keep your database schema in sync across multiple developers and your production servers."
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "This is especially helpful if you are writing multiple services in different languages, and want to maintain some sanity with consistent development tools."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "this command relies on the respective `pg_dump`, `mysqldump`, or `sqlite3` commands being available in your PATH"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install dbmate"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "$ dbmate up\nCreating: myapp_development\nApplying: 20151127184807_create_users_table.sql"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "| Database URL | `DATABASE_URL` (default) | Overridden by `--url` / `-u`."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Otherwise the migration will fail with \"Error: cannot change into wal mode from within a transaction\"."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "**Windows**"
+        }
+      },
+      "unquoted": [],
+      "input_sha": "a3ac8354b4f6ea87743ccc1dd3c91e2d1be34356868593cde83914dadc15eb7a",
+      "prompt_version": "rubric-p1",
+      "renderer_version": "r1",
+      "grader": "anthropic"
+    },
+    "inputs": {
+      "version": "inputs.v1",
+      "github": {
+        "source": "pipeline_db",
+        "fetched_at": "2026-11-21T06:32:51+08:00",
+        "stars": 7560,
+        "forks": 390,
+        "open_issues": 31,
+        "created_at": "2015-11-25T18:58:30Z",
+        "pushed_at": "2026-11-19T17:48:18Z",
+        "releases": [
+          {
+            "tag": "v2.38.2",
+            "published_at": "2026-11-19T17:32:40Z",
+            "prerelease": false,
+            "notes_chars": 1233,
+            "downloads": 7407
+          },
+          {
+            "tag": "v2.38.1",
+            "published_at": "2026-11-09T16:29:20Z",
+            "prerelease": false,
+            "notes_chars": 784,
+            "downloads": 76128
+          },
+          {
+            "tag": "v2.38.0",
+            "published_at": "2026-11-09T04:49:15Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 4547
+          },
+          {
+            "tag": "v2.37.0",
+            "published_at": "2026-10-18T18:12:44Z",
+            "prerelease": false,
+            "notes_chars": 2853,
+            "downloads": 265064
+          },
+          {
+            "tag": "v2.36.0",
+            "published_at": "2026-09-19T00:33:14Z",
+            "prerelease": false,
+            "notes_chars": 3417,
+            "downloads": 616590
+          },
+          {
+            "tag": "v2.35.1",
+            "published_at": "2026-08-26T17:38:09Z",
+            "prerelease": false,
+            "notes_chars": 0,
+            "downloads": 447812
+          },
+          {
+            "tag": "v2.35.0",
+            "published_at": "2026-08-07T21:23:57Z",
+            "prerelease": false,
+            "notes_chars": 942,
+            "downloads": 226766
+          },
+          {
+            "tag": "v2.34.1",
+            "published_at": "2026-07-09T19:16:20Z",
+            "prerelease": false,
+            "notes_chars": 207,
+            "downloads": 584714
+          },
+          {
+            "tag": "v2.34.0",
+            "published_at": "2026-07-09T17:24:16Z",
+            "prerelease": false,
+            "notes_chars": 1696,
+            "downloads": 15701
+          },
+          {
+            "tag": "v2.33.0",
+            "published_at": "2026-04-29T13:41:44Z",
+            "prerelease": false,
+            "notes_chars": 710,
+            "downloads": 867264
+          }
+        ],
+        "contributors": null,
+        "files": {
+          "count": 90,
+          "truncated": false,
+          "ci": ".github/workflows/ci.yml",
+          "tests": "main_test.go",
+          "changelog": null,
+          "lockfile": "go.sum"
+        }
+      },
+      "issues": {
+        "source": "github_live",
+        "fetched_at": "2026-11-21T06:34:20+08:00",
+        "items": [
+          {
+            "created_at": "2026-11-20T17:39:58Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-16T09:59:45Z",
+            "closed_at": "2026-11-17T02:29:38Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-09T06:09:54Z",
+            "closed_at": "2026-11-09T15:43:04Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-09T02:33:22Z",
+            "closed_at": "2026-11-09T04:08:07Z",
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-29T19:02:25Z",
+            "closed_at": "2026-11-08T22:20:00Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-21T20:14:57Z",
+            "closed_at": "2026-11-08T15:16:32Z",
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-01T22:46:19Z",
+            "closed_at": "2026-10-04T17:02:20Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-24T03:08:28Z",
+            "closed_at": "2026-09-24T14:47:20Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-23T11:33:09Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-08-26T08:38:06Z",
+            "closed_at": "2026-09-17T02:45:52Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-07-31T07:15:13Z",
+            "closed_at": "2026-10-18T17:18:59Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-06-19T13:54:25Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          }
+        ],
+        "pull_requests": 88,
+        "page_full": true
+      }
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/amacneil/dbmate",
+      "fetched_at": "2026-11-21T06:32:53+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/amacneil/dbmate/blob/main/README.md",
+      "fetched_at": "2026-11-21T06:32:51+08:00"
+    },
+    {
+      "id": "release:v2.38.2",
+      "kind": "release",
+      "url": "https://github.com/amacneil/dbmate/releases/tag/v2.38.2",
+      "fetched_at": "2026-11-21T06:32:51+08:00"
+    },
+    {
+      "id": "help:verify-dbmate-20261121-063308-3002:3",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-21T06:35:17+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "It is a standalone command line tool",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:03+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "It is a standalone command line tool",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:03+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "Supports MySQL, MariaDB, PostgreSQL, SQLite, and ClickHouse",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:03+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "Dbmate is a database migration tool that will keep your database schema in sync across multiple developers and your production servers.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:03+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Dbmate",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:03+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "this command relies on the respective `pg_dump`, `mysqldump`, or `sqlite3` commands being available in your PATH",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:03+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:32:53+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:32:53+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-21T06:32:53+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:32:53+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.38.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:32:51+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "Run `dbmate up` to run any pending migrations.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:03+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Run `dbmate rollback` to roll back the most recent migration",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:03+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "before running your test suite, you may wish to drop and recreate the test database",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:03+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "dbmate wait           # wait for the database server to become available",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:03+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Uses plain SQL for writing schema migrations",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:03+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Migrations are run atomically inside a transaction",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:03+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Supports creating and dropping databases (handy in development/test)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:03+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Supports saving a `schema.sql` file to easily diff schema changes in git",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:03+08:00"
+    },
+    {
+      "field": "/features/4",
+      "source_id": "readme",
+      "quote": "Migrations are timestamp-versioned, to avoid version number conflicts with multiple developers",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:03+08:00"
+    },
+    {
+      "field": "/features/5",
+      "source_id": "readme",
+      "quote": "Built-in support for reading environment variables from your `.env` file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:03+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install dbmate",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:03+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "sudo curl -fsSL -o /usr/local/bin/dbmate https://github.com/amacneil/dbmate/releases/latest/download/dbmate-linux-amd64",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:03+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "scoop install dbmate",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:03+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "dbmate migrate        # run any pending migrations",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:35:17+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "dbmate new            # generate a new migration file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:35:17+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "dbmate up             # create the database (if it does not already exist) and run any pending migrations",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:35:17+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "dbmate rollback       # roll back the most recent migration",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:35:17+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "dbmate status         # show the status of all migrations (supports --exit-code, --quiet and --strict)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:35:17+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "dbmate dump           # write the database schema.sql file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:35:17+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "dbmate load           # load schema.sql file to the database",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:35:17+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "dbmate wait           # wait for the database server to become available",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:35:17+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Supports MySQL, MariaDB, PostgreSQL, SQLite, and ClickHouse",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:35:17+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Uses plain SQL for writing schema migrations",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:35:17+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "Migrations are timestamp-versioned, to avoid version number conflicts with multiple developers",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:35:17+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "`transaction` is useful if you do not want to run SQL inside a transaction",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:35:17+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "Built-in support for reading environment variables from your `.env` file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:35:17+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "hold a database lock while migrating so that concurrent dbmate instances wait for each other (PostgreSQL only)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:35:17+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "`--strict` - fail if migrations would be applied out of order",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:35:17+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "Dbmate supports connecting to ClickHouse using native TCP (default) or HTTP/HTTPS.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:35:17+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "To work with ClickHouse cluster, there are connection query parameters that can be supplied",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:35:17+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "Use dbmate as a library",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:35:17+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "help:verify-dbmate-20261121-063308-3002:3",
+      "quote": "--verbose, -v  print the result of each statement execution",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:35:17+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-21T06:32:51+08:00",
+  "updated_at": "2026-11-21T06:35:17+08:00"
+}
