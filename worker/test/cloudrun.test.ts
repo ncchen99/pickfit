@@ -1,6 +1,9 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { remoteD1 } from '../cloudrun/bindings.ts';
+import { cloudRunAllowedHosts } from '../cloudrun/config.ts';
 import { parseHeaders, parseJsonc } from '../cloudrun/server.ts';
 
 test('remoteD1 sends sql and params, and reads rows and meta', async () => {
@@ -37,4 +40,22 @@ test('parseHeaders reads Cloudflare _headers rules', () => {
   assert.ok(rules[0].pattern.test('/assets/fitz/fitz.svg'));
   assert.ok(!rules[0].pattern.test('/tool/x'));
   assert.deepEqual(rules[0].headers[0], ['Cache-Control', 'public, max-age=86400']);
+});
+
+test('deploy.sh takes ALLOWED_HOSTS from wrangler.jsonc, adding only the run.app host', () => {
+  const wrangler = readFileSync(join(import.meta.dirname, '..', 'wrangler.jsonc'), 'utf8');
+  const deploy = readFileSync(join(import.meta.dirname, '..', 'cloudrun', 'deploy.sh'), 'utf8');
+  const top = (parseJsonc(wrangler) as { vars: { ALLOWED_HOSTS: string } }).vars.ALLOWED_HOSTS;
+  // No host list of its own: the env var is built by config.ts from wrangler.jsonc.
+  assert.match(deploy, /HOSTS="\$\(node cloudrun\/config\.ts allowed-hosts "\$RUN_HOST"\)"/);
+  assert.match(deploy, /ALLOWED_HOSTS=\$\{HOSTS\}/);
+  const code = deploy.split('\n').filter((line) => !line.trim().startsWith('#')).join('\n');
+  for (const host of top.split(',')) assert.ok(!code.includes(host.trim()), `deploy.sh hard-codes ${host}`);
+  const runHost = /RUN_HOST="([^"]+)"/.exec(deploy)![1];
+  assert.equal(cloudRunAllowedHosts(wrangler, runHost), `${top},${runHost}`);
+});
+
+test('cloudRunAllowedHosts trims, drops repeats and refuses an empty list', () => {
+  assert.equal(cloudRunAllowedHosts('{ "vars": { "ALLOWED_HOSTS": " A.app , b.dev," } }', 'a.app', 'c.run.app'), 'a.app,b.dev,c.run.app');
+  assert.throws(() => cloudRunAllowedHosts('{ "vars": {} } // none'), /no top-level ALLOWED_HOSTS/);
 });
