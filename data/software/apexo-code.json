@@ -465,19 +465,96 @@
   },
   "security": {
     "version": "sec.v2",
-    "status": "unchecked",
-    "unchecked_reason": "lockfile_not_supported",
+    "status": "vulnerable",
+    "unchecked_reason": null,
     "sources": [
       "npm:apexo-code (fresh install, 13 packages)",
       "github.com/cluster1900/apexo-code@d2ca7f0c6f65",
+      "bun.lock",
       "packages/workflow-script/Cargo.lock"
     ],
-    "packages_checked": 67,
-    "findings_total": 0,
-    "advisories_total": 0,
-    "findings": [],
+    "packages_checked": 1383,
+    "findings_total": 3,
+    "advisories_total": 3,
+    "findings": [
+      {
+        "package": "npm:minimatch",
+        "version": "10.0.3",
+        "advisory": "GHSA-23c5-xmqv-rm74",
+        "cves": [
+          "CVE-2026-27904"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "10.2.3",
+        "summary": "minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "bun.lock",
+        "kev": false,
+        "epss": 0.00525,
+        "fix_published_at": "2026-02-25T00:19:15Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ]
+      },
+      {
+        "package": "npm:minimatch",
+        "version": "10.0.3",
+        "advisory": "GHSA-3ppc-4f35-3m26",
+        "cves": [
+          "CVE-2026-26996"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "10.2.1",
+        "summary": "minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "bun.lock",
+        "kev": false,
+        "epss": 0.00569,
+        "fix_published_at": "2026-02-17T04:33:01Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ]
+      },
+      {
+        "package": "npm:minimatch",
+        "version": "10.0.3",
+        "advisory": "GHSA-7r86-cg39-jmmj",
+        "cves": [
+          "CVE-2026-27903"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "10.2.3",
+        "summary": "minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "bun.lock",
+        "kev": false,
+        "epss": 0.00576,
+        "fix_published_at": "2026-02-25T00:19:15Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ]
+      }
+    ],
     "database": "OSV.dev",
-    "checked_at": "2026-11-20T00:06:03+08:00",
+    "checked_at": "2026-11-20T12:12:35+08:00",
     "observation": {
       "scanner": "pickfit-security",
       "scanner_version": "sec.v2",
@@ -488,32 +565,41 @@
       "artifact_sha256": [],
       "packages": {
         "crates": 54,
-        "npm": 13
+        "npm": 1329
       },
       "scopes": {
-        "runtime": 65,
-        "optional": 2
+        "runtime": 74,
+        "optional": 2,
+        "dev": 54,
+        "workspace": 1253
       },
-      "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+      "advisories_fetched_at": "2026-11-20T12:12:35+08:00",
       "kev_catalog": "2026.11.18",
       "epss_date": "2026-11-20",
-      "findings_total": 0,
+      "findings_total": 291,
       "details": "security/apexo-code.json",
-      "details_sha256": "dfd5f6543706fa4e98092bdd9b373e3c3d561ede10e07ef549db37dbac057349"
+      "details_sha256": "1ed4e5211329bc74d7982f31c484ff8dff6befd4875bf2f7c6738f168051ad31"
     },
     "assessment": {
-      "level": "none",
+      "level": "conditional",
       "policy_version": "sec.v2",
-      "reasons": [],
-      "counts": {},
-      "uncounted": 0,
-      "assessed_at": "2026-11-20T00:06:03+08:00"
+      "reasons": [
+        "worst:GHSA-23c5-xmqv-rm74 npm:minimatch@10.0.3 (conditional)",
+        "worst:GHSA-3ppc-4f35-3m26 npm:minimatch@10.0.3 (conditional)",
+        "worst:GHSA-7r86-cg39-jmmj npm:minimatch@10.0.3 (conditional)"
+      ],
+      "counts": {
+        "conditional": 3,
+        "not_shipped": 121
+      },
+      "uncounted": 167,
+      "assessed_at": "2026-11-20T12:12:35+08:00"
     },
     "coverage": {
-      "state": "partial",
+      "state": "complete",
       "target": "repo_lockfile",
-      "packages_found": 1530,
-      "packages_checked": 67,
+      "packages_found": 1383,
+      "packages_checked": 1383,
       "components": [
         {
           "ecosystem": "npm",
@@ -527,11 +613,9 @@
         {
           "ecosystem": "npm",
           "component": "bun.lock",
-          "status": "not_scanned",
-          "packages": 1463,
-          "gaps": [
-            "lockfile.unsupported_format"
-          ]
+          "status": "scanned",
+          "packages": 1316,
+          "gaps": []
         },
         {
           "ecosystem": "crates",
@@ -541,45 +625,25 @@
           "gaps": []
         }
       ],
-      "gaps": [
-        {
-          "code": "lockfile.unsupported_format",
-          "category": "lockfile_unreadable",
-          "ecosystem": "npm",
-          "component": "bun.lock",
-          "detail": "bun_lock is not read yet",
-          "capability": "read_lockfile:bun_lock",
-          "found": 1463,
-          "first_seen": "2026-11-04",
-          "last_seen": "2026-11-20"
-        },
-        {
-          "code": "binary.prebuilt_package",
-          "category": "binary_no_metadata",
-          "ecosystem": "npm",
-          "component": "npm:apexo-code",
-          "detail": "the package wraps a compiled binary",
-          "capability": "sbom_binary",
-          "found": null,
-          "first_seen": "2026-11-20",
-          "last_seen": "2026-11-20"
-        }
-      ]
+      "gaps": []
     }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-20T00:06:03+08:00",
+    "computed_at": "2026-11-20T12:12:35+08:00",
     "quality": {
       "total": 87.0,
-      "raw_total": 87.0,
       "confidence": 0.6,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.6875,
@@ -599,17 +663,14 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 87.0,
       "security": {
-        "level": "none",
+        "level": "conditional",
         "basis": "assessment",
-        "effect": "none",
+        "effect": "note",
         "deduction": 0.0
       }
     },
@@ -1146,5 +1207,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-11-20T02:16:11+08:00"
+  "updated_at": "2026-11-20T12:12:35+08:00"
 }

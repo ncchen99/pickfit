@@ -199,11 +199,12 @@
     "sources": [
       "github.com/tterrasson/retrograd@29e7435b9171",
       "Cargo.lock",
-      "python/native/Cargo.lock"
+      "python/native/Cargo.lock",
+      "web/bun.lock"
     ],
-    "packages_checked": 371,
-    "findings_total": 1,
-    "advisories_total": 1,
+    "packages_checked": 864,
+    "findings_total": 3,
+    "advisories_total": 3,
     "findings": [
       {
         "package": "crates:rmcp",
@@ -214,22 +215,80 @@
         "fixed_in": "3.6.0",
         "summary": "Unbounded tool schema cache in Streamable HTTP server transport",
         "malicious": false,
-        "attack_vector": "network",
-        "dos_only": true,
-        "fix_published_at": "2026-10-20T05:53:35Z",
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
         "scope": "runtime",
-        "paths": [
-          "retrograd-tools > rmcp"
-        ],
         "workspace": "crates/retrograd-tools",
         "found_in": "Cargo.lock",
         "kev": false,
+        "fix_published_at": "2026-10-20T05:53:35Z",
+        "attack_vector": "network",
+        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "counted": true,
+        "paths": [
+          "retrograd-tools > rmcp"
+        ]
+      },
+      {
+        "package": "npm:markdown-it",
+        "version": "14.3.2",
+        "advisory": "GHSA-gfr2-rv44-r23c",
+        "cves": [
+          "CVE-2026-111758"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "14.3.3",
+        "summary": "markdown-it: Quadratic-time rendering of a single multi-line link reference definition with default options (regression since 14.0)",
+        "malicious": false,
         "level": "conditional",
-        "policy_version": "sec.v2"
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web/bun.lock",
+        "kev": false,
+        "epss": 0.0055,
+        "fix_published_at": "2026-10-16T01:47:54Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > markdown-it"
+        ]
+      },
+      {
+        "package": "npm:source-map-js",
+        "version": "1.2.1",
+        "advisory": "GHSA-68fv-2mgg-jv7q",
+        "cves": [
+          "CVE-2026-93749"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.2.2",
+        "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "web/bun.lock",
+        "kev": false,
+        "epss": 0.00455,
+        "fix_published_at": "2026-09-30T14:08:09Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > vue > @vue/compiler-sfc > source-map-js"
+        ]
       },
       {
         "package": "crates:pyo3",
@@ -240,19 +299,22 @@
         "fixed_in": "0.29.0",
         "summary": "PyO3 has an Out-of-bounds Read in `nth` / `nth_back` for `PyList` and `PyTuple` iterators",
         "malicious": false,
-        "attack_vector": "network",
-        "dos_only": false,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2",
+        "counted": true,
         "scope": "runtime",
-        "paths": [
-          "retrograd-python > pyo3"
-        ],
         "workspace": "python/native",
         "found_in": "python/native/Cargo.lock",
         "kev": false,
+        "attack_vector": "network",
+        "dos_only": false,
         "preconditions": [
           "symbol:nth_back",
           "symbol:PyList",
           "symbol:PyTuple"
+        ],
+        "paths": [
+          "retrograd-python > pyo3"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -260,14 +322,11 @@
           "evidence": [
             "no source file uses nth_back, PyList, PyTuple; only the project depends on pyo3"
           ]
-        },
-        "counted": true,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2"
+        }
       }
     ],
     "database": "OSV.dev",
-    "checked_at": "2026-11-20T00:17:01+08:00",
+    "checked_at": "2026-11-20T12:12:35+08:00",
     "observation": {
       "scanner": "pickfit-security",
       "scanner_version": "sec.v2",
@@ -277,39 +336,43 @@
       "tool_version": null,
       "artifact_sha256": [],
       "packages": {
-        "crates": 371
+        "crates": 371,
+        "npm": 493
       },
       "scopes": {
-        "runtime": 319,
-        "dev": 36,
+        "runtime": 381,
+        "peer": 70,
+        "dev": 397,
         "workspace": 16
       },
-      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "advisories_fetched_at": "2026-11-20T12:12:35+08:00",
       "kev_catalog": "2026.11.18",
       "epss_date": "2026-11-20",
-      "findings_total": 15,
+      "findings_total": 34,
       "details": "security/retrograd.json",
-      "details_sha256": "ae2d2bb525d15f72a66cdc12a14915542b2f62259c6ba135a782d4eb5e341799"
+      "details_sha256": "8b776c6f5bf07b0bd3311a9248e99837adc98440631911334a2565d3801be06d"
     },
     "assessment": {
       "level": "conditional",
       "policy_version": "sec.v2",
       "reasons": [
         "worst:RUSTSEC-2026-0461 crates:rmcp@3.4.0 (conditional)",
-        "worst:GHSA-36hh-v3qg-5jq4 crates:pyo3@0.25.1 (present_unreachable)"
+        "worst:GHSA-gfr2-rv44-r23c npm:markdown-it@14.3.2 (conditional)",
+        "worst:GHSA-68fv-2mgg-jv7q npm:source-map-js@1.2.1 (conditional)"
       ],
       "counts": {
-        "conditional": 1,
-        "present_unreachable": 1
+        "conditional": 3,
+        "present_unreachable": 1,
+        "not_shipped": 3
       },
-      "uncounted": 13,
-      "assessed_at": "2026-11-20T00:17:01+08:00"
+      "uncounted": 27,
+      "assessed_at": "2026-11-20T12:12:35+08:00"
     },
     "coverage": {
       "state": "partial",
       "target": "repo_lockfile",
-      "packages_found": 881,
-      "packages_checked": 371,
+      "packages_found": 864,
+      "packages_checked": 864,
       "components": [
         {
           "ecosystem": "crates",
@@ -328,11 +391,9 @@
         {
           "ecosystem": "npm",
           "component": "web/bun.lock",
-          "status": "not_scanned",
-          "packages": 510,
-          "gaps": [
-            "lockfile.unsupported_format"
-          ]
+          "status": "scanned",
+          "packages": 493,
+          "gaps": []
         },
         {
           "ecosystem": "pypi",
@@ -345,17 +406,6 @@
         }
       ],
       "gaps": [
-        {
-          "code": "lockfile.unsupported_format",
-          "category": "lockfile_unreadable",
-          "ecosystem": "npm",
-          "component": "web/bun.lock",
-          "detail": "bun_lock is not read yet",
-          "capability": "read_lockfile:bun_lock",
-          "found": 510,
-          "first_seen": "2026-11-20",
-          "last_seen": "2026-11-20"
-        },
         {
           "code": "resolve.pyproject_failed",
           "category": "resolve_failed",
@@ -854,5 +904,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:28:17+08:00",
-  "updated_at": "2026-11-20T02:22:48+08:00"
+  "updated_at": "2026-11-20T12:12:35+08:00"
 }

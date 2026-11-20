@@ -259,19 +259,50 @@
   },
   "security": {
     "version": "sec.v2",
-    "status": "unchecked",
-    "unchecked_reason": "lockfile_not_supported",
+    "status": "vulnerable",
+    "unchecked_reason": null,
     "sources": [
       "github.com/fjrevoredo/mini-diarium@31c149051d21",
       "Cargo.lock",
+      "bun.lock",
       "package-lock.json"
     ],
-    "packages_checked": 1502,
-    "findings_total": 0,
-    "advisories_total": 0,
-    "findings": [],
+    "packages_checked": 1644,
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "npm:prosemirror-view",
+        "version": "1.41.9",
+        "advisory": "GHSA-c8x8-7fp4-3x9w",
+        "cves": [
+          "CVE-2026-104847"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.42.3",
+        "summary": "ProseMirror has a XSS vulnerability in prosemirror-view's paste handling",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "bun.lock",
+        "kev": false,
+        "epss": 0.003,
+        "fix_published_at": "2026-08-24T23:40:03Z",
+        "attack_vector": "network",
+        "dos_only": false,
+        "preconditions": [
+          "user_interaction"
+        ],
+        "paths": [
+          ". > @tiptap/pm > prosemirror-gapcursor > prosemirror-view"
+        ]
+      }
+    ],
     "database": "OSV.dev",
-    "checked_at": "2026-11-20T00:17:01+08:00",
+    "checked_at": "2026-11-20T12:12:35+08:00",
     "observation": {
       "scanner": "pickfit-security",
       "scanner_version": "sec.v2",
@@ -282,33 +313,40 @@
       "artifact_sha256": [],
       "packages": {
         "crates": 572,
-        "npm": 930
+        "npm": 1072
       },
       "scopes": {
-        "runtime": 657,
+        "runtime": 673,
         "optional": 2,
-        "dev": 843
+        "dev": 969
       },
-      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "advisories_fetched_at": "2026-11-20T12:12:35+08:00",
       "kev_catalog": "2026.11.18",
       "epss_date": "2026-11-20",
-      "findings_total": 4,
+      "findings_total": 32,
       "details": "security/mini-diarium.json",
-      "details_sha256": "b711f79516d43e0e2116f41fdceb183505f555146bf02f5cc8283ac2726473fb"
+      "details_sha256": "5efd8ff28fb11b53fcf5c34c99c61495bc083ab4f865709ad1ffabbd789c2cf1"
     },
     "assessment": {
-      "level": "none",
+      "level": "conditional",
       "policy_version": "sec.v2",
-      "reasons": [],
-      "counts": {},
-      "uncounted": 4,
-      "assessed_at": "2026-11-20T00:17:01+08:00"
+      "reasons": [
+        "worst:GHSA-c8x8-7fp4-3x9w npm:prosemirror-view@1.41.9 (conditional)",
+        "worst:GHSA-73wf-gq98-2v4g npm:browserslist@4.28.2 (not_shipped)",
+        "worst:GHSA-c83g-rgw3-j3cx npm:browserslist@4.28.2 (not_shipped)"
+      ],
+      "counts": {
+        "conditional": 1,
+        "not_shipped": 7
+      },
+      "uncounted": 24,
+      "assessed_at": "2026-11-20T12:12:35+08:00"
     },
     "coverage": {
-      "state": "partial",
+      "state": "complete",
       "target": "repo_lockfile",
-      "packages_found": 2679,
-      "packages_checked": 1502,
+      "packages_found": 1644,
+      "packages_checked": 1644,
       "components": [
         {
           "ecosystem": "crates",
@@ -320,11 +358,9 @@
         {
           "ecosystem": "npm",
           "component": "bun.lock",
-          "status": "not_scanned",
-          "packages": 1177,
-          "gaps": [
-            "lockfile.unsupported_format"
-          ]
+          "status": "scanned",
+          "packages": 1011,
+          "gaps": []
         },
         {
           "ecosystem": "npm",
@@ -334,24 +370,12 @@
           "gaps": []
         }
       ],
-      "gaps": [
-        {
-          "code": "lockfile.unsupported_format",
-          "category": "lockfile_unreadable",
-          "ecosystem": "npm",
-          "component": "bun.lock",
-          "detail": "bun_lock is not read yet",
-          "capability": "read_lockfile:bun_lock",
-          "found": 1177,
-          "first_seen": "2026-11-04",
-          "last_seen": "2026-11-20"
-        }
-      ]
+      "gaps": []
     }
   },
   "scores": {
     "formula_version": "b3.v7+visual.v1",
-    "computed_at": "2026-11-20T00:17:01+08:00",
+    "computed_at": "2026-11-20T12:12:35+08:00",
     "quality": {
       "total": 85.3,
       "confidence": 0.7,
@@ -389,9 +413,9 @@
       },
       "raw_total": 85.3,
       "security": {
-        "level": "none",
+        "level": "conditional",
         "basis": "assessment",
-        "effect": "none",
+        "effect": "note",
         "deduction": 0.0
       },
       "visual": {
@@ -764,5 +788,5 @@
     }
   ],
   "first_seen_at": "2026-11-01T16:42:43+08:00",
-  "updated_at": "2026-11-20T00:17:01+08:00"
+  "updated_at": "2026-11-20T12:12:35+08:00"
 }

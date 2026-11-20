@@ -10,38 +10,39 @@
   "tool_version": null,
   "artifact_sha256": [],
   "packages": {
-   "crates": 497
+   "crates": 497,
+   "npm": 1290
   },
   "scopes": {
-   "runtime": 497
+   "runtime": 499,
+   "dev": 485,
+   "workspace": 803
   },
-  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "advisories_fetched_at": "2026-11-20T12:12:35+08:00",
   "kev_catalog": "2026.11.18",
   "epss_date": "2026-11-20",
-  "findings_total": 1
+  "findings_total": 6
  },
  "assessment": {
   "level": "none",
   "policy_version": "sec.v2",
   "reasons": [],
   "counts": {},
-  "uncounted": 1,
-  "assessed_at": "2026-11-20T00:17:01+08:00"
+  "uncounted": 6,
+  "assessed_at": "2026-11-20T12:12:35+08:00"
  },
  "coverage": {
-  "state": "partial",
+  "state": "complete",
   "target": "repo_lockfile",
-  "packages_found": 1911,
-  "packages_checked": 497,
+  "packages_found": 1787,
+  "packages_checked": 1787,
   "components": [
    {
     "ecosystem": "npm",
     "component": "bun.lock",
-    "status": "not_scanned",
-    "packages": 1414,
-    "gaps": [
-     "lockfile.unsupported_format"
-    ]
+    "status": "scanned",
+    "packages": 1290,
+    "gaps": []
    },
    {
     "ecosystem": "crates",
@@ -51,22 +52,11 @@
     "gaps": []
    }
   ],
-  "gaps": [
-   {
-    "code": "lockfile.unsupported_format",
-    "category": "lockfile_unreadable",
-    "ecosystem": "npm",
-    "component": "bun.lock",
-    "detail": "bun_lock is not read yet",
-    "capability": "read_lockfile:bun_lock",
-    "found": 1414,
-    "first_seen": "2026-11-04",
-    "last_seen": "2026-11-20"
-   }
-  ]
+  "gaps": []
  },
  "sources": [
   "github.com/nimbus-agent/Nimbus@4296aa26de2d",
+  "bun.lock",
   "packages/ui/src-tauri/Cargo.lock"
  ],
  "installed": [],
@@ -113,6 +103,235 @@
    },
    "counted": false,
    "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@hono/node-server",
+   "version": "1.19.18",
+   "advisory": "GHSA-rmxm-3fg6-px4f",
+   "cves": [
+    "CVE-2026-118663"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.1.3",
+   "summary": "@hono/node-server: `serveStatic` decodes the request path a second time, leading to bypass of middleware on static paths",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118663"
+   ],
+   "published": "2026-10-28T21:05:00Z",
+   "modified": "2026-10-28T21:15:04.153052864Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-174"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40hono/node-server@1.19.18",
+   "scope": "workspace",
+   "paths": [
+    "packages/gateway > @mastra/mcp > @modelcontextprotocol/node > @hono/node-server"
+   ],
+   "workspace": "packages/gateway",
+   "found_in": "bun.lock",
+   "kev": false,
+   "epss": 0.00353,
+   "epss_percentile": 0.29616,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "symbol:serveStatic"
+   ],
+   "reachability": {
+    "method": "symbol_grep",
+    "result": "unknown",
+    "evidence": [
+     "the project's source does not use serveStatic, but other packages depend on @hono/node-server"
+    ]
+   },
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:glob",
+   "version": "10.5.0",
+   "advisory": "GHSA-3g3m-2fjr-6pw4",
+   "cves": [
+    "CVE-2026-118773"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "14.0.2",
+   "summary": "Glob: AbortSignal cancellation bypass allows post-timeout filesystem traversal",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118773"
+   ],
+   "published": "2026-10-30T23:09:11Z",
+   "modified": "2026-10-30T23:15:04.503965732Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/glob@10.5.0",
+   "scope": "dev",
+   "paths": [
+    ". > babel-plugin-istanbul > test-exclude > glob"
+   ],
+   "workspace": ".",
+   "found_in": "bun.lock",
+   "kev": false,
+   "epss": 0.0035,
+   "epss_percentile": 0.2932,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:minimatch",
+   "version": "10.2.6",
+   "advisory": "GHSA-g3hv-75wg-m249",
+   "cves": [
+    "CVE-2026-118764"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "11.0.1",
+   "summary": "minimatch has potential denial of service via globparts amplification",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118764"
+   ],
+   "published": "2026-10-30T23:09:55Z",
+   "modified": "2026-11-04T17:01:25.850114200Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-405"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/minimatch@10.2.6",
+   "scope": "dev",
+   "paths": [
+    ". > @stryker-mutator/core > minimatch"
+   ],
+   "workspace": ".",
+   "found_in": "bun.lock",
+   "kev": false,
+   "epss": 0.00301,
+   "epss_percentile": 0.23299,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:minimatch",
+   "version": "9.0.9",
+   "advisory": "GHSA-g3hv-75wg-m249",
+   "cves": [
+    "CVE-2026-118764"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "11.0.1",
+   "summary": "minimatch has potential denial of service via globparts amplification",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118764"
+   ],
+   "published": "2026-10-30T23:09:55Z",
+   "modified": "2026-11-04T17:01:25.850114200Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-405"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/minimatch@9.0.9",
+   "scope": "dev",
+   "paths": [
+    ". > babel-plugin-istanbul > test-exclude > glob > minimatch"
+   ],
+   "workspace": ".",
+   "found_in": "bun.lock",
+   "kev": false,
+   "epss": 0.00301,
+   "epss_percentile": 0.23299,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:katex",
+   "version": "0.16.47",
+   "advisory": "GHSA-238p-pmpm-9mq7",
+   "cves": [
+    "CVE-2026-103923"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.18.2",
+   "summary": "KaTeX: Existing prototype pollution can bypass trust restrictions",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-103923"
+   ],
+   "published": "2026-10-05T23:41:05Z",
+   "modified": "2026-10-06T00:00:09.544490390Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:N/VI:N/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-807"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/katex@0.16.47",
+   "scope": "dev",
+   "paths": [
+    ". > markdownlint-cli2 > markdownlint > micromark-extension-math > katex"
+   ],
+   "workspace": ".",
+   "found_in": "bun.lock",
+   "kev": false,
+   "epss": 0.003,
+   "epss_percentile": 0.23091,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
    "policy_version": "sec.v2"
   }
  ]

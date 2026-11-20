@@ -5,43 +5,52 @@
   "scanner": "pickfit-security",
   "scanner_version": "sec.v2",
   "target": "repo_lockfile",
-  "commit": "a0a3512cc1e8a6d71313ba46fc07bf128e550b5c",
+  "commit": "3f6f102bc1edb81681278276078265bc03ad6c13",
   "run_id": null,
   "tool_version": null,
   "artifact_sha256": [],
   "packages": {
-   "go": 148
+   "go": 148,
+   "npm": 770
   },
   "scopes": {
-   "runtime": 148
+   "runtime": 492,
+   "peer": 12,
+   "build": 142,
+   "dev": 272
   },
-  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "advisories_fetched_at": "2026-11-20T12:12:35+08:00",
   "kev_catalog": "2026.11.18",
   "epss_date": "2026-11-20",
-  "findings_total": 0
+  "findings_total": 15
  },
  "assessment": {
-  "level": "none",
+  "level": "conditional",
   "policy_version": "sec.v2",
-  "reasons": [],
-  "counts": {},
-  "uncounted": 0,
-  "assessed_at": "2026-11-20T00:17:01+08:00"
+  "reasons": [
+   "worst:GHSA-3jxr-9vmj-r5cp npm:brace-expansion@3.0.9 (conditional)",
+   "worst:GHSA-68fv-2mgg-jv7q npm:source-map-js@1.2.1 (conditional)",
+   "worst:GHSA-587h-7wmj-h5pm npm:vite@5.4.21 (not_shipped)"
+  ],
+  "counts": {
+   "conditional": 2,
+   "not_shipped": 1
+  },
+  "uncounted": 12,
+  "assessed_at": "2026-11-20T12:12:35+08:00"
  },
  "coverage": {
-  "state": "partial",
+  "state": "complete",
   "target": "repo_lockfile",
-  "packages_found": 985,
-  "packages_checked": 148,
+  "packages_found": 918,
+  "packages_checked": 918,
   "components": [
    {
     "ecosystem": "npm",
     "component": "bun.lock",
-    "status": "not_scanned",
-    "packages": 837,
-    "gaps": [
-     "lockfile.unsupported_format"
-    ]
+    "status": "scanned",
+    "packages": 770,
+    "gaps": []
    },
    {
     "ecosystem": "go",
@@ -51,24 +60,679 @@
     "gaps": []
    }
   ],
-  "gaps": [
-   {
-    "code": "lockfile.unsupported_format",
-    "category": "lockfile_unreadable",
-    "ecosystem": "npm",
-    "component": "bun.lock",
-    "detail": "bun_lock is not read yet",
-    "capability": "read_lockfile:bun_lock",
-    "found": 837,
-    "first_seen": "2026-11-16",
-    "last_seen": "2026-11-20"
-   }
-  ]
+  "gaps": []
  },
  "sources": [
-  "github.com/amir20/dozzle@a0a3512cc1e8",
+  "github.com/amir20/dozzle@3f6f102bc1ed",
+  "bun.lock",
   "go.mod"
  ],
  "installed": [],
- "findings": []
+ "findings": [
+  {
+   "package": "npm:brace-expansion",
+   "version": "3.0.9",
+   "advisory": "GHSA-3jxr-9vmj-r5cp",
+   "cves": [
+    "CVE-2026-13149"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "5.0.7",
+   "summary": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-13149"
+   ],
+   "published": "2026-07-20T20:51:09Z",
+   "modified": "2026-09-10T03:51:10.092354944Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:P/S:N/AU:Y/R:U/V:D/RE:M/U:Amber",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/brace-expansion@3.0.9",
+   "fix_published_at": "2026-06-29T03:47:11Z",
+   "scope": "runtime",
+   "paths": [
+    ". > vite-plugin-vue-layouts-next > brace-expansion"
+   ],
+   "workspace": ".",
+   "found_in": "bun.lock",
+   "kev": false,
+   "epss": 0.00364,
+   "epss_percentile": 0.30865,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:source-map-js",
+   "version": "1.2.1",
+   "advisory": "GHSA-68fv-2mgg-jv7q",
+   "cves": [
+    "CVE-2026-93749"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.2.2",
+   "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-93749"
+   ],
+   "published": "2026-09-18T18:31:44Z",
+   "modified": "2026-10-05T23:45:07.974936711Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1284"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/source-map-js@1.2.1",
+   "fix_published_at": "2026-09-30T14:08:09Z",
+   "scope": "runtime",
+   "paths": [
+    ". > vite-svg-loader > svgo > css-tree > source-map-js"
+   ],
+   "workspace": ".",
+   "found_in": "bun.lock",
+   "kev": false,
+   "epss": 0.00455,
+   "epss_percentile": 0.40249,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:minimatch",
+   "version": "10.2.6",
+   "advisory": "GHSA-g3hv-75wg-m249",
+   "cves": [
+    "CVE-2026-118764"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "11.0.1",
+   "summary": "minimatch has potential denial of service via globparts amplification",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118764"
+   ],
+   "published": "2026-10-30T23:09:55Z",
+   "modified": "2026-11-04T17:01:25.850114200Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-405"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/minimatch@10.2.6",
+   "scope": "runtime",
+   "paths": [
+    ". > @intlify/unplugin-vue-i18n > @typescript-eslint/typescript-estree > minimatch"
+   ],
+   "workspace": ".",
+   "found_in": "bun.lock",
+   "kev": false,
+   "epss": 0.00301,
+   "epss_percentile": 0.23299,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:postcss-selector-parser",
+   "version": "6.0.10",
+   "advisory": "GHSA-rj75-hqrm-r3gf",
+   "cves": [
+    "CVE-2026-104844"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.1.5",
+   "summary": "PostCSS: Quadratic complexity in flat selector parsing allows CPU exhaustion",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-104844"
+   ],
+   "published": "2026-10-05T22:53:54Z",
+   "modified": "2026-10-26T14:16:59.921540799Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/postcss-selector-parser@6.0.10",
+   "scope": "runtime",
+   "paths": [
+    ". > @tailwindcss/typography > postcss-selector-parser"
+   ],
+   "workspace": ".",
+   "found_in": "bun.lock",
+   "kev": false,
+   "epss": 0.00389,
+   "epss_percentile": 0.33714,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:qs",
+   "version": "6.16.0",
+   "advisory": "GHSA-6pq8-jhm2-2vcw",
+   "cves": [
+    "CVE-2026-110816"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.16.1",
+   "summary": "qs : qs.stringify with arrayFormat 'comma' throws an uncaught TypeError on array elements carrying a non-callable own toString (DoS)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-110816"
+   ],
+   "published": "2026-10-27T16:10:55Z",
+   "modified": "2026-10-27T16:15:05.324423680Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248",
+    "CWE-704"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/qs@6.16.0",
+   "scope": "runtime",
+   "paths": [
+    ". > @duckdb/duckdb-wasm > qs"
+   ],
+   "workspace": ".",
+   "found_in": "bun.lock",
+   "kev": false,
+   "epss": 0.00368,
+   "epss_percentile": 0.31342,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "5.4.21",
+   "advisory": "GHSA-587h-7wmj-h5pm",
+   "cves": [
+    "CVE-2026-112942"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "6.4.4",
+   "summary": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112942"
+   ],
+   "published": "2026-10-20T19:48:25Z",
+   "modified": "2026-10-20T20:00:04.608979840Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-77"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@5.4.21",
+   "scope": "build",
+   "paths": [
+    ". > vitepress > vite"
+   ],
+   "workspace": ".",
+   "found_in": "bun.lock",
+   "kev": false,
+   "epss": 0.01694,
+   "epss_percentile": 0.77635,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:esbuild",
+   "version": "0.21.5",
+   "advisory": "GHSA-67mh-4wv8-2f99",
+   "severity": "MODERATE",
+   "fixed_in": "0.25.0",
+   "summary": "esbuild enables any website to send any requests to the development server and read the response",
+   "malicious": false,
+   "published": "2025-02-10T17:48:07Z",
+   "modified": "2026-09-10T03:50:22.418128505Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-346"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/esbuild@0.21.5",
+   "scope": "build",
+   "paths": [
+    ". > vitepress > vite > esbuild"
+   ],
+   "workspace": ".",
+   "found_in": "bun.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:glob",
+   "version": "13.0.6",
+   "advisory": "GHSA-3g3m-2fjr-6pw4",
+   "cves": [
+    "CVE-2026-118773"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "14.0.2",
+   "summary": "Glob: AbortSignal cancellation bypass allows post-timeout filesystem traversal",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118773"
+   ],
+   "published": "2026-10-30T23:09:11Z",
+   "modified": "2026-10-30T23:15:04.503965732Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/glob@13.0.6",
+   "scope": "dev",
+   "paths": [
+    ". > @vue/test-utils > js-beautify > glob"
+   ],
+   "workspace": ".",
+   "found_in": "bun.lock",
+   "kev": false,
+   "epss": 0.0035,
+   "epss_percentile": 0.2932,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "5.4.21",
+   "advisory": "GHSA-4w7w-66w2-5vf9",
+   "cves": [
+    "CVE-2026-39365"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.2",
+   "summary": "Vite Vulnerable to Path Traversal in Optimized Deps `.map` Handling",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-39365"
+   ],
+   "published": "2026-04-06T18:03:46Z",
+   "modified": "2026-09-10T03:50:42.779400319Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@5.4.21",
+   "scope": "build",
+   "paths": [
+    ". > vitepress > vite"
+   ],
+   "workspace": ".",
+   "found_in": "bun.lock",
+   "kev": false,
+   "epss": 0.00914,
+   "epss_percentile": 0.60854,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "5.4.21",
+   "advisory": "GHSA-698v-4r3x-3vcv",
+   "cves": [
+    "CVE-2026-112943"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.4",
+   "summary": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112943"
+   ],
+   "published": "2026-10-20T18:30:24Z",
+   "modified": "2026-10-20T18:45:09.467993691Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-78"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@5.4.21",
+   "scope": "build",
+   "paths": [
+    ". > vitepress > vite"
+   ],
+   "workspace": ".",
+   "found_in": "bun.lock",
+   "kev": false,
+   "epss": 0.00414,
+   "epss_percentile": 0.36473,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "5.4.21",
+   "advisory": "GHSA-fx2h-pf6j-xcff",
+   "cves": [
+    "CVE-2026-53571"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.3",
+   "summary": "vite: `server.fs.deny` bypass on Windows alternate paths",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-53571"
+   ],
+   "published": "2026-06-15T17:17:45Z",
+   "modified": "2026-10-27T15:15:07.885624041Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:H/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@5.4.21",
+   "scope": "build",
+   "paths": [
+    ". > vitepress > vite"
+   ],
+   "workspace": ".",
+   "found_in": "bun.lock",
+   "kev": false,
+   "epss": 0.00577,
+   "epss_percentile": 0.48326,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "5.4.21",
+   "advisory": "GHSA-r825-w8mm-5pxw",
+   "cves": [
+    "CVE-2026-112944"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.4",
+   "summary": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112944"
+   ],
+   "published": "2026-10-20T19:51:52Z",
+   "modified": "2026-10-20T20:00:04.608907013Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-88"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@5.4.21",
+   "scope": "build",
+   "paths": [
+    ". > vitepress > vite"
+   ],
+   "workspace": ".",
+   "found_in": "bun.lock",
+   "kev": false,
+   "epss": 0.00705,
+   "epss_percentile": 0.54125,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "5.4.21",
+   "advisory": "GHSA-rq7h-c2jc-7f22",
+   "cves": [
+    "CVE-2026-112946"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.4",
+   "summary": "Vite: Files outside `server.fs.allow` could be served when project paths match system paths on non-Windows machine",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112946"
+   ],
+   "published": "2026-10-21T16:47:42Z",
+   "modified": "2026-10-21T17:00:06.336868869Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22",
+    "CWE-284"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@5.4.21",
+   "scope": "build",
+   "paths": [
+    ". > vitepress > vite"
+   ],
+   "workspace": ".",
+   "found_in": "bun.lock",
+   "kev": false,
+   "epss": 0.00852,
+   "epss_percentile": 0.59015,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "5.4.21",
+   "advisory": "GHSA-v6wh-96g9-6wx3",
+   "cves": [
+    "CVE-2026-53632"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.4.3",
+   "summary": "launch-editor: NTLMv2 hash disclosure via UNC path handling on Windows",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-53632"
+   ],
+   "published": "2026-06-15T17:18:31Z",
+   "modified": "2026-09-10T03:50:50.705036566Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:A/VC:N/VI:N/VA:N/SC:H/SI:H/SA:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-522",
+    "CWE-73"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@5.4.21",
+   "scope": "build",
+   "paths": [
+    ". > vitepress > vite"
+   ],
+   "workspace": ".",
+   "found_in": "bun.lock",
+   "kev": false,
+   "epss": 0.00464,
+   "epss_percentile": 0.40943,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:vite",
+   "version": "5.4.21",
+   "advisory": "GHSA-9jrq-w75r-8gcw",
+   "cves": [
+    "CVE-2026-112945"
+   ],
+   "severity": "LOW",
+   "fixed_in": "6.4.4",
+   "summary": "Vite: Cross origin script execution through Vite custom middleware",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-112945"
+   ],
+   "published": "2026-10-21T16:48:14Z",
+   "modified": "2026-10-21T17:00:26.569382874Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-80"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/vite@5.4.21",
+   "scope": "build",
+   "paths": [
+    ". > vitepress > vite"
+   ],
+   "workspace": ".",
+   "found_in": "bun.lock",
+   "kev": false,
+   "epss": 0.00672,
+   "epss_percentile": 0.52858,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  }
+ ]
 }

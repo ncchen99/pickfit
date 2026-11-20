@@ -429,22 +429,110 @@
   },
   "security": {
     "version": "sec.v2",
-    "status": "unchecked",
-    "unchecked_reason": "lockfile_not_supported",
+    "status": "vulnerable",
+    "unchecked_reason": null,
     "sources": [
       "npm:mercury-tech-cli (fresh install, 1 packages)",
       "github.com/Whq02/MercuryCLI@b61af160fe5d",
+      "bun.lock",
       "native/desktop/Cargo.lock",
       "native/embed/Cargo.lock",
       "native/voice/Cargo.lock",
       "native/whisper/Cargo.lock"
     ],
-    "packages_checked": 166,
-    "findings_total": 0,
-    "advisories_total": 0,
-    "findings": [],
+    "packages_checked": 564,
+    "findings_total": 3,
+    "advisories_total": 3,
+    "findings": [
+      {
+        "package": "npm:image-size",
+        "version": "1.2.1",
+        "advisory": "GHSA-5p2g-fcmc-qvqq",
+        "cves": [
+          "CVE-2025-71329"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.0.3",
+        "summary": "image-size: JXL and HEIF parsers allow denial of service through infinite loops",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "bun.lock",
+        "kev": false,
+        "epss": 0.0043,
+        "fix_published_at": "2026-09-14T15:57:47Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > pptxgenjs > image-size"
+        ]
+      },
+      {
+        "package": "npm:image-size",
+        "version": "1.2.1",
+        "advisory": "GHSA-w3rx-r6r6-pgpr",
+        "cves": [
+          "CVE-2025-71330"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.0.3",
+        "summary": "image-size: ICNS parser allows denial of service through an infinite loop",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "bun.lock",
+        "kev": false,
+        "epss": 0.0043,
+        "fix_published_at": "2026-09-14T15:57:47Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > pptxgenjs > image-size"
+        ]
+      },
+      {
+        "package": "npm:zod",
+        "version": "3.25.76",
+        "advisory": "GHSA-mrhx-c7xc-m3w5",
+        "cves": [
+          "CVE-2023-54404"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.6.6",
+        "summary": "Zod can exhaust memory while validating oversized constrained collections",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "bun.lock",
+        "kev": false,
+        "fix_published_at": "2026-10-11T16:18:23Z",
+        "attack_vector": "network",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          ". > puppeteer-core > chromium-bidi > zod"
+        ]
+      }
+    ],
     "database": "OSV.dev",
-    "checked_at": "2026-11-20T00:17:01+08:00",
+    "checked_at": "2026-11-20T12:12:35+08:00",
     "observation": {
       "scanner": "pickfit-security",
       "scanner_version": "sec.v2",
@@ -455,31 +543,38 @@
       "artifact_sha256": [],
       "packages": {
         "crates": 165,
-        "npm": 1
+        "npm": 399
       },
       "scopes": {
-        "runtime": 166
+        "runtime": 536,
+        "dev": 28
       },
-      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "advisories_fetched_at": "2026-11-20T12:12:35+08:00",
       "kev_catalog": "2026.11.18",
       "epss_date": "2026-11-20",
-      "findings_total": 0,
+      "findings_total": 4,
       "details": "security/mercurycli.json",
-      "details_sha256": "08bca96f20ca4f02828a264abc8cf8d7e424f5bd8965ec6021d1a9414a8adcf2"
+      "details_sha256": "c0dd9e7b7fe8ea61172131a83613b86b5a3407410a5b051d31b7826b96a96edc"
     },
     "assessment": {
-      "level": "none",
+      "level": "conditional",
       "policy_version": "sec.v2",
-      "reasons": [],
-      "counts": {},
-      "uncounted": 0,
-      "assessed_at": "2026-11-20T00:17:01+08:00"
+      "reasons": [
+        "worst:GHSA-5p2g-fcmc-qvqq npm:image-size@1.2.1 (conditional)",
+        "worst:GHSA-w3rx-r6r6-pgpr npm:image-size@1.2.1 (conditional)",
+        "worst:GHSA-mrhx-c7xc-m3w5 npm:zod@3.25.76 (conditional)"
+      ],
+      "counts": {
+        "conditional": 3
+      },
+      "uncounted": 1,
+      "assessed_at": "2026-11-20T12:12:35+08:00"
     },
     "coverage": {
       "state": "partial",
       "target": "repo_lockfile",
-      "packages_found": 575,
-      "packages_checked": 166,
+      "packages_found": 564,
+      "packages_checked": 564,
       "components": [
         {
           "ecosystem": "npm",
@@ -493,11 +588,9 @@
         {
           "ecosystem": "npm",
           "component": "bun.lock",
-          "status": "not_scanned",
-          "packages": 409,
-          "gaps": [
-            "lockfile.unsupported_format"
-          ]
+          "status": "scanned",
+          "packages": 398,
+          "gaps": []
         },
         {
           "ecosystem": "crates",
@@ -539,17 +632,6 @@
       ],
       "gaps": [
         {
-          "code": "lockfile.unsupported_format",
-          "category": "lockfile_unreadable",
-          "ecosystem": "npm",
-          "component": "bun.lock",
-          "detail": "bun_lock is not read yet",
-          "capability": "read_lockfile:bun_lock",
-          "found": 409,
-          "first_seen": "2026-11-04",
-          "last_seen": "2026-11-20"
-        },
-        {
           "code": "resolve.pyproject_failed",
           "category": "resolve_failed",
           "ecosystem": "pypi",
@@ -576,17 +658,20 @@
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-20T00:17:01+08:00",
+    "computed_at": "2026-11-20T12:12:35+08:00",
     "quality": {
       "total": 84.6,
-      "raw_total": 84.6,
       "confidence": 0.6,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.75,
@@ -606,17 +691,14 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 84.6,
       "security": {
-        "level": "none",
+        "level": "conditional",
         "basis": "assessment",
-        "effect": "none",
+        "effect": "note",
         "deduction": 0.0
       }
     },
@@ -1248,5 +1330,5 @@
     }
   ],
   "first_seen_at": "2026-10-29T02:29:31+08:00",
-  "updated_at": "2026-11-20T02:16:11+08:00"
+  "updated_at": "2026-11-20T12:12:35+08:00"
 }

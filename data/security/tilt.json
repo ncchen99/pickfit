@@ -10,15 +10,17 @@
   "tool_version": null,
   "artifact_sha256": [],
   "packages": {
-   "go": 246
+   "go": 246,
+   "npm": 2081
   },
   "scopes": {
-   "runtime": 246
+   "runtime": 360,
+   "dev": 1967
   },
-  "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+  "advisories_fetched_at": "2026-11-20T12:12:35+08:00",
   "kev_catalog": "2026.11.18",
   "epss_date": "2026-11-20",
-  "findings_total": 34
+  "findings_total": 168
  },
  "assessment": {
   "level": "conditional",
@@ -29,16 +31,17 @@
    "worst:GHSA-p7v4-vr35-mj6f go:github.com/containerd/containerd/v2@v2.2.1 (conditional)"
   ],
   "counts": {
-   "conditional": 8
+   "conditional": 10,
+   "not_shipped": 59
   },
-  "uncounted": 26,
-  "assessed_at": "2026-11-20T00:17:01+08:00"
+  "uncounted": 99,
+  "assessed_at": "2026-11-20T12:12:35+08:00"
  },
  "coverage": {
-  "state": "partial",
+  "state": "complete",
   "target": "repo_lockfile",
-  "packages_found": 2333,
-  "packages_checked": 246,
+  "packages_found": 2327,
+  "packages_checked": 2327,
   "components": [
    {
     "ecosystem": "go",
@@ -50,30 +53,17 @@
    {
     "ecosystem": "npm",
     "component": "web/yarn.lock",
-    "status": "not_scanned",
-    "packages": 2087,
-    "gaps": [
-     "lockfile.unsupported_format"
-    ]
+    "status": "scanned",
+    "packages": 2081,
+    "gaps": []
    }
   ],
-  "gaps": [
-   {
-    "code": "lockfile.unsupported_format",
-    "category": "lockfile_unreadable",
-    "ecosystem": "npm",
-    "component": "web/yarn.lock",
-    "detail": "yarn_lock is not read yet",
-    "capability": "read_lockfile:yarn_lock",
-    "found": 2087,
-    "first_seen": "2026-11-20",
-    "last_seen": "2026-11-20"
-   }
-  ]
+  "gaps": []
  },
  "sources": [
   "github.com/tilt-dev/tilt@30a5e684c83f",
-  "go.mod"
+  "go.mod",
+  "web/yarn.lock"
  ],
  "installed": [],
  "findings": [
@@ -496,6 +486,50 @@
   {
    "package": "go:github.com/containerd/containerd/v2",
    "version": "v2.2.1",
+   "advisory": "GHSA-vwhp-8p66-mq4f",
+   "cves": [
+    "CVE-2026-95839"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.2.10",
+   "summary": "containerd image-triggered daemon crash via malformed digest in subject-annotated descriptor",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-95839"
+   ],
+   "published": "2026-11-19T22:46:24Z",
+   "modified": "2026-11-19T23:00:36.650790873Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248"
+   ],
+   "dos_only": true,
+   "purl": "pkg:golang/github.com/containerd/containerd/v2@v2.2.1",
+   "fix_published_at": "2026-10-13T22:32:29Z",
+   "scope": "runtime",
+   "paths": [
+    "go.mod > github.com/containerd/containerd/v2"
+   ],
+   "workspace": ".",
+   "found_in": "go.mod",
+   "kev": false,
+   "epss": 0.00398,
+   "epss_percentile": 0.3477,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "go:github.com/containerd/containerd/v2",
+   "version": "v2.2.1",
    "advisory": "GHSA-xhf5-7wjv-pqxp",
    "cves": [
     "CVE-2026-53488"
@@ -657,6 +691,51 @@
     "symbol:NewListener",
     "symbol:NewListenerWithOpts",
     "symbol:NewTLSListener"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": true,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@remix-run/router",
+   "version": "1.23.0",
+   "advisory": "GHSA-2w69-qvjg-hvjx",
+   "cves": [
+    "CVE-2026-22029"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.23.2",
+   "summary": "React Router vulnerable to XSS via Open Redirects",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-22029"
+   ],
+   "published": "2026-01-08T20:54:18Z",
+   "modified": "2026-02-03T03:15:00.320749Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:C/C:H/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40remix-run/router@1.23.0",
+   "fix_published_at": "2026-01-07T19:21:45Z",
+   "scope": "runtime",
+   "paths": [
+    ". > react-router > @remix-run/router"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00866,
+   "epss_percentile": 0.59438,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
    ],
    "vex": {
     "status": "under_investigation"
@@ -1139,6 +1218,212 @@
    "policy_version": "sec.v2"
   },
   {
+   "package": "npm:@remix-run/router",
+   "version": "1.23.0",
+   "advisory": "GHSA-2j2x-hqr9-3h42",
+   "cves": [
+    "CVE-2026-40181"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.23.3",
+   "summary": "React Router's same-origin redirect with path starting // causes open redirect via protocol-relative URL reinterpretation",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-40181"
+   ],
+   "published": "2026-06-03T20:58:01Z",
+   "modified": "2026-09-10T03:50:55.348600076Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N/E:U",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-601"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40remix-run/router@1.23.0",
+   "scope": "runtime",
+   "paths": [
+    ". > react-router > @remix-run/router"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00221,
+   "epss_percentile": 0.12829,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:react-router",
+   "version": "6.30.1",
+   "advisory": "GHSA-2j2x-hqr9-3h42",
+   "cves": [
+    "CVE-2026-40181"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.30.4",
+   "summary": "React Router's same-origin redirect with path starting // causes open redirect via protocol-relative URL reinterpretation",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-40181"
+   ],
+   "published": "2026-06-03T20:58:01Z",
+   "modified": "2026-09-10T03:50:55.348600076Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N/E:U",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-601"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/react-router@6.30.1",
+   "scope": "runtime",
+   "paths": [
+    ". > react-router"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00221,
+   "epss_percentile": 0.12829,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:react-router",
+   "version": "6.30.1",
+   "advisory": "GHSA-337j-9hxr-rhxg",
+   "cves": [
+    "CVE-2026-53666"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "7.18.0",
+   "summary": "React Router: Arbitrary Constructor Injection via deserializeErrors() in React Router SSR Hydration",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-53666"
+   ],
+   "published": "2026-07-23T19:34:14Z",
+   "modified": "2026-09-10T03:50:51.309163082Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-470"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/react-router@6.30.1",
+   "scope": "runtime",
+   "paths": [
+    ". > react-router"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.0042,
+   "epss_percentile": 0.37114,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:react-router",
+   "version": "6.30.1",
+   "advisory": "GHSA-9jcx-v3wj-wh4m",
+   "cves": [
+    "CVE-2025-68470"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.30.2",
+   "summary": "React Router has unexpected external redirect via untrusted paths",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-68470"
+   ],
+   "published": "2026-01-08T20:48:21Z",
+   "modified": "2026-02-03T03:14:56.431029Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-601"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/react-router@6.30.1",
+   "scope": "runtime",
+   "paths": [
+    ". > react-router"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00492,
+   "epss_percentile": 0.43071,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:react-router",
+   "version": "6.30.1",
+   "advisory": "GHSA-wrjc-x8rr-h8h6",
+   "cves": [
+    "CVE-2026-53669"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "7.18.0",
+   "summary": "React Router: Open redirect via backslash in <Link> and useNavigate (CVE-2025-68470 bypass)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-53669"
+   ],
+   "published": "2026-07-23T19:38:28Z",
+   "modified": "2026-09-10T03:51:12.418370518Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:A/VC:N/VI:L/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-601"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/react-router@6.30.1",
+   "scope": "runtime",
+   "paths": [
+    ". > react-router"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00319,
+   "epss_percentile": 0.25371,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "under_investigation"
+   },
+   "counted": false,
+   "level": "conditional",
+   "policy_version": "sec.v2"
+  },
+  {
    "package": "go:github.com/sigstore/sigstore-go",
    "version": "v1.1.4",
    "advisory": "GHSA-wqqc-jjcq-vfxm",
@@ -1603,6 +1888,5639 @@
    },
    "counted": false,
    "level": "present_unreachable",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:elliptic",
+   "version": "6.6.0",
+   "advisory": "GHSA-vjh7-7g9h-fjfh",
+   "severity": "CRITICAL",
+   "fixed_in": "6.6.1",
+   "summary": "Elliptic's private key extraction in ECDSA upon signing a malformed input (e.g. a string)",
+   "malicious": false,
+   "published": "2025-02-12T19:47:52Z",
+   "modified": "2025-02-12T19:47:53Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:N/VA:N/SC:H/SI:H/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/elliptic@6.6.0",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/addon-essentials > @storybook/core-common > webpack > node-libs-browser > crypto-browserify > browserify-sign > elliptic"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:form-data",
+   "version": "4.0.0",
+   "advisory": "GHSA-fjxv-7rqg-78g4",
+   "cves": [
+    "CVE-2025-7783"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "4.0.4",
+   "summary": "form-data uses unsafe random function in form-data for choosing boundary",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-7783"
+   ],
+   "published": "2025-07-21T19:04:54Z",
+   "modified": "2026-09-10T03:50:57.924154051Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:H/SI:H/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-330"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/form-data@4.0.0",
+   "scope": "dev",
+   "paths": [
+    ". > jsdom > form-data"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.0181,
+   "epss_percentile": 0.79081,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:tar",
+   "version": "6.2.1",
+   "advisory": "GHSA-23hp-3jrh-7fpw",
+   "cves": [
+    "CVE-2026-59873"
+   ],
+   "severity": "CRITICAL",
+   "fixed_in": "7.5.19",
+   "summary": "node-tar: Decompression/parse DoS via unlimited input",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-59873"
+   ],
+   "published": "2026-07-20T21:52:03Z",
+   "modified": "2026-09-10T03:51:09.781853040Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/tar@6.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > tar"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00582,
+   "epss_percentile": 0.4859,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:body-parser",
+   "version": "1.20.3",
+   "advisory": "GHSA-27r3-jxmh-p828",
+   "cves": [
+    "CVE-2026-111181"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.20.9",
+   "summary": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-111181"
+   ],
+   "published": "2026-10-23T20:53:11Z",
+   "modified": "2026-10-23T21:00:06.131613693Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/body-parser@1.20.3",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/manager-webpack5 > express > body-parser"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00388,
+   "epss_percentile": 0.33634,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:brace-expansion",
+   "version": "2.0.1",
+   "advisory": "GHSA-3jxr-9vmj-r5cp",
+   "cves": [
+    "CVE-2026-13149"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.1.2",
+   "summary": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-13149"
+   ],
+   "published": "2026-07-20T20:51:09Z",
+   "modified": "2026-09-10T03:51:10.092354944Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:P/S:N/AU:Y/R:U/V:D/RE:M/U:Amber",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/brace-expansion@2.0.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > glob > minimatch > brace-expansion"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00364,
+   "epss_percentile": 0.30865,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:brace-expansion",
+   "version": "2.0.1",
+   "advisory": "GHSA-6j4f-fj2g-mc7p",
+   "cves": [
+    "CVE-2026-102276"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.1.5",
+   "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-102276"
+   ],
+   "published": "2026-09-29T23:44:58Z",
+   "modified": "2026-09-30T00:00:03.836613572Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-674"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/brace-expansion@2.0.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > glob > minimatch > brace-expansion"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00455,
+   "epss_percentile": 0.40249,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:brace-expansion",
+   "version": "2.0.1",
+   "advisory": "GHSA-mh99-v99m-4gvg",
+   "cves": [
+    "CVE-2026-14257"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.1.3",
+   "summary": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-14257"
+   ],
+   "published": "2026-07-24T21:53:14Z",
+   "modified": "2026-09-10T03:50:12.282849322Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/brace-expansion@2.0.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > glob > minimatch > brace-expansion"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00643,
+   "epss_percentile": 0.51624,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:brace-expansion",
+   "version": "2.0.1",
+   "advisory": "GHSA-qhr7-859c-m2p7",
+   "cves": [
+    "CVE-2026-102278"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.1.6",
+   "summary": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-102278"
+   ],
+   "published": "2026-09-29T23:45:17Z",
+   "modified": "2026-09-30T00:00:04.402763332Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-674"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/brace-expansion@2.0.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > glob > minimatch > brace-expansion"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00491,
+   "epss_percentile": 0.42966,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:brace-expansion",
+   "version": "2.0.1",
+   "advisory": "GHSA-rgw5-rvv9-x895",
+   "cves": [
+    "CVE-2026-69152"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.1.4",
+   "summary": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-69152"
+   ],
+   "published": "2026-08-03T16:35:32Z",
+   "modified": "2026-09-10T03:51:14.535270857Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/brace-expansion@2.0.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > glob > minimatch > brace-expansion"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00647,
+   "epss_percentile": 0.51802,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:braces",
+   "version": "2.3.2",
+   "advisory": "GHSA-grv7-fg5c-xmjg",
+   "cves": [
+    "CVE-2024-4068"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "3.0.3",
+   "summary": "Uncontrolled resource consumption in braces",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-4068"
+   ],
+   "published": "2024-05-14T18:30:54Z",
+   "modified": "2026-09-10T03:50:00.374713008Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1050",
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/braces@2.3.2",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/addon-essentials > @storybook/core-common > webpack > micromatch > braces"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.01471,
+   "epss_percentile": 0.74329,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:braces",
+   "version": "3.0.2",
+   "advisory": "GHSA-grv7-fg5c-xmjg",
+   "cves": [
+    "CVE-2024-4068"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "3.0.3",
+   "summary": "Uncontrolled resource consumption in braces",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-4068"
+   ],
+   "published": "2024-05-14T18:30:54Z",
+   "modified": "2026-09-10T03:50:00.374713008Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1050",
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/braces@3.0.2",
+   "scope": "dev",
+   "paths": [
+    ". > sass > chokidar > braces"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.01471,
+   "epss_percentile": 0.74329,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:cross-spawn",
+   "version": "7.0.3",
+   "advisory": "GHSA-3xgq-45jj-v275",
+   "cves": [
+    "CVE-2024-21538"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "7.0.5",
+   "summary": "Regular Expression Denial of Service (ReDoS) in cross-spawn",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-21538"
+   ],
+   "published": "2024-11-08T06:30:47Z",
+   "modified": "2026-09-10T03:50:20.309509025Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:P",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1333"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/cross-spawn@7.0.3",
+   "scope": "dev",
+   "paths": [
+    ". > eslint > cross-spawn"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00868,
+   "epss_percentile": 0.59487,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:decode-uri-component",
+   "version": "0.2.2",
+   "advisory": "GHSA-qr28-fpjm-wq7f",
+   "cves": [
+    "CVE-2026-118664"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.5.1",
+   "summary": "decode-uri-component vulnerable to denial of service via quadratic replacement of percent-encoded runs",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118664"
+   ],
+   "published": "2026-10-29T16:41:28Z",
+   "modified": "2026-10-29T17:00:04.168610583Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/decode-uri-component@0.2.2",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/addon-essentials > @storybook/core-common > webpack > micromatch > snapdragon > source-map-resolve > decode-uri-component"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00318,
+   "epss_percentile": 0.25316,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:form-data",
+   "version": "4.0.0",
+   "advisory": "GHSA-hmw2-7cc7-3qxx",
+   "cves": [
+    "CVE-2026-12143"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "4.0.6",
+   "summary": "form-data: CRLF injection in form-data via unescaped multipart field names and filenames",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-12143"
+   ],
+   "published": "2026-06-15T17:26:26Z",
+   "modified": "2026-09-10T03:50:49.785679067Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-93"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/form-data@4.0.0",
+   "scope": "dev",
+   "paths": [
+    ". > jsdom > form-data"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00669,
+   "epss_percentile": 0.52755,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:glob",
+   "version": "10.3.10",
+   "advisory": "GHSA-5j98-mcp5-4vw2",
+   "cves": [
+    "CVE-2025-64756"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "10.5.0",
+   "summary": "glob CLI: Command injection via -c/--cmd executes matches with shell:true",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-64756"
+   ],
+   "published": "2025-11-17T17:38:56Z",
+   "modified": "2026-09-10T03:50:30.568830409Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:H/I:H/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-78"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/glob@10.3.10",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > glob"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.0309,
+   "epss_percentile": 0.8799,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ip",
+   "version": "2.0.1",
+   "advisory": "GHSA-2p57-rm9w-gvfp",
+   "cves": [
+    "CVE-2024-29415"
+   ],
+   "severity": "HIGH",
+   "summary": "ip SSRF improper categorization in isPublic",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-29415"
+   ],
+   "published": "2024-06-02T22:29:29Z",
+   "modified": "2026-09-10T03:50:14.802476879Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/ip@2.0.1",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/react > @storybook/core > @storybook/core-server > ip"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.08279,
+   "epss_percentile": 0.9503,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2",
+   "fixed_in": null
+  },
+  {
+   "package": "npm:ip-address",
+   "version": "9.0.5",
+   "advisory": "GHSA-mwp4-54f8-5fhr",
+   "cves": [
+    "CVE-2026-69192"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "10.3.1",
+   "summary": "ip-address: Address4 decodes leading-zero octets as decimal while resolvers decode them as octal, allowing SSRF and trust-boundary bypass",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-69192"
+   ],
+   "published": "2026-08-03T19:59:44Z",
+   "modified": "2026-09-10T03:51:14.478555296Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:N/VA:N/SC:H/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20",
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/ip-address@9.0.5",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > make-fetch-happen > @npmcli/agent > socks-proxy-agent > socks > ip-address"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00465,
+   "epss_percentile": 0.4101,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:js-yaml",
+   "version": "4.1.0",
+   "advisory": "GHSA-2883-xcg3-v3hh",
+   "cves": [
+    "CVE-2026-84375"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "4.3.2",
+   "summary": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-84375"
+   ],
+   "published": "2026-09-08T21:24:51Z",
+   "modified": "2026-09-08T21:30:05.575808098Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/js-yaml@4.1.0",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > eslint > js-yaml"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00541,
+   "epss_percentile": 0.46269,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:js-yaml",
+   "version": "4.1.0",
+   "advisory": "GHSA-52cp-r559-cp3m",
+   "cves": [
+    "CVE-2026-59869"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "4.3.0",
+   "summary": "js-yaml: YAML merge-key chains can force quadratic CPU consumption",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-59869"
+   ],
+   "published": "2026-07-20T21:19:09Z",
+   "modified": "2026-09-10T03:50:12.263307536Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/js-yaml@4.1.0",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > eslint > js-yaml"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00585,
+   "epss_percentile": 0.48764,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:js-yaml",
+   "version": "4.1.0",
+   "advisory": "GHSA-5p4m-2wfm-xmqj",
+   "severity": "HIGH",
+   "fixed_in": "4.3.1",
+   "summary": "JS-YAML: Quadratic CPU consumption in !!omap resolution (3.x and 4.x) — CVE-2026-59870 fix not backported",
+   "malicious": false,
+   "published": "2026-08-06T20:27:32Z",
+   "modified": "2026-09-10T03:50:53.407436483Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/js-yaml@4.1.0",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > eslint > js-yaml"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:jsonpath",
+   "version": "1.2.1",
+   "advisory": "GHSA-87r5-mp6g-5w5j",
+   "cves": [
+    "CVE-2026-1615"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.3.0",
+   "summary": "jsonpath has Arbitrary Code Injection via Unsafe Evaluation of JSON Path Expressions",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-1615"
+   ],
+   "published": "2026-02-09T06:30:28Z",
+   "modified": "2026-03-19T16:31:29.559898Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:H/SC:N/SI:N/SA:N/E:P",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-94"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/jsonpath@1.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > bfj > jsonpath"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.01149,
+   "epss_percentile": 0.67546,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:minimatch",
+   "version": "9.0.3",
+   "advisory": "GHSA-23c5-xmqv-rm74",
+   "cves": [
+    "CVE-2026-27904"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "9.0.7",
+   "summary": "minimatch ReDoS: nested *() extglobs generate catastrophically backtracking regular expressions",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-27904"
+   ],
+   "published": "2026-02-26T22:07:15Z",
+   "modified": "2026-09-10T03:50:59.274637421Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1333"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/minimatch@9.0.3",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > glob > minimatch"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00525,
+   "epss_percentile": 0.45277,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:minimatch",
+   "version": "9.0.3",
+   "advisory": "GHSA-3ppc-4f35-3m26",
+   "cves": [
+    "CVE-2026-26996"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "9.0.6",
+   "summary": "minimatch has a ReDoS via repeated wildcards with non-matching literal in pattern",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-26996"
+   ],
+   "published": "2026-02-18T22:38:11Z",
+   "modified": "2026-09-10T03:50:33.812431744Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1333"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/minimatch@9.0.3",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > glob > minimatch"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00569,
+   "epss_percentile": 0.4789,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:minimatch",
+   "version": "9.0.3",
+   "advisory": "GHSA-7r86-cg39-jmmj",
+   "cves": [
+    "CVE-2026-27903"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "9.0.7",
+   "summary": "minimatch has ReDoS: matchOne() combinatorial backtracking via multiple non-adjacent GLOBSTAR segments",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-27903"
+   ],
+   "published": "2026-02-26T22:10:18Z",
+   "modified": "2026-09-10T03:50:34.376990726Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/minimatch@9.0.3",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > glob > minimatch"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00576,
+   "epss_percentile": 0.48275,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:nth-check",
+   "version": "1.0.2",
+   "advisory": "GHSA-rp65-9cf3-cjxr",
+   "cves": [
+    "CVE-2021-3803"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.0.1",
+   "summary": "Inefficient Regular Expression Complexity in nth-check",
+   "malicious": false,
+   "aliases": [
+    "CVE-2021-3803"
+   ],
+   "published": "2021-09-20T20:47:31Z",
+   "modified": "2026-09-10T03:49:08.829841257Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1333"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/nth-check@1.0.2",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > @svgr/webpack > @svgr/plugin-svgo > svgo > css-select > nth-check"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.02206,
+   "epss_percentile": 0.82948,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:path-to-regexp",
+   "version": "0.1.10",
+   "advisory": "GHSA-37ch-88jc-xwx2",
+   "cves": [
+    "CVE-2024-45296",
+    "CVE-2026-4867"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.1.13",
+   "summary": "path-to-regexp vulnerable to Regular Expression Denial of Service via multiple route parameters",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-45296",
+    "CVE-2026-4867",
+    "GHSA-9wv6-86v2-598j"
+   ],
+   "published": "2026-03-27T20:04:53Z",
+   "modified": "2026-09-10T03:50:36.768786245Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1333"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/path-to-regexp@0.1.10",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/manager-webpack5 > express > path-to-regexp"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00932,
+   "epss_percentile": 0.6145,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:path-to-regexp",
+   "version": "0.1.10",
+   "advisory": "GHSA-rhx6-c78j-4q9w",
+   "cves": [
+    "CVE-2024-52798"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.1.12",
+   "summary": "path-to-regexp contains a ReDoS",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-52798"
+   ],
+   "published": "2024-12-05T22:40:47Z",
+   "modified": "2026-09-10T03:50:56.223604407Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:P",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1333"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/path-to-regexp@0.1.10",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/manager-webpack5 > express > path-to-regexp"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00787,
+   "epss_percentile": 0.56926,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:path-to-regexp",
+   "version": "2.4.0",
+   "advisory": "GHSA-9wv6-86v2-598j",
+   "cves": [
+    "CVE-2024-45296",
+    "CVE-2026-4867"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "3.3.0",
+   "summary": "path-to-regexp outputs backtracking regular expressions",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-45296",
+    "CVE-2026-4867",
+    "GHSA-37ch-88jc-xwx2"
+   ],
+   "published": "2024-09-09T20:19:15Z",
+   "modified": "2026-09-10T03:50:18.832560863Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:P",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1333"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/path-to-regexp@2.4.0",
+   "scope": "dev",
+   "paths": [
+    ". > fetch-mock > path-to-regexp"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00932,
+   "epss_percentile": 0.6145,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:postcss",
+   "version": "7.0.39",
+   "advisory": "GHSA-6g55-p6wh-862q",
+   "cves": [
+    "CVE-2026-45623"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "8.5.12",
+   "summary": "PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-45623"
+   ],
+   "published": "2026-07-23T15:06:16Z",
+   "modified": "2026-09-10T03:51:10.752909750Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/postcss@7.0.39",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > resolve-url-loader > postcss"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00608,
+   "epss_percentile": 0.4989,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:postcss",
+   "version": "7.0.39",
+   "advisory": "GHSA-r28c-9q8g-f849",
+   "cves": [
+    "CVE-2026-73646"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "8.5.18",
+   "summary": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-73646"
+   ],
+   "published": "2026-07-24T16:24:55Z",
+   "modified": "2026-09-10T03:50:52.854537677Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/postcss@7.0.39",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > resolve-url-loader > postcss"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.0053,
+   "epss_percentile": 0.45573,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:postcss",
+   "version": "8.4.35",
+   "advisory": "GHSA-6g55-p6wh-862q",
+   "cves": [
+    "CVE-2026-45623"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "8.5.12",
+   "summary": "PostCSS: Arbitrary file read and information disclosure via attacker-controlled sourceMappingURL in CSS comments",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-45623"
+   ],
+   "published": "2026-07-23T15:06:16Z",
+   "modified": "2026-09-10T03:51:10.752909750Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/postcss@8.4.35",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > postcss"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00608,
+   "epss_percentile": 0.4989,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:postcss",
+   "version": "8.4.35",
+   "advisory": "GHSA-r28c-9q8g-f849",
+   "cves": [
+    "CVE-2026-73646"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "8.5.18",
+   "summary": "PostCSS: Path Traversal in Previous Source Map Auto-Loading (sourceMappingURL) leads to Arbitrary .map File Disclosure",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-73646"
+   ],
+   "published": "2026-07-24T16:24:55Z",
+   "modified": "2026-09-10T03:50:52.854537677Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/postcss@8.4.35",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > postcss"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.0053,
+   "epss_percentile": 0.45573,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:serialize-javascript",
+   "version": "4.0.0",
+   "advisory": "GHSA-5c6j-r48x-rmvq",
+   "severity": "HIGH",
+   "fixed_in": "7.0.3",
+   "summary": "Serialize JavaScript is Vulnerable to RCE via RegExp.flags and Date.prototype.toISOString()",
+   "malicious": false,
+   "published": "2026-02-28T02:50:45Z",
+   "modified": "2026-09-10T03:50:34.154574250Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-96"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/serialize-javascript@4.0.0",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/addon-essentials > @storybook/core-common > webpack > terser-webpack-plugin > serialize-javascript"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:serialize-javascript",
+   "version": "5.0.1",
+   "advisory": "GHSA-5c6j-r48x-rmvq",
+   "severity": "HIGH",
+   "fixed_in": "7.0.3",
+   "summary": "Serialize JavaScript is Vulnerable to RCE via RegExp.flags and Date.prototype.toISOString()",
+   "malicious": false,
+   "published": "2026-02-28T02:50:45Z",
+   "modified": "2026-09-10T03:50:34.154574250Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-96"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/serialize-javascript@5.0.1",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/react > @storybook/core > @storybook/core-server > @storybook/builder-webpack4 > terser-webpack-plugin > serialize-javascript"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:serialize-javascript",
+   "version": "6.0.2",
+   "advisory": "GHSA-5c6j-r48x-rmvq",
+   "severity": "HIGH",
+   "fixed_in": "7.0.3",
+   "summary": "Serialize JavaScript is Vulnerable to RCE via RegExp.flags and Date.prototype.toISOString()",
+   "malicious": false,
+   "published": "2026-02-28T02:50:45Z",
+   "modified": "2026-09-10T03:50:34.154574250Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-96"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/serialize-javascript@6.0.2",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/builder-webpack5 > terser-webpack-plugin > serialize-javascript"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:svgo",
+   "version": "1.3.2",
+   "advisory": "GHSA-2p49-hgcm-8545",
+   "cves": [
+    "CVE-2026-73650"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.8.3",
+   "summary": "SVGO removeScripts plugin leaves some executable scripts intact",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-73650"
+   ],
+   "published": "2026-07-21T19:42:04Z",
+   "modified": "2026-09-10T03:51:09.939776176Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-184",
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/svgo@1.3.2",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > @svgr/webpack > @svgr/plugin-svgo > svgo"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00435,
+   "epss_percentile": 0.3848,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:svgo",
+   "version": "1.3.2",
+   "advisory": "GHSA-w27v-7q3p-w38r",
+   "cves": [
+    "CVE-2026-84370"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.8.4",
+   "summary": "SVGO: removeScripts allows executable links through namespace and control-character bypasses",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-84370"
+   ],
+   "published": "2026-09-08T21:20:28Z",
+   "modified": "2026-09-08T21:30:04.769354630Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-184",
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/svgo@1.3.2",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > @svgr/webpack > @svgr/plugin-svgo > svgo"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00525,
+   "epss_percentile": 0.45266,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:svgo",
+   "version": "2.8.0",
+   "advisory": "GHSA-2p49-hgcm-8545",
+   "cves": [
+    "CVE-2026-73650"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.8.3",
+   "summary": "SVGO removeScripts plugin leaves some executable scripts intact",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-73650"
+   ],
+   "published": "2026-07-21T19:42:04Z",
+   "modified": "2026-09-10T03:51:09.939776176Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-184",
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/svgo@2.8.0",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > css-minimizer-webpack-plugin > cssnano > cssnano-preset-default > postcss-svgo > svgo"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00435,
+   "epss_percentile": 0.3848,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:svgo",
+   "version": "2.8.0",
+   "advisory": "GHSA-w27v-7q3p-w38r",
+   "cves": [
+    "CVE-2026-84370"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.8.4",
+   "summary": "SVGO: removeScripts allows executable links through namespace and control-character bypasses",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-84370"
+   ],
+   "published": "2026-09-08T21:20:28Z",
+   "modified": "2026-09-08T21:30:04.769354630Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-184",
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/svgo@2.8.0",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > css-minimizer-webpack-plugin > cssnano > cssnano-preset-default > postcss-svgo > svgo"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00525,
+   "epss_percentile": 0.45266,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:svgo",
+   "version": "2.8.0",
+   "advisory": "GHSA-xpqw-6gx7-v673",
+   "cves": [
+    "CVE-2026-29074"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "2.8.1",
+   "summary": "SVGO DoS through entity expansion in DOCTYPE (Billion Laughs)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-29074"
+   ],
+   "published": "2026-03-04T22:59:28Z",
+   "modified": "2026-09-10T03:50:41.875487187Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-776"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/svgo@2.8.0",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > css-minimizer-webpack-plugin > cssnano > cssnano-preset-default > postcss-svgo > svgo"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00702,
+   "epss_percentile": 0.5402,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:tar",
+   "version": "6.2.1",
+   "advisory": "GHSA-34x7-hfp2-rc4v",
+   "cves": [
+    "CVE-2026-24842"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "7.5.7",
+   "summary": "node-tar Vulnerable to Arbitrary File Creation/Overwrite via Hardlink Path Traversal",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-24842"
+   ],
+   "published": "2026-01-28T16:35:31Z",
+   "modified": "2026-09-10T03:50:32.616577975Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22",
+    "CWE-59"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/tar@6.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > tar"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00608,
+   "epss_percentile": 0.49904,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:tar",
+   "version": "6.2.1",
+   "advisory": "GHSA-83g3-92jg-28cx",
+   "cves": [
+    "CVE-2026-26960"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "7.5.8",
+   "summary": "Arbitrary File Read/Write via Hardlink Target Escape Through Symlink Chain in node-tar Extraction",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-26960"
+   ],
+   "published": "2026-02-18T00:57:13Z",
+   "modified": "2026-09-10T03:50:34.418493270Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:L/PR:N/UI:R/S:U/C:H/I:H/A:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/tar@6.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > tar"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00324,
+   "epss_percentile": 0.25935,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:tar",
+   "version": "6.2.1",
+   "advisory": "GHSA-8qq5-rm4j-mr97",
+   "cves": [
+    "CVE-2026-23745"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "7.5.3",
+   "summary": "node-tar is Vulnerable to Arbitrary File Overwrite and Symlink Poisoning via Insufficient Path Sanitization",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-23745"
+   ],
+   "published": "2026-01-16T21:16:20Z",
+   "modified": "2026-09-10T03:50:59.009017334Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:A/VC:H/VI:L/VA:N/SC:H/SI:L/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/tar@6.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > tar"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00587,
+   "epss_percentile": 0.48856,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:tar",
+   "version": "6.2.1",
+   "advisory": "GHSA-8x88-c5mf-7j5w",
+   "cves": [
+    "CVE-2026-59874"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "7.5.18",
+   "summary": "node-tar: Negative tar entry size causes infinite loop in archive replace",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-59874"
+   ],
+   "published": "2026-07-20T21:51:39Z",
+   "modified": "2026-09-10T03:51:11.200904859Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-835"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/tar@6.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > tar"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00434,
+   "epss_percentile": 0.38402,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:tar",
+   "version": "6.2.1",
+   "advisory": "GHSA-9ppj-qmqm-q256",
+   "cves": [
+    "CVE-2026-31802"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "7.5.11",
+   "summary": "node-tar Symlink Path Traversal via Drive-Relative Linkpath",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-31802"
+   ],
+   "published": "2026-03-10T23:44:58Z",
+   "modified": "2026-09-10T03:50:38.398085665Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:H/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/tar@6.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > tar"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00287,
+   "epss_percentile": 0.21629,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:tar",
+   "version": "6.2.1",
+   "advisory": "GHSA-qffp-2rhf-9h96",
+   "cves": [
+    "CVE-2026-29786"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "7.5.10",
+   "summary": "tar has Hardlink Path Traversal via Drive-Relative Linkpath",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-29786"
+   ],
+   "published": "2026-03-05T00:52:32Z",
+   "modified": "2026-09-10T03:50:40.605623006Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:P/VC:N/VI:H/VA:L/SC:N/SI:H/SA:L",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-22",
+    "CWE-59"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/tar@6.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > tar"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00511,
+   "epss_percentile": 0.44369,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:tar",
+   "version": "6.2.1",
+   "advisory": "GHSA-r292-9mhp-454m",
+   "cves": [
+    "CVE-2026-73566"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "7.5.21",
+   "summary": "node-tar: Uncontrolled recursion in mapHas/filesFilter allows uncatchable stack-overflow DoS via crafted long-path tar with member selection",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-73566"
+   ],
+   "published": "2026-07-24T16:26:16Z",
+   "modified": "2026-09-10T03:51:11.855710545Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-674"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/tar@6.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > tar"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00531,
+   "epss_percentile": 0.45657,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:tar",
+   "version": "6.2.1",
+   "advisory": "GHSA-r6q2-hw4h-h46w",
+   "cves": [
+    "CVE-2026-23950"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "7.5.4",
+   "summary": "Race Condition in node-tar Path Reservations via Unicode Ligature Collisions on macOS APFS",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-23950"
+   ],
+   "published": "2026-01-21T01:05:49Z",
+   "modified": "2026-09-10T03:50:59.225342497Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:H/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-176",
+    "CWE-367"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/tar@6.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > tar"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00264,
+   "epss_percentile": 0.18533,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:trim",
+   "version": "0.0.1",
+   "advisory": "GHSA-w5p7-h5w8-2hfq",
+   "cves": [
+    "CVE-2020-7753"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "0.0.3",
+   "summary": "Regular Expression Denial of Service in trim",
+   "malicious": false,
+   "aliases": [
+    "CVE-2020-7753"
+   ],
+   "published": "2021-05-10T18:44:22Z",
+   "modified": "2023-11-08T04:04:08.561494Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/trim@0.0.1",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/addon-essentials > @storybook/addon-docs > @storybook/mdx1-csf > @mdx-js/mdx > remark-parse > trim"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.03777,
+   "epss_percentile": 0.90175,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:trim-newlines",
+   "version": "1.0.0",
+   "advisory": "GHSA-7p7h-4mm5-852v",
+   "cves": [
+    "CVE-2021-33623"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "3.0.1",
+   "summary": "Uncontrolled Resource Consumption in trim-newlines",
+   "malicious": false,
+   "aliases": [
+    "CVE-2021-33623"
+   ],
+   "published": "2021-06-07T22:10:39Z",
+   "modified": "2026-09-10T03:49:05.648239072Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/trim-newlines@1.0.0",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/react > @storybook/core > @storybook/core-server > x-default-browser > default-browser-id > meow > trim-newlines"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.02925,
+   "epss_percentile": 0.87348,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:underscore",
+   "version": "1.13.6",
+   "advisory": "GHSA-qpx9-hpmf-5gmw",
+   "cves": [
+    "CVE-2026-27601"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "1.13.8",
+   "summary": "Underscore has unlimited recursion in _.flatten and _.isEqual, potential for DoS attack",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-27601"
+   ],
+   "published": "2026-03-03T17:46:06Z",
+   "modified": "2026-09-10T03:51:00.752419958Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-674",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/underscore@1.13.6",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > bfj > jsonpath > underscore"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.01063,
+   "epss_percentile": 0.65323,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:webpack-dev-middleware",
+   "version": "3.7.3",
+   "advisory": "GHSA-g84c-rxfj-3j2c",
+   "cves": [
+    "CVE-2026-76844"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "7.4.6",
+   "summary": "webpack-dev-middleware vulnerable to Path Traversal via non-slash-terminated publicPath",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-76844"
+   ],
+   "published": "2026-09-29T16:59:18Z",
+   "modified": "2026-11-14T02:57:07.669911324Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/webpack-dev-middleware@3.7.3",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/react > @storybook/core > @storybook/core-server > @storybook/builder-webpack4 > webpack-dev-middleware"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00682,
+   "epss_percentile": 0.53275,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:webpack-dev-middleware",
+   "version": "3.7.3",
+   "advisory": "GHSA-wr3j-pwj9-hqq6",
+   "cves": [
+    "CVE-2024-29180"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "5.3.4",
+   "summary": "Path traversal in webpack-dev-middleware",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-29180"
+   ],
+   "published": "2024-03-21T18:59:28Z",
+   "modified": "2026-11-14T02:57:07.814421564Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/webpack-dev-middleware@3.7.3",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/react > @storybook/core > @storybook/core-server > @storybook/builder-webpack4 > webpack-dev-middleware"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.01226,
+   "epss_percentile": 0.69466,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:webpack-dev-middleware",
+   "version": "4.3.0",
+   "advisory": "GHSA-g84c-rxfj-3j2c",
+   "cves": [
+    "CVE-2026-76844"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "7.4.6",
+   "summary": "webpack-dev-middleware vulnerable to Path Traversal via non-slash-terminated publicPath",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-76844"
+   ],
+   "published": "2026-09-29T16:59:18Z",
+   "modified": "2026-11-14T02:57:07.669911324Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/webpack-dev-middleware@4.3.0",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/builder-webpack5 > webpack-dev-middleware"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00682,
+   "epss_percentile": 0.53275,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:webpack-dev-middleware",
+   "version": "4.3.0",
+   "advisory": "GHSA-wr3j-pwj9-hqq6",
+   "cves": [
+    "CVE-2024-29180"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "5.3.4",
+   "summary": "Path traversal in webpack-dev-middleware",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-29180"
+   ],
+   "published": "2024-03-21T18:59:28Z",
+   "modified": "2026-11-14T02:57:07.814421564Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/webpack-dev-middleware@4.3.0",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/builder-webpack5 > webpack-dev-middleware"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.01226,
+   "epss_percentile": 0.69466,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:webpack-dev-middleware",
+   "version": "5.3.3",
+   "advisory": "GHSA-g84c-rxfj-3j2c",
+   "cves": [
+    "CVE-2026-76844"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "7.4.6",
+   "summary": "webpack-dev-middleware vulnerable to Path Traversal via non-slash-terminated publicPath",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-76844"
+   ],
+   "published": "2026-09-29T16:59:18Z",
+   "modified": "2026-11-14T02:57:07.669911324Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/webpack-dev-middleware@5.3.3",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > webpack-dev-server > webpack-dev-middleware"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00682,
+   "epss_percentile": 0.53275,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:webpack-dev-middleware",
+   "version": "5.3.3",
+   "advisory": "GHSA-wr3j-pwj9-hqq6",
+   "cves": [
+    "CVE-2024-29180"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "5.3.4",
+   "summary": "Path traversal in webpack-dev-middleware",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-29180"
+   ],
+   "published": "2024-03-21T18:59:28Z",
+   "modified": "2026-11-14T02:57:07.814421564Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/webpack-dev-middleware@5.3.3",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > webpack-dev-server > webpack-dev-middleware"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.01226,
+   "epss_percentile": 0.69466,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ws",
+   "version": "8.16.0",
+   "advisory": "GHSA-3h5v-q93c-6h6q",
+   "cves": [
+    "CVE-2024-37890"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "8.17.1",
+   "summary": "ws affected by a DoS when handling a request with many HTTP headers",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-37890"
+   ],
+   "published": "2024-06-17T19:09:10Z",
+   "modified": "2026-09-10T03:50:14.788589634Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-476"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/ws@8.16.0",
+   "scope": "dev",
+   "paths": [
+    ". > jsdom > ws"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.01357,
+   "epss_percentile": 0.72263,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ws",
+   "version": "8.16.0",
+   "advisory": "GHSA-96hv-2xvq-fx4p",
+   "cves": [
+    "CVE-2026-48779"
+   ],
+   "severity": "HIGH",
+   "fixed_in": "8.21.0",
+   "summary": "ws: Memory exhaustion DoS from tiny fragments and data chunks",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-48779"
+   ],
+   "published": "2026-06-15T16:34:23Z",
+   "modified": "2026-09-10T03:50:49.163643932Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1050",
+    "CWE-400",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/ws@8.16.0",
+   "scope": "dev",
+   "paths": [
+    ". > jsdom > ws"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.01426,
+   "epss_percentile": 0.73511,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": true,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@babel/helpers",
+   "version": "7.24.0",
+   "advisory": "GHSA-968p-4wvh-cqc8",
+   "cves": [
+    "CVE-2025-27789"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "7.26.10",
+   "summary": "Babel has inefficient RegExp complexity in generated code with .replace when transpiling named capturing groups",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-27789"
+   ],
+   "published": "2025-03-11T20:30:18Z",
+   "modified": "2026-09-10T03:50:22.971593530Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-1333"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/%40babel/helpers@7.24.0",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/builder-webpack5 > @babel/core > @babel/helpers"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00563,
+   "epss_percentile": 0.476,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ajv",
+   "version": "6.12.6",
+   "advisory": "GHSA-2g4f-4pwh-qvx6",
+   "cves": [
+    "CVE-2025-69873"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.14.0",
+   "summary": "ajv has ReDoS when using `$data` option",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-69873"
+   ],
+   "published": "2026-02-11T21:30:39Z",
+   "modified": "2026-09-10T03:50:33.716487588Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N/E:P",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1333",
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/ajv@6.12.6",
+   "scope": "dev",
+   "paths": [
+    ". > eslint > ajv"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00539,
+   "epss_percentile": 0.46144,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ajv",
+   "version": "8.12.0",
+   "advisory": "GHSA-2g4f-4pwh-qvx6",
+   "cves": [
+    "CVE-2025-69873"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.18.0",
+   "summary": "ajv has ReDoS when using `$data` option",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-69873"
+   ],
+   "published": "2026-02-11T21:30:39Z",
+   "modified": "2026-09-10T03:50:33.716487588Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N/E:P",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1333",
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/ajv@8.12.0",
+   "scope": "dev",
+   "paths": [
+    ". > eslint > table > ajv"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00539,
+   "epss_percentile": 0.46144,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:bn.js",
+   "version": "4.12.0",
+   "advisory": "GHSA-378v-28hj-76wf",
+   "cves": [
+    "CVE-2026-2739"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.12.3",
+   "summary": "bn.js affected by an infinite loop",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-2739"
+   ],
+   "published": "2026-02-20T06:30:39Z",
+   "modified": "2026-09-10T03:50:33.815513385Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N/E:P",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-835"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/bn.js@4.12.0",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/addon-essentials > @storybook/core-common > webpack > node-libs-browser > crypto-browserify > create-ecdh > bn.js"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00523,
+   "epss_percentile": 0.45143,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:bn.js",
+   "version": "5.2.1",
+   "advisory": "GHSA-378v-28hj-76wf",
+   "cves": [
+    "CVE-2026-2739"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "5.2.3",
+   "summary": "bn.js affected by an infinite loop",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-2739"
+   ],
+   "published": "2026-02-20T06:30:39Z",
+   "modified": "2026-09-10T03:50:33.815513385Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N/E:P",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-835"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/bn.js@5.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/addon-essentials > @storybook/core-common > webpack > node-libs-browser > crypto-browserify > browserify-sign > bn.js"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00523,
+   "epss_percentile": 0.45143,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:brace-expansion",
+   "version": "2.0.1",
+   "advisory": "GHSA-f886-m6hf-6m8v",
+   "cves": [
+    "CVE-2026-33750"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.0.3",
+   "summary": "brace-expansion: Zero-step sequence causes process hang and memory exhaustion",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-33750"
+   ],
+   "published": "2026-03-26T18:29:42Z",
+   "modified": "2026-09-10T03:51:00.342356761Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/brace-expansion@2.0.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > glob > minimatch > brace-expansion"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00457,
+   "epss_percentile": 0.40395,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:brace-expansion",
+   "version": "2.0.1",
+   "advisory": "GHSA-q2hr-2g5m-vwhr",
+   "cves": [
+    "CVE-2026-102277"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.1.7",
+   "summary": "brace-expansion: Quadratic-time expansion of the `{a},b}` rewrite causes CPU denial of service",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-102277"
+   ],
+   "published": "2026-09-29T23:45:39Z",
+   "modified": "2026-09-30T00:00:03.849541183Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/brace-expansion@2.0.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > glob > minimatch > brace-expansion"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00428,
+   "epss_percentile": 0.3784,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:colord",
+   "version": "2.9.3",
+   "advisory": "GHSA-2wm5-q62r-hmrv",
+   "cves": [
+    "CVE-2026-85062"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.9.4",
+   "summary": "Colord: Slow rejection of oversized malformed color strings",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-85062"
+   ],
+   "published": "2026-09-08T20:51:57Z",
+   "modified": "2026-09-08T21:00:06.239800217Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1333"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/colord@2.9.3",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > css-minimizer-webpack-plugin > cssnano > cssnano-preset-default > postcss-colormin > colord"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00507,
+   "epss_percentile": 0.44013,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:decode-uri-component",
+   "version": "0.2.2",
+   "advisory": "GHSA-vcc3-ghjq-m6fr",
+   "cves": [
+    "CVE-2026-45822"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "0.5.0",
+   "summary": "decode-uri-component: Denial of service via exponential decoding of malformed percent-encoded input",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-45822"
+   ],
+   "published": "2026-08-31T22:10:20Z",
+   "modified": "2026-09-10T03:51:14.713899943Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N/E:U/S:N/AU:Y/R:U/V:D/RE:M/U:Amber",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1176",
+    "CWE-400",
+    "CWE-405",
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/decode-uri-component@0.2.2",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/addon-essentials > @storybook/core-common > webpack > micromatch > snapdragon > source-map-resolve > decode-uri-component"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00507,
+   "epss_percentile": 0.44013,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:glob",
+   "version": "10.3.10",
+   "advisory": "GHSA-3g3m-2fjr-6pw4",
+   "cves": [
+    "CVE-2026-118773"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "14.0.2",
+   "summary": "Glob: AbortSignal cancellation bypass allows post-timeout filesystem traversal",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118773"
+   ],
+   "published": "2026-10-30T23:09:11Z",
+   "modified": "2026-10-30T23:15:04.503965732Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/glob@10.3.10",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > glob"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.0035,
+   "epss_percentile": 0.2932,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ip-address",
+   "version": "9.0.5",
+   "advisory": "GHSA-h3mg-xc3c-68pw",
+   "cves": [
+    "CVE-2026-101911"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "10.7.1",
+   "summary": "ip-address: Address6 builds a parse diagnostic proportional to the input with no length bound, allowing a single long string to stall or crash the process",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-101911"
+   ],
+   "published": "2026-09-29T23:46:39Z",
+   "modified": "2026-09-30T00:00:04.407982988Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/ip-address@9.0.5",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > make-fetch-happen > @npmcli/agent > socks-proxy-agent > socks > ip-address"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00383,
+   "epss_percentile": 0.33073,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ip-address",
+   "version": "9.0.5",
+   "advisory": "GHSA-j6r3-76f7-8jcv",
+   "cves": [
+    "CVE-2026-101912"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "10.7.1",
+   "summary": "ip-address: isInSubnet() and isHostInSubnet() compare addresses of different families as if they shared an address space, allowing an allowlist check to admit an address outside its range",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-101912"
+   ],
+   "published": "2026-09-29T23:46:52Z",
+   "modified": "2026-09-30T00:00:03.843448355Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-697",
+    "CWE-843"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/ip-address@9.0.5",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > make-fetch-happen > @npmcli/agent > socks-proxy-agent > socks > ip-address"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.0037,
+   "epss_percentile": 0.3164,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ip-address",
+   "version": "9.0.5",
+   "advisory": "GHSA-rpw4-54j3-4h4q",
+   "cves": [
+    "CVE-2026-101913"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "10.5.1",
+   "summary": "ip-address: Address6.isLinkLocal() recognizes fe80::/64 rather than fe80::/10, allowing SSRF and trust-boundary bypass to on-link hosts",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-101913"
+   ],
+   "published": "2026-09-28T20:43:55Z",
+   "modified": "2026-09-28T21:00:05.359993143Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:L/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-697",
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/ip-address@9.0.5",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > make-fetch-happen > @npmcli/agent > socks-proxy-agent > socks > ip-address"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00386,
+   "epss_percentile": 0.33404,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ip-address",
+   "version": "9.0.5",
+   "advisory": "GHSA-rxp7-6hxx-x8q5",
+   "cves": [
+    "CVE-2026-111997"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "10.7.4",
+   "summary": "ip-address: Address6 matches a zone identifier in quadratic time ahead of its length limit, allowing a single long string to stall the process",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-111997"
+   ],
+   "published": "2026-10-22T16:19:39Z",
+   "modified": "2026-10-22T16:30:30.129356757Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1333"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/ip-address@9.0.5",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > make-fetch-happen > @npmcli/agent > socks-proxy-agent > socks > ip-address"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00315,
+   "epss_percentile": 0.24896,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ip-address",
+   "version": "9.0.5",
+   "advisory": "GHSA-v2v4-37r5-5v8g",
+   "cves": [
+    "CVE-2026-42338"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "10.1.1",
+   "summary": "ip-address has XSS in Address6 HTML-emitting methods",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-42338"
+   ],
+   "published": "2026-05-05T21:50:58Z",
+   "modified": "2026-09-10T03:50:47.603301077Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:P/VC:L/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/ip-address@9.0.5",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > make-fetch-happen > @npmcli/agent > socks-proxy-agent > socks > ip-address"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00471,
+   "epss_percentile": 0.41489,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:js-yaml",
+   "version": "4.1.0",
+   "advisory": "GHSA-h67p-54hq-rp68",
+   "cves": [
+    "CVE-2026-53550"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.2.0",
+   "summary": "JS-YAML: Quadratic-complexity DoS in merge key handling via repeated aliases",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-53550"
+   ],
+   "published": "2026-06-15T17:15:07Z",
+   "modified": "2026-09-10T03:50:49.729923880Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-407"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/js-yaml@4.1.0",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > eslint > js-yaml"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00415,
+   "epss_percentile": 0.36595,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:js-yaml",
+   "version": "4.1.0",
+   "advisory": "GHSA-mh29-5h37-fv8m",
+   "cves": [
+    "CVE-2025-64718"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.1.1",
+   "summary": "js-yaml has prototype pollution in merge (<<)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-64718"
+   ],
+   "published": "2025-11-14T14:29:48Z",
+   "modified": "2026-09-10T03:50:58.469126910Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1321"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/js-yaml@4.1.0",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > eslint > js-yaml"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00423,
+   "epss_percentile": 0.37358,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:micromatch",
+   "version": "3.1.10",
+   "advisory": "GHSA-952p-6rrq-rcjv",
+   "cves": [
+    "CVE-2024-4067"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.0.8",
+   "summary": "Regular Expression Denial of Service (ReDoS) in micromatch",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-4067"
+   ],
+   "published": "2024-05-14T18:30:54Z",
+   "modified": "2026-09-10T03:50:13.524150483Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1333"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/micromatch@3.1.10",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/addon-essentials > @storybook/core-common > webpack > micromatch"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.01429,
+   "epss_percentile": 0.73566,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:micromatch",
+   "version": "4.0.5",
+   "advisory": "GHSA-952p-6rrq-rcjv",
+   "cves": [
+    "CVE-2024-4067"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "4.0.8",
+   "summary": "Regular Expression Denial of Service (ReDoS) in micromatch",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-4067"
+   ],
+   "published": "2024-05-14T18:30:54Z",
+   "modified": "2026-09-10T03:50:13.524150483Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1333"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/micromatch@4.0.5",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/preset-create-react-app > @storybook/react-docgen-typescript-plugin > micromatch"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.01429,
+   "epss_percentile": 0.73566,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:minimatch",
+   "version": "9.0.3",
+   "advisory": "GHSA-g3hv-75wg-m249",
+   "cves": [
+    "CVE-2026-118764"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "11.0.1",
+   "summary": "minimatch has potential denial of service via globparts amplification",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-118764"
+   ],
+   "published": "2026-10-30T23:09:55Z",
+   "modified": "2026-11-04T17:01:25.850114200Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-405"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/minimatch@9.0.3",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > glob > minimatch"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00301,
+   "epss_percentile": 0.23299,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:pbkdf2",
+   "version": "3.1.3",
+   "advisory": "GHSA-477h-4r7f-fvrx",
+   "cves": [
+    "CVE-2026-102414"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "3.1.7",
+   "summary": "pbkdf2 rehashes long passwords on every iteration, enabling denial of service",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-102414"
+   ],
+   "published": "2026-10-06T13:40:10Z",
+   "modified": "2026-10-06T13:45:05.863430802Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/pbkdf2@3.1.3",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/addon-essentials > @storybook/core-common > webpack > node-libs-browser > crypto-browserify > pbkdf2"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00345,
+   "epss_percentile": 0.28626,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:postcss",
+   "version": "7.0.39",
+   "advisory": "GHSA-7fh5-64p2-3v2j",
+   "cves": [
+    "CVE-2023-44270"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.4.31",
+   "summary": "PostCSS line return parsing error",
+   "malicious": false,
+   "aliases": [
+    "CVE-2023-44270"
+   ],
+   "published": "2023-09-30T00:31:10Z",
+   "modified": "2026-09-10T03:49:57.862104145Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-144",
+    "CWE-74"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/postcss@7.0.39",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > resolve-url-loader > postcss"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00973,
+   "epss_percentile": 0.62757,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:postcss",
+   "version": "7.0.39",
+   "advisory": "GHSA-fxqj-rqcc-2cmp",
+   "cves": [
+    "CVE-2026-69153"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.5.23",
+   "summary": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-69153"
+   ],
+   "published": "2026-08-03T17:11:39Z",
+   "modified": "2026-09-10T03:50:53.572374167Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/postcss@7.0.39",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > resolve-url-loader > postcss"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00451,
+   "epss_percentile": 0.39936,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:postcss",
+   "version": "7.0.39",
+   "advisory": "GHSA-qx2v-qp2m-jg93",
+   "cves": [
+    "CVE-2026-41305"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.5.10",
+   "summary": "PostCSS has XSS via Unescaped </style> in its CSS Stringify Output",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-41305"
+   ],
+   "published": "2026-04-24T15:31:42Z",
+   "modified": "2026-09-10T03:51:02.916463871Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/postcss@7.0.39",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > resolve-url-loader > postcss"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00205,
+   "epss_percentile": 0.10587,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:postcss",
+   "version": "8.4.35",
+   "advisory": "GHSA-fxqj-rqcc-2cmp",
+   "cves": [
+    "CVE-2026-69153"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.5.23",
+   "summary": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-69153"
+   ],
+   "published": "2026-08-03T17:11:39Z",
+   "modified": "2026-09-10T03:50:53.572374167Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:N/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-200",
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/postcss@8.4.35",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > postcss"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00451,
+   "epss_percentile": 0.39936,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:postcss",
+   "version": "8.4.35",
+   "advisory": "GHSA-qx2v-qp2m-jg93",
+   "cves": [
+    "CVE-2026-41305"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.5.10",
+   "summary": "PostCSS has XSS via Unescaped </style> in its CSS Stringify Output",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-41305"
+   ],
+   "published": "2026-04-24T15:31:42Z",
+   "modified": "2026-09-10T03:51:02.916463871Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/postcss@8.4.35",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > postcss"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00205,
+   "epss_percentile": 0.10587,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:qs",
+   "version": "6.11.2",
+   "advisory": "GHSA-4mjr-xmp4-gh2g",
+   "cves": [
+    "CVE-2026-82417"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.16.0",
+   "summary": "qs: Denial of Service via Attacker Controlled isBuffer",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-82417"
+   ],
+   "published": "2026-09-02T14:45:13Z",
+   "modified": "2026-09-10T03:51:14.991984096Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248",
+    "CWE-703"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/qs@6.11.2",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/addons > @storybook/router > qs"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34537,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:qs",
+   "version": "6.11.2",
+   "advisory": "GHSA-6pq8-jhm2-2vcw",
+   "cves": [
+    "CVE-2026-110816"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.16.1",
+   "summary": "qs : qs.stringify with arrayFormat 'comma' throws an uncaught TypeError on array elements carrying a non-callable own toString (DoS)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-110816"
+   ],
+   "published": "2026-10-27T16:10:55Z",
+   "modified": "2026-10-27T16:15:05.324423680Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248",
+    "CWE-704"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/qs@6.11.2",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/addons > @storybook/router > qs"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00368,
+   "epss_percentile": 0.31342,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:qs",
+   "version": "6.11.2",
+   "advisory": "GHSA-6rw7-vpxm-498p",
+   "cves": [
+    "CVE-2025-15284"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.14.1",
+   "summary": "qs's arrayLimit bypass in its bracket notation allows DoS via memory exhaustion",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-15284"
+   ],
+   "published": "2025-12-30T21:02:54Z",
+   "modified": "2026-09-10T03:50:31.670581449Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/qs@6.11.2",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/addons > @storybook/router > qs"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.0045,
+   "epss_percentile": 0.39812,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:qs",
+   "version": "6.11.2",
+   "advisory": "GHSA-q8mj-m7cp-5q26",
+   "cves": [
+    "CVE-2026-8723"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.15.2",
+   "summary": "qs has a remotely triggerable DoS: qs.stringify crashes with TypeError on null/undefined entries in comma-format arrays when encodeValuesOnly is set",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-8723"
+   ],
+   "published": "2026-05-22T17:27:19Z",
+   "modified": "2026-09-10T03:50:55.285123128Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-476"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/qs@6.11.2",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/addons > @storybook/router > qs"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00399,
+   "epss_percentile": 0.34944,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:qs",
+   "version": "6.13.0",
+   "advisory": "GHSA-4mjr-xmp4-gh2g",
+   "cves": [
+    "CVE-2026-82417"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.16.0",
+   "summary": "qs: Denial of Service via Attacker Controlled isBuffer",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-82417"
+   ],
+   "published": "2026-09-02T14:45:13Z",
+   "modified": "2026-09-10T03:51:14.991984096Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248",
+    "CWE-703"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/qs@6.13.0",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/manager-webpack5 > express > qs"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00396,
+   "epss_percentile": 0.34537,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:qs",
+   "version": "6.13.0",
+   "advisory": "GHSA-6pq8-jhm2-2vcw",
+   "cves": [
+    "CVE-2026-110816"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.16.1",
+   "summary": "qs : qs.stringify with arrayFormat 'comma' throws an uncaught TypeError on array elements carrying a non-callable own toString (DoS)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-110816"
+   ],
+   "published": "2026-10-27T16:10:55Z",
+   "modified": "2026-10-27T16:15:05.324423680Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248",
+    "CWE-704"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/qs@6.13.0",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/manager-webpack5 > express > qs"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00368,
+   "epss_percentile": 0.31342,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:qs",
+   "version": "6.13.0",
+   "advisory": "GHSA-6rw7-vpxm-498p",
+   "cves": [
+    "CVE-2025-15284"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.14.1",
+   "summary": "qs's arrayLimit bypass in its bracket notation allows DoS via memory exhaustion",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-15284"
+   ],
+   "published": "2025-12-30T21:02:54Z",
+   "modified": "2026-09-10T03:50:31.670581449Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/qs@6.13.0",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/manager-webpack5 > express > qs"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.0045,
+   "epss_percentile": 0.39812,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:qs",
+   "version": "6.13.0",
+   "advisory": "GHSA-q8mj-m7cp-5q26",
+   "cves": [
+    "CVE-2026-8723"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "6.15.2",
+   "summary": "qs has a remotely triggerable DoS: qs.stringify crashes with TypeError on null/undefined entries in comma-format arrays when encodeValuesOnly is set",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-8723"
+   ],
+   "published": "2026-05-22T17:27:19Z",
+   "modified": "2026-09-10T03:50:55.285123128Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-476"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/qs@6.13.0",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/manager-webpack5 > express > qs"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00399,
+   "epss_percentile": 0.34944,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:serialize-javascript",
+   "version": "5.0.1",
+   "advisory": "GHSA-qj8w-gfj5-8c6v",
+   "cves": [
+    "CVE-2026-34043"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "7.0.5",
+   "summary": "Serialize JavaScript has CPU Exhaustion Denial of Service via crafted array-like objects",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-34043"
+   ],
+   "published": "2026-03-27T18:18:54Z",
+   "modified": "2026-09-10T03:50:40.557735802Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-834"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/serialize-javascript@5.0.1",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/react > @storybook/core > @storybook/core-server > @storybook/builder-webpack4 > terser-webpack-plugin > serialize-javascript"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00502,
+   "epss_percentile": 0.43704,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:serialize-javascript",
+   "version": "6.0.2",
+   "advisory": "GHSA-qj8w-gfj5-8c6v",
+   "cves": [
+    "CVE-2026-34043"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "7.0.5",
+   "summary": "Serialize JavaScript has CPU Exhaustion Denial of Service via crafted array-like objects",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-34043"
+   ],
+   "published": "2026-03-27T18:18:54Z",
+   "modified": "2026-09-10T03:50:40.557735802Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:H",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400",
+    "CWE-834"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/serialize-javascript@6.0.2",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/builder-webpack5 > terser-webpack-plugin > serialize-javascript"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00502,
+   "epss_percentile": 0.43704,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:store2",
+   "version": "2.14.3",
+   "advisory": "GHSA-w5hq-hm5m-4548",
+   "cves": [
+    "CVE-2024-57556"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.14.4",
+   "summary": "Cross Site Scripting vulnerability in store2",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-57556"
+   ],
+   "published": "2025-01-24T00:31:47Z",
+   "modified": "2025-01-24T22:57:03.673863Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/store2@2.14.3",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/addon-essentials > @storybook/api > store2"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00363,
+   "epss_percentile": 0.30741,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:svgo",
+   "version": "1.3.2",
+   "advisory": "GHSA-4vpr-x523-8j87",
+   "cves": [
+    "CVE-2026-84369"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.8.4",
+   "summary": "SVGO: removeScripts incompletely sanitizes executable HTML in SVG foreignObject elements",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-84369"
+   ],
+   "published": "2026-09-08T21:20:05Z",
+   "modified": "2026-09-08T21:30:05.558835894Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/svgo@1.3.2",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > @svgr/webpack > @svgr/plugin-svgo > svgo"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.0043,
+   "epss_percentile": 0.37937,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:svgo",
+   "version": "2.8.0",
+   "advisory": "GHSA-4vpr-x523-8j87",
+   "cves": [
+    "CVE-2026-84369"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.8.4",
+   "summary": "SVGO: removeScripts incompletely sanitizes executable HTML in SVG foreignObject elements",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-84369"
+   ],
+   "published": "2026-09-08T21:20:05Z",
+   "modified": "2026-09-08T21:30:05.558835894Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/svgo@2.8.0",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > css-minimizer-webpack-plugin > cssnano > cssnano-preset-default > postcss-svgo > svgo"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.0043,
+   "epss_percentile": 0.37937,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:tar",
+   "version": "6.2.1",
+   "advisory": "GHSA-gvwx-54wh-qm9j",
+   "cves": [
+    "CVE-2026-59875"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "7.5.17",
+   "summary": "node-tar: Uncaught Exception DoS via NUL byte in PAX path/linkpath records",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-59875"
+   ],
+   "published": "2026-07-20T21:51:12Z",
+   "modified": "2026-09-10T03:50:52.205344551Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-248"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/tar@6.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > tar"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00354,
+   "epss_percentile": 0.29788,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:tar",
+   "version": "6.2.1",
+   "advisory": "GHSA-vmf3-w455-68vh",
+   "cves": [
+    "CVE-2026-53655"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "7.5.16",
+   "summary": "node-tar applies PAX size override to intermediary GNU long-name/long-link headers, causing tar parser interpretation differential (file smuggling)",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-53655"
+   ],
+   "published": "2026-06-15T17:19:42Z",
+   "modified": "2026-09-10T03:51:09.639522869Z",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:N/UI:N/VC:N/VI:H/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-436"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/tar@6.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > tar"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00156,
+   "epss_percentile": 0.0489,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:tar",
+   "version": "6.2.1",
+   "advisory": "GHSA-w8wr-v893-vjvp",
+   "cves": [
+    "CVE-2026-59871"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "7.5.18",
+   "summary": "node-tar: Process crash via PAX numeric path type confusion",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-59871"
+   ],
+   "published": "2026-07-20T21:53:14Z",
+   "modified": "2026-09-10T03:51:12.362978491Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-704"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/tar@6.2.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > tar"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00644,
+   "epss_percentile": 0.51677,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:uuid",
+   "version": "3.4.0",
+   "advisory": "GHSA-w5hq-g745-h8pq",
+   "cves": [
+    "CVE-2026-41907",
+    "CVE-2026-41988"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "11.1.1",
+   "summary": "uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-41907",
+    "CVE-2026-41988"
+   ],
+   "published": "2026-04-22T20:53:24Z",
+   "modified": "2026-09-10T03:51:03.663336650Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1285",
+    "CWE-787"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/uuid@3.4.0",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/react > @storybook/core > @storybook/core-server > @storybook/builder-webpack4 > webpack-dev-middleware > webpack-log > uuid"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.0035,
+   "epss_percentile": 0.29245,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:uuid",
+   "version": "8.3.2",
+   "advisory": "GHSA-w5hq-g745-h8pq",
+   "cves": [
+    "CVE-2026-41907",
+    "CVE-2026-41988"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "11.1.1",
+   "summary": "uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-41907",
+    "CVE-2026-41988"
+   ],
+   "published": "2026-04-22T20:53:24Z",
+   "modified": "2026-09-10T03:51:03.663336650Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:H/A:N",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:N/VI:L/VA:N/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1285",
+    "CWE-787"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/uuid@8.3.2",
+   "scope": "dev",
+   "paths": [
+    ". > jest-junit > uuid"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.0035,
+   "epss_percentile": 0.29245,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:webpack",
+   "version": "5.90.3",
+   "advisory": "GHSA-4vvj-4cpr-p986",
+   "cves": [
+    "CVE-2024-43788"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "5.94.0",
+   "summary": "Webpack's AutoPublicPathRuntimeModule has a DOM Clobbering Gadget that leads to XSS",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-43788"
+   ],
+   "published": "2024-08-27T19:50:40Z",
+   "modified": "2026-09-10T03:50:18.076870007Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:L/I:L/A:H",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:L/VI:L/VA:H/SC:N/SI:N/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/webpack@5.90.3",
+   "scope": "dev",
+   "paths": [
+    ". > webpack"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00959,
+   "epss_percentile": 0.62214,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:webpack-dev-server",
+   "version": "4.15.1",
+   "advisory": "GHSA-4v9v-hfq4-rm2v",
+   "cves": [
+    "CVE-2025-30359"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "5.2.1",
+   "summary": "webpack-dev-server users' source code may be stolen when they access a malicious web site",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-30359"
+   ],
+   "published": "2025-06-04T21:09:13Z",
+   "modified": "2026-09-10T03:50:24.784004995Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-749"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/webpack-dev-server@4.15.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > webpack-dev-server"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00598,
+   "epss_percentile": 0.49428,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:webpack-dev-server",
+   "version": "4.15.1",
+   "advisory": "GHSA-79cf-xcqc-c78w",
+   "cves": [
+    "CVE-2026-6402"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "5.2.4",
+   "summary": "webpack-dev-server vulnerable to cross-origin source code exposure on non-HTTPS origins",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-6402"
+   ],
+   "published": "2026-05-18T13:31:42Z",
+   "modified": "2026-09-10T03:50:46.202661971Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-749"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/webpack-dev-server@4.15.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > webpack-dev-server"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00291,
+   "epss_percentile": 0.22098,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:webpack-dev-server",
+   "version": "4.15.1",
+   "advisory": "GHSA-9jgg-88mc-972h",
+   "cves": [
+    "CVE-2025-30360"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "5.2.1",
+   "summary": "webpack-dev-server users' source code may be stolen when they access a malicious web site with non-Chromium based browser",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-30360"
+   ],
+   "published": "2025-06-04T21:09:38Z",
+   "modified": "2026-09-10T03:50:25.088634204Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-346"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/webpack-dev-server@4.15.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > webpack-dev-server"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00357,
+   "epss_percentile": 0.30102,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:webpack-dev-server",
+   "version": "4.15.1",
+   "advisory": "GHSA-f5vj-f2hx-8m93",
+   "cves": [
+    "CVE-2026-14620"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "5.2.6",
+   "summary": "webpack-dev-server vulnerable to cross-site request forgery via internal developer endpoints",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-14620"
+   ],
+   "published": "2026-07-20T22:01:56Z",
+   "modified": "2026-09-10T03:50:51.837057467Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:R/S:C/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-352",
+    "CWE-749"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/webpack-dev-server@4.15.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > webpack-dev-server"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00521,
+   "epss_percentile": 0.4501,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:webpack-dev-server",
+   "version": "4.15.1",
+   "advisory": "GHSA-m28w-2pqf-7qgj",
+   "cves": [
+    "CVE-2026-14631"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "5.2.6",
+   "summary": "webpack-dev-server vulnerable to denial of service via a malformed Host or Origin header",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-14631"
+   ],
+   "published": "2026-07-20T22:02:31Z",
+   "modified": "2026-09-10T03:50:52.455906127Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20",
+    "CWE-248"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/webpack-dev-server@4.15.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > webpack-dev-server"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00517,
+   "epss_percentile": 0.44723,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:webpack-dev-server",
+   "version": "4.15.1",
+   "advisory": "GHSA-mx8g-39q3-5c79",
+   "cves": [
+    "CVE-2026-9595"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "5.2.5",
+   "summary": "webpack-dev-server vulnerable to HMR WebSocket interception via permissive user proxies",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-9595"
+   ],
+   "published": "2026-06-17T18:13:31Z",
+   "modified": "2026-09-10T03:51:09.136558749Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-346",
+    "CWE-441"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/webpack-dev-server@4.15.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > webpack-dev-server"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00163,
+   "epss_percentile": 0.05567,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:ws",
+   "version": "8.16.0",
+   "advisory": "GHSA-58qx-3vcg-4xpx",
+   "cves": [
+    "CVE-2026-45736"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "8.20.1",
+   "summary": "ws: Uninitialized memory disclosure",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-45736"
+   ],
+   "published": "2026-05-18T19:02:40Z",
+   "modified": "2026-09-10T03:51:04.572514669Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:H/UI:N/S:U/C:H/I:N/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-908"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/ws@8.16.0",
+   "scope": "dev",
+   "paths": [
+    ". > jsdom > ws"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00745,
+   "epss_percentile": 0.55565,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_privileges",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:yaml",
+   "version": "1.10.2",
+   "advisory": "GHSA-48c2-rrv3-qjmp",
+   "cves": [
+    "CVE-2026-33532"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "1.10.3",
+   "summary": "yaml is vulnerable to Stack Overflow via deeply nested YAML collections",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-33532"
+   ],
+   "published": "2026-03-25T20:08:24Z",
+   "modified": "2026-09-10T03:50:37.151581408Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-674"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/yaml@1.10.2",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/builder-webpack5 > fork-ts-checker-webpack-plugin > cosmiconfig > yaml"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00499,
+   "epss_percentile": 0.43534,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:yaml",
+   "version": "2.4.0",
+   "advisory": "GHSA-48c2-rrv3-qjmp",
+   "cves": [
+    "CVE-2026-33532"
+   ],
+   "severity": "MODERATE",
+   "fixed_in": "2.8.3",
+   "summary": "yaml is vulnerable to Stack Overflow via deeply nested YAML collections",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-33532"
+   ],
+   "published": "2026-03-25T20:08:24Z",
+   "modified": "2026-09-10T03:50:37.151581408Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-674"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/yaml@2.4.0",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > tailwindcss > postcss-load-config > yaml"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00499,
+   "epss_percentile": 0.43534,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@babel/core",
+   "version": "7.12.9",
+   "advisory": "GHSA-4x5r-pxfx-6jf8",
+   "cves": [
+    "CVE-2026-49356"
+   ],
+   "severity": "LOW",
+   "fixed_in": "7.29.6",
+   "summary": "@babel/core: Arbitrary File Read via sourceMappingURL Comment",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-49356"
+   ],
+   "published": "2026-06-15T17:14:14Z",
+   "modified": "2026-09-10T03:50:48.280629201Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:H/PR:N/UI:N/S:C/C:L/I:N/A:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-200",
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40babel/core@7.12.9",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/addon-essentials > @storybook/addon-docs > @storybook/mdx1-csf > @mdx-js/mdx > @babel/core"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00152,
+   "epss_percentile": 0.04411,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@babel/core",
+   "version": "7.24.0",
+   "advisory": "GHSA-4x5r-pxfx-6jf8",
+   "cves": [
+    "CVE-2026-49356"
+   ],
+   "severity": "LOW",
+   "fixed_in": "7.29.6",
+   "summary": "@babel/core: Arbitrary File Read via sourceMappingURL Comment",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-49356"
+   ],
+   "published": "2026-06-15T17:14:14Z",
+   "modified": "2026-09-10T03:50:48.280629201Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:H/PR:N/UI:N/S:C/C:L/I:N/A:N",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-200",
+    "CWE-22"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/%40babel/core@7.24.0",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/builder-webpack5 > @babel/core"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00152,
+   "epss_percentile": 0.04411,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:@tootallnate/once",
+   "version": "1.1.2",
+   "advisory": "GHSA-vpq2-c234-7xj6",
+   "cves": [
+    "CVE-2026-3449"
+   ],
+   "severity": "LOW",
+   "fixed_in": "2.0.1",
+   "summary": "@tootallnate/once vulnerable to Incorrect Control Flow Scoping",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-3449"
+   ],
+   "published": "2026-03-03T06:31:14Z",
+   "modified": "2026-09-10T03:51:00.790088103Z",
+   "cvss_v3": "CVSS:3.1/AV:L/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:L/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N/E:P",
+   "attack_vector": "local",
+   "cwes": [
+    "CWE-705"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/%40tootallnate/once@1.1.2",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > jest > @jest/core > jest-config > jest-environment-jsdom > jsdom > http-proxy-agent > @tootallnate/once"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00128,
+   "epss_percentile": 0.02554,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "local_access",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:body-parser",
+   "version": "1.20.3",
+   "advisory": "GHSA-v422-hmwv-36x6",
+   "cves": [
+    "CVE-2026-12590"
+   ],
+   "severity": "LOW",
+   "fixed_in": "1.20.6",
+   "summary": "body-parser vulnerable to denial of service when invalid limit value silently disables size enforcement",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-12590"
+   ],
+   "published": "2026-07-20T23:23:26Z",
+   "modified": "2026-09-10T03:50:53.014509971Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-770"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/body-parser@1.20.3",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/manager-webpack5 > express > body-parser"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00412,
+   "epss_percentile": 0.36229,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:brace-expansion",
+   "version": "2.0.1",
+   "advisory": "GHSA-v6h2-p8h4-qcjw",
+   "cves": [
+    "CVE-2025-5889"
+   ],
+   "severity": "LOW",
+   "fixed_in": "2.0.2",
+   "summary": "brace-expansion Regular Expression Denial of Service vulnerability",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-5889"
+   ],
+   "published": "2025-06-09T21:30:51Z",
+   "modified": "2026-09-10T03:50:25.501161917Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:U/C:N/I:N/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:N/PR:L/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N/E:P/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-400"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/brace-expansion@2.0.1",
+   "scope": "dev",
+   "paths": [
+    ". > react-scripts > fsevents > node-gyp > glob > minimatch > brace-expansion"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00611,
+   "epss_percentile": 0.50062,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:cookie",
+   "version": "0.6.0",
+   "advisory": "GHSA-pxg6-pf52-xh8x",
+   "cves": [
+    "CVE-2024-47764"
+   ],
+   "severity": "LOW",
+   "fixed_in": "0.7.0",
+   "summary": "cookie accepts cookie name, path, and domain with out of bounds characters",
+   "malicious": false,
+   "aliases": [
+    "CVE-2024-47764"
+   ],
+   "published": "2024-10-04T20:31:00Z",
+   "modified": "2026-09-10T03:50:19.898971417Z",
+   "cwes": [
+    "CWE-74"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/cookie@0.6.0",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/manager-webpack5 > express > cookie"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00744,
+   "epss_percentile": 0.55539,
+   "intel_checked_at": "2026-11-20",
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:elliptic",
+   "version": "6.6.0",
+   "advisory": "GHSA-848j-6mx2-7j84",
+   "cves": [
+    "CVE-2025-14505"
+   ],
+   "severity": "LOW",
+   "summary": "Elliptic Uses a Cryptographic Primitive with a Risky Implementation",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-14505"
+   ],
+   "published": "2026-01-08T21:30:34Z",
+   "modified": "2026-09-10T03:50:32.794069999Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:L/I:L/A:L",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N/E:P",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-1240"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/elliptic@6.6.0",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/addon-essentials > @storybook/core-common > webpack > node-libs-browser > crypto-browserify > browserify-sign > elliptic"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.0018,
+   "epss_percentile": 0.07696,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2",
+   "fixed_in": null
+  },
+  {
+   "package": "npm:qs",
+   "version": "6.11.2",
+   "advisory": "GHSA-w7fw-mjwx-w883",
+   "cves": [
+    "CVE-2026-2391"
+   ],
+   "severity": "LOW",
+   "fixed_in": "6.14.2",
+   "summary": "qs's arrayLimit bypass in comma parsing allows denial of service",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-2391"
+   ],
+   "published": "2026-02-12T17:04:39Z",
+   "modified": "2026-09-10T03:50:35.973235487Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/qs@6.11.2",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/addons > @storybook/router > qs"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00534,
+   "epss_percentile": 0.45871,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:qs",
+   "version": "6.13.0",
+   "advisory": "GHSA-w7fw-mjwx-w883",
+   "cves": [
+    "CVE-2026-2391"
+   ],
+   "severity": "LOW",
+   "fixed_in": "6.14.2",
+   "summary": "qs's arrayLimit bypass in comma parsing allows denial of service",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-2391"
+   ],
+   "published": "2026-02-12T17:04:39Z",
+   "modified": "2026-09-10T03:50:35.973235487Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:N/UI:N/S:U/C:N/I:N/A:L",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-20"
+   ],
+   "dos_only": true,
+   "purl": "pkg:npm/qs@6.13.0",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/manager-webpack5 > express > qs"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00534,
+   "epss_percentile": 0.45871,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "high_complexity",
+    "denial_of_service"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:serialize-javascript",
+   "version": "4.0.0",
+   "advisory": "GHSA-m5mm-p8h7-m29v",
+   "cves": [
+    "CVE-2026-115754",
+    "CVE-2026-115897"
+   ],
+   "severity": "LOW",
+   "fixed_in": "7.1.3",
+   "summary": "Serialize JavaScript: Cross-site scripting (XSS) via unescaped </script at the end of a serialized function body",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115754",
+    "CVE-2026-115897"
+   ],
+   "published": "2026-10-23T22:09:52Z",
+   "modified": "2026-10-24T02:55:55.507718062Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:L/UI:P/VC:L/VI:L/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/serialize-javascript@4.0.0",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/addon-essentials > @storybook/core-common > webpack > terser-webpack-plugin > serialize-javascript"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00307,
+   "epss_percentile": 0.23929,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:serialize-javascript",
+   "version": "5.0.1",
+   "advisory": "GHSA-m5mm-p8h7-m29v",
+   "cves": [
+    "CVE-2026-115754",
+    "CVE-2026-115897"
+   ],
+   "severity": "LOW",
+   "fixed_in": "7.1.3",
+   "summary": "Serialize JavaScript: Cross-site scripting (XSS) via unescaped </script at the end of a serialized function body",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115754",
+    "CVE-2026-115897"
+   ],
+   "published": "2026-10-23T22:09:52Z",
+   "modified": "2026-10-24T02:55:55.507718062Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:L/UI:P/VC:L/VI:L/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/serialize-javascript@5.0.1",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/react > @storybook/core > @storybook/core-server > @storybook/builder-webpack4 > terser-webpack-plugin > serialize-javascript"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00307,
+   "epss_percentile": 0.23929,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:serialize-javascript",
+   "version": "6.0.2",
+   "advisory": "GHSA-m5mm-p8h7-m29v",
+   "cves": [
+    "CVE-2026-115754",
+    "CVE-2026-115897"
+   ],
+   "severity": "LOW",
+   "fixed_in": "7.1.3",
+   "summary": "Serialize JavaScript: Cross-site scripting (XSS) via unescaped </script at the end of a serialized function body",
+   "malicious": false,
+   "aliases": [
+    "CVE-2026-115754",
+    "CVE-2026-115897"
+   ],
+   "published": "2026-10-23T22:09:52Z",
+   "modified": "2026-10-24T02:55:55.507718062Z",
+   "cvss_v4": "CVSS:4.0/AV:N/AC:H/AT:P/PR:L/UI:P/VC:L/VI:L/VA:N/SC:L/SI:L/SA:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-79"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/serialize-javascript@6.0.2",
+   "scope": "dev",
+   "paths": [
+    ". > @storybook/builder-webpack5 > terser-webpack-plugin > serialize-javascript"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.00307,
+   "epss_percentile": 0.23929,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:webpack",
+   "version": "5.90.3",
+   "advisory": "GHSA-38r7-794h-5758",
+   "cves": [
+    "CVE-2025-68157"
+   ],
+   "severity": "LOW",
+   "fixed_in": "5.104.0",
+   "summary": "webpack buildHttp HttpUriPlugin allowedUris bypass via HTTP redirects → SSRF + cache persistence",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-68157"
+   ],
+   "published": "2026-02-05T18:35:28Z",
+   "modified": "2026-09-10T03:50:33.757470252Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:U/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/webpack@5.90.3",
+   "scope": "dev",
+   "paths": [
+    ". > webpack"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.0023,
+   "epss_percentile": 0.13934,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
+   "policy_version": "sec.v2"
+  },
+  {
+   "package": "npm:webpack",
+   "version": "5.90.3",
+   "advisory": "GHSA-8fgc-7cc6-rx7x",
+   "cves": [
+    "CVE-2025-68458"
+   ],
+   "severity": "LOW",
+   "fixed_in": "5.104.1",
+   "summary": "webpack buildHttp: allowedUris allow-list bypass via URL userinfo (@) leading to build-time SSRF behavior",
+   "malicious": false,
+   "aliases": [
+    "CVE-2025-68458"
+   ],
+   "published": "2026-02-05T18:38:10Z",
+   "modified": "2026-09-10T03:50:34.472343977Z",
+   "cvss_v3": "CVSS:3.1/AV:N/AC:H/PR:L/UI:R/S:U/C:L/I:L/A:N",
+   "attack_vector": "network",
+   "cwes": [
+    "CWE-918"
+   ],
+   "dos_only": false,
+   "purl": "pkg:npm/webpack@5.90.3",
+   "scope": "dev",
+   "paths": [
+    ". > webpack"
+   ],
+   "workspace": ".",
+   "found_in": "web/yarn.lock",
+   "kev": false,
+   "epss": 0.0023,
+   "epss_percentile": 0.13934,
+   "intel_checked_at": "2026-11-20",
+   "preconditions": [
+    "user_interaction",
+    "high_complexity"
+   ],
+   "vex": {
+    "status": "not_affected",
+    "justification": "component_not_present"
+   },
+   "counted": false,
+   "level": "not_shipped",
    "policy_version": "sec.v2"
   }
  ]
