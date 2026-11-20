@@ -1,0 +1,1089 @@
+{
+  "schema_version": "software.v1",
+  "slug": "tmux",
+  "repo_id": "gh:36836475",
+  "name": "tmux",
+  "summary": "A terminal multiplexer that creates and controls multiple terminals from one screen, and can be detached and later reattached.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "dev_cli",
+  "kind": "tui",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [
+    "control several terminals from a single screen",
+    "keep terminal sessions running in the background and reattach later"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "create and control multiple terminals in one screen",
+    "detach and reattach running sessions"
+  ],
+  "capabilities": [
+    {
+      "label": "Create and control multiple terminals from one screen",
+      "area": "multiplexing"
+    },
+    {
+      "label": "Detach and reattach sessions running in background",
+      "area": "sessions"
+    },
+    {
+      "label": "Update utmp via utempter library",
+      "area": "integrations"
+    },
+    {
+      "label": "Generate server and client debug logs",
+      "area": "debugging"
+    },
+    {
+      "label": "Load a custom configuration file",
+      "area": "configuration"
+    },
+    {
+      "label": "Use a named or custom socket",
+      "area": "options"
+    }
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/tmux/tmux",
+    "full_name": "tmux/tmux",
+    "created_at": "2015-06-03T23:32:55Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "libevent 2.x",
+      "ncurses",
+      "C compiler, make, pkg-config, yacc or bison (to build)"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "source",
+      "steps": [
+        {
+          "command": "sudo make install",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": null
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-tmux-20261121-062809-5b9b",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/src && cd ~/src && curl -fsSLO https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz && curl -fsSLO https://github.com/tmux/tmux/releases/download/3.5a/tmux-3.5a.tar.gz && tar xzf libevent-2.1.12-stable.tar.gz && tar xzf tmux-3.5a.tar.gz",
+          "purpose": "Download and unpack the libevent 2.1.12 and tmux 3.5a release tarballs"
+        },
+        {
+          "command": "cd ~/src/libevent-2.1.12-stable && ./configure --prefix=$HOME/.local --disable-openssl --disable-samples --disable-libevent-regress && make -j4 && make install",
+          "purpose": "Build libevent and install it into ~/.local"
+        },
+        {
+          "command": "cd ~/src && curl -fsSLO https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz && tar xJf bison-3.8.2.tar.xz && cd bison-3.8.2 && ./configure --prefix=$HOME/.local && make -j4 && make install",
+          "purpose": "Build GNU bison 3.8.2 (yacc) and install it into ~/.local"
+        },
+        {
+          "command": "cd ~/src/tmux-3.5a && PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig LDFLAGS=\"-Wl,-rpath,$HOME/.local/lib\" ./configure --prefix=$HOME/.local && make -j4 && make install",
+          "purpose": "./configure && make && make install for tmux, with prefix ~/.local, PKG_CONFIG_PATH and rpath set"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "tmux -V",
+        "expected_signal": "tmux 3.5a"
+      },
+      "first_task": "export TERM=xterm && tmux -L f1 new -d -s demo -x 80 -y 24 && tmux -L f1 splitw -t demo && tmux -L f1 neww -t demo && tmux -L f1 send -t demo:0.0 'echo hello-from-pane-0' Enter && tmux -L f1 send -t demo:0.1 'echo hello-from-pane-1' Enter && sleep 1 && tmux -L f1 lsp -a -F '#{session_name}:#{window_"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "ISC",
+  "processing": "local",
+  "last_release": {
+    "tag": "3.8",
+    "published_at": "2026-09-09T12:55:58Z",
+    "url": "https://github.com/tmux/tmux/releases/tag/3.8"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-21T06:33:07.818107+08:00",
+    "runs": [
+      {
+        "id": "verify-tmux-20261121-062809-5b9b",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-build:895c1564de8e",
+        "checked_at": "2026-11-21T06:33:07.818107+08:00",
+        "tool_version": "tmux 3.5a",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/src && cd ~/src && curl -fsSLO https://github.com/libevent/libevent/releases/download/release-2.1.12-stable/libevent-2.1.12-stable.tar.gz && curl -fsSLO https://github.com/tmux/tmux/releases/download/3.5a/tmux-3.5a.tar.gz && tar xzf libevent-2.1.12-stable.tar.gz && tar xzf tmux-3.5a.tar.gz",
+            "purpose": "Download and unpack the libevent 2.1.12 and tmux 3.5a release tarballs"
+          },
+          {
+            "command": "cd ~/src/libevent-2.1.12-stable && ./configure --prefix=$HOME/.local --disable-openssl --disable-samples --disable-libevent-regress && make -j4 && make install",
+            "purpose": "Build libevent and install it into ~/.local"
+          },
+          {
+            "command": "cd ~/src && curl -fsSLO https://ftp.gnu.org/gnu/bison/bison-3.8.2.tar.xz && tar xJf bison-3.8.2.tar.xz && cd bison-3.8.2 && ./configure --prefix=$HOME/.local && make -j4 && make install",
+            "purpose": "Build GNU bison 3.8.2 (yacc) and install it into ~/.local"
+          },
+          {
+            "command": "cd ~/src/tmux-3.5a && PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig LDFLAGS=\"-Wl,-rpath,$HOME/.local/lib\" ./configure --prefix=$HOME/.local && make -j4 && make install",
+            "purpose": "./configure && make && make install for tmux, with prefix ~/.local, PKG_CONFIG_PATH and rpath set"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "tmux -V",
+            "expected_signal": "tmux 3.5a",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "tmux 3.5a",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "export TERM=xterm && tmux -L f1 new -d -s demo -x 80 -y 24 && tmux -L f1 splitw -t demo && tmux -L f1 neww -t demo && tmux -L f1 send -t demo:0.0 'echo hello-from-pane-0' Enter && tmux -L f1 send -t demo:0.1 'echo hello-from-pane-1' Enter && sleep 1 && tmux -L f1 lsp -a -F '#{session_name}:#{window_index}.#{pane_index}' && tmux -L f1 capturep -p -t demo:0.0 -S 0 -E 2 && tmux -L f1 capturep -p -t demo:0.1 -S 0 -E 2 && tmux -L f1 kill-server",
+            "expected_signal": "hello-from-pane-1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "sbx@modal:~/work$ echo hello-from-pane-1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "bash ~/work/f2.sh",
+            "expected_signal": "reattached client on bg",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "reattached client on bg",
+            "setup": [
+              {
+                "command": "cat > ~/work/f2.sh <<'EOF'\nset -e\nexport TERM=xterm-256color\nT=\"tmux -L f2\"\n$T new-session -d -s bg -x 80 -y 10 'i=0; while true; do i=$((i+1)); echo \"tick $i\"; sleep 1; done'\necho \"== session started detached:\"; $T list-sessions\nsleep 2\necho \"== attaching a client via a pseudo-terminal\"\nscript -qec \"tmux -L f2 attach-session -t bg\" /dev/null >/dev/null 2>&1 &\nsleep 2\necho \"== clients while attached:\"; $T list-clients -F 'client attached to #{session_name}'\n$T detach-client -s bg\nsleep 2\necho \"== after detach, clients: $($T list-clients | wc -l)\"; $T list-sessions\necho \"== still running in background, last pane output:\"\n$T capture-pane -p -t bg -S 0 -E 9 | grep tick | tail -n 2\necho \"== reattach and detach again:\"\nscript -qec \"tmux -L f2 attach-session -t bg\" /dev/null >/dev/null 2>&1 &\nsleep 2\n$T list-clients -F 'reattached client on #{session_name}'\n$T kill-server\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "tmux depends on libevent 2.x",
+            "actually_needed": "This box had no libevent, so I built libevent 2.1.12 from its release tarball into ~/.local. tmux's configure then needed PKG_CONFIG_PATH=~/.local/lib/pkgconfig and an rpath in LDFLAGS to find and load it.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "a suitable yacc (yacc or bison) are needed",
+            "actually_needed": "No yacc or bison was installed and tmux's configure failed with \"yacc not found\", even when building from the release tarball. I built GNU bison 3.8.2 from source into ~/.local.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "sudo make install",
+            "actually_needed": "Running configure with --prefix=$HOME/.local and then plain make install worked without root.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "To build tmux, a C compiler, make, pkg-config",
+            "actually_needed": "I used the 3.5a release tarball, not git, so autogen.sh was not needed. The build used gcc, make and pkg-config, which the box already had.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks succeeded: panes were created and their output captured, the session survived detach and was reattached, and the version printed as tmux 3.5a.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-tmux-20261121-062809-5b9b/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-tmux-20261121-062809-5b9b/check-1-cmd11.judged.png",
+            "runs/verify/verify-tmux-20261121-062809-5b9b/check-2-cmd10.judged.png",
+            "runs/verify/verify-tmux-20261121-062809-5b9b/check-3-cmd7.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.251031,
+        "features": [
+          {
+            "feature": "create and control multiple terminals in one screen",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "detach and reattach running sessions",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v2",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-21T06:33:13+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "b2a01282069146476ceca974ff255437ff00865e",
+      "run_id": "verify-tmux-20261121-062809-5b9b",
+      "tool_version": "tmux 3.5a",
+      "artifact_sha256": [
+        "bf40280c1c90d97a2ba4bae0fd57b9f63478a0dd3978e815e887af560ed6cf16",
+        "f89c3c623e6818fa920a95c63bd86bf3797746ca58a8ff02495ba8abdb3369e4",
+        "14c9f0f52de2f83a10a15e040591c99fda09ad9e79338d2288a2f84349533c16",
+        "7b3d037eb3fc38d1e96e2555a210076f15fe38f3d607433bef0c8a7d18032932"
+      ],
+      "packages": {},
+      "scopes": {},
+      "advisories_fetched_at": "2026-11-21T06:33:13+08:00",
+      "kev_catalog": null,
+      "epss_date": null,
+      "findings_total": 0,
+      "details": "security/tmux.json",
+      "details_sha256": "4a994f682077e7b325b053ec3fbdefe45126ba62c71af70f49235cd8ebe260c4"
+    },
+    "assessment": {
+      "level": "none",
+      "policy_version": "sec.v2",
+      "reasons": [],
+      "counts": {},
+      "uncounted": 0,
+      "assessed_at": "2026-11-21T06:33:13+08:00"
+    },
+    "coverage": {
+      "state": "unchecked",
+      "target": null,
+      "packages_found": 0,
+      "packages_checked": 0,
+      "components": [
+        {
+          "ecosystem": "c/c++",
+          "component": "configure.ac",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "advisory_db.no_ecosystem"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "code": "advisory_db.no_ecosystem",
+          "category": "advisory_db",
+          "ecosystem": "c/c++",
+          "component": "configure.ac",
+          "detail": "configure.ac: no advisory ecosystem for C/C++ libraries",
+          "capability": "advisory_source:c/c++",
+          "found": null,
+          "first_seen": "2026-11-21",
+          "last_seen": "2026-11-21"
+        },
+        {
+          "code": "binary.no_build_info",
+          "category": "binary_no_metadata",
+          "ecosystem": "unknown",
+          "component": "sbom:verify-tmux-20261121-062809-5b9b",
+          "detail": "4 installed executables list no dependencies",
+          "capability": "binary_analysis",
+          "found": null,
+          "first_seen": "2026-11-21",
+          "last_seen": "2026-11-21"
+        }
+      ]
+    }
+  },
+  "scores": {
+    "formula_version": "b3.v7",
+    "computed_at": "2026-11-21T06:33:13+08:00",
+    "quality": {
+      "total": 79.2,
+      "raw_total": 79.2,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.9,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      },
+      "security": {
+        "level": "none",
+        "basis": "assessment",
+        "effect": "none",
+        "deduction": 0.0
+      }
+    },
+    "popularity": {
+      "score": 100.0,
+      "signals": {
+        "stars": 50577,
+        "monthly_downloads": 50717,
+        "forks": 3033,
+        "dependents": null,
+        "release_downloads": 1320334,
+        "hn_top_score": 504,
+        "registries_count": 1
+      },
+      "age_days": 4187,
+      "packages": [
+        "homebrew:tmux"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.0
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:07.832930+08:00",
+      "sources_sha": "15b114514f42bf67add1b85f5988999c9602b0a90c78d176e814efb7c5d84216",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "tmux is a terminal multiplexer: it enables a number of terminals to be created,\naccessed, and controlled from a single screen."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "tmux may be detached from a\nscreen and continue running in the background, then later reattached."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "tmux depends on [libevent](https://libevent.org) 2.x"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "./configure && make\nsudo make install"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "A small example configuration is in `example_tmux.conf`."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "For debugging, run tmux with `-v` or `-vv` to generate server and client log\nfiles in the current directory."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "This release runs on OpenBSD, FreeBSD, NetBSD, Linux, macOS and Solaris."
+        }
+      },
+      "unquoted": [],
+      "input_sha": "816af8dd6b4bfdb9b47bd8af839367c1cbc385561315cef5efaa15803c929344",
+      "prompt_version": "rubric-p1",
+      "renderer_version": "r1",
+      "grader": "anthropic"
+    },
+    "inputs": {
+      "version": "inputs.v1",
+      "github": {
+        "source": "pipeline_db",
+        "fetched_at": "2026-11-21T06:27:54+08:00",
+        "stars": 50577,
+        "forks": 3033,
+        "open_issues": 54,
+        "created_at": "2015-06-03T23:32:55Z",
+        "pushed_at": "2026-11-20T09:52:50Z",
+        "releases": [
+          {
+            "tag": "3.8",
+            "published_at": "2026-09-09T12:55:58Z",
+            "prerelease": false,
+            "notes_chars": 194,
+            "downloads": 86201
+          },
+          {
+            "tag": "3.7c",
+            "published_at": "2026-08-17T12:53:48Z",
+            "prerelease": false,
+            "notes_chars": 236,
+            "downloads": 117102
+          },
+          {
+            "tag": "3.7b",
+            "published_at": "2026-07-01T18:58:22Z",
+            "prerelease": false,
+            "notes_chars": 236,
+            "downloads": 47608
+          },
+          {
+            "tag": "3.7a",
+            "published_at": "2026-07-01T06:23:26Z",
+            "prerelease": false,
+            "notes_chars": 236,
+            "downloads": 14616
+          },
+          {
+            "tag": "3.7",
+            "published_at": "2026-06-26T18:01:19Z",
+            "prerelease": false,
+            "notes_chars": 194,
+            "downloads": 9895
+          },
+          {
+            "tag": "3.6b",
+            "published_at": "2026-05-20T11:23:30Z",
+            "prerelease": false,
+            "notes_chars": 236,
+            "downloads": 38362
+          },
+          {
+            "tag": "3.6a",
+            "published_at": "2025-12-05T05:50:50Z",
+            "prerelease": false,
+            "notes_chars": 236,
+            "downloads": 208974
+          },
+          {
+            "tag": "3.6",
+            "published_at": "2025-11-26T08:42:57Z",
+            "prerelease": false,
+            "notes_chars": 194,
+            "downloads": 38355
+          },
+          {
+            "tag": "3.5a",
+            "published_at": "2024-10-05T06:30:51Z",
+            "prerelease": false,
+            "notes_chars": 231,
+            "downloads": 704453
+          },
+          {
+            "tag": "3.5",
+            "published_at": "2024-09-27T08:22:02Z",
+            "prerelease": false,
+            "notes_chars": 194,
+            "downloads": 54768
+          }
+        ],
+        "contributors": null,
+        "files": {
+          "count": 824,
+          "truncated": false,
+          "ci": ".github/workflows/lock.yml",
+          "tests": "regress/image_test.py",
+          "changelog": "CHANGES",
+          "lockfile": null
+        }
+      },
+      "issues": {
+        "source": "github_live",
+        "fetched_at": "2026-11-21T06:33:07+08:00",
+        "items": [
+          {
+            "created_at": "2026-11-20T17:07:31Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T21:26:44Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-18T01:12:04Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T14:12:10Z",
+            "closed_at": "2026-11-18T09:23:23Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T00:37:25Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-15T14:04:08Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-15T10:39:52Z",
+            "closed_at": "2026-11-18T09:28:21Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-14T20:27:31Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-13T14:50:22Z",
+            "closed_at": "2026-11-13T16:48:04Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-13T07:33:55Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-12T17:48:23Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-09T15:43:39Z",
+            "closed_at": "2026-11-09T17:00:47Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-08T02:24:48Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-06T14:28:05Z",
+            "closed_at": "2026-11-10T10:45:04Z",
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-06T13:57:40Z",
+            "closed_at": "2026-11-06T21:28:11Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-06T00:50:58Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-05T23:02:42Z",
+            "closed_at": "2026-11-13T08:02:14Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-05T23:02:37Z",
+            "closed_at": "2026-11-13T08:02:24Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-05T22:54:08Z",
+            "closed_at": "2026-11-13T07:50:57Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-05T22:54:04Z",
+            "closed_at": "2026-11-13T07:51:03Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-05T22:53:55Z",
+            "closed_at": "2026-11-13T08:02:35Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-04T21:01:12Z",
+            "closed_at": "2026-11-09T14:04:30Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-04T08:58:11Z",
+            "closed_at": "2026-11-09T13:24:51Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-04T08:56:52Z",
+            "closed_at": "2026-11-09T12:30:52Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-04T00:35:09Z",
+            "closed_at": "2026-11-13T07:51:15Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-03T20:57:39Z",
+            "closed_at": "2026-11-13T08:02:48Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-01T17:53:52Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-01T07:21:16Z",
+            "closed_at": "2026-11-12T11:27:39Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-30T12:43:19Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-30T12:40:19Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-30T04:06:04Z",
+            "closed_at": "2026-11-13T07:52:44Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-30T03:22:24Z",
+            "closed_at": "2026-11-13T07:52:51Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-29T15:19:59Z",
+            "closed_at": "2026-11-13T07:52:58Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-29T02:50:59Z",
+            "closed_at": "2026-10-29T09:34:56Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-28T23:24:05Z",
+            "closed_at": "2026-10-29T19:26:22Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-28T01:02:40Z",
+            "closed_at": "2026-11-12T18:18:22Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-27T19:00:02Z",
+            "closed_at": "2026-11-13T07:53:08Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-27T15:56:52Z",
+            "closed_at": "2026-10-29T09:46:00Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-26T19:49:21Z",
+            "closed_at": "2026-10-27T08:49:25Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-26T10:55:55Z",
+            "closed_at": "2026-10-29T13:01:02Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-24T18:45:41Z",
+            "closed_at": "2026-11-03T16:50:16Z",
+            "association": "NONE",
+            "bot": false
+          }
+        ],
+        "pull_requests": 59,
+        "page_full": true
+      }
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/tmux/tmux",
+      "fetched_at": "2026-11-21T06:27:55+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/tmux/tmux/blob/master/.github/README.md",
+      "fetched_at": "2026-11-21T06:27:54+08:00"
+    },
+    {
+      "id": "release:3.8",
+      "kind": "release",
+      "url": "https://github.com/tmux/tmux/releases/tag/3.8",
+      "fetched_at": "2026-11-21T06:27:54+08:00"
+    },
+    {
+      "id": "help:verify-tmux-20261121-062809-5b9b:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-21T06:33:18+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "tmux is a terminal multiplexer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:28:03+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "For documentation on using tmux, see the tmux.1 manpage.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:28:03+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "tmux is a terminal multiplexer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:28:03+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "tmux is a terminal multiplexer: it enables a number of terminals to be created,\naccessed, and controlled from a single screen.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:28:03+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# Welcome to tmux!",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:28:03+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "This release runs on OpenBSD, FreeBSD, NetBSD, Linux, macOS and Solaris.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:28:03+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "tmux depends on [libevent](https://libevent.org) 2.x",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:28:03+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "It also depends on [ncurses](https://www.gnu.org/software/ncurses/)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:28:03+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/2",
+      "source_id": "readme",
+      "quote": "To build tmux, a C compiler (for example gcc or clang), make, pkg-config and a\nsuitable yacc (yacc or bison) are needed.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:28:03+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:27:55+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:27:55+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-21T06:27:55+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:3.8",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:27:54+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "enables a number of terminals to be created,\naccessed, and controlled from a single screen",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:28:03+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "tmux may be detached from a\nscreen and continue running in the background, then later reattached.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:28:03+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "enables a number of terminals to be created,\naccessed, and controlled from a single screen",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:28:03+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "tmux may be detached from a\nscreen and continue running in the background, then later reattached.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:28:03+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "sudo make install",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:28:03+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "sudo make install",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:28:03+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "tmux may be detached from a\nscreen and continue running in the background",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:28:03+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "it enables a number of terminals to be created,\naccessed, and controlled from a single screen",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:18+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "tmux may be detached from a\nscreen and continue running in the background, then later reattached.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:18+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "tmux can use the utempter library to update utmp(5)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:18+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "run tmux with `-v` or `-vv` to generate server and client log\nfiles in the current directory",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:18+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "help:verify-tmux-20261121-062809-5b9b:1",
+      "quote": "[-f file]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:18+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "help:verify-tmux-20261121-062809-5b9b:1",
+      "quote": "[-L socket-name]\n            [-S socket-path]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:33:18+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-21T06:27:54+08:00",
+  "updated_at": "2026-11-21T06:33:18+08:00"
+}
