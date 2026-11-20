@@ -464,7 +464,9 @@ const outcomeOutput = z.object({
   deduplicated: z.boolean().describe('true = this rec_id, slug, stage and result were already reported; nothing changed'),
   counted_in_score: z.boolean(),
   not_counted_reason: z.enum(['no_rec_id', 'unknown_or_expired_rec_id']).nullable(),
-  reverify: z.enum(['queued', 'already_queued', 'none']).describe('Whether pickfit will re-run the install steps in a fresh sandbox'),
+  reverify: z
+    .enum(['queued', 'already_queued', 'none'])
+    .describe('queued = waiting for a fresh-sandbox re-run that a maintainer starts and reviews later; it has not run yet. next says what to tell the user'),
   next: z.string().nullable(),
 });
 
@@ -595,7 +597,7 @@ export function buildServer(deps: Deps): McpServer {
         'installed and first_run reports count for 7 days after the rec_id was issued; still_using, replaced and abandoned for 120 days. ' +
         "For those later stages follow get_install_guide's check_in: only with the user's consent, read-only checks, and send last_used, never the command output. " +
         'Remove user names, file paths, tokens and other personal data from error_excerpt and note; pickfit stores no account or IP. ' +
-        'A failed install with an error excerpt makes pickfit re-run the install steps in a fresh sandbox. Repeating the same report changes nothing.',
+        'A failed install with a rec_id, os and error excerpt queues a fresh-sandbox re-run that a maintainer starts and reviews later; next says what to tell the user, or what the report lacked. Repeating the same report changes nothing.',
       inputSchema: outcomeInput,
       outputSchema: outcomeOutput,
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
