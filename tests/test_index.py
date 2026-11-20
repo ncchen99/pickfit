@@ -328,3 +328,31 @@ def test_capabilities_reach_the_index_with_their_items(data_dir: Path) -> None:
     assert entries["fixture-json-query"]["capabilities"] == [
         {"label": "convert JSON to other formats", "items": ["csv", "yaml"]}, {"label": "color output"}]  # empty items left out
     assert entries["fixture-chat-tui"]["capabilities"] == []
+
+
+def test_entries_carry_a_short_coverage_summary(data_dir: Path) -> None:
+    """U8: the tool page's Verification Coverage, from pickfit/coverage.py, summed up small (no gap text, no
+    dimension that does not apply) and agreeing with compute_coverage."""
+    from pickfit.coverage import CATEGORIES, compute_coverage
+    from pickfit.index import load_records
+    from pickfit.security import GAP_CATEGORIES
+
+    entries = {e["slug"]: e for e in build_index(data_dir).index["entries"]}
+    records = {r.slug: r for r in load_records(data_dir)[0]}
+    for slug, entry in entries.items():
+        cov = entry["coverage"]
+        full = compute_coverage(records[slug])
+        assert cov["version"] == "cov.v1" and cov["share"] == full["summary"]["verified_share"]
+        applies = {d for d, v in full["dimensions"].items() if v["status"] != "not_applicable"}
+        assert set(cov["dimensions"]) == applies, slug
+        for name, dim in cov["dimensions"].items():
+            assert dim["status"] == full["dimensions"][name]["status"]
+            assert set(dim) <= {"status", "done", "of", "unit", "blocked_by", "gaps"}
+            assert len(dim.get("gaps", [])) <= 3
+            assert set(dim.get("gaps", [])) <= set(CATEGORIES) | set(GAP_CATEGORIES)
+            assert ("unit" in dim) == (name == "function" and "done" in dim)
+    runner = entries["fixture-llm-runner"]["coverage"]["dimensions"]
+    assert runner["function"] == {"status": "partial", "done": 1, "of": 2, "unit": "feature", "gaps": ["sandbox_missing"]}
+    assert "usability" not in runner and "video" not in runner
+    # Small: under 600 bytes a tool (about 414 on average over the real catalog, 11/21).
+    assert all(len(json.dumps(e["coverage"], separators=(",", ":"))) < 600 for e in entries.values())

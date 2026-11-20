@@ -964,6 +964,13 @@ a.check-mark:hover .check-count,button.check-mark:hover .check-count{text-decora
 .mark-pass{color:var(--pass)}.mark-caution{color:var(--caution)}.mark-fail{color:var(--fail)}
 .mark-open{color:var(--ink-3)}
 .mark-open .i>*{stroke-dasharray:2.25 2.75}
+.cov-list{list-style:none;margin:12px 0;padding:0;display:grid;gap:10px}
+.cov-row{display:grid;grid-template-columns:7.5rem 1fr;gap:4px 14px;align-items:start}
+.cov-mark{display:inline-flex;align-items:center;gap:6px;font-size:var(--t-small);font-weight:600}
+.cov-mark .i{flex:none;width:18px;height:18px}
+.cov-what{display:grid;gap:2px;color:var(--ink)}
+.cov-detail{font-size:var(--t-small);color:var(--ink-2)}
+@media (max-width:480px){.cov-row{grid-template-columns:1fr}}
 .check-mark:focus-visible{outline:3px solid var(--stitch);outline-offset:2px}
 .check-mark[data-tip]{position:relative}
 /* On focus too (a tap focuses it on a touch screen, which has no hover), as a feature's mark does. */

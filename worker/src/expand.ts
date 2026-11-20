@@ -62,14 +62,16 @@ export async function englishKeywords(text: string, deps: Deps, now: Date, timeo
   });
   if (!settings.modelEnabled) return done('model_off');
   if (!settings.apiKey) return done('no_api_key');
+  const model = deps.settings.matchModel ?? MATCH_MODEL;
   const body = requestBody({
+    model,
     instructions: EXPAND_INSTRUCTIONS,
     input: ['<request>', safeJson(text), '</request>'].join('\n'),
     schema: SCHEMA,
     maxOutputTokens: EXPAND_MAX_OUTPUT_TOKENS,
   });
   try {
-    const budget = await checkBudget(deps.db, now, estimateCostUsd(JSON.stringify(body).length, EXPAND_MAX_OUTPUT_TOKENS), settings);
+    const budget = await checkBudget(deps.db, now, estimateCostUsd(JSON.stringify(body).length, EXPAND_MAX_OUTPUT_TOKENS, model), settings);
     if (!budget.ok) return done('over_budget');
   } catch {
     return done('budget_unavailable');
@@ -84,7 +86,7 @@ export async function englishKeywords(text: string, deps: Deps, now: Date, timeo
     });
     cost = result.costUsd;
     console.log(
-      JSON.stringify({ event: 'meta_call', kind: 'keywords', model: MATCH_MODEL, ...result.usage, cost_usd: cost, latency_ms: result.latencyMs, statuses: result.statuses }),
+      JSON.stringify({ event: 'meta_call', kind: 'keywords', model, ...result.usage, cost_usd: cost, latency_ms: result.latencyMs, statuses: result.statuses }),
     );
     const keywords = parseKeywords(result.text);
     return keywords ? done('ok', cost, keywords) : done('model_bad_output', cost);

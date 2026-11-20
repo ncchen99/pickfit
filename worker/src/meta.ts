@@ -2,7 +2,7 @@
  * The Worker's model calls: Claude through the Anthropic Messages API (the
  * match call, and English keywords when the shortlist must cut, expand.ts).
  *
- * The model is fixed here, one constant with its price beside it. The file
+ * The model is fixed here, one constant with its price beside it (a bench run may name another, MODEL_PRICES). The file
  * keeps its first name, and so do the D1 table (meta_budget), the events
  * column (meta_cost_usd) and the log events (meta_call, meta_retry): until
  * 2026-11-15 these calls went to Meta's muse-spark-1.3.
@@ -12,10 +12,19 @@ export const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
 export const ANTHROPIC_VERSION = '2026-10-21';
 export const MATCH_MODEL = 'claude-opus-5-5';
 /**
- * USD per 1M tokens for MATCH_MODEL (same table as pickfit/meta.py). cacheWrite is the 5-minute prompt
- * cache, 1.25 times input. To change the model, change MATCH_MODEL and this together.
+ * USD per 1M tokens (same table as pickfit/meta.py). cacheWrite is the 5-minute prompt cache, 1.25 times input.
+ * The product always calls MATCH_MODEL; Settings.matchModel picks another model from this table only for a bench run
+ * (worker/bench/capability.ts --model-id), so a cost is never counted at the wrong price.
  */
-const PRICE = { input: 4.0, cacheRead: 0.2, cacheWrite: 5.0, output: 20.0 };
+export const MODEL_PRICES: Record<string, { input: number; cacheRead: number; cacheWrite: number; output: number }> = {
+  'claude-opus-5-5': { input: 4.0, cacheRead: 0.2, cacheWrite: 5.0, output: 20.0 },
+  'claude-sonnet-5-5': { input: 2.0, cacheRead: 0.2, cacheWrite: 2.5, output: 10.0 },
+};
+const priceOf = (model: string) => {
+  const price = MODEL_PRICES[model];
+  if (!price) throw new Error(`No price for model ${model}; add it to MODEL_PRICES`);
+  return price;
+};
 /** Thinking is always on for this model and shares the limit with the answer (a match answer is about 1,000 tokens). */
 export const MAX_OUTPUT_TOKENS = 8000;
 
@@ -97,7 +106,8 @@ export function retryAfterMs(headers: Headers, nowMs: number): number | null {
   return Number.isNaN(at) ? null : Math.max(0, at - nowMs);
 }
 
-export function costUsd(usage: Usage): number {
+export function costUsd(usage: Usage, model = MATCH_MODEL): number {
+  const PRICE = priceOf(model);
   const cached = Math.min(usage.cached_tokens, usage.input_tokens);
   const written = Math.min(usage.cache_write_tokens, usage.input_tokens - cached);
   return (
@@ -110,7 +120,8 @@ export function costUsd(usage: Usage): number {
 }
 
 /** Upper bound for one call: ~3 characters per input token, every output token used. */
-export function estimateCostUsd(requestChars: number, maxOutputTokens = MAX_OUTPUT_TOKENS): number {
+export function estimateCostUsd(requestChars: number, maxOutputTokens = MAX_OUTPUT_TOKENS, model = MATCH_MODEL): number {
+  const PRICE = priceOf(model);
   return ((requestChars / 3) * PRICE.input + maxOutputTokens * PRICE.output) / 1_000_000;
 }
 
@@ -151,11 +162,13 @@ export interface StructuredRequest {
    * the keyword call's are too short to cache.
    */
   cache?: boolean;
+  /** A model from MODEL_PRICES; MATCH_MODEL when absent (the product never sets it). */
+  model?: string;
 }
 
 export function requestBody(req: StructuredRequest): Record<string, unknown> {
   return {
-    model: MATCH_MODEL,
+    model: req.model ?? MATCH_MODEL,
     max_tokens: req.maxOutputTokens ?? MAX_OUTPUT_TOKENS,
     system: req.cache ? [{ type: 'text', text: req.instructions, cache_control: { type: 'ephemeral' } }] : req.instructions,
     messages: [{ role: 'user', content: req.input }],
@@ -229,7 +242,7 @@ async function callOnce(
   clock: () => number,
 ): Promise<ModelResult> {
   const started = clock();
-  const upperBound = () => estimateCostUsd(JSON.stringify(body).length, outputLimit(body));
+  const upperBound = () => estimateCostUsd(JSON.stringify(body).length, outputLimit(body), String(body.model ?? MATCH_MODEL));
   let response: Response;
   try {
     response = await doFetch(ANTHROPIC_URL, {
@@ -261,7 +274,7 @@ async function callOnce(
     });
   }
   const usage = readUsage(raw);
-  const cost = usage ? costUsd(usage) : upperBound();
+  const cost = usage ? costUsd(usage, String(body.model ?? MATCH_MODEL)) : upperBound();
   // stop_reason comes before content: a refusal or a cut-off answer is a 200 whose text is not an answer.
   const stop = raw?.stop_reason;
   if (stop === 'refusal') {

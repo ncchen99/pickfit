@@ -34,6 +34,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from pickfit.coverage import DIMENSIONS, compute_coverage
 from pickfit.schema import SCHEMA_VERSION, SoftwareRecord, VerificationRun, is_passed
 from pickfit.usage_guide import shown_guide
 from pickfit.userpaths import SANDBOX_HOMES, UserCommand, expected_for_user, for_user, names_workdir
@@ -320,6 +321,35 @@ def _user_guide(guide: dict[str, Any], os_name: str) -> dict[str, Any]:
     return out
 
 
+COVERAGE_GAPS_MAX = 3
+
+
+def _coverage(record: SoftwareRecord) -> dict[str, Any]:
+    """Verification Coverage (pickfit/coverage.py) for the tool page: per applicable dimension its status, the measure's
+    count (done of), what it waited for, and the categories of what pickfit could not do (at most three, never the
+    gaps' free text). A dimension that does not apply is left out. The page reads it; the matcher's cards do not."""
+    cov = compute_coverage(record)
+    dims: dict[str, Any] = {}
+    for name in DIMENSIONS:
+        dim = cov["dimensions"][name]
+        if dim["status"] == "not_applicable":
+            continue  # left out: the page says the dimension does not apply to this kind of tool
+        out: dict[str, Any] = {"status": dim["status"]}
+        measure = dim.get("measure") or {}
+        if isinstance(measure.get("done"), int) and isinstance(measure.get("of"), int):
+            out |= {"done": measure["done"], "of": measure["of"]}
+            # Each dimension counts one unit, but function counts features, or checks when there is no feature list.
+            if name == "function":
+                out["unit"] = measure.get("unit")
+        if dim.get("blocked_by"):
+            out["blocked_by"] = dim["blocked_by"]
+        categories = list(dict.fromkeys(g["category"] for g in dim["gaps"] if g.get("category")))
+        if categories:
+            out["gaps"] = categories[:COVERAGE_GAPS_MAX]
+        dims[name] = out
+    return {"version": cov["version"], "share": cov["summary"]["verified_share"], "dimensions": dims}
+
+
 def _entry(record: SoftwareRecord) -> dict[str, Any]:
     runs = {run.id: run for run in record.verification.runs}
     install: dict[str, Any] = {}
@@ -377,6 +407,7 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
         "web": _web(record),
         "visual": _visual(record),
         "security": _security(record),
+        "coverage": _coverage(record),
         "scores": {
             "quality": scores.quality.total,
             "popularity": scores.popularity.score,

@@ -19,6 +19,7 @@ import { esc, link, listOf, safeUrl } from '../ui/html.ts';
 import { icon, osMark, type IconName } from '../ui/icons.ts';
 import { age, badge, compareToggle, confidenceRow, coverage, fitz, kindTag, levelIcon, measure, osList, popover, runFacts, tape, type FitzName, type MeasureRow } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
+import { coverageSection } from '../ui/coverage.ts';
 import { captionsOf, posterOf, videoPath } from '../video.ts';
 import { NO_INSTALL_LABEL, noInstallLabel } from '../webapp.ts';
 
@@ -1097,6 +1098,7 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string, opts: 
     (ran ? progress(entry) : '') +
     (features.checked.length + features.not_checked.length ? goodFor(entry, true) : '') +
     tested(catalog, entry) +
+    coverageSection(entry.coverage) +
     `</div></div><aside class="side" aria-label="${L('At a glance', '一覽')}">` +
     `<div class="panel"><h2>${L('At a glance', '一覽')}</h2>${factSheet(entry, now)}<div class="panel-measure">` +
     tape(L('Quality', '品質'), entry.scores?.quality ?? null, { pop: 'pop-quality' }) +

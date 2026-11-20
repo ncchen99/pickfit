@@ -12,8 +12,10 @@
  *   rules    the target is among the rules-only picks
  * With --model (paid, ANTHROPIC_API_KEY): the product's real path (keyword call when
  * more than MAX_CARDS pass, then the match call) and whether the target is a pick.
+ * --model-id names the model for both calls (default claude-opus-5-5, the product's;
+ * one with a price in src/meta.ts MODEL_PRICES) and implies --model.
  *
- *   node bench/capability.ts <index.json> <queries.json> [--lang en|zh|both] [--category] [--model] [--limit N] [--cap USD] [--out picks.json] [--show]
+ *   node bench/capability.ts <index.json> <queries.json> [--lang en|zh|both] [--category] [--model] [--model-id ID] [--limit N] [--cap USD] [--out picks.json] [--show]
  *
  * --category passes the target's category, as a client that knows it would;
  * without it the request runs over the whole catalog.
@@ -25,6 +27,7 @@ import { hardFilter, type Conditions } from '../src/filter.ts';
 import { queryTerms, rulesTerms, terms } from '../src/relevance.ts';
 import { findSoftware } from '../src/find.ts';
 import { harness, makeD1, SETTINGS } from '../test/helpers.ts';
+import { modelArg } from './model-arg.ts';
 
 interface Query {
   id: string;
@@ -44,9 +47,10 @@ interface Query {
 const args = process.argv.slice(2);
 const flag = (name: string) => args.includes(name);
 const opt = (name: string) => (args.includes(name) ? args[args.indexOf(name) + 1] : undefined);
-const [indexPath, queriesPath] = args.filter((a, i) => !a.startsWith('--') && !['--lang', '--limit', '--cap', '--out'].includes(args[i - 1]));
+const [indexPath, queriesPath] = args.filter((a, i) => !a.startsWith('--') && !['--lang', '--limit', '--cap', '--out', '--model-id'].includes(args[i - 1]));
 const langs = (opt('--lang') ?? 'both') === 'both' ? ['en', 'zh'] : [opt('--lang')!];
-const useModel = flag('--model');
+const modelId = modelArg(args);
+const useModel = flag('--model') || flag('--model-id');
 const show = flag('--show');
 const capUsd = Number(opt('--cap') ?? 15);
 
@@ -74,7 +78,7 @@ const paid = useModel ? makeD1() : null;
 const modelDeps = paid && {
   catalog,
   db: paid.db,
-  settings: { ...SETTINGS, apiKey: apiKey!, dailyCapUsd: capUsd, totalCapUsd: capUsd, timeoutMs: 60_000 }, // this run's own stop
+  settings: { ...SETTINGS, apiKey: apiKey!, dailyCapUsd: capUsd, totalCapUsd: capUsd, timeoutMs: 60_000, matchModel: modelId }, // this run's own stop
   now: () => new Date(),
   waitUntil: () => {},
 };
@@ -133,7 +137,7 @@ const rate = (xs: (boolean | null)[]) => {
   const ys = xs.filter((x): x is boolean => x !== null);
   return ys.length ? `${ys.filter(Boolean).length}/${ys.length} (${Math.round((100 * ys.filter(Boolean).length) / ys.length)}%)` : '-';
 };
-const summary: Record<string, unknown> = { queries: queries.length, tools: new Set(queries.map((q) => q.slug)).size, category: flag('--category') };
+const summary: Record<string, unknown> = { queries: queries.length, tools: new Set(queries.map((q) => q.slug)).size, category: flag('--category'), ...(useModel ? { model_id: modelId } : {}) };
 for (const lang of langs) {
   const r = rows.filter((x) => x.lang === lang);
   summary[lang] = {

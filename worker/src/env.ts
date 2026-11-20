@@ -53,6 +53,8 @@ export interface Settings {
   tools: ToolSet;
   /** KEYWORDS_ENGLISH: skip the keyword call for an English request; absent = call it. */
   skipEnglishKeywords?: boolean;
+  /** A bench run's model (worker/bench/capability.ts --model-id); never read from Env, so the product stays on MATCH_MODEL. */
+  matchModel?: string;
 }
 
 function number(value: string | undefined, fallback: number): number {
