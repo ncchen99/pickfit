@@ -202,14 +202,28 @@ class ScalewayProvider(Provider):
         return [t for t in self.types if stock.get(t) in ("available", "low_stock")]
 
     def ensure_key(self, public_key: str, name: str) -> None:
-        """Scaleway puts the project's SSH keys on a new Mac; add ours once."""
+        """Scaleway puts the project's SSH keys on a new Mac; add ours once.
+
+        An API key with Apple silicon rights only (the watch's own IAM application) may not list or add SSH keys
+        (11/20: `insufficient permissions: list ssh_key`). Then the key is taken as one already in the project, as
+        the watch's --mac-key names it, and the rental goes on; a key that is not there shows when SSH to the new
+        Mac fails, not here."""
         mine = " ".join(public_key.split()[:2])
-        for entry in self._iam("ssh-key", "list") or []:
+        try:
+            entries = self._iam("ssh-key", "list") or []
+        except BoxError as err:
+            if "insufficient permissions" not in str(err):
+                raise
+            getattr(self, "_log", print)("scw: this API key may not list the project's SSH keys; using the key as one already in the "
+                "project (the watch's --mac-key)")
+            return
+        for entry in entries:
             if " ".join(str(entry.get("public_key", "")).split()[:2]) == mine:
                 return
         self._iam("ssh-key", "create", f"name={name}", f"public-key={public_key.strip()}")
 
     def create(self, name: str, macos: int, public_key: str, log: Callable[[str], None]) -> HostRecord:
+        self._log = log
         self.ensure_key(public_key, f"pickfit-{name}")
         os_id = self.os_id(macos)
         types = self.in_stock()

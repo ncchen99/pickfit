@@ -498,3 +498,12 @@ def test_the_services_watch_command_parses() -> None:
     # Renting a Mac is a choice someone makes: 念誠 made it on 11/19 ("open one when it is needed"), so the service
     # rents when a macOS batch is due and does the root step itself.
     assert args.mac_rent and args.mac_root_from_provider
+
+
+def test_the_watch_names_the_key_a_rented_mac_is_reached_with(monkeypatch: pytest.MonkeyPatch) -> None:
+    from pickfit.cli import _watch_lanes
+
+    monkeypatch.delenv("PICKFIT_MAC_KEY", raising=False)
+    assert _watch_lanes(parse(["watch", "--mac-rent"]), ("macos",))["macos"].key is None  # mac_host's default
+    lanes = _watch_lanes(parse(["watch", "--mac-rent", "--mac-key", "/keys/scaleway-mac"]), ("macos",))
+    assert lanes["macos"].key == Path("/keys/scaleway-mac")

@@ -554,6 +554,24 @@ def test_ready_records_become_listed_once_the_live_worker_serves_them(env: dict[
     assert saved["result"] == "listed" and saved["seconds_to_listed"] == 400.0
 
 
+def test_a_record_that_does_not_load_is_named_instead_of_holding_listing_silently(env: dict[str, Any]) -> None:
+    from pickfit.index import load_records
+
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    live = {"sha": "an older deploy"}
+    [job] = make(env, Pipeline(env["tmp"]), live_sha=lambda: live["sha"]).run(once=True)
+    live["sha"] = load_records(env["data"])[1]
+    broken = env["data"] / "zz-broken.json"
+    broken.write_text(json.dumps({**EXAMPLE, "slug": "zz-broken", "repo_id": "gh:99", "unknown_field": 1}))
+    lines: list[str] = []
+    w = make(env, Pipeline(env["tmp"]), live_sha=lambda: live["sha"], lines=lines)
+    assert w._mark_deployed() == [] and w._mark_deployed() == []
+    said = [line for line in lines if "cannot be marked listed" in line]
+    assert len(said) == 1 and "zz-broken" in said[0]  # once, naming the record
+    broken.unlink()
+    assert w._mark_deployed() == ["sub_1"]
+
+
 def test_publish_lists_earlier_ready_records_too(env: dict[str, Any]) -> None:
     from pickfit.index import load_records
 
