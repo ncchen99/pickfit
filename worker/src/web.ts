@@ -103,8 +103,9 @@ export function toFindArgs(form: FormValues): Record<string, unknown> {
  * What makes two searches the same one: the need with its case and spacing evened out, and every condition the form
  * sends to find_software. A condition left out here would let a search reuse an answer made without it.
  */
-export function searchKey(form: FormValues): string {
-  return JSON.stringify([form.need.toLowerCase().replace(/\s+/g, ' '), form.os, form.arch, form.free_only, form.offline, form.private]);
+export function searchKey(form: FormValues, lang: Lang = 'en'): string {
+  // The language too: a zh-TW page asks the model to write its sentences in Chinese.
+  return JSON.stringify([form.need.toLowerCase().replace(/\s+/g, ' '), form.os, form.arch, form.free_only, form.offline, form.private, lang]);
 }
 
 /** The rate limiter's subject: an IPv4 address, or an IPv6 address's /64 (one household or host can hold all of it). */
@@ -327,7 +328,7 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
     }
 
     const t = now().getTime();
-    const key = await sha256(searchKey(form));
+    const key = await sha256(searchKey(form, lang));
     for (;;) {
       const hit = cache.get(key);
       if (hit && t - hit.at < CACHE_TTL_MS) {
@@ -384,7 +385,7 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
       }
       inFlight++;
       try {
-        searched = await run(parsed.data, form, env, ctx);
+        searched = await run(lang === 'zh-TW' ? { ...parsed.data, answer_language: 'zh-TW' } : parsed.data, form, env, ctx);
       } finally {
         inFlight--;
       }

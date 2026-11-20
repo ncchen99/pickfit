@@ -120,7 +120,7 @@ export const script = () => `
       busy = true;
       go.disabled = true;
       go.setAttribute('aria-busy', 'true');
-      label.textContent = ${J('Measuring', '量身中')};
+      label.textContent = ${J('Measuring', '比對中')};
       status.textContent = ${J('Searching', '搜尋中')};
       out.setAttribute('aria-busy', 'true');
       out.replaceChildren($('#loading').content.cloneNode(true));

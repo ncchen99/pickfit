@@ -33,7 +33,7 @@ What usually matters per category:
 - media_files (media download and conversion, image compression, PDF tools, file transfer): the formats it handles, extra programs it needs (system_packages, runtimes), whether files are processed on the person's machine (processing).
 - web app (no_install true): opens in a browser. It works offline only if works_offline is "verified", and keeps typed data on the device only if data_sent is "none"; also account_needed, ads_seen.
 
-Write every text field in plain, specific English without marketing words.`;
+Write every text field in plain, specific words without marketing words, in English. When <request> has answer_language, write fit, claim, tradeoffs, vs_well_known, best_free_reason, no_install_option, well_known_why, clarifying_question and keep_current.reason in that language instead (zh-TW: Traditional Chinese as written in Taiwan; keep tool names, commands and file formats as they are). Every value still copies the card exactly, and need stays in English.`;
 
 /** find_alternatives: appended to MATCH_INSTRUCTIONS, which stays as it is for find_software. */
 export const ALTERNATIVES_RULES = `

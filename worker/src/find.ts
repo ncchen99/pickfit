@@ -39,9 +39,13 @@ import { dropNegated, queryTerms, rulesRelevance, rulesTerms, termsAsSaid } from
 import { leansInstall, rankByRules, templateReasons } from './rules.ts';
 import { webAppOut, webRanSentence, type WebAppOut } from './webapp.ts';
 
+/** The language the web page asks the model to write its sentences in; MCP answers stay English. */
+export type AnswerLanguage = 'zh-TW';
+
 export interface FindInput extends Conditions {
   need: string;
   ui_language?: string;
+  answer_language?: AnswerLanguage;
   limit?: number;
 }
 
@@ -635,7 +639,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   return { output, keepCurrent: choice.keepCurrent };
 }
 
-function sharedRequest(input: Conditions & { ui_language?: string }) {
+function sharedRequest(input: Conditions & { ui_language?: string; answer_language?: AnswerLanguage }) {
   return {
     category: input.category ?? 'any',
     os: input.os ?? null,
@@ -646,6 +650,8 @@ function sharedRequest(input: Conditions & { ui_language?: string }) {
     ...(input.offline !== undefined ? { offline: input.offline } : {}),
     ...(input.data_stays_local !== undefined ? { data_stays_local: input.data_stays_local } : {}),
     ui_language: input.ui_language ?? null,
+    // Only when the page asks, so an MCP request reads as before.
+    ...(input.answer_language ? { answer_language: input.answer_language } : {}),
   };
 }
 

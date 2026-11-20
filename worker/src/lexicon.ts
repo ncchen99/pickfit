@@ -76,6 +76,17 @@ export const ZH_EN: Record<string, string> = {
   影片: 'video', 视频: 'video', 視訊: 'video', 音訊: 'audio', 音频: 'audio', 音樂: 'music audio', 字幕: 'subtitle subtitles',
   截圖: 'screenshot', 生成: 'generate generation', 產生: 'generate', 光學辨識: 'ocr', 文字辨識: 'ocr',
   費用: 'cost', 花費: 'cost spending', 成本: 'cost', 額度: 'quota limit', 工作流: 'workflow',
+  // added 11/20 (product audit): words the home page's zh examples and everyday requests use that had no entry
+  剪輯: 'edit video editing cut', 剪接: 'edit video editing cut', 錄影: 'record recording video', 錄螢幕: 'screen recording record screen',
+  螢幕錄影: 'screen recording', 螢幕: 'screen display', 屏幕: 'screen', 簡報: 'slides presentation', 投影片: 'slides presentation',
+  浮水印: 'watermark', 水印: 'watermark', 縮圖: 'thumbnail resize', 縮放: 'resize scale', 去背: 'remove background',
+  轉碼: 'transcode convert', 心智圖: 'mind map', 思維導圖: 'mind map', 流程圖: 'diagram flowchart', 電子書: 'ebook epub',
+  播放器: 'player', 播放: 'play player', 直播: 'live stream streaming', 串流: 'stream streaming', 會議: 'meeting',
+  雲端: 'cloud', 自架: 'self-hosted self-host', 自建: 'self-hosted', 記帳: 'expense budget finance', 地圖: 'map',
+  檢查: 'check audit inspect', 稽核: 'audit', 釋放: 'release kill', 佔用: 'in use holds occupied', 占用: 'in use holds occupied',
+  關掉: 'stop kill', 關閉: 'stop close kill', 結束: 'kill stop end', 程式碼庫: 'codebase repository', 倉庫: 'repository repo',
+  結構: 'structure map', 權杖: 'token', 危險: 'risky dangerous', 風險: 'risk risky', 訪談: 'interview',
+  合併檔案: 'merge files', 分割: 'split', 合成: 'merge combine', 標註: 'annotate annotation', 簽名: 'sign signature',
 };
 
 /**

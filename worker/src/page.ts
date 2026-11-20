@@ -993,7 +993,7 @@ export const EXAMPLES: [string, string][] = [
 const EXAMPLES_ZH: [string, string][] = [
   ['離線把錄音轉成字幕', '把一整個資料夾的訪談錄音離線轉成字幕'],
   ['檢查我的 MCP 設定', '安裝 MCP 伺服器前，先檢查我的 MCP 設定有沒有危險權限'],
-  ['給 agent 的程式碼地圖', '一個 MCP 伺服器，讓我的 coding agent 看懂整個程式碼庫的結構'],
+  ['給 agent 的程式碼地圖', '一個 MCP 伺服器，讓我的程式設計 agent 看懂整個程式碼庫的結構'],
   ['釋放連接埠 3000', '找出佔用連接埠 3000 的程序並關掉它'],
 ];
 const examples = (): [string, string][] => (isZh() ? EXAMPLES_ZH : EXAMPLES);
@@ -1028,7 +1028,7 @@ export function searchForm(form: FormValues): string {
     `<select class="select" name="arch" data-dropdown aria-label="${L('CPU architecture', 'CPU 架構')}">${arch}</select>` +
     `<label class="chip"><input type="checkbox" name="free_only" value="1"${form.free_only ? ' checked' : ''}>${icon('leaf')}${L('Free', '免費')}</label>` +
     `<label class="chip"><input type="checkbox" name="offline" value="1"${form.offline ? ' checked' : ''}>${icon('wifi-off')}${L('Offline', '不需網路')}</label>` +
-    `<label class="chip"><input type="checkbox" name="private" value="1"${form.private ? ' checked' : ''}>${icon('laptop')}${L('Data stays local', '資料在本地')}</label></div>` +
+    `<label class="chip"><input type="checkbox" name="private" value="1"${form.private ? ' checked' : ''}>${icon('laptop')}${L('Data stays local', '資料留在本機')}</label></div>` +
     `<div class="ask-go"><span class="counter" data-counter aria-live="polite"></span>` +
     `<button type="submit" class="btn btn-primary go"><span class="btn-label">${L('Find tools', '幫我挑')}</span>${icon('arrow-right')}</button></div>` +
     `</div></form>`

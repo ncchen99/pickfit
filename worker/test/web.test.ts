@@ -301,6 +301,8 @@ test('the search key holds every condition the form sends to find_software', () 
   for (const change of [{ os: 'linux' }, { arch: 'arm64' }, { free_only: true }, { offline: true }, { private: true }] as Partial<FormValues>[]) {
     assert.notEqual(searchKey(base), searchKey({ ...base, ...change }), JSON.stringify(change));
   }
+  // And the page's language: a zh-TW search gets its sentences in Chinese.
+  assert.notEqual(searchKey(base, 'en'), searchKey(base, 'zh-TW'));
 });
 
 test('rules reasons read in zh-TW, including what the docs say it can do', () => {
