@@ -1,0 +1,1435 @@
+{
+  "schema_version": "software.v1",
+  "slug": "hl",
+  "repo_id": "gh:284906876",
+  "name": "hl",
+  "summary": "A command-line log viewer and processor that converts JSON and logfmt logs into human-readable output with filtering and sorting.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "data_db",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "command-line-tool",
+    "hl",
+    "human",
+    "json",
+    "json-log",
+    "json-logging",
+    "json-logs",
+    "log",
+    "log-viewer"
+  ],
+  "use_cases": [
+    "view JSON or logfmt log files in readable form",
+    "show only error-level log messages",
+    "merge and sort multiple log files chronologically",
+    "follow live kubectl logs from multiple apps"
+  ],
+  "alternatives_to": [
+    "humanlog",
+    "fblog"
+  ],
+  "features": [
+    "filter log records by field values",
+    "filter logs by level",
+    "filter logs by timestamp range",
+    "sort messages chronologically with indexing",
+    "live follow mode across multiple sources",
+    "complex queries with AND/OR conditions"
+  ],
+  "capabilities": [
+    {
+      "label": "Convert JSON and logfmt logs to readable output",
+      "items": [
+        "json",
+        "logfmt"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Read compressed log files",
+      "items": [
+        "bzip2",
+        "gzip",
+        "xz",
+        "zstd"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Concatenate multiple log files",
+      "area": "input"
+    },
+    {
+      "label": "Filter records by field values",
+      "area": "filtering"
+    },
+    {
+      "label": "Run complex queries with AND/OR logic",
+      "area": "filtering"
+    },
+    {
+      "label": "Match fields with regular expressions",
+      "area": "filtering"
+    },
+    {
+      "label": "Sort messages chronologically across files",
+      "area": "sorting"
+    },
+    {
+      "label": "Follow live streams sorted by time",
+      "area": "streaming"
+    },
+    {
+      "label": "Stream logs without pager",
+      "area": "streaming"
+    },
+    {
+      "label": "Open output in a pager automatically",
+      "area": "output"
+    },
+    {
+      "label": "Hide or reveal specific fields",
+      "area": "output"
+    },
+    {
+      "label": "Hide empty fields",
+      "area": "output"
+    },
+    {
+      "label": "Control multi-line field expansion",
+      "items": [
+        "never",
+        "inline",
+        "auto",
+        "always"
+      ],
+      "area": "output"
+    },
+    {
+      "label": "Display timestamps in chosen time zone",
+      "area": "output"
+    },
+    {
+      "label": "Custom time format",
+      "area": "output"
+    },
+    {
+      "label": "Output raw source entries",
+      "area": "output"
+    },
+    {
+      "label": "Write output to a file",
+      "area": "output"
+    },
+    {
+      "label": "Handle non-JSON prefixes in logs",
+      "area": "input"
+    },
+    {
+      "label": "Switch and customize color themes",
+      "area": "themes"
+    },
+    {
+      "label": "Apply theme overlays",
+      "area": "themes"
+    },
+    {
+      "label": "List available themes",
+      "area": "themes"
+    },
+    {
+      "label": "Configure via YAML, TOML or JSON files",
+      "items": [
+        "yaml",
+        "toml",
+        "json"
+      ],
+      "area": "configuration"
+    },
+    {
+      "label": "Generate shell completion scripts",
+      "items": [
+        "bash",
+        "elvish",
+        "fish",
+        "powershell",
+        "zsh"
+      ],
+      "area": "shell"
+    },
+    {
+      "label": "Print man page",
+      "area": "shell"
+    }
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/pamburus/hl",
+    "full_name": "pamburus/hl",
+    "created_at": "2020-08-04T07:19:46Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "linux",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "binary",
+      "steps": [
+        {
+          "command": "curl -sSfL https://github.com/pamburus/hl/releases/latest/download/hl-macos.tar.gz | tar xz",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "hl --list-themes"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-hl-20261121-051803-6faa",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin && cd ~/.local/bin && curl -sSfL https://github.com/pamburus/hl/releases/latest/download/hl-linux-x86_64-musl.tar.gz | tar xz",
+          "purpose": "Download the musl release tarball and extract it into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "hl --version",
+        "expected_signal": "hl 0.36.5"
+      },
+      "first_task": "hl -P example.log --filter component=tsdb"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "other",
+      "steps": [
+        {
+          "command": "scoop install hl",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "hl --list-themes"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v0.36.5",
+    "published_at": "2026-10-21T21:26:22Z",
+    "url": "https://github.com/pamburus/hl/releases/tag/v0.36.5"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-21T05:18:50.095831+08:00",
+    "runs": [
+      {
+        "id": "verify-hl-20261121-051803-6faa",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:01363ad5a469",
+        "checked_at": "2026-11-21T05:18:50.095831+08:00",
+        "tool_version": "hl 0.36.5",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin && cd ~/.local/bin && curl -sSfL https://github.com/pamburus/hl/releases/latest/download/hl-linux-x86_64-musl.tar.gz | tar xz",
+            "purpose": "Download the musl release tarball and extract it into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "hl --version",
+            "expected_signal": "hl 0.36.5",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "hl 0.36.5",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "hl -P example.log --filter component=tsdb",
+            "expected_signal": "[ERR] first by time › component=tsdb",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2024-01-01 10:00:01.000 [ERR] first by time › component=tsdb",
+            "setup": [
+              {
+                "command": "cat > /home/sbx/work/example.log <<'EOF'\n{\"ts\":\"2024-01-01T10:00:05Z\",\"level\":\"info\",\"msg\":\"third by time\",\"component\":\"api\"}\n{\"ts\":\"2024-01-01T10:00:01Z\",\"level\":\"error\",\"msg\":\"first by time\",\"component\":\"tsdb\"}\n{\"ts\":\"2024-01-02T12:00:00Z\",\"level\":\"warning\",\"msg\":\"next day message\",\"component\":\"api\"}\n{\"ts\":\"2024-01-01T10:00:03Z\",\"level\":\"debug\",\"msg\":\"second by time\",\"component\":\"tsdb\"}\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "hl -P -l w example.log",
+            "expected_signal": "[WRN] next day message › component=api",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2024-01-02 12:00:00.000 [WRN] next day message › component=api",
+            "setup": [
+              {
+                "command": "cat > /home/sbx/work/example.log <<'EOF'\n{\"ts\":\"2024-01-01T10:00:05Z\",\"level\":\"info\",\"msg\":\"third by time\",\"component\":\"api\"}\n{\"ts\":\"2024-01-01T10:00:01Z\",\"level\":\"error\",\"msg\":\"first by time\",\"component\":\"tsdb\"}\n{\"ts\":\"2024-01-02T12:00:00Z\",\"level\":\"warning\",\"msg\":\"next day message\",\"component\":\"api\"}\n{\"ts\":\"2024-01-01T10:00:03Z\",\"level\":\"debug\",\"msg\":\"second by time\",\"component\":\"tsdb\"}\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "hl -P --since 2024-01-01T10:00:02Z --until 2024-01-01T23:00:00Z example.log",
+            "expected_signal": "[INF] third by time › component=api",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2024-01-01 10:00:05.000 [INF] third by time › component=api",
+            "setup": [
+              {
+                "command": "cat > /home/sbx/work/example.log <<'EOF'\n{\"ts\":\"2024-01-01T10:00:05Z\",\"level\":\"info\",\"msg\":\"third by time\",\"component\":\"api\"}\n{\"ts\":\"2024-01-01T10:00:01Z\",\"level\":\"error\",\"msg\":\"first by time\",\"component\":\"tsdb\"}\n{\"ts\":\"2024-01-02T12:00:00Z\",\"level\":\"warning\",\"msg\":\"next day message\",\"component\":\"api\"}\n{\"ts\":\"2024-01-01T10:00:03Z\",\"level\":\"debug\",\"msg\":\"second by time\",\"component\":\"tsdb\"}\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "hl -P -s example.log",
+            "expected_signal": "2024-01-01 10:00:01.000 [ERR] first by time › component=tsdb 2024-01-01 10:00:03.000 [DBG] second by time",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "2024-01-02 12:00:00.000 [WRN] next day message › component=api",
+            "setup": [
+              {
+                "command": "cat > /home/sbx/work/example.log <<'EOF'\n{\"ts\":\"2024-01-01T10:00:05Z\",\"level\":\"info\",\"msg\":\"third by time\",\"component\":\"api\"}\n{\"ts\":\"2024-01-01T10:00:01Z\",\"level\":\"error\",\"msg\":\"first by time\",\"component\":\"tsdb\"}\n{\"ts\":\"2024-01-02T12:00:00Z\",\"level\":\"warning\",\"msg\":\"next day message\",\"component\":\"api\"}\n{\"ts\":\"2024-01-01T10:00:03Z\",\"level\":\"debug\",\"msg\":\"second by time\",\"component\":\"tsdb\"}\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl -sSfL .../hl-linux-x86_64-musl.tar.gz | tar xz (extracts into the current directory)",
+            "actually_needed": "Extract it into a directory on PATH (here ~/.local/bin) so that `hl` runs as a command",
+            "kind": "note"
+          },
+          {
+            "readme_said": "hl example.log opens the less pager automatically",
+            "actually_needed": "Pass -P to turn off the pager and get plain output when nothing is attached to a terminal",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks produced their expected signals: the field filter showed only tsdb lines, the level filter showed warning-and-above lines, and the version printed as hl 0.36.5.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-hl-20261121-051803-6faa/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-hl-20261121-051803-6faa/check-1-cmd4.judged.png",
+            "runs/verify/verify-hl-20261121-051803-6faa/check-2-cmd5.judged.png",
+            "runs/verify/verify-hl-20261121-051803-6faa/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.145799,
+        "features": [
+          {
+            "feature": "filter log records by field values",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "filter logs by level",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "filter logs by timestamp range",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "sort messages chronologically with indexing",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "live follow mode across multiple sources",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          },
+          {
+            "feature": "complex queries with AND/OR conditions",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v2",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [
+      "github.com/pamburus/hl@3aae7bc70c65",
+      "Cargo.lock"
+    ],
+    "packages_checked": 371,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-21T05:18:56+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "3aae7bc70c6519110cd579ac70479fbc2989c88b",
+      "run_id": "verify-hl-20261121-051803-6faa",
+      "tool_version": "hl 0.36.5",
+      "artifact_sha256": [
+        "7b9afdb665b3204ac8a458412b06c41434ebdc2f751b467b799294a9e1eb7d5f"
+      ],
+      "packages": {
+        "crates": 371
+      },
+      "scopes": {
+        "runtime": 279,
+        "build": 47,
+        "dev": 45
+      },
+      "advisories_fetched_at": "2026-11-21T05:18:56+08:00",
+      "kev_catalog": "2026.11.20",
+      "epss_date": "2026-11-21",
+      "findings_total": 3,
+      "details": "security/hl.json",
+      "details_sha256": "1d70b488c97a2486c0b258a71f5b1f1e35cb34b25afb27d609f2c609e648fe49"
+    },
+    "assessment": {
+      "level": "none",
+      "policy_version": "sec.v2",
+      "reasons": [],
+      "counts": {},
+      "uncounted": 3,
+      "assessed_at": "2026-11-21T05:18:56+08:00"
+    },
+    "coverage": {
+      "state": "partial",
+      "target": "repo_lockfile",
+      "packages_found": 375,
+      "packages_checked": 371,
+      "components": [
+        {
+          "ecosystem": "crates",
+          "component": "Cargo.lock",
+          "status": "scanned",
+          "packages": 371,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "requirements.txt",
+          "status": "not_scanned",
+          "packages": 4,
+          "gaps": [
+            "lockfile.missing"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "code": "lockfile.missing",
+          "category": "lockfile_missing",
+          "ecosystem": "pypi",
+          "component": "requirements.txt",
+          "detail": "requirements without pinned versions",
+          "capability": "lockfile_from_manifest:pypi",
+          "found": 4,
+          "first_seen": "2026-11-21",
+          "last_seen": "2026-11-21"
+        }
+      ]
+    }
+  },
+  "scores": {
+    "formula_version": "b3.v7",
+    "computed_at": "2026-11-21T05:18:56+08:00",
+    "quality": {
+      "total": 90.2,
+      "raw_total": 90.2,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.6875,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      },
+      "security": {
+        "level": "none",
+        "basis": "assessment",
+        "effect": "none",
+        "deduction": 0.0
+      }
+    },
+    "popularity": {
+      "score": 92.4,
+      "signals": {
+        "stars": 3336,
+        "monthly_downloads": 283,
+        "forks": 69,
+        "dependents": null,
+        "release_downloads": 26742,
+        "hn_top_score": 4,
+        "registries_count": 1
+      },
+      "age_days": 2299,
+      "packages": [
+        "homebrew:hl"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.86
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:18:50.107582+08:00",
+      "sources_sha": "7b491b2e43a8c77cf6044a4bfac88173da8199897e8f275020abb59f94cd121b",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "High-performance log viewer and processor that transforms logs in JSON and logfmt formats into a human-readable output."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "it enables quick parsing and analysis of large log files with minimal overhead."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "Currently, `hl` does not provide a built-in pager and relies on external pagers such as [less](https://www.greenwoodsoftware.com/less/)."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "brew install hl"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "hl example.log"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "The path to the configuration file can be overridden using the `HL_CONFIG` environment variable or the `--config` command-line option."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "Just make sure you do not have any other conflicting installations by running `where less` in cmd or `Get-Command less` in powershell."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "| Windows | %PROGRAMDATA%\\hl\\config.{yaml,toml,json} | %USERPROFILE%\\AppData\\Roaming\\hl\\config.{yaml,toml,json} |"
+        }
+      },
+      "unquoted": [],
+      "input_sha": "afa55e6f28b1a752c8f9b66c535d2f3f42731d26beb48211b07be34360012ed4",
+      "prompt_version": "rubric-p1",
+      "renderer_version": "r1",
+      "grader": "anthropic"
+    },
+    "inputs": {
+      "version": "inputs.v1",
+      "github": {
+        "source": "pipeline_db",
+        "fetched_at": "2026-11-21T05:17:42+08:00",
+        "stars": 3336,
+        "forks": 69,
+        "open_issues": 57,
+        "created_at": "2020-08-04T07:19:46Z",
+        "pushed_at": "2026-11-20T18:14:59Z",
+        "releases": [
+          {
+            "tag": "v0.36.5",
+            "published_at": "2026-10-21T21:26:22Z",
+            "prerelease": false,
+            "notes_chars": 679,
+            "downloads": 2673
+          },
+          {
+            "tag": "v0.36.4",
+            "published_at": "2026-10-19T22:24:23Z",
+            "prerelease": false,
+            "notes_chars": 2905,
+            "downloads": 480
+          },
+          {
+            "tag": "v0.36.3",
+            "published_at": "2026-06-12T22:01:25Z",
+            "prerelease": false,
+            "notes_chars": 1048,
+            "downloads": 14011
+          },
+          {
+            "tag": "v0.36.2",
+            "published_at": "2026-05-18T19:47:11Z",
+            "prerelease": false,
+            "notes_chars": 1395,
+            "downloads": 1677
+          },
+          {
+            "tag": "v0.36.1",
+            "published_at": "2026-04-11T11:00:50Z",
+            "prerelease": false,
+            "notes_chars": 1599,
+            "downloads": 2842
+          },
+          {
+            "tag": "v0.36.0",
+            "published_at": "2026-02-28T18:56:30Z",
+            "prerelease": false,
+            "notes_chars": 2688,
+            "downloads": 1441
+          },
+          {
+            "tag": "v0.35.4",
+            "published_at": "2026-02-27T08:20:56Z",
+            "prerelease": false,
+            "notes_chars": 162,
+            "downloads": 238
+          },
+          {
+            "tag": "v0.35.3",
+            "published_at": "2026-01-24T01:11:09Z",
+            "prerelease": false,
+            "notes_chars": 1411,
+            "downloads": 1685
+          },
+          {
+            "tag": "v0.35.2",
+            "published_at": "2026-01-13T01:15:13Z",
+            "prerelease": false,
+            "notes_chars": 151,
+            "downloads": 1498
+          },
+          {
+            "tag": "v0.35.1",
+            "published_at": "2026-01-11T21:02:43Z",
+            "prerelease": false,
+            "notes_chars": 387,
+            "downloads": 197
+          }
+        ],
+        "contributors": null,
+        "files": {
+          "count": 469,
+          "truncated": false,
+          "ci": ".github/workflows/auto-merge-dependabot.yml",
+          "tests": "benches/go/ts_parse_test.go",
+          "changelog": null,
+          "lockfile": "Cargo.lock"
+        }
+      },
+      "issues": {
+        "source": "github_live",
+        "fetched_at": "2026-11-21T05:18:50+08:00",
+        "items": [
+          {
+            "created_at": "2026-11-20T17:56:42Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T00:09:40Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T00:09:39Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-16T19:57:36Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-15T20:38:14Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-15T15:39:29Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-15T13:25:14Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-15T13:02:16Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-15T13:02:14Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-15T12:48:40Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-15T09:20:27Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-15T09:10:22Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-15T08:57:40Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-15T08:50:57Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-15T08:50:55Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-13T21:55:40Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-13T20:24:09Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-13T19:47:04Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-13T19:15:20Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-13T08:21:25Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-13T07:45:20Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-13T07:45:08Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-12T23:00:01Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-12T22:28:40Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-25T22:23:15Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-25T22:14:01Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-25T22:13:59Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-25T22:13:57Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-25T21:25:24Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-25T14:21:07Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-25T13:30:18Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-25T08:59:52Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-25T08:32:32Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-24T19:51:13Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-24T19:08:28Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-24T19:00:14Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-24T17:25:00Z",
+            "closed_at": null,
+            "association": "OWNER",
+            "bot": false
+          }
+        ],
+        "pull_requests": 63,
+        "page_full": true
+      }
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/pamburus/hl",
+      "fetched_at": "2026-11-21T05:17:44+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/pamburus/hl/blob/master/README.md",
+      "fetched_at": "2026-11-21T05:17:42+08:00"
+    },
+    {
+      "id": "release:v0.36.5",
+      "kind": "release",
+      "url": "https://github.com/pamburus/hl/releases/tag/v0.36.5",
+      "fetched_at": "2026-11-21T05:17:42+08:00"
+    },
+    {
+      "id": "help:verify-hl-20261121-051803-6faa:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-21T05:19:25+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Usage: hl [OPTIONS] [FILE]...",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "Usage: hl [OPTIONS] [FILE]...",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "converts JSON logs or logfmt logs into a clear human-readable format",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "High-performance log viewer and processor that transforms logs in JSON and logfmt formats into a human-readable output.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "# hl",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "| Windows | %PROGRAMDATA%\\hl\\config.{yaml,toml,json} | %USERPROFILE%\\AppData\\Roaming\\hl\\config.{yaml,toml,json} |",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T05:17:44+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T05:17:44+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-21T05:17:44+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T05:17:44+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v0.36.5",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T05:17:42+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "hl example.log",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Displays only error log level messages.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Displays log messages from all log files in the current directory sorted in chronological order.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "hl --sync-interval-ms 500 -F <(kubectl logs -l app=my-app-1 -f) <(kubectl logs -l app=my-app-2 -f)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "Performance comparison with [humanlog](https://github.com/humanlogio/humanlog)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/alternatives_to/1",
+      "source_id": "readme",
+      "quote": "[fblog](https://github.com/brocode/fblog)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Filter log records by key/value pairs using the `-f` option, with support for hierarchical keys.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Easily filter logs by level with the `-l` option.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Filter logs by timestamp range using the `--since` and `--until` options",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Achieve lightning-fast message sorting with automatic indexing via the `-s` flag.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/features/4",
+      "source_id": "readme",
+      "quote": "Use the `-F` flag for live, timestamp-sorted message updates across multiple sources",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/features/5",
+      "source_id": "readme",
+      "quote": "Construct custom queries with logical conditions (AND/OR) and additional advanced filtering options.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "curl -sSfL https://github.com/pamburus/hl/releases/latest/download/hl-macos.tar.gz | tar xz",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl -sSfL https://github.com/pamburus/hl/releases/latest/download/hl-linux-x86_64-musl.tar.gz | tar xz",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "scoop install hl",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Efficiently handles hundreds of local files totaling hundreds of gigabytes.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:17:56+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "JSON and logfmt log converter to human readable representation",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "Support for compressed (bzip2, gzip, xz, zstd) log files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "Concatenates and displays all `*.log` files found in the current directory.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "Filter log records by key/value pairs using the `-f` option, with support for hierarchical keys.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "Construct custom queries with logical conditions (AND/OR) and additional advanced filtering options.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "Regular expression match - (`match`, `~~=`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "Displays log messages from all log files in the current directory sorted in chronological order.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Use the `-F` flag for live, timestamp-sorted message updates across multiple sources",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Enable log streaming with the `-P` flag, which disables the pager.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Automatically integrates with a pager for enhanced convenience, defaulting to [less]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "Quickly hide or reveal specific fields using the `-h` option.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "Automatically hide empty fields with the `-e` flag.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "Control multi-line field and message formatting with the `-x` option",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "allowing effortless timezone switching with the `-Z` option or local timezone adjustments using the `-L` flag",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "help:verify-hl-20261121-051803-6faa:1",
+      "quote": "Time format, see https://man7.org/linux/man-pages/man1/date.1.html",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "readme",
+      "quote": "Output raw source entries instead of formatted entries",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "help:verify-hl-20261121-051803-6faa:1",
+      "quote": "-o, --output <FILE>         Output file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "Process logs with non-JSON prefixes using the `--allow-prefix` flag.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "with support for easy [theme switching](#selecting-current-theme) and custom [themes](#custom-themes)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "readme",
+      "quote": "Theme overlays allow you to apply multiple theme modifications on top of your base theme",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "help:verify-hl-20261121-051803-6faa:1",
+      "quote": "Print available themes optionally filtered by tags",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "readme",
+      "quote": "~/.config/hl/config.{yaml,toml,json}",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/22/label",
+      "source_id": "help:verify-hl-20261121-051803-6faa:1",
+      "quote": "Print shell auto-completion script and exit [possible values: \n                                    bash, elvish, fish, powershell, zsh]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    },
+    {
+      "field": "/capabilities/23/label",
+      "source_id": "help:verify-hl-20261121-051803-6faa:1",
+      "quote": "Print man page and exit",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T05:19:25+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-21T05:17:42+08:00",
+  "updated_at": "2026-11-21T05:19:25+08:00"
+}
