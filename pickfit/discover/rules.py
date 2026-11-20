@@ -182,6 +182,30 @@ def _hard_rejects(repo: dict[str, Any], readme: str | None, files: list[str], li
     return reasons
 
 
+_DOWNLOAD_OR_INSTALL = re.compile(r"download|install", re.I)
+
+
+def _install_link(candidate: dict[str, Any], readme: str) -> bool:
+    """Whether the README links to a downloads or install page on the project's own site (or its wiki), its link
+    text or address saying so: what pickfit/installdocs.py would read for install steps. A documentation file of
+    the repository does not count, nor "setup" or "quick start" wording: model recipes and cookbooks have those
+    (7 of 27 such rejected candidates in runs/pipeline.db, 11/20), real tools link to their downloads page."""
+    if not readme:
+        return False
+    from pickfit.installdocs import INSTALL, find_links
+
+    repo = candidate.get("repo") or {}
+    full_name = repo.get("full_name") or candidate.get("full_name") or ""
+    if "/" not in full_name:
+        return False
+    try:
+        links = find_links({**candidate, "repo": repo, "full_name": full_name, "readme": readme})
+    except (KeyError, ValueError):
+        return False
+    return any(link.url is not None and link.score >= INSTALL and "README links" in link.why
+               and _DOWNLOAD_OR_INSTALL.search(f"{link.why} {link.url}") for link in links)
+
+
 def classify(candidate: dict[str, Any], owner_counts: dict[str, int] | None = None) -> RuleResult:
     """Label one candidate (a store row: `repo` snapshot plus README, releases, files, manifests)."""
     repo = candidate["repo"]
@@ -221,6 +245,11 @@ def classify(candidate: dict[str, Any], owner_counts: dict[str, int] | None = No
     topics = set(repo.get("topics") or [])
     if TOOL_TOPICS & topics:
         positive.append(("tool_topic", 1))
+    if not has_install_command and _install_link(candidate, readme):
+        # The README sends readers to the project's own install guide or downloads page (Jellyfin, 11/20): the
+        # install steps are there, and the extraction reads that guide (pickfit/installdocs.py). Worth one
+        # install signal, never a tool by itself.
+        positive.append(("readme_install_link", 2))
 
     name_and_topics = " ".join([repo.get("name") or "", *sorted(topics)])
     description = repo.get("description") or ""

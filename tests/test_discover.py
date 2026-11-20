@@ -518,3 +518,53 @@ def test_capped_discover_takes_round_robin_by_rank_and_skips_records(tmp_path: P
         ("a/one", "dev_cli:cli", 1), ("a/five", "local_ai:ollama", 1), ("a/four", "dev_cli:tui", 2)]
     assert funnel["discover"]["candidates"] == 3
     assert funnel["rules"]["checked"] == 3
+
+
+JELLYFIN_README = """<h1 align="center">Jellyfin</h1>
+<h3 align="center">The Free Software Media System</h3>
+
+Jellyfin is a Free Software Media System that puts you in control of managing and streaming your media.
+
+For further details, please see [our documentation page](https://jellyfin.org/docs/). To receive the latest updates,
+<a href="https://jellyfin.org/downloads">download Jellyfin</a> or follow the
+[installation guide](https://jellyfin.org/docs/general/installation/).
+"""
+JELLYFIN_FILES = ["Jellyfin.Server/Program.cs", "Jellyfin.Server/Jellyfin.Server.csproj", "Emby.Server.sln",
+                  "MediaBrowser.Controller/Library/ILibraryManager.cs"]
+
+
+def test_a_readme_that_links_to_its_own_install_guide_reaches_the_extraction() -> None:
+    # Jellyfin, 11/20: no install heading or command in the README, no release binaries, a .NET server: only the
+    # links to jellyfin.org's downloads and installation guide say how to install it.
+    result = classify(candidate(JELLYFIN_README, files=JELLYFIN_FILES, full_name="jellyfin/jellyfin",
+                                homepage="https://jellyfin.org", description="The Free Software Media System",
+                                topics=["media-server", "streaming"], language="C#"))
+    assert result.passed and "+readme_install_link" in result.reasons
+    assert result.label == "uncertain"  # one install signal, never a tool by itself
+
+
+def test_an_install_link_to_someone_elses_site_is_no_signal() -> None:
+    readme = "# thing\n\nSee the [installation guide](https://docs.docker.com/engine/install/) for Docker first.\n"
+    result = classify(candidate(readme, files=JELLYFIN_FILES, topics=[]))
+    assert "+readme_install_link" not in result.reasons and not result.passed
+    assert "reject:no_install_or_usage_signal" in result.reasons
+
+
+def test_an_empty_shell_or_a_link_list_with_a_download_link_is_still_refused() -> None:
+    shell = "# thing\n\n[Download](https://tinyq.dev/download)\n"
+    readme_only = classify(candidate(shell, files=["README.md"], homepage="https://tinyq.dev", topics=[]))
+    assert not readme_only.passed and "-no_source_files" in readme_only.reasons  # no code: refused all the same
+    links = "# awesome-things\n\n[Download](https://tinyq.dev/download)\n" + "".join(
+        f"- [tool {i}](https://example.com/{i}) - a tool\n" for i in range(40))
+    listing = classify(candidate(links, files=["README.md", "scripts/check.py"], name="awesome-things",
+                                 homepage="https://tinyq.dev", topics=["awesome-list"]))
+    assert not listing.passed
+
+
+def test_a_setup_doc_in_the_repository_is_not_an_install_link() -> None:
+    # Model recipes and cookbooks link to docs/INSTALL.md or SETUP.md; the signal is for a project's own downloads
+    # or install page on its site (11/20: 7 of 27 rejected candidates would otherwise have passed).
+    readme = "# recipe\n\nSee [installation](docs/INSTALL.md) and [quick start](https://tinyq.dev/start).\n"
+    result = classify(candidate(readme, files=["docs/INSTALL.md", "serve.py"], homepage="https://tinyq.dev",
+                                topics=[]))
+    assert "+readme_install_link" not in result.reasons and not result.passed
