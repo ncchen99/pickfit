@@ -417,52 +417,89 @@
   },
   "security": {
     "version": "sec.v2",
-    "status": "unchecked",
-    "unchecked_reason": "no_lockfile",
+    "status": "vulnerable",
+    "unchecked_reason": null,
     "sources": [
-      "github.com/Comfy-Org/ComfyUI@995456d0188f",
-      "requirements.txt"
+      "github.com/Comfy-Org/ComfyUI@199442068225",
+      "requirements.txt",
+      "sbom:verify-comfyui-20261104-211208-7634 (1113 packages installed)"
     ],
-    "packages_checked": 5,
-    "findings_total": 0,
-    "advisories_total": 0,
-    "findings": [],
+    "packages_checked": 586,
+    "findings_total": 1,
+    "advisories_total": 1,
+    "findings": [
+      {
+        "package": "pypi:comfy-cli",
+        "version": "1.28.0",
+        "advisory": "GHSA-562r-8445-54r2",
+        "cves": [
+          "CVE-2026-22777"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "3.39.2",
+        "summary": "ComfyUI-Manager is Vulnerable to CRLF Injection in Configuration Handler",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-comfyui-20261104-211208-7634",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00866,
+        "attack_vector": "network",
+        "dos_only": false,
+        "paths": [
+          "installed > /.local/share/uv/tools/comfy-cli/lib/python3.12/site-packages/comfy_cli-1.28.0.dist-info/METADATA > comfy-cli"
+        ]
+      }
+    ],
     "database": "OSV.dev",
-    "checked_at": "2026-11-20T00:06:03+08:00",
+    "checked_at": "2026-11-20T12:24:26+08:00",
     "observation": {
       "scanner": "pickfit-security",
       "scanner_version": "sec.v2",
-      "target": "repo_lockfile",
-      "commit": "995456d0188ffb51032c28f41527cfa82d87d8a9",
-      "run_id": null,
-      "tool_version": null,
-      "artifact_sha256": [],
+      "target": "installed_artifact",
+      "commit": "1994420682258539f9ea1d22a9857a14df6acd32",
+      "run_id": "verify-comfyui-20261104-211208-7634",
+      "tool_version": "1.25.0",
+      "artifact_sha256": [
+        "33f6745717b28f5fdc39e62ad4bc1fc82f8e0163476f4d2c0c50cf2f316f36d3",
+        "33f6745717b28f5fdc39e62ad4bc1fc82f8e0163476f4d2c0c50cf2f316f36d3",
+        "33f6745717b28f5fdc39e62ad4bc1fc82f8e0163476f4d2c0c50cf2f316f36d3",
+        "2d2dcdee55ff336ad5920a9af9326694ed8e4512390edaf7bbb12590a4ae002a"
+      ],
       "packages": {
-        "pypi": 5
+        "crates": 532,
+        "pypi": 54
       },
       "scopes": {
-        "runtime": 5
+        "runtime": 586
       },
-      "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+      "advisories_fetched_at": "2026-11-20T12:24:26+08:00",
       "kev_catalog": "2026.11.18",
       "epss_date": "2026-11-20",
-      "findings_total": 0,
+      "findings_total": 13,
       "details": "security/comfyui.json",
-      "details_sha256": "160521030c30837df2751e13559e92a25965e8093c5df19ec8b6477ea9ee2bd1"
+      "details_sha256": "710fe3e110e1f68ea61656f16b82d6cf753195c0323efd0906bc86bea9cf8fe9"
     },
     "assessment": {
-      "level": "none",
+      "level": "conditional",
       "policy_version": "sec.v2",
-      "reasons": [],
-      "counts": {},
-      "uncounted": 0,
-      "assessed_at": "2026-11-20T00:06:03+08:00"
+      "reasons": [
+        "worst:GHSA-562r-8445-54r2 pypi:comfy-cli@1.28.0 (conditional)"
+      ],
+      "counts": {
+        "conditional": 1
+      },
+      "uncounted": 12,
+      "assessed_at": "2026-11-20T12:24:26+08:00"
     },
     "coverage": {
       "state": "partial",
-      "target": "repo_lockfile",
-      "packages_found": 10,
-      "packages_checked": 5,
+      "target": "installed_artifact",
+      "packages_found": 591,
+      "packages_checked": 586,
       "components": [
         {
           "ecosystem": "pypi",
@@ -479,6 +516,13 @@
           "gaps": [
             "lockfile.missing"
           ]
+        },
+        {
+          "ecosystem": "crates",
+          "component": "sbom:verify-comfyui-20261104-211208-7634",
+          "status": "scanned",
+          "packages": 1064,
+          "gaps": []
         }
       ],
       "gaps": [
@@ -498,17 +542,20 @@
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-20T12:17:48+08:00",
+    "computed_at": "2026-11-20T12:24:26+08:00",
     "quality": {
       "total": 88.3,
-      "raw_total": 88.3,
       "confidence": 0.6,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.75,
@@ -528,17 +575,14 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 88.3,
       "security": {
-        "level": "none",
+        "level": "conditional",
         "basis": "assessment",
-        "effect": "none",
+        "effect": "note",
         "deduction": 0.0
       }
     },
@@ -1313,5 +1357,5 @@
     }
   ],
   "first_seen_at": "2026-11-04T13:05:06+08:00",
-  "updated_at": "2026-11-20T12:17:48+08:00"
+  "updated_at": "2026-11-20T12:24:26+08:00"
 }

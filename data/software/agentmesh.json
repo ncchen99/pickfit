@@ -262,55 +262,392 @@
   },
   "security": {
     "version": "sec.v2",
-    "status": "unchecked",
-    "unchecked_reason": "lockfile_not_supported",
+    "status": "vulnerable",
+    "unchecked_reason": null,
     "sources": [
       "github.com/google/agentmesh@8474138fc806",
       "go.mod",
-      "sdk/js/package-lock.json"
+      "sdk/js/package-lock.json",
+      "sbom:verify-agentmesh-20261102-185446-c855 (522 packages installed)"
     ],
-    "packages_checked": 427,
-    "findings_total": 0,
-    "advisories_total": 0,
-    "findings": [],
+    "packages_checked": 438,
+    "findings_total": 9,
+    "advisories_total": 9,
+    "findings": [
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2022-0969",
+        "cves": [
+          "CVE-2022-27664"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.18.6",
+        "summary": "Denial of service in net/http and golang.org/x/net/http2",
+        "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-agentmesh-20261102-185446-c855",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.03487,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:ListenAndServe",
+          "symbol:ListenAndServeTLS",
+          "symbol:Serve"
+        ],
+        "paths": [
+          "installed > /.local/bin/agentmesh-console > stdlib"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "cmd/agentmesh-console/main.go:84: if err := httpSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2023-1571",
+        "cves": [
+          "CVE-2022-41723"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.19.6",
+        "summary": "Denial of service via crafted HTTP/2 stream in net/http and golang.org/x/net",
+        "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-agentmesh-20261102-185446-c855",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04561,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:Client.Do",
+          "symbol:Client.Get",
+          "symbol:Client.Head"
+        ],
+        "paths": [
+          "installed > /.local/bin/agentmesh-console > stdlib"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "cmd/agentmesh-node/debug.go:117: resp, err := socketClient(socketPath, 30*time.Second).Do(req)"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2023-2102",
+        "cves": [
+          "CVE-2023-39325"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.10",
+        "summary": "HTTP/2 rapid reset can cause excessive work in net/http",
+        "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-agentmesh-20261102-185446-c855",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.03796,
+        "preconditions": [
+          "symbol:ListenAndServe",
+          "symbol:ListenAndServeTLS",
+          "symbol:Serve"
+        ],
+        "paths": [
+          "installed > /.local/bin/agentmesh-console > stdlib"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "cmd/agentmesh-console/main.go:84: if err := httpSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2022-0535",
+        "cves": [
+          "CVE-2020-0601"
+        ],
+        "severity": "UNKNOWN",
+        "fixed_in": "1.12.16",
+        "summary": "Certificate validation bypass on Windows in crypto/x509",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-agentmesh-20261102-185446-c855",
+        "in_artifact": true,
+        "kev": true,
+        "epss": 0.89078,
+        "preconditions": [
+          "symbol:Certificate.systemVerify"
+        ],
+        "paths": [
+          "installed > /.local/bin/agentmesh-console > stdlib"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "internal/controlplane/signingkeys.go:23: \"crypto/x509\"",
+            "no call to Certificate.systemVerify found"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2025-3563",
+        "cves": [
+          "CVE-2025-22871"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "1.23.8",
+        "summary": "Request smuggling due to acceptance of invalid chunked data in net/http",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-agentmesh-20261102-185446-c855",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00842,
+        "preconditions": [
+          "symbol:chunkedReader.Read",
+          "symbol:readChunkLine"
+        ],
+        "paths": [
+          "installed > /.local/bin/agentmesh-console > stdlib"
+        ]
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2021-0142",
+        "cves": [
+          "CVE-2020-16845"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.13.15",
+        "summary": "Unbounded read from invalid inputs in encoding/binary",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-agentmesh-20261102-185446-c855",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04861,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:ReadUvarint",
+          "symbol:ReadVarint"
+        ],
+        "paths": [
+          "installed > /.local/bin/agentmesh-console > stdlib"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "hack/gen-sdk-datalog/main.go:28: \"encoding/binary\"",
+            "no call to ReadUvarint, ReadVarint found"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2022-0229",
+        "cves": [
+          "CVE-2020-7919"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.12.16",
+        "summary": "Panic in certificate parsing in crypto/x509 and golang.org/x/crypto/cryptobyte",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-agentmesh-20261102-185446-c855",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.02647,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:crypto/x509",
+          "symbol:golang.org/x/crypto/cryptobyte"
+        ],
+        "paths": [
+          "installed > /.local/bin/agentmesh-console > stdlib"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "internal/controlplane/signingkeys.go:23: \"crypto/x509\"",
+            "the advisory names no function"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2022-0288",
+        "cves": [
+          "CVE-2021-44716"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.16.12",
+        "summary": "Unbounded memory growth in net/http and golang.org/x/net/http2",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-agentmesh-20261102-185446-c855",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04254,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:http2serverConn.canonicalHeader",
+          "symbol:Server.ServeConn",
+          "symbol:serverConn.canonicalHeader"
+        ],
+        "paths": [
+          "installed > /.local/bin/agentmesh-console > stdlib"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "api/ingress.go:19: \"net/http\"",
+            "no call to http2serverConn.canonicalHeader, Server.ServeConn, serverConn.canonicalHeader found"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2022-0536",
+        "cves": [
+          "CVE-2019-9512",
+          "CVE-2019-9514"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.11.13",
+        "summary": "Reset flood in net/http and golang.org/x/net/http",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-agentmesh-20261102-185446-c855",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.83958,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:http2serverConn.scheduleFrameWrite",
+          "symbol:http2serverConn.serve",
+          "symbol:http2serverConn.writeFrame"
+        ],
+        "paths": [
+          "installed > /.local/bin/agentmesh-console > stdlib"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "api/ingress.go:19: \"net/http\"",
+            "no call to http2serverConn.scheduleFrameWrite, http2serverConn.serve, http2serverConn.writeFrame found"
+          ]
+        }
+      }
+    ],
     "database": "OSV.dev",
-    "checked_at": "2026-11-20T00:06:03+08:00",
+    "checked_at": "2026-11-20T12:24:26+08:00",
     "observation": {
       "scanner": "pickfit-security",
       "scanner_version": "sec.v2",
-      "target": "repo_lockfile",
+      "target": "installed_artifact",
       "commit": "8474138fc806960e873cf69a6387bfe93139088c",
-      "run_id": null,
-      "tool_version": null,
-      "artifact_sha256": [],
+      "run_id": "verify-agentmesh-20261102-185446-c855",
+      "tool_version": "agentmesh-node version v0.2.0",
+      "artifact_sha256": [
+        "ccd0327229fcdad147299163b9b3dba27db04511643d81e2bd80500049b398b4",
+        "276f14ce3032cd3cd59e60d4432f3c9bfc30b91a536e785470fc417fce94e987",
+        "0f9238c56e6ca9ae5a62de426eeb52e4b855e335d2262319a07a3acd09002c2e",
+        "9c484a6b5f2bf2e11253668fed3afcd36c06a8d6695debcf086733ffcfd6c41d",
+        "9006511a8461e29f8b361097c8eefd9b186b9dcdc92677ca187b39f52784f93c",
+        "0d5a8f51a782cc74d9ed5097cf4679e584306e2080b0562ffb21009d2123b8af"
+      ],
       "packages": {
-        "go": 151,
+        "go": 162,
         "npm": 276
       },
       "scopes": {
-        "runtime": 363,
+        "runtime": 374,
         "dev": 64
       },
-      "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+      "advisories_fetched_at": "2026-11-20T12:24:26+08:00",
       "kev_catalog": "2026.11.18",
       "epss_date": "2026-11-20",
-      "findings_total": 2,
+      "findings_total": 167,
       "details": "security/agentmesh.json",
-      "details_sha256": "27864ff752d98b020d4d951dc52b65fdfbb9d7a170395a827efa1a837dd48d66"
+      "details_sha256": "40d407b4120c9f84045655b768010d543405fdab6a9c9471dd6360c9e5c895d8"
     },
     "assessment": {
-      "level": "none",
+      "level": "exposed",
       "policy_version": "sec.v2",
-      "reasons": [],
-      "counts": {},
-      "uncounted": 2,
-      "assessed_at": "2026-11-20T00:06:03+08:00"
+      "reasons": [
+        "worst:GO-2022-0969 go:stdlib@go1.27.3 (exposed)",
+        "worst:GO-2023-1571 go:stdlib@go1.27.3 (exposed)",
+        "worst:GO-2023-2102 go:stdlib@go1.27.3 (exposed)"
+      ],
+      "counts": {
+        "exposed": 3,
+        "conditional": 6
+      },
+      "uncounted": 158,
+      "assessed_at": "2026-11-20T12:24:26+08:00"
     },
     "coverage": {
       "state": "partial",
-      "target": "repo_lockfile",
-      "packages_found": 520,
-      "packages_checked": 427,
+      "target": "installed_artifact",
+      "packages_found": 531,
+      "packages_checked": 438,
       "components": [
         {
           "ecosystem": "go",
@@ -352,6 +689,13 @@
           "gaps": [
             "lockfile.missing"
           ]
+        },
+        {
+          "ecosystem": "go",
+          "component": "sbom:verify-agentmesh-20261102-185446-c855",
+          "status": "scanned",
+          "packages": 522,
+          "gaps": []
         }
       ],
       "gaps": [
@@ -393,12 +737,12 @@
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-20T00:06:03+08:00",
+    "computed_at": "2026-11-20T12:24:26+08:00",
     "quality": {
-      "total": 86.0,
+      "total": 79.0,
       "confidence": 0.9,
-      "cap": null,
-      "cap_reason": null,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
@@ -431,9 +775,9 @@
       },
       "raw_total": 86.0,
       "security": {
-        "level": "none",
+        "level": "exposed",
         "basis": "assessment",
-        "effect": "none",
+        "effect": "capped",
         "deduction": 0.0
       }
     },
@@ -453,7 +797,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 15.14
+      "value": 13.9
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -747,5 +1091,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-20T00:06:03+08:00"
+  "updated_at": "2026-11-20T12:24:26+08:00"
 }

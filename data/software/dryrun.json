@@ -439,41 +439,13 @@
     "sources": [
       "npm:@boringsql/dryrun (fresh install, 6 packages)",
       "github.com/boringSQL/dryrun@85bbbacfd160",
-      "go.mod"
+      "go.mod",
+      "sbom:verify-dryrun-20261031-034044-ec2d (59 packages installed)"
     ],
-    "packages_checked": 61,
-    "findings_total": 1,
-    "advisories_total": 1,
+    "packages_checked": 63,
+    "findings_total": 13,
+    "advisories_total": 13,
     "findings": [
-      {
-        "package": "go:oras.land/oras-go/v2",
-        "version": "v2.6.1",
-        "advisory": "GHSA-m37j-52j7-pjw7",
-        "cves": [
-          "CVE-2026-85731"
-        ],
-        "severity": "HIGH",
-        "fixed_in": "2.6.2",
-        "summary": "oras-go: Arbitrary file write outside file.Store root via symlink-chain bypass in tar extraction (pushDir)",
-        "malicious": false,
-        "attack_vector": "network",
-        "dos_only": false,
-        "fix_published_at": "2026-07-10T14:50:25Z",
-        "scope": "runtime",
-        "paths": [
-          "go.mod > oras.land/oras-go/v2"
-        ],
-        "workspace": ".",
-        "found_in": "go.mod",
-        "kev": false,
-        "epss": 0.00676,
-        "preconditions": [
-          "user_interaction"
-        ],
-        "counted": true,
-        "level": "conditional",
-        "policy_version": "sec.v2"
-      },
       {
         "package": "go:github.com/klauspost/compress",
         "version": "v1.18.6",
@@ -485,30 +457,31 @@
         "fixed_in": "1.18.7",
         "summary": "Compress/s2: Integer Overflow or Wraparound and Out-of-bounds Write in compress",
         "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00572,
+        "fix_published_at": "2026-06-30T09:38:05Z",
         "attack_vector": "network",
         "dos_only": true,
-        "scope": "runtime",
+        "preconditions": [
+          "denial_of_service"
+        ],
         "paths": [
           "go.mod > github.com/klauspost/compress"
         ],
-        "workspace": ".",
-        "found_in": "go.mod",
-        "kev": false,
-        "epss": 0.00572,
-        "preconditions": [
-          "denial_of_service",
-          "symbol:NewDict"
-        ],
         "reachability": {
-          "method": "import_grep",
-          "result": "not_reachable",
+          "method": "govulncheck_binary",
+          "result": "reachable",
           "evidence": [
-            "no .go file imports github.com/klauspost/compress/s2; go.mod requires github.com/klauspost/compress directly"
+            "govulncheck -mode=binary symbol level, /home/sbx/.local/lib/node_modules/@boringsql/dryrun/node_modules/@boringsql/dryrun-linux-x64/bin/dryrun: NewDict"
           ]
-        },
-        "counted": true,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2"
+        }
       },
       {
         "package": "go:github.com/klauspost/compress",
@@ -521,31 +494,30 @@
         "fixed_in": "1.20.2",
         "summary": "Panic on two-block frames in github.com/klauspost/compress",
         "malicious": false,
-        "dos_only": true,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
         "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00333,
+        "fix_published_at": "2026-10-12T09:34:06Z",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
         "paths": [
           "go.mod > github.com/klauspost/compress"
         ],
-        "workspace": ".",
-        "found_in": "go.mod",
-        "kev": false,
-        "epss": 0.00333,
-        "preconditions": [
-          "denial_of_service",
-          "symbol:Compress",
-          "symbol:Decompress",
-          "symbol:Scratch.readNCount"
-        ],
         "reachability": {
-          "method": "import_grep",
-          "result": "not_reachable",
+          "method": "govulncheck_binary",
+          "result": "reachable",
           "evidence": [
-            "no .go file imports github.com/klauspost/compress/fse, github.com/klauspost/compress/huff0; go.mod requires github.com/klauspost/compress directly"
+            "govulncheck -mode=binary symbol level, /home/sbx/.local/lib/node_modules/@boringsql/dryrun/node_modules/@boringsql/dryrun-linux-x64/bin/dryrun: Decompress"
           ]
-        },
-        "counted": true,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2"
+        }
       },
       {
         "package": "go:oras.land/oras-go/v2",
@@ -558,77 +530,415 @@
         "fixed_in": "2.6.2",
         "summary": "`oras-go` tar extraction: Hardlink entry with relative Linkname escapes extract dir via process CWD resolution",
         "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": ".",
+        "found_in": "go.mod",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00403,
+        "fix_published_at": "2026-07-10T14:50:25Z",
         "attack_vector": "network",
         "dos_only": false,
-        "scope": "runtime",
+        "preconditions": [
+          "user_interaction"
+        ],
         "paths": [
           "go.mod > oras.land/oras-go/v2"
         ],
+        "reachability": {
+          "method": "govulncheck_binary",
+          "result": "reachable",
+          "evidence": [
+            "govulncheck -mode=binary symbol level, /home/sbx/.local/lib/node_modules/@boringsql/dryrun/node_modules/@boringsql/dryrun-linux-x64/bin/dryrun: Store.Add"
+          ]
+        }
+      },
+      {
+        "package": "go:oras.land/oras-go/v2",
+        "version": "v2.6.1",
+        "advisory": "GHSA-m37j-52j7-pjw7",
+        "cves": [
+          "CVE-2026-85731"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "2.6.2",
+        "summary": "oras-go: Arbitrary file write outside file.Store root via symlink-chain bypass in tar extraction (pushDir)",
+        "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
         "workspace": ".",
         "found_in": "go.mod",
+        "in_artifact": true,
         "kev": false,
-        "epss": 0.00403,
+        "epss": 0.00676,
+        "fix_published_at": "2026-07-10T14:50:25Z",
+        "attack_vector": "network",
+        "dos_only": false,
         "preconditions": [
-          "user_interaction",
-          "symbol:New",
-          "symbol:Store.Add"
+          "user_interaction"
+        ],
+        "paths": [
+          "go.mod > oras.land/oras-go/v2"
+        ],
+        "reachability": {
+          "method": "govulncheck_binary",
+          "result": "reachable",
+          "evidence": [
+            "govulncheck -mode=binary symbol level, /home/sbx/.local/lib/node_modules/@boringsql/dryrun/node_modules/@boringsql/dryrun-linux-x64/bin/dryrun: New"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.26.4",
+        "advisory": "GO-2023-1571",
+        "cves": [
+          "CVE-2022-41723"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.19.6",
+        "summary": "Denial of service via crafted HTTP/2 stream in net/http and golang.org/x/net",
+        "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-dryrun-20261031-034044-ec2d",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04561,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:Client.Do",
+          "symbol:Client.Get",
+          "symbol:Client.Head"
+        ],
+        "paths": [
+          "installed > /.local/lib/node_modules/@boringsql/dryrun/node_modules/@boringsql/dryrun-linux-x64/bin/dryrun > stdlib"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "cmd/dryrun/update_check.go:168: resp, err := http.DefaultClient.Do(req)"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.26.4",
+        "advisory": "GO-2022-0535",
+        "cves": [
+          "CVE-2020-0601"
+        ],
+        "severity": "UNKNOWN",
+        "fixed_in": "1.12.16",
+        "summary": "Certificate validation bypass on Windows in crypto/x509",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-dryrun-20261031-034044-ec2d",
+        "in_artifact": true,
+        "kev": true,
+        "epss": 0.89078,
+        "preconditions": [
+          "symbol:Certificate.systemVerify"
+        ],
+        "paths": [
+          "installed > /.local/lib/node_modules/@boringsql/dryrun/node_modules/@boringsql/dryrun-linux-x64/bin/dryrun > stdlib"
+        ]
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.26.4",
+        "advisory": "GO-2025-3563",
+        "cves": [
+          "CVE-2025-22871"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "1.23.8",
+        "summary": "Request smuggling due to acceptance of invalid chunked data in net/http",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-dryrun-20261031-034044-ec2d",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00842,
+        "preconditions": [
+          "symbol:chunkedReader.Read",
+          "symbol:readChunkLine"
+        ],
+        "paths": [
+          "installed > /.local/lib/node_modules/@boringsql/dryrun/node_modules/@boringsql/dryrun-linux-x64/bin/dryrun > stdlib"
+        ]
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.26.4",
+        "advisory": "GO-2021-0142",
+        "cves": [
+          "CVE-2020-16845"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.13.15",
+        "summary": "Unbounded read from invalid inputs in encoding/binary",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-dryrun-20261031-034044-ec2d",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04861,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:ReadUvarint",
+          "symbol:ReadVarint"
+        ],
+        "paths": [
+          "installed > /.local/lib/node_modules/@boringsql/dryrun/node_modules/@boringsql/dryrun-linux-x64/bin/dryrun > stdlib"
+        ]
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.26.4",
+        "advisory": "GO-2022-0229",
+        "cves": [
+          "CVE-2020-7919"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.12.16",
+        "summary": "Panic in certificate parsing in crypto/x509 and golang.org/x/crypto/cryptobyte",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-dryrun-20261031-034044-ec2d",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.02647,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:crypto/x509",
+          "symbol:golang.org/x/crypto/cryptobyte"
+        ],
+        "paths": [
+          "installed > /.local/lib/node_modules/@boringsql/dryrun/node_modules/@boringsql/dryrun-linux-x64/bin/dryrun > stdlib"
+        ]
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.26.4",
+        "advisory": "GO-2022-0288",
+        "cves": [
+          "CVE-2021-44716"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.16.12",
+        "summary": "Unbounded memory growth in net/http and golang.org/x/net/http2",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-dryrun-20261031-034044-ec2d",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04254,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:http2serverConn.canonicalHeader",
+          "symbol:Server.ServeConn",
+          "symbol:serverConn.canonicalHeader"
+        ],
+        "paths": [
+          "installed > /.local/lib/node_modules/@boringsql/dryrun/node_modules/@boringsql/dryrun-linux-x64/bin/dryrun > stdlib"
         ],
         "reachability": {
           "method": "import_grep",
-          "result": "not_reachable",
+          "result": "unknown",
           "evidence": [
-            "no .go file imports oras.land/oras-go/v2/content/file; go.mod requires oras.land/oras-go/v2 directly"
+            "cmd/dryrun/update_check.go:9: \"net/http\"",
+            "no call to http2serverConn.canonicalHeader, Server.ServeConn, serverConn.canonicalHeader found"
           ]
-        },
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.26.4",
+        "advisory": "GO-2022-0536",
+        "cves": [
+          "CVE-2019-9512",
+          "CVE-2019-9514"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.11.13",
+        "summary": "Reset flood in net/http and golang.org/x/net/http",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
         "counted": true,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2"
+        "scope": "runtime",
+        "found_in": "sbom:verify-dryrun-20261031-034044-ec2d",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.83958,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:http2serverConn.scheduleFrameWrite",
+          "symbol:http2serverConn.serve",
+          "symbol:http2serverConn.writeFrame"
+        ],
+        "paths": [
+          "installed > /.local/lib/node_modules/@boringsql/dryrun/node_modules/@boringsql/dryrun-linux-x64/bin/dryrun > stdlib"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "cmd/dryrun/update_check.go:9: \"net/http\"",
+            "no call to http2serverConn.scheduleFrameWrite, http2serverConn.serve, http2serverConn.writeFrame found"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.26.4",
+        "advisory": "GO-2022-0969",
+        "cves": [
+          "CVE-2022-27664"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.18.6",
+        "summary": "Denial of service in net/http and golang.org/x/net/http2",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-dryrun-20261031-034044-ec2d",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.03487,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:ListenAndServe",
+          "symbol:ListenAndServeTLS",
+          "symbol:Serve"
+        ],
+        "paths": [
+          "installed > /.local/lib/node_modules/@boringsql/dryrun/node_modules/@boringsql/dryrun-linux-x64/bin/dryrun > stdlib"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "cmd/dryrun/update_check.go:9: \"net/http\"",
+            "no call to ListenAndServe, ListenAndServeTLS, Serve found"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.26.4",
+        "advisory": "GO-2023-2102",
+        "cves": [
+          "CVE-2023-39325"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.10",
+        "summary": "HTTP/2 rapid reset can cause excessive work in net/http",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-dryrun-20261031-034044-ec2d",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.03796,
+        "preconditions": [
+          "symbol:ListenAndServe",
+          "symbol:ListenAndServeTLS",
+          "symbol:Serve"
+        ],
+        "paths": [
+          "installed > /.local/lib/node_modules/@boringsql/dryrun/node_modules/@boringsql/dryrun-linux-x64/bin/dryrun > stdlib"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "cmd/dryrun/update_check.go:9: \"net/http\"",
+            "no call to ListenAndServe, ListenAndServeTLS, Serve found"
+          ]
+        }
       }
     ],
     "database": "OSV.dev",
-    "checked_at": "2026-11-20T00:17:01+08:00",
+    "checked_at": "2026-11-20T12:24:26+08:00",
     "observation": {
       "scanner": "pickfit-security",
       "scanner_version": "sec.v2",
-      "target": "repo_lockfile",
+      "target": "installed_artifact",
       "commit": "85bbbacfd160007a9996180dbbd44fee621ce936",
-      "run_id": null,
-      "tool_version": null,
-      "artifact_sha256": [],
+      "run_id": "verify-dryrun-20261031-034044-ec2d",
+      "tool_version": "dryrun version v0.23.0",
+      "artifact_sha256": [
+        "4ffba9e300372e6020c009c4c6e972f4713017e8131db64f3c184fb8a96cb8ab"
+      ],
       "packages": {
-        "go": 55,
+        "go": 57,
         "npm": 6
       },
       "scopes": {
-        "runtime": 61
+        "runtime": 63
       },
-      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "advisories_fetched_at": "2026-11-20T12:24:26+08:00",
       "kev_catalog": "2026.11.18",
       "epss_date": "2026-11-20",
-      "findings_total": 8,
+      "findings_total": 172,
       "details": "security/dryrun.json",
-      "details_sha256": "a56a05ad76ef82b1cb05fb24650ea9f2f65c4027753f13b22709e4340ff28c24"
+      "details_sha256": "61962b9083f49fd83bec6af0a83c3105b78d9dd056591707771edf7c0b6e3645"
     },
     "assessment": {
-      "level": "conditional",
+      "level": "exposed",
       "policy_version": "sec.v2",
       "reasons": [
-        "worst:GHSA-m37j-52j7-pjw7 go:oras.land/oras-go/v2@v2.6.1 (conditional)",
-        "worst:GHSA-259r-337f-4rfw go:github.com/klauspost/compress@v1.18.6 (present_unreachable)",
-        "worst:GO-2026-6865 go:github.com/klauspost/compress@v1.18.6 (present_unreachable)"
+        "worst:GHSA-259r-337f-4rfw go:github.com/klauspost/compress@v1.18.6 (exposed)",
+        "worst:GO-2026-6865 go:github.com/klauspost/compress@v1.18.6 (exposed)",
+        "worst:GHSA-fxhp-mv3v-67qp go:oras.land/oras-go/v2@v2.6.1 (exposed)"
       ],
       "counts": {
-        "conditional": 1,
-        "present_unreachable": 3
+        "exposed": 5,
+        "conditional": 8
       },
-      "uncounted": 4,
-      "assessed_at": "2026-11-20T00:17:01+08:00"
+      "uncounted": 159,
+      "assessed_at": "2026-11-20T12:24:26+08:00"
     },
     "coverage": {
-      "state": "partial",
-      "target": "repo_lockfile",
-      "packages_found": 66,
-      "packages_checked": 61,
+      "state": "complete",
+      "target": "installed_artifact",
+      "packages_found": 63,
+      "packages_checked": 63,
       "components": [
         {
           "ecosystem": "npm",
@@ -654,47 +964,41 @@
           "gaps": [
             "lockfile.missing"
           ]
-        }
-      ],
-      "gaps": [
-        {
-          "code": "lockfile.missing",
-          "category": "lockfile_missing",
-          "ecosystem": "npm",
-          "component": "npm/dryrun/package.json",
-          "detail": "package.json without a lockfile",
-          "capability": "lockfile_from_manifest:npm",
-          "found": 5,
-          "first_seen": "2026-11-20",
-          "last_seen": "2026-11-20"
         },
         {
-          "code": "binary.prebuilt_package",
-          "category": "binary_no_metadata",
+          "ecosystem": "go",
+          "component": "sbom:verify-dryrun-20261031-034044-ec2d",
+          "status": "scanned",
+          "packages": 55,
+          "gaps": []
+        },
+        {
           "ecosystem": "npm",
-          "component": "npm:@boringsql/dryrun",
-          "detail": "the package wraps a compiled binary",
-          "capability": "sbom_binary",
-          "found": null,
-          "first_seen": "2026-11-20",
-          "last_seen": "2026-11-20"
+          "component": "sbom:verify-dryrun-20261031-034044-ec2d",
+          "status": "scanned",
+          "packages": 4,
+          "gaps": []
         }
-      ]
+      ],
+      "gaps": []
     }
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-20T02:22:48+08:00",
+    "computed_at": "2026-11-20T12:24:26+08:00",
     "quality": {
-      "total": 85.4,
-      "raw_total": 85.4,
+      "total": 79.0,
       "confidence": 0.9,
-      "cap": null,
-      "cap_reason": null,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.875,
@@ -714,17 +1018,14 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 85.4,
       "security": {
-        "level": "conditional",
+        "level": "exposed",
         "basis": "assessment",
-        "effect": "note",
+        "effect": "capped",
         "deduction": 0.0
       }
     },
@@ -746,7 +1047,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 31.43
+      "value": 29.07
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -1313,5 +1614,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:00+08:00",
-  "updated_at": "2026-11-20T02:22:48+08:00"
+  "updated_at": "2026-11-20T12:24:26+08:00"
 }

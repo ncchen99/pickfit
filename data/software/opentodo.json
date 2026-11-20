@@ -328,61 +328,393 @@
   },
   "security": {
     "version": "sec.v2",
-    "status": "unchecked",
-    "unchecked_reason": "lockfile_not_supported",
+    "status": "vulnerable",
+    "unchecked_reason": null,
     "sources": [
-      "github.com/OpenTodoApp/OpenTodo@68a386a77329",
+      "github.com/OpenTodoApp/OpenTodo@19f95daf6088",
       "deploy/runtipi/upstream/bun.lock",
       "go.mod",
       "mobile/app/package-lock.json",
       "obsidian/package-lock.json",
       "obsidian/review/package-lock.json",
-      "web/package-lock.json"
+      "web/package-lock.json",
+      "sbom:verify-opentodo-20261119-210750-6661 (36 packages installed)"
     ],
-    "packages_checked": 1543,
-    "findings_total": 0,
-    "advisories_total": 0,
-    "findings": [],
+    "packages_checked": 1545,
+    "findings_total": 9,
+    "advisories_total": 9,
+    "findings": [
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2022-0536",
+        "cves": [
+          "CVE-2019-9512",
+          "CVE-2019-9514"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.11.13",
+        "summary": "Reset flood in net/http and golang.org/x/net/http",
+        "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-opentodo-20261119-210750-6661",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.83958,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:http2serverConn.scheduleFrameWrite",
+          "symbol:http2serverConn.serve",
+          "symbol:http2serverConn.writeFrame"
+        ],
+        "paths": [
+          "installed > /.local/bin/opentodo > stdlib"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "internal/httpapi/frames.go:147: s.writeFrame(w, r, ids.New(), body, http.StatusCreated)"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2022-0969",
+        "cves": [
+          "CVE-2022-27664"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.18.6",
+        "summary": "Denial of service in net/http and golang.org/x/net/http2",
+        "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-opentodo-20261119-210750-6661",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.03487,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:ListenAndServe",
+          "symbol:ListenAndServeTLS",
+          "symbol:Serve"
+        ],
+        "paths": [
+          "installed > /.local/bin/opentodo > stdlib"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "cmd/opentodo/host.go:54: if err := s.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2023-1571",
+        "cves": [
+          "CVE-2022-41723"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.19.6",
+        "summary": "Denial of service via crafted HTTP/2 stream in net/http and golang.org/x/net",
+        "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-opentodo-20261119-210750-6661",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04561,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:Client.Do",
+          "symbol:Client.Get",
+          "symbol:Client.Head"
+        ],
+        "paths": [
+          "installed > /.local/bin/opentodo > stdlib"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "cmd/websign/main.go:267: res, err := h.client.Do(req)"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2023-2102",
+        "cves": [
+          "CVE-2023-39325"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.10",
+        "summary": "HTTP/2 rapid reset can cause excessive work in net/http",
+        "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-opentodo-20261119-210750-6661",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.03796,
+        "preconditions": [
+          "symbol:ListenAndServe",
+          "symbol:ListenAndServeTLS",
+          "symbol:Serve"
+        ],
+        "paths": [
+          "installed > /.local/bin/opentodo > stdlib"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "cmd/opentodo/host.go:54: if err := s.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2022-0535",
+        "cves": [
+          "CVE-2020-0601"
+        ],
+        "severity": "UNKNOWN",
+        "fixed_in": "1.12.16",
+        "summary": "Certificate validation bypass on Windows in crypto/x509",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-opentodo-20261119-210750-6661",
+        "in_artifact": true,
+        "kev": true,
+        "epss": 0.89078,
+        "preconditions": [
+          "symbol:Certificate.systemVerify"
+        ],
+        "paths": [
+          "installed > /.local/bin/opentodo > stdlib"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "internal/mail/smtptest/smtptest.go:10: \"crypto/x509\"",
+            "no call to Certificate.systemVerify found"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2025-3563",
+        "cves": [
+          "CVE-2025-22871"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "1.23.8",
+        "summary": "Request smuggling due to acceptance of invalid chunked data in net/http",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-opentodo-20261119-210750-6661",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00842,
+        "preconditions": [
+          "symbol:chunkedReader.Read",
+          "symbol:readChunkLine"
+        ],
+        "paths": [
+          "installed > /.local/bin/opentodo > stdlib"
+        ]
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2021-0142",
+        "cves": [
+          "CVE-2020-16845"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.13.15",
+        "summary": "Unbounded read from invalid inputs in encoding/binary",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-opentodo-20261119-210750-6661",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04861,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:ReadUvarint",
+          "symbol:ReadVarint"
+        ],
+        "paths": [
+          "installed > /.local/bin/opentodo > stdlib"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "internal/auth/totp.go:8: \"encoding/binary\"",
+            "no call to ReadUvarint, ReadVarint found"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2022-0229",
+        "cves": [
+          "CVE-2020-7919"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.12.16",
+        "summary": "Panic in certificate parsing in crypto/x509 and golang.org/x/crypto/cryptobyte",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-opentodo-20261119-210750-6661",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.02647,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:crypto/x509",
+          "symbol:golang.org/x/crypto/cryptobyte"
+        ],
+        "paths": [
+          "installed > /.local/bin/opentodo > stdlib"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "internal/mail/smtptest/smtptest.go:10: \"crypto/x509\"",
+            "the advisory names no function"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.4",
+        "advisory": "GO-2022-0288",
+        "cves": [
+          "CVE-2021-44716"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.16.12",
+        "summary": "Unbounded memory growth in net/http and golang.org/x/net/http2",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-opentodo-20261119-210750-6661",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04254,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:http2serverConn.canonicalHeader",
+          "symbol:Server.ServeConn",
+          "symbol:serverConn.canonicalHeader"
+        ],
+        "paths": [
+          "installed > /.local/bin/opentodo > stdlib"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "cmd/opentodo/host.go:7: \"net/http\"",
+            "no call to http2serverConn.canonicalHeader, Server.ServeConn, serverConn.canonicalHeader found"
+          ]
+        }
+      }
+    ],
     "database": "OSV.dev",
-    "checked_at": "2026-11-20T12:12:35+08:00",
+    "checked_at": "2026-11-20T12:24:26+08:00",
     "observation": {
       "scanner": "pickfit-security",
       "scanner_version": "sec.v2",
-      "target": "repo_lockfile",
-      "commit": "68a386a773297e9022a86ed8aea0fbe62db8a9ac",
-      "run_id": null,
-      "tool_version": null,
-      "artifact_sha256": [],
+      "target": "installed_artifact",
+      "commit": "19f95daf608822922ec43c5cde7c7f5794f15a7d",
+      "run_id": "verify-opentodo-20261119-210750-6661",
+      "tool_version": "v1.5.0",
+      "artifact_sha256": [
+        "2489bf09913eef697d0fce42ed2c085030b08912793744af6c20bee0b58bf5b2",
+        "15ad9f399469cb15af68bef1e00e3c5a59eb98b29155b03cd7780f2118492d97"
+      ],
       "packages": {
-        "go": 34,
+        "go": 36,
         "npm": 1509
       },
       "scopes": {
-        "runtime": 559,
+        "runtime": 561,
         "peer": 8,
         "build": 27,
         "dev": 949
       },
-      "advisories_fetched_at": "2026-11-20T12:12:35+08:00",
+      "advisories_fetched_at": "2026-11-20T12:24:26+08:00",
       "kev_catalog": "2026.11.18",
       "epss_date": "2026-11-20",
-      "findings_total": 8,
+      "findings_total": 172,
       "details": "security/opentodo.json",
-      "details_sha256": "271bde6cb4d488c74c08388984a9e07971332eeec97c451457c8c322c14930f3"
+      "details_sha256": "513a99c42fdb93a1065b17484a7f7eb8a909afd3d6c38f4cbf0e9e8848cdea3a"
     },
     "assessment": {
-      "level": "none",
+      "level": "exposed",
       "policy_version": "sec.v2",
-      "reasons": [],
-      "counts": {},
-      "uncounted": 8,
-      "assessed_at": "2026-11-20T12:12:35+08:00"
+      "reasons": [
+        "worst:GO-2022-0536 go:stdlib@go1.27.4 (exposed)",
+        "worst:GO-2022-0969 go:stdlib@go1.27.4 (exposed)",
+        "worst:GO-2023-1571 go:stdlib@go1.27.4 (exposed)"
+      ],
+      "counts": {
+        "exposed": 4,
+        "conditional": 5
+      },
+      "uncounted": 163,
+      "assessed_at": "2026-11-20T12:24:26+08:00"
     },
     "coverage": {
       "state": "partial",
-      "target": "repo_lockfile",
-      "packages_found": 1547,
-      "packages_checked": 1543,
+      "target": "installed_artifact",
+      "packages_found": 1549,
+      "packages_checked": 1545,
       "components": [
         {
           "ecosystem": "npm",
@@ -443,6 +775,13 @@
           "status": "scanned",
           "packages": 793,
           "gaps": []
+        },
+        {
+          "ecosystem": "go",
+          "component": "sbom:verify-opentodo-20261119-210750-6661",
+          "status": "scanned",
+          "packages": 36,
+          "gaps": []
         }
       ],
       "gaps": [
@@ -473,12 +812,12 @@
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-20T00:50:25+08:00",
+    "computed_at": "2026-11-20T12:24:26+08:00",
     "quality": {
-      "total": 89.9,
+      "total": 79.0,
       "confidence": 0.9,
-      "cap": null,
-      "cap_reason": null,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.7,
@@ -511,9 +850,9 @@
       },
       "raw_total": 89.9,
       "security": {
-        "level": "none",
+        "level": "exposed",
         "basis": "assessment",
-        "effect": "none",
+        "effect": "capped",
         "deduction": 0.0
       }
     },
@@ -533,7 +872,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 13.31
+      "value": 11.69
     },
     "docs_rubric": {
       "model": "claude-opus-5-5",
@@ -907,5 +1246,5 @@
     }
   ],
   "first_seen_at": "2026-11-19T21:07:33+08:00",
-  "updated_at": "2026-11-20T12:12:35+08:00"
+  "updated_at": "2026-11-20T12:24:26+08:00"
 }

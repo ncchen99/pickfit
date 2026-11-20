@@ -254,16 +254,143 @@
     "status": "vulnerable",
     "unchecked_reason": null,
     "sources": [
-      "github.com/llmmanorg/llmman@8cb3e0a30721",
+      "github.com/llmmanorg/llmman@b6691a3fb74d",
       "Cargo.lock",
       "app/package-lock.json",
       "csi/go.mod",
-      "go-shim/go.mod"
+      "go-shim/go.mod",
+      "sbom:verify-llmman-20261102-174231-7765 (38 packages installed)"
     ],
-    "packages_checked": 1685,
-    "findings_total": 5,
-    "advisories_total": 5,
+    "packages_checked": 1691,
+    "findings_total": 14,
+    "advisories_total": 14,
     "findings": [
+      {
+        "package": "go:github.com/klauspost/compress",
+        "version": "v1.18.7",
+        "advisory": "GO-2026-6865",
+        "cves": [
+          "CVE-2026-116591"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.2",
+        "summary": "Panic on two-block frames in github.com/klauspost/compress",
+        "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "workspace": "go-shim",
+        "found_in": "go-shim/go.mod",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00333,
+        "fix_published_at": "2026-10-12T09:34:06Z",
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "paths": [
+          "go-shim/go.mod > github.com/klauspost/compress"
+        ],
+        "reachability": {
+          "method": "govulncheck_binary",
+          "result": "reachable",
+          "evidence": [
+            "govulncheck -mode=binary symbol level, /home/sbx/.local/bin/llmman: EstimateSizes"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.25.14",
+        "advisory": "GO-2023-1571",
+        "cves": [
+          "CVE-2022-41723"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.19.6",
+        "summary": "Denial of service via crafted HTTP/2 stream in net/http and golang.org/x/net",
+        "malicious": false,
+        "level": "exposed",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-llmman-20261102-174231-7765",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04561,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:Client.Do",
+          "symbol:Client.Get",
+          "symbol:Client.Head"
+        ],
+        "paths": [
+          "installed > /.local/bin/llmman > stdlib"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "go-shim/referrers.go:444: resp, err := client.Do(req)"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.25.14",
+        "advisory": "GO-2022-0535",
+        "cves": [
+          "CVE-2020-0601"
+        ],
+        "severity": "UNKNOWN",
+        "fixed_in": "1.12.16",
+        "summary": "Certificate validation bypass on Windows in crypto/x509",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-llmman-20261102-174231-7765",
+        "in_artifact": true,
+        "kev": true,
+        "epss": 0.89078,
+        "preconditions": [
+          "symbol:Certificate.systemVerify"
+        ],
+        "paths": [
+          "installed > /.local/bin/llmman > stdlib"
+        ]
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.25.14",
+        "advisory": "GO-2025-3563",
+        "cves": [
+          "CVE-2025-22871"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "1.23.8",
+        "summary": "Request smuggling due to acceptance of invalid chunked data in net/http",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-llmman-20261102-174231-7765",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00842,
+        "preconditions": [
+          "symbol:chunkedReader.Read",
+          "symbol:readChunkLine"
+        ],
+        "paths": [
+          "installed > /.local/bin/llmman > stdlib"
+        ]
+      },
       {
         "package": "crates:quinn-proto",
         "version": "0.11.16",
@@ -325,35 +452,213 @@
         ]
       },
       {
-        "package": "go:github.com/klauspost/compress",
-        "version": "v1.18.7",
-        "advisory": "GO-2026-6865",
+        "package": "go:stdlib",
+        "version": "go1.25.14",
+        "advisory": "GO-2021-0142",
         "cves": [
-          "CVE-2026-116591"
+          "CVE-2020-16845"
         ],
         "severity": "HIGH",
-        "fixed_in": "1.20.2",
-        "summary": "Panic on two-block frames in github.com/klauspost/compress",
+        "fixed_in": "1.13.15",
+        "summary": "Unbounded read from invalid inputs in encoding/binary",
         "malicious": false,
         "level": "conditional",
         "policy_version": "sec.v2",
         "counted": true,
         "scope": "runtime",
-        "workspace": "go-shim",
-        "found_in": "go-shim/go.mod",
+        "found_in": "sbom:verify-llmman-20261102-174231-7765",
+        "in_artifact": true,
         "kev": false,
-        "epss": 0.00333,
-        "fix_published_at": "2026-10-12T09:34:06Z",
+        "epss": 0.04861,
         "dos_only": true,
         "preconditions": [
           "denial_of_service",
-          "symbol:Compress",
-          "symbol:Decompress",
-          "symbol:Scratch.readNCount"
+          "symbol:ReadUvarint",
+          "symbol:ReadVarint"
         ],
         "paths": [
-          "go-shim/go.mod > github.com/klauspost/compress"
+          "installed > /.local/bin/llmman > stdlib"
         ]
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.25.14",
+        "advisory": "GO-2022-0229",
+        "cves": [
+          "CVE-2020-7919"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.12.16",
+        "summary": "Panic in certificate parsing in crypto/x509 and golang.org/x/crypto/cryptobyte",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-llmman-20261102-174231-7765",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.02647,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:crypto/x509",
+          "symbol:golang.org/x/crypto/cryptobyte"
+        ],
+        "paths": [
+          "installed > /.local/bin/llmman > stdlib"
+        ]
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.25.14",
+        "advisory": "GO-2022-0288",
+        "cves": [
+          "CVE-2021-44716"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.16.12",
+        "summary": "Unbounded memory growth in net/http and golang.org/x/net/http2",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-llmman-20261102-174231-7765",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04254,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:http2serverConn.canonicalHeader",
+          "symbol:Server.ServeConn",
+          "symbol:serverConn.canonicalHeader"
+        ],
+        "paths": [
+          "installed > /.local/bin/llmman > stdlib"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "go-shim/backend_docker.go:17: \"net/http\"",
+            "no call to http2serverConn.canonicalHeader, Server.ServeConn, serverConn.canonicalHeader found"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.25.14",
+        "advisory": "GO-2022-0536",
+        "cves": [
+          "CVE-2019-9512",
+          "CVE-2019-9514"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.11.13",
+        "summary": "Reset flood in net/http and golang.org/x/net/http",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-llmman-20261102-174231-7765",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.83958,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:http2serverConn.scheduleFrameWrite",
+          "symbol:http2serverConn.serve",
+          "symbol:http2serverConn.writeFrame"
+        ],
+        "paths": [
+          "installed > /.local/bin/llmman > stdlib"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "go-shim/backend_docker.go:17: \"net/http\"",
+            "no call to http2serverConn.scheduleFrameWrite, http2serverConn.serve, http2serverConn.writeFrame found"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.25.14",
+        "advisory": "GO-2022-0969",
+        "cves": [
+          "CVE-2022-27664"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.18.6",
+        "summary": "Denial of service in net/http and golang.org/x/net/http2",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-llmman-20261102-174231-7765",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.03487,
+        "dos_only": true,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:ListenAndServe",
+          "symbol:ListenAndServeTLS",
+          "symbol:Serve"
+        ],
+        "paths": [
+          "installed > /.local/bin/llmman > stdlib"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "go-shim/backend_docker.go:17: \"net/http\"",
+            "no call to ListenAndServe, ListenAndServeTLS, Serve found"
+          ]
+        }
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.25.14",
+        "advisory": "GO-2023-2102",
+        "cves": [
+          "CVE-2023-39325"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.10",
+        "summary": "HTTP/2 rapid reset can cause excessive work in net/http",
+        "malicious": false,
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
+        "scope": "runtime",
+        "found_in": "sbom:verify-llmman-20261102-174231-7765",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.03796,
+        "preconditions": [
+          "symbol:ListenAndServe",
+          "symbol:ListenAndServeTLS",
+          "symbol:Serve"
+        ],
+        "paths": [
+          "installed > /.local/bin/llmman > stdlib"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "go-shim/backend_docker.go:17: \"net/http\"",
+            "no call to ListenAndServe, ListenAndServeTLS, Serve found"
+          ]
+        }
       },
       {
         "package": "npm:decode-uri-component",
@@ -415,51 +720,54 @@
       }
     ],
     "database": "OSV.dev",
-    "checked_at": "2026-11-20T00:17:01+08:00",
+    "checked_at": "2026-11-20T12:24:26+08:00",
     "observation": {
       "scanner": "pickfit-security",
       "scanner_version": "sec.v2",
-      "target": "repo_lockfile",
-      "commit": "8cb3e0a307210a4a16a045b5ac871a279d8d8d8e",
-      "run_id": null,
-      "tool_version": null,
-      "artifact_sha256": [],
+      "target": "installed_artifact",
+      "commit": "b6691a3fb74d3411bec4370ea5d061e5ccf0677d",
+      "run_id": "verify-llmman-20261102-174231-7765",
+      "tool_version": "0.1.546 (fa27394)",
+      "artifact_sha256": [
+        "e7bb8f56c83fcc4f889ee2af92a22cf8ee959f670e93d201c20fe1544ce4dcd7"
+      ],
       "packages": {
         "crates": 530,
-        "go": 100,
+        "go": 106,
         "npm": 1055
       },
       "scopes": {
-        "runtime": 1171,
+        "runtime": 1177,
         "peer": 175,
         "dev": 339
       },
-      "advisories_fetched_at": "2026-11-20T00:17:01+08:00",
+      "advisories_fetched_at": "2026-11-20T12:24:26+08:00",
       "kev_catalog": "2026.11.18",
       "epss_date": "2026-11-20",
-      "findings_total": 30,
+      "findings_total": 195,
       "details": "security/llmman.json",
-      "details_sha256": "739d21a60a38cabb5073fb6c05c925fc1ca578741a09442233640071a3bafe9b"
+      "details_sha256": "5ff1c641c5652868c0104464d3c799f508eee2c95ccf80aa15fcc839b84d77b7"
     },
     "assessment": {
-      "level": "conditional",
+      "level": "exposed",
       "policy_version": "sec.v2",
       "reasons": [
-        "worst:RUSTSEC-2026-0340 crates:quinn-proto@0.11.16 (conditional)",
-        "worst:RUSTSEC-2026-0341 crates:quinn-proto@0.11.16 (conditional)",
-        "worst:GO-2026-6865 go:github.com/klauspost/compress@v1.18.7 (conditional)"
+        "worst:GO-2026-6865 go:github.com/klauspost/compress@v1.18.7 (exposed)",
+        "worst:GO-2023-1571 go:stdlib@go1.25.14 (exposed)",
+        "kev:GO-2022-0535 go:stdlib@go1.25.14 (conditional)"
       ],
       "counts": {
-        "conditional": 5
+        "exposed": 2,
+        "conditional": 12
       },
-      "uncounted": 25,
-      "assessed_at": "2026-11-20T00:17:01+08:00"
+      "uncounted": 181,
+      "assessed_at": "2026-11-20T12:24:26+08:00"
     },
     "coverage": {
       "state": "partial",
-      "target": "repo_lockfile",
-      "packages_found": 1688,
-      "packages_checked": 1685,
+      "target": "installed_artifact",
+      "packages_found": 1694,
+      "packages_checked": 1691,
       "components": [
         {
           "ecosystem": "crates",
@@ -515,6 +823,13 @@
           "gaps": [
             "resolve.pyproject_failed"
           ]
+        },
+        {
+          "ecosystem": "go",
+          "component": "sbom:verify-llmman-20261102-174231-7765",
+          "status": "scanned",
+          "packages": 38,
+          "gaps": []
         }
       ],
       "gaps": [
@@ -567,17 +882,20 @@
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-20T02:22:48+08:00",
+    "computed_at": "2026-11-20T12:24:26+08:00",
     "quality": {
-      "total": 82.8,
-      "raw_total": 82.8,
+      "total": 79.0,
       "confidence": 0.7,
-      "cap": null,
-      "cap_reason": null,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20.0
+          "weight": 20
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20
         },
         "install_docs": {
           "score": 0.6875,
@@ -597,17 +915,14 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10.0
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20.0
+          "weight": 10
         }
       },
+      "raw_total": 82.8,
       "security": {
-        "level": "conditional",
+        "level": "exposed",
         "basis": "assessment",
-        "effect": "note",
+        "effect": "capped",
         "deduction": 0.0
       }
     },
@@ -629,7 +944,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 10.35
+      "value": 9.88
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -907,5 +1222,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-20T02:22:48+08:00"
+  "updated_at": "2026-11-20T12:24:26+08:00"
 }

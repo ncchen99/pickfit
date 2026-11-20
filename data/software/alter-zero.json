@@ -384,8 +384,9 @@
     "unchecked_reason": null,
     "sources": [
       "npm:@linuztx/alter-zero (fresh install, 5 packages)",
-      "github.com/linuztx/alter-zero@66553cad57dd",
-      "Cargo.lock"
+      "github.com/linuztx/alter-zero@7f171ba7d0c5",
+      "Cargo.lock",
+      "sbom:verify-alter-zero-20261031-032204-389e (4 packages installed)"
     ],
     "packages_checked": 413,
     "findings_total": 2,
@@ -400,22 +401,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "attack_vector": "network",
-        "dos_only": true,
-        "fix_published_at": "2026-06-29T18:04:43Z",
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
         "scope": "runtime",
-        "paths": [
-          "alter-zero > wl-clipboard-rs > wayland-client > wayland-scanner > quick-xml"
-        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "counted": true,
-        "level": "conditional",
-        "policy_version": "sec.v2"
+        "paths": [
+          "alter-zero > wl-clipboard-rs > wayland-client > wayland-scanner > quick-xml"
+        ]
       },
       {
         "package": "crates:quick-xml",
@@ -426,19 +427,22 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "attack_vector": "network",
-        "dos_only": true,
-        "fix_published_at": "2026-06-29T18:04:43Z",
+        "level": "conditional",
+        "policy_version": "sec.v2",
+        "counted": true,
         "scope": "runtime",
-        "paths": [
-          "alter-zero > wl-clipboard-rs > wayland-client > wayland-scanner > quick-xml"
-        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "attack_vector": "network",
+        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:NsReader"
+        ],
+        "paths": [
+          "alter-zero > wl-clipboard-rs > wayland-client > wayland-scanner > quick-xml"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -446,22 +450,21 @@
           "evidence": [
             "the project's source does not use NsReader, but other packages depend on quick-xml"
           ]
-        },
-        "counted": true,
-        "level": "conditional",
-        "policy_version": "sec.v2"
+        }
       }
     ],
     "database": "OSV.dev",
-    "checked_at": "2026-11-20T00:06:03+08:00",
+    "checked_at": "2026-11-20T12:24:26+08:00",
     "observation": {
       "scanner": "pickfit-security",
       "scanner_version": "sec.v2",
-      "target": "repo_lockfile",
-      "commit": "66553cad57dd0cf2de6593a9c621d2eee190ab37",
-      "run_id": null,
-      "tool_version": null,
-      "artifact_sha256": [],
+      "target": "installed_artifact",
+      "commit": "7f171ba7d0c595d209b216d8bf908d02b1e9d2d0",
+      "run_id": "verify-alter-zero-20261031-032204-389e",
+      "tool_version": "alter-zero 0.19.0",
+      "artifact_sha256": [
+        "0f8072e37613758180508f42b7ba4aa5231803d9a3a760cfe1dadd3436036fcc"
+      ],
       "packages": {
         "crates": 408,
         "npm": 5
@@ -471,12 +474,12 @@
         "optional": 8,
         "workspace": 14
       },
-      "advisories_fetched_at": "2026-11-20T00:06:03+08:00",
+      "advisories_fetched_at": "2026-11-20T12:24:26+08:00",
       "kev_catalog": "2026.11.18",
       "epss_date": "2026-11-20",
       "findings_total": 16,
       "details": "security/alter-zero.json",
-      "details_sha256": "d60fa4f88fc7a52e5746e78bcb0d7bc27106feae41dbc2d91ea5cf0583ecac6c"
+      "details_sha256": "d56d8403d0414751ab2112bd80d163b10673df4da10d8a31dbf238c34806b4e2"
     },
     "assessment": {
       "level": "conditional",
@@ -491,12 +494,12 @@
         "not_shipped": 2
       },
       "uncounted": 12,
-      "assessed_at": "2026-11-20T00:06:03+08:00"
+      "assessed_at": "2026-11-20T12:24:26+08:00"
     },
     "coverage": {
-      "state": "partial",
-      "target": "repo_lockfile",
-      "packages_found": 417,
+      "state": "complete",
+      "target": "installed_artifact",
+      "packages_found": 413,
       "packages_checked": 413,
       "components": [
         {
@@ -523,32 +526,16 @@
           "gaps": [
             "lockfile.missing"
           ]
-        }
-      ],
-      "gaps": [
-        {
-          "code": "lockfile.missing",
-          "category": "lockfile_missing",
-          "ecosystem": "npm",
-          "component": "npm/package.json",
-          "detail": "package.json without a lockfile",
-          "capability": "lockfile_from_manifest:npm",
-          "found": 4,
-          "first_seen": "2026-11-20",
-          "last_seen": "2026-11-20"
         },
         {
-          "code": "binary.prebuilt_package",
-          "category": "binary_no_metadata",
           "ecosystem": "npm",
-          "component": "npm:@linuztx/alter-zero",
-          "detail": "the package wraps a compiled binary",
-          "capability": "sbom_binary",
-          "found": null,
-          "first_seen": "2026-11-20",
-          "last_seen": "2026-11-20"
+          "component": "sbom:verify-alter-zero-20261031-032204-389e",
+          "status": "scanned",
+          "packages": 4,
+          "gaps": []
         }
-      ]
+      ],
+      "gaps": []
     }
   },
   "scores": {
@@ -1238,5 +1225,5 @@
     }
   ],
   "first_seen_at": "2026-10-28T19:03:07+08:00",
-  "updated_at": "2026-11-20T02:22:48+08:00"
+  "updated_at": "2026-11-20T12:24:26+08:00"
 }
