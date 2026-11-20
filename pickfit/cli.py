@@ -955,6 +955,10 @@ def main(argv: list[str] | None = None) -> int:
     _add_security_command(sub)
     from pickfit.coverage import add_parser as add_coverage_parser
     add_coverage_parser(sub)
+    from pickfit.sbom_replay import add_parser as add_sbom_replay_parser
+    add_sbom_replay_parser(sub)
+    from pickfit.rubric_batch import add_parser as add_score_batch_parser
+    add_score_batch_parser(sub)
     _add_queue_commands(sub)
     _add_outcomes_command(sub)
     _add_publish_command(sub)

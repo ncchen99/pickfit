@@ -836,12 +836,12 @@ def test_the_repository_read_names_every_gap(tmp_path: Path) -> None:
     got = security.repo_deps(tmp_path)
     gaps = {(g["code"], g["ecosystem"], g["component"]): g.get("found") for g in got.gaps}
     assert gaps == {("lockfile.missing", "npm", "package.json"): 2, ("lockfile.missing", "crates", "Cargo.toml"): 1,
-                    ("lockfile.unsupported_format", "npm", "web/yarn.lock"): 2,
                     ("adapter.missing", "maven", "android/build.gradle"): 2,
                     ("advisory_db.no_ecosystem", "c/c++", "native/CMakeLists.txt"): None,
                     ("lockfile.missing", "pypi", "requirements.txt"): 2,
                     ("lockfile.parse_error", "crates", "sub/Cargo.lock"): None}
-    assert [c["component"] for c in got.components if c["status"] == "scanned"] == ["go.mod"]
+    # yarn.lock is read since 11/20 (yarn_graph): web/yarn.lock is scanned, no longer a gap.
+    assert [c["component"] for c in got.components if c["status"] == "scanned"] == ["go.mod", "web/yarn.lock"]
     empty = tmp_path / "empty"
     write(empty, "README.md", "hello\n")
     assert [g["code"] for g in security.repo_deps(empty).gaps] == ["lockfile.none_found"]

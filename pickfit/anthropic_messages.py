@@ -52,6 +52,10 @@ STREAM_ABOVE_TOKENS = 16_000
 
 # Request keys with no counterpart that are safe to leave out: server-side storage and cache hints.
 _IGNORED_KEYS = frozenset({"store", "include", "prompt_cache_key", "user", "metadata", "truncation"})
+# How long the system prompt (instructions, tool and schema notes) stays in the prompt cache: None for the default
+# five minutes, "1h" for an hour. An hour costs 2x input to write instead of 1.25x, so it pays only for a prefix many
+# calls share with gaps of more than five minutes between them (extraction: the same instructions for every record).
+CACHE_RETENTION = {None: None, "5m": None, "1h": "1h"}
 _CHAT_KEYS = frozenset({"model", "messages", "tools", "tool_choice", "response_format", "max_completion_tokens",
                         "reasoning_effort", "parallel_tool_calls", "n"})
 _RESPONSES_KEYS = frozenset({"model", "instructions", "input", "tools", "tool_choice", "text", "reasoning",
@@ -317,7 +321,10 @@ def to_request(endpoint: str, request: dict[str, Any], *, fallbacks: bool = True
     cannot compile it (more than UNION_LIMIT union-typed parameters, or `prompt_schema`: the API refused
     it): then the schema goes in the system prompt and the caller's own validation is the check."""
     known = _CHAT_KEYS if endpoint == "chat" else _RESPONSES_KEYS
-    unknown = request.keys() - known - _IGNORED_KEYS
+    unknown = request.keys() - known - _IGNORED_KEYS - {"prompt_cache_retention"}
+    retention = request.get("prompt_cache_retention")
+    if retention not in CACHE_RETENTION:
+        raise ValueError(f"prompt_cache_retention {retention!r}: only 5m and 1h have an Anthropic counterpart")
     if unknown:
         raise ValueError(f"request keys {sorted(unknown)} have no Anthropic counterpart")
     if endpoint == "chat":
@@ -365,7 +372,10 @@ def to_request(endpoint: str, request: dict[str, Any], *, fallbacks: bool = True
     kwargs: dict[str, Any] = {"model": request["model"], "max_tokens": max_tokens, "messages": messages,
                               "output_config": output_config}
     if system:
-        kwargs["system"] = [{"type": "text", "text": system, "cache_control": {"type": "ephemeral"}}]
+        control: dict[str, Any] = {"type": "ephemeral"}
+        if CACHE_RETENTION[retention]:
+            control["ttl"] = CACHE_RETENTION[retention]
+        kwargs["system"] = [{"type": "text", "text": system, "cache_control": control}]
     if tools:
         kwargs["tools"] = tools
     if tool_choice:
@@ -389,7 +399,10 @@ def _usage(usage: dict[str, Any], endpoint: str) -> dict[str, Any]:
     read = usage.get("cache_read_input_tokens") or 0
     total_in = (usage.get("input_tokens") or 0) + written + read
     out = usage.get("output_tokens") or 0
+    hour = ((usage.get("cache_creation") or {}).get("ephemeral_1h_input_tokens") or 0) if written else 0
     details = {"cached_tokens": read, "cache_write_tokens": written}
+    if hour:
+        details["cache_write_1h_tokens"] = min(hour, written)
     if endpoint == "chat":
         return {"prompt_tokens": total_in, "completion_tokens": out, "total_tokens": total_in + out,
                 "prompt_tokens_details": details}

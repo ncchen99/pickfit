@@ -54,7 +54,7 @@ last_seen}; `capability` names the harness capability that would close it, `foun
 | lockfile.missing            | lockfile_missing     | a manifest (package.json, Cargo.toml, requirements) without a  | lockfile_from_manifest: |
 |                             |                      | lockfile or pins pickfit reads                                 | <eco>                   |
 | lockfile.none_found         | lockfile_missing     | no manifest or lockfile pickfit recognizes in the repository   | manifest_detection      |
-| lockfile.unsupported_format | lockfile_unreadable  | yarn.lock, bun.lock(b), pnpm-lock before v6                    | read_lockfile:<format>  |
+| lockfile.unsupported_format | lockfile_unreadable  | bun.lockb (binary), pnpm-lock before v6                        | read_lockfile:<format>  |
 | lockfile.parse_error        | lockfile_unreadable  | a lockfile pickfit reads failed to parse                       | fix_lockfile_reader     |
 | resolve.registry_failed     | resolve_failed       | the software's own registry package did not resolve            | resolve_in_sandbox      |
 | resolve.pyproject_failed    | resolve_failed       | pyproject.toml did not resolve (uv pip compile --no-build)     | resolve_in_sandbox      |
@@ -96,7 +96,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter, deque
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field, replace
 from datetime import datetime, timedelta
@@ -123,7 +123,7 @@ PERIPHERAL = re.compile(r"(^|/)(website|site|docs?|landing|www|demo|examples?|be
                         r"__tests__|fixtures?|scripts|editors?|action|vscode|node_modules|vendor|tools|external|"
                         r"third_party|reference|mockups|spikes?|eval|fuzz|testdata|experiments?|skill_assets|skills|qa|"
                         r"labs?|probes?|\.[^/]+)/", re.I)
-UNSUPPORTED_LOCKS = ("yarn.lock", "bun.lock", "bun.lockb")
+UNSUPPORTED_LOCKS = ("bun.lockb",)  # yarn.lock and bun.lock are read since 11/20
 MAX_FINDINGS = 60  # sec.v1's record list
 RECORD_WARN = 20  # sec.v2: findings that warn kept in the record (all are in data/security/<slug>.json)
 RECORD_UNREACHABLE = 10  # and the ones present but unreachable
@@ -1417,6 +1417,185 @@ def _yarn_entries(text: str) -> int:
     return len(re.findall(r'(?m)^"?(?:@[^@\s"/]+/)?[^@\s"]+@[^\n]*:\s*$', text))
 
 
+def _npm_name(spec: str) -> str:
+    """'@scope/a@^1' -> '@scope/a'; 'a@npm:1.2.3' -> 'a'."""
+    at = spec.find("@", 1)
+    return spec[:at] if at > 0 else spec
+
+
+_YARN_KV = re.compile(r'^("(?:[^"\\]|\\.)*"|[^\s"]+?):?\s+(.+)$')
+
+
+def _yarn_kv(line: str) -> tuple[str, str] | None:
+    """`version "1.3.0"` (v1) and `version: 1.3.0` (berry) alike."""
+    m = _YARN_KV.match(line)
+    if not m:
+        return None
+    return m.group(1).strip('"').rstrip(":"), m.group(2).strip().strip('"')
+
+
+def _yarn_blocks(text: str) -> list[dict[str, Any]]:
+    """The entries of a yarn.lock, v1 or berry (v2+): each {keys, version, resolution, deps: {group: {name: range}}}."""
+    blocks: list[dict[str, Any]] = []
+    cur: dict[str, Any] | None = None
+    group: str | None = None
+    for line in text.splitlines():
+        body = line.strip()
+        if not body or body.startswith("#"):
+            continue
+        indent = len(line) - len(line.lstrip(" "))
+        if indent == 0:
+            cur, group = None, None
+            if body.endswith(":") and body != "__metadata:":
+                keys = [k.strip() for k in body[:-1].replace('"', "").split(",")]
+                cur = {"keys": [k for k in keys if k], "version": None, "resolution": None, "deps": {}}
+                blocks.append(cur)
+            continue
+        if cur is None:
+            continue
+        if indent == 2:
+            group = None
+            if body.endswith(":") and " " not in body:
+                group = body[:-1].strip('"')
+                cur["deps"].setdefault(group, {})
+                continue
+            kv = _yarn_kv(body)
+            if kv and kv[0] in ("version", "resolution"):
+                cur[kv[0]] = kv[1]
+        elif group is not None:
+            kv = _yarn_kv(body)
+            if kv:
+                cur["deps"][group][kv[0]] = kv[1]
+    return blocks
+
+
+_DEP_GROUPS = (("dependencies", "normal"), ("optionalDependencies", "normal"), ("peerDependencies", "peer"))
+_ROOT_GROUPS = (("dependencies", "runtime"), ("optionalDependencies", "runtime"), ("devDependencies", "dev"),
+                ("peerDependencies", "peer"))
+
+
+def _root_importer(graph: Graph, manifest: dict[str, Any], resolve: Callable[[str, str], str | None], *,
+                   root_label: str, own: set[str] | None, kind: str | None) -> None:
+    """The lockfile's own package.json as the graph's one importer (yarn.lock and bun.lock name no importers)."""
+    imp = Importer(".", manifest.get("name"), bool(manifest.get("bin")), False, [], bool(manifest.get("dependencies")),
+                   frozenset(manifest.get("peerDependencies") or {}))
+    kids: list[tuple[str, str]] = []
+    for group, scope in _ROOT_GROUPS:
+        for name, rng in (manifest.get(group) or {}).items():
+            if name in ("electron", "electron-nightly"):
+                imp.electron = True
+            kid = resolve(name, str(rng))
+            if kid:
+                real = "runtime" if scope == "dev" and name in ("electron", "electron-nightly") else scope
+                kids.append((kid, real))
+    shipped = shipped_importers({".": imp}, own or set(), kind)
+    graph.workspace_of[root_label] = "."
+    for kid, scope in kids:
+        graph.roots.append((root_label, kid, scope if "." in shipped else "workspace"))
+
+
+def yarn_graph(text: str, *, found_in: str = "yarn.lock", manifest: dict[str, Any] | None = None,
+               root_label: str = ".", own: set[str] | None = None, kind: str | None = None) -> Graph:
+    """A yarn.lock (v1, or berry v2+) as a graph. Entries are keyed by descriptors (name@range); a dependency
+    resolves to the entry that lists its descriptor. The package.json beside it gives the roots and their scope; an
+    entry no root reaches counts as runtime, as in every graph. Workspace and link entries are not packages."""
+    graph = Graph(found_in, "npm", build_tools=NATIVE_BUILD_TOOLS | (BUNDLERS if kind in BUNDLER_KINDS else frozenset()))
+    by_desc: dict[str, str] = {}
+    blocks = _yarn_blocks(text)
+    for b in blocks:
+        version = b["version"]
+        if not b["keys"] or not version or "workspace:" in (b["resolution"] or "") or version.startswith("0.0.0-use"):
+            continue
+        nid = b["keys"][0]
+        graph.nodes[nid] = (_npm_name(nid), version)
+        for key in b["keys"]:
+            by_desc[key] = nid
+
+    def resolve(name: str, rng: str) -> str | None:
+        for desc in (f"{name}@{rng}", f"{name}@npm:{rng}", rng if rng.startswith(name + "@") else ""):
+            if desc in by_desc:
+                return by_desc[desc]
+        return None
+
+    for b in blocks:
+        nid = b["keys"][0] if b["keys"] else None
+        if nid not in graph.nodes:
+            continue
+        for group, kind_ in _DEP_GROUPS:
+            for name, rng in (b["deps"].get(group) or {}).items():
+                kid = resolve(name, rng)
+                if kid and kid != nid:
+                    graph.edges.setdefault(nid, []).append((kid, kind_))
+    if not graph.nodes and blocks:
+        raise ValueError("no package entry with a version")
+    _root_importer(graph, manifest or {}, resolve, root_label=root_label, own=own, kind=kind)
+    return graph
+
+
+def _bun_segments(key: str) -> list[str]:
+    """'a/@s/b/c' -> ['a', '@s/b', 'c']: a bun.lock package key is the install path, one package name per level."""
+    parts, out = key.split("/"), []
+    i = 0
+    while i < len(parts):
+        if parts[i].startswith("@") and i + 1 < len(parts):
+            out.append(f"{parts[i]}/{parts[i + 1]}")
+            i += 2
+        else:
+            out.append(parts[i])
+            i += 1
+    return out
+
+
+def bun_graph(text: str, *, found_in: str = "bun.lock", root_label: str = ".", own: set[str] | None = None,
+              kind: str | None = None) -> Graph:
+    """A text bun.lock (bun 1.2+, JSON with trailing commas) as a graph. `packages` is keyed by install path
+    ('a', 'a/b' for a b nested under a); each value is [name@version, registry, {dependencies...}, integrity]. A
+    dependency resolves from the deepest path up, as Node does. The root workspace ('') gives the roots; other
+    workspaces count as workspace scope. bun.lockb (binary) is not read."""
+    data = json.loads(re.sub(r",(\s*[}\]])", r"\1", text))
+    if not isinstance(data, dict) or not isinstance(data.get("packages"), dict):
+        raise ValueError("no packages map")
+    graph = Graph(found_in, "npm", build_tools=NATIVE_BUILD_TOOLS | (BUNDLERS if kind in BUNDLER_KINDS else frozenset()))
+    meta: dict[str, dict[str, Any]] = {}
+    for key, value in data["packages"].items():
+        if not isinstance(value, list) or not value or not isinstance(value[0], str):
+            continue
+        name = _npm_name(value[0])
+        version = value[0][len(name) + 1:]
+        if not version or ":" in version or "/" in version:  # workspace:, github:, file:, a path
+            continue
+        graph.nodes[key] = (name, version)
+        meta[key] = next((v for v in value[1:] if isinstance(v, dict)), {})
+
+    def resolve_from(base: str, name: str) -> str | None:
+        segs = _bun_segments(base) if base else []
+        for i in range(len(segs), -1, -1):
+            cand = "/".join([*segs[:i], name])
+            if cand in graph.nodes:
+                return cand
+        return None
+
+    for key, m in meta.items():
+        for group, kind_ in _DEP_GROUPS:
+            for name in m.get(group) or {}:
+                kid = resolve_from(key, name)
+                if kid and kid != key:
+                    graph.edges.setdefault(key, []).append((kid, kind_))
+    workspaces = data.get("workspaces") or {}
+    _root_importer(graph, workspaces.get("") or {}, lambda name, _rng: resolve_from("", name), root_label=root_label,
+                   own=own, kind=kind)
+    for path, ws in workspaces.items():
+        if not path or not isinstance(ws, dict):
+            continue
+        graph.workspace_of[path] = path
+        for group, _scope in _ROOT_GROUPS:
+            for name in ws.get(group) or {}:
+                kid = resolve_from(path, name) or resolve_from("", name)
+                if kid:
+                    graph.roots.append((path, kid, "workspace"))
+    return graph
+
+
 def _covered_by(folder: str, locks: set[str]) -> bool:
     """A lockfile in the folder or one above it covers a manifest there (a workspace's root lockfile)."""
     parts = folder.split("/") if folder else []
@@ -1501,6 +1680,25 @@ def repo_deps(root: Path, ctx: ReadContext = ReadContext(), *, resolve_python: b
             elif name in ("uv.lock", "poetry.lock") or re.fullmatch(r"requirements(-lock)?\.txt", name):
                 recognized = True
                 py_locks.setdefault(f.parent, []).append(f)
+            elif name in ("yarn.lock", "bun.lock"):
+                recognized = True
+                npm_lock_dirs.add(folder)
+                text = f.read_text(encoding="utf-8", errors="replace")
+                try:
+                    graph = (yarn_graph(text, found_in=rel, manifest=_package_json(f.parent / "package.json"),
+                                        own=set(ctx.own), kind=ctx.kind) if name == "yarn.lock" else
+                             bun_graph(text, found_in=rel, own=set(ctx.own), kind=ctx.kind))
+                except (ValueError, IndexError, TypeError) as err:
+                    found = _yarn_entries(text) if name == "yarn.lock" else None
+                    missed("lockfile.parse_error", "npm", rel, f"{name.replace('.', '_')}: {err}"[:200], found)
+                    root_unreadable |= "/" not in rel
+                    continue
+                got = graph.deps(ctx.supported)
+                if not got:
+                    missed("lockfile.parse_error", "npm", rel, f"{name.replace('.', '_')}: no packages", 0)
+                    root_unreadable |= "/" not in rel
+                    continue
+                took(rel, got, "npm")
             elif name in UNSUPPORTED_LOCKS:
                 recognized = True
                 unsupported = True
