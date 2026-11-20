@@ -35,7 +35,10 @@ if args[:3] == ["apple-silicon", "os", "list"]:
     out([{"id": "os-26", "version": "26", "is_beta": False}, {"id": "os-15", "version": "15", "is_beta": False},
          {"id": "os-15b", "version": "15", "is_beta": True}])
 if args[:3] == ["apple-silicon", "server-type", "list"]:
-    stock = json.loads(os.environ.get("FAKE_STOCK", '{"M4-S": "available", "M4-SP": "low_stock"}'))
+    zone = next((a.split("=", 1)[1] for a in args if a.startswith("zone=")), "")
+    by_zone = json.loads(os.environ.get("FAKE_STOCK_BY_ZONE", "{}"))
+    stock = by_zone[zone] if zone in by_zone else json.loads(
+        os.environ.get("FAKE_STOCK", '{"M4-S": "available", "M4-SP": "low_stock"}'))
     out([{"name": k, "stock": v} for k, v in stock.items()])
 if args[:3] == ["apple-silicon", "server", "create"]:
     if "type=" + os.environ.get("FAKE_CREATE_FAILS", "-") in args:
@@ -353,3 +356,39 @@ def test_an_api_key_that_may_not_list_ssh_keys_still_rents_with_a_registered_key
     monkeypatch.setenv("FAKE_IAM_ERROR", "connection refused")
     with pytest.raises(BoxError, match="connection refused"):
         mh.ScalewayProvider(scw=str(scw)).create("mac2", 15, PUBLIC_KEY, print)
+
+
+@POSIX_ONLY
+def test_out_of_stock_in_paris_1_rents_in_paris_3_and_keeps_that_zone(scw: Path, tmp_path: Path,
+                                                                      monkeypatch: pytest.MonkeyPatch):
+    # 11/20 evening: every type in fr-par-1 was out of stock for hours. The rental goes on to fr-par-3, and the host
+    # remembers fr-par-3 for SSH, refresh and delete.
+    monkeypatch.setenv("FAKE_STOCK_BY_ZONE", json.dumps({"fr-par-1": {"M4-S": "no_stock", "M4-SP": "no_stock"},
+                                                         "fr-par-3": {"M2-M": "available"}}))
+    logs: list[str] = []
+    rec = mh.ScalewayProvider(scw=str(scw)).create("mac1", 15, PUBLIC_KEY, logs.append)
+    creates = [c for c in _scw_calls(scw) if c[:3] == ["apple-silicon", "server", "create"]]
+    assert len(creates) == 1 and "zone=fr-par-3" in creates[0] and "type=M2-M" in creates[0]
+    assert rec.zone == "fr-par-3" and any("trying fr-par-3" in line for line in logs)
+    later = mh.provider_for(rec, scw=str(scw))  # what refresh and delete use
+    assert later.zones == ("fr-par-3",)
+    later.delete(rec, print, now=mh.datetime(2026, 11, 19, tzinfo=mh.UTC))
+    assert ["apple-silicon", "server", "delete", "srv-1", "zone=fr-par-3", "-o", "json"] in _scw_calls(scw)
+
+
+@POSIX_ONLY
+def test_out_of_stock_everywhere_says_so_and_rents_nothing(scw: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("FAKE_STOCK_BY_ZONE", json.dumps({"fr-par-1": {"M4-S": "no_stock", "M2-M": "no_stock"},
+                                                         "fr-par-3": {"M1-M": "available"}}))
+    with pytest.raises(BoxError) as err:
+        mh.ScalewayProvider(scw=str(scw)).create("mac1", 15, PUBLIC_KEY, print)
+    text = str(err.value)
+    assert "no Scaleway Mac mini is in stock in fr-par-1, fr-par-3" in text
+    assert "M1-M (8 GB, too little for an 8 GiB macOS VM)" in text  # what fr-par-3 has, and why it is not rented
+    assert not any(c[:3] == ["apple-silicon", "server", "create"] for c in _scw_calls(scw))
+
+
+def test_zones_come_from_a_comma_list_or_the_default():
+    assert mh.ScalewayProvider().zones == ("fr-par-1", "fr-par-3")
+    assert mh.ScalewayProvider(zone="fr-par-3").zones == ("fr-par-3",)
+    assert mh.ScalewayProvider(zone="fr-par-3, fr-par-1").zones == ("fr-par-3", "fr-par-1")

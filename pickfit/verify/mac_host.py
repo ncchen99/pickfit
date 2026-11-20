@@ -172,11 +172,23 @@ class ScalewayProvider(Provider):
     """Scaleway Apple silicon through `scw` (logged in with `scw login`). A Mac mini is billed for at least 24 h."""
 
     key = "scaleway"
-    TYPES = ("M4-S", "M4-SP", "M4-M")  # cheapest first; €0.22, €0.24, €0.29 an hour on 2026-11-17
+    # Cheapest first; €0.22, €0.24, €0.29 an hour on 2026-11-17. M2-M (16 GB, as M4-S) is the last resort: no price on
+    # file, so the ledger says so. M1-M is left out: its 8 GB cannot hold one of pickfit's 8 GiB macOS VMs.
+    TYPES = ("M4-S", "M4-SP", "M4-M", "M2-M")
+    TOO_SMALL = {"M1-M": "8 GB, too little for an 8 GiB macOS VM"}
     EUR_PER_HOUR = {"M4-S": 0.22, "M4-SP": 0.24, "M4-M": 0.29}  # scaleway.com/en/pricing/apple-silicon, 2026-11-17
+    # Where to rent, in order: Paris 1 first, Paris 3 when Paris 1 has none in stock (11/20: every type in fr-par-1
+    # was out of stock for hours). A host keeps the zone it was rented in, for SSH, refresh and delete.
+    ZONES = ("fr-par-1", "fr-par-3")
 
-    def __init__(self, zone: str = "fr-par-1", scw: str = "scw", types: tuple[str, ...] = TYPES) -> None:
-        self.zone, self.scw, self.types = zone, scw, types
+    def __init__(self, zone: str | None = None, scw: str = "scw", types: tuple[str, ...] = TYPES,
+                 zones: tuple[str, ...] | None = None) -> None:
+        """zone: one zone, or several separated by commas (tried in order); zones: the same as a tuple. With
+        neither, ZONES."""
+        if zones is None:
+            zones = tuple(z.strip() for z in zone.split(",") if z.strip()) if zone else self.ZONES
+        self.zones = tuple(zones) or self.ZONES
+        self.zone, self.scw, self.types = self.zones[0], scw, types
 
     def _call(self, *args: str, timeout: float = 120) -> Any:
         done = subprocess.run([self.scw, *args, f"zone={self.zone}", "-o", "json"], capture_output=True,
@@ -222,25 +234,48 @@ class ScalewayProvider(Provider):
                 return
         self._iam("ssh-key", "create", f"name={name}", f"public-key={public_key.strip()}")
 
+    def _stock_note(self) -> str:
+        """What the zone has that pickfit will not rent, for the out-of-stock message."""
+        try:
+            listed = self._call("apple-silicon", "server-type", "list")
+        except BoxError:
+            return ""
+        small = [f"{t['name']} ({self.TOO_SMALL[t['name']]})" for t in listed
+                 if t.get("name") in self.TOO_SMALL and t.get("stock") in ("available", "low_stock")]
+        return f", only {', '.join(small)}" if small else ""
+
     def create(self, name: str, macos: int, public_key: str, log: Callable[[str], None]) -> HostRecord:
         self._log = log
         self.ensure_key(public_key, f"pickfit-{name}")
-        os_id = self.os_id(macos)
-        types = self.in_stock()
-        if not types:
-            raise BoxError(f"no Scaleway Mac mini of type {', '.join(self.types)} is in stock in {self.zone}; "
-                           "try again later or another zone (--zone)")
-        server, errors = None, []
-        for kind in types:
+        server, kind, why = None, "", []
+        for zone in self.zones:  # the first zone with a Mac in stock, in order
+            self.zone = zone
             try:
-                log(f"scaleway: creating a {kind} Mac mini ({self.zone}, macOS {macos}); billed for 24 h at least")
-                server = self._call("apple-silicon", "server", "create", f"type={kind}", f"name={name}",
-                                    f"os-id={os_id}")
+                os_id = self.os_id(macos)
+                types = self.in_stock()
+            except BoxError as err:
+                why.append(f"{zone}: {err}")
+                continue
+            if not types:
+                why.append(f"{zone}: none of {', '.join(self.types)} in stock{self._stock_note()}")
+                if zone != self.zones[-1]:
+                    log(f"scaleway: no Mac mini in stock in {zone}; trying {self.zones[self.zones.index(zone) + 1]}")
+                continue
+            for kind in types:
+                try:
+                    log(f"scaleway: creating a {kind} Mac mini ({zone}, macOS {macos}); billed for 24 h at least")
+                    server = self._call("apple-silicon", "server", "create", f"type={kind}", f"name={name}",
+                                        f"os-id={os_id}")
+                    break
+                except BoxError as err:  # stock moves between the list and the create
+                    why.append(f"{zone} {kind}: {err}")
+            if server is not None:
                 break
-            except BoxError as err:  # stock moves between the list and the create
-                errors.append(f"{kind}: {err}")
         if server is None:
-            raise BoxError("could not create a Mac mini: " + "; ".join(errors))
+            if all(" in stock" in w for w in why):
+                raise BoxError(f"no Scaleway Mac mini is in stock in {', '.join(self.zones)} ({'; '.join(why)}); "
+                               "try again later")
+            raise BoxError("could not create a Mac mini: " + "; ".join(why))
         log(f"scaleway: {server['id']} created; waiting until it is ready (often 10-30 minutes)")
         made = HostRecord(name=name, provider=self.key, server_id=server["id"], zone=self.zone,
                           server_type=server.get("type") or kind, created_at=server.get("created_at", ""))
@@ -883,7 +918,8 @@ def add_parser(sub: Any) -> None:
                                    "then the root step")
     u.add_argument("name")
     u.add_argument("--provider", default="scaleway", choices=sorted(k for k in PROVIDERS if k != "ssh"))
-    u.add_argument("--zone", default="fr-par-1")
+    u.add_argument("--zone", default=None,
+                   help="Scaleway zone, or several separated by commas, tried in order (default fr-par-1,fr-par-3)")
     u.add_argument("--macos", type=int, default=DEFAULT_MACOS, choices=sorted(MACOS))
     u.add_argument("--key", default=None, help=f"SSH key (default {DEFAULT_KEY}, made if missing)")
     u.add_argument("--password-stdin", action="store_true", help="root step: read the sudo password from stdin")

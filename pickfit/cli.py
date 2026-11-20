@@ -715,7 +715,8 @@ def _add_queue_commands(sub: argparse._SubParsersAction) -> None:
                         "~/.pickfit/ssh/mac-host). Give one already in the Scaleway project when the API key may not "
                         "list or add SSH keys"),
     w.add_argument("--mac-provider", default="scaleway", help="macOS: who rents the Mac (default scaleway)")
-    w.add_argument("--mac-zone", default=None, help="macOS: the provider's zone (Scaleway default fr-par-1)")
+    w.add_argument("--mac-zone", default=None,
+                   help="macOS: the provider's zone, or several separated by commas, tried in order (Scaleway default fr-par-1,fr-par-3)")
     w.add_argument("--mac-root-from-provider", action="store_true",
                    help="macOS: read a rented Mac's sudo password from the provider and pipe it into its root step "
                         "(never logged or saved); without it the lane waits for `pickfit mac-host root NAME`")
