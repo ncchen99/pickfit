@@ -1,0 +1,885 @@
+{
+  "schema_version": "software.v1",
+  "slug": "calibre",
+  "repo_id": "gh:10332822",
+  "name": "calibre",
+  "summary": "An e-book manager that views, converts, edits and catalogs e-books in major formats and communicates with e-book reader devices.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "productivity_docs",
+  "kind": "desktop_app",
+  "audience": null,
+  "maturity": null,
+  "tags": [
+    "calibre",
+    "ebook",
+    "ebook-formats",
+    "ebook-manager",
+    "ebook-reader",
+    "ebooks",
+    "epub",
+    "epub-generation",
+    "kindle",
+    "python"
+  ],
+  "use_cases": [
+    "download newspapers and convert them into e-books",
+    "fetch metadata for books from the internet"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "view, convert, edit and catalog e-books",
+    "communicate with e-book reader devices",
+    "fetch book metadata from the internet",
+    "download newspapers as e-books"
+  ],
+  "capabilities": [
+    {
+      "label": "View e-books",
+      "area": "reading"
+    },
+    {
+      "label": "Convert e-books between formats",
+      "area": "conversion"
+    },
+    {
+      "label": "Edit e-books",
+      "area": "editing"
+    },
+    {
+      "label": "Catalog e-book library",
+      "area": "library"
+    },
+    {
+      "label": "Open books via calibre URLs",
+      "area": "integrations"
+    },
+    {
+      "label": "Add an e-book to the library",
+      "area": "library"
+    },
+    {
+      "label": "Use a library at a specified path",
+      "area": "library"
+    },
+    {
+      "label": "Start minimized to system tray",
+      "area": "interface"
+    },
+    {
+      "label": "Shut down a running calibre instance"
+    },
+    {
+      "label": "Start while ignoring custom plugins",
+      "area": "plugins"
+    }
+  ],
+  "why_worth_it": null,
+  "homepage": "https://calibre-ebook.com",
+  "repo": {
+    "url": "https://github.com/kovidgoyal/calibre",
+    "full_name": "kovidgoyal/calibre",
+    "created_at": "2013-05-28T10:03:23Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "windows",
+    "macos"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-calibre-20261120-191933-d55d",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "U=$(curl -fsSL https://api.github.com/repos/kovidgoyal/calibre/releases/latest | grep -o 'https://[^\"]*x86_64\\.txz' | grep -v debug) && curl -fL -o /tmp/calibre.txz \"$U\"",
+          "purpose": "Download the official calibre 9.18.0 x86_64 binary tarball from GitHub releases"
+        },
+        {
+          "command": "mkdir -p ~/calibre-bin && tar -xJf /tmp/calibre.txz -C ~/calibre-bin",
+          "purpose": "Extract it into ~/calibre-bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "~/calibre-bin/calibre --version",
+        "expected_signal": "calibre (calibre 9.18)"
+      },
+      "first_task": "~/calibre-bin/ebook-convert /tmp/book.txt /tmp/book.epub --title \"Pickfit Chronicle\" --authors \"Ada Tester\" && ~/calibre-bin/ebook-meta /tmp/book.epub && ~/calibre-bin/ebook-convert /tmp/book.epub /tmp/back.txt && cat /tmp/back.txt"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "GPL-3.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v9.18.0",
+    "published_at": "2026-11-06T02:37:50Z",
+    "url": "https://github.com/kovidgoyal/calibre/releases/tag/v9.18.0"
+  },
+  "verification": {
+    "level": "install",
+    "unverified_reason": null,
+    "checked_at": "2026-11-20T19:21:31.073018+08:00",
+    "runs": [
+      {
+        "id": "verify-calibre-20261120-191933-d55d",
+        "level": "install",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-gui:91f559e213dc",
+        "checked_at": "2026-11-20T19:21:31.073018+08:00",
+        "tool_version": "calibre 9.18",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "U=$(curl -fsSL https://api.github.com/repos/kovidgoyal/calibre/releases/latest | grep -o 'https://[^\"]*x86_64\\.txz' | grep -v debug) && curl -fL -o /tmp/calibre.txz \"$U\"",
+            "purpose": "Download the official calibre 9.18.0 x86_64 binary tarball from GitHub releases"
+          },
+          {
+            "command": "mkdir -p ~/calibre-bin && tar -xJf /tmp/calibre.txz -C ~/calibre-bin",
+            "purpose": "Extract it into ~/calibre-bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "~/calibre-bin/calibre --version",
+            "expected_signal": "calibre (calibre 9.18)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "calibre (calibre 9.18)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "~/calibre-bin/ebook-convert /tmp/book.txt /tmp/book.epub --title \"Pickfit Chronicle\" --authors \"Ada Tester\" && ~/calibre-bin/ebook-meta /tmp/book.epub && ~/calibre-bin/ebook-convert /tmp/book.epub /tmp/back.txt && cat /tmp/back.txt",
+            "expected_signal": "The Pickfit Chronicle Chapter one. The quick brown fox jumps over the lazy dog near the riverbank.",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "The Pickfit Chronicle Chapter one. The quick brown fox jumps over the lazy dog near the riverbank.",
+            "setup": [
+              {
+                "command": "cat > /tmp/book.txt <<'EOF'\nThe Pickfit Chronicle\n\nChapter one. The quick brown fox jumps over the lazy dog near the riverbank.\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "~/calibre-bin/calibredb add /tmp/book.epub --library-path ~/lib1 && ~/calibre-bin/calibredb list --library-path ~/lib1 --fields title,authors,formats",
+            "expected_signal": "Added book ids: 1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Added book ids: 1",
+            "setup": [
+              {
+                "command": "cat > /tmp/book.txt <<'EOF'\nThe Pickfit Chronicle\n\nChapter one. The quick brown fox jumps over the lazy dog near the riverbank.\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "~/calibre-bin/ebook-convert /tmp/book.txt /tmp/book.epub --title \"Pickfit Chronicle\" --authors \"Ada Tester\" && ~/calibre-bin/ebook-meta /tmp/book.epub && ~/calibre-bin/ebook-convert /tmp/book.epub /tmp/back.txt && cat /tmp/back.txt",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Build from source with python setup.py bootstrap/build",
+            "actually_needed": "The official prebuilt Linux tarball (calibre-<ver>-x86_64.txz from GitHub releases) extracted into ~/calibre-bin works without root or a toolchain",
+            "kind": "note"
+          },
+          {
+            "readme_said": "(not stated) code.calibre-ebook.com/latest for the version",
+            "actually_needed": "That host failed TLS verification in this box (curl error 60); used the GitHub releases API instead",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "(not stated)",
+            "actually_needed": "The GUI's Qt xcb plugin needs system libs libxcb-cursor0, libxcb-icccm4, libxcb-keysyms1, libxcb-util1, libxcb-image0, libxcb-render-util0; without root they had to be extracted from Debian .debs, and the GUI could not be relaunched before the budget ran out",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks succeeded: the txt→epub→txt round trip kept the metadata and text, calibredb added and listed the book, and the version printed as 'calibre (calibre 9.18)'.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-calibre-20261120-191933-d55d/report.json",
+          "log_path": "runs/verify/verify-calibre-20261120-191933-d55d/app.log",
+          "screenshot_paths": [
+            "runs/verify/verify-calibre-20261120-191933-d55d/check-1-cmd6.judged.png",
+            "runs/verify/verify-calibre-20261120-191933-d55d/check-2-cmd7.judged.png",
+            "runs/verify/verify-calibre-20261120-191933-d55d/check-3-cmd5.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.276934,
+        "features": [
+          {
+            "feature": "view, convert, edit and catalog e-books",
+            "status": "checked",
+            "smoke_tests": [
+              1,
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "communicate with e-book reader devices",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_hardware",
+            "failure": null,
+            "note": "No e-book reader device in the box"
+          },
+          {
+            "feature": "fetch book metadata from the internet",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "Command budget used up before fetch-ebook-metadata was tried"
+          },
+          {
+            "feature": "download newspapers as e-books",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_attempted",
+            "failure": null,
+            "note": "Command budget used up before a news recipe download was tried"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v2",
+    "status": "unchecked",
+    "unchecked_reason": "resolve_failed",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T19:21:36+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "dc441a2a132169bf0924468b79aeff22d611bcdb",
+      "run_id": "verify-calibre-20261120-191933-d55d",
+      "tool_version": "calibre 9.18",
+      "artifact_sha256": [],
+      "packages": {},
+      "scopes": {},
+      "advisories_fetched_at": "2026-11-20T19:21:36+08:00",
+      "kev_catalog": null,
+      "epss_date": null,
+      "findings_total": 0,
+      "details": "security/calibre.json",
+      "details_sha256": "9fcb7361c2e77008fddd6280b7254ce068be0d90e9e3401bcc7a4890852bc846"
+    },
+    "assessment": {
+      "level": "none",
+      "policy_version": "sec.v2",
+      "reasons": [],
+      "counts": {},
+      "uncounted": 0,
+      "assessed_at": "2026-11-20T19:21:36+08:00"
+    },
+    "coverage": {
+      "state": "unchecked",
+      "target": null,
+      "packages_found": 1,
+      "packages_checked": 0,
+      "components": [
+        {
+          "ecosystem": "pypi",
+          "component": "pyproject.toml",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "resolve.pyproject_failed"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "code": "resolve.pyproject_failed",
+          "category": "resolve_failed",
+          "ecosystem": "pypi",
+          "component": "pyproject.toml",
+          "detail": "uv pip compile --no-build did not resolve it",
+          "capability": "resolve_in_sandbox",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "tool.sbom_error",
+          "category": "tool_error",
+          "ecosystem": "unknown",
+          "component": "sbom:verify-calibre-20261120-191933-d55d",
+          "detail": "npm exited 254: \nnpm error enoent This is related to npm not being able to find a file.\nnpm error enoent\nnpm error A complete log of this run can be found in: /home/sbx/.npm/_logs/2026-11-20T11_21_22_",
+          "capability": "fix_sbom_tool",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "advisory_db.no_ecosystem",
+          "category": "advisory_db",
+          "ecosystem": "other",
+          "component": "sbom:verify-calibre-20261120-191933-d55d",
+          "detail": "installed packages of ecosystems OSV.dev has no data for",
+          "capability": "advisory_source:other",
+          "found": 1,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
+  },
+  "scores": {
+    "formula_version": "b3.v7",
+    "computed_at": "2026-11-20T19:21:36+08:00",
+    "quality": {
+      "total": 79.5,
+      "raw_total": 79.5,
+      "confidence": 0.8,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.375,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": null,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      },
+      "security": {
+        "level": "none",
+        "basis": "assessment",
+        "effect": "none",
+        "deduction": 0.0
+      }
+    },
+    "popularity": {
+      "score": 90.0,
+      "signals": {
+        "stars": 26477,
+        "monthly_downloads": null,
+        "forks": 2764,
+        "dependents": null,
+        "release_downloads": 278972,
+        "hn_top_score": 674,
+        "registries_count": 0
+      },
+      "age_days": 4924,
+      "packages": []
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 7.95
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:31.084120+08:00",
+      "sources_sha": "eb92310240cdba38ecb57af00154addf02005318b432755ff27fccbdfc38dba2",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "calibre is an e-book manager. It can view, convert, edit and catalog e-books "
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "It can download newspapers and convert them into e-books for convenient "
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "The system dependencies listed at the bottom of\n    https://calibre-ebook.com/download_linux"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "sudo python setup.py install"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "It is cross platform, running on Linux, Windows and macOS."
+        }
+      },
+      "unquoted": [],
+      "input_sha": "418ac4c070490b8e14f4232eeb8d9d41959cec5e5e3d7b25fabef29e3ee1ee55",
+      "prompt_version": "rubric-p1",
+      "renderer_version": "r1",
+      "grader": "anthropic"
+    },
+    "inputs": {
+      "version": "inputs.v1",
+      "github": {
+        "source": "pipeline_db",
+        "fetched_at": "2026-11-20T19:18:04+08:00",
+        "stars": 26477,
+        "forks": 2764,
+        "open_issues": 6,
+        "created_at": "2013-05-28T10:03:23Z",
+        "pushed_at": "2026-11-20T08:39:16Z",
+        "releases": [
+          {
+            "tag": "v9.18.0",
+            "published_at": "2026-11-06T02:37:50Z",
+            "prerelease": false,
+            "notes_chars": 22,
+            "downloads": 278972
+          },
+          {
+            "tag": "v9.17.0",
+            "published_at": "2026-10-23T03:50:48Z",
+            "prerelease": false,
+            "notes_chars": 22,
+            "downloads": null
+          },
+          {
+            "tag": "v9.16.0",
+            "published_at": "2026-10-09T03:05:13Z",
+            "prerelease": false,
+            "notes_chars": 22,
+            "downloads": null
+          },
+          {
+            "tag": "v9.15.0",
+            "published_at": "2026-09-18T03:03:31Z",
+            "prerelease": false,
+            "notes_chars": 22,
+            "downloads": null
+          },
+          {
+            "tag": "v9.14.0",
+            "published_at": "2026-08-28T02:35:39Z",
+            "prerelease": false,
+            "notes_chars": 22,
+            "downloads": null
+          },
+          {
+            "tag": "v9.13.0",
+            "published_at": "2026-08-07T02:04:49Z",
+            "prerelease": false,
+            "notes_chars": 22,
+            "downloads": null
+          },
+          {
+            "tag": "v9.12.0",
+            "published_at": "2026-07-31T03:34:59Z",
+            "prerelease": false,
+            "notes_chars": 22,
+            "downloads": null
+          },
+          {
+            "tag": "v9.11.0",
+            "published_at": "2026-07-03T04:04:20Z",
+            "prerelease": false,
+            "notes_chars": 22,
+            "downloads": null
+          },
+          {
+            "tag": "v9.10.0",
+            "published_at": "2026-06-26T01:54:58Z",
+            "prerelease": false,
+            "notes_chars": 22,
+            "downloads": null
+          },
+          {
+            "tag": "v9.9.0",
+            "published_at": "2026-05-28T03:27:48Z",
+            "prerelease": false,
+            "notes_chars": 21,
+            "downloads": null
+          }
+        ],
+        "contributors": null,
+        "files": {
+          "count": 5115,
+          "truncated": false,
+          "ci": ".github/workflows/ci.yml",
+          "tests": "src/calibre/db/tests/__init__.py",
+          "changelog": "Changelog.txt",
+          "lockfile": null
+        }
+      },
+      "issues": {
+        "source": "github_live",
+        "fetched_at": "2026-11-20T19:21:31+08:00",
+        "items": [],
+        "pull_requests": 100,
+        "page_full": true
+      }
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/kovidgoyal/calibre",
+      "fetched_at": "2026-11-20T19:18:06+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/kovidgoyal/calibre/blob/master/README.md",
+      "fetched_at": "2026-11-20T19:18:04+08:00"
+    },
+    {
+      "id": "release:v9.18.0",
+      "kind": "release",
+      "url": "https://github.com/kovidgoyal/calibre/releases/tag/v9.18.0",
+      "fetched_at": "2026-11-20T19:18:04+08:00"
+    },
+    {
+      "id": "docs1",
+      "kind": "readme",
+      "url": "https://github.com/kovidgoyal/calibre/blob/master/INSTALL.rst",
+      "fetched_at": "2026-11-20T19:18:13+08:00"
+    },
+    {
+      "id": "help:verify-calibre-20261120-191933-d55d:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T19:21:51+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "calibre is an e-book manager.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:18:19+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-20T19:18:06+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "calibre is an e-book manager. It can view, convert, edit and catalog e-books \nin all of the major e-book formats.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:18:19+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "calibre is an e-book manager.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:18:19+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "It is cross platform, running on Linux, Windows and macOS.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:18:19+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:18:06+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:18:06+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-20T19:18:06+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:18:06+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:18:06+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v9.18.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:18:04+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "It can download newspapers and convert them into e-books for convenient \nreading.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:18:19+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "It can go out to the internet and fetch metadata for your books.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:18:19+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "It can view, convert, edit and catalog e-books \nin all of the major e-book formats.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:18:19+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "It can also talk to e-book reader \ndevices.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:18:19+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "It can go out to the internet and fetch metadata for your books.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:18:19+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "It can download newspapers and convert them into e-books for convenient \nreading.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:18:19+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "docs1",
+      "quote": "python setup.py bootstrap",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:18:19+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "It can view, convert, edit and catalog e-books",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:51+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "It can view, convert, edit and catalog e-books",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:51+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "It can view, convert, edit and catalog e-books",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:51+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "It can view, convert, edit and catalog e-books",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:51+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "help:verify-calibre-20261120-191933-d55d:1",
+      "quote": "calibre://view-book/test_library/1842/epub",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:51+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "help:verify-calibre-20261120-191933-d55d:1",
+      "quote": "optionally add the e-book at\npath_to_ebook to the database",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:51+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "help:verify-calibre-20261120-191933-d55d:1",
+      "quote": "Use the library located at the specified path.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:51+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "help:verify-calibre-20261120-191933-d55d:1",
+      "quote": "Start minimized to system tray.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:51+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "help:verify-calibre-20261120-191933-d55d:1",
+      "quote": "Cause a running calibre instance, if any, to be shutdown.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:51+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "help:verify-calibre-20261120-191933-d55d:1",
+      "quote": "Ignore custom plugins, useful if you installed a plugin that is preventing",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:21:51+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-20T19:18:04+08:00",
+  "updated_at": "2026-11-20T19:21:52+08:00"
+}
