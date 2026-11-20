@@ -1480,6 +1480,9 @@ class Watcher:
                                "something else.") from None
             if reason == "no_summary":
                 raise Rejected("pickfit could not tell from the README what the tool does.") from None
+            if reason == "kind_unknown":
+                raise Rejected("pickfit could not tell from the README how this software is used (a command, an "
+                               "app, a server or a library).") from None
             raise Rejected("pickfit could not build a valid record from what the README says.") from None
         if record.category not in COVERED and record.kind not in OTHER_KINDS:
             raise Rejected("pickfit lists software people install and run (CLI tools, desktop and web apps, "

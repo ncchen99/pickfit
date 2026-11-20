@@ -92,7 +92,8 @@ PROMPT_CACHE_KEY = "pickfit-extract-v4"  # v2: the mcp section; v3: package-stor
 EXTRACT_CACHE_RETENTION = "1h"  # the instructions' prompt-cache lifetime (anthropic_messages.CACHE_RETENTION)
 # What a row was read with (docs/proposals/scoring.md R3). Bump PROMPT_VERSION with INSTRUCTIONS or the schema,
 # RENDERER_VERSION with build_sources or render_sources; neither makes anything be read again by itself.
-PROMPT_VERSION = "p5"  # p5: rule 8 asks for 1-6 features instead of 2-4 (read again with --refresh-before p5)
+PROMPT_VERSION = "p6"  # p6: rule 5 on kind (a CLI with client libraries; a tool whose form goes unnamed); p5: rule 8
+# asks for 1-6 features instead of 2-4 (read again with --refresh-before p6)
 WEB_PROMPT_VERSION = "web-p2"  # web-p2: the same rule 8
 FEATURES_PROMPT_VERSION = "features-p2"  # features-p2: the same rule 8
 CAPABILITIES_PROMPT_VERSION = "capabilities-p1"
@@ -122,7 +123,13 @@ value and quote to null, or leave the list empty.
 without a shell prompt such as "$ " and without comments.
 4. summary.value is your own neutral sentence in English (at most 160 characters, no marketing \
 words); its quote is the passage it is based on.
-5. Prefer null to a guess. A missing fact is fine; a wrong fact is not.
+5. Prefer null to a guess. A missing fact is fine; a wrong fact is not. kind is the exception that needs \
+care: software people run (a command, an app, a server) is not library_sdk or framework because it also \
+ships client libraries or bindings for other languages; when the sources say it is available as a CLI, an \
+application or a server, pick that kind. library_sdk and framework are only for software whose only use is \
+being imported by code. When the sources describe a tool people run without naming its form, pick the form \
+its commands, install steps or description show (a program run in a terminal is cli_tool) and quote the \
+passage that shows it; leave kind null only when nothing in the sources shows how it is used.
 6. Write every value in English, even when the sources are in another language: summary, \
 use_cases (short jobs such as "browse files on a remote host over SFTP"), features, alternatives_to, \
 runtimes, system_packages, api_keys and manual_steps. Quotes stay verbatim in the source language.

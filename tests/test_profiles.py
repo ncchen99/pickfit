@@ -527,3 +527,38 @@ def test_capabilities_no_source_holds_are_not_written(db: PipelineDB, tmp_path: 
     assert write_capabilities(db, model=MODEL, out_dir=out, help_from=tmp_path / "none", now=NOW).skipped == {
         "tinyq": "no quoted capability"}
     assert "capabilities" not in read(out, "tinyq")
+
+
+# --- kind, 11/20: DuckDB read as library_sdk, OpenTofu with no kind at all --------------------------------------
+
+
+def test_a_cli_that_also_ships_client_libraries_is_a_cli_tool(db: PipelineDB, tmp_path: Path) -> None:
+    quote = "DuckDB is available as a standalone CLI application and has clients for Python"
+    add(db, 1, "a/duck", extraction(kind=cited("library_sdk", quote), audience=cited("end_user", quote)),
+        readme=README + f"\n{quote}, R and Java.\n")
+    out = tmp_path / "software"
+    summary = write_profiles(db, model=MODEL, out_dir=out, now=NOW)
+    assert summary.written == ["duck"] and read(out, "duck")["kind"] == "cli_tool"
+
+
+def test_a_library_whose_kind_quote_names_no_cli_stays_a_library(db: PipelineDB, tmp_path: Path) -> None:
+    add(db, 1, "a/lib", extraction(kind=cited("library_sdk", "A tiny jq-like query tool")))
+    summary = write_profiles(db, model=MODEL, out_dir=tmp_path / "software", now=NOW)
+    assert summary.skipped == {"a/lib": "not_a_tool: kind library_sdk"}
+    add(db, 2, "a/imp", extraction(kind=cited("library_sdk", "A tiny jq-like query tool"),
+                                   audience=cited("import_only", "cargo install tinyq")))
+    assert write_profiles(db, model=MODEL, out_dir=tmp_path / "s2", now=NOW).skipped["a/imp"].startswith("not_a_tool")
+
+
+def test_no_cited_kind_is_kind_unknown_not_a_library(db: PipelineDB, tmp_path: Path) -> None:
+    add(db, 1, "a/tofu", extraction(kind=NULL, audience=NULL))
+    summary = write_profiles(db, model=MODEL, out_dir=tmp_path / "software", now=NOW)
+    assert summary.skipped == {"a/tofu": "kind_unknown"}
+
+
+def test_the_extraction_prompt_says_a_cli_with_libraries_is_not_a_library() -> None:
+    from pickfit.extract import INSTRUCTIONS, PROMPT_VERSION
+
+    assert PROMPT_VERSION == "p6"
+    assert "not library_sdk or framework because it also" in " ".join(INSTRUCTIONS.split())
+    assert "leave kind null only when nothing in the sources shows how it is used" in " ".join(INSTRUCTIONS.split())

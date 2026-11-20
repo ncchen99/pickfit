@@ -263,6 +263,8 @@ def test_prescreen_and_extraction_rejections(env: dict[str, Any]) -> None:
       "category": cited("other", "A tiny jq-like query tool for JSON Lines.")}, "reads as a library"),
     ({"kind": cited("curated_list", "A tiny jq-like query tool"),
       "category": cited("other", "A tiny jq-like query tool for JSON Lines.")}, "reads as a library"),
+    # OpenTofu, 11/20: no kind cited is "could not tell", not "a library".
+    ({"kind": cited(None, None), "audience": cited(None, None)}, "could not tell from the README how this software"),
 ])
 def test_records_outside_the_directory_are_refused(env: dict[str, Any], override: dict[str, Any],
                                                    reason: str) -> None:

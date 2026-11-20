@@ -286,6 +286,10 @@ def _summary(text: str) -> str:
     return cut.rstrip(",;:") + "…"
 
 
+# A kind quote that names the software as something run from a terminal (build_record overrides library_sdk then).
+_RUNS_AS_CLI = re.compile(r"\bCLI\b|\bcommand[- ]line (?:tool|application|app|interface|client|program|shell)\b|"
+                          r"\bstandalone (?:binary|executable|program)\b", re.I)
+
 def build_record(candidate: dict[str, Any], extraction: dict[str, Any], *, slug: str,
                  now: datetime, existing: dict[str, Any] | None = None,
                  found_in: list[dict[str, Any]] | None = None) -> SoftwareRecord:
@@ -340,9 +344,16 @@ def build_record(candidate: dict[str, Any], extraction: dict[str, Any], *, slug:
         return kept
 
     kind = cited("/kind", result.kind.value, result.kind.quote)
+    audience = cited("/audience", result.audience.value, result.audience.quote)
+    if kind in ("library_sdk", "framework") and audience == "end_user" and result.kind.quote \
+            and _RUNS_AS_CLI.search(result.kind.quote):
+        # The model's own quote says the software is run as a CLI ("available as a standalone CLI application and
+        # has clients for Python"): the client libraries are not what people install. DuckDB, 11/20.
+        kind = "cli_tool"
+    if kind is None and audience != "import_only":
+        raise ValueError("kind_unknown")  # nothing cited says how it is used; not a library for that
     if kind not in TOOL_KINDS:
         raise ValueError(f"not_a_tool: kind {kind}")
-    audience = cited("/audience", result.audience.value, result.audience.quote)
     if audience == "import_only":
         raise ValueError("not_a_tool: import_only")
     category = cited("/category", result.category.value, result.category.quote)
