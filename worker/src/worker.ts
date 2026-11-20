@@ -40,13 +40,20 @@ export interface WorkerOptions {
 export function makeWorker(indexData: unknown, options: WorkerOptions = {}) {
   const catalog = loadCatalog(indexData);
   const web = makeWeb(catalog, options);
-  return {
+  const worker = {
     async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
       const url = new URL(request.url);
       const moved = canonicalRedirect(request, url, env);
       if (moved) return moved;
       const video = await serveVideo(request, env.VIDEOS, catalog, options.translations);
       if (video) return video;
+      if (request.method === 'HEAD' && url.pathname !== '/mcp') {
+        // HEAD is GET without the body (RFC 9110 9.3.2): the same status and headers for every page and the JSON check.
+        // Link checkers and uptime monitors send it (Product Hunt's got 404 for / on 11/20). No page a GET serves
+        // calls the model, so answering one costs nothing.
+        const got = await worker.fetch(new Request(request, { method: 'GET' }), env, ctx);
+        return new Response(null, { status: got.status, statusText: got.statusText, headers: got.headers });
+      }
       if (url.pathname !== '/mcp') {
         const page = await web.fetch(request, env, ctx, allowedHosts(env));
         if (page) return page;
@@ -92,4 +99,5 @@ export function makeWorker(indexData: unknown, options: WorkerOptions = {}) {
       return uncached;
     },
   };
+  return worker;
 }
