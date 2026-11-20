@@ -77,8 +77,13 @@ APP_LOG_DIR = f"{BOX_HOME}/.pickfit-gui"
 # python3-tk brings Debian's own /usr/bin/python3 with tkinter: the image's python3.12 has none.
 # xdotool and xclip: the display uid's hands (XTEST input) and its reading of the clipboard (gui_operate.py).
 # ffmpeg: the display uid's screen recording of an operation (record.py).
+# The libxcb-* helpers, libxcb-cursor0 and libxkbcommon-x11-0: what Qt's xcb platform plugin (libqxcb.so) loads, so
+# a Qt 5 or 6 app opens a window (calibre's GUI found five of them missing, 11/20). Every desktop Linux has them.
+QT_XCB_PACKAGES = ("libxcb-icccm4", "libxcb-image0", "libxcb-keysyms1", "libxcb-render-util0", "libxcb-util1",
+                   "libxcb-cursor0", "libxkbcommon-x11-0")
 GUI_PACKAGES = ("xvfb", "x11-utils", "x11-apps", "xrestop", "imagemagick", "chromium",
-                "libwebkit2gtk-4.1-0", "fonts-dejavu-core", "python3-tk", "python3-venv", "xdotool", "xclip", "ffmpeg")
+                "libwebkit2gtk-4.1-0", "fonts-dejavu-core", "python3-tk", "python3-venv", "xdotool", "xclip", "ffmpeg",
+                *QT_XCB_PACKAGES)
 DESKTOP_PACKAGES = ("dbus", "dbus-x11", "xdg-desktop-portal", "xdg-desktop-portal-gtk", "xdg-utils", "mousepad")
 if FULL_DESKTOP:
     GUI_PACKAGES = (*GUI_PACKAGES, *DESKTOP_PACKAGES)

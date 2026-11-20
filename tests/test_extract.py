@@ -508,7 +508,7 @@ def test_only_a_renderer_change_reads_nothing_again(tmp_path: Path, ledger: Ledg
     monkeypatch.setattr(extract_module, "RENDERER_VERSION", "r2")
     assert sources_sha(build_sources(db.candidate(key))) != before  # the old rule would read it again
     assert _rerun(tmp_path, db_path, ledger)["attempted"] == 0
-    monkeypatch.setattr(extract_module, "PROMPT_VERSION", "p6")  # a new prompt: still nothing by itself
+    monkeypatch.setattr(extract_module, "PROMPT_VERSION", "p7")  # a new prompt: still nothing by itself
     assert _rerun(tmp_path, db_path, ledger)["attempted"] == 0
 
 
@@ -527,12 +527,12 @@ def test_a_changed_readme_is_read_again(tmp_path: Path, ledger: Ledger) -> None:
 def test_an_explicit_refresh_reads_again_what_an_older_prompt_or_renderer_read(
         tmp_path: Path, ledger: Ledger, monkeypatch: pytest.MonkeyPatch) -> None:
     db_path, db, _ = _extract_once(tmp_path, ledger)
-    assert _rerun(tmp_path, db_path, ledger, refresh_before="p5")["attempted"] == 0  # read with p5: not older
+    assert _rerun(tmp_path, db_path, ledger, refresh_before="p6")["attempted"] == 0  # read with p6: not older
     assert _rerun(tmp_path, db_path, ledger, refresh_before="web-p9")["attempted"] == 0  # another prompt family
-    monkeypatch.setattr(extract_module, "PROMPT_VERSION", "p6")
-    assert _rerun(tmp_path, db_path, ledger, ok(extraction()), refresh_before="p6")["attempted"] == 1
-    assert db.extractions()[-1]["prompt_version"] == "p6"
-    assert _rerun(tmp_path, db_path, ledger, refresh_before="p6")["attempted"] == 0  # done once is enough
+    monkeypatch.setattr(extract_module, "PROMPT_VERSION", "p7")
+    assert _rerun(tmp_path, db_path, ledger, ok(extraction()), refresh_before="p7")["attempted"] == 1
+    assert db.extractions()[-1]["prompt_version"] == "p7"
+    assert _rerun(tmp_path, db_path, ledger, refresh_before="p7")["attempted"] == 0  # done once is enough
     assert _rerun(tmp_path, db_path, ledger, ok(extraction()), refresh_before="r2")["attempted"] == 1
     with pytest.raises(ValueError, match="refresh-before"):
         _rerun(tmp_path, db_path, ledger, refresh_before="v5")

@@ -737,3 +737,10 @@ def test_the_gateway_probe_covers_the_real_gateway_root_sees():
     assert not _gateway(Box({"/proc/net/route": (0, "hosts: 10.0.2.2 172.21.0.1\n", "")})).ok  # real gateway unprobed
     assert not _gateway(Box({"/proc/net/route": (0, "hosts: 10.0.2.2 172.20.0.1 172.21.0.1\nopen 172.20.0.1:80\n",
                                                   "")})).ok
+
+
+def test_the_display_image_has_what_qts_xcb_plugin_loads() -> None:
+    # calibre, 11/20: libqxcb.so could not find libxcb-util, -render-util, -keysyms, -image and -icccm.
+    for package in ("libxcb-icccm4", "libxcb-image0", "libxcb-keysyms1", "libxcb-render-util0", "libxcb-util1",
+                    "libxcb-cursor0", "libxkbcommon-x11-0"):
+        assert package in gui.GUI_PACKAGES
