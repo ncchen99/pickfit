@@ -199,3 +199,49 @@ export function setupWords(steps: number, manual: number): string {
   if (manual) parts.push(L(`${manual} by hand`, `${manual} 個手動步驟`));
   return parts.join(isZh() ? '，' : ', ');
 }
+
+/** A card field (cards.ts CARD_FIELDS) in plain words, for the "From its profile" line under a reason; an unknown field
+ * keeps its name. */
+const FIELD: Record<string, [string, string]> = {
+  name: ['Name', '名稱'],
+  summary: ['Summary', '簡介'],
+  why_worth_it: ['Why it is worth it', '值得用的原因'],
+  category: ['Category', '類別'],
+  kind: ['Kind of tool', '工具類型'],
+  maturity: ['Maturity', '成熟度'],
+  tags: ['Tags', '標籤'],
+  use_cases: ['Use cases', '用途'],
+  features_checked: ['Features pickfit checked', 'pickfit 檢查過的功能'],
+  features_not_checked: ['Features not checked', '沒有檢查的功能'],
+  alternatives_to: ['An alternative to', '可替代'],
+  platforms: ['Systems', '支援的系統'],
+  verified_on: ['Where pickfit ran it', 'pickfit 在哪裡跑過'],
+  verified_on_user_os: ['Checked on your system', '在你的系統上檢查過'],
+  install_method_user_os: ['How it installs on your system', '在你的系統上怎麼安裝'],
+  manual_steps: ['Steps you do by hand', '要手動做的步驟'],
+  pricing: ['Price', '價格'],
+  pricing_note: ['Price note', '價格說明'],
+  open_source: ['Open source', '開源'],
+  license: ['License', '授權'],
+  processing: ['Where it runs', '在哪裡執行'],
+  gpu: ['GPU', 'GPU'],
+  network: ['Network', '網路需求'],
+  api_keys: ['API keys', 'API 金鑰'],
+  apple_silicon_only: ['Apple silicon only', '只支援 Apple 晶片'],
+  min_ram_gb: ['Memory needed (GB)', '需要的記憶體（GB）'],
+  runtimes: ['Runtimes', '執行環境'],
+  system_packages: ['System packages', '系統套件'],
+  last_release: ['Last release', '最近一次發布'],
+  quality: ['Quality score', '品質分數'],
+  popularity: ['Popularity', '知名度'],
+  mcp_tools: ['MCP tools', 'MCP 工具'],
+  mcp_env_vars: ['MCP settings', 'MCP 設定'],
+  no_install: ['No install', '免安裝'],
+  account_needed: ['Account needed', '需要帳號'],
+  ads_seen: ['Ads seen', '有沒有廣告'],
+  third_party_domains: ['Other sites it contacts', '連到的其他網站'],
+  data_sent: ['What you type leaves the device', '輸入內容是否離開裝置'],
+  works_offline: ['Works offline', '能離線使用'],
+  capabilities_matched: ['What its docs say it can do', '文件寫它能做的事'],
+};
+export const fieldLabel = (field: string) => (FIELD[field] ? L(...FIELD[field]) : field);

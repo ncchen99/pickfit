@@ -599,6 +599,15 @@ clip-path:inset(0 100% 0 0);transition:clip-path .45s var(--ease-out)}
 .t-vuln{display:flex;align-items:flex-start;gap:8px;margin:0 0 12px;font-size:var(--t-small);line-height:1.45;color:var(--ink-2)}
 .t-vuln .i{flex:none;width:22px;height:22px;margin-top:-1px;color:var(--fail)}
 .t-vuln b{color:var(--fail)}
+.t-vuln.caution .i,.t-vuln.caution b{color:var(--caution)}
+.run-age{margin:-6px 0 10px}
+.run-stale{display:flex;gap:8px;align-items:flex-start;margin:0 0 12px;color:var(--ink-2)}
+.run-stale .i{flex:none;width:18px;height:18px;color:var(--caution)}
+.report{margin:18px 0 0}
+.report-form{display:grid;gap:10px;margin:10px 0 0;max-width:36rem}
+.report-form label{display:grid;gap:4px;font-size:var(--t-small)}
+.report-form textarea,.report-form select{font:inherit;padding:8px;border:1px solid var(--line-ctl);border-radius:6px;background:var(--raised);color:inherit}
+.report-form button{justify-self:start}
 .t-install .cmd pre{font-size:.95rem;padding:3px 0 3px calc(16px + 2ch)}
 /* In Fitz's answer the command takes the row, so its Copy stands at the answer's right edge, under the sheet's values. */
 .picks .pick:first-child .t-install .cmd pre{flex:1 1 auto}

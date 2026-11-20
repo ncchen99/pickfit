@@ -17,7 +17,8 @@
  *   nothing is reserved and the search goes straight to the model;
  * - at most MAX_IN_FLIGHT model searches at once in an isolate; identical
  *   searches in flight share one call, and finished ones are kept 10 minutes
- *   (this isolate only; the MCP path never reads any of it).
+ *   in this isolate and 7 days in D1 for every instance (keyed by the index's
+ *   data too); the MCP path never reads any of it.
  * Shown install guides are not logged as install_guide events: the person has
  * not picked a tool yet, and that event means a pick in the MCP flow.
  */
@@ -36,6 +37,8 @@ import { renderCompare } from './pages/compare.ts';
 import { renderAbout, renderAgents, renderHow, renderNotFound } from './pages/info.ts';
 import { renderSubmissionLive, renderSubmissionPage, renderSubmitForm, type SubmissionView } from './pages/submit.ts';
 import { renderTool } from './pages/tool.ts';
+import { reportOutcome, type OutcomeInput } from './outcome.ts';
+import { reporterFrom } from './events.ts';
 import { findInput } from './server.ts';
 import { submissionById, SubmitError, submitSoftware } from './submit.ts';
 import { osName } from './ui/facts.ts';
@@ -44,6 +47,8 @@ import { SLUG } from './ui/html.ts';
 /** Searches per visitor per minute; wrangler.jsonc's WEB_RATE_LIMITER uses the same number. */
 export const SEARCHES_PER_MINUTE = 6;
 export const CACHE_TTL_MS = 10 * 60_000;
+/** The shared cache in D1 (migrations/0006): an answer for the same search on the same data is kept this long. */
+export const SHARED_TTL_DAYS = 7;
 const CACHE_MAX = 64;
 /** Bytes: a 500-character need is up to 6,000 bytes once percent-encoded (4-byte characters), plus the other fields. */
 export const BODY_MAX_BYTES = 8192;
@@ -97,6 +102,15 @@ export function toFindArgs(form: FormValues): Record<string, unknown> {
     ...(form.free_only ? { budget: 'free_only' } : {}),
     ...(form.offline && form.private ? { must_run_locally: true } : form.offline ? { offline: true } : form.private ? { data_stays_local: true } : {}),
   };
+}
+
+/**
+ * What makes two searches the same one: the need with its case and spacing evened out, and every condition the form
+ * sends to find_software. A condition left out here would let a search reuse an answer made without it.
+ */
+export function searchKey(form: FormValues, lang: Lang = 'en'): string {
+  // The language too: a zh-TW page asks the model to write its sentences in Chinese.
+  return JSON.stringify([form.need.toLowerCase().replace(/\s+/g, ' '), form.os, form.arch, form.free_only, form.offline, form.private, lang]);
 }
 
 /** The rate limiter's subject: an IPv4 address, or an IPv6 address's /64 (one household or host can hold all of it). */
@@ -191,9 +205,31 @@ export function zhRuleClaim(claim: string, map: Record<string, string> | undefin
   if (ZH_CLAIM[claim]) return ZH_CLAIM[claim];
   const useCase = /^Use case: (.+)$/s.exec(claim);
   if (useCase) return `用途：${map?.[useCase[1]] ?? useCase[1]}`;
+  const documented = /^Its docs say it can: (.+) \(not tested by pickfit\)$/s.exec(claim);
+  if (documented) return `它的文件說能做到：${documented[1]}（pickfit 沒有逐項測試）`;
   const ranOn = /^Install steps were run and checked on (macos|linux|windows)$/.exec(claim);
   if (ranOn) return `安裝步驟已在 ${osName(ranOn[1] as 'macos')} 上執行並檢查`;
   return null;
+}
+
+/** A search answered earlier on this data, from any instance; null on a miss or when D1 cannot answer (a cache
+ * that fails is a miss, never an error). */
+async function readShared(db: D1Database, key: string, now: Date): Promise<{ result: SearchResult; at: string } | null> {
+  try {
+    const since = new Date(now.getTime() - SHARED_TTL_DAYS * 86_400_000).toISOString();
+    const row = await db.prepare('SELECT result, created_at FROM search_cache WHERE key = ?1 AND created_at >= ?2').bind(key, since).first<{ result: string; created_at: string }>();
+    return row ? { result: JSON.parse(row.result) as SearchResult, at: row.created_at } : null;
+  } catch (err) {
+    console.error(JSON.stringify({ event: 'search_cache_read_failed', error: String(err) }));
+    return null;
+  }
+}
+
+async function writeShared(db: D1Database, key: string, result: SearchResult, now: Date): Promise<void> {
+  const since = new Date(now.getTime() - SHARED_TTL_DAYS * 86_400_000).toISOString();
+  // Two statements, not a batch: the Cloud Run binding speaks D1's REST API one statement at a time.
+  await db.prepare('INSERT OR REPLACE INTO search_cache (key, result, created_at) VALUES (?1, ?2, ?3)').bind(key, JSON.stringify(result), now.toISOString()).run();
+  await db.prepare('DELETE FROM search_cache WHERE created_at < ?1').bind(since).run();
 }
 
 export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
@@ -317,12 +353,21 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
     }
 
     const t = now().getTime();
-    const key = await sha256(JSON.stringify([form.need.toLowerCase().replace(/\s+/g, ' '), form.os, form.arch, form.free_only, form.offline]));
+    // The index's data is part of the key, so an answer is never shown against data it was not made from.
+    const key = await sha256(searchKey(form, lang) + (catalog.data_sha256 ?? ''));
     for (;;) {
       const hit = cache.get(key);
       if (hit && t - hit.at < CACHE_TTL_MS) {
         console.log(JSON.stringify({ event: 'web_search', cached: true, picks: hit.result.out.picks.length }));
         return respond(form, results(hit.result, form, { cached: true }));
+      }
+      if (!running.has(key)) {
+        const shared = await readShared(env.DB, key, now());
+        if (shared) {
+          cache.set(key, { at: t, result: shared.result });
+          console.log(JSON.stringify({ event: 'web_search', cached: 'shared', picks: shared.result.out.picks.length }));
+          return respond(form, results(shared.result, form, { cached: true, cachedAt: shared.at }));
+        }
       }
       const same = running.get(key);
       if (!same) break;
@@ -374,7 +419,7 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
       }
       inFlight++;
       try {
-        searched = await run(parsed.data, form, env, ctx);
+        searched = await run(lang === 'zh-TW' ? { ...parsed.data, answer_language: 'zh-TW' } : parsed.data, form, env, ctx);
       } finally {
         inFlight--;
       }
@@ -388,6 +433,7 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
     const { result, budget } = searched;
     // A degraded answer is not kept: the next identical search should get to try the model again.
     if (!result.out.degraded) {
+      ctx.waitUntil(writeShared(env.DB, key, result, now()).catch((err) => console.error(JSON.stringify({ event: 'search_cache_write_failed', error: String(err) }))));
       cache.set(key, { at: t, result });
       for (const [k, v] of cache) if (cache.size > CACHE_MAX || t - v.at >= CACHE_TTL_MS) cache.delete(k);
     }
@@ -476,6 +522,24 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
           return failed(withLang(lang, () => L('That isn’t a link Fitz can take. Paste a GitHub repository, like github.com/you/your-app, or the https address of a public web app.', '這個連結 Fitz 收不了。請貼上 GitHub 專案，例如 github.com/you/your-app，或公開網頁應用的 https 網址。')), 400);
         }
       }
+      if (url.pathname === '/report' && request.method === 'POST') {
+        // F1: the tool page's "It didn't install for me". Same guard as a search; the rate limit is the search's.
+        if (!validateHostHeader(request.headers.get('host') ?? url.host, hosts).ok || !validateOriginHeader(request.headers.get('origin'), hosts).ok) {
+          return new Response('Forbidden', { status: 403 });
+        }
+        const text = await readBody(request, BODY_MAX_BYTES);
+        const form = new URLSearchParams(text ?? '');
+        const slug = (form.get('slug') ?? '').toLowerCase();
+        const os = form.get('os') ?? '';
+        if (text === null || !SLUG.test(slug) || !catalog.bySlug.has(slug) || !OS_VALUES.has(os)) return new Response('Bad request', { status: 400 });
+        if (!(await allow(request, env))) return new Response('Too many reports from here; try again in a minute.', { status: 429, headers: { 'retry-after': '60' } });
+        // No rec_id: stored for people to read, not counted and no re-run queued (outcome.ts); the page says so.
+        await reportOutcome(
+          { slug, stage: 'install_failed', os: os as OutcomeInput['os'], ...(form.get('error')?.trim() ? { error_excerpt: form.get('error')!.trim() } : {}) },
+          { catalog, db: env.DB, now, reporter: reporterFrom(request.headers.get('x-pickfit-reporter')), client: 'web' },
+        );
+        return new Response(null, { status: 303, headers: { location: `/tool/${slug}?reported=1#report`, 'cache-control': 'no-store', ...keep } });
+      }
       const submission = /^\/submit\/(sub_[a-z0-9]{1,64})\/?$/.exec(url.pathname);
       if (submission && (request.method === 'GET' || request.method === 'HEAD')) {
         const row = await submissionById(env.DB, submission[1]);
@@ -499,7 +563,7 @@ export function makeWeb(catalog: Catalog, options: WebOptions = {}) {
         if (tool) {
           const slug = decodeURIComponent(tool[1]).toLowerCase();
           const entry = SLUG.test(slug) ? shown.bySlug.get(slug) : undefined;
-          return entry ? render((nonce) => renderTool(shown, entry, nonce)) : render((nonce) => renderNotFound(nonce), 404);
+          return entry ? render((nonce) => renderTool(shown, entry, nonce, { reported: url.searchParams.get('reported') === '1' })) : render((nonce) => renderNotFound(nonce), 404);
         }
         if (url.pathname === '/browse') return render((nonce) => renderBrowse(shown, url.searchParams, nonce));
         if (url.pathname === '/compare') return render((nonce) => renderCompare(shown, url.searchParams, nonce));

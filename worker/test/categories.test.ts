@@ -56,7 +56,7 @@ test('the hard filter keeps only the category asked for, new ones included', () 
 });
 
 test('the match schema lets the model name any category, and the prompt says what matters for each', () => {
-  const schema = matchSchema(['a', 'b']) as any;
+  const schema = matchSchema() as any;
   assert.deepEqual(schema.properties.need.properties.category.enum, [...CATEGORIES]);
   for (const category of NAMED_CATEGORIES) assert.match(MATCH_INSTRUCTIONS, new RegExp(`\\n- ${category}[ :(]`), category);
 });

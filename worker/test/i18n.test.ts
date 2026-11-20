@@ -112,7 +112,7 @@ test('every catalog page renders in both languages', async () => {
   }
 });
 
-test('a zh-TW search sends the model exactly what an English search sends, and shows Chinese data', async () => {
+test('a zh-TW search sends what an English search sends plus answer_language, and shows Chinese data', async () => {
   const en = site();
   const zh = site();
   const body = new URLSearchParams({ need: 'run a language model offline on my laptop', os: 'macos', offline: '1' }).toString();
@@ -120,7 +120,10 @@ test('a zh-TW search sends the model exactly what an English search sends, and s
   const enPage = await (await en.send('/search', headers('pickfit_lang=en'), { method: 'POST', body })).text();
   const zhPage = await (await zh.send('/search', headers('pickfit_lang=zh-TW'), { method: 'POST', body })).text();
   assert.equal(en.modelCalls.length, 1);
-  assert.deepEqual(zh.modelCalls, en.modelCalls);
+  // The same cached instructions, schema and candidates; only <request> asks for the sentences in Chinese (U9).
+  assert.equal(zh.modelCalls.length, 1);
+  assert.equal(zh.modelCalls[0].replace(',\\"answer_language\\":\\"zh-TW\\"', ''), en.modelCalls[0]);
+  assert.ok(zh.modelCalls[0].includes('\\"answer_language\\":\\"zh-TW\\"'));
   assert.ok(enPage.includes(SUMMARY_EN) && !enPage.includes(SUMMARY_ZH));
   assert.ok(zhPage.includes(SUMMARY_ZH));
   assert.match(zhPage, /<html lang="zh-Hant-TW">/);

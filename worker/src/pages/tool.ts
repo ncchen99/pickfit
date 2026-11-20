@@ -9,6 +9,8 @@
 import { bestGuide, isVerified, isWebApp, OSES, securityOf, verifiedOn, webCheck, type Catalog, type Entry, type InstallGuide, type OS, type RunVideo, type GapCategory, type SecurityCheck, type SecurityFinding } from '../catalog.ts';
 import { featuresOut, type FeaturesOut, type NotCheckedReason } from '../features.ts';
 import { advisoriesOf } from '../security.ts';
+import { freshness } from '../freshness.ts';
+import { ERROR_EXCERPT_MAX } from '../outcome.ts';
 import { L, lang } from '../i18n.ts';
 import { installGuide, type InstallOutput } from '../install.ts';
 import { EMPTY_FORM, installSection, levelLine, stepText, webFactList } from '../page.ts';
@@ -711,7 +713,7 @@ const WHY_NOT: Record<NotCheckedReason, () => string> = {
   check_not_met: () => L('pickfit used it but didn’t see the result', 'pickfit 操作過，但沒有看到結果'),
   app_error: () => L('The app crashed or showed an error', '應用程式當掉或顯示錯誤'),
   needs_desktop: () => L('It needs a desktop part the test machine lacks', '需要測試機器沒有的桌面元件'),
-  beyond_budget: () => L('pickfit tests only the first four features one by one', 'pickfit 只逐項測試前四項功能'),
+  beyond_budget: () => L('pickfit didn’t test this one by one', '這一項 pickfit 沒有逐項測試'),
   test_failed_in_sandbox: () => L('Its test failed because of the test machine’s limits, not the tool', '測試沒通過，原因是測試機器的限制，不是工具本身'),
   test_failed: () => L('Its test failed with the tool’s own error; you may hit it too (not confirmed on a real machine)', '測試沒通過，是工具本身的錯誤，你也可能遇到（尚未在實體機器上確認）'),
   not_recorded: () => L('Not checked one by one', '沒有逐項檢查'),
@@ -852,7 +854,7 @@ function readerGuide(out: InstallOutput, hint: string | null, gui: boolean): Ins
 
 const installTitle = (en: string, zh: string) => `<h2 id="install-title">${L(en, zh)}</h2>`;
 
-function install(catalog: Catalog, entry: Entry): string {
+function install(catalog: Catalog, entry: Entry, reported = false): string {
   if (isWebApp(entry) && entry.web) return webRun(entry);
   const oses = OSES.filter((os) => entry.install[os]);
   if (!oses.length) {
@@ -876,6 +878,7 @@ function install(catalog: Catalog, entry: Entry): string {
     return (
       `<div class="run-panel" id="install-${os}"${tabbed ? ` role="tabpanel" aria-labelledby="tab-${os}" data-os="${os}"` : ''}>` +
       `<div class="run-head"><h3>${sysLabel(os)}</h3></div>` +
+      runAge(g, entry, new Date(catalog.built_at)) +
       installSection(out, { ...EMPTY_FORM, os }, true, true, { hint, needs }) +
       `</div>`
     );
@@ -887,7 +890,43 @@ function install(catalog: Catalog, entry: Entry): string {
       oses.map((os, i) => `<button type="button" role="tab" id="tab-${os}" aria-controls="install-${os}" aria-selected="${i === 0}" data-os="${os}"${i ? ' tabindex="-1"' : ''}>${sysLabel(os)}</button>`).join('') +
       `</div>`
     : '';
-  return `<section class="block" aria-labelledby="install-title">${installTitle('Use it', '使用')}${securityNotice(entry)}<div class="use-it">${tabs}${panels.join('')}</div></section>`;
+  return `<section class="block" aria-labelledby="install-title">${installTitle('Use it', '使用')}${securityNotice(entry)}<div class="use-it">${tabs}${panels.join('')}</div>${reportForm(entry, oses, reported)}</section>`;
+}
+
+/** When pickfit ran these steps, as a day and how long ago (against the catalog's build, like the fact sheet), and a
+ * warning when the project released after the check or the check is old (freshness.ts, D2). */
+function runAge(g: InstallGuide, entry: Entry, now: Date): string {
+  const f = freshness(g.run.checked_at, entry.last_release, now);
+  if (f.age_days === null) return '';
+  return (
+    `<p class="run-age small quiet">${L('pickfit ran these steps on', 'pickfit 執行這些步驟的日期：')} ${esc(day(g.run.checked_at))} (${esc(age(g.run.checked_at, now) ?? '')})</p>` +
+    (f.warning ? `<p class="run-stale small" role="note">${icon('triangle-alert')}${esc(f.warning)}</p>` : '')
+  );
+}
+
+/**
+ * "It didn't install for me" (F1): a report_outcome install_failed with the OS and, if the person gives it, the end of
+ * the error. Without a rec_id it is stored for people to read and neither counts toward the score nor queues a re-run,
+ * and the form says so. Posts without the page script too.
+ */
+function reportForm(entry: Entry, oses: OS[], reported: boolean): string {
+  if (reported) {
+    return `<div class="notice info report-done" role="status" id="report"><div><h3>${L('Thanks, it’s recorded', '謝謝，已經記下來了')}</h3><p>${L(
+      'pickfit’s maintainers read these reports. One report doesn’t change the score or start a new check by itself.',
+      'pickfit 的維護者會看這些回報。單一回報不會改變分數，也不會自動重新檢查。',
+    )}</p></div></div>`;
+  }
+  const options = oses.map((os) => `<option value="${os}">${esc(OS_NAME[os])}</option>`).join('');
+  return (
+    `<details class="report" id="report"><summary class="small">${L('It didn’t install for me', '我裝不起來')}</summary>` +
+    `<form method="post" action="/report" class="report-form">` +
+    `<input type="hidden" name="slug" value="${esc(entry.slug)}">` +
+    `<label>${L('Your system', '你的系統')} <select name="os">${options}</select></label>` +
+    `<label>${L('The last lines of the error (optional; leave out names, paths and keys)', '錯誤訊息的最後幾行（選填；請拿掉名字、路徑和金鑰）')}` +
+    `<textarea name="error" rows="4" maxlength="${ERROR_EXCERPT_MAX}"></textarea></label>` +
+    `<p class="small quiet">${L('No account and no IP address is stored. A maintainer reads it; it doesn’t change the score by itself.', '不需要帳號，也不記錄 IP。維護者會看；單一回報不會改變分數。')}</p>` +
+    `<button type="submit" class="btn btn-quiet btn-sm">${L('Send the report', '送出回報')}</button></form></details>`
+  );
 }
 
 /** A web app: open it, and the facts a person weighs before typing anything in. */
@@ -996,7 +1035,7 @@ const crumb = (entry: Entry) => {
   return `<a href="/browse?kind=${esc(kind)}">${esc(KIND_PLURAL[kind] ?? KIND[kind] ?? '')}</a>`;
 };
 
-export function renderTool(catalog: Catalog, entry: Entry, nonce: string): string {
+export function renderTool(catalog: Catalog, entry: Entry, nonce: string, opts: { reported?: boolean } = {}): string {
   const now = new Date(catalog.built_at);
   const guide = bestGuide(entry);
   const features = featuresOut(entry, guide);
@@ -1053,7 +1092,7 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string): strin
     `<div class="wrap layout tool-layout"><div class="tool-main">` +
     (wide ? '' : clip) +
     (ran ? '' : progress(entry)) +
-    (clip ? about(entry, features) + install(catalog, entry) : install(catalog, entry) + about(entry, features)) +
+    (clip ? about(entry, features) + install(catalog, entry, opts.reported) : install(catalog, entry, opts.reported) + about(entry, features)) +
     `<div class="tool-more">` +
     (ran ? progress(entry) : '') +
     (features.checked.length + features.not_checked.length ? goodFor(entry, true) : '') +

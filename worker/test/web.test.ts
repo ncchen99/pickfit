@@ -10,7 +10,7 @@ import type { FindOutput, PickOut } from '../src/find.ts';
 import { runDay } from '../src/evidence.ts';
 import { catalogStats, EMPTY_FORM, esc, guiSentence, levelLabel, ranSentence, renderResults, safeUrl, yourSystem, type FormValues } from '../src/page.ts';
 import { withLang } from '../src/i18n.ts';
-import { BODY_MAX_BYTES, MAX_IN_FLIGHT, SEARCHES_PER_MINUTE, visitorKey, WEB_RESERVE_USD } from '../src/web.ts';
+import { BODY_MAX_BYTES, MAX_IN_FLIGHT, searchKey, zhRuleClaim, SEARCHES_PER_MINUTE, visitorKey, WEB_RESERVE_USD } from '../src/web.ts';
 import { command } from '../src/ui/kit.ts';
 import { makeWorker } from '../src/worker.ts';
 import { costUsd } from '../src/meta.ts';
@@ -132,7 +132,7 @@ test('a search is find_software plus get_install_guide: reasons, verification, s
   const [first, second] = commandText(html).split('<article class="pick"').slice(1);
   assert.match(first, /Fixture LLM Runner/);
   assert.match(first, /Serves a local model offline through an OpenAI-compatible API\./);
-  assert.match(first, /<summary>Runs offline on your machine<svg[^>]*>.*?<\/svg><\/summary><p class="cite">From its profile: <code>processing<\/code> is “local”/);
+  assert.match(first, /<summary>Runs offline on your machine<svg[^>]*>.*?<\/svg><\/summary><p class="cite">From its profile: <span title="processing">Where it runs<\/span> is “local”/);
   assert.match(first, /Needs 8 GB of RAM/);
   assert.match(first, /Best free option<\/span>/);
   assert.match(first, /Hidden gem/);
@@ -284,10 +284,31 @@ test('identical web searches share one model call; MCP calls are never cached', 
   // Different conditions are a different search.
   await s.search({ ...MAC_LLM, os: 'linux' });
   assert.equal(s.modelCalls.length, 2);
+  // "Keep my data on this machine" too: without it in the key, a private search got the answer made without it.
+  const priv = { need: 'take notes', os: 'macos' };
+  await s.search(priv);
+  await s.search({ ...priv, private: '1' });
+  assert.equal(s.modelCalls.length, 4);
 
   await s.mcpFind({ need: 'run a language model offline on my laptop', os: 'macos', must_run_locally: true });
   await s.mcpFind({ need: 'run a language model offline on my laptop', os: 'macos', must_run_locally: true });
-  assert.equal(s.modelCalls.length, 4);
+  assert.equal(s.modelCalls.length, 6);
+});
+
+test('the search key holds every condition the form sends to find_software', () => {
+  const base: FormValues = { ...EMPTY_FORM, need: 'Take  Notes' };
+  assert.equal(searchKey(base), searchKey({ ...base, need: 'take notes' }));
+  for (const change of [{ os: 'linux' }, { arch: 'arm64' }, { free_only: true }, { offline: true }, { private: true }] as Partial<FormValues>[]) {
+    assert.notEqual(searchKey(base), searchKey({ ...base, ...change }), JSON.stringify(change));
+  }
+  // And the page's language: a zh-TW search gets its sentences in Chinese.
+  assert.notEqual(searchKey(base, 'en'), searchKey(base, 'zh-TW'));
+});
+
+test('rules reasons read in zh-TW, including what the docs say it can do', () => {
+  assert.equal(zhRuleClaim('Its docs say it can: export to PDF (not tested by pickfit)', undefined), '它的文件說能做到：export to PDF（pickfit 沒有逐項測試）');
+  assert.equal(zhRuleClaim('Free to use', undefined), '免費使用');
+  assert.equal(zhRuleClaim('A model wrote this', undefined), null);
 });
 
 test('a degraded answer is not cached, so the next identical search tries the model again', async () => {
@@ -560,6 +581,9 @@ function pick(overrides: Partial<PickOut> = {}): PickOut {
     features: { recorded: false, checked: [], not_checked: [] },
     scores: { quality: 80, popularity: 10, treasure: false },
     security: { status: 'unchecked', level: null, coverage: null, reason: 'not_run', checked_at: null, count: 0, advisories: 0, findings: [] },
+    security_warning: null,
+    readme_wrong: [],
+    freshness: { age_days: 1, last_release: null, warning: null },
     repo: 'https://github.com/a/tool',
     homepage: null,
     web_app: null,
@@ -668,7 +692,7 @@ test('an MCP server pick shows its handshake and how to add it to an agent', asy
   assert.match(pick, /An MCP client called one of its tools<\/p>/);
   assert.match(pick, /An MCP client handshake over stdio listed its 2 tools \(search_notes, read_note\), and a call to search_notes returned a result\./);
   assert.match(pick, /<h4>Add it to your agent<\/h4><div class="cmd"><pre translate="no"><code>claude mcp add/);
-  assert.match(pick, /JSON for Claude Desktop, Cursor and other clients/);
+  assert.match(pick, /Other clients: Cursor, VS Code, Claude Desktop, Codex, Gemini/);
   assert.match(pick, /<code translate="no">NOTES_SYNC_TOKEN<\/code>: sync service token \(required\)/);
 });
 

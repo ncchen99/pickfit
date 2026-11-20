@@ -6,7 +6,8 @@
  * later stages (still_using, replaced, abandoned); then the row keeps the rec_id (so
  * `rec_id IS NOT NULL` means counted), otherwise it is stored once with
  * rec_id null. A failed install or first run with an error excerpt queues a
- * fresh sandbox re-run for that slug and OS. No model call.
+ * fresh sandbox re-run for that slug and OS, which a maintainer starts and
+ * reviews later; `next` says so, or says what kept it from being queued. No model call.
  */
 import { isWebApp, type Catalog, type OS } from './catalog.ts';
 import { issuedRec, logEvent, newId, REC_TTL_DAYS, REC_TTL_LATER_DAYS, type Reporter } from './events.ts';
@@ -95,9 +96,24 @@ async function queueReverify(db: D1Database, now: Date, slug: string, os: string
   return (result.meta.changes ?? 0) > 0 ? 'queued' : 'already_queued';
 }
 
-function nextHint(input: OutcomeInput, failed: boolean): string | null {
+/**
+ * What the agent may tell the user about a failure report. A queued re-run is a batch job that pickfit's maintainers
+ * start and review (`pickfit reverify`), not something already running, so the hint says so; when no re-run was
+ * queued it names what the report lacked (F2).
+ */
+function reverifyHint(reverify: OutcomeOutput['reverify'], missing: string[]): string {
+  if (reverify === 'queued') {
+    return 'Recorded. The failure is queued for a re-run of the install steps in a fresh sandbox; that re-run is a batch pickfit\'s maintainers start and review, so it has not started yet. Tell the user it was reported, not that it is being fixed now.';
+  }
+  if (reverify === 'already_queued') return 'Recorded. A re-run for this tool on this OS is already waiting for review; this report joins it.';
+  if (missing.length === 0) return 'Recorded.';
+  return `Recorded, but no re-run was queued: ${missing.join('; ')}.`;
+}
+
+function nextHint(input: OutcomeInput, failed: boolean, reverify: OutcomeOutput['reverify'] = 'none', missing: string[] = []): string | null {
   if (failed || input.stage === 'abandoned' || input.stage === 'replaced') {
-    return `If the user still needs a tool for this job, call find_software or find_alternatives with exclude: ["${input.slug}"].`;
+    const retry = `If the user still needs a tool for this job, call find_software or find_alternatives with exclude: ["${input.slug}"].`;
+    return failed ? `${reverifyHint(reverify, missing)} ${retry}` : retry;
   }
   if (input.stage === 'installed') return 'After the first real use, report first_run_ok or first_run_failed.';
   return null;
@@ -169,9 +185,16 @@ export async function reportOutcome(input: OutcomeInput, deps: OutcomeDeps): Pro
   }
 
   let reverify: OutcomeOutput['reverify'] = 'none';
-  // A web app has no install steps to re-run; the stored report is there for its next browser check.
-  if (failed && recId && os && errorExcerpt && !isWebApp(deps.catalog.bySlug.get(input.slug)!)) {
-    reverify = await queueReverify(deps.db, now, input.slug, os, input.stage, id);
+  const missing: string[] = [];
+  if (failed) {
+    // A web app has no install steps to re-run; the stored report is there for its next browser check.
+    if (isWebApp(deps.catalog.bySlug.get(input.slug)!)) missing.push('a web app has no install steps to re-run');
+    else {
+      if (!recId) missing.push(input.rec_id ? 'the rec_id is unknown or older than 7 days' : 'pass the rec_id pickfit gave with this tool');
+      if (!os) missing.push('pass os');
+      if (!errorExcerpt) missing.push('pass error_excerpt (the last lines of the error, personal data removed)');
+    }
+    if (missing.length === 0) reverify = await queueReverify(deps.db, now, input.slug, os!, input.stage, id);
   }
   return {
     accepted: true,
@@ -181,7 +204,7 @@ export async function reportOutcome(input: OutcomeInput, deps: OutcomeDeps): Pro
     counted_in_score: recId !== null,
     not_counted_reason: recId ? null : input.rec_id ? 'unknown_or_expired_rec_id' : 'no_rec_id',
     reverify,
-    next: nextHint(input, failed),
+    next: nextHint(input, failed, reverify, missing),
   };
 }
 

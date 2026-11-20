@@ -199,6 +199,9 @@ test('a failed install with an error excerpt queues a re-run; a pending one is n
   });
   assert.equal(failed.reverify, 'queued');
   assert.match(failed.next ?? '', /exclude: \["fixture-llm-runner"\]/);
+  // Queued is not running: the agent is told not to say the tool is being fixed now.
+  assert.match(failed.next ?? '', /has not started yet/);
+  assert.doesNotMatch(failed.next ?? '', /no re-run was queued/);
   const queue = h.sqlite.prepare('SELECT * FROM reverify_queue').all() as any[];
   assert.equal(queue.length, 1);
   assert.equal(queue[0].slug, 'fixture-llm-runner');
@@ -232,6 +235,19 @@ test('failures without an error excerpt or a counted rec_id do not queue a re-ru
     'none',
   );
   assert.equal(h.sqlite.prepare('SELECT count(*) AS n FROM reverify_queue').get()!.n, 0);
+});
+
+test('a failure report that queued nothing says what it lacked', async () => {
+  const h = harness(null, { modelEnabled: false });
+  const rec = await recommend(h);
+  const noExcerpt = await report(h, { slug: 'fixture-llm-runner', stage: 'install_failed', rec_id: rec });
+  assert.match(noExcerpt.next ?? '', /no re-run was queued: pass error_excerpt/);
+  assert.match(noExcerpt.next ?? '', /exclude: \["fixture-llm-runner"\]/);
+  const noRec = await report(h, { slug: 'fixture-llm-runner', stage: 'first_run_failed', os: 'linux', error_excerpt: 'boom' });
+  assert.match(noRec.next ?? '', /pass the rec_id/);
+  assert.doesNotMatch(noRec.next ?? '', /pass os/);
+  const oldRec = await report(h, { slug: 'fixture-llm-runner', stage: 'first_run_failed', rec_id: 'rec_nope', os: 'linux', error_excerpt: 'boom' });
+  assert.match(oldRec.next ?? '', /unknown or older than 7 days/);
 });
 
 test('error excerpts and notes are scrubbed and cut before they are stored', async () => {

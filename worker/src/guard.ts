@@ -38,9 +38,30 @@ const OS_WORDS: [RegExp, string][] = [
 const RAN_WORDS = 'verified|tested|installed|checked|confirmed';
 const RAN = new RegExp(`\\b(${RAN_WORDS})\\b`);
 
+/**
+ * The claims the checks below look for, said in Chinese, as the English words they test (a zh-TW page asks the model
+ * for Chinese text). Negated forms (不免費, 非開源) are left alone, so they never read as the claim.
+ */
+const ZH_CLAIMS: [RegExp, string][] = [
+  [/(?<![不非])(離線|斷網)/g, ' offline '],
+  [/不需(要)?(網路|連網)|免連網/g, ' no internet '],
+  [/不需(要)?雲端|不用雲端|(只|完全)在(你的|本機|電腦)|資料(都)?留在(你的|本機|裝置)|本機執行|在本機/g, ' runs locally '],
+  [/(?<![不非])免費(?!試用|方案|版本|額度)/g, ' free '],
+  [/免費(試用|方案|版本|額度)/g, ' free tier '],
+  [/(?<![不非])開源|開放原始碼/g, ' open source '],
+  [/(不需|免)(要)?(註冊|帳號|登入)/g, ' no account '],
+  [/(不需|免)(要)?\s*api\s*(金鑰|key)/g, ' no api key '],
+  [/(不需|免)(要)?\s*gpu|只用\s*cpu/g, ' no gpu '],
+  [/沒有廣告|無廣告/g, ' no ads '],
+  [/驗證過|已驗證|測試過|實測|安裝過|檢查過/g, ' verified '],
+  [/蘋果電腦|麥金塔/g, ' mac '],
+];
+export const zhClaimWords = (text: string) => ZH_CLAIMS.reduce((t, [pattern, words]) => t.replace(pattern, words), text);
+
 /** Why a free-text claim contradicts the card, or null when it does not. */
 export function contradiction(card: Card, text: string): string | null {
-  const t = text.toLowerCase();
+  // A zh-TW answer (the web page in Chinese) says the same claims in Chinese: read them as the English words.
+  const t = zhClaimWords(text.toLowerCase());
   if (card.no_install === true) {
     // A web app: offline only as a PWA pickfit reloaded offline; private only when nothing it typed left the device.
     if (/\b(offline|no internet|no network)\b/.test(t) && card.works_offline !== 'verified') return 'claims a web app works offline';
@@ -73,8 +94,15 @@ export function contradiction(card: Card, text: string): string | null {
   return null;
 }
 
+/** Card fields a reason may not rest on: how known or how well scored a tool is says nothing about this person's job
+ * (prompt rule 3). The model still reads them to break ties. */
+export const NOT_A_REASON: readonly string[] = ['popularity', 'quality'];
+
+/** Card fields that say what the tool does, so a reason citing one is about the person's job. */
+const JOB_FIELDS: readonly string[] = ['use_cases', 'capabilities_matched', 'features_checked', 'mcp_tools'];
+
 export function reasonHolds(card: Card, reason: ModelReason): boolean {
-  if (!(CARD_FIELDS as readonly string[]).includes(reason.field)) return false;
+  if (!(CARD_FIELDS as readonly string[]).includes(reason.field) || NOT_A_REASON.includes(reason.field)) return false;
   const value = card[reason.field as keyof Card] as CardValue;
   return valueMatches(value, reason.value) && contradiction(card, reason.claim) === null;
 }
@@ -115,13 +143,17 @@ export function guardPicks(answer: ModelAnswer, cards: Map<string, Card>, limit:
     }
     seen.add(pick.slug);
     const fit = clip(pick.fit, 300);
+    const kept = reasons.map((r) => ({ claim: r.claim.trim().slice(0, 200), field: r.field, value: r.value.slice(0, 200) }));
+    const vsWellKnown = clip(pick.vs_well_known, 300);
     picks.push({
       slug: pick.slug,
-      // A fit sentence that contradicts the card is replaced by the card's own summary.
-      fit: fit && contradiction(card, fit) === null ? fit : String(card.summary),
-      reasons: reasons.map((r) => ({ claim: r.claim.trim().slice(0, 200), field: r.field, value: r.value.slice(0, 200) })),
+      // A fit sentence that contradicts the card gives way to a reason that held about the job itself (it answers this
+      // request), else to the card's own summary.
+      fit: fit && contradiction(card, fit) === null ? fit : (kept.find((r) => JOB_FIELDS.includes(r.field))?.claim ?? String(card.summary)),
+      reasons: kept,
       tradeoffs: (pick.tradeoffs ?? []).map((t) => t.trim().slice(0, 200)).filter(Boolean).slice(0, 3),
-      vs_well_known: clip(pick.vs_well_known, 300),
+      // A comparison is a claim about this tool too; one the card contradicts is left out.
+      vs_well_known: vsWellKnown && contradiction(card, vsWellKnown) === null ? vsWellKnown : null,
     });
   }
   return { picks, droppedPicks, droppedReasons };
@@ -142,14 +174,14 @@ export interface GuardedWellKnown {
 
 export const NO_WELL_KNOWN: GuardedWellKnown = { option: null, name: null, dropped: null };
 
-const CLAIMS_CHECKED = new RegExp(`\\bpickfit\\b|\\b(${RAN_WORDS}|vetted|proven|audited)\\b`, 'i');
+const CLAIMS_CHECKED = new RegExp(`\\bpickfit\\b|\\b(${RAN_WORDS}|vetted|proven|audited)\\b|驗證|測試過|實測|檢查過|審核過`, 'i');
 const PLACEHOLDER = /^(none|null|nil|n\/?a|nothing|unknown|not applicable|no (tool|option)|-+)$/i;
 // Letters, digits, spaces and the few marks tool names use (llama.cpp, C++, yt-dlp, Node.js).
 const PLAIN_NAME = /^[\p{L}\p{N}][\p{L}\p{N} .+_'-]*$/u;
 const DOMAIN = /\.(com|org|net|io|dev|ai|app|sh|co|me|so|xyz)$/i;
 const COMMAND = /\b(sudo|curl|wget|brew|npm|npx|pnpm|yarn|pip3?|pipx|uvx?|cargo|go|apt(-get)?|dnf|yum|winget|choco|scoop|docker|git)\s+((install|add|i|get|run|tool|clone)\b|-\S)/i;
 // Plain prose: no markup, backticks, pipes, brackets, control or bidi characters, no line breaks.
-const PROSE = /^[\p{L}\p{N} .,;:'"()%+&!?\/–—-]+$/u;
+const PROSE = /^[\p{L}\p{N} .,;:'"()%+&!?\/–—\-，。、；：！？（）「」『』]+$/u;
 const URL_LIKE = /https?:|www\.|:\/\/|\b[a-z0-9-]+\.(com|org|net|io|dev|ai|app|sh|co|me|so|xyz)\b/i;
 const NEGATED_FREE = /\b(not|isn't|aren't|never|no|without|nor)\s+(\w+\s+)?free\b/i;
 const LIMITED_FREE = /\btrial\b|\bfree for (personal|non-?commercial|individual|students)|\bnon-?commercial\b/i;
@@ -158,9 +190,9 @@ const NOT_A_PRICE = /\b[a-z]+-free\b|\bfree up\b/gi;
 
 /** An affirmative claim that the tool, or a tier of it, is free or open source. */
 export function saysFree(text: string): boolean {
-  if (NEGATED_FREE.test(text) || LIMITED_FREE.test(text)) return false;
+  if (NEGATED_FREE.test(text) || LIMITED_FREE.test(text) || /[不非]免費|試用|非商業|僅限個人/.test(text)) return false;
   const rest = text.replace(NOT_A_PRICE, ' ');
-  return /\bfree\b/i.test(rest) || /\bopen[- ]source\b/i.test(rest);
+  return /\bfree\b/i.test(rest) || /\bopen[- ]source\b/i.test(rest) || /免費|開源|開放原始碼/.test(rest);
 }
 
 const GENERIC_WORDS = new Set([
@@ -214,6 +246,18 @@ export function guardWellKnown(answer: ModelAnswer, entries: Entry[], current?: 
   if (!saysFree(why)) return drop('not_said_free');
   if (CLAIMS_CHECKED.test(why)) return drop('claims_checked');
   return { option: { name, why }, name, dropped: null };
+}
+
+/**
+ * no_install_option names something the person already has, from the model's general knowledge (prompt rule 9). It
+ * gets the well-known option's checks that apply: plain prose with no link or command, and no claim that anyone
+ * checked it. One that breaks a rule is dropped whole.
+ */
+export function guardNoInstall(text: string | null | undefined): string | null {
+  const said = clip(text, 300);
+  if (!said || PLACEHOLDER.test(said)) return null;
+  if (!PROSE.test(said) || URL_LIKE.test(said) || COMMAND.test(said) || CLAIMS_CHECKED.test(said)) return null;
+  return said;
 }
 
 /** Minimal shape check; strict decoding should guarantee it, but code does not assume. */

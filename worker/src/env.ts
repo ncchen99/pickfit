@@ -29,6 +29,12 @@ export interface Env {
   WEB_DAILY_CAP_USD?: string;
   /** Workers rate limiting binding for web searches (wrangler.jsonc ratelimits); without it, a per-isolate count. */
   WEB_RATE_LIMITER?: RateLimit;
+  /**
+   * "call" (default) or "skip": whether an English request still gets the model's keyword call before the shortlist
+   * cut (expand.ts). Skipping saves one model call in series; on the free shortlist bench (11/20, 316 needs) the
+   * need's own tool reached the 50 cards for 94.0% of English needs without keywords against 99.7% with them.
+   */
+  KEYWORDS_ENGLISH?: string;
   /** R2 bucket pickfit-videos: verification clips at <slug>/<file>. Without it, /video/ answers 404. */
   VIDEOS?: R2Bucket;
 }
@@ -45,6 +51,8 @@ export interface Settings {
   timeoutMs: number;
   submitHourlyCap: number;
   tools: ToolSet;
+  /** KEYWORDS_ENGLISH: skip the keyword call for an English request; absent = call it. */
+  skipEnglishKeywords?: boolean;
 }
 
 function number(value: string | undefined, fallback: number): number {
@@ -76,6 +84,7 @@ export function settings(env: Env): Settings {
     timeoutMs: number(env.META_TIMEOUT_MS, 40_000),
     submitHourlyCap: number(env.SUBMIT_HOURLY_CAP, 20),
     tools: toolSet(env.TOOLS),
+    skipEnglishKeywords: (env.KEYWORDS_ENGLISH ?? '').trim().toLowerCase() === 'skip',
   };
 }
 

@@ -7,6 +7,25 @@ import { esc } from '../ui/html.ts';
 import { icon } from '../ui/icons.ts';
 import { badge, command, fitz, levelIcon, marksLegend, tape } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
+import { clientSetups, type ClientSetup } from '../clients.ts';
+
+/** One tab per client (the tool page's tab bar and script); without the script every client stays, one under the other. */
+function clientTabs(setups: ClientSetup[]): string {
+  const bar =
+    `<div class="os-tabs" role="tablist" aria-label="${L('Your MCP client', '你的 MCP 用戶端')}" data-os-tabs hidden>` +
+    setups
+      .map((c, i) => `<button type="button" role="tab" id="tab-${c.client}" aria-controls="client-${c.client}" aria-selected="${i === 0}" data-os="${c.client}"${i ? ' tabindex="-1"' : ''}>${esc(c.label)}</button>`)
+      .join('') +
+    `</div>`;
+  const panels = setups
+    .map(
+      (c) =>
+        `<div class="client-panel" id="client-${c.client}" role="tabpanel" aria-labelledby="tab-${c.client}"><h3>${esc(c.label)}</h3>` +
+        `<p>${esc(c.where)}</p>${c.text ? command(c.text) : ''}</div>`,
+    )
+    .join('');
+  return `<div class="clients">${bar}${panels}</div>`;
+}
 
 export const head = (title: string, lede: string, who: Parameters<typeof fitz>[0]) =>
   `<section class="head mat after-top"><div class="wrap head-row"><div><h1>${esc(title)}</h1><p class="lede">${esc(lede)}</p></div>` +
@@ -71,17 +90,15 @@ export function renderAgents(origin: string, nonce: string): string {
       'recommending',
     ) +
     `<div class="wrap"><article class="prose agents-doc">` +
-    `<h2>${L('Connect', '連線')}</h2><p>${L(`Any MCP client that speaks streamable HTTP can connect to <code translate="no">${esc(mcp)}</code>.`, `任何支援 streamable HTTP 的 MCP 用戶端都能連到 <code translate="no">${esc(mcp)}</code>。`)}</p><p>${L('For Claude Code:', 'Claude Code：')}</p>` +
-    command(`claude mcp add --transport http pickfit ${mcp}`) +
-    `<p>${L('For Claude Desktop, Cursor and other clients, add it to the MCP config:', 'Claude Desktop、Cursor 等用戶端，請加進 MCP 設定：')}</p>` +
-    command(JSON.stringify({ mcpServers: { pickfit: { type: 'http', url: mcp } } }, null, 2)) +
+    `<h2>${L('Connect', '連線')}</h2><p>${L(`Any MCP client that speaks streamable HTTP can connect to <code translate="no">${esc(mcp)}</code>. Pick yours:`, `任何支援 streamable HTTP 的 MCP 用戶端都能連到 <code translate="no">${esc(mcp)}</code>。選你用的：`)}</p>` +
+    clientTabs(clientSetups('pickfit', { url: mcp }, true)) +
     `<h2>${L('Tools', '工具')}</h2><div class="table-wrap"><table class="dt"><thead><tr><th scope="col">${L('Tool', '工具')}</th><th scope="col">${L('What it does', '用途')}</th></tr></thead><tbody>` +
     tools.map(([n, t]) => `<tr><th scope="row"><code>${esc(n)}</code></th><td>${esc(t)}</td></tr>`).join('') +
     `</tbody></table></div>` +
     `<h2>${L('Try it', '試試看')}</h2><p>${L('Ask your agent in plain words, for example:', '用平常的話問你的 agent，例如：')}</p><div class="prompt">${command(L('Find me a free tool that works offline on my Mac to turn meeting recordings into subtitles, and install it.', '幫我找一款能在我的 Mac 上離線使用的免費工具，把會議錄音轉成字幕，並幫我安裝。'))}</div>` +
     `<div class="tip">${fitz('peek', 52)}<h3>${L('No sign-up, no ads', '不用註冊，也沒有廣告')}</h3><p>${L('The MCP needs no account and returns no referral links. Answers carry a <code>how_we_know</code> line and the run’s <code>evidence_url</code>, so your agent can tell you where each claim came from.', '這個 MCP 不需要帳號，也不會回傳推薦連結。每個答案都附有 <code>how_we_know</code> 說明和測試的 <code>evidence_url</code>，讓你的 agent 能告訴你每項說法的出處。')}</p></div>` +
     `</article></div>`;
-  return renderShell({ nonce, title: L('Connect your agent · pickfit', '接上你的 agent · pickfit'), description: L('Use pickfit from Claude Code, Claude Desktop, Cursor or any MCP client.', '在 Claude Code、Claude Desktop、Cursor 或任何 MCP 用戶端中使用 pickfit。'), active: 'agents', tray: false, main });
+  return renderShell({ nonce, title: L('Connect your agent · pickfit', '接上你的 agent · pickfit'), description: L('Use pickfit from Claude Code, Cursor, VS Code, Claude Desktop, Codex CLI, Gemini CLI or any MCP client.', '在 Claude Code、Cursor、VS Code、Claude Desktop、Codex CLI、Gemini CLI 或任何 MCP 用戶端中使用 pickfit。'), active: 'agents', tray: false, main });
 }
 
 /** Who makes pickfit: the product in two paragraphs, the team, where it started and how to reach us. Facts only; no funding or company claims. */

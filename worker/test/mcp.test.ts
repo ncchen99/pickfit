@@ -95,7 +95,13 @@ test('legacy clients: initialize, list and call without a session', async () => 
   const out = res.result.structuredContent;
   assert.equal(out.matched_by, 'rules');
   assert.equal(out.degraded_reason, 'model_off');
-  assert.deepEqual(JSON.parse(res.result.content[0].text), out);
+  // The full answer is in structuredContent once; the text block is a short plain answer, not a second copy (X2).
+  const text: string = res.result.content[0].text;
+  assert.throws(() => JSON.parse(text));
+  assert.ok(text.length < JSON.stringify(out).length / 2, `${text.length} vs ${JSON.stringify(out).length}`);
+  assert.ok(text.includes(`rec_id: ${out.rec_id}`));
+  for (const pick of out.picks) assert.ok(text.includes(`${pick.name} (${pick.slug})`), pick.slug);
+  assert.match(text, /Ranked by rules/);
 });
 
 test('instructions say how to write the answer: pick first, alternative before the steps, no narration', () => {
@@ -105,7 +111,7 @@ test('instructions say how to write the answer: pick first, alternative before t
     assert.match(text, /Next line, before any steps: "If your setup is X instead, use Y\."/);
     assert.match(text, /say why the obvious choice isn't recommended/);
     assert.match(text, /Tag well_known_option "\(not verified by pickfit\)" beside its name/);
-    assert.match(text, /Don't narrate the search or say pickfit found nothing; just answer/);
+    assert.match(text, /Don't narrate the search\. If none fits, say so \(offer well_known_option\)\./);
     assert.match(text, /No disclaimers about what you didn't run/);
     assert.match(text, /If security\.status is vulnerable, warn the user first \(level conditional: one line on when\); if unchecked, don't call it safe\./);
   }
@@ -174,6 +180,13 @@ test('modern clients: the model path end to end, then the install guide', async 
   );
   assert.equal(guide.result.structuredContent.applies_to_user_system.match, 'exact');
   assert.equal(guide.result.structuredContent.rec_id, out.rec_id);
+  // The text block carries every step and the check, so a client that shows the model only text can still install.
+  const g = guide.result.structuredContent;
+  const guideText: string = guide.result.content[0].text;
+  for (const step of g.steps) assert.ok(guideText.includes(step.command), step.command);
+  if (g.verify) assert.ok(guideText.includes(g.verify.command));
+  assert.ok(guideText.includes(`rec_id: ${out.rec_id}`));
+  assert.ok(guideText.length < JSON.stringify(g).length / 2);
   await settle();
 
   const reported = await message(

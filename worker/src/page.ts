@@ -14,7 +14,7 @@ import { fitNote } from './fit.ts';
 import { isZh, L, withLang } from './i18n.ts';
 import { PIPE_TO_SHELL, type InstallOutput, type VerifiedInPickfit } from './install.ts';
 import { compareTable } from './pages/compare.ts';
-import { day, guiSentence, howRan, levelLabel, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, SHORT_DAY, system, webLevelLabel, webRunWords } from './ui/facts.ts';
+import { day, fieldLabel, guiSentence, howRan, levelLabel, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, SHORT_DAY, system, webLevelLabel, webRunWords } from './ui/facts.ts';
 import { esc, link, listOf } from './ui/html.ts';
 import { icon, osMark, type IconName } from './ui/icons.ts';
 import { badge, command, compareToggle, confidenceRow, coverage, fitz, kindTag, levelIcon, measure, notice, osList, runFacts, says, SEAM, sysTag, tape, type FitzName, type MeasureRow } from './ui/kit.ts';
@@ -232,7 +232,12 @@ export function installSection(guide: InstallOutput, form: FormValues, open: boo
       : '';
     agent =
       `<h4>${L('Add it to your agent', '加進你的 agent')}</h4>${command(cfg.claude_code)}` +
-      `<details class="json"><summary class="small">${L('JSON for Claude Desktop, Cursor and other clients', 'Claude Desktop、Cursor 等用戶端用的 JSON')}</summary>${command(cfg.json)}</details>` +
+      `<details class="json"><summary class="small">${L('Other clients: Cursor, VS Code, Claude Desktop, Codex, Gemini', '其他用戶端：Cursor、VS Code、Claude Desktop、Codex、Gemini')}</summary>` +
+      cfg.clients
+        .filter((c) => c.client !== 'claude_code')
+        .map((c) => `<h5>${esc(c.label)}</h5><p class="quiet small">${esc(c.where)}</p>${c.text ? command(c.text) : ''}`)
+        .join('') +
+      `</details>` +
       env +
       (cfg.note ? `<p class="quiet small">${esc(cfg.note)}</p>` : '');
   }
@@ -518,22 +523,31 @@ function webSheet(pick: PickOut, entry: Entry | undefined, first: boolean): stri
 
 /**
  * A vulnerable pick says so before its commands (or its address), as the tool page's warning does before its steps: the
- * red shield with the count, the source and day, and a link to the list on the tool page. Clean and unchecked add
- * nothing here, so a ticket never reads as checked clean when it was not; the tool page's shield says which it is.
+ * shield with the count, the source and day, and a link to the list on the tool page. The count and colour are the tool
+ * page's (securityMark): distinct advisories, not findings; a sec.v2 check that matters only in some uses (conditional)
+ * is amber and says so, blocked says not to install it. Clean and unchecked add nothing here, so a ticket never reads
+ * as checked clean when it was not; the tool page's shield says which it is.
  */
 function vulnLine(pick: PickOut): string {
   const s = pick.security;
   if (s?.status !== 'vulnerable') return '';
-  const n = Math.max(s.count, s.findings.length, 1);
+  const n = s.advisories || Math.max(s.count, s.findings.length, 1);
   const date = s.checked_at ? day(s.checked_at) : '';
   const web = !!pick.web_app;
-  const what = L(
-    `${n} known ${n === 1 ? 'vulnerability' : 'vulnerabilities'} in ${web ? 'the packages the site is built from' : 'packages it installs'}`,
-    `${web ? '這個網站用到的' : '它安裝的'}套件有 ${n} 個已知漏洞`,
-  );
+  const conditional = s.level === 'conditional';
+  const vulns = L(`${n} known ${n === 1 ? 'vulnerability' : 'vulnerabilities'}`, `${n} 個已知漏洞`);
+  const what =
+    s.level === 'blocked'
+      ? L(`Do not ${web ? 'use it' : 'install it'}: a malicious package or an exploited hole`, `不要${web ? '使用' : '安裝'}：有惡意套件或已遭利用的漏洞`)
+      : conditional
+        ? L(
+            `${vulns} in ${web ? 'the packages the site is built from' : 'packages it installs'}, in some uses only`,
+            `${web ? '這個網站用到的' : '它安裝的'}套件有 ${vulns}，只在某些用法下才會碰到`,
+          )
+        : L(`${vulns} in ${web ? 'the packages the site is built from' : 'packages it installs'}`, `${web ? '這個網站用到的' : '它安裝的'}套件有 ${vulns}`);
   const source = L(`high or critical; OSV.dev${date ? `, ${esc(date)}` : ''}`, `高風險或嚴重；OSV.dev${date ? `，${esc(date)}` : ''}`);
   return (
-    `<p class="t-vuln" role="note">${icon('shield-alert')}<span><b>${esc(what)}</b>${L(` (${source}). `, `（${source}）。`)}` +
+    `<p class="t-vuln${conditional ? ' caution' : ''}" role="note">${icon('shield-alert')}<span><b>${esc(what)}</b>${L(` (${source}). `, `（${source}）。`)}` +
     `<a href="/tool/${esc(pick.slug)}#security">${L('See the list', '看清單')}</a></span></p>`
   );
 }
@@ -564,8 +578,8 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
       (r) =>
         `<li><details class="why-src"><summary>${esc(r.claim)}${icon('file-text')}</summary>` +
         `<p class="cite">${L(
-          `From its profile: <code>${esc(r.field)}</code> is “${esc(r.value)}”`,
-          `依據簡介：<code>${esc(r.field)}</code> 是「${esc(r.value)}」`,
+          `From its profile: <span title="${esc(r.field)}">${esc(fieldLabel(r.field))}</span> is “${esc(r.value)}”`,
+          `依據簡介：<span title="${esc(r.field)}">${esc(fieldLabel(r.field))}</span>是「${esc(r.value)}」`,
         )}</p></details></li>`,
     )
     .join('');
@@ -829,7 +843,7 @@ export function renderResults(
   result: SearchResult,
   form: FormValues,
   catalog: Catalog,
-  opts: { cached?: boolean; budget?: BudgetStop | null } = {},
+  opts: { cached?: boolean; cachedAt?: string; budget?: BudgetStop | null } = {},
 ): string {
   const { out } = result;
   const parts: string[] = [];
@@ -956,7 +970,9 @@ export function renderResults(
     parts.unshift(head);
     if (outside) parts.push(outside);
   }
-  if (opts.cached)
+  if (opts.cachedAt)
+    parts.push(`<p class="quiet small">${L(`Shown from the same search made on ${esc(day(opts.cachedAt))}, on the same data.`, `這是 ${esc(day(opts.cachedAt))} 同一個搜尋的結果，資料沒有變。`)}</p>`);
+  else if (opts.cached)
     parts.push(`<p class="quiet small">${L('Shown from the same search made in the last few minutes.', '這是幾分鐘前同一個搜尋的結果。')}</p>`);
   return parts.join('');
 }
@@ -979,7 +995,7 @@ export const EXAMPLES: [string, string][] = [
 const EXAMPLES_ZH: [string, string][] = [
   ['離線把錄音轉成字幕', '把一整個資料夾的訪談錄音離線轉成字幕'],
   ['檢查我的 MCP 設定', '安裝 MCP 伺服器前，先檢查我的 MCP 設定有沒有危險權限'],
-  ['給 agent 的程式碼地圖', '一個 MCP 伺服器，讓我的 coding agent 看懂整個程式碼庫的結構'],
+  ['給 agent 的程式碼地圖', '一個 MCP 伺服器，讓我的程式設計 agent 看懂整個程式碼庫的結構'],
   ['釋放連接埠 3000', '找出佔用連接埠 3000 的程序並關掉它'],
 ];
 const examples = (): [string, string][] => (isZh() ? EXAMPLES_ZH : EXAMPLES);
@@ -1014,7 +1030,7 @@ export function searchForm(form: FormValues): string {
     `<select class="select" name="arch" data-dropdown aria-label="${L('CPU architecture', 'CPU 架構')}">${arch}</select>` +
     `<label class="chip"><input type="checkbox" name="free_only" value="1"${form.free_only ? ' checked' : ''}>${icon('leaf')}${L('Free', '免費')}</label>` +
     `<label class="chip"><input type="checkbox" name="offline" value="1"${form.offline ? ' checked' : ''}>${icon('wifi-off')}${L('Offline', '不需網路')}</label>` +
-    `<label class="chip"><input type="checkbox" name="private" value="1"${form.private ? ' checked' : ''}>${icon('laptop')}${L('Data stays local', '資料在本地')}</label></div>` +
+    `<label class="chip"><input type="checkbox" name="private" value="1"${form.private ? ' checked' : ''}>${icon('laptop')}${L('Data stays local', '資料留在本機')}</label></div>` +
     `<div class="ask-go"><span class="counter" data-counter aria-live="polite"></span>` +
     `<button type="submit" class="btn btn-primary go"><span class="btn-label">${L('Find tools', '幫我挑')}</span>${icon('arrow-right')}</button></div>` +
     `</div></form>`

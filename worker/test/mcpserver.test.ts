@@ -17,6 +17,16 @@ test('the client config comes from the launch argv the sandbox started', () => {
   assert.deepEqual(JSON.parse(config.json), {
     mcpServers: { 'fixture-notes-mcp': { command: 'notes-mcp', args: ['--root', '<root>'], env: { NOTES_SYNC_TOKEN: '<NOTES_SYNC_TOKEN>' } } },
   });
+  // Each client in its own format: Codex reads TOML, VS Code takes the server through code --add-mcp, Claude Desktop's file holds stdio servers.
+  const by = Object.fromEntries(config.clients.map((c) => [c.client, c.text]));
+  assert.deepEqual(Object.keys(by), ['claude_code', 'cursor', 'vscode', 'claude_desktop', 'codex', 'gemini']);
+  assert.equal(by.claude_code, config.claude_code);
+  assert.equal(by.codex, '[mcp_servers.fixture-notes-mcp]\ncommand = "notes-mcp"\nargs = ["--root", "<root>"]\nenv = { NOTES_SYNC_TOKEN = "<NOTES_SYNC_TOKEN>" }');
+  assert.equal(
+    by.vscode,
+    `code --add-mcp '{"name":"fixture-notes-mcp","type":"stdio","command":"notes-mcp","args":["--root","<root>"],"env":{"NOTES_SYNC_TOKEN":"<NOTES_SYNC_TOKEN>"}}'`,
+  );
+  assert.deepEqual(JSON.parse(by.claude_desktop!), JSON.parse(config.json));
   // Only variables the README marks required become placeholders; pickfit never had a value.
   assert.deepEqual(config.env.map((v) => v.name), ['NOTES_SYNC_TOKEN']);
   assert.match(config.note ?? '', /Replace <root> with your own path/);
@@ -26,6 +36,15 @@ test('the client config comes from the launch argv the sandbox started', () => {
   // The probe exists only in pickfit's sandbox: never a check or first task for the user.
   assert.deepEqual([out.verify, out.first_task], [null, null]);
   assert.match(out.how_we_know, /an MCP client handshake over stdio listed its 2 tools with the network off, and a call to search_notes returned a result/);
+});
+
+test('an HTTP server on the user\'s machine: Claude Desktop says it cannot reach it, Gemini uses its http transport', async () => {
+  const { clientSetups } = await import('../src/clients.ts');
+  const setups = clientSetups('local-http', { url: 'http://localhost:8080/mcp' });
+  const desktop = setups.find((c) => c.client === 'claude_desktop')!;
+  assert.equal(desktop.text, null);
+  assert.match(desktop.where, /public https address/);
+  assert.equal(setups.find((c) => c.client === 'gemini')!.text, 'gemini mcp add --transport http -s user local-http http://localhost:8080/mcp');
 });
 
 test('other software has no client config, and an MCP server without a run gives none', () => {

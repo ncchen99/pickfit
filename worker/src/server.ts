@@ -10,6 +10,7 @@ import { logEvent, logFailure } from './events.ts';
 import { ERROR_EXCERPT_MAX, LAST_USED, NOTE_MAX, reportOutcome, STAGES, UnknownToolError } from './outcome.ts';
 import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './submit.ts';
 import { NO_INSTALL_LABEL } from './webapp.ts';
+import { findSummary, installSummary } from './summary.ts';
 
 const ABOUT =
   "pickfit matches software to the user's need; each was installed and tested in a sandbox. Scope: dev CLIs, local AI tools, MCP servers, DevOps, security, data, docs and media tools, desktop GUI apps, web apps. ";
@@ -20,7 +21,7 @@ const ANSWER =
   'Next line, before any steps: "If your setup is X instead, use Y." ' +
   "Keep drawbacks short; say why the obvious choice isn't recommended. " +
   'Tag well_known_option "(not verified by pickfit)" beside its name. ' +
-  "Don't narrate the search or say pickfit found nothing; just answer. No disclaimers about what you didn't run. " +
+  "Don't narrate the search. If none fits, say so (offer well_known_option). No disclaimers about what you didn't run. " +
   "If security.status is vulnerable, warn the user first (level conditional: one line on when); if unchecked, don't call it safe.";
 
 export const INSTRUCTIONS =
@@ -201,6 +202,13 @@ const pick = z.object({
     gui: gui,
   }),
   features,
+  freshness: z
+    .object({
+      age_days: z.number().int().nullable().describe('Days since pickfit ran the shown steps (or opened the web app)'),
+      last_release: z.string().nullable().describe("The project's last release date"),
+      warning: z.string().nullable().describe('When the check may be out of date (a newer release, or over 90 days old): mention it before the steps'),
+    })
+    .describe('How fresh the check is'),
   how_we_know: z.string(),
   evidence_url: z.string().nullable(),
   scores: z.object({
@@ -209,6 +217,11 @@ const pick = z.object({
     treasure: z.boolean().describe('High quality, low popularity'),
   }),
   security,
+  security_warning: z
+    .string()
+    .nullable()
+    .describe('Say this to the user before recommending the tool (vulnerable, unchecked or partly checked); null: nothing to say'),
+  readme_wrong: z.array(z.string()).describe("Where the README's install instructions were wrong in pickfit's run; mention before the user follows the README"),
   repo: z.string().nullable(),
   homepage: z.string().nullable(),
   web_app: webApp,
@@ -386,7 +399,17 @@ export const installOutput = z.object({
       args: z.array(z.string()),
       url: z.string().nullable().describe('streamable_http: where the client connects once the server runs'),
       claude_code: z.string().describe('A `claude mcp add` line for Claude Code'),
-      json: z.string().describe('An mcpServers entry (JSON text) for Claude Desktop, Cursor and other clients'),
+      json: z.string().describe('An mcpServers entry (JSON text); clients has the right format for each client'),
+      clients: z
+        .array(
+          z.object({
+            client: z.enum(['claude_code', 'cursor', 'vscode', 'claude_desktop', 'codex', 'gemini']),
+            label: z.string(),
+            where: z.string().describe('Where the text goes: a terminal, a config file, or the app settings'),
+            text: z.string().nullable().describe('What to run or paste; null when that client cannot add this server'),
+          }),
+        )
+        .describe("How to add it to the user's client, in that client's own format"),
       env: z.array(
         z.object({
           name: z.string(),
@@ -464,7 +487,9 @@ const outcomeOutput = z.object({
   deduplicated: z.boolean().describe('true = this rec_id, slug, stage and result were already reported; nothing changed'),
   counted_in_score: z.boolean(),
   not_counted_reason: z.enum(['no_rec_id', 'unknown_or_expired_rec_id']).nullable(),
-  reverify: z.enum(['queued', 'already_queued', 'none']).describe('Whether pickfit will re-run the install steps in a fresh sandbox'),
+  reverify: z
+    .enum(['queued', 'already_queued', 'none'])
+    .describe('queued = waiting for a fresh-sandbox re-run that a maintainer starts and reviews later; it has not run yet. next says what to tell the user'),
   next: z.string().nullable(),
 });
 
@@ -489,9 +514,10 @@ function toolError(message: string) {
   return { content: [{ type: 'text' as const, text: message }], isError: true };
 }
 
-function result(out: object) {
+/** The full answer once, in structuredContent; the text block is `text` (summary.ts) when given, else the JSON for a small answer. */
+function result(out: object, text?: string) {
   return {
-    content: [{ type: 'text' as const, text: JSON.stringify(out) }],
+    content: [{ type: 'text' as const, text: text ?? JSON.stringify(out) }],
     structuredContent: out as Record<string, unknown>,
   };
 }
@@ -519,7 +545,10 @@ export function buildServer(deps: Deps): McpServer {
       outputSchema: findOutput,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    async (args) => result(await findSoftware(args, deps)),
+    async (args) => {
+      const out = await findSoftware(args, deps);
+      return result(out, findSummary(out, readonly));
+    },
   );
 
   server.registerTool(
@@ -536,7 +565,10 @@ export function buildServer(deps: Deps): McpServer {
       outputSchema: alternativesOutput,
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
-    async (args) => result(await findAlternatives(args, deps)),
+    async (args) => {
+      const out = await findAlternatives(args, deps);
+      return result(out, findSummary(out, readonly));
+    },
   );
 
   server.registerTool(
@@ -546,7 +578,7 @@ export function buildServer(deps: Deps): McpServer {
       description:
         'Use after the user picks a tool from find_software or find_alternatives. Returns install steps pickfit actually ran (replayed in a fresh sandbox, or by hand), with the OS, date and evidence (verification.video: a short clip of the run, if any), ' +
         'the steps only the user can do (permissions, accounts), a command to verify the install and a first task to try. ' +
-        'For an MCP server, mcp_client_config gives the `claude mcp add` line and the mcpServers JSON for the launch command pickfit started, with placeholders for user keys. ' +
+        'For an MCP server, mcp_client_config.clients says how to add it to each common client, from the launch command pickfit started, with placeholders for user keys. ' +
         'Show each command to the user before running it, and ask before any step that needs sudo or pipes a script into a shell. ' +
         'If applies_to_user_system.match is not "exact", tell the user the steps were checked on a different system. ' +
         'For a web app (web_app set) there are no steps: give the user its URL and the facts pickfit checked.' +
@@ -574,7 +606,7 @@ export function buildServer(deps: Deps): McpServer {
             client: deps.client ?? null,
           }).catch(logFailure('install_guide', out.rec_id)),
         );
-        return result(out);
+        return result(out, installSummary(out, readonly));
       } catch (err) {
         if (err instanceof UnknownSlugError) return toolError(err.message);
         throw err;
@@ -595,7 +627,7 @@ export function buildServer(deps: Deps): McpServer {
         'installed and first_run reports count for 7 days after the rec_id was issued; still_using, replaced and abandoned for 120 days. ' +
         "For those later stages follow get_install_guide's check_in: only with the user's consent, read-only checks, and send last_used, never the command output. " +
         'Remove user names, file paths, tokens and other personal data from error_excerpt and note; pickfit stores no account or IP. ' +
-        'A failed install with an error excerpt makes pickfit re-run the install steps in a fresh sandbox. Repeating the same report changes nothing.',
+        'A failed install with a rec_id, os and error excerpt queues a fresh-sandbox re-run that a maintainer starts and reviews later; next says what to tell the user, or what the report lacked. Repeating the same report changes nothing.',
       inputSchema: outcomeInput,
       outputSchema: outcomeOutput,
       annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },

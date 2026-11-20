@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { findSoftware, type FindInput } from '../src/find.ts';
 import { costUsd, estimateCostUsd, MATCH_MODEL } from '../src/meta.ts';
 import { MATCH_INSTRUCTIONS } from '../src/prompt.ts';
-import { answer, harness, modelResponse } from './helpers.ts';
+import { answer, harness, modelResponse, sentSlugs, systemText } from './helpers.ts';
 
 const MAC_OFFLINE: FindInput = {
   need: '我想要一個 Mac 上、免費、能離線跑本地 LLM 的工具 (secret-project-xyz)',
@@ -39,7 +39,7 @@ test('model path: picks come from claude-opus-5-5 and are checked against the ca
   assert.deepEqual(out.best_free, { slug: 'fixture-llm-runner', reason: 'Free, open source and runs offline.' });
 });
 
-test('the request is an Anthropic Messages call: claude-opus-5-5, low effort and a JSON schema limited to the candidates', async () => {
+test('the request is an Anthropic Messages call: claude-opus-5-5, low effort, cached instructions and one fixed JSON schema', async () => {
   const h = harness(() => modelResponse(answer()));
   await findSoftware(MAC_OFFLINE, h.deps);
   assert.equal(h.requests.length, 1);
@@ -54,13 +54,17 @@ test('the request is an Anthropic Messages call: claude-opus-5-5, low effort and
   // Exactly these fields: no sampling parameters, no thinking setting (this model rejects both), no forced tool.
   assert.deepEqual(Object.keys(body).sort(), ['max_tokens', 'messages', 'model', 'output_config', 'system']);
   assert.equal(body.max_tokens, 8000);
-  assert.equal(body.system, MATCH_INSTRUCTIONS.replace('{limit}', '3'));
+  assert.equal(systemText(body), MATCH_INSTRUCTIONS.replace('{limit}', '3'));
   assert.deepEqual(Object.keys(body.output_config).sort(), ['effort', 'format']);
   assert.equal(body.output_config.effort, 'low');
   assert.deepEqual(Object.keys(body.output_config.format).sort(), ['schema', 'type']);
   assert.equal(body.output_config.format.type, 'json_schema');
   const schema = body.output_config.format.schema;
-  assert.deepEqual(schema.properties.picks.items.properties.slug.enum, ['fixture-chat-tui', 'fixture-json-query', 'fixture-llm-runner', 'fixture-transcribe', 'fixture-web-sketch']);
+  assert.deepEqual(sentSlugs(body), ['fixture-chat-tui', 'fixture-json-query', 'fixture-llm-runner', 'fixture-transcribe', 'fixture-web-sketch']);
+  // C1: the instructions are one cached block, and the schema names no slugs, so both stay the same from request to
+  // request (the guard keeps only this request's candidates).
+  assert.deepEqual(body.system.map((b: any) => b.cache_control), [{ type: 'ephemeral' }]);
+  assert.equal(schema.properties.picks.items.properties.slug.enum, undefined);
   // A nullable field is anyOf with null, and every object is closed: what the API's JSON outputs accept.
   assert.deepEqual(schema.properties.best_free_slug.anyOf[1], { type: 'null' });
   assert.deepEqual(schema.properties.need.properties.os, { anyOf: [{ type: 'string', enum: ['macos', 'linux', 'windows'] }, { type: 'null' }] });
@@ -233,6 +237,66 @@ test('a fit sentence that contradicts the card is replaced by the summary', asyn
   );
   const out = await findSoftware(MAC_OFFLINE, h.deps);
   assert.match(out.picks[0].fit, /^\(Fake test fixture\) Terminal chat client/);
+});
+
+test('a contradicted fit gives way to a reason about the job; a contradicted comparison is left out', async () => {
+  const h = harness(() =>
+    modelResponse(
+      answer({
+        picks: [
+          {
+            slug: 'fixture-chat-tui',
+            fit: 'Closed-source but tested on macOS by pickfit.',
+            reasons: [
+              { claim: 'Free to use', field: 'pricing', value: 'free' },
+              { claim: 'Chats with a local model in the terminal', field: 'use_cases', value: 'chat with a local model from the terminal' },
+            ],
+            tradeoffs: [],
+            vs_well_known: 'Unlike the ChatGPT desktop app it is open source and was tested on Windows.',
+          },
+        ],
+      }),
+    ),
+  );
+  const out = await findSoftware(MAC_OFFLINE, h.deps);
+  assert.equal(out.picks[0].fit, 'Chats with a local model in the terminal');
+  assert.equal(out.picks[0].vs_well_known, null);
+});
+
+test('popularity and quality are never a reason, however true', async () => {
+  const h = harness(() =>
+    modelResponse(
+      answer({
+        picks: [
+          {
+            slug: 'fixture-chat-tui',
+            fit: 'A terminal chat client for local models.',
+            reasons: [
+              { claim: 'Well liked', field: 'popularity', value: '22' },
+              { claim: 'Scores well', field: 'quality', value: '76' },
+              { claim: 'Free to use', field: 'pricing', value: 'free' },
+            ],
+            tradeoffs: [],
+            vs_well_known: null,
+          },
+        ],
+      }),
+    ),
+  );
+  const out = await findSoftware(MAC_OFFLINE, h.deps);
+  assert.deepEqual(out.picks[0]?.why.map((r) => r.field), ['pricing']);
+});
+
+test('no_install_option drops links, commands and claims of a check; a best free tool with nothing said is left out', async () => {
+  const { guardNoInstall } = await import('../src/guard.ts');
+  assert.equal(guardNoInstall('macOS Preview can already merge PDFs.'), 'macOS Preview can already merge PDFs.');
+  for (const bad of ['Use smallpdf.com instead.', 'Run brew install qpdf.', 'Preview, verified by pickfit, is enough.', 'none']) {
+    assert.equal(guardNoInstall(bad), null, bad);
+  }
+  const h = harness(() => modelResponse(answer({ best_free_slug: 'fixture-transcribe', best_free_reason: null })));
+  const out = await findSoftware(MAC_OFFLINE, h.deps);
+  if (!out.picks.some((p) => p.slug === 'fixture-transcribe')) assert.equal(out.best_free, null);
+  assert.notEqual(out.best_free?.reason, 'Free and fits the request.');
 });
 
 test('every pick rejected by the guard falls back to rules', async () => {
@@ -445,4 +509,37 @@ test('exclude and limit are honoured', async () => {
   );
   assert.equal(out.picks.length, 1);
   assert.notEqual(out.picks[0].slug, 'fixture-llm-runner');
+});
+
+test('the cached prefix is the same for requests with different candidates', async () => {
+  const h = harness(() => modelResponse(answer()));
+  await findSoftware(MAC_OFFLINE, h.deps);
+  await findSoftware({ need: 'query JSON files from the terminal', os: 'linux' }, h.deps);
+  const [a, b] = h.requests.map((r) => r.body);
+  assert.notDeepEqual(sentSlugs(a), sentSlugs(b));
+  assert.deepEqual(a.system, b.system);
+  assert.deepEqual(a.output_config, b.output_config);
+});
+
+test('a pick or best free slug outside the candidates is dropped now that the schema does not list them', async () => {
+  const h = harness(() =>
+    modelResponse(
+      answer({
+        picks: [{ slug: 'not-a-candidate', fit: 'x', reasons: [{ claim: 'Free to use', field: 'pricing', value: 'free' }], tradeoffs: [], vs_well_known: null }],
+        best_free_slug: 'not-a-candidate',
+        best_free_reason: 'It is free.',
+      }),
+    ),
+  );
+  const out = await findSoftware(MAC_OFFLINE, h.deps);
+  assert.ok(out.picks.every((p) => p.slug !== 'not-a-candidate'));
+  assert.notEqual(out.best_free?.slug, 'not-a-candidate');
+});
+
+test('isEnglish: ASCII text with letters, typographic quotes allowed; any other script is not', async () => {
+  const { isEnglish } = await import('../src/find.ts');
+  assert.equal(isEnglish('convert “markdown” to PDF — fast'), true);
+  assert.equal(isEnglish('把 markdown 轉成 PDF'), false);
+  assert.equal(isEnglish('convertir en PDF à la volée'), false);
+  assert.equal(isEnglish('123 456'), false);
 });

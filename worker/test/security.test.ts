@@ -252,6 +252,15 @@ test('find_software: each pick carries its security check', async () => {
   assert.ok(!('summary' in runner.security.findings[0]));
   const other = out.picks.find((p) => p.slug !== SLUG)!;
   assert.deepEqual(other.security, { status: 'unchecked', level: null, coverage: null, reason: 'not_run', checked_at: null, count: 0, advisories: 0, findings: [] });
+  // X4: the line to say before recommending it, up front on the pick.
+  assert.match(runner.security_warning ?? '', /^Known vulnerabilities \(\d+ high or critical\).*npm:undici 8\.9\.0.*Tell the user before installing\.$/);
+  assert.match(other.security_warning ?? '', /Not checked for known vulnerabilities \(not_run\); do not call it safe\./);
+  // And the README's install mistake from the shown run: the macOS run had none, the Linux one had one.
+  assert.deepEqual(runner.readme_wrong, []);
+  const linux = await findSoftware({ need: 'run a language model offline on my laptop', os: 'linux', must_run_locally: true }, h.deps);
+  assert.deepEqual(linux.picks.find((p) => p.slug === SLUG)!.readme_wrong, [
+    'README says make install; actually needed the install script; make needs a C toolchain the README does not list',
+  ]);
 });
 
 test('results: a vulnerable pick is flagged before its commands, with the count, the source and the list; others are not', async () => {
@@ -283,6 +292,27 @@ test('results: a vulnerable pick is flagged before its commands, with the count,
     // An unchecked pick says nothing here, so it never reads as checked clean.
     for (const other of out.picks.filter((p) => p.slug !== SLUG)) assert.ok(!ticketOf(html, other.slug).includes('t-vuln'));
   }
+});
+
+test('results: the ticket counts and colours a vulnerable pick as the tool page does', async () => {
+  const h = harness(() => modelResponse(answer()));
+  const ticketFor = async (check: SecurityCheck) => {
+    const catalog = loadCatalog(indexWith(check));
+    h.deps.catalog = catalog;
+    const out = await findSoftware({ need: 'run a language model offline on my laptop', os: 'macos', must_run_locally: true }, h.deps);
+    const html = renderResults({ out, guides: {} }, { ...EMPTY_FORM, os: 'macos' }, catalog);
+    const at = html.indexOf('class="t-vuln');
+    return { line: html.slice(at, html.indexOf('</p>', at)), mark: markFor(check) };
+  };
+  // Distinct advisories, not findings: 5, as the tool page's shield says, not 7.
+  const shared = await ticketFor({ ...VULNERABLE, count: 7, advisories: 5 });
+  assert.match(shared.line, /<b>5 known vulnerabilities in packages it installs<\/b>/);
+  assert.match(shared.mark, /5 known high or critical vulnerabilities/);
+  // Conditional: amber on both, and the ticket says it is only in some uses.
+  const conditional = await ticketFor(CONDITIONAL);
+  assert.match(conditional.line, /^class="t-vuln caution" role="note">/);
+  assert.match(conditional.line, /<b>2 known vulnerabilities in packages it installs, in some uses only<\/b>/);
+  assert.match(conditional.mark, /mark-caution/);
 });
 
 test('over MCP, a vulnerable tool passes the find_software and get_install_guide output schemas', async () => {

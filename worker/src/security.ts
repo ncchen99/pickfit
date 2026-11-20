@@ -136,3 +136,17 @@ export function securityWarnings(out: SecurityOut, web = false): string[] {
   }
   return lines;
 }
+
+/** find_software's security_warning: the line an agent must say before recommending the tool, or null when there is
+ * nothing to say. Vulnerable: securityWarnings' lines; unchecked or partly checked: that it must not be called safe. */
+export function securityLine(s: SecurityOut, web = false): string | null {
+  if (s.status === 'vulnerable') {
+    const lines = securityWarnings(s, web);
+    return lines.length ? lines.join(' ') : null;
+  }
+  if (s.status === 'unchecked') return `Not checked for known vulnerabilities (${s.reason ?? 'not_run'}); do not call it safe.`;
+  if (s.coverage?.state === 'partial') {
+    return `Only ${s.coverage.packages_checked} of ${s.coverage.packages_found} packages could be checked for known vulnerabilities; do not call it safe.`;
+  }
+  return null;
+}

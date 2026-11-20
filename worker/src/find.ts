@@ -26,22 +26,28 @@ import { toCard, type Card } from './cards.ts';
 import { checkBudget, recordSpend } from './budget.ts';
 import { ranSentence, videoSentence } from './evidence.ts';
 import { featureSentence, featuresOut, type FeaturesOut } from './features.ts';
-import { securityOut, type SecurityOut } from './security.ts';
+import { securityLine, securityOut, type SecurityOut } from './security.ts';
 import type { Settings } from './env.ts';
 import { logEvent, logFailure, newId, type Reporter } from './events.ts';
 import { englishKeywords, EXPAND_TIMEOUT_MS, type Expansion } from './expand.ts';
 import { fitNote, fitOf, jobOf, type Fit, type MatchQuality } from './fit.ts';
 import { hardFilter, MAX_CARDS, needsOffline, replacesCurrent, type Conditions } from './filter.ts';
-import { clip, guardPicks, guardWellKnown, NO_WELL_KNOWN, parseAnswer, type GuardedPick, type GuardedWellKnown } from './guard.ts';
+import { clip, guardNoInstall, guardPicks, guardWellKnown, NO_WELL_KNOWN, parseAnswer, type GuardedPick, type GuardedWellKnown } from './guard.ts';
 import { callModel, estimateCostUsd, MATCH_MODEL, ModelCallError, requestBody } from './meta.ts';
 import { instructions, matchInput, matchSchema, type MatchKind, type ModelAnswer, type ModelReason } from './prompt.ts';
 import { dropNegated, queryTerms, rulesRelevance, rulesTerms, termsAsSaid } from './relevance.ts';
 import { leansInstall, rankByRules, templateReasons } from './rules.ts';
 import { webAppOut, webRanSentence, type WebAppOut } from './webapp.ts';
+import { freshness, type Freshness } from './freshness.ts';
+import { withLang } from './i18n.ts';
+
+/** The language the web page asks the model to write its sentences in; MCP answers stay English. */
+export type AnswerLanguage = 'zh-TW';
 
 export interface FindInput extends Conditions {
   need: string;
   ui_language?: string;
+  answer_language?: AnswerLanguage;
   limit?: number;
 }
 
@@ -95,11 +101,17 @@ export interface PickOut {
   };
   /** Advertised features the run behind the shown guide exercised, and the ones it did not, with why. */
   features: FeaturesOut;
+  /** How old the shown check is, the last release, and a warning when the steps may be out of date. */
+  freshness: Freshness;
   how_we_know: string;
   evidence_url: string | null;
   scores: { quality: number | null; popularity: number | null; treasure: boolean };
   /** Known high or critical vulnerabilities (OSV.dev) in what a fresh install brings; unchecked says why not. */
   security: SecurityOut;
+  /** The one line about security to say before recommending it; null when there is nothing to say. */
+  security_warning: string | null;
+  /** Where the README's install instructions were wrong on the shown run: "README says X; actually needed Y". */
+  readme_wrong: string[];
   /** null for a web app with no public repository. */
   repo: string | null;
   homepage: string | null;
@@ -134,6 +146,9 @@ export interface AlternativesOutput extends FindOutput {
   current: { matched_slug: string | null; known: boolean };
   keep_current: { recommended: boolean; reason: string } | null;
 }
+
+/** How many README mistakes a pick names; get_install_guide lists them all. */
+const README_WRONG_MAX = 2;
 
 function howWeKnow(entry: Entry, guide: InstallGuide | null, matchedBy: string, considered: number, videoBase?: string | null): string {
   const parts: string[] = [];
@@ -177,12 +192,14 @@ function pickOut(
   arch: Arch | undefined,
   matchedBy: string,
   considered: number,
+  now: Date,
   videoBase?: string | null,
 ): PickOut {
   const guide = bestGuide(entry, os);
   const web = isWebApp(entry) ? webCheck(entry) : null;
   // A web app opens in any browser: no install steps ran on any OS.
   const onUserOs = isWebApp(entry) ? null : verifiedOnUserSystem(entry, os, arch);
+  const security = securityOut(entry);
   const tradeoffs = [...chosen.tradeoffs];
   if (os && !onUserOs && guide) {
     // Run on the user's OS but another CPU architecture, or on another OS.
@@ -221,6 +238,8 @@ function pickOut(
       gui: guide?.run.gui ?? null,
     },
     features: featuresOut(entry, guide),
+    // English for agents, like the rest of the answer.
+    freshness: withLang('en', () => freshness(guide?.run.checked_at ?? web?.checked_at ?? null, isWebApp(entry) ? null : entry.last_release, now)),
     how_we_know: howWeKnow(entry, guide, matchedBy, considered, videoBase),
     evidence_url: guide?.run.evidence_url ?? web?.evidence_url ?? null,
     scores: {
@@ -228,7 +247,12 @@ function pickOut(
       popularity: entry.scores?.popularity ?? null,
       treasure: entry.scores?.treasure ?? false,
     },
-    security: securityOut(entry),
+    security,
+    security_warning: securityLine(security, isWebApp(entry)),
+    readme_wrong: (guide?.pitfalls ?? [])
+      .filter((p) => p.kind === 'readme_wrong' || !p.kind)
+      .slice(0, README_WRONG_MAX)
+      .map((p) => `README says ${clip(p.readme_said, 160) ?? ""}; actually needed ${clip(p.actually_needed, 160) ?? ""}`),
     repo: entry.repo_url,
     homepage: entry.homepage,
     web_app: webAppOut(entry),
@@ -272,6 +296,17 @@ const NO_CHOICE: Choice = {
 const shortList = (items: string[] | undefined, n: number, max: number) =>
   (Array.isArray(items) ? items : []).slice(0, n).map((s) => String(s).slice(0, max));
 
+/**
+ * The model's best free option: free in pickfit's data, with the model's reason. With no reason it stays only as a
+ * pick's label (the reason then says so); a free tool outside the picks with nothing said about it is left out rather
+ * than given a sentence that says nothing.
+ */
+function bestFreeOf(free: Entry | undefined, reason: string | null, picks: GuardedPick[]): Choice['bestFree'] {
+  if (free?.pricing !== 'free') return null;
+  if (reason) return { slug: free.slug, reason };
+  return picks.some((p) => p.slug === free.slug) ? { slug: free.slug, reason: 'Free to use, and one of the picks above.' } : null;
+}
+
 function fromModel(
   answer: ModelAnswer,
   picks: GuardedPick[],
@@ -284,11 +319,8 @@ function fromModel(
   const keep = answer.keep_current;
   return {
     picks,
-    bestFree:
-      free?.pricing === 'free'
-        ? { slug: free.slug, reason: clip(answer.best_free_reason, 200) ?? 'Free and fits the request.' }
-        : null,
-    noInstall: clip(answer.no_install_option, 300),
+    bestFree: bestFreeOf(free, clip(answer.best_free_reason, 200), picks),
+    noInstall: guardNoInstall(answer.no_install_option),
     question: clip(answer.clarifying_question, 200),
     parsedNeed: {
       task: clip(need.task, 120),
@@ -381,7 +413,8 @@ async function askModel(
   const body = requestBody({
     instructions: instructions(limit, kind),
     input: matchInput(request, [...cards.values()]),
-    schema: matchSchema([...cards.keys()], kind),
+    schema: matchSchema(kind),
+    cache: true,
   });
   try {
     // With no cap set (the default) this passes without reading D1; the spend is recorded below either way.
@@ -443,6 +476,11 @@ interface MatchRequest {
   logged?: Record<string, unknown>;
 }
 
+/** Text in English: ASCII letters, with no letters from another script (typographic quotes and dashes allowed). */
+export function isEnglish(text: string): boolean {
+  return /[a-z]/i.test(text) && !/[^\x00-\x7F\u2010-\u2015\u2018-\u201F\u2026]/.test(text);
+}
+
 async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindOutput; keepCurrent: Choice['keepCurrent'] }> {
   const started = Date.now();
   const now = deps.now();
@@ -456,7 +494,11 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   let filtered = hardFilter(corpus, cond, { terms: ruleTerms(), current: req.currentTool, scorer: 'rules' });
   // Only a shortlist that must cut needs the request in the profiles' words.
   let expansion: Expansion | null = null;
-  if (filtered.passed > MAX_CARDS) {
+  if (filtered.passed > MAX_CARDS && deps.settings.skipEnglishKeywords && isEnglish(req.rulesText)) {
+    // KEYWORDS_ENGLISH=skip: an English request is already in the profiles' words; cut by them, with no model call.
+    const own = req.kind === 'find' ? dropNegated(req.rulesText) : req.rulesText;
+    filtered = hardFilter(corpus, cond, { terms: queryTerms(own), current: req.currentTool });
+  } else if (filtered.passed > MAX_CARDS) {
     expansion = await englishKeywords(req.rulesText, deps, now, Math.min(EXPAND_TIMEOUT_MS, deps.settings.timeoutMs));
     if (expansion.keywords) {
       // A need's negated words are constraints ("不需要 GPU"). Pain points stay as they are: there "no dark mode"
@@ -547,7 +589,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     model_attempts: statuses.length,
     model_http_status: httpStatus,
     considered: passed,
-    picks: choice.picks.map((chosen) => pickOut(entries.get(chosen.slug)!, chosen, cond.os, cond.arch, matchedBy, passed, deps.videoBase)),
+    picks: choice.picks.map((chosen) => pickOut(entries.get(chosen.slug)!, chosen, cond.os, cond.arch, matchedBy, passed, now, deps.videoBase)),
     best_free: choice.bestFree,
     no_install_option: choice.noInstall,
     well_known_option: choice.wellKnown.option
@@ -604,7 +646,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   return { output, keepCurrent: choice.keepCurrent };
 }
 
-function sharedRequest(input: Conditions & { ui_language?: string }) {
+function sharedRequest(input: Conditions & { ui_language?: string; answer_language?: AnswerLanguage }) {
   return {
     category: input.category ?? 'any',
     os: input.os ?? null,
@@ -615,6 +657,8 @@ function sharedRequest(input: Conditions & { ui_language?: string }) {
     ...(input.offline !== undefined ? { offline: input.offline } : {}),
     ...(input.data_stays_local !== undefined ? { data_stays_local: input.data_stays_local } : {}),
     ui_language: input.ui_language ?? null,
+    // Only when the page asks, so an MCP request reads as before.
+    ...(input.answer_language ? { answer_language: input.answer_language } : {}),
   };
 }
 

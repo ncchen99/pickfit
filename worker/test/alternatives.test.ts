@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import { findAlternatives, matchCurrent, type AlternativesInput } from '../src/find.ts';
 import { MATCH_MODEL } from '../src/meta.ts';
 import { ALTERNATIVES_RULES, MATCH_INSTRUCTIONS } from '../src/prompt.ts';
-import { answer, harness, modelResponse } from './helpers.ts';
+import { answer, harness, modelResponse, sentSlugs, systemText } from './helpers.ts';
 
 const REPLACE_OLLAMA: AlternativesInput = {
   current_software: 'Ollama',
@@ -53,7 +53,7 @@ test('model path: the request carries the current tool and pain points; the sche
 
   const { body } = h.requests[0];
   assert.equal(body.model, 'claude-opus-5-5');
-  assert.equal(body.system, MATCH_INSTRUCTIONS.replace('{limit}', '3') + ALTERNATIVES_RULES);
+  assert.equal(systemText(body), MATCH_INSTRUCTIONS.replace('{limit}', '3') + ALTERNATIVES_RULES);
   assert.match(body.messages[0].content, /<request>\n\{"current_software":"Ollama","pain_points":"too heavy.*"must_keep":\["OpenAI-compatible API"\]/);
   const schema = body.output_config.format.schema;
   assert.deepEqual(schema.properties.keep_current.required, ['recommended', 'reason']);
@@ -66,7 +66,7 @@ test('find_software keeps its own prompt and schema', async () => {
   const { findSoftware } = await import('../src/find.ts');
   await findSoftware({ need: 'run a model offline', os: 'macos' }, h.deps);
   const { body } = h.requests[0];
-  assert.equal(body.system, MATCH_INSTRUCTIONS.replace('{limit}', '3'));
+  assert.equal(systemText(body), MATCH_INSTRUCTIONS.replace('{limit}', '3'));
   assert.equal(body.output_config.format.schema.properties.keep_current, undefined);
   assert.equal(body.output_config.format.schema.properties.need.properties.pain_points, undefined);
 });
@@ -85,7 +85,7 @@ test('a current tool that pickfit lists is never among the candidates', async ()
     h.deps,
   );
   assert.deepEqual(out.current, { matched_slug: 'fixture-llm-runner', known: true });
-  const slugEnum = h.requests[0].body.output_config.format.schema.properties.picks.items.properties.slug.enum;
+  const slugEnum = sentSlugs(h.requests[0].body);
   assert.ok(!slugEnum.includes('fixture-llm-runner'));
   // The model named it anyway: the guard drops it, and with no pick left the rules take over.
   assert.equal(out.degraded_reason, 'guard_rejected_all');
