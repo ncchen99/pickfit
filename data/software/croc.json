@@ -1,0 +1,1607 @@
+{
+  "schema_version": "software.v1",
+  "slug": "croc",
+  "repo_id": "gh:107286889",
+  "name": "croc",
+  "summary": "Command-line tool that transfers files and folders between two computers with end-to-end encryption, peer-to-peer with relay fallback.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "media_files",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "data-transfer",
+    "file-sharing",
+    "golang",
+    "pake",
+    "peer-to-peer",
+    "tcp",
+    "transfer"
+  ],
+  "use_cases": [
+    "send files or folders between two computers",
+    "send short text or URLs to another computer",
+    "share a terminal session with others",
+    "run a self-hosted relay server",
+    "store encrypted files temporarily for later download"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "transfer files between any two computers",
+    "end-to-end encryption using PAKE",
+    "transfer multiple files at once",
+    "resume interrupted transfers",
+    "send through a proxy such as Tor",
+    "share a terminal session"
+  ],
+  "capabilities": [
+    {
+      "label": "Send files or folders between computers",
+      "area": "subcommands"
+    },
+    {
+      "label": "Receive files with a code phrase",
+      "area": "transfer"
+    },
+    {
+      "label": "Share a collaborative terminal",
+      "area": "subcommands"
+    },
+    {
+      "label": "Store encrypted files for later download",
+      "area": "subcommands"
+    },
+    {
+      "label": "Revoke a stored transfer",
+      "area": "storage"
+    },
+    {
+      "label": "Self-host a relay server",
+      "area": "subcommands"
+    },
+    {
+      "label": "Send text or URLs",
+      "area": "transfer"
+    },
+    {
+      "label": "Pipe data via stdin and stdout",
+      "area": "input"
+    },
+    {
+      "label": "Show QR code for mobile receive",
+      "area": "output"
+    },
+    {
+      "label": "Transfer through SOCKS5 or HTTP proxy",
+      "items": [
+        "--socks5",
+        "--connect"
+      ],
+      "area": "networking"
+    },
+    {
+      "label": "Use a custom code phrase",
+      "area": "transfer"
+    },
+    {
+      "label": "Exclude folders or files from sending",
+      "area": "filtering"
+    },
+    {
+      "label": "Respect .gitignore when sending",
+      "area": "filtering"
+    },
+    {
+      "label": "Choose encryption curve",
+      "items": [
+        "p521",
+        "p256",
+        "p384",
+        "siec",
+        "ed25519"
+      ],
+      "area": "security"
+    },
+    {
+      "label": "Choose hash algorithm",
+      "items": [
+        "xxhash",
+        "imohash",
+        "md5",
+        "highway"
+      ],
+      "area": "options"
+    },
+    {
+      "label": "Select data transport",
+      "items": [
+        "auto",
+        "derp",
+        "relay"
+      ],
+      "area": "networking"
+    },
+    {
+      "label": "Send and receive files in browser",
+      "area": "web"
+    },
+    {
+      "label": "Serve web client with croc-web",
+      "area": "web"
+    },
+    {
+      "label": "Auto-overwrite or rename existing files",
+      "area": "options"
+    },
+    {
+      "label": "Zip folder before sending",
+      "area": "transfer"
+    },
+    {
+      "label": "Throttle upload speed",
+      "area": "networking"
+    },
+    {
+      "label": "Force local-only connections",
+      "area": "networking"
+    },
+    {
+      "label": "Copy code phrase to clipboard",
+      "area": "output"
+    },
+    {
+      "label": "Quiet mode for scripts",
+      "area": "output"
+    },
+    {
+      "label": "Update croc to latest release",
+      "area": "subcommands"
+    },
+    {
+      "label": "Remember settings for next run",
+      "area": "options"
+    }
+  ],
+  "why_worth_it": null,
+  "homepage": "https://getcroc.com",
+  "repo": {
+    "url": "https://github.com/schollz/croc",
+    "full_name": "schollz/croc",
+    "created_at": "2017-10-17T15:20:18Z",
+    "archived": false
+  },
+  "platforms": [
+    "windows",
+    "linux",
+    "macos"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": "required",
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install croc",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "croc update --check"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-croc-20261120-200738-ba60",
+      "method": "script",
+      "steps": [
+        {
+          "command": "curl -fsSL https://getcroc.com -o /tmp/getcroc.sh",
+          "purpose": "download getcroc.com installer script"
+        },
+        {
+          "command": "bash /tmp/getcroc.sh -p \"$HOME/.local/bin\"",
+          "purpose": "run installer with writable prefix ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "croc --version",
+        "expected_signal": "croc version 11.6.5"
+      },
+      "first_task": "/tmp/ct/t.sh multi"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "go",
+      "steps": [
+        {
+          "command": "go install github.com/schollz/croc/v11@latest",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": null,
+      "first_task": "croc update --check"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": null,
+  "last_release": {
+    "tag": "v11.6.5",
+    "published_at": "2026-11-07T22:39:14Z",
+    "url": "https://github.com/schollz/croc/releases/tag/v11.6.5"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-20T20:09:58.367145+08:00",
+    "runs": [
+      {
+        "id": "verify-croc-20261120-200738-ba60",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:01363ad5a469",
+        "checked_at": "2026-11-20T20:09:58.367145+08:00",
+        "tool_version": "croc version 11.6.5",
+        "install_method": "script",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "curl -fsSL https://getcroc.com -o /tmp/getcroc.sh",
+            "purpose": "download getcroc.com installer script"
+          },
+          {
+            "command": "bash /tmp/getcroc.sh -p \"$HOME/.local/bin\"",
+            "purpose": "run installer with writable prefix ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "croc --version",
+            "expected_signal": "croc version 11.6.5",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "croc version 11.6.5",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "/tmp/ct/t.sh multi",
+            "expected_signal": "dst/b.txt: bravo file contents",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "dst/b.txt: bravo file contents",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/ct && cat > /tmp/ct/t.sh <<'EOF'\n#!/bin/bash\n# usage: t.sh MODE   (multi | wrongcode | resume)\nset -u\nMODE=$1; cd /tmp/ct; rm -rf src dst relay.log; mkdir -p src dst\nexport CROC_NO_UPDATE_CHECK=1\nR=\"--relay 127.0.0.1:9109 --disable-clipboard --no-update-check\"\ncroc relay --ports 9109,9110,9111 > relay.log 2>&1 & RP=$!\nsleep 2\necho \"alpha file contents\" > src/a.txt\necho \"bravo file contents\" > src/b.txt\nCODE=7391-qzxv-plum-ferry\nif [ \"$MODE\" = resume ]; then\n  head -c 3000000 /dev/urandom > src/big.bin\n  head -c 1000000 src/big.bin > dst/big.bin\n  echo \"receiver starts with partial big.bin: $(stat -c %s dst/big.bin) bytes\"\n  FILES=\"src/big.bin\"\nelse\n  FILES=\"src/a.txt src/b.txt\"\nfi\nCROC_SECRET=$CODE croc $R send --transport relay $FILES > send.log 2>&1 & SP=$!\nsleep 3\nRC=$CODE; [ \"$MODE\" = wrongcode ] && RC=1111-wrong-code-here\n(cd dst && CROC_SECRET=$RC timeout 60 croc $R --yes --overwrite 2>&1); ST=$?\necho \"receiver exit: $ST\"\nkill $SP $RP 2>/dev/null; wait 2>/dev/null\necho \"--- sender log ---\"; tail -n 8 send.log\necho \"--- received files ---\"\nif [ \"$MODE\" = resume ]; then\n  echo \"dst/big.bin size $(stat -c %s dst/big.bin)\"; cmp src/big.bin dst/big.bin && echo \"RESUMED FILE IDENTICAL\"\nelse\n  for f in dst/*; do echo \"$f: $(cat $f)\"; done\nfi\n[ \"$MODE\" = wrongcode ] && [ $ST -ne 0 ] && exit 0\nexit $ST\nEOF\nchmod +x /tmp/ct/t.sh",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "/tmp/ct/t.sh wrongcode",
+            "expected_signal": "receiver exit: 1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "receiver exit: 1",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/ct && cat > /tmp/ct/t.sh <<'EOF'\n#!/bin/bash\n# usage: t.sh MODE   (multi | wrongcode | resume)\nset -u\nMODE=$1; cd /tmp/ct; rm -rf src dst relay.log; mkdir -p src dst\nexport CROC_NO_UPDATE_CHECK=1\nR=\"--relay 127.0.0.1:9109 --disable-clipboard --no-update-check\"\ncroc relay --ports 9109,9110,9111 > relay.log 2>&1 & RP=$!\nsleep 2\necho \"alpha file contents\" > src/a.txt\necho \"bravo file contents\" > src/b.txt\nCODE=7391-qzxv-plum-ferry\nif [ \"$MODE\" = resume ]; then\n  head -c 3000000 /dev/urandom > src/big.bin\n  head -c 1000000 src/big.bin > dst/big.bin\n  echo \"receiver starts with partial big.bin: $(stat -c %s dst/big.bin) bytes\"\n  FILES=\"src/big.bin\"\nelse\n  FILES=\"src/a.txt src/b.txt\"\nfi\nCROC_SECRET=$CODE croc $R send --transport relay $FILES > send.log 2>&1 & SP=$!\nsleep 3\nRC=$CODE; [ \"$MODE\" = wrongcode ] && RC=1111-wrong-code-here\n(cd dst && CROC_SECRET=$RC timeout 60 croc $R --yes --overwrite 2>&1); ST=$?\necho \"receiver exit: $ST\"\nkill $SP $RP 2>/dev/null; wait 2>/dev/null\necho \"--- sender log ---\"; tail -n 8 send.log\necho \"--- received files ---\"\nif [ \"$MODE\" = resume ]; then\n  echo \"dst/big.bin size $(stat -c %s dst/big.bin)\"; cmp src/big.bin dst/big.bin && echo \"RESUMED FILE IDENTICAL\"\nelse\n  for f in dst/*; do echo \"$f: $(cat $f)\"; done\nfi\n[ \"$MODE\" = wrongcode ] && [ $ST -ne 0 ] && exit 0\nexit $ST\nEOF\nchmod +x /tmp/ct/t.sh",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "/tmp/ct/t.sh resume",
+            "expected_signal": "RESUMED FILE IDENTICAL",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "RESUMED FILE IDENTICAL",
+            "setup": [
+              {
+                "command": "mkdir -p /tmp/ct && cat > /tmp/ct/t.sh <<'EOF'\n#!/bin/bash\n# usage: t.sh MODE   (multi | wrongcode | resume)\nset -u\nMODE=$1; cd /tmp/ct; rm -rf src dst relay.log; mkdir -p src dst\nexport CROC_NO_UPDATE_CHECK=1\nR=\"--relay 127.0.0.1:9109 --disable-clipboard --no-update-check\"\ncroc relay --ports 9109,9110,9111 > relay.log 2>&1 & RP=$!\nsleep 2\necho \"alpha file contents\" > src/a.txt\necho \"bravo file contents\" > src/b.txt\nCODE=7391-qzxv-plum-ferry\nif [ \"$MODE\" = resume ]; then\n  head -c 3000000 /dev/urandom > src/big.bin\n  head -c 1000000 src/big.bin > dst/big.bin\n  echo \"receiver starts with partial big.bin: $(stat -c %s dst/big.bin) bytes\"\n  FILES=\"src/big.bin\"\nelse\n  FILES=\"src/a.txt src/b.txt\"\nfi\nCROC_SECRET=$CODE croc $R send --transport relay $FILES > send.log 2>&1 & SP=$!\nsleep 3\nRC=$CODE; [ \"$MODE\" = wrongcode ] && RC=1111-wrong-code-here\n(cd dst && CROC_SECRET=$RC timeout 60 croc $R --yes --overwrite 2>&1); ST=$?\necho \"receiver exit: $ST\"\nkill $SP $RP 2>/dev/null; wait 2>/dev/null\necho \"--- sender log ---\"; tail -n 8 send.log\necho \"--- received files ---\"\nif [ \"$MODE\" = resume ]; then\n  echo \"dst/big.bin size $(stat -c %s dst/big.bin)\"; cmp src/big.bin dst/big.bin && echo \"RESUMED FILE IDENTICAL\"\nelse\n  for f in dst/*; do echo \"$f: $(cat $f)\"; done\nfi\n[ \"$MODE\" = wrongcode ] && [ $ST -ne 0 ] && exit 0\nexit $ST\nEOF\nchmod +x /tmp/ct/t.sh",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "curl https://getcroc.com | bash (default prefix /usr/local/bin)",
+            "actually_needed": "Without root, run the installer with -p \"$HOME/.local/bin\", which the README documents as a custom prefix",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "croc send --code [code-phrase] [file(s)-or-folder]",
+            "actually_needed": "On Linux, croc send --code fails with the message 'to send with a custom code phrase, you need to set the environmental variable CROC_SECRET'. The sender needs CROC_SECRET=code croc send ... (or croc --classic). The README mentions this elsewhere, but the --code example is shown with no caveat.",
+            "kind": "readme_wrong"
+          },
+          {
+            "readme_said": "croc update --check",
+            "actually_needed": "Not run: it queries GitHub releases, and the replayed smoke tests run with the network off",
+            "kind": "note"
+          },
+          {
+            "readme_said": "p2p with relay fallback via the public relays",
+            "actually_needed": "The checks used a local relay (croc relay --ports 9109,9110,9111) with --relay 127.0.0.1:9109 and --transport relay, so they work offline",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Multi-file transfer delivered both files with correct contents, the wrong-code check shows the receiver failing with exit 1 and nothing received as intended, and the version check prints croc version 11.6.5.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-croc-20261120-200738-ba60/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-croc-20261120-200738-ba60/check-1-cmd7.judged.png",
+            "runs/verify/verify-croc-20261120-200738-ba60/check-2-cmd8.judged.png",
+            "runs/verify/verify-croc-20261120-200738-ba60/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.28967,
+        "features": [
+          {
+            "feature": "transfer files between any two computers",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "end-to-end encryption using PAKE",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "not_shown",
+            "failure": null,
+            "note": "its check passed, but the output does not show it: Nothing in the output shows encryption, and the wrong-code check failed with an i/o timeout rather than an authentication rejection."
+          },
+          {
+            "feature": "transfer multiple files at once",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "resume interrupted transfers",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "check_not_met",
+            "failure": null,
+            "note": "The receiver started with the first 1 MB of a 3 MB file and ended with an identical copy, but the output doesn't show that only the missing part was sent. No interrupted transfer was tested."
+          },
+          {
+            "feature": "send through a proxy such as Tor",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          },
+          {
+            "feature": "share a terminal session",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v2",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/schollz/croc@94009c31ba1d",
+      "go.mod",
+      "web/package-lock.json",
+      "sbom:verify-croc-20261120-200738-ba60 (62 packages installed)"
+    ],
+    "packages_checked": 327,
+    "findings_total": 9,
+    "advisories_total": 9,
+    "findings": [
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2022-0969",
+        "cves": [
+          "CVE-2022-27664"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.18.6",
+        "summary": "Denial of service in net/http and golang.org/x/net/http2",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/croc > stdlib"
+        ],
+        "found_in": "sbom:verify-croc-20261120-200738-ba60",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.03487,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:ListenAndServe",
+          "symbol:ListenAndServeTLS",
+          "symbol:Serve"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "src/webrelay/webrelay.go:191: errc <- server.ListenAndServe()"
+          ]
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2023-1571",
+        "cves": [
+          "CVE-2022-41723"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.19.6",
+        "summary": "Denial of service via crafted HTTP/2 stream in net/http and golang.org/x/net",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/croc > stdlib"
+        ],
+        "found_in": "sbom:verify-croc-20261120-200738-ba60",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04561,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:Client.Do",
+          "symbol:Client.Get",
+          "symbol:Client.Head"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "internal/tailcat/tailcat.go:868: res, err := http.DefaultClient.Do(req)"
+          ]
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2023-2102",
+        "cves": [
+          "CVE-2023-39325"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.10",
+        "summary": "HTTP/2 rapid reset can cause excessive work in net/http",
+        "malicious": false,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/croc > stdlib"
+        ],
+        "found_in": "sbom:verify-croc-20261120-200738-ba60",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.03796,
+        "preconditions": [
+          "symbol:ListenAndServe",
+          "symbol:ListenAndServeTLS",
+          "symbol:Serve"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "src/webrelay/webrelay.go:191: errc <- server.ListenAndServe()"
+          ]
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2022-0535",
+        "cves": [
+          "CVE-2020-0601"
+        ],
+        "severity": "UNKNOWN",
+        "fixed_in": "1.12.16",
+        "summary": "Certificate validation bypass on Windows in crypto/x509",
+        "malicious": false,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/croc > stdlib"
+        ],
+        "found_in": "sbom:verify-croc-20261120-200738-ba60",
+        "in_artifact": true,
+        "kev": true,
+        "epss": 0.89078,
+        "preconditions": [
+          "symbol:Certificate.systemVerify"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2025-3563",
+        "cves": [
+          "CVE-2025-22871"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "1.23.8",
+        "summary": "Request smuggling due to acceptance of invalid chunked data in net/http",
+        "malicious": false,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/croc > stdlib"
+        ],
+        "found_in": "sbom:verify-croc-20261120-200738-ba60",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00842,
+        "preconditions": [
+          "symbol:chunkedReader.Read",
+          "symbol:readChunkLine"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2021-0142",
+        "cves": [
+          "CVE-2020-16845"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.13.15",
+        "summary": "Unbounded read from invalid inputs in encoding/binary",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/croc > stdlib"
+        ],
+        "found_in": "sbom:verify-croc-20261120-200738-ba60",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04861,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:ReadUvarint",
+          "symbol:ReadVarint"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "src/comm/comm.go:6: \"encoding/binary\"",
+            "no call to ReadUvarint, ReadVarint found"
+          ]
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2022-0229",
+        "cves": [
+          "CVE-2020-7919"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.12.16",
+        "summary": "Panic in certificate parsing in crypto/x509 and golang.org/x/crypto/cryptobyte",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/croc > stdlib"
+        ],
+        "found_in": "sbom:verify-croc-20261120-200738-ba60",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.02647,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:crypto/x509",
+          "symbol:golang.org/x/crypto/cryptobyte"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2022-0288",
+        "cves": [
+          "CVE-2021-44716"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.16.12",
+        "summary": "Unbounded memory growth in net/http and golang.org/x/net/http2",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/croc > stdlib"
+        ],
+        "found_in": "sbom:verify-croc-20261120-200738-ba60",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04254,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:http2serverConn.canonicalHeader",
+          "symbol:Server.ServeConn",
+          "symbol:serverConn.canonicalHeader"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "internal/tailcat/tailcat.go:42: \"net/http\"",
+            "no call to http2serverConn.canonicalHeader, Server.ServeConn, serverConn.canonicalHeader found"
+          ]
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2022-0536",
+        "cves": [
+          "CVE-2019-9512",
+          "CVE-2019-9514"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.11.13",
+        "summary": "Reset flood in net/http and golang.org/x/net/http",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/croc > stdlib"
+        ],
+        "found_in": "sbom:verify-croc-20261120-200738-ba60",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.83958,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:http2serverConn.scheduleFrameWrite",
+          "symbol:http2serverConn.serve",
+          "symbol:http2serverConn.writeFrame"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "internal/tailcat/tailcat.go:42: \"net/http\"",
+            "no call to http2serverConn.scheduleFrameWrite, http2serverConn.serve, http2serverConn.writeFrame found"
+          ]
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      }
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T20:10:06+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "installed_artifact",
+      "commit": "94009c31ba1d18e49b16eea73bf3a4b7797feeda",
+      "run_id": "verify-croc-20261120-200738-ba60",
+      "tool_version": "croc version 11.6.5",
+      "artifact_sha256": [
+        "d6cde9a91bb16007e96355ef68b64da1b5cc714a8999c16e10d050f6407c5d5c",
+        "80c3fc67f3f0e34a4831d586b698e33ee8c0a1de7d0e34b8db5b2a41adbef299"
+      ],
+      "packages": {
+        "go": 127,
+        "npm": 200
+      },
+      "scopes": {
+        "runtime": 140,
+        "dev": 187
+      },
+      "advisories_fetched_at": "2026-11-20T20:10:06+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 176,
+      "details": "security/croc.json",
+      "details_sha256": "135873e523977c3278f9030190d1dc3229b03cac1712d83ec0619bcebfbf43c5"
+    },
+    "assessment": {
+      "level": "exposed",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GO-2022-0969 go:stdlib@go1.27.3 (exposed)",
+        "worst:GO-2023-1571 go:stdlib@go1.27.3 (exposed)",
+        "worst:GO-2023-2102 go:stdlib@go1.27.3 (exposed)"
+      ],
+      "counts": {
+        "exposed": 3,
+        "conditional": 6,
+        "not_shipped": 4
+      },
+      "uncounted": 163,
+      "assessed_at": "2026-11-20T20:10:06+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "installed_artifact",
+      "packages_found": 327,
+      "packages_checked": 327,
+      "components": [
+        {
+          "ecosystem": "go",
+          "component": "go.mod",
+          "status": "scanned",
+          "packages": 114,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "web/package-lock.json",
+          "status": "scanned",
+          "packages": 200,
+          "gaps": []
+        },
+        {
+          "ecosystem": "go",
+          "component": "sbom:verify-croc-20261120-200738-ba60",
+          "status": "scanned",
+          "packages": 62,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
+  },
+  "scores": {
+    "formula_version": "b3.v7",
+    "computed_at": "2026-11-20T20:10:06+08:00",
+    "quality": {
+      "total": 79.0,
+      "raw_total": 89.7,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      },
+      "security": {
+        "level": "exposed",
+        "basis": "assessment",
+        "effect": "capped",
+        "deduction": 0.0
+      }
+    },
+    "popularity": {
+      "score": 98.4,
+      "signals": {
+        "stars": 40985,
+        "monthly_downloads": 3259,
+        "forks": 1661,
+        "dependents": null,
+        "release_downloads": 114849,
+        "hn_top_score": 300,
+        "registries_count": 1
+      },
+      "age_days": 3320,
+      "packages": [
+        "homebrew:croc"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 1.26
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:09:58.529592+08:00",
+      "sources_sha": "3fdc899fa0bd5c77bf8a87417514a00ba46ae096159d0930060bb7cbcf697977",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "`croc` is a tool that allows any two computers to simply and securely transfer files and folders."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Allows **any two computers** to transfer data (p2p with relay fallback)"
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "build from source (requires Go 1.27.3+)"
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "curl https://getcroc.com | bash"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "$ croc send [file(s)-or-folder]\nSending 'file-or-folder' (X MB)\nCode is: code-phrase"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Set\n`CROC_DO_CHECK=0` or `CROC_NO_UPDATE_CHECK=1`"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "croc update       # check croc and prepare the updater when needed"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Enables easy **cross-platform** transfers (Windows, Linux, Mac, [Browser](https://getcroc.com))"
+        }
+      },
+      "unquoted": [],
+      "input_sha": "f780cee04802f64235e969c20b289d8fa9dc0b6c528d7f709648c7944792ebbf",
+      "prompt_version": "rubric-p1",
+      "renderer_version": "r1",
+      "grader": "anthropic"
+    },
+    "inputs": {
+      "version": "inputs.v1",
+      "github": {
+        "source": "pipeline_db",
+        "fetched_at": "2026-11-20T20:07:22+08:00",
+        "stars": 40985,
+        "forks": 1661,
+        "open_issues": 4,
+        "created_at": "2017-10-17T15:20:18Z",
+        "pushed_at": "2026-11-18T16:31:54Z",
+        "releases": [
+          {
+            "tag": "v11.6.5",
+            "published_at": "2026-11-07T22:39:14Z",
+            "prerelease": false,
+            "notes_chars": 187,
+            "downloads": 18776
+          },
+          {
+            "tag": "v11.6.4",
+            "published_at": "2026-11-05T00:16:57Z",
+            "prerelease": false,
+            "notes_chars": 1077,
+            "downloads": 4713
+          },
+          {
+            "tag": "v11.6.3",
+            "published_at": "2026-11-02T10:06:44Z",
+            "prerelease": false,
+            "notes_chars": 120,
+            "downloads": 4647
+          },
+          {
+            "tag": "v11.6.2",
+            "published_at": "2026-11-01T21:11:06Z",
+            "prerelease": false,
+            "notes_chars": 320,
+            "downloads": 1699
+          },
+          {
+            "tag": "v11.6.1",
+            "published_at": "2026-11-01T15:10:47Z",
+            "prerelease": false,
+            "notes_chars": 306,
+            "downloads": 1123
+          },
+          {
+            "tag": "v11.6.0",
+            "published_at": "2026-10-30T20:00:59Z",
+            "prerelease": false,
+            "notes_chars": 1574,
+            "downloads": 8332
+          },
+          {
+            "tag": "v11.5.5",
+            "published_at": "2026-10-19T17:47:05Z",
+            "prerelease": false,
+            "notes_chars": 1420,
+            "downloads": 17637
+          },
+          {
+            "tag": "v11.5.4",
+            "published_at": "2026-09-26T21:53:50Z",
+            "prerelease": false,
+            "notes_chars": 1131,
+            "downloads": 30901
+          },
+          {
+            "tag": "v11.5.3",
+            "published_at": "2026-09-13T19:55:27Z",
+            "prerelease": false,
+            "notes_chars": 765,
+            "downloads": 17839
+          },
+          {
+            "tag": "v11.5.2",
+            "published_at": "2026-09-09T10:26:05Z",
+            "prerelease": false,
+            "notes_chars": 174,
+            "downloads": 9182
+          }
+        ],
+        "contributors": null,
+        "files": {
+          "count": 517,
+          "truncated": false,
+          "ci": ".github/workflows/ci.yml",
+          "tests": ".github/tests/windows_drive_root_test.go",
+          "changelog": "packaging/distributions/debian/changelog",
+          "lockfile": "go.sum"
+        }
+      },
+      "issues": {
+        "source": "github_live",
+        "fetched_at": "2026-11-20T20:09:58+08:00",
+        "items": [
+          {
+            "created_at": "2026-11-17T09:17:26Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-09T06:13:31Z",
+            "closed_at": "2026-11-09T17:03:15Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-06T22:43:08Z",
+            "closed_at": "2026-11-08T21:11:34Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-06T02:59:03Z",
+            "closed_at": "2026-11-18T11:10:09Z",
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-02T21:07:35Z",
+            "closed_at": "2026-11-04T22:35:28Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-01T11:24:01Z",
+            "closed_at": "2026-11-02T10:07:19Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-26T15:34:47Z",
+            "closed_at": "2026-10-27T13:29:46Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-22T08:57:38Z",
+            "closed_at": "2026-10-25T19:04:21Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-19T18:33:39Z",
+            "closed_at": "2026-10-20T20:12:23Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-15T02:10:52Z",
+            "closed_at": "2026-10-17T16:24:00Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-07T23:31:48Z",
+            "closed_at": "2026-10-19T16:17:01Z",
+            "association": "NONE",
+            "bot": false
+          }
+        ],
+        "pull_requests": 89,
+        "page_full": true
+      }
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/schollz/croc",
+      "fetched_at": "2026-11-20T20:07:23+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/schollz/croc/blob/main/README.md",
+      "fetched_at": "2026-11-20T20:07:22+08:00"
+    },
+    {
+      "id": "release:v11.6.5",
+      "kind": "release",
+      "url": "https://github.com/schollz/croc/releases/tag/v11.6.5",
+      "fetched_at": "2026-11-20T20:07:22+08:00"
+    },
+    {
+      "id": "help:verify-croc-20261120-200738-ba60:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "id": "help:verify-croc-20261120-200738-ba60:2",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T20:11:25+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "_croc_ is the only CLI file-transfer tool",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "To send a file, simply do:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "the only CLI file-transfer tool",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "`croc` is a tool that allows any two computers to simply and securely transfer files and folders.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "`croc` is a tool that allows any two computers to simply and securely transfer files and folders.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "Enables easy **cross-platform** transfers (Windows, Linux, Mac, [Browser](https://getcroc.com))",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/prerequisites/network",
+      "source_id": "readme",
+      "quote": "Allows **any two computers** to transfer data (p2p with relay fallback)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T20:07:23+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T20:07:23+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-20T20:07:23+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T20:07:23+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T20:07:23+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v11.6.5",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T20:07:22+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "croc send [file(s)-or-folder]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "croc send --text \"hello world\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Share a terminal with `croc ssh`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "You can run your own relay:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/use_cases/4",
+      "source_id": "readme",
+      "quote": "`croc` can upload\nregular files as client-side encrypted ciphertext:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Allows **any two computers** to transfer data (p2p with relay fallback)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Provides **end-to-end encryption** (using PAKE)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Allows **multiple file** transfers",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Allows **resuming transfers** that are interrupted",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/features/4",
+      "source_id": "readme",
+      "quote": "Can **use a proxy**, like Tor",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/features/5",
+      "source_id": "readme",
+      "quote": "Share a terminal with `croc ssh`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install croc",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "curl https://getcroc.com | bash",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "go install github.com/schollz/croc/v11@latest",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:33+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "croc send [file(s)-or-folder]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "croc code-phrase",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "help:verify-croc-20261120-200738-ba60:1",
+      "quote": "share or join a secure, collaborative terminal",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "help:verify-croc-20261120-200738-ba60:1",
+      "quote": "upload encrypted files for later download",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "help:verify-croc-20261120-200738-ba60:1",
+      "quote": "revoke a stored transfer using its local sender receipt",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "help:verify-croc-20261120-200738-ba60:1",
+      "quote": "start your own relay (optional)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "To send URLs or short text, use:",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Use Pipes - stdin and stdout",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "help:verify-croc-20261120-200738-ba60:2",
+      "quote": "show the web receive URL as a qrcode",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Can **use a proxy**, like Tor",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "You can send with your own code phrase (must be at least 6 characters):",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "readme",
+      "quote": "To exclude folders from being sent, use the `--exclude` flag",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "help:verify-croc-20261120-200738-ba60:2",
+      "quote": "enable .gitignore respect / don't send ignored files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "help:verify-croc-20261120-200738-ba60:1",
+      "quote": "choose an encryption curve (p521, p256, p384, siec, ed25519)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "help:verify-croc-20261120-200738-ba60:2",
+      "quote": "hash algorithm (xxhash, imohash, md5, highway)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "help:verify-croc-20261120-200738-ba60:2",
+      "quote": "sender file data transport (auto, derp, relay)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "The browser version is fully compatible with the CLI",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "It\nserves both the site and its same-origin WebSocket relay",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "help:verify-croc-20261120-200738-ba60:1",
+      "quote": "receive files that already exist under a new name instead of prompting",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "help:verify-croc-20261120-200738-ba60:2",
+      "quote": "zip folder before sending",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "help:verify-croc-20261120-200738-ba60:1",
+      "quote": "throttle the upload speed e.g. 500k",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "help:verify-croc-20261120-200738-ba60:1",
+      "quote": "force to use only local connections",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/22/label",
+      "source_id": "readme",
+      "quote": "By default, the code phrase is copied to your clipboard.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/23/label",
+      "source_id": "readme",
+      "quote": "To suppress all output (useful for scripts and automation):",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/24/label",
+      "source_id": "help:verify-croc-20261120-200738-ba60:1",
+      "quote": "prepare croc-update to install the latest croc release",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    },
+    {
+      "field": "/capabilities/25/label",
+      "source_id": "help:verify-croc-20261120-200738-ba60:1",
+      "quote": "save these settings to reuse next time",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:11:25+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-20T20:07:22+08:00",
+  "updated_at": "2026-11-20T20:11:25+08:00"
+}
