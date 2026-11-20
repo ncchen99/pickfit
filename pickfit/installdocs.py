@@ -164,6 +164,19 @@ def _doc_file(path: str, files: set[str]) -> str | None:
     return None
 
 
+_LINUX_DOC = re.compile(r"linux|unix|posix|source|ubuntu|debian", re.I)
+_OTHER_OS_DOC = re.compile(r"mac|osx|darwin|windows|(?:^|[^a-z])win(?:32|64)?(?:[^a-z]|$)", re.I)
+
+
+def _os_rank(where: str) -> int:
+    """0 for a guide that names Linux, Unix or a build from source, 2 for one that names only macOS or Windows,
+    1 for one that names no platform. Only the file or page name counts, not the folders above it."""
+    name = where.rstrip("/").rsplit("/", 1)[-1]
+    if _LINUX_DOC.search(name):
+        return 0
+    return 2 if _OTHER_OS_DOC.search(name) else 1
+
+
 def find_links(candidate: dict[str, Any]) -> list[Link]:
     """Where a candidate's install documentation may be, best first: repository files, then pages."""
     repo = candidate.get("repo") or {}
@@ -202,9 +215,11 @@ def find_links(candidate: dict[str, Any]) -> list[Link]:
                              url=urldefrag(homepage)[0]))
     seen: set[str] = set()
     unique = []
-    # At the same score: files before pages (no robots question, and the text is the project's own source),
-    # and "getting started" before "setup" or "download" (a setup wizard's page, a download button's).
-    for link in sorted(links, key=lambda x: (-x.score, x.path is None,
+    # At the same score: files before pages (no robots question, and the text is the project's own source), a
+    # Linux, Unix or from-source guide before a macOS or Windows one (the sandbox is Linux: ImageMagick's
+    # Install-mac.txt, the shortest name, was read instead of Install-unix.txt), and "getting started" before
+    # "setup" or "download" (a setup wizard's page, a download button's).
+    for link in sorted(links, key=lambda x: (-x.score, x.path is None, _os_rank(x.where),
                                              not re.search(r"getting|quick", x.where, re.I))):
         key = link.where.rstrip("/").lower()
         if key not in seen:
