@@ -113,6 +113,36 @@ ssh root@機器的IP systemctl list-timers 'pickfit-harvest*'
 ssh root@機器的IP systemctl --failed
 ```
 
+## 維護用的 timer（11/20）
+
+`pickfit maintenance`（`pickfit/maintenance.py`）有三件定期的維護工作。每件都在 watch 旁邊另一個 git worktree（`/var/lib/pickfit/maint`）裡做，不碰 watch commit 和 push 用的那個 checkout，所以兩邊不會搶同一個 index。跑的程式是 watch checkout 的版本，只有紀錄來自 worktree。每次都從 `origin/main` 重新開始，上一次中斷留下的東西會清掉。
+
+| timer | 時間（UTC） | 做什麼 | 費用 | 結果去哪 |
+|---|---|---|---|---|
+| `pickfit-security-weekly.timer` | 每週日 04:30 | `pickfit security --stale-days 7 --write`，接著 `pickfit score --refresh` | 不呼叫模型 | commit 後推到 main，CI 部署 |
+| `pickfit-outcomes.timer` | 每天 05:10 | `pickfit outcomes sync`，把 D1 裡外部的使用回報算進分數 | 不呼叫模型 | commit 後推到 main，CI 部署 |
+| `pickfit-reverify.timer` | 每天 06:00 | `pickfit reverify --limit 3`，在新箱子重驗使用者回報裝不起來的紀錄 | **要錢**：每筆約一次驗證的費用，受 watch 同一個每日金額上限管 | commit 在 `maint/reverify-日期` 分支並推上去，**不進 main** |
+
+- 推到 main 時如果 watch 先推了，會 fetch、rebase 再推，最多試三次。還是失敗的話，commit 留在 worktree，報告寫在 `runs/maintenance/<task>.json`。
+- reverify 會照使用者的回報改紀錄的安裝步驟，所以要有人看過 diff 才上線，和 watch 不准 `--reverify` 搭 `--publish` 是同一個理由。看過沒問題就把分支合進 main。
+- `SECURITY_STALE_DAYS`、`REVERIFY_LIMIT` 寫在 watch.env，留空就是預設值。
+
+`bootstrap.sh` 只安裝這些 unit，不啟用。要開的時候在這台 Mac 跑（reverify 要錢，要不要開另外決定）：
+
+```bash
+ssh root@機器的IP systemctl enable --now pickfit-security-weekly.timer pickfit-outcomes.timer
+```
+
+```bash
+ssh root@機器的IP systemctl enable --now pickfit-reverify.timer
+```
+
+先手動跑一次、不推送，看看會改哪些紀錄：
+
+```bash
+ssh root@機器的IP sudo -u pickfit sh -c 'cd /var/lib/pickfit/pickfit && uv run pickfit maintenance security --no-push'
+```
+
 ## 平常要知道的事
 
 - macOS 那條沒有能用的 Mac 時，批次到了會自己租一台（`--mac-rent`，一週最多一台），root 步驟也自動做（`--mac-root-from-provider`，向 Scaleway 讀那台的 sudo 密碼，直接餵給主機上的腳本，不記錄、不存檔）。拿掉這兩個參數就只用 `~pickfit/.pickfit/mac-hosts` 裡已經能用的主機。

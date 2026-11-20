@@ -1,0 +1,22 @@
+# pickfit maintenance security (D3): the weekly sec.v2 rescan of records not checked in 7 days, then a score refresh,
+# in the maintenance worktree (/var/lib/pickfit/maint), committed and pushed to main; CI deploys it. OSV.dev,
+# deps.dev, CISA KEV and FIRST EPSS only: no model call, no sandbox. Installed by bootstrap.sh, enabled by a person.
+[Unit]
+Description=pickfit weekly security rescan and score refresh (no model cost)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=pickfit
+Group=pickfit
+WorkingDirectory=/var/lib/pickfit/pickfit
+EnvironmentFile=/etc/pickfit/watch.env
+Environment=PYTHONUNBUFFERED=1
+ExecStartPre=/bin/mkdir -p runs/maintenance
+ExecStart=/bin/sh -c '/usr/local/bin/uv run pickfit maintenance security --stale-days $${SECURITY_STALE_DAYS:-7} > runs/maintenance/security.json'
+TimeoutStartSec=4h
+Nice=10
+NoNewPrivileges=true
+ProtectSystem=full
+PrivateTmp=true

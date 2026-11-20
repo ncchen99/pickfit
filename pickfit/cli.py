@@ -962,6 +962,8 @@ def main(argv: list[str] | None = None) -> int:
     add_sbom_replay_parser(sub)
     from pickfit.rubric_batch import add_parser as add_score_batch_parser
     add_score_batch_parser(sub)
+    from pickfit.maintenance import add_parser as add_maintenance_parser
+    add_maintenance_parser(sub)
     _add_queue_commands(sub)
     _add_outcomes_command(sub)
     _add_publish_command(sub)
