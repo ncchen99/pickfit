@@ -1,0 +1,1477 @@
+{
+  "schema_version": "software.v1",
+  "slug": "marp-cli",
+  "repo_id": "gh:144130157",
+  "name": "Marp CLI",
+  "summary": "Command-line tool that converts Marp/Marpit Markdown slide decks into HTML, PDF, PowerPoint and images.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "productivity_docs",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "cli",
+    "deck",
+    "markdown",
+    "marp",
+    "marpit",
+    "presentation",
+    "slides"
+  ],
+  "use_cases": [
+    "convert a Markdown slide deck to PDF",
+    "create a PowerPoint file from Markdown slides",
+    "generate an Open Graph image from a title slide",
+    "serve a directory of slide decks with on-demand conversion"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "convert Markdown slides to HTML",
+    "export slides to PDF",
+    "export slides to PowerPoint PPTX",
+    "render slides to PNG/JPEG images",
+    "watch files and reconvert on change",
+    "serve decks with on-demand HTTP conversion"
+  ],
+  "capabilities": [
+    {
+      "label": "Convert slide deck to PDF",
+      "area": "formats"
+    },
+    {
+      "label": "Convert slide deck to PowerPoint PPTX",
+      "area": "formats"
+    },
+    {
+      "label": "Generate editable PPTX (experimental)",
+      "area": "formats"
+    },
+    {
+      "label": "Convert slides to PNG/JPEG images",
+      "items": [
+        "png",
+        "jpeg"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Convert title slide into an image",
+      "items": [
+        "png",
+        "jpeg"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Export presenter notes as text file",
+      "area": "formats"
+    },
+    {
+      "label": "Serve on-demand conversion over HTTP",
+      "area": "modes"
+    },
+    {
+      "label": "Open preview window",
+      "area": "modes"
+    },
+    {
+      "label": "Convert multiple files in parallel",
+      "area": "modes"
+    },
+    {
+      "label": "Add PDF notes annotations and outlines",
+      "area": "pdf"
+    },
+    {
+      "label": "Choose browser for conversion",
+      "items": [
+        "chrome",
+        "edge",
+        "firefox"
+      ],
+      "area": "browser"
+    },
+    {
+      "label": "Choose HTML template",
+      "items": [
+        "bare",
+        "bespoke"
+      ],
+      "area": "templates"
+    },
+    {
+      "label": "Presenter view in bespoke template",
+      "area": "templates"
+    },
+    {
+      "label": "Slide transitions",
+      "area": "templates"
+    },
+    {
+      "label": "Set slide deck metadata",
+      "items": [
+        "title",
+        "description",
+        "author",
+        "keywords",
+        "url",
+        "image"
+      ],
+      "area": "metadata"
+    },
+    {
+      "label": "Use built-in or custom CSS themes",
+      "area": "themes"
+    },
+    {
+      "label": "Swap conversion engine or add plugins",
+      "area": "engine"
+    },
+    {
+      "label": "Configure via configuration file",
+      "items": [
+        "marp.config.js",
+        "marp.config.mjs",
+        "marp.config.cjs",
+        ".marprc",
+        "package.json"
+      ],
+      "area": "configuration"
+    }
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/marp-team/marp-cli",
+    "full_name": "marp-team/marp-cli",
+    "created_at": "2018-08-09T09:22:36Z",
+    "archived": false
+  },
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "prerequisites": {
+    "runtimes": [
+      "node>=18"
+    ],
+    "system_packages": [
+      "Google Chrome, Microsoft Edge, or Mozilla Firefox (for PDF, PPTX, image conversion)",
+      "LibreOffice Impress (for editable PPTX)"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install marp-cli",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "marp --version",
+        "expected_signal": "@marp-team/marp-cli v4.x.x (w/ @marp-team/marp-core v4.x.x)"
+      },
+      "first_task": "marp --version"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-marp-cli-20261120-195308-5d86",
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @marp-team/marp-cli",
+          "purpose": "npm install -g @marp-team/marp-cli"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "marp --version",
+        "expected_signal": "@marp-team/marp-cli v4.5.1"
+      },
+      "first_task": "marp --no-stdin slide-deck.md -o output.html && grep -oE '<h[12][^>]*>[^<]*</h[12]>' output.html"
+    },
+    "windows": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "npm",
+      "steps": [
+        {
+          "command": "npm install -g @marp-team/marp-cli",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "marp --version",
+        "expected_signal": "@marp-team/marp-cli v4.x.x (w/ @marp-team/marp-core v4.x.x)"
+      },
+      "first_task": "marp --version"
+    }
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "MIT",
+  "processing": "local",
+  "last_release": {
+    "tag": "v4.5.1",
+    "published_at": "2026-09-06T00:33:58Z",
+    "url": "https://github.com/marp-team/marp-cli/releases/tag/v4.5.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-20T19:55:55.406166+08:00",
+    "runs": [
+      {
+        "id": "verify-marp-cli-20261120-195308-5d86",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:01363ad5a469",
+        "checked_at": "2026-11-20T19:55:55.406166+08:00",
+        "tool_version": "@marp-team/marp-cli v4.5.1 (w/ @marp-team/marp-core v4.4.0)",
+        "install_method": "npm",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "npm install -g @marp-team/marp-cli",
+            "purpose": "npm install -g @marp-team/marp-cli"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "marp --version",
+            "expected_signal": "@marp-team/marp-cli v4.5.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "@marp-team/marp-cli v4.5.1 (w/ @marp-team/marp-core v4.4.0)",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "marp --no-stdin slide-deck.md -o output.html && grep -oE '<h[12][^>]*>[^<]*</h[12]>' output.html",
+            "expected_signal": "<h1 id=\"hello-marp-slide-one\">Hello Marp Slide One</h1>",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "<h1 id=\"hello-marp-slide-one\">Hello Marp Slide One</h1>",
+            "setup": [
+              {
+                "command": "cat > slide-deck.md <<'EOF'\n---\nmarp: true\n---\n\n# Hello Marp Slide One\n\nFirst slide body\n\n---\n\n## Second Slide Title\n\n- bullet alpha\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "marp slide-deck.md -o output.html",
+            "actually_needed": "When stdin is not a TTY (closed/non-interactive), marp waits forever reading stdin; pass --no-stdin.",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Install Google Chrome, Edge or Firefox for PDF/PPTX/images",
+            "actually_needed": "A user-local chrome-headless-shell (via @puppeteer/browsers) failed for missing libnspr4.so, and Firefox failed for missing libgtk-3.so.0. The system libraries need apt, which needs root.",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Marp converted slide-deck.md to output.html containing the expected h1 and h2 headings, and --version printed v4.5.1.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-marp-cli-20261120-195308-5d86/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-marp-cli-20261120-195308-5d86/check-1-cmd5.judged.png",
+            "runs/verify/verify-marp-cli-20261120-195308-5d86/check-2-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.191589,
+        "features": [
+          {
+            "feature": "convert Markdown slides to HTML",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "export slides to PDF",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "No browser installed; downloaded Chrome needs libnspr4.so and Firefox needs libgtk-3.so.0, which need apt"
+          },
+          {
+            "feature": "export slides to PowerPoint PPTX",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "Needs the same browser as PDF, which cannot start without system libraries"
+          },
+          {
+            "feature": "render slides to PNG/JPEG images",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_root",
+            "failure": null,
+            "note": "Needs the same browser as PDF, which cannot start without system libraries"
+          },
+          {
+            "feature": "watch files and reconvert on change",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          },
+          {
+            "feature": "serve decks with on-demand HTTP conversion",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v2",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "npm:@marp-team/marp-cli (fresh install, 156 packages)",
+      "sbom:verify-marp-cli-20261120-195308-5d86 (311 packages installed)"
+    ],
+    "packages_checked": 155,
+    "findings_total": 4,
+    "advisories_total": 4,
+    "findings": [
+      {
+        "package": "npm:basic-ftp",
+        "version": "5.3.1",
+        "advisory": "GHSA-c475-qrg2-pj4r",
+        "cves": [
+          "CVE-2026-102990"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "6.2.1",
+        "summary": "basic-ftp: Quadratic-time CPU denial of service in Client.list() Unix directory-listing parser (RE_LINE backtracking)",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-08-27T19:42:01Z",
+        "scope": "runtime",
+        "paths": [
+          "npm:@marp-team/marp-cli > @marp-team/marp-cli > puppeteer-core > @puppeteer/browsers > proxy-agent > pac-proxy-agent > get-uri > basic-ftp"
+        ],
+        "workspace": ".",
+        "found_in": "registry:npm:@marp-team/marp-cli",
+        "kev": false,
+        "epss": 0.0037,
+        "preconditions": [
+          "high_complexity",
+          "denial_of_service",
+          "option:RE_LINE"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "npm:extract-zip",
+        "version": "2.0.1",
+        "advisory": "GHSA-7pqw-9j4j-h8q3",
+        "cves": [
+          "CVE-2026-19693"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "extract-zip allows arbitrary file writes through symlink archive entries",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": false,
+        "scope": "runtime",
+        "paths": [
+          "npm:@marp-team/marp-cli > @marp-team/marp-cli > puppeteer-core > @puppeteer/browsers > extract-zip"
+        ],
+        "workspace": ".",
+        "found_in": "registry:npm:@marp-team/marp-cli",
+        "kev": false,
+        "epss": 0.00453,
+        "preconditions": [
+          "user_interaction"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "npm:extract-zip",
+        "version": "2.0.1",
+        "advisory": "GHSA-jmr9-qjv8-65gv",
+        "cves": [
+          "CVE-2026-56876"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "extract-zip unvalidated symlink path traversal",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": false,
+        "scope": "runtime",
+        "paths": [
+          "npm:@marp-team/marp-cli > @marp-team/marp-cli > puppeteer-core > @puppeteer/browsers > extract-zip"
+        ],
+        "workspace": ".",
+        "found_in": "registry:npm:@marp-team/marp-cli",
+        "kev": false,
+        "epss": 0.00526,
+        "preconditions": [
+          "user_interaction"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "npm:zod",
+        "version": "3.25.76",
+        "advisory": "GHSA-mrhx-c7xc-m3w5",
+        "cves": [
+          "CVE-2023-54404"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "4.6.6",
+        "summary": "Zod can exhaust memory while validating oversized constrained collections",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-11T16:18:23Z",
+        "scope": "runtime",
+        "paths": [
+          "npm:@marp-team/marp-cli > @marp-team/marp-cli > puppeteer-core > chromium-bidi > zod"
+        ],
+        "workspace": ".",
+        "found_in": "registry:npm:@marp-team/marp-cli",
+        "kev": false,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      }
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T19:56:02+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "installed_artifact",
+      "commit": null,
+      "run_id": "verify-marp-cli-20261120-195308-5d86",
+      "tool_version": "@marp-team/marp-cli v4.5.1 (w/ @marp-team/marp-core v4.4.0)",
+      "artifact_sha256": [
+        "e60dfc62992a7bc175dec6df3d997cb76491c8d80a837bea0cc8cac7096f6a3c"
+      ],
+      "packages": {
+        "npm": 155
+      },
+      "scopes": {
+        "runtime": 155
+      },
+      "advisories_fetched_at": "2026-11-20T19:56:02+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 7,
+      "details": "security/marp-cli.json",
+      "details_sha256": "07b26a833af8b72f16940b183157e8220133d857ff4d26038d18888cc5a557ac"
+    },
+    "assessment": {
+      "level": "conditional",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GHSA-c475-qrg2-pj4r npm:basic-ftp@5.3.1 (conditional)",
+        "worst:GHSA-7pqw-9j4j-h8q3 npm:extract-zip@2.0.1 (conditional)",
+        "worst:GHSA-jmr9-qjv8-65gv npm:extract-zip@2.0.1 (conditional)"
+      ],
+      "counts": {
+        "conditional": 4
+      },
+      "uncounted": 3,
+      "assessed_at": "2026-11-20T19:56:02+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "installed_artifact",
+      "packages_found": 155,
+      "packages_checked": 155,
+      "components": [
+        {
+          "ecosystem": "npm",
+          "component": "registry:npm:@marp-team/marp-cli",
+          "status": "scanned",
+          "packages": 156,
+          "gaps": []
+        },
+        {
+          "ecosystem": "npm",
+          "component": "sbom:verify-marp-cli-20261120-195308-5d86",
+          "status": "scanned",
+          "packages": 311,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
+  },
+  "scores": {
+    "formula_version": "b3.v7",
+    "computed_at": "2026-11-20T19:56:02+08:00",
+    "quality": {
+      "total": 90.0,
+      "raw_total": 90.0,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.725,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      },
+      "security": {
+        "level": "conditional",
+        "basis": "assessment",
+        "effect": "note",
+        "deduction": 0.0
+      }
+    },
+    "popularity": {
+      "score": 94.1,
+      "signals": {
+        "stars": 3940,
+        "monthly_downloads": 307176,
+        "forks": 209,
+        "dependents": null,
+        "release_downloads": 39543,
+        "hn_top_score": 1,
+        "registries_count": 2
+      },
+      "age_days": 3025,
+      "packages": [
+        "npm:@marp-team/marp-cli",
+        "homebrew:marp-cli"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 5.31
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:55:55.420228+08:00",
+      "sources_sha": "e57935cac524bf52d9156c272bc36d9d119e99dcaa5c0b1ec9a213451eebacd6",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "It can convert Marp / Marpit Markdown files into static HTML / CSS, PDF, PowerPoint document, and image(s) easily."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "We recommend to install Marp CLI into your Node.js project. You may control the CLI version (and engine if you want) exactly."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "[Node.js](https://nodejs.org/) v18 and later is required to use Marp CLI."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "#### macOS / Linux: **[Homebrew](https://brew.sh/)**\n\n```bash\nbrew install marp-cli\n```"
+        },
+        "first_run_example": {
+          "score": 1,
+          "quote": "marp slide-deck.md -o output.html"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "Marp CLI can be configured options with file, such as `marp.config.js`, `marp.config.mjs` (ES Modules), `marp.config.cjs` (CommonJS), `.marprc` (JSON / YAML), and `marp` section of `package.json`."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "When an unexpected problem has occurred while converting, please update your browser to the latest version."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "We also provide standalone binaries for Linux, macOS (Apple Silicon), and Windows."
+        }
+      },
+      "unquoted": [],
+      "input_sha": "bd43479c04b40c567c85a12876b6e4cf6e25ff2776207d1e0afdc6e0ad3b7036",
+      "prompt_version": "rubric-p1",
+      "renderer_version": "r1",
+      "grader": "anthropic"
+    },
+    "inputs": {
+      "version": "inputs.v1",
+      "github": {
+        "source": "pipeline_db",
+        "fetched_at": "2026-11-20T19:52:50+08:00",
+        "stars": 3940,
+        "forks": 209,
+        "open_issues": 21,
+        "created_at": "2018-08-09T09:22:36Z",
+        "pushed_at": "2026-09-08T14:24:15Z",
+        "releases": [
+          {
+            "tag": "v4.5.1",
+            "published_at": "2026-09-06T00:33:58Z",
+            "prerelease": false,
+            "notes_chars": 596,
+            "downloads": 7606
+          },
+          {
+            "tag": "v4.5.0",
+            "published_at": "2026-07-17T23:05:08Z",
+            "prerelease": false,
+            "notes_chars": 1191,
+            "downloads": 6765
+          },
+          {
+            "tag": "v4.4.1",
+            "published_at": "2026-07-04T17:35:01Z",
+            "prerelease": false,
+            "notes_chars": 605,
+            "downloads": 5482
+          },
+          {
+            "tag": "v4.4.0",
+            "published_at": "2026-05-06T17:03:34Z",
+            "prerelease": false,
+            "notes_chars": 431,
+            "downloads": 5266
+          },
+          {
+            "tag": "v4.3.1",
+            "published_at": "2026-03-16T16:52:29Z",
+            "prerelease": false,
+            "notes_chars": 201,
+            "downloads": 3474
+          },
+          {
+            "tag": "v4.3.0",
+            "published_at": "2026-03-14T13:08:56Z",
+            "prerelease": false,
+            "notes_chars": 2096,
+            "downloads": 71
+          },
+          {
+            "tag": "v4.2.3",
+            "published_at": "2025-08-09T18:45:46Z",
+            "prerelease": false,
+            "notes_chars": 208,
+            "downloads": 8125
+          },
+          {
+            "tag": "v4.2.2",
+            "published_at": "2025-07-29T16:49:48Z",
+            "prerelease": false,
+            "notes_chars": 220,
+            "downloads": 631
+          },
+          {
+            "tag": "v4.2.1",
+            "published_at": "2025-07-19T14:38:07Z",
+            "prerelease": false,
+            "notes_chars": 645,
+            "downloads": 595
+          },
+          {
+            "tag": "v4.2.0",
+            "published_at": "2025-06-11T20:36:12Z",
+            "prerelease": false,
+            "notes_chars": 1169,
+            "downloads": 1528
+          }
+        ],
+        "contributors": null,
+        "files": {
+          "count": 308,
+          "truncated": false,
+          "ci": ".circleci/config.yml",
+          "tests": "test/__mocks__/cosmiconfig.ts",
+          "changelog": "CHANGELOG.md",
+          "lockfile": "package-lock.json"
+        }
+      },
+      "issues": {
+        "source": "github_live",
+        "fetched_at": "2026-11-20T19:55:55+08:00",
+        "items": [
+          {
+            "created_at": "2026-10-26T19:39:53Z",
+            "closed_at": "2026-10-27T12:50:01Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-29T13:44:48Z",
+            "closed_at": "2026-10-01T21:16:49Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-29T05:21:25Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-08-01T21:13:00Z",
+            "closed_at": "2026-08-01T21:18:04Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-06-13T07:46:30Z",
+            "closed_at": "2026-06-16T04:25:58Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-06-05T08:44:13Z",
+            "closed_at": "2026-06-14T06:19:10Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-05-25T16:20:26Z",
+            "closed_at": "2026-07-04T12:18:37Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-05-14T08:52:50Z",
+            "closed_at": "2026-05-14T09:50:46Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-05-12T12:31:01Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-05-04T16:14:31Z",
+            "closed_at": "2026-05-04T17:11:42Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-04-25T22:21:38Z",
+            "closed_at": "2026-04-26T05:52:16Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-03-30T15:38:14Z",
+            "closed_at": "2026-03-30T17:51:18Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-03-16T20:15:40Z",
+            "closed_at": "2026-03-16T20:29:47Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-03-15T17:01:17Z",
+            "closed_at": "2026-03-16T16:43:27Z",
+            "association": "MEMBER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-03-02T02:08:48Z",
+            "closed_at": "2026-05-06T16:39:18Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-02-22T07:15:08Z",
+            "closed_at": "2026-02-22T07:16:11Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-12-09T04:12:08Z",
+            "closed_at": "2026-07-04T12:19:54Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-12-07T21:47:30Z",
+            "closed_at": "2026-03-11T13:19:55Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-12-05T10:05:50Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-11-07T17:58:40Z",
+            "closed_at": "2025-11-07T21:19:07Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-10-25T18:00:59Z",
+            "closed_at": "2025-11-07T21:14:25Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-10-23T14:00:32Z",
+            "closed_at": "2025-10-24T01:56:54Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-10-17T06:25:02Z",
+            "closed_at": "2025-10-24T01:56:44Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-10-10T08:02:51Z",
+            "closed_at": "2025-10-10T08:42:17Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-10-06T11:45:44Z",
+            "closed_at": "2025-10-08T11:22:13Z",
+            "association": "MEMBER",
+            "bot": false
+          },
+          {
+            "created_at": "2025-09-28T00:22:30Z",
+            "closed_at": "2025-10-08T11:28:16Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-09-10T09:08:22Z",
+            "closed_at": "2025-10-10T12:06:09Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-09-10T06:46:54Z",
+            "closed_at": "2025-09-24T07:06:20Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-09-04T03:55:19Z",
+            "closed_at": "2025-09-04T04:52:54Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-08-09T17:23:21Z",
+            "closed_at": "2025-08-09T18:07:30Z",
+            "association": "MEMBER",
+            "bot": false
+          },
+          {
+            "created_at": "2025-08-03T04:38:16Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-07-29T08:58:46Z",
+            "closed_at": "2025-07-29T16:29:18Z",
+            "association": "MEMBER",
+            "bot": false
+          },
+          {
+            "created_at": "2025-07-16T04:14:42Z",
+            "closed_at": "2025-07-17T02:48:27Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-06-26T19:33:41Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-06-20T14:21:45Z",
+            "closed_at": "2025-08-03T06:04:04Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-06-07T21:08:38Z",
+            "closed_at": "2025-06-11T01:21:44Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-05-28T03:29:22Z",
+            "closed_at": "2025-05-28T03:38:07Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-05-17T00:16:17Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-04-18T07:38:02Z",
+            "closed_at": "2025-04-19T17:32:59Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-04-12T19:43:27Z",
+            "closed_at": "2025-04-12T23:10:27Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-03-24T04:32:29Z",
+            "closed_at": "2025-03-25T06:44:19Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-03-19T10:55:48Z",
+            "closed_at": "2025-03-19T15:09:03Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-03-18T13:21:05Z",
+            "closed_at": "2025-03-18T16:54:11Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2025-02-07T16:03:30Z",
+            "closed_at": "2025-02-07T16:24:14Z",
+            "association": "NONE",
+            "bot": false
+          }
+        ],
+        "pull_requests": 56,
+        "page_full": true
+      }
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/marp-team/marp-cli",
+      "fetched_at": "2026-11-20T19:52:52+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/marp-team/marp-cli/blob/main/README.md",
+      "fetched_at": "2026-11-20T19:52:50+08:00"
+    },
+    {
+      "id": "release:v4.5.1",
+      "kind": "release",
+      "url": "https://github.com/marp-team/marp-cli/releases/tag/v4.5.1",
+      "fetched_at": "2026-11-20T19:52:50+08:00"
+    },
+    {
+      "id": "help:verify-marp-cli-20261120-195308-5d86:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T19:56:30+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "A CLI interface for Marp and Marpit based converters",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "You can install with `-g` option if you want to use `marp` command globally.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "topics: cli, deck, markdown, marp, marpit, presentation, slides",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "It can convert Marp / Marpit Markdown files into static HTML / CSS, PDF, PowerPoint document, and image(s) easily.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "Marp CLI supports converting multiple files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "readme",
+      "quote": "We also provide standalone binaries for Linux, macOS (Apple Silicon), and Windows.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "[Node.js](https://nodejs.org/) v18 and later is required to use Marp CLI.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "You have to install any one of [Google Chrome], [Microsoft Edge], or [Mozilla Firefox] to convert slide deck into PDF, PPTX, and image(s).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "The experimental `--pptx-editable` option requires installing both of the browser and [LibreOffice Impress](https://www.libreoffice.org/).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:52:52+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:52:52+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-20T19:52:52+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:52:52+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v4.5.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:52:50+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "marp --pdf slide-deck.md",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "marp --pptx slide-deck.md",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "It would be useful for creating [Open Graph] image",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/use_cases/3",
+      "source_id": "readme",
+      "quote": "Server mode supports on-demand conversion by HTTP request.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "The passed markdown will be converted to HTML file by default.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Convert to PDF (`--pdf`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Convert to PowerPoint document (`--pptx`)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Convert to PNG/JPEG image(s)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/features/4",
+      "source_id": "readme",
+      "quote": "The conversion will be triggered whenever the content of file is updated.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/features/5",
+      "source_id": "readme",
+      "quote": "Server mode supports on-demand conversion by HTTP request.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install marp-cli",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g @marp-team/marp-cli",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/install/windows/steps/0",
+      "source_id": "readme",
+      "quote": "npm install -g @marp-team/marp-cli",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "readme",
+      "quote": "Marp CLI will try to convert Markdown into PDF file through the browser.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:04+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "help:verify-marp-cli-20261120-195308-5d86:1",
+      "quote": "--pdf                Convert slide deck into PDF",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:56:30+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "help:verify-marp-cli-20261120-195308-5d86:1",
+      "quote": "--pptx               Convert slide deck into PowerPoint document",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:56:30+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "help:verify-marp-cli-20261120-195308-5d86:1",
+      "quote": "[EXPERIMENTAL] Generate editable PPTX when converting",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:56:30+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "help:verify-marp-cli-20261120-195308-5d86:1",
+      "quote": "--images             Convert slide deck into multiple image files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:56:30+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "help:verify-marp-cli-20261120-195308-5d86:1",
+      "quote": "--image              Convert the first slide page into an image file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:56:30+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "help:verify-marp-cli-20261120-195308-5d86:1",
+      "quote": "--notes              Convert slide deck notes into a text file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:56:30+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "Server mode supports on-demand conversion by HTTP request.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:56:30+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "help:verify-marp-cli-20261120-195308-5d86:1",
+      "quote": "-p, --preview                      Open preview window",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:56:30+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Marp CLI will process them in parallel with 5 concurrency by default.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:56:30+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "help:verify-marp-cli-20261120-195308-5d86:1",
+      "quote": "--pdf-outlines           Add outlines (bookmarks) to PDF",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:56:30+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "Available browsers are `chrome`, `edge`, and `firefox`.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:56:30+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "help:verify-marp-cli-20261120-195308-5d86:1",
+      "quote": "[string] [choices: \"bare\", \"bespoke\"] [default: \"bespoke\"]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:56:30+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "**Presenter view**: Open presenter view in external window by hitting <kbd>p</kbd> key.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:56:30+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "readme",
+      "quote": "Support transitions (`transition` local directive) powered by [View Transition API].",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:56:30+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "you can set metadata for a converted HTML, PDF, and PPTX slide deck.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:56:30+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "help:verify-marp-cli-20261120-195308-5d86:1",
+      "quote": "--theme      Override theme by name or CSS file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:56:30+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "readme",
+      "quote": "you may swap the conversion engine to another Marpit based engine through `--engine` option.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:56:30+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "readme",
+      "quote": "Marp CLI can be configured options with file, such as `marp.config.js`",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:56:30+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-20T19:52:50+08:00",
+  "updated_at": "2026-11-20T19:56:30+08:00"
+}
