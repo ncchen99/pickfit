@@ -1,0 +1,1082 @@
+{
+  "schema_version": "software.v1",
+  "slug": "piper1-gpl",
+  "repo_id": "gh:956792596",
+  "name": "Piper",
+  "summary": "A local neural text-to-speech engine that uses espeak-ng for phonemization, usable from the command line, a web server, Python or C/C++.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "local_ai",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [],
+  "use_cases": [
+    "synthesize speech from text locally",
+    "train new voices",
+    "serve text-to-speech over HTTP"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "convert text to speech with neural voices",
+    "run a text-to-speech web server",
+    "use from Python API",
+    "use from C/C++ API",
+    "train new voices"
+  ],
+  "capabilities": [
+    {
+      "label": "Convert text to speech locally",
+      "area": "synthesis"
+    },
+    {
+      "label": "Phonemize text with embedded espeak-ng",
+      "area": "synthesis"
+    },
+    {
+      "label": "Write speech to a WAV file",
+      "area": "output"
+    },
+    {
+      "label": "Stream raw audio to stdout",
+      "area": "output"
+    },
+    {
+      "label": "Read input from text files",
+      "area": "input"
+    },
+    {
+      "label": "Write WAV files into an output directory",
+      "items": [
+        "timestamp",
+        "text"
+      ],
+      "area": "output"
+    },
+    {
+      "label": "Use ONNX voice models",
+      "area": "models"
+    },
+    {
+      "label": "Select a speaker in multi-speaker voices",
+      "area": "voices"
+    },
+    {
+      "label": "Adjust phoneme length and noise",
+      "area": "tuning"
+    },
+    {
+      "label": "Add silence after each sentence",
+      "area": "tuning"
+    },
+    {
+      "label": "Change output volume",
+      "area": "tuning"
+    },
+    {
+      "label": "Run synthesis on GPU",
+      "area": "performance"
+    },
+    {
+      "label": "Serve speech over a web server",
+      "area": "server"
+    },
+    {
+      "label": "Phonemize Thai text with TLTK",
+      "area": "languages"
+    },
+    {
+      "label": "Use from Java via bindings",
+      "area": "integrations"
+    }
+  ],
+  "why_worth_it": null,
+  "homepage": null,
+  "repo": {
+    "url": "https://github.com/OHF-Voice/piper1-gpl",
+    "full_name": "OHF-Voice/piper1-gpl",
+    "created_at": "2025-03-28T21:47:10Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-piper1-gpl-20261120-195313-8a2a",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install 'piper-tts[http]'",
+          "purpose": "uv tool install 'piper-tts[http]'"
+        },
+        {
+          "command": "mkdir -p ~/voices && cd ~/voices && ~/.local/share/uv/tools/piper-tts/bin/python -m piper.download_voices en_US-lessac-low",
+          "purpose": "download voice en_US-lessac-low with piper.download_voices"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "piper --help",
+        "expected_signal": "usage: piper [-h] -m MODEL"
+      },
+      "first_task": "cd ~/voices && piper -m en_US-lessac-low -f /tmp/test.wav -- 'This is a test.' && python3 -c \"import wave;w=wave.open('/tmp/test.wav');print('WAV rate',w.getframerate(),'channels',w.getnchannels(),'seconds',round(w.getnframes()/w.getframerate(),2))\""
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "GPL-3.0",
+  "processing": "local",
+  "last_release": {
+    "tag": "v1.8.0",
+    "published_at": "2026-09-04T16:47:48Z",
+    "url": "https://github.com/OHF-Voice/piper1-gpl/releases/tag/v1.8.0"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-20T19:54:32.910665+08:00",
+    "runs": [
+      {
+        "id": "verify-piper1-gpl-20261120-195313-8a2a",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:01363ad5a469",
+        "checked_at": "2026-11-20T19:54:32.910665+08:00",
+        "tool_version": null,
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install 'piper-tts[http]'",
+            "purpose": "uv tool install 'piper-tts[http]'"
+          },
+          {
+            "command": "mkdir -p ~/voices && cd ~/voices && ~/.local/share/uv/tools/piper-tts/bin/python -m piper.download_voices en_US-lessac-low",
+            "purpose": "download voice en_US-lessac-low with piper.download_voices"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "piper --help",
+            "expected_signal": "usage: piper [-h] -m MODEL",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "usage: piper [-h] -m MODEL [-c CONFIG] [-i INPUT_FILE] [-f OUTPUT_FILE] [-d OUTPUT_DIR]",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd ~/voices && piper -m en_US-lessac-low -f /tmp/test.wav -- 'This is a test.' && python3 -c \"import wave;w=wave.open('/tmp/test.wav');print('WAV rate',w.getframerate(),'channels',w.getnchannels(),'seconds',round(w.getnframes()/w.getframerate(),2))\"",
+            "expected_signal": "WAV rate 16000 channels 1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "WAV rate 16000 channels 1 seconds 0.99",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "~/.local/share/uv/tools/piper-tts/bin/python ~/work/api_test.py",
+            "expected_signal": "API WAV rate 16000 frames>0: True",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "API WAV rate 16000 frames>0: True",
+            "setup": [
+              {
+                "command": "cat > ~/work/api_test.py <<'EOF'\nimport wave\nfrom piper import PiperVoice\nvoice = PiperVoice.load(\"/home/sbx/voices/en_US-lessac-low.onnx\")\nprint(\"phonemes:\", voice.phonemize(\"Hello world.\"))\nwith wave.open(\"/tmp/api.wav\", \"wb\") as wav_file:\n    voice.synthesize_wav(\"Welcome to the world of speech synthesis!\", wav_file)\nw = wave.open(\"/tmp/api.wav\")\nprint(\"API WAV rate\", w.getframerate(), \"frames>0:\", w.getnframes() > 0)\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -sf -X POST -H 'Content-Type: application/json' -d '{\"text\": \"This is a test.\"}' -o /tmp/http.wav http://127.0.0.1:5000/synthesize && python3 -c \"import wave;w=wave.open('/tmp/http.wav');print('HTTP WAV rate',w.getframerate(),'channels',w.getnchannels(),'frames>0:',w.getnframes()>0)\"",
+            "expected_signal": "HTTP WAV rate 16000 channels 1 frames>0: True",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "HTTP WAV rate 16000 channels 1 frames>0: True",
+            "setup": [
+              {
+                "command": "cd ~/voices && ~/.local/share/uv/tools/piper-tts/bin/python -m piper.http_server -m en_US-lessac-low --port 5000",
+                "background": true,
+                "port": 5000
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "pip install piper-tts",
+            "actually_needed": "Use the extra piper-tts[http] for the web server (it needs Flask). With uv tool install, only the `piper` executable goes on PATH, so run `python -m piper.download_voices` and `python -m piper.http_server` with the tool's own Python (~/.local/share/uv/tools/piper-tts/bin/python).",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Web server (docs/API_HTTP.md)",
+            "actually_needed": "Synthesis is a POST of JSON {\"text\": ...} to /synthesize. The / path accepts only GET (a POST there returned 405).",
+            "kind": "note"
+          },
+          {
+            "readme_said": "pip install piper-tts",
+            "actually_needed": "No voice model is included. You must download one first, for example with `python -m piper.download_voices en_US-lessac-low`.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Piper synthesized a 16 kHz mono WAV via CLI and API, and the help output printed the expected usage line.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-piper1-gpl-20261120-195313-8a2a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-piper1-gpl-20261120-195313-8a2a/check-1-cmd4.judged.png",
+            "runs/verify/verify-piper1-gpl-20261120-195313-8a2a/check-2-cmd6.judged.png",
+            "runs/verify/verify-piper1-gpl-20261120-195313-8a2a/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.164466,
+        "features": [
+          {
+            "feature": "convert text to speech with neural voices",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "run a text-to-speech web server",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "use from Python API",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "use from C/C++ API",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_toolchain",
+            "failure": null,
+            "note": "libpiper must be built from source with a C/C++ compiler and CMake"
+          },
+          {
+            "feature": "train new voices",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v2",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "pypi:piper-tts (fresh install, 7 packages)"
+    ],
+    "packages_checked": 7,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T19:54:38+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "registry_resolve",
+      "commit": null,
+      "run_id": "verify-piper1-gpl-20261120-195313-8a2a",
+      "tool_version": "piper-tts 1.8.0",
+      "artifact_sha256": [
+        "f0ce06ff4f6cb873bdfccdbe35819ec2ef68046963f3756063052694b08d6d8a"
+      ],
+      "packages": {
+        "pypi": 7
+      },
+      "scopes": {
+        "runtime": 7
+      },
+      "advisories_fetched_at": "2026-11-20T19:54:38+08:00",
+      "kev_catalog": null,
+      "epss_date": null,
+      "findings_total": 0,
+      "details": "security/piper1-gpl.json",
+      "details_sha256": "aa3e3ef493ef55c3b9e351c47cc025491e58e057c65aa509f70f6ce2399be36b"
+    },
+    "assessment": {
+      "level": "none",
+      "policy_version": "sec.v2",
+      "reasons": [],
+      "counts": {},
+      "uncounted": 0,
+      "assessed_at": "2026-11-20T19:54:38+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "registry_resolve",
+      "packages_found": 7,
+      "packages_checked": 7,
+      "components": [
+        {
+          "ecosystem": "pypi",
+          "component": "registry:pypi:piper-tts",
+          "status": "scanned",
+          "packages": 7,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
+  },
+  "scores": {
+    "formula_version": "b3.v7",
+    "computed_at": "2026-11-20T19:54:38+08:00",
+    "quality": {
+      "total": 76.3,
+      "raw_total": 76.3,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.3125,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.6571,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      },
+      "security": {
+        "level": "none",
+        "basis": "assessment",
+        "effect": "none",
+        "deduction": 0.0
+      }
+    },
+    "popularity": {
+      "score": 91.7,
+      "signals": {
+        "stars": 6332,
+        "monthly_downloads": 2797493,
+        "forks": 637,
+        "dependents": null,
+        "release_downloads": 24717,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 601,
+      "packages": [
+        "pypi:piper-tts"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.33
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:54:32.926123+08:00",
+      "sources_sha": "aed631319c1be2f2c58aef494e62065c899093b469faad88d245a4e69c8f6108",
+      "items": {
+        "what_it_does": {
+          "score": 1,
+          "quote": "A fast and local neural text-to-speech engine that embeds [espeak-ng][] for phonemization."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "* [NVDA - NonVisual Desktop Access](https://www.nvaccess.org/post/in-process-8th-may-2023/#voices)"
+        },
+        "prerequisites": {
+          "score": 0,
+          "quote": null
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "pip install piper-tts"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 0,
+          "quote": null
+        },
+        "troubleshooting_uninstall": {
+          "score": 0,
+          "quote": null
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "piper_tts-1.8.0-cp39-abi3-win_amd64.whl"
+        }
+      },
+      "unquoted": [],
+      "input_sha": "eecc089332e8a501e761b84be4e640c983788c5167df9a43a7e644e492d68853",
+      "prompt_version": "rubric-p1",
+      "renderer_version": "r1",
+      "grader": "anthropic"
+    },
+    "inputs": {
+      "version": "inputs.v1",
+      "github": {
+        "source": "pipeline_db",
+        "fetched_at": "2026-11-20T19:52:54+08:00",
+        "stars": 6332,
+        "forks": 637,
+        "open_issues": 64,
+        "created_at": "2025-03-28T21:47:10Z",
+        "pushed_at": "2026-11-19T21:03:06Z",
+        "releases": [
+          {
+            "tag": "v1.8.0",
+            "published_at": "2026-09-04T16:47:48Z",
+            "prerelease": false,
+            "notes_chars": 789,
+            "downloads": 9003
+          },
+          {
+            "tag": "v1.7.0",
+            "published_at": "2026-08-15T18:51:35Z",
+            "prerelease": false,
+            "notes_chars": 663,
+            "downloads": 1887
+          },
+          {
+            "tag": "v1.6.1",
+            "published_at": "2026-08-13T15:24:25Z",
+            "prerelease": false,
+            "notes_chars": 432,
+            "downloads": 325
+          },
+          {
+            "tag": "v1.6.0",
+            "published_at": "2026-07-23T16:12:10Z",
+            "prerelease": false,
+            "notes_chars": 38,
+            "downloads": 1680
+          },
+          {
+            "tag": "v1.5.0",
+            "published_at": "2026-07-17T20:06:41Z",
+            "prerelease": false,
+            "notes_chars": 539,
+            "downloads": 599
+          },
+          {
+            "tag": "v1.4.2",
+            "published_at": "2026-04-02T21:17:31Z",
+            "prerelease": false,
+            "notes_chars": 31,
+            "downloads": 7417
+          },
+          {
+            "tag": "v1.4.1",
+            "published_at": "2026-02-05T09:58:41Z",
+            "prerelease": false,
+            "notes_chars": 20,
+            "downloads": 3341
+          },
+          {
+            "tag": "v1.4.0",
+            "published_at": "2026-01-30T17:00:19Z",
+            "prerelease": false,
+            "notes_chars": 679,
+            "downloads": 465
+          },
+          {
+            "tag": "v1.3.0",
+            "published_at": "2025-07-10T21:14:16Z",
+            "prerelease": false,
+            "notes_chars": 914,
+            "downloads": null
+          }
+        ],
+        "contributors": null,
+        "files": {
+          "count": 181,
+          "truncated": false,
+          "ci": ".github/workflows/build-libpiper.yml",
+          "tests": "libpiper/tests/.clang-tidy",
+          "changelog": "CHANGELOG.md",
+          "lockfile": null
+        }
+      },
+      "issues": {
+        "source": "github_live",
+        "fetched_at": "2026-11-20T19:54:32+08:00",
+        "items": [
+          {
+            "created_at": "2026-11-19T10:52:33Z",
+            "closed_at": "2026-11-20T00:21:10Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-18T19:39:20Z",
+            "closed_at": "2026-11-19T20:28:01Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-12T15:06:14Z",
+            "closed_at": "2026-11-12T17:03:42Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-08T12:34:43Z",
+            "closed_at": "2026-11-19T20:27:57Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-03T04:10:27Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-31T16:55:59Z",
+            "closed_at": "2026-11-12T18:30:27Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-25T23:30:22Z",
+            "closed_at": "2026-11-19T13:54:06Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-22T21:51:50Z",
+            "closed_at": "2026-11-19T20:27:53Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-22T06:49:14Z",
+            "closed_at": "2026-10-30T14:15:00Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-18T00:25:28Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-17T13:15:04Z",
+            "closed_at": "2026-11-19T20:27:50Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-12T13:12:21Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-09T23:26:25Z",
+            "closed_at": "2026-11-19T20:27:46Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-01T20:50:59Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-01T19:05:19Z",
+            "closed_at": "2026-10-01T19:41:30Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-28T19:11:46Z",
+            "closed_at": "2026-11-19T20:27:42Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-16T00:05:58Z",
+            "closed_at": "2026-11-19T20:27:38Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-09T14:55:39Z",
+            "closed_at": "2026-11-19T20:27:35Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-08T16:40:25Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-07T11:41:24Z",
+            "closed_at": "2026-09-09T21:41:41Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-07T11:26:29Z",
+            "closed_at": "2026-11-19T20:27:31Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-01T01:10:32Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-08-30T23:47:20Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-08-17T19:15:23Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-08-16T18:15:24Z",
+            "closed_at": "2026-08-16T18:17:45Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-08-16T17:46:47Z",
+            "closed_at": "2026-08-19T01:15:54Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-08-16T09:07:45Z",
+            "closed_at": "2026-08-18T18:41:07Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-08-15T08:35:23Z",
+            "closed_at": "2026-11-19T19:58:00Z",
+            "association": "NONE",
+            "bot": false
+          }
+        ],
+        "pull_requests": 72,
+        "page_full": true
+      }
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/OHF-Voice/piper1-gpl",
+      "fetched_at": "2026-11-20T19:52:56+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/OHF-Voice/piper1-gpl/blob/main/README.md",
+      "fetched_at": "2026-11-20T19:52:54+08:00"
+    },
+    {
+      "id": "release:v1.8.0",
+      "kind": "release",
+      "url": "https://github.com/OHF-Voice/piper1-gpl/releases/tag/v1.8.0",
+      "fetched_at": "2026-11-20T19:52:54+08:00"
+    },
+    {
+      "id": "help:verify-piper1-gpl-20261120-195313-8a2a:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T19:54:47+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "🖥️ [Command-line interface][cli]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:08+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "🖥️ [Command-line interface][cli]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:08+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "Fast and local neural text-to-speech engine",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:08+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "A fast and local neural text-to-speech engine that embeds [espeak-ng][] for phonemization.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:08+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "![Piper](etc/logo.png)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:08+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:52:56+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:52:56+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-20T19:52:56+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v1.8.0",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:52:54+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "A fast and local neural text-to-speech engine",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:08+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "🏋️ [Training new voices][training]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:08+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "🌐 [Web server][api-http]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:08+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "A fast and local neural text-to-speech engine that embeds [espeak-ng][] for phonemization.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:08+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "🌐 [Web server][api-http]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:08+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "🐍 [Python API][api-python]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:08+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "🔧 [C/C++ API][libpiper]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:08+08:00"
+    },
+    {
+      "field": "/features/4",
+      "source_id": "readme",
+      "quote": "🏋️ [Training new voices][training]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:08+08:00"
+    },
+    {
+      "field": "/processing",
+      "source_id": "github_api",
+      "quote": "Fast and local neural text-to-speech engine",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:53:08+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "A fast and local neural text-to-speech engine",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:54:47+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "embeds [espeak-ng][] for phonemization",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:54:47+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "help:verify-piper1-gpl-20261120-195313-8a2a:1",
+      "quote": "Path to output WAV file (default: stdout)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:54:47+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "help:verify-piper1-gpl-20261120-195313-8a2a:1",
+      "quote": "Stream raw audio to stdout",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:54:47+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "help:verify-piper1-gpl-20261120-195313-8a2a:1",
+      "quote": "Paths to input text files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:54:47+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "help:verify-piper1-gpl-20261120-195313-8a2a:1",
+      "quote": "Naming scheme for WAV files in output directory (default: timestamp)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:54:47+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "help:verify-piper1-gpl-20261120-195313-8a2a:1",
+      "quote": "Path to Onnx model file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:54:47+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "help:verify-piper1-gpl-20261120-195313-8a2a:1",
+      "quote": "Id of speaker (default: 0)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:54:47+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "help:verify-piper1-gpl-20261120-195313-8a2a:1",
+      "quote": "Phoneme length",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:54:47+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "help:verify-piper1-gpl-20261120-195313-8a2a:1",
+      "quote": "Seconds of silence after each sentence",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:54:47+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "help:verify-piper1-gpl-20261120-195313-8a2a:1",
+      "quote": "Volume multiplier (default: 1.0)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:54:47+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "help:verify-piper1-gpl-20261120-195313-8a2a:1",
+      "quote": "Use GPU",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:54:47+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "readme",
+      "quote": "🌐 [Web server][api-http]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:54:47+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "release:v1.8.0",
+      "quote": "Add Thai phonemizer using TLTK in the new `th` extra",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:54:47+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "readme",
+      "quote": "Java: [Piper JNI](https://github.com/jvoice-project/piper-jni)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:54:47+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-20T19:52:54+08:00",
+  "updated_at": "2026-11-20T19:54:47+08:00"
+}
