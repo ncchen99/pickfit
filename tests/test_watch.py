@@ -60,6 +60,7 @@ class Pipeline:
         self.calls: list[str] = []
         self.security: Any = None
         self.visual: Any = None
+        self.ease: Any = None
         self.pages: list[dict[str, Any]] | None = None  # install pages the docs step reads; None: no docs step
         self.result_with_docs: dict[str, Any] | None = None  # what extraction answers once it has them
         self.capabilities: Any = None  # the capabilities-only extraction step; None: no such step
@@ -88,7 +89,7 @@ class Pipeline:
             return self.score_error
 
         return Steps(github=self.github, prescreen=prescreen, extract=extract, verify=verify, score=score,
-                     display=self.display, security=self.security, visual=self.visual,
+                     display=self.display, security=self.security, visual=self.visual, ease=self.ease,
                      docs=docs if self.pages is not None else None, capabilities=self.capabilities)
 
 
@@ -705,6 +706,33 @@ def test_a_visual_check_runs_and_is_paid_for_on_a_desktop_app_and_cannot_lose_th
     assert job.cost_usd["model"] >= 0.02
     assert (env["data"] / "tinyq.json").exists()
     assert any("visual check did not finish" in line for line in lines)
+
+
+def test_a_desktop_app_gets_its_ease_judgment_after_the_visual_check_and_a_failure_cannot_lose_the_run(
+        env: dict[str, Any]) -> None:
+    pipeline = Pipeline(env["tmp"], display=True, result=extraction(
+        kind=cited("desktop_app", "A tiny jq-like query tool"),
+        category=cited("other", "A tiny jq-like query tool for JSON Lines.")),
+        runs=[passed_run("run-20261030-linux-7", ["cargo install tinyq"], method="cargo", level="install")])
+    order: list[str] = []
+    pipeline.visual = lambda data_dir, slug, log: (order.append("visual"), (0.02, None))[1]
+    pipeline.ease = lambda data_dir, slug, log: (order.append("ease"), (0.07, "HTTP 529 overloaded"))[1]
+    lines: list[str] = []
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    [job] = run_once(env, pipeline, lines=lines)
+    assert order == ["visual", "ease"] and "ease" in job.stages
+    assert job.cost_usd["model"] >= 0.09
+    assert (env["data"] / "tinyq.json").exists() and job.result == "ready"
+    assert any("ease judgment not added: HTTP 529" in n for n in job.notes)
+
+
+def test_a_command_line_tool_gets_no_ease_judgment(env: dict[str, Any]) -> None:
+    pipeline = Pipeline(env["tmp"])
+    asked: list[str] = []
+    pipeline.ease = lambda data_dir, slug, log: (asked.append(slug), (0.07, None))[1]
+    submit(env["d1"], "sub_1", "https://github.com/someone/tinyq")
+    [job] = run_once(env, pipeline)
+    assert asked == [] and "ease" not in job.stages
 
 
 def test_the_live_steps_give_desktop_apps_a_display_box_on_ec2_too(monkeypatch: pytest.MonkeyPatch) -> None:
