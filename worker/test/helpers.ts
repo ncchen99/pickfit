@@ -185,3 +185,18 @@ export function answer(overrides: Partial<ModelAnswer> = {}): ModelAnswer {
     ...overrides,
   };
 }
+
+/** The candidate slugs a match request sent, read from its <candidates> block (the schema no longer lists them). */
+export function sentSlugs(body: any): string[] {
+  const text: string = body.messages[0].content;
+  const block = text.slice(text.indexOf('<candidates'), text.indexOf('</candidates>'));
+  return block
+    .split('\n')
+    .slice(1)
+    .filter(Boolean)
+    .map((line) => JSON.parse(line).slug)
+    .sort();
+}
+
+/** The instructions of a request, whether sent as a string or as one cached text block. */
+export const systemText = (body: any): string => (typeof body.system === 'string' ? body.system : body.system.map((b: any) => b.text).join(''));

@@ -8,7 +8,7 @@ import { EMPTY_FORM, renderResults } from '../src/page.ts';
 import { withLang } from '../src/i18n.ts';
 import { queryTerms, relevance, terms } from '../src/relevance.ts';
 import { rankByRules } from '../src/rules.ts';
-import { answer, fixtureCatalog, harness, isKeywordsCall, modelResponse } from './helpers.ts';
+import { answer, fixtureCatalog, harness, isKeywordsCall, modelResponse, sentSlugs } from './helpers.ts';
 
 const fixtures = fixtureCatalog();
 const fixture = (slug: string) => fixtures.bySlug.get(slug)!;
@@ -151,7 +151,10 @@ test('a request over MAX_CARDS gets English keywords from claude-opus-5-5 first 
   assert.equal(kw.output_config.format.type, 'json_schema');
   assert.equal(kw.max_tokens, 2000); // room for thinking beside a 100-token answer
   assert.match(kw.messages[0].content, /<request>\n.*secret-xyz.*\n<\/request>/);
-  assert.ok(match.output_config.format.schema.properties.picks.items.properties.slug.enum.includes('quiet-transcriber'));
+  // Too short for the prompt cache: the keyword call's instructions go as a plain string, the match's as a cached block.
+  assert.equal(typeof kw.system, 'string');
+  assert.equal(match.system[0].cache_control.type, 'ephemeral');
+  assert.ok(sentSlugs(match).includes('quiet-transcriber'));
   assert.equal(out.matched_by, MATCH_MODEL);
   assert.deepEqual(out.picks.map((p) => p.slug), ['quiet-transcriber']);
   assert.match(out.coverage_note ?? '', new RegExp(`72 tools met the conditions; the ${MAX_CARDS} compared were the 1 whose profiles best match`));
@@ -172,7 +175,7 @@ test('when the keyword call fails the rules scorer chooses the cards (Chinese th
     const out = await findSoftware({ need: ZH_NEED }, h.deps);
     await h.settle();
     assert.equal(h.requests.length, 2);
-    assert.ok(h.requests[1].body.output_config.format.schema.properties.picks.items.properties.slug.enum.includes('quiet-transcriber'));
+    assert.ok(sentSlugs(h.requests[1].body).includes('quiet-transcriber'));
     assert.equal(out.matched_by, MATCH_MODEL);
     const row = h.sqlite.prepare('SELECT need FROM events WHERE type = ?').get('find') as any;
     assert.ok(JSON.parse(row.need).shortlist.by_relevance >= 1);
@@ -182,7 +185,7 @@ test('when the keyword call fails the rules scorer chooses the cards (Chinese th
   const h = harness(twoCalls(() => new Response('{}', { status: 500 }), 'sheet-69'));
   h.deps.catalog = asCatalog(bulk());
   const out = await findSoftware({ need: '我想要一個好用的東西 (secret-xyz)' }, h.deps);
-  assert.ok(!h.requests[1].body.output_config.format.schema.properties.picks.items.properties.slug.enum.includes('quiet-transcriber'));
+  assert.ok(!sentSlugs(h.requests[1].body).includes('quiet-transcriber'));
   assert.match(out.coverage_note ?? '', /no profile matched the request's words/);
 });
 
@@ -219,7 +222,7 @@ test('English requests get keywords too (synonyms); none when at most MAX_CARDS 
   h.deps.catalog = asCatalog(bulk());
   const out = await findSoftware({ need: 'dictate my notes' }, h.deps);
   assert.equal(h.requests.length, 2);
-  assert.ok(h.requests[1].body.output_config.format.schema.properties.picks.items.properties.slug.enum.includes('quiet-transcriber'));
+  assert.ok(sentSlugs(h.requests[1].body).includes('quiet-transcriber'));
   assert.deepEqual(out.picks.map((p) => p.slug), ['quiet-transcriber']);
   const small = harness(twoCalls(() => modelResponse({ keywords: [] }), 'fixture-transcribe'));
   await findSoftware({ need: ZH_NEED }, small.deps);
@@ -262,4 +265,17 @@ test('find_alternatives over MAX_CARDS keeps the tools that replace the current 
   h.deps.catalog = asCatalog(bulk());
   const out = await findAlternatives({ current_software: 'jq', pain_points: 'hard to remember the syntax' }, h.deps);
   assert.equal(out.picks[0].slug, 'quiet-yaml');
+});
+
+test('KEYWORDS_ENGLISH=skip: an English request is cut by its own words with no keyword call; others still get one', async () => {
+  const h = harness(twoCalls(() => modelResponse({ keywords: ['transcribe audio', 'speech to text', 'recordings'] })));
+  h.deps.catalog = asCatalog(bulk());
+  h.deps.settings = { ...h.deps.settings, skipEnglishKeywords: true };
+  await findSoftware({ need: 'transcribe my audio recordings offline' }, h.deps);
+  assert.equal(h.requests.length, 1);
+  assert.ok(!isKeywordsCall(h.requests[0].body));
+  assert.ok(sentSlugs(h.requests[0].body).includes('quiet-transcriber'));
+
+  await findSoftware({ need: ZH_NEED }, h.deps);
+  assert.ok(isKeywordsCall(h.requests[1].body), 'a Chinese request still gets its English keywords');
 });

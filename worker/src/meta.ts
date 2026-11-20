@@ -145,13 +145,19 @@ export interface StructuredRequest {
   /** Defaults: low effort (this model cannot turn thinking off; effort is the control) and MAX_OUTPUT_TOKENS. */
   effort?: 'low' | 'medium' | 'high';
   maxOutputTokens?: number;
+  /**
+   * Mark the instructions for the prompt cache (5 minutes). Only worth it for a prefix that is the same from request
+   * to request and at least the model's minimum cacheable length (512 tokens on Opus 5.5): the match's instructions;
+   * the keyword call's are too short to cache.
+   */
+  cache?: boolean;
 }
 
 export function requestBody(req: StructuredRequest): Record<string, unknown> {
   return {
     model: MATCH_MODEL,
     max_tokens: req.maxOutputTokens ?? MAX_OUTPUT_TOKENS,
-    system: req.instructions,
+    system: req.cache ? [{ type: 'text', text: req.instructions, cache_control: { type: 'ephemeral' } }] : req.instructions,
     messages: [{ role: 'user', content: req.input }],
     output_config: { effort: req.effort ?? 'low', format: { type: 'json_schema', schema: req.schema } },
   };

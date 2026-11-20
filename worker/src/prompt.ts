@@ -73,8 +73,12 @@ export function matchInput(request: Record<string, unknown>, cards: Card[]): str
 const nullable = (schema: Record<string, unknown>) => ({ anyOf: [schema, { type: 'null' }] });
 const nullableString = nullable({ type: 'string' });
 
-/** JSON schema for the answer (output_config.format), every object closed; slugs are limited to this request's candidates. */
-export function matchSchema(slugs: string[], kind: MatchKind = 'find'): Record<string, unknown> {
+/**
+ * JSON schema for the answer (output_config.format), every object closed. It is the same for every request of a kind,
+ * so the cached prefix stays valid: slugs are plain strings here, and the guard keeps only this request's candidates
+ * (a pick or best free slug outside them is dropped).
+ */
+export function matchSchema(kind: MatchKind = 'find'): Record<string, unknown> {
   const object = (properties: Record<string, unknown>) => ({
     type: 'object',
     properties,
@@ -98,7 +102,7 @@ export function matchSchema(slugs: string[], kind: MatchKind = 'find'): Record<s
     picks: {
       type: 'array',
       items: object({
-        slug: { type: 'string', enum: slugs },
+        slug: { type: 'string', description: 'A slug from <candidates>.' },
         fit: { type: 'string' },
         reasons: {
           type: 'array',
@@ -112,7 +116,7 @@ export function matchSchema(slugs: string[], kind: MatchKind = 'find'): Record<s
         vs_well_known: nullableString,
       }),
     },
-    best_free_slug: nullable({ type: 'string', enum: slugs }),
+    best_free_slug: nullable({ type: 'string', description: 'A slug from <candidates>, or null.' }),
     best_free_reason: nullableString,
     no_install_option: nullableString,
     well_known_name: nullableString,

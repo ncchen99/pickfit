@@ -402,7 +402,8 @@ async function askModel(
   const body = requestBody({
     instructions: instructions(limit, kind),
     input: matchInput(request, [...cards.values()]),
-    schema: matchSchema([...cards.keys()], kind),
+    schema: matchSchema(kind),
+    cache: true,
   });
   try {
     // With no cap set (the default) this passes without reading D1; the spend is recorded below either way.
@@ -464,6 +465,11 @@ interface MatchRequest {
   logged?: Record<string, unknown>;
 }
 
+/** Text in English: ASCII letters, with no letters from another script (typographic quotes and dashes allowed). */
+export function isEnglish(text: string): boolean {
+  return /[a-z]/i.test(text) && !/[^\x00-\x7F\u2010-\u2015\u2018-\u201F\u2026]/.test(text);
+}
+
 async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindOutput; keepCurrent: Choice['keepCurrent'] }> {
   const started = Date.now();
   const now = deps.now();
@@ -477,7 +483,11 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   let filtered = hardFilter(corpus, cond, { terms: ruleTerms(), current: req.currentTool, scorer: 'rules' });
   // Only a shortlist that must cut needs the request in the profiles' words.
   let expansion: Expansion | null = null;
-  if (filtered.passed > MAX_CARDS) {
+  if (filtered.passed > MAX_CARDS && deps.settings.skipEnglishKeywords && isEnglish(req.rulesText)) {
+    // KEYWORDS_ENGLISH=skip: an English request is already in the profiles' words; cut by them, with no model call.
+    const own = req.kind === 'find' ? dropNegated(req.rulesText) : req.rulesText;
+    filtered = hardFilter(corpus, cond, { terms: queryTerms(own), current: req.currentTool });
+  } else if (filtered.passed > MAX_CARDS) {
     expansion = await englishKeywords(req.rulesText, deps, now, Math.min(EXPAND_TIMEOUT_MS, deps.settings.timeoutMs));
     if (expansion.keywords) {
       // A need's negated words are constraints ("不需要 GPU"). Pain points stay as they are: there "no dark mode"

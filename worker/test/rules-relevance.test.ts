@@ -5,7 +5,7 @@ import { findSoftware } from '../src/find.ts';
 import { hardFilter, MAX_CARDS } from '../src/filter.ts';
 import { dropNegated, queryTerms, relevance, rulesRelevance, rulesTerms, terms, zhToEnglish } from '../src/relevance.ts';
 import { rankByRules } from '../src/rules.ts';
-import { answer, fixtureCatalog, harness, isKeywordsCall, modelResponse } from './helpers.ts';
+import { answer, fixtureCatalog, harness, isKeywordsCall, modelResponse, sentSlugs } from './helpers.ts';
 
 const fixtures = fixtureCatalog();
 
@@ -139,7 +139,7 @@ test('with keywords from the model the cards sent to the model are the plain-BM2
   const entries = many();
   h.deps.catalog = asCatalog(entries);
   await findSoftware({ need }, h.deps);
-  const sent = h.requests[1].body.output_config.format.schema.properties.picks.items.properties.slug.enum;
+  const sent = sentSlugs(h.requests[1].body);
   const expected = hardFilter(entries, {}, { terms: queryTerms(need, ...keywords) }).candidates;
   assert.equal(expected.length, MAX_CARDS);
   assert.deepEqual(sent, slugs(expected));
