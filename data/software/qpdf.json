@@ -1,0 +1,1372 @@
+{
+  "schema_version": "software.v1",
+  "slug": "qpdf",
+  "repo_id": "gh:4539167",
+  "name": "qpdf",
+  "summary": "Command-line tool and C++ library for content-preserving transformations of PDF files, such as linearization, encryption, splitting and merging.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "media_files",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "pdf",
+    "pdf-document-processor"
+  ],
+  "use_cases": [
+    "split and merge PDF files",
+    "inspect PDF file structure for study or analysis",
+    "encrypt a PDF file"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "linearize PDF files",
+    "encrypt PDF files",
+    "split and merge PDF files",
+    "create PDF files from supplied content",
+    "inspect PDF files for analysis"
+  ],
+  "capabilities": [
+    {
+      "label": "Create encrypted PDF files",
+      "area": "encryption"
+    },
+    {
+      "label": "Output PDF information as JSON",
+      "area": "output"
+    },
+    {
+      "label": "Attach embedded files to PDFs",
+      "area": "attachments"
+    },
+    {
+      "label": "Copy attachments from another PDF",
+      "area": "attachments"
+    },
+    {
+      "label": "Overlay or underlay pages from other PDFs",
+      "area": "pages"
+    },
+    {
+      "label": "Select pages from multiple files",
+      "area": "pages"
+    },
+    {
+      "label": "Modify parts of a PDF",
+      "area": "editing"
+    },
+    {
+      "label": "Use as a C++ library",
+      "area": "library"
+    },
+    {
+      "label": "Compress streams with zopfli",
+      "area": "compression"
+    },
+    {
+      "label": "Select crypto provider",
+      "items": [
+        "gnutls",
+        "openssl",
+        "native"
+      ],
+      "area": "encryption"
+    },
+    {
+      "label": "Shell completion",
+      "area": "cli"
+    }
+  ],
+  "why_worth_it": null,
+  "homepage": "https://qpdf.sourceforge.io/",
+  "repo": {
+    "url": "https://github.com/qpdf/qpdf",
+    "full_name": "qpdf/qpdf",
+    "created_at": "2012-06-03T17:40:19Z",
+    "archived": false
+  },
+  "platforms": [
+    "macos",
+    "windows",
+    "linux"
+  ],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "zlib",
+      "jpeg"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-qpdf-20261120-192702-38bd",
+      "method": "source",
+      "steps": [
+        {
+          "command": "git clone --depth 1 https://github.com/libjpeg-turbo/libjpeg-turbo.git ~/ljt && cmake -S ~/ljt -B ~/ljt/build -DCMAKE_BUILD_TYPE=Release -DWITH_SIMD=OFF -DCMAKE_INSTALL_PREFIX=$HOME/.local -DCMAKE_INSTALL_LIBDIR=lib -DENABLE_STATIC=OFF && cmake --build ~/ljt/build -j8 && cmake --install ~/ljt/build",
+          "purpose": "Build and install libjpeg-turbo (missing libjpeg prerequisite) into ~/.local"
+        },
+        {
+          "command": "rm -rf qpdf && git clone --depth 1 https://github.com/qpdf/qpdf.git qpdf && cd qpdf && PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$HOME/.local -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_INSTALL_RPATH=$HOME/.local/lib -DBUILD_STATIC_LIBS=OFF",
+          "purpose": "Clone qpdf and configure with cmake (PKG_CONFIG_PATH pointing to ~/.local, install prefix ~/.local)"
+        },
+        {
+          "command": "cd qpdf && cmake --build build -j8 && cmake --install build",
+          "purpose": "cmake --build build and cmake --install build"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "qpdf --version",
+        "expected_signal": "qpdf version 12.4.2"
+      },
+      "first_task": "cd /tmp && qpdf --json-input in.json made.pdf && qpdf --check made.pdf && qpdf --show-npages made.pdf && qpdf --show-object=7 --filtered-stream-data made.pdf"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v12.4.2",
+    "published_at": "2026-09-27T00:01:39Z",
+    "url": "https://github.com/qpdf/qpdf/releases/tag/v12.4.2"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-20T19:37:12.866819+08:00",
+    "runs": [
+      {
+        "id": "verify-qpdf-20261120-192702-38bd",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-build:895c1564de8e",
+        "checked_at": "2026-11-20T19:37:12.866819+08:00",
+        "tool_version": "12.4.2",
+        "install_method": "source",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "git clone --depth 1 https://github.com/libjpeg-turbo/libjpeg-turbo.git ~/ljt && cmake -S ~/ljt -B ~/ljt/build -DCMAKE_BUILD_TYPE=Release -DWITH_SIMD=OFF -DCMAKE_INSTALL_PREFIX=$HOME/.local -DCMAKE_INSTALL_LIBDIR=lib -DENABLE_STATIC=OFF && cmake --build ~/ljt/build -j8 && cmake --install ~/ljt/build",
+            "purpose": "Build and install libjpeg-turbo (missing libjpeg prerequisite) into ~/.local"
+          },
+          {
+            "command": "rm -rf qpdf && git clone --depth 1 https://github.com/qpdf/qpdf.git qpdf && cd qpdf && PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_INSTALL_PREFIX=$HOME/.local -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_INSTALL_RPATH=$HOME/.local/lib -DBUILD_STATIC_LIBS=OFF",
+            "purpose": "Clone qpdf and configure with cmake (PKG_CONFIG_PATH pointing to ~/.local, install prefix ~/.local)"
+          },
+          {
+            "command": "cd qpdf && cmake --build build -j8 && cmake --install build",
+            "purpose": "cmake --build build and cmake --install build"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "qpdf --version",
+            "expected_signal": "qpdf version 12.4.2",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "qpdf version 12.4.2",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp && qpdf --json-input in.json made.pdf && qpdf --check made.pdf && qpdf --show-npages made.pdf && qpdf --show-object=7 --filtered-stream-data made.pdf",
+            "expected_signal": "BT /F1 24 Tf 20 100 Td (Second page text) Tj ET",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "BT /F1 24 Tf 20 100 Td (Second page text) Tj ET",
+            "setup": [
+              {
+                "command": "cat > /tmp/in.json <<EOF\n{\"qpdf\":[{\"jsonversion\":2,\"pdfversion\":\"1.7\",\"pushedinheritedpageresources\":false,\"calledgetallpages\":false,\"maxobjectid\":7},\n{\"obj:1 0 R\":{\"value\":{\"/Type\":\"/Catalog\",\"/Pages\":\"2 0 R\"}},\n\"obj:2 0 R\":{\"value\":{\"/Type\":\"/Pages\",\"/Kids\":[\"3 0 R\",\"5 0 R\"],\"/Count\":2}},\n\"obj:3 0 R\":{\"value\":{\"/Type\":\"/Page\",\"/Parent\":\"2 0 R\",\"/MediaBox\":[0,0,300,200],\"/Contents\":\"4 0 R\",\"/Resources\":{\"/Font\":{\"/F1\":\"7 0 R\"}}}},\n\"obj:4 0 R\":{\"stream\":{\"dict\":{},\"data\":\"$(printf 'BT /F1 24 Tf 20 100 Td (Hello from page one) Tj ET' | base64 -w0)\"}},\n\"obj:5 0 R\":{\"value\":{\"/Type\":\"/Page\",\"/Parent\":\"2 0 R\",\"/MediaBox\":[0,0,300,200],\"/Contents\":\"6 0 R\",\"/Resources\":{\"/Font\":{\"/F1\":\"7 0 R\"}}}},\n\"obj:6 0 R\":{\"stream\":{\"dict\":{},\"data\":\"$(printf 'BT /F1 24 Tf 20 100 Td (Second page text) Tj ET' | base64 -w0)\"}},\n\"obj:7 0 R\":{\"value\":{\"/Type\":\"/Font\",\"/Subtype\":\"/Type1\",\"/BaseFont\":\"/Helvetica\"}},\n\"trailer\":{\"value\":{\"/Root\":\"1 0 R\",\"/Size\":8}}}]}\nEOF\ncat /tmp/in.json",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp && qpdf --linearize made.pdf lin.pdf && qpdf --check-linearization lin.pdf && qpdf --check lin.pdf",
+            "expected_signal": "lin.pdf: no linearization errors",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "lin.pdf: no linearization errors",
+            "setup": [
+              {
+                "command": "cat > /tmp/in.json <<EOF\n{\"qpdf\":[{\"jsonversion\":2,\"pdfversion\":\"1.7\",\"pushedinheritedpageresources\":false,\"calledgetallpages\":false,\"maxobjectid\":7},\n{\"obj:1 0 R\":{\"value\":{\"/Type\":\"/Catalog\",\"/Pages\":\"2 0 R\"}},\n\"obj:2 0 R\":{\"value\":{\"/Type\":\"/Pages\",\"/Kids\":[\"3 0 R\",\"5 0 R\"],\"/Count\":2}},\n\"obj:3 0 R\":{\"value\":{\"/Type\":\"/Page\",\"/Parent\":\"2 0 R\",\"/MediaBox\":[0,0,300,200],\"/Contents\":\"4 0 R\",\"/Resources\":{\"/Font\":{\"/F1\":\"7 0 R\"}}}},\n\"obj:4 0 R\":{\"stream\":{\"dict\":{},\"data\":\"$(printf 'BT /F1 24 Tf 20 100 Td (Hello from page one) Tj ET' | base64 -w0)\"}},\n\"obj:5 0 R\":{\"value\":{\"/Type\":\"/Page\",\"/Parent\":\"2 0 R\",\"/MediaBox\":[0,0,300,200],\"/Contents\":\"6 0 R\",\"/Resources\":{\"/Font\":{\"/F1\":\"7 0 R\"}}}},\n\"obj:6 0 R\":{\"stream\":{\"dict\":{},\"data\":\"$(printf 'BT /F1 24 Tf 20 100 Td (Second page text) Tj ET' | base64 -w0)\"}},\n\"obj:7 0 R\":{\"value\":{\"/Type\":\"/Font\",\"/Subtype\":\"/Type1\",\"/BaseFont\":\"/Helvetica\"}},\n\"trailer\":{\"value\":{\"/Root\":\"1 0 R\",\"/Size\":8}}}]}\nEOF\ncat /tmp/in.json",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp && qpdf --json-input in.json made.pdf && qpdf --check made.pdf && qpdf --show-npages made.pdf && qpdf --show-object=7 --filtered-stream-data made.pdf",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp && qpdf --encrypt --user-password=ux7Kq2 --owner-password=ow9Zt4 --bits=256 -- made.pdf enc.pdf && qpdf --show-encryption --password=ux7Kq2 enc.pdf && qpdf --decrypt --password=ux7Kq2 enc.pdf dec.pdf && qpdf --show-encryption dec.pdf",
+            "expected_signal": "Supplied password is user password",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Supplied password is user password",
+            "setup": [
+              {
+                "command": "cat > /tmp/in.json <<EOF\n{\"qpdf\":[{\"jsonversion\":2,\"pdfversion\":\"1.7\",\"pushedinheritedpageresources\":false,\"calledgetallpages\":false,\"maxobjectid\":7},\n{\"obj:1 0 R\":{\"value\":{\"/Type\":\"/Catalog\",\"/Pages\":\"2 0 R\"}},\n\"obj:2 0 R\":{\"value\":{\"/Type\":\"/Pages\",\"/Kids\":[\"3 0 R\",\"5 0 R\"],\"/Count\":2}},\n\"obj:3 0 R\":{\"value\":{\"/Type\":\"/Page\",\"/Parent\":\"2 0 R\",\"/MediaBox\":[0,0,300,200],\"/Contents\":\"4 0 R\",\"/Resources\":{\"/Font\":{\"/F1\":\"7 0 R\"}}}},\n\"obj:4 0 R\":{\"stream\":{\"dict\":{},\"data\":\"$(printf 'BT /F1 24 Tf 20 100 Td (Hello from page one) Tj ET' | base64 -w0)\"}},\n\"obj:5 0 R\":{\"value\":{\"/Type\":\"/Page\",\"/Parent\":\"2 0 R\",\"/MediaBox\":[0,0,300,200],\"/Contents\":\"6 0 R\",\"/Resources\":{\"/Font\":{\"/F1\":\"7 0 R\"}}}},\n\"obj:6 0 R\":{\"stream\":{\"dict\":{},\"data\":\"$(printf 'BT /F1 24 Tf 20 100 Td (Second page text) Tj ET' | base64 -w0)\"}},\n\"obj:7 0 R\":{\"value\":{\"/Type\":\"/Font\",\"/Subtype\":\"/Type1\",\"/BaseFont\":\"/Helvetica\"}},\n\"trailer\":{\"value\":{\"/Root\":\"1 0 R\",\"/Size\":8}}}]}\nEOF\ncat /tmp/in.json",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp && qpdf --json-input in.json made.pdf && qpdf --check made.pdf && qpdf --show-npages made.pdf && qpdf --show-object=7 --filtered-stream-data made.pdf",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "cd /tmp && qpdf --split-pages made.pdf part-%d.pdf && ls part-*.pdf && qpdf --show-npages part-1.pdf && qpdf --empty --pages made.pdf part-2.pdf part-1.pdf -- merged.pdf && qpdf --show-npages merged.pdf",
+            "expected_signal": "part-2.pdf",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "part-2.pdf",
+            "setup": [
+              {
+                "command": "cat > /tmp/in.json <<EOF\n{\"qpdf\":[{\"jsonversion\":2,\"pdfversion\":\"1.7\",\"pushedinheritedpageresources\":false,\"calledgetallpages\":false,\"maxobjectid\":7},\n{\"obj:1 0 R\":{\"value\":{\"/Type\":\"/Catalog\",\"/Pages\":\"2 0 R\"}},\n\"obj:2 0 R\":{\"value\":{\"/Type\":\"/Pages\",\"/Kids\":[\"3 0 R\",\"5 0 R\"],\"/Count\":2}},\n\"obj:3 0 R\":{\"value\":{\"/Type\":\"/Page\",\"/Parent\":\"2 0 R\",\"/MediaBox\":[0,0,300,200],\"/Contents\":\"4 0 R\",\"/Resources\":{\"/Font\":{\"/F1\":\"7 0 R\"}}}},\n\"obj:4 0 R\":{\"stream\":{\"dict\":{},\"data\":\"$(printf 'BT /F1 24 Tf 20 100 Td (Hello from page one) Tj ET' | base64 -w0)\"}},\n\"obj:5 0 R\":{\"value\":{\"/Type\":\"/Page\",\"/Parent\":\"2 0 R\",\"/MediaBox\":[0,0,300,200],\"/Contents\":\"6 0 R\",\"/Resources\":{\"/Font\":{\"/F1\":\"7 0 R\"}}}},\n\"obj:6 0 R\":{\"stream\":{\"dict\":{},\"data\":\"$(printf 'BT /F1 24 Tf 20 100 Td (Second page text) Tj ET' | base64 -w0)\"}},\n\"obj:7 0 R\":{\"value\":{\"/Type\":\"/Font\",\"/Subtype\":\"/Type1\",\"/BaseFont\":\"/Helvetica\"}},\n\"trailer\":{\"value\":{\"/Root\":\"1 0 R\",\"/Size\":8}}}]}\nEOF\ncat /tmp/in.json",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cd /tmp && qpdf --json-input in.json made.pdf && qpdf --check made.pdf && qpdf --show-npages made.pdf && qpdf --show-object=7 --filtered-stream-data made.pdf",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "qpdf depends on zlib and jpeg, 'part of every Linux distribution'",
+            "actually_needed": "libjpeg development files were not installed and there was no root to apt-get them; cmake failed with 'libjpeg not found'. Built libjpeg-turbo from source into ~/.local (-DWITH_SIMD=OFF) and passed PKG_CONFIG_PATH=$HOME/.local/lib/pkgconfig to cmake",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo; cmake --build build",
+            "actually_needed": "Also -DCMAKE_INSTALL_PREFIX=$HOME/.local -DCMAKE_INSTALL_LIBDIR=lib -DCMAKE_INSTALL_RPATH=$HOME/.local/lib and cmake --install build, to install without root and get qpdf on PATH",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "C++20 compiler required",
+            "actually_needed": "Built with the box's GCC 14 and cmake; a C++ toolchain plus cmake is required",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks exit 0 with expected outputs: the PDF built from JSON passes check with 2 pages and the expected stream text, linearization succeeds without errors, and the version prints 12.4.2.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-qpdf-20261120-192702-38bd/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-qpdf-20261120-192702-38bd/check-1-cmd8.judged.png",
+            "runs/verify/verify-qpdf-20261120-192702-38bd/check-2-cmd9.judged.png",
+            "runs/verify/verify-qpdf-20261120-192702-38bd/check-3-cmd6.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.287203,
+        "features": [
+          {
+            "feature": "linearize PDF files",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "encrypt PDF files",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "split and merge PDF files",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "create PDF files from supplied content",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "inspect PDF files for analysis",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v2",
+    "status": "unchecked",
+    "unchecked_reason": "no_lockfile",
+    "sources": [],
+    "packages_checked": 0,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T19:37:19+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "repo_lockfile",
+      "commit": "4eba95899886e851cc41d76886483b347612f2a8",
+      "run_id": "verify-qpdf-20261120-192702-38bd",
+      "tool_version": "12.4.2",
+      "artifact_sha256": [
+        "b1b258db39de529ee1ee56215b2df23befd5f5a492443f443dd67421990c1bd6",
+        "c5ed032d442e07bf92d4e3baaa8dfbfa998b220af967b055a570cfd8000892f4",
+        "2b371857229e9dbc8cb0a2f05b6fa019974abe9357c44f1348b8cdc8d6d2fb8f",
+        "2b169f407b183ecdab580974b4b018b426275feb1de11854c85923eebf37ca63",
+        "2b30ab437c1a93dca988c5556b763fef97f0b7417cecd87eaed6398dc38f5c44",
+        "2c09229afcbb91072295b4eebfa5f7b26d5e8b7f3801c19577d110be009e1828",
+        "b741573b05eee07e734ce96ec8e7766e5733749a143e29644279d376195d696f",
+        "17f69284a9ac1f5b8ec51bfd816b70ccc334e3f7b5b43db37bfe94eb728c908e",
+        "b0c9d590d3b9184778f5c2a7f6e548dc7c1447005fd1a2e8c43e77937fad0f91",
+        "24cbe5b45a31c899e50b0f9be998dc2beafea98ddaaaf6246ccabd162c976eba",
+        "1d38f2e283a1ea209bb248e3f0e45c7e191c41bdeb1cf44d5f47d0713a50bbfe",
+        "6b2157b6b8737085cd845fa9acf51232269ec6dbc392e4dcc0fa3f233df99ad1",
+        "19aba6a12b856316c3f0d026fa320477767de94480f1569c67747411ca1c56d4",
+        "6c458c2e01c56ae7f302ab515b650a700f187cd4436c9effc0dbaca4b254cb57",
+        "fe7f48abb1626a2654d7e9ea180ba1d13300876f74d19dcd4b7bc9c2844a7a08",
+        "722b069dd2ebb6ba442198a29e8dff662ef8f1bba75f2f67efa62a21cf1ed077",
+        "5d147c46d9e5de994e743ddea7cd7e3c0e3d34cdfd23c66f1a7ba997af07c415",
+        "5cfd2e7ff5264498a572694e6689012a556bae2e9e64afd78ba6bd72c60a55ab",
+        "d17276fed8f2308893aa1a75088d3853f74450a5098b8e655d32ae59bc82eee1",
+        "8b7c84e18f0534d4cd2299f4f841b10b111d856b144773c1c78e6eb66011868b"
+      ],
+      "packages": {},
+      "scopes": {},
+      "advisories_fetched_at": "2026-11-20T19:37:19+08:00",
+      "kev_catalog": null,
+      "epss_date": null,
+      "findings_total": 0,
+      "details": "security/qpdf.json",
+      "details_sha256": "3b2af99c0d57887947293b4dd7c45027ff6c886cd464ba52fdbc56e7e46f2468"
+    },
+    "assessment": {
+      "level": "none",
+      "policy_version": "sec.v2",
+      "reasons": [],
+      "counts": {},
+      "uncounted": 0,
+      "assessed_at": "2026-11-20T19:37:19+08:00"
+    },
+    "coverage": {
+      "state": "unchecked",
+      "target": null,
+      "packages_found": 1,
+      "packages_checked": 0,
+      "components": [
+        {
+          "ecosystem": "c/c++",
+          "component": "CMakeLists.txt",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "advisory_db.no_ecosystem"
+          ]
+        },
+        {
+          "ecosystem": "c/c++",
+          "component": "compare-for-test/CMakeLists.txt",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "advisory_db.no_ecosystem"
+          ]
+        },
+        {
+          "ecosystem": "c/c++",
+          "component": "include/CMakeLists.txt",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "advisory_db.no_ecosystem"
+          ]
+        },
+        {
+          "ecosystem": "c/c++",
+          "component": "libqpdf/CMakeLists.txt",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "advisory_db.no_ecosystem"
+          ]
+        },
+        {
+          "ecosystem": "c/c++",
+          "component": "libtests/CMakeLists.txt",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "advisory_db.no_ecosystem"
+          ]
+        },
+        {
+          "ecosystem": "c/c++",
+          "component": "manual/CMakeLists.txt",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "advisory_db.no_ecosystem"
+          ]
+        },
+        {
+          "ecosystem": "c/c++",
+          "component": "pkg-test/CMakeLists.txt",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "advisory_db.no_ecosystem"
+          ]
+        },
+        {
+          "ecosystem": "c/c++",
+          "component": "qpdf/CMakeLists.txt",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "advisory_db.no_ecosystem"
+          ]
+        },
+        {
+          "ecosystem": "c/c++",
+          "component": "zlib-flate/CMakeLists.txt",
+          "status": "not_scanned",
+          "packages": 0,
+          "gaps": [
+            "advisory_db.no_ecosystem"
+          ]
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "manual/requirements.txt",
+          "status": "not_scanned",
+          "packages": 1,
+          "gaps": [
+            "lockfile.missing"
+          ]
+        }
+      ],
+      "gaps": [
+        {
+          "code": "advisory_db.no_ecosystem",
+          "category": "advisory_db",
+          "ecosystem": "c/c++",
+          "component": "CMakeLists.txt",
+          "detail": "CMakeLists.txt: no advisory ecosystem for C/C++ libraries",
+          "capability": "advisory_source:c/c++",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "advisory_db.no_ecosystem",
+          "category": "advisory_db",
+          "ecosystem": "c/c++",
+          "component": "compare-for-test/CMakeLists.txt",
+          "detail": "CMakeLists.txt: no advisory ecosystem for C/C++ libraries",
+          "capability": "advisory_source:c/c++",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "advisory_db.no_ecosystem",
+          "category": "advisory_db",
+          "ecosystem": "c/c++",
+          "component": "include/CMakeLists.txt",
+          "detail": "CMakeLists.txt: no advisory ecosystem for C/C++ libraries",
+          "capability": "advisory_source:c/c++",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "advisory_db.no_ecosystem",
+          "category": "advisory_db",
+          "ecosystem": "c/c++",
+          "component": "libqpdf/CMakeLists.txt",
+          "detail": "CMakeLists.txt: no advisory ecosystem for C/C++ libraries",
+          "capability": "advisory_source:c/c++",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "advisory_db.no_ecosystem",
+          "category": "advisory_db",
+          "ecosystem": "c/c++",
+          "component": "libtests/CMakeLists.txt",
+          "detail": "CMakeLists.txt: no advisory ecosystem for C/C++ libraries",
+          "capability": "advisory_source:c/c++",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "advisory_db.no_ecosystem",
+          "category": "advisory_db",
+          "ecosystem": "c/c++",
+          "component": "manual/CMakeLists.txt",
+          "detail": "CMakeLists.txt: no advisory ecosystem for C/C++ libraries",
+          "capability": "advisory_source:c/c++",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "advisory_db.no_ecosystem",
+          "category": "advisory_db",
+          "ecosystem": "c/c++",
+          "component": "pkg-test/CMakeLists.txt",
+          "detail": "CMakeLists.txt: no advisory ecosystem for C/C++ libraries",
+          "capability": "advisory_source:c/c++",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "advisory_db.no_ecosystem",
+          "category": "advisory_db",
+          "ecosystem": "c/c++",
+          "component": "qpdf/CMakeLists.txt",
+          "detail": "CMakeLists.txt: no advisory ecosystem for C/C++ libraries",
+          "capability": "advisory_source:c/c++",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "advisory_db.no_ecosystem",
+          "category": "advisory_db",
+          "ecosystem": "c/c++",
+          "component": "zlib-flate/CMakeLists.txt",
+          "detail": "CMakeLists.txt: no advisory ecosystem for C/C++ libraries",
+          "capability": "advisory_source:c/c++",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "lockfile.missing",
+          "category": "lockfile_missing",
+          "ecosystem": "pypi",
+          "component": "manual/requirements.txt",
+          "detail": "requirements without pinned versions",
+          "capability": "lockfile_from_manifest:pypi",
+          "found": 1,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        },
+        {
+          "code": "binary.no_build_info",
+          "category": "binary_no_metadata",
+          "ecosystem": "unknown",
+          "component": "sbom:verify-qpdf-20261120-192702-38bd",
+          "detail": "40 installed executables list no dependencies",
+          "capability": "binary_analysis",
+          "found": null,
+          "first_seen": "2026-11-20",
+          "last_seen": "2026-11-20"
+        }
+      ]
+    }
+  },
+  "scores": {
+    "formula_version": "b3.v7",
+    "computed_at": "2026-11-20T19:37:19+08:00",
+    "quality": {
+      "total": 78.2,
+      "raw_total": 78.2,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 0.7,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.6,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.4607,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      },
+      "security": {
+        "level": "none",
+        "basis": "assessment",
+        "effect": "none",
+        "deduction": 0.0
+      }
+    },
+    "popularity": {
+      "score": 91.2,
+      "signals": {
+        "stars": 5604,
+        "monthly_downloads": 7633,
+        "forks": 420,
+        "dependents": null,
+        "release_downloads": 1004233,
+        "hn_top_score": 0,
+        "registries_count": 1
+      },
+      "age_days": 5282,
+      "packages": [
+        "homebrew:qpdf"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 6.88
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:37:12.902602+08:00",
+      "sources_sha": "55c08ec60c3ab4c1d4f4168aa93de306bee47d90b22dffebf62ef7062d864437",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "qpdf is a command-line tool and C++ library that performs content-preserving transformations on PDF files. It supports"
+        },
+        "who_it_is_for": {
+          "score": 2,
+          "quote": "can be a valuable tool for anyone who wants to do\nprogrammatic or command-line-based manipulation of PDF files."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "To build and test qpdf, a C++ compiler that supports C++20 is required. To link with qpdf, a C++17-compatible compiler\nis sufficient."
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "cmake -S . -B build -DCMAKE_BUILD_TYPE=RelWithDebInfo\ncmake --build build"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "The environment variable `QPDF_ZOPFLI` can be set to the following values:"
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "you may need to set the `LD_LIBRARY_PATH` variable in your `.bashrc` or similar"
+        },
+        "license_and_platforms": {
+          "score": 2,
+          "quote": "We now include official release binaries for MacOS (intel and arm64), Windows arm64, and Linux aarch64 (arm64)"
+        }
+      },
+      "unquoted": [],
+      "input_sha": "66ed406b6818396dc6ba18f38f28d9d5765290fab9e409bac4edaf9dd772b00d",
+      "prompt_version": "rubric-p1",
+      "renderer_version": "r1",
+      "grader": "anthropic"
+    },
+    "inputs": {
+      "version": "inputs.v1",
+      "github": {
+        "source": "pipeline_db",
+        "fetched_at": "2026-11-20T19:23:23+08:00",
+        "stars": 5604,
+        "forks": 420,
+        "open_issues": 199,
+        "created_at": "2012-06-03T17:40:19Z",
+        "pushed_at": "2026-09-26T23:55:04Z",
+        "releases": [
+          {
+            "tag": "v12.4.2",
+            "published_at": "2026-09-27T00:01:39Z",
+            "prerelease": false,
+            "notes_chars": 987,
+            "downloads": 345755
+          },
+          {
+            "tag": "v12.4.1",
+            "published_at": "2026-08-27T23:56:39Z",
+            "prerelease": false,
+            "notes_chars": 511,
+            "downloads": 85506
+          },
+          {
+            "tag": "v12.4.0",
+            "published_at": "2026-08-09T20:09:59Z",
+            "prerelease": false,
+            "notes_chars": 528,
+            "downloads": 38904
+          },
+          {
+            "tag": "vcpkg-cache-v1",
+            "published_at": "2026-04-30T20:43:18Z",
+            "prerelease": false,
+            "notes_chars": 158,
+            "downloads": 49
+          },
+          {
+            "tag": "v12.3.2",
+            "published_at": "2026-01-24T20:31:09Z",
+            "prerelease": false,
+            "notes_chars": 433,
+            "downloads": 297173
+          },
+          {
+            "tag": "v12.3.1",
+            "published_at": "2026-01-19T16:14:32Z",
+            "prerelease": false,
+            "notes_chars": 391,
+            "downloads": 5425
+          },
+          {
+            "tag": "v12.3.0",
+            "published_at": "2026-01-10T20:05:58Z",
+            "prerelease": false,
+            "notes_chars": 467,
+            "downloads": 7884
+          },
+          {
+            "tag": "v12.2.0",
+            "published_at": "2025-05-04T21:45:46Z",
+            "prerelease": false,
+            "notes_chars": 584,
+            "downloads": 167173
+          },
+          {
+            "tag": "v12.1.0",
+            "published_at": "2025-04-06T21:40:49Z",
+            "prerelease": false,
+            "notes_chars": 592,
+            "downloads": 30432
+          },
+          {
+            "tag": "v12.0.0",
+            "published_at": "2025-03-09T18:40:24Z",
+            "prerelease": false,
+            "notes_chars": 1194,
+            "downloads": 25932
+          }
+        ],
+        "contributors": null,
+        "files": {
+          "count": 2906,
+          "truncated": false,
+          "ci": ".github/workflows/cifuzz.yml",
+          "tests": null,
+          "changelog": "ChangeLog",
+          "lockfile": null
+        }
+      },
+      "issues": {
+        "source": "github_live",
+        "fetched_at": "2026-11-20T19:37:12+08:00",
+        "items": [
+          {
+            "created_at": "2026-11-18T05:12:27Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-18T05:12:26Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-14T19:36:20Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-14T14:27:04Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-09T15:30:39Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-08T20:36:02Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-07T13:52:51Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-06T09:57:24Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-26T11:51:56Z",
+            "closed_at": "2026-10-28T12:12:14Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-23T20:49:01Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-21T16:36:22Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-21T16:13:13Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-21T16:13:09Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-10-03T11:58:50Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-27T06:56:11Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-22T05:16:07Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-14T11:22:16Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-04T12:32:33Z",
+            "closed_at": "2026-09-07T11:49:13Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-08-31T16:41:57Z",
+            "closed_at": "2026-09-14T11:41:56Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-08-16T19:55:50Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-08-16T10:27:12Z",
+            "closed_at": "2026-08-16T11:57:58Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-08-10T03:33:00Z",
+            "closed_at": "2026-08-16T00:13:18Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-07-10T14:13:33Z",
+            "closed_at": "2026-08-16T00:13:18Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-06-27T13:01:35Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-06-25T09:03:20Z",
+            "closed_at": "2026-07-03T04:56:40Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-06-22T01:48:53Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-06-17T20:47:32Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-06-17T10:56:23Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-06-08T16:17:25Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-05-31T15:21:58Z",
+            "closed_at": "2026-06-02T17:57:52Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-05-21T02:11:38Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-05-14T17:08:15Z",
+            "closed_at": "2026-08-09T20:22:17Z",
+            "association": "NONE",
+            "bot": false
+          }
+        ],
+        "pull_requests": 68,
+        "page_full": true
+      }
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/qpdf/qpdf",
+      "fetched_at": "2026-11-20T19:23:25+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/qpdf/qpdf/blob/main/README.md",
+      "fetched_at": "2026-11-20T19:23:23+08:00"
+    },
+    {
+      "id": "release:v12.4.2",
+      "kind": "release",
+      "url": "https://github.com/qpdf/qpdf/releases/tag/v12.4.2",
+      "fetched_at": "2026-11-20T19:23:23+08:00"
+    },
+    {
+      "id": "help:verify-qpdf-20261120-192702-38bd:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T19:37:30+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "qpdf is a command-line tool and C++ library",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:23:34+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "can be a valuable tool for anyone who wants to do\nprogrammatic or command-line-based manipulation of PDF files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:23:34+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "performs content-preserving transformations on PDF files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:23:34+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "qpdf is a command-line tool and C++ library that performs content-preserving transformations on PDF files. It supports\nlinearization, encryption, and numerous other features.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:23:34+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "github_api",
+      "quote": "qpdf: A content-preserving PDF document transformer",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:23:34+08:00"
+    },
+    {
+      "field": "/platforms",
+      "source_id": "release:v12.4.2",
+      "quote": "We now include official release binaries for MacOS (intel and arm64), Windows arm64, and Linux aarch64 (arm64)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:23:34+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "qpdf depends on the external libraries [zlib](https://www.zlib.net/) and [jpeg](https://www.ijg.org/files/).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:23:34+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/1",
+      "source_id": "readme",
+      "quote": "qpdf depends on the external libraries [zlib](https://www.zlib.net/) and [jpeg](https://www.ijg.org/files/).",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:23:34+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:23:25+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:23:25+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-20T19:23:25+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:23:25+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:23:25+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v12.4.2",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T19:23:23+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "It can also be used for splitting and merging files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:23:34+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "inspecting files for study or analysis",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:23:34+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "It supports\nlinearization, encryption",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:23:34+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "It supports\nlinearization, encryption, and numerous other features.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:23:34+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "It supports\nlinearization, encryption, and numerous other features.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:23:34+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "It can also be used for splitting and merging files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:23:34+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "creating\nPDF files (but you have to supply all the content yourself)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:23:34+08:00"
+    },
+    {
+      "field": "/features/4",
+      "source_id": "readme",
+      "quote": "inspecting files for study or analysis",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:23:34+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "help:verify-qpdf-20261120-192702-38bd:1",
+      "quote": "encryption: create encrypted files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:37:30+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "help:verify-qpdf-20261120-192702-38bd:1",
+      "quote": "json: JSON output for PDF information",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:37:30+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "help:verify-qpdf-20261120-192702-38bd:1",
+      "quote": "add-attachment: attach (embed) files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:37:30+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "help:verify-qpdf-20261120-192702-38bd:1",
+      "quote": "copy-attachments: copy attachments from another file",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:37:30+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "help:verify-qpdf-20261120-192702-38bd:1",
+      "quote": "overlay-underlay: overlay/underlay pages from other PDF files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:37:30+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "help:verify-qpdf-20261120-192702-38bd:1",
+      "quote": "page-selection: select pages from one or more files",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:37:30+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "help:verify-qpdf-20261120-192702-38bd:1",
+      "quote": "modification: change parts of the PDF",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:37:30+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "qpdf is a command-line tool and C++ library",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:37:30+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "qpdf will use the zopfli compression library instead of zlib to generate flate-compressed streams",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:37:30+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "qpdf can use different crypto implementations.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:37:30+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "help:verify-qpdf-20261120-192702-38bd:1",
+      "quote": "completion: shell completion",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T19:37:30+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-20T19:23:23+08:00",
+  "updated_at": "2026-11-20T19:37:30+08:00"
+}
