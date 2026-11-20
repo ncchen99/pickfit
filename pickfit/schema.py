@@ -272,12 +272,12 @@ def treasure_value(quality: float, popularity: float) -> float:
 # and switching one needs `pickfit score --refresh` over the records and nothing else; `pickfit coverage rules` shows
 # what each would do.
 
-# The sec.v2 levels (security.assessment.level) the known_vulnerability cap (79) applies to. Default, today's rule:
-# every level that warns (blocked, exposed, conditional), which is exactly where sec.v2's status reads vulnerable
-# (security_status_for), so status vulnerable caps under sec.v1 and sec.v2 alike. A check without an assessment
-# (sec.v1) keeps its own rule: status vulnerable caps. Candidate: {"blocked", "exposed"} (conditional, a finding that
-# matters only in some uses, loses the cap).
-SECURITY_CAP_LEVELS: frozenset[str] = frozenset({"blocked", "exposed", "conditional"})
+# The sec.v2 levels (security.assessment.level) the known_vulnerability cap (79) applies to. Since 11/20 (rule 1 of
+# docs/proposals/coverage-distribution.md, decided after the sec.v2 rescan): blocked and exposed. Conditional, a
+# finding that matters only in some uses or whose reach pickfit could not settle, loses the cap and gets a line on the
+# page; its status still reads vulnerable. Before 11/20 it was every level that warns (WARN_LEVELS). A check without
+# an assessment (sec.v1) keeps its own rule: status vulnerable caps.
+SECURITY_CAP_LEVELS: frozenset[str] = frozenset({"blocked", "exposed"})
 # Levels that cannot be a treasure whatever the score (treasure.blocked_by "security_<level>"). Default: none beyond
 # the cap. Candidate (R5 as docs/proposals/scoring.md put it): {"blocked", "exposed"}, with no cap and
 # pickfit/score.py's SECURITY_EXPOSED_DEDUCTION.

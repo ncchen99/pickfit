@@ -935,7 +935,8 @@ def test_write_security_stores_the_details_beside_the_record(monkeypatch: pytest
     assert len(full.findings) == 13 and full.assessment.level == "conditional"
     stored = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8"))
     assert stored.security.assessment.level == "conditional" and stored.security.status == "vulnerable"
-    assert stored.scores.quality.cap_reason == "known_vulnerability"  # status vulnerable: sec.v1's cap still reads it
+    # Rule 1 (11/20): conditional reads vulnerable but is not capped; the page gives it a line.
+    assert stored.scores.quality.cap_reason is None and stored.scores.quality.security.effect == "note"
     # Re-judging offline from the stored details gives the same level, with no lookups.
     monkeypatch.setattr(security, "_http", lambda *a, **k: (_ for _ in ()).throw(AssertionError("no network")))
     again = security.reassess(json.loads(path.read_text(encoding="utf-8")), security.Advisories(), now=NOW,

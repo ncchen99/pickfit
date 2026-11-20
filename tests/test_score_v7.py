@@ -103,7 +103,7 @@ def sec(level: str | None = None, status: str = "vulnerable", state: str | None 
 @pytest.mark.parametrize(("security", "effect", "cap"), [
     (sec("blocked"), "unlisted", "known_vulnerability"),
     (sec("exposed"), "capped", "known_vulnerability"),
-    (sec("conditional"), "capped", "known_vulnerability"),  # today: every level that warns is capped at 79
+    (sec("conditional"), "note", None),  # rule 1 (11/20): conditional is not capped, it gets a line on the page
     (sec("present_unreachable", status="clean"), "none", None),
     (sec("not_shipped", status="clean"), "none", None),
     (sec("none", status="unchecked", state="partial"), "none", None),  # an unknown is never a problem
@@ -118,7 +118,8 @@ def test_by_default_the_cap_is_todays_and_no_unknown_deducts(security: Any, effe
     assert got["effect"] == effect and got["deduction"] == 0.0
     assert schema.binding_cap("cli_tool", False, "function", security) == cap
     assert required_treasure_block(security, "function") is None
-    assert schema.SECURITY_CAP_LEVELS == schema.WARN_LEVELS  # where sec.v2's status reads vulnerable
+    # Rule 1 (11/20): blocked and exposed are capped; conditional still reads vulnerable but is not capped.
+    assert schema.SECURITY_CAP_LEVELS == schema.WARN_LEVELS - {"conditional"}
 
 
 def test_the_r5_candidates_are_settings(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -149,17 +150,18 @@ def test_a_scored_record_follows_its_assessment_and_the_settings(tmp_path: Path,
                                                                  monkeypatch: pytest.MonkeyPatch) -> None:
     _, _, data = scored(tmp_path)
     data["scores"]["popularity"]["signals"]["stars"] = 1  # keep it under the popularity line
-    for level, capped in (("conditional", True), ("exposed", True), ("blocked", True), ("not_shipped", False)):
+    for level, capped in (("conditional", False), ("exposed", True), ("blocked", True), ("not_shipped", False)):
         data["security"] = sec(level)
         refresh_scores(data, LATER)
         q, t = data["scores"]["quality"], data["scores"]["treasure"]
         assert (q["cap_reason"] == "known_vulnerability") is capped and q["security"]["level"] == level
         assert "blocked_by" not in t
         Scores.model_validate(data["scores"])  # the record's security field is sec.v1's until S1 lands
-    monkeypatch.setattr(schema, "SECURITY_CAP_LEVELS", frozenset({"blocked", "exposed"}))
+    monkeypatch.setattr(schema, "SECURITY_CAP_LEVELS", schema.WARN_LEVELS)  # the rule before 11/20
     data["security"] = sec("conditional")
     refresh_scores(data, LATER)
-    assert data["scores"]["quality"]["cap_reason"] is None and data["scores"]["quality"]["security"]["effect"] == "note"
+    assert data["scores"]["quality"]["cap_reason"] == "known_vulnerability"
+    assert data["scores"]["quality"]["security"]["effect"] == "capped"
 
 
 def test_a_fix_out_for_ninety_days_comes_off_maintenance_only_when_switched_on(monkeypatch: pytest.MonkeyPatch

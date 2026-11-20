@@ -112,7 +112,7 @@ Known vulnerabilities (record field security, pickfit/security.py; 念誠 11/3 a
 scores; what a scan could not read never does (it is the coverage's security dimension). A check with an assessment
 (sec.v2) acts by its level (security_effect), under schema's settings, each a candidate rule whose default is today's
 rule (docs/proposals/coverage-distribution.md has what each would do):
-- schema.SECURITY_CAP_LEVELS (default blocked, exposed, conditional: where sec.v2's status reads vulnerable) caps
+- schema.SECURITY_CAP_LEVELS (blocked and exposed since 11/20, rule 1; conditional before, as WARN_LEVELS) caps
   quality at 79 (known_vulnerability), so such a record cannot be a treasure; a sec.v1 check, with no assessment,
   keeps its rule: status vulnerable caps. present_unreachable and not_shipped change nothing;
 - blocked is also not listed (pickfit security --write hides it);
