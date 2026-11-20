@@ -313,6 +313,9 @@ export interface Entry {
   /** Known high or critical vulnerabilities (OSV.dev) in what a fresh install brings (pickfit/index.py _security).
    * Older indexes lack it: read a missing one as unchecked, reason not_run (securityOf). */
   security?: SecurityCheck | null;
+  /** Verification Coverage (pickfit/coverage.py cov.v1, summed up by pickfit/index.py _coverage): what pickfit could
+   * check, apart from quality. Older indexes lack it; the tool page then leaves the section out. */
+  coverage?: CoverageSummary | null;
   scores: {
     quality: number | null;
     popularity: number | null;
@@ -438,6 +441,33 @@ export interface Catalog {
   count: number;
   entries: Entry[];
   bySlug: Map<string, Entry>;
+}
+
+export const COVERAGE_DIMENSIONS = ['install', 'function', 'service', 'security', 'docs', 'usability', 'video', 'repo_signals'] as const;
+export type CoverageDimension = (typeof COVERAGE_DIMENSIONS)[number];
+export type CoverageStatus = 'verified' | 'partial' | 'unverified';
+
+export interface CoverageSummary {
+  version: string;
+  /** Mean share over the dimensions that apply, 0-1; null when none applies. */
+  share: number | null;
+  /** Only the dimensions that apply to this kind of tool. */
+  dimensions: Partial<
+    Record<
+      CoverageDimension,
+      {
+        status: CoverageStatus;
+        done?: number;
+        of?: number;
+        /** function only: feature, or check when there is no feature list. */
+        unit?: string;
+        /** The dimension that had to pass first and did not. */
+        blocked_by?: CoverageDimension;
+        /** Categories of what pickfit could not do (coverage.py CATEGORIES, security.py GAP_CATEGORIES), at most three. */
+        gaps?: string[];
+      }
+    >
+  >;
 }
 
 export function loadCatalog(data: unknown): Catalog {
