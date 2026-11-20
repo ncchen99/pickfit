@@ -73,8 +73,15 @@ export function contradiction(card: Card, text: string): string | null {
   return null;
 }
 
+/** Card fields a reason may not rest on: how known or how well scored a tool is says nothing about this person's job
+ * (prompt rule 3). The model still reads them to break ties. */
+export const NOT_A_REASON: readonly string[] = ['popularity', 'quality'];
+
+/** Card fields that say what the tool does, so a reason citing one is about the person's job. */
+const JOB_FIELDS: readonly string[] = ['use_cases', 'capabilities_matched', 'features_checked', 'mcp_tools'];
+
 export function reasonHolds(card: Card, reason: ModelReason): boolean {
-  if (!(CARD_FIELDS as readonly string[]).includes(reason.field)) return false;
+  if (!(CARD_FIELDS as readonly string[]).includes(reason.field) || NOT_A_REASON.includes(reason.field)) return false;
   const value = card[reason.field as keyof Card] as CardValue;
   return valueMatches(value, reason.value) && contradiction(card, reason.claim) === null;
 }
@@ -115,13 +122,17 @@ export function guardPicks(answer: ModelAnswer, cards: Map<string, Card>, limit:
     }
     seen.add(pick.slug);
     const fit = clip(pick.fit, 300);
+    const kept = reasons.map((r) => ({ claim: r.claim.trim().slice(0, 200), field: r.field, value: r.value.slice(0, 200) }));
+    const vsWellKnown = clip(pick.vs_well_known, 300);
     picks.push({
       slug: pick.slug,
-      // A fit sentence that contradicts the card is replaced by the card's own summary.
-      fit: fit && contradiction(card, fit) === null ? fit : String(card.summary),
-      reasons: reasons.map((r) => ({ claim: r.claim.trim().slice(0, 200), field: r.field, value: r.value.slice(0, 200) })),
+      // A fit sentence that contradicts the card gives way to a reason that held about the job itself (it answers this
+      // request), else to the card's own summary.
+      fit: fit && contradiction(card, fit) === null ? fit : (kept.find((r) => JOB_FIELDS.includes(r.field))?.claim ?? String(card.summary)),
+      reasons: kept,
       tradeoffs: (pick.tradeoffs ?? []).map((t) => t.trim().slice(0, 200)).filter(Boolean).slice(0, 3),
-      vs_well_known: clip(pick.vs_well_known, 300),
+      // A comparison is a claim about this tool too; one the card contradicts is left out.
+      vs_well_known: vsWellKnown && contradiction(card, vsWellKnown) === null ? vsWellKnown : null,
     });
   }
   return { picks, droppedPicks, droppedReasons };
@@ -214,6 +225,18 @@ export function guardWellKnown(answer: ModelAnswer, entries: Entry[], current?: 
   if (!saysFree(why)) return drop('not_said_free');
   if (CLAIMS_CHECKED.test(why)) return drop('claims_checked');
   return { option: { name, why }, name, dropped: null };
+}
+
+/**
+ * no_install_option names something the person already has, from the model's general knowledge (prompt rule 9). It
+ * gets the well-known option's checks that apply: plain prose with no link or command, and no claim that anyone
+ * checked it. One that breaks a rule is dropped whole.
+ */
+export function guardNoInstall(text: string | null | undefined): string | null {
+  const said = clip(text, 300);
+  if (!said || PLACEHOLDER.test(said)) return null;
+  if (!PROSE.test(said) || URL_LIKE.test(said) || COMMAND.test(said) || CLAIMS_CHECKED.test(said)) return null;
+  return said;
 }
 
 /** Minimal shape check; strict decoding should guarantee it, but code does not assume. */

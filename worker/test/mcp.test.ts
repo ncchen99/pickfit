@@ -111,7 +111,7 @@ test('instructions say how to write the answer: pick first, alternative before t
     assert.match(text, /Next line, before any steps: "If your setup is X instead, use Y\."/);
     assert.match(text, /say why the obvious choice isn't recommended/);
     assert.match(text, /Tag well_known_option "\(not verified by pickfit\)" beside its name/);
-    assert.match(text, /Don't narrate the search or say pickfit found nothing; just answer/);
+    assert.match(text, /Don't narrate the search\. If none fits, say so \(offer well_known_option\)\./);
     assert.match(text, /No disclaimers about what you didn't run/);
     assert.match(text, /If security\.status is vulnerable, warn the user first \(level conditional: one line on when\); if unchecked, don't call it safe\./);
   }

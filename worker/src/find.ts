@@ -32,7 +32,7 @@ import { logEvent, logFailure, newId, type Reporter } from './events.ts';
 import { englishKeywords, EXPAND_TIMEOUT_MS, type Expansion } from './expand.ts';
 import { fitNote, fitOf, jobOf, type Fit, type MatchQuality } from './fit.ts';
 import { hardFilter, MAX_CARDS, needsOffline, replacesCurrent, type Conditions } from './filter.ts';
-import { clip, guardPicks, guardWellKnown, NO_WELL_KNOWN, parseAnswer, type GuardedPick, type GuardedWellKnown } from './guard.ts';
+import { clip, guardNoInstall, guardPicks, guardWellKnown, NO_WELL_KNOWN, parseAnswer, type GuardedPick, type GuardedWellKnown } from './guard.ts';
 import { callModel, estimateCostUsd, MATCH_MODEL, ModelCallError, requestBody } from './meta.ts';
 import { instructions, matchInput, matchSchema, type MatchKind, type ModelAnswer, type ModelReason } from './prompt.ts';
 import { dropNegated, queryTerms, rulesRelevance, rulesTerms, termsAsSaid } from './relevance.ts';
@@ -285,6 +285,17 @@ const NO_CHOICE: Choice = {
 const shortList = (items: string[] | undefined, n: number, max: number) =>
   (Array.isArray(items) ? items : []).slice(0, n).map((s) => String(s).slice(0, max));
 
+/**
+ * The model's best free option: free in pickfit's data, with the model's reason. With no reason it stays only as a
+ * pick's label (the reason then says so); a free tool outside the picks with nothing said about it is left out rather
+ * than given a sentence that says nothing.
+ */
+function bestFreeOf(free: Entry | undefined, reason: string | null, picks: GuardedPick[]): Choice['bestFree'] {
+  if (free?.pricing !== 'free') return null;
+  if (reason) return { slug: free.slug, reason };
+  return picks.some((p) => p.slug === free.slug) ? { slug: free.slug, reason: 'Free to use, and one of the picks above.' } : null;
+}
+
 function fromModel(
   answer: ModelAnswer,
   picks: GuardedPick[],
@@ -297,11 +308,8 @@ function fromModel(
   const keep = answer.keep_current;
   return {
     picks,
-    bestFree:
-      free?.pricing === 'free'
-        ? { slug: free.slug, reason: clip(answer.best_free_reason, 200) ?? 'Free and fits the request.' }
-        : null,
-    noInstall: clip(answer.no_install_option, 300),
+    bestFree: bestFreeOf(free, clip(answer.best_free_reason, 200), picks),
+    noInstall: guardNoInstall(answer.no_install_option),
     question: clip(answer.clarifying_question, 200),
     parsedNeed: {
       task: clip(need.task, 120),

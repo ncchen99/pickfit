@@ -21,7 +21,7 @@ const ANSWER =
   'Next line, before any steps: "If your setup is X instead, use Y." ' +
   "Keep drawbacks short; say why the obvious choice isn't recommended. " +
   'Tag well_known_option "(not verified by pickfit)" beside its name. ' +
-  "Don't narrate the search or say pickfit found nothing; just answer. No disclaimers about what you didn't run. " +
+  "Don't narrate the search. If none fits, say so (offer well_known_option). No disclaimers about what you didn't run. " +
   "If security.status is vulnerable, warn the user first (level conditional: one line on when); if unchecked, don't call it safe.";
 
 export const INSTRUCTIONS =

@@ -235,6 +235,66 @@ test('a fit sentence that contradicts the card is replaced by the summary', asyn
   assert.match(out.picks[0].fit, /^\(Fake test fixture\) Terminal chat client/);
 });
 
+test('a contradicted fit gives way to a reason about the job; a contradicted comparison is left out', async () => {
+  const h = harness(() =>
+    modelResponse(
+      answer({
+        picks: [
+          {
+            slug: 'fixture-chat-tui',
+            fit: 'Closed-source but tested on macOS by pickfit.',
+            reasons: [
+              { claim: 'Free to use', field: 'pricing', value: 'free' },
+              { claim: 'Chats with a local model in the terminal', field: 'use_cases', value: 'chat with a local model from the terminal' },
+            ],
+            tradeoffs: [],
+            vs_well_known: 'Unlike the ChatGPT desktop app it is open source and was tested on Windows.',
+          },
+        ],
+      }),
+    ),
+  );
+  const out = await findSoftware(MAC_OFFLINE, h.deps);
+  assert.equal(out.picks[0].fit, 'Chats with a local model in the terminal');
+  assert.equal(out.picks[0].vs_well_known, null);
+});
+
+test('popularity and quality are never a reason, however true', async () => {
+  const h = harness(() =>
+    modelResponse(
+      answer({
+        picks: [
+          {
+            slug: 'fixture-chat-tui',
+            fit: 'A terminal chat client for local models.',
+            reasons: [
+              { claim: 'Well liked', field: 'popularity', value: '22' },
+              { claim: 'Scores well', field: 'quality', value: '76' },
+              { claim: 'Free to use', field: 'pricing', value: 'free' },
+            ],
+            tradeoffs: [],
+            vs_well_known: null,
+          },
+        ],
+      }),
+    ),
+  );
+  const out = await findSoftware(MAC_OFFLINE, h.deps);
+  assert.deepEqual(out.picks[0]?.why.map((r) => r.field), ['pricing']);
+});
+
+test('no_install_option drops links, commands and claims of a check; a best free tool with nothing said is left out', async () => {
+  const { guardNoInstall } = await import('../src/guard.ts');
+  assert.equal(guardNoInstall('macOS Preview can already merge PDFs.'), 'macOS Preview can already merge PDFs.');
+  for (const bad of ['Use smallpdf.com instead.', 'Run brew install qpdf.', 'Preview, verified by pickfit, is enough.', 'none']) {
+    assert.equal(guardNoInstall(bad), null, bad);
+  }
+  const h = harness(() => modelResponse(answer({ best_free_slug: 'fixture-transcribe', best_free_reason: null })));
+  const out = await findSoftware(MAC_OFFLINE, h.deps);
+  if (!out.picks.some((p) => p.slug === 'fixture-transcribe')) assert.equal(out.best_free, null);
+  assert.notEqual(out.best_free?.reason, 'Free and fits the request.');
+});
+
 test('every pick rejected by the guard falls back to rules', async () => {
   const bad = answer({
     picks: [
