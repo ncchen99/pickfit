@@ -205,3 +205,25 @@ def test_the_agent_gets_the_install_page_as_a_file_to_read():
     prompt = render_task(task, plan_for(ex), box, AgentLimits())
     assert "install guide (https://tinyq.dev/install) is saved in the work dir as INSTALL-GUIDE-1.md" in prompt
     assert "pipx install tinyq\n" not in prompt  # read on demand, not put in the prompt
+
+
+def test_at_the_same_score_a_unix_guide_comes_before_the_mac_and_windows_ones() -> None:
+    # ImageMagick, 11/20: Install-mac.txt, Install-unix.txt and Install-windows.txt score the same; the shortest name
+    # won, and a tool Linux runs was read from its macOS guide.
+    candidate = {"full_name": "ImageMagick/ImageMagick", "readme": "# ImageMagick\n",
+                 "repo": {"full_name": "ImageMagick/ImageMagick", "homepage": ""},
+                 "files": ["Install-mac.txt", "Install-unix.txt", "Install-windows.txt", "README.md"]}
+    assert [link.path for link in find_links(candidate)] == ["Install-unix.txt", "Install-mac.txt",
+                                                             "Install-windows.txt"]
+
+
+def test_the_platform_order_breaks_ties_only() -> None:
+    from pickfit.installdocs import _os_rank
+
+    assert [_os_rank(p) for p in ("docs/install-linux.md", "INSTALL-from-source.md", "INSTALL.md",
+                                  "docs/install-macos.md", "Install-win32.txt", "docs/windows/README.md")] \
+        == [0, 0, 1, 2, 2, 1]  # a folder name does not count, only the file's own
+    candidate = {"full_name": "a/b", "readme": "# b\n", "repo": {"full_name": "a/b", "homepage": ""},
+                 "files": ["INSTALL-macos.md", "docs/setup-linux.md"]}
+    # install (3) outranks setup (2) whatever the platform: the order only breaks ties.
+    assert [link.path for link in find_links(candidate)] == ["INSTALL-macos.md", "docs/setup-linux.md"]
