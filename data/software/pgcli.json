@@ -1,0 +1,1091 @@
+{
+  "schema_version": "software.v1",
+  "slug": "pgcli",
+  "repo_id": "gh:25126616",
+  "name": "pgcli",
+  "summary": "A command-line PostgreSQL client with auto-completion and syntax highlighting.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "data_db",
+  "kind": "cli_tool",
+  "audience": "end_user",
+  "maturity": null,
+  "tags": [
+    "database",
+    "postgres",
+    "postgresql",
+    "psql",
+    "python"
+  ],
+  "use_cases": [
+    "connect to a Postgres database and run SQL queries interactively",
+    "connect to a Postgres database over SSL",
+    "run pgcli queries from an IPython session"
+  ],
+  "alternatives_to": [
+    "psql"
+  ],
+  "features": [
+    "auto-complete SQL keywords, tables and columns",
+    "syntax highlighting of SQL",
+    "context-sensitive smart completion",
+    "run psql back-slash commands",
+    "pretty-print tabular query results"
+  ],
+  "capabilities": [
+    {
+      "label": "Syntax highlighting using Pygments",
+      "area": "editing"
+    },
+    {
+      "label": "Pretty print tabular data",
+      "area": "output"
+    },
+    {
+      "label": "Connect using a postgres URI",
+      "area": "connection"
+    },
+    {
+      "label": "Use psql environment variables for login",
+      "items": [
+        "PGHOST",
+        "PGPORT",
+        "PGUSER",
+        "PGPASSWORD",
+        "PGDATABASE"
+      ],
+      "area": "connection"
+    },
+    {
+      "label": "Connect over SSL",
+      "area": "connection"
+    },
+    {
+      "label": "Use DSN aliases from config file",
+      "area": "connection"
+    },
+    {
+      "label": "List available databases",
+      "area": "commands"
+    },
+    {
+      "label": "Auto-switch to vertical output for wide results",
+      "area": "output"
+    },
+    {
+      "label": "Warn before destructive queries",
+      "area": "safety"
+    },
+    {
+      "label": "Customize the prompt format",
+      "area": "configuration"
+    },
+    {
+      "label": "Run inside IPython console",
+      "area": "integrations"
+    },
+    {
+      "label": "Connect through an SSH tunnel",
+      "area": "connection"
+    },
+    {
+      "label": "Log queries and output to file",
+      "area": "output"
+    },
+    {
+      "label": "Run a command and exit",
+      "area": "scripting"
+    },
+    {
+      "label": "Execute commands from a file",
+      "area": "scripting"
+    },
+    {
+      "label": "Check database connectivity",
+      "area": "connection"
+    },
+    {
+      "label": "Print rows only without headers",
+      "area": "output"
+    },
+    {
+      "label": "Run SQL after connecting",
+      "area": "scripting"
+    },
+    {
+      "label": "Set row limit prompt threshold",
+      "area": "output"
+    }
+  ],
+  "why_worth_it": null,
+  "homepage": "http://pgcli.com",
+  "repo": {
+    "url": "https://github.com/dbcli/pgcli",
+    "full_name": "dbcli/pgcli",
+    "created_at": "2014-10-12T17:32:33Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [],
+    "system_packages": [
+      "postgres"
+    ],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": {
+      "basis": "readme_claim",
+      "run_id": null,
+      "method": "brew",
+      "steps": [
+        {
+          "command": "brew install pgcli",
+          "purpose": null
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "pgcli --help",
+        "expected_signal": "Usage: pgcli [OPTIONS] [DBNAME] [USERNAME]"
+      },
+      "first_task": "pgcli --help"
+    },
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-pgcli-20261121-063943-1a76",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "pickfit-services start postgres",
+          "purpose": "start throwaway PostgreSQL"
+        },
+        {
+          "command": "uv tool install pgcli",
+          "purpose": "uv tool install pgcli"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "pgcli --version",
+        "expected_signal": "Version: 4.7.1"
+      },
+      "first_task": "pgcli -l postgresql://pickfit@127.0.0.1:5432/pickfit"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "BSD-3-Clause",
+  "processing": null,
+  "last_release": {
+    "tag": "v4.7.1",
+    "published_at": "2026-09-20T06:51:49Z",
+    "url": "https://github.com/dbcli/pgcli/releases/tag/v4.7.1"
+  },
+  "verification": {
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-21T06:41:03.159626+08:00",
+    "runs": [
+      {
+        "id": "verify-pgcli-20261121-063943-1a76",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx-svc:119a3d869a3a",
+        "checked_at": "2026-11-21T06:41:03.159626+08:00",
+        "tool_version": "4.7.1",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "pickfit-services start postgres",
+            "purpose": "start throwaway PostgreSQL"
+          },
+          {
+            "command": "uv tool install pgcli",
+            "purpose": "uv tool install pgcli"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "pgcli --version",
+            "expected_signal": "Version: 4.7.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Version: 4.7.1",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "pgcli -l postgresql://pickfit@127.0.0.1:5432/pickfit",
+            "expected_signal": "List of databases",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "List of databases",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "~/.local/share/uv/tools/pgcli/bin/python /tmp/feat2.py f1 \"SEL\" \"SELECT * FROM us\" \"SELECT usern\"",
+            "expected_signal": "'SELECT * FROM us' -> ['users']",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "'SELECT * FROM us' -> ['users']",
+            "setup": [
+              {
+                "command": "cat > /tmp/feat2.py <<'EOF'\nimport sys, logging\nlogging.disable(logging.CRITICAL)\nmode = sys.argv[1]\nif mode == \"f2\":\n    from pygments import highlight\n    from pygments.lexers.sql import PostgresLexer\n    from pygments.formatters import Terminal256Formatter\n    out = highlight(sys.argv[2], PostgresLexer(), Terminal256Formatter(style=\"default\"))\n    print(out); print(repr(out))\n    sys.exit(0)\nfrom pgcli.pgexecute import PGExecute\nfrom pgcli.pgcompleter import PGCompleter\nfrom prompt_toolkit.document import Document\nex = PGExecute(database=\"pickfit\", user=\"pickfit\", password=None, host=\"127.0.0.1\", port=5432, dsn=None)\nex.conn.cursor().execute(\"DROP TABLE IF EXISTS users; CREATE TABLE users (id int, username text, email text)\")\ncomp = PGCompleter(smart_completion=True)\ncomp.extend_schemata([\"public\"])\ncomp.set_search_path([\"public\"])\ncomp.extend_relations([t for t in ex.tables() if t[0] == \"public\"], kind=\"tables\")\ncomp.extend_columns([c for c in ex.table_columns() if c[0] == \"public\"], kind=\"tables\")\nfor text in sys.argv[2:]:\n    seen = []\n    for c in comp.get_completions(Document(text, len(text)), None):\n        if c.text not in seen: seen.append(c.text)\n    print(repr(text), \"->\", seen[:6])\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "~/.local/share/uv/tools/pgcli/bin/python /tmp/feat2.py f3 \"SELECT * FROM \" \"SELECT * FROM users WHERE \"",
+            "expected_signal": "'SELECT * FROM users WHERE ' -> ['email', 'id', 'username'",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "'SELECT * FROM users WHERE ' -> ['email', 'id', 'username', 'ABBREV', 'ABS', 'AGE']",
+            "setup": [
+              {
+                "command": "cat > /tmp/feat2.py <<'EOF'\nimport sys, logging\nlogging.disable(logging.CRITICAL)\nmode = sys.argv[1]\nif mode == \"f2\":\n    from pygments import highlight\n    from pygments.lexers.sql import PostgresLexer\n    from pygments.formatters import Terminal256Formatter\n    out = highlight(sys.argv[2], PostgresLexer(), Terminal256Formatter(style=\"default\"))\n    print(out); print(repr(out))\n    sys.exit(0)\nfrom pgcli.pgexecute import PGExecute\nfrom pgcli.pgcompleter import PGCompleter\nfrom prompt_toolkit.document import Document\nex = PGExecute(database=\"pickfit\", user=\"pickfit\", password=None, host=\"127.0.0.1\", port=5432, dsn=None)\nex.conn.cursor().execute(\"DROP TABLE IF EXISTS users; CREATE TABLE users (id int, username text, email text)\")\ncomp = PGCompleter(smart_completion=True)\ncomp.extend_schemata([\"public\"])\ncomp.set_search_path([\"public\"])\ncomp.extend_relations([t for t in ex.tables() if t[0] == \"public\"], kind=\"tables\")\ncomp.extend_columns([c for c in ex.table_columns() if c[0] == \"public\"], kind=\"tables\")\nfor text in sys.argv[2:]:\n    seen = []\n    for c in comp.get_completions(Document(text, len(text)), None):\n        if c.text not in seen: seen.append(c.text)\n    print(repr(text), \"->\", seen[:6])\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "~/.local/share/uv/tools/pgcli/bin/python /tmp/feat2.py f2 \"SELECT name FROM users WHERE id = 1;\"",
+            "expected_signal": "\\x1b[38;5;28;01mSELECT",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "'\\x1b[38;5;28;01mSELECT\\x1b[39;00m\\x1b[38;5;250m \\x1b[39m\\x1b[38;5;28;01mname\\x1b[39;00m\\x1b[38;5;250m \\x1b[39m\\x1b[38;5;28;01mFROM\\x1b[39;00m\\x1b[38;5;250m \\x1b[39musers\\x1b[38;5;250m \\x1b[39m\\x1b[38;5;28;01mWHERE\\x1b[39;00m\\x1b[38;5;250m \\x1b[39mid\\x1b[38;5;250m \\x1b[39m\\x1b[38;5;241m=\\x1b[39m\\x1…",
+            "setup": [
+              {
+                "command": "cat > /tmp/feat2.py <<'EOF'\nimport sys, logging\nlogging.disable(logging.CRITICAL)\nmode = sys.argv[1]\nif mode == \"f2\":\n    from pygments import highlight\n    from pygments.lexers.sql import PostgresLexer\n    from pygments.formatters import Terminal256Formatter\n    out = highlight(sys.argv[2], PostgresLexer(), Terminal256Formatter(style=\"default\"))\n    print(out); print(repr(out))\n    sys.exit(0)\nfrom pgcli.pgexecute import PGExecute\nfrom pgcli.pgcompleter import PGCompleter\nfrom prompt_toolkit.document import Document\nex = PGExecute(database=\"pickfit\", user=\"pickfit\", password=None, host=\"127.0.0.1\", port=5432, dsn=None)\nex.conn.cursor().execute(\"DROP TABLE IF EXISTS users; CREATE TABLE users (id int, username text, email text)\")\ncomp = PGCompleter(smart_completion=True)\ncomp.extend_schemata([\"public\"])\ncomp.set_search_path([\"public\"])\ncomp.extend_relations([t for t in ex.tables() if t[0] == \"public\"], kind=\"tables\")\ncomp.extend_columns([c for c in ex.table_columns() if c[0] == \"public\"], kind=\"tables\")\nfor text in sys.argv[2:]:\n    seen = []\n    for c in comp.get_completions(Document(text, len(text)), None):\n        if c.text not in seen: seen.append(c.text)\n    print(repr(text), \"->\", seen[:6])\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "~/.local/share/uv/tools/pgcli/bin/python /tmp/feat.py f4 \"\\d users\"",
+            "expected_signal": "['Column', 'Type', 'Modifiers']",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "['Column', 'Type', 'Modifiers']",
+            "setup": [
+              {
+                "command": "cat > /tmp/feat.py <<'EOF'\nimport sys\nfrom pgcli.pgexecute import PGExecute\nfrom pgcli.pgcompleter import PGCompleter\nfrom pgspecial.main import PGSpecial\nfrom prompt_toolkit.document import Document\nex = PGExecute(database=\"pickfit\", user=\"pickfit\", password=None, host=\"127.0.0.1\", port=5432, dsn=None)\nex.conn.cursor().execute(\"DROP TABLE IF EXISTS users; CREATE TABLE users (id int, username text, email text); INSERT INTO users VALUES (1,'alice','a@x.org')\")\nmode = sys.argv[1]\nif mode in (\"f1\", \"f3\"):\n    comp = PGCompleter(smart_completion=True)\n    comp.extend_schemata([\"public\"])\n    comp.set_search_path([\"public\"])\n    comp.extend_relations(list(ex.tables()), kind=\"tables\")\n    comp.extend_columns(list(ex.table_columns()), kind=\"tables\")\n    for text in sys.argv[2:]:\n        names = sorted({c.text for c in comp.get_completions(Document(text, len(text)), None)})\n        print(repr(text), \"->\", names[:15])\nelif mode == \"f4\":\n    sp = PGSpecial()\n    for title, rows, headers, status, *_ in ex.run(sys.argv[2], pgspecial=sp):\n        print(headers); print(list(rows) if rows else rows); print(status)\nEOF",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Features are shown in the interactive REPL (tab completion, highlighting)",
+            "actually_needed": "No TTY in the box, so completion, highlighting and backslash commands were tested through pgcli's own Python classes (PGCompleter, PGExecute with pgspecial) using the uv tool venv's python, against the local Postgres",
+            "kind": "sandbox"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "pgcli listed the databases, completed 'SELECT * FROM us' to ['users'], and printed Version: 4.7.1, all with exit code 0.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-pgcli-20261121-063943-1a76/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-pgcli-20261121-063943-1a76/check-1-cmd12.judged.png",
+            "runs/verify/verify-pgcli-20261121-063943-1a76/check-2-cmd9.judged.png",
+            "runs/verify/verify-pgcli-20261121-063943-1a76/check-3-cmd3.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.221865,
+        "features": [
+          {
+            "feature": "auto-complete SQL keywords, tables and columns",
+            "status": "checked",
+            "smoke_tests": [
+              2,
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "syntax highlighting of SQL",
+            "status": "checked",
+            "smoke_tests": [
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "context-sensitive smart completion",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "run psql back-slash commands",
+            "status": "checked",
+            "smoke_tests": [
+              5
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "pretty-print tabular query results",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v2",
+    "status": "clean",
+    "unchecked_reason": null,
+    "sources": [
+      "pypi:pgcli (fresh install, 14 packages)",
+      "sbom:verify-pgcli-20261121-063943-1a76 (14 packages installed)"
+    ],
+    "packages_checked": 14,
+    "findings_total": 0,
+    "advisories_total": 0,
+    "findings": [],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-21T06:41:10+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "installed_artifact",
+      "commit": null,
+      "run_id": "verify-pgcli-20261121-063943-1a76",
+      "tool_version": "4.7.1",
+      "artifact_sha256": [
+        "4f8e7707b2913582662c84ee6c708eb66abf2b4550006ce1fd2f7c829211bf61"
+      ],
+      "packages": {
+        "pypi": 14
+      },
+      "scopes": {
+        "runtime": 14
+      },
+      "advisories_fetched_at": "2026-11-21T06:41:10+08:00",
+      "kev_catalog": null,
+      "epss_date": null,
+      "findings_total": 0,
+      "details": "security/pgcli.json",
+      "details_sha256": "3df0c335c8b3e03c2c505af874d2d71363fb515d0241260a1c9c651ef2b098d1"
+    },
+    "assessment": {
+      "level": "none",
+      "policy_version": "sec.v2",
+      "reasons": [],
+      "counts": {},
+      "uncounted": 0,
+      "assessed_at": "2026-11-21T06:41:10+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "installed_artifact",
+      "packages_found": 14,
+      "packages_checked": 14,
+      "components": [
+        {
+          "ecosystem": "pypi",
+          "component": "registry:pypi:pgcli",
+          "status": "scanned",
+          "packages": 14,
+          "gaps": []
+        },
+        {
+          "ecosystem": "pypi",
+          "component": "sbom:verify-pgcli-20261121-063943-1a76",
+          "status": "scanned",
+          "packages": 14,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
+  },
+  "scores": {
+    "formula_version": "b3.v7",
+    "computed_at": "2026-11-21T06:41:10+08:00",
+    "quality": {
+      "total": 85.3,
+      "raw_total": 85.3,
+      "confidence": 0.9,
+      "cap": null,
+      "cap_reason": null,
+      "components": {
+        "sandbox_verification": {
+          "score": 1.0,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.75,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 0.85,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.3808,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      },
+      "security": {
+        "level": "none",
+        "basis": "assessment",
+        "effect": "none",
+        "deduction": 0.0
+      }
+    },
+    "popularity": {
+      "score": 100.0,
+      "signals": {
+        "stars": 13454,
+        "monthly_downloads": 267982,
+        "forks": 621,
+        "dependents": null,
+        "release_downloads": null,
+        "hn_top_score": 316,
+        "registries_count": 1
+      },
+      "age_days": 4422,
+      "packages": [
+        "pypi:pgcli"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.0
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:41:03.288326+08:00",
+      "sources_sha": "0fdff5176b4b11439bc862864ff2101e623ec5dbd1a8a6bd66dc0bea52008b5f",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "* Auto-completes as you type for SQL keywords as well as tables and\n  columns in the database."
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "This is a postgres client that does auto-completion and syntax highlighting."
+        },
+        "prerequisites": {
+          "score": 1,
+          "quote": "You will need postgres installed on your system\nfor this to work."
+        },
+        "install_per_os": {
+          "score": 2,
+          "quote": "    $ sudo apt-get install pgcli # Only on Debian based Linux (e.g. Ubuntu, Mint, etc)\n    $ brew install pgcli  # Only on macOS"
+        },
+        "first_run_example": {
+          "score": 2,
+          "quote": "    In [2]: %pgcli postgres://someone@localhost:5432/world\n    Connected: someone@world"
+        },
+        "config_and_keys": {
+          "score": 2,
+          "quote": "A config file is automatically created at ``~/.config/pgcli/config`` at first launch."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "If that fails due to permission issues, you might need to run the command with\nsudo permissions."
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "macOS:\n======"
+        }
+      },
+      "unquoted": [],
+      "input_sha": "2ad690fa1cbdd05dba6147ec4448736864e0a620c79a15123eeb94c9ae3ac426",
+      "prompt_version": "rubric-p1",
+      "renderer_version": "r1",
+      "grader": "anthropic"
+    },
+    "inputs": {
+      "version": "inputs.v1",
+      "github": {
+        "source": "pipeline_db",
+        "fetched_at": "2026-11-21T06:39:29+08:00",
+        "stars": 13454,
+        "forks": 621,
+        "open_issues": 57,
+        "created_at": "2014-10-12T17:32:33Z",
+        "pushed_at": "2026-11-04T22:15:44Z",
+        "releases": [
+          {
+            "tag": "v4.7.1",
+            "published_at": "2026-09-20T06:51:49Z",
+            "prerelease": false,
+            "notes_chars": 105,
+            "downloads": null
+          },
+          {
+            "tag": "v4.7.0",
+            "published_at": "2026-09-19T07:51:12Z",
+            "prerelease": false,
+            "notes_chars": 2283,
+            "downloads": null
+          }
+        ],
+        "contributors": null,
+        "files": {
+          "count": 124,
+          "truncated": false,
+          "ci": ".github/workflows/ci.yml",
+          "tests": "tests/conftest.py",
+          "changelog": "changelog.rst",
+          "lockfile": null
+        }
+      },
+      "issues": {
+        "source": "github_live",
+        "fetched_at": "2026-11-21T06:41:03+08:00",
+        "items": [
+          {
+            "created_at": "2026-09-21T14:55:14Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-11T18:59:11Z",
+            "closed_at": null,
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-09-01T12:17:06Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-08-27T16:30:36Z",
+            "closed_at": "2026-10-15T13:28:41Z",
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-08-18T05:38:44Z",
+            "closed_at": "2026-08-24T15:43:10Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-06-29T08:26:15Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-06-23T22:40:57Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-06-22T19:46:46Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-05-07T07:23:55Z",
+            "closed_at": "2026-06-02T22:23:47Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-05-03T19:42:37Z",
+            "closed_at": "2026-07-20T09:40:14Z",
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-05-01T02:22:07Z",
+            "closed_at": "2026-05-31T09:45:03Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-04-26T10:01:15Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-04-23T09:07:52Z",
+            "closed_at": "2026-04-24T16:51:42Z",
+            "association": "NONE",
+            "bot": false
+          }
+        ],
+        "pull_requests": 87,
+        "page_full": true
+      }
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/dbcli/pgcli",
+      "fetched_at": "2026-11-21T06:39:31+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/dbcli/pgcli/blob/main/README.rst",
+      "fetched_at": "2026-11-21T06:39:29+08:00"
+    },
+    {
+      "id": "release:v4.7.1",
+      "kind": "release",
+      "url": "https://github.com/dbcli/pgcli/releases/tag/v4.7.1",
+      "fetched_at": "2026-11-21T06:39:29+08:00"
+    },
+    {
+      "id": "help:verify-pgcli-20261121-063943-1a76:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-21T06:41:21+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "github_api",
+      "quote": "Postgres CLI with autocompletion and syntax highlighting",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:39:39+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "This is a postgres client that does auto-completion and syntax highlighting.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:39:39+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "readme",
+      "quote": "A REPL for Postgres",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:39:39+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "readme",
+      "quote": "This is a postgres client that does auto-completion and syntax highlighting.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:39:39+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "github_api",
+      "quote": "name: dbcli/pgcli",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:39:39+08:00"
+    },
+    {
+      "field": "/prerequisites/system_packages/0",
+      "source_id": "readme",
+      "quote": "You will need postgres installed on your system\nfor this to work.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:39:39+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:39:31+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:39:31+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-21T06:39:31+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:39:31+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:39:31+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v4.7.1",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-21T06:39:29+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "$ pgcli local_database",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:39:39+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "if you need to connect a postgres database via ssl connection",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:39:39+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "readme",
+      "quote": "Pgcli can be run from within `IPython <https://ipython.org>`_ console.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:39:39+08:00"
+    },
+    {
+      "field": "/alternatives_to/0",
+      "source_id": "readme",
+      "quote": "supports many of the same `environment variables`_ as ``psql``",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:39:39+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "Auto-completes as you type for SQL keywords as well as tables and\n  columns in the database.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:39:39+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "Syntax highlighting using Pygments.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:39:39+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "Smart-completion (enabled by default) will suggest context-sensitive\n  completion.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:39:39+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "Primitive support for ``psql`` back-slash commands.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:39:39+08:00"
+    },
+    {
+      "field": "/features/4",
+      "source_id": "readme",
+      "quote": "Pretty prints tabular data.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:39:39+08:00"
+    },
+    {
+      "field": "/install/macos/steps/0",
+      "source_id": "readme",
+      "quote": "brew install pgcli",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:39:39+08:00"
+    },
+    {
+      "field": "/install/linux/steps/0",
+      "source_id": "readme",
+      "quote": "uvx pgcli",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:39:39+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "Syntax highlighting using Pygments.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:41:21+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "readme",
+      "quote": "Pretty prints tabular data.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:41:21+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "readme",
+      "quote": "pgcli postgresql://[user[:password]@][netloc][:port][/dbname][?extra=value[&other=other-value]]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:41:21+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "supports many of the same `environment variables`_ as ``psql`` for login options",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:41:21+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "if you need to connect a postgres database via ssl connection",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:41:21+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "Use DSN configured into the [alias_dsn] section",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:41:21+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "list available databases, then exit.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:41:21+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Automatically switch to vertical output mode if",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:41:21+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Warn before running a destructive query.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:41:21+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Prompt format (Default: \"\\u@\\h:\\d> \").",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:41:21+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "readme",
+      "quote": "Pgcli can be run from within `IPython <https://ipython.org>`_ console.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:41:21+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "help:verify-pgcli-20261121-063943-1a76:1",
+      "quote": "Open an SSH tunnel to the given address and connect",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:41:21+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "help:verify-pgcli-20261121-063943-1a76:1",
+      "quote": "Write all queries & output into a file, in addition",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:41:21+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "help:verify-pgcli-20261121-063943-1a76:1",
+      "quote": "run command (SQL or internal) and exit.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:41:21+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "help:verify-pgcli-20261121-063943-1a76:1",
+      "quote": "execute commands from file, then exit.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:41:21+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "help:verify-pgcli-20261121-063943-1a76:1",
+      "quote": "Check database connectivity, then exit.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:41:21+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "help:verify-pgcli-20261121-063943-1a76:1",
+      "quote": "Print rows only: no column headers, no status",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:41:21+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "help:verify-pgcli-20261121-063943-1a76:1",
+      "quote": "SQL statement to execute after connecting.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:41:21+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "readme",
+      "quote": "Set threshold for row limit prompt.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-21T06:41:21+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-21T06:39:29+08:00",
+  "updated_at": "2026-11-21T06:41:22+08:00"
+}
