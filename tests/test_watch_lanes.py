@@ -498,6 +498,7 @@ def test_the_services_watch_command_parses() -> None:
     # Renting a Mac is a choice someone makes: 念誠 made it on 11/19 ("open one when it is needed"), so the service
     # rents when a macOS batch is due and does the root step itself.
     assert args.mac_rent and args.mac_root_from_provider
+    assert args.mac_key == "/var/lib/pickfit/.pickfit/ssh/scaleway-mac"  # a key the project already has
 
 
 def test_the_watch_names_the_key_a_rented_mac_is_reached_with(monkeypatch: pytest.MonkeyPatch) -> None:
