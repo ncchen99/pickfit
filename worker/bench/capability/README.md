@@ -157,3 +157,15 @@ cd worker && node bench/capability.ts src/generated/index.json bench/capability/
 ```
 
 `--show` 逐筆列出結果。查詢集本身不用重做。要擴充的話，用 `--tools N` 加大樣本，已經做過的工具會跳過。
+
+## Sonnet 5.5 對照（準備好，還沒跑，2026-11-21）
+
+`--model-id` 指定關鍵字和 match 兩個呼叫用的模型，預設還是正式站的 claude-opus-5-5。它只收 `src/meta.ts` 的 `MODEL_PRICES` 有價格的模型，`--cap` 才會用對的價格算花費。正式站不讀這個設定，Env 也改不了。
+
+同一份 46 題，在這個 worktree 的 `worker/` 跑，金鑰從主工作區的 `.env` 讀：
+
+```sh
+node --env-file=../../../../.env bench/capability.ts src/generated/index.json bench/capability/opus-check.json --model-id claude-sonnet-5-5 --cap 6 --out bench/capability/sonnet-check-model.json
+```
+
+注意：`baseline-backfill50-model.json` 的 Opus 結果是 11/20 跑的，當時還是 60 張卡片、舊的 index。卡片瘦身（50 張）和之後的資料更新都會影響結果。要公平比較，就在同一個 build 用 `--model-id claude-opus-5-5 --out bench/capability/opus-check-model-20261121.json` 再跑一次 Opus（約 US$5）。

@@ -410,7 +410,9 @@ async function askModel(
   const { settings } = deps;
   if (!settings.modelEnabled) return notSent('model_off');
   if (!settings.apiKey) return notSent('no_api_key');
+  const model = settings.matchModel ?? MATCH_MODEL;
   const body = requestBody({
+    model,
     instructions: instructions(limit, kind),
     input: matchInput(request, [...cards.values()]),
     schema: matchSchema(kind),
@@ -418,7 +420,7 @@ async function askModel(
   });
   try {
     // With no cap set (the default) this passes without reading D1; the spend is recorded below either way.
-    const budget = await checkBudget(deps.db, now, estimateCostUsd(JSON.stringify(body).length), settings);
+    const budget = await checkBudget(deps.db, now, estimateCostUsd(JSON.stringify(body).length, undefined, model), settings);
     if (!budget.ok) return notSent('over_budget');
   } catch {
     return notSent('budget_unavailable'); // a cap is set and spend cannot be counted, so do not spend
@@ -436,7 +438,7 @@ async function askModel(
     const { statuses } = result;
     // Token use for tuning; no request text.
     console.log(
-      JSON.stringify({ event: 'meta_call', kind, model: MATCH_MODEL, cards: cards.size, ...result.usage, cost_usd: cost, latency_ms: result.latencyMs, statuses }),
+      JSON.stringify({ event: 'meta_call', kind, model, cards: cards.size, ...result.usage, cost_usd: cost, latency_ms: result.latencyMs, statuses }),
     );
     // From here on the model has answered: a bad or rejected answer is never retried.
     const answer = parseAnswer(result.text);
@@ -535,7 +537,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     cost = attempt.cost;
     statuses = attempt.statuses;
     if ('answer' in attempt) {
-      matchedBy = MATCH_MODEL;
+      matchedBy = deps.settings.matchModel ?? MATCH_MODEL;
       const wellKnown = guardWellKnown(attempt.answer, deps.catalog.entries, req.currentTool);
       choice = fromModel(attempt.answer, attempt.picks, entries, req.kind, wellKnown);
     } else {
