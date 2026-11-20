@@ -711,7 +711,7 @@ const WHY_NOT: Record<NotCheckedReason, () => string> = {
   check_not_met: () => L('pickfit used it but didn’t see the result', 'pickfit 操作過，但沒有看到結果'),
   app_error: () => L('The app crashed or showed an error', '應用程式當掉或顯示錯誤'),
   needs_desktop: () => L('It needs a desktop part the test machine lacks', '需要測試機器沒有的桌面元件'),
-  beyond_budget: () => L('pickfit tests only the first four features one by one', 'pickfit 只逐項測試前四項功能'),
+  beyond_budget: () => L('pickfit didn’t test this one by one', '這一項 pickfit 沒有逐項測試'),
   test_failed_in_sandbox: () => L('Its test failed because of the test machine’s limits, not the tool', '測試沒通過，原因是測試機器的限制，不是工具本身'),
   test_failed: () => L('Its test failed with the tool’s own error; you may hit it too (not confirmed on a real machine)', '測試沒通過，是工具本身的錯誤，你也可能遇到（尚未在實體機器上確認）'),
   not_recorded: () => L('Not checked one by one', '沒有逐項檢查'),

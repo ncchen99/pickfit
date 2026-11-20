@@ -294,6 +294,27 @@ test('results: a vulnerable pick is flagged before its commands, with the count,
   }
 });
 
+test('results: the ticket counts and colours a vulnerable pick as the tool page does', async () => {
+  const h = harness(() => modelResponse(answer()));
+  const ticketFor = async (check: SecurityCheck) => {
+    const catalog = loadCatalog(indexWith(check));
+    h.deps.catalog = catalog;
+    const out = await findSoftware({ need: 'run a language model offline on my laptop', os: 'macos', must_run_locally: true }, h.deps);
+    const html = renderResults({ out, guides: {} }, { ...EMPTY_FORM, os: 'macos' }, catalog);
+    const at = html.indexOf('class="t-vuln');
+    return { line: html.slice(at, html.indexOf('</p>', at)), mark: markFor(check) };
+  };
+  // Distinct advisories, not findings: 5, as the tool page's shield says, not 7.
+  const shared = await ticketFor({ ...VULNERABLE, count: 7, advisories: 5 });
+  assert.match(shared.line, /<b>5 known vulnerabilities in packages it installs<\/b>/);
+  assert.match(shared.mark, /5 known high or critical vulnerabilities/);
+  // Conditional: amber on both, and the ticket says it is only in some uses.
+  const conditional = await ticketFor(CONDITIONAL);
+  assert.match(conditional.line, /^class="t-vuln caution" role="note">/);
+  assert.match(conditional.line, /<b>2 known vulnerabilities in packages it installs, in some uses only<\/b>/);
+  assert.match(conditional.mark, /mark-caution/);
+});
+
 test('over MCP, a vulnerable tool passes the find_software and get_install_guide output schemas', async () => {
   const { db } = makeD1();
   const worker = makeWorker(indexWith(VULNERABLE), {

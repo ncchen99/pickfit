@@ -14,7 +14,7 @@ import { fitNote } from './fit.ts';
 import { isZh, L, withLang } from './i18n.ts';
 import { PIPE_TO_SHELL, type InstallOutput, type VerifiedInPickfit } from './install.ts';
 import { compareTable } from './pages/compare.ts';
-import { day, guiSentence, howRan, levelLabel, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, SHORT_DAY, system, webLevelLabel, webRunWords } from './ui/facts.ts';
+import { day, fieldLabel, guiSentence, howRan, levelLabel, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, SHORT_DAY, system, webLevelLabel, webRunWords } from './ui/facts.ts';
 import { esc, link, listOf } from './ui/html.ts';
 import { icon, osMark, type IconName } from './ui/icons.ts';
 import { badge, command, compareToggle, confidenceRow, coverage, fitz, kindTag, levelIcon, measure, notice, osList, runFacts, says, SEAM, sysTag, tape, type FitzName, type MeasureRow } from './ui/kit.ts';
@@ -518,22 +518,31 @@ function webSheet(pick: PickOut, entry: Entry | undefined, first: boolean): stri
 
 /**
  * A vulnerable pick says so before its commands (or its address), as the tool page's warning does before its steps: the
- * red shield with the count, the source and day, and a link to the list on the tool page. Clean and unchecked add
- * nothing here, so a ticket never reads as checked clean when it was not; the tool page's shield says which it is.
+ * shield with the count, the source and day, and a link to the list on the tool page. The count and colour are the tool
+ * page's (securityMark): distinct advisories, not findings; a sec.v2 check that matters only in some uses (conditional)
+ * is amber and says so, blocked says not to install it. Clean and unchecked add nothing here, so a ticket never reads
+ * as checked clean when it was not; the tool page's shield says which it is.
  */
 function vulnLine(pick: PickOut): string {
   const s = pick.security;
   if (s?.status !== 'vulnerable') return '';
-  const n = Math.max(s.count, s.findings.length, 1);
+  const n = s.advisories || Math.max(s.count, s.findings.length, 1);
   const date = s.checked_at ? day(s.checked_at) : '';
   const web = !!pick.web_app;
-  const what = L(
-    `${n} known ${n === 1 ? 'vulnerability' : 'vulnerabilities'} in ${web ? 'the packages the site is built from' : 'packages it installs'}`,
-    `${web ? '這個網站用到的' : '它安裝的'}套件有 ${n} 個已知漏洞`,
-  );
+  const conditional = s.level === 'conditional';
+  const vulns = L(`${n} known ${n === 1 ? 'vulnerability' : 'vulnerabilities'}`, `${n} 個已知漏洞`);
+  const what =
+    s.level === 'blocked'
+      ? L(`Do not ${web ? 'use it' : 'install it'}: a malicious package or an exploited hole`, `不要${web ? '使用' : '安裝'}：有惡意套件或已遭利用的漏洞`)
+      : conditional
+        ? L(
+            `${vulns} in ${web ? 'the packages the site is built from' : 'packages it installs'}, in some uses only`,
+            `${web ? '這個網站用到的' : '它安裝的'}套件有 ${vulns}，只在某些用法下才會碰到`,
+          )
+        : L(`${vulns} in ${web ? 'the packages the site is built from' : 'packages it installs'}`, `${web ? '這個網站用到的' : '它安裝的'}套件有 ${vulns}`);
   const source = L(`high or critical; OSV.dev${date ? `, ${esc(date)}` : ''}`, `高風險或嚴重；OSV.dev${date ? `，${esc(date)}` : ''}`);
   return (
-    `<p class="t-vuln" role="note">${icon('shield-alert')}<span><b>${esc(what)}</b>${L(` (${source}). `, `（${source}）。`)}` +
+    `<p class="t-vuln${conditional ? ' caution' : ''}" role="note">${icon('shield-alert')}<span><b>${esc(what)}</b>${L(` (${source}). `, `（${source}）。`)}` +
     `<a href="/tool/${esc(pick.slug)}#security">${L('See the list', '看清單')}</a></span></p>`
   );
 }
@@ -564,8 +573,8 @@ function pickHtml(pick: PickOut, index: number, result: SearchResult, form: Form
       (r) =>
         `<li><details class="why-src"><summary>${esc(r.claim)}${icon('file-text')}</summary>` +
         `<p class="cite">${L(
-          `From its profile: <code>${esc(r.field)}</code> is “${esc(r.value)}”`,
-          `依據簡介：<code>${esc(r.field)}</code> 是「${esc(r.value)}」`,
+          `From its profile: <span title="${esc(r.field)}">${esc(fieldLabel(r.field))}</span> is “${esc(r.value)}”`,
+          `依據簡介：<span title="${esc(r.field)}">${esc(fieldLabel(r.field))}</span>是「${esc(r.value)}」`,
         )}</p></details></li>`,
     )
     .join('');

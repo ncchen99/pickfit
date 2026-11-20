@@ -199,6 +199,8 @@ export function zhRuleClaim(claim: string, map: Record<string, string> | undefin
   if (ZH_CLAIM[claim]) return ZH_CLAIM[claim];
   const useCase = /^Use case: (.+)$/s.exec(claim);
   if (useCase) return `用途：${map?.[useCase[1]] ?? useCase[1]}`;
+  const documented = /^Its docs say it can: (.+) \(not tested by pickfit\)$/s.exec(claim);
+  if (documented) return `它的文件說能做到：${documented[1]}（pickfit 沒有逐項測試）`;
   const ranOn = /^Install steps were run and checked on (macos|linux|windows)$/.exec(claim);
   if (ranOn) return `安裝步驟已在 ${osName(ranOn[1] as 'macos')} 上執行並檢查`;
   return null;

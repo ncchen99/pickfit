@@ -10,7 +10,7 @@ import type { FindOutput, PickOut } from '../src/find.ts';
 import { runDay } from '../src/evidence.ts';
 import { catalogStats, EMPTY_FORM, esc, guiSentence, levelLabel, ranSentence, renderResults, safeUrl, yourSystem, type FormValues } from '../src/page.ts';
 import { withLang } from '../src/i18n.ts';
-import { BODY_MAX_BYTES, MAX_IN_FLIGHT, searchKey, SEARCHES_PER_MINUTE, visitorKey, WEB_RESERVE_USD } from '../src/web.ts';
+import { BODY_MAX_BYTES, MAX_IN_FLIGHT, searchKey, zhRuleClaim, SEARCHES_PER_MINUTE, visitorKey, WEB_RESERVE_USD } from '../src/web.ts';
 import { command } from '../src/ui/kit.ts';
 import { makeWorker } from '../src/worker.ts';
 import { costUsd } from '../src/meta.ts';
@@ -132,7 +132,7 @@ test('a search is find_software plus get_install_guide: reasons, verification, s
   const [first, second] = commandText(html).split('<article class="pick"').slice(1);
   assert.match(first, /Fixture LLM Runner/);
   assert.match(first, /Serves a local model offline through an OpenAI-compatible API\./);
-  assert.match(first, /<summary>Runs offline on your machine<svg[^>]*>.*?<\/svg><\/summary><p class="cite">From its profile: <code>processing<\/code> is “local”/);
+  assert.match(first, /<summary>Runs offline on your machine<svg[^>]*>.*?<\/svg><\/summary><p class="cite">From its profile: <span title="processing">Where it runs<\/span> is “local”/);
   assert.match(first, /Needs 8 GB of RAM/);
   assert.match(first, /Best free option<\/span>/);
   assert.match(first, /Hidden gem/);
@@ -301,6 +301,12 @@ test('the search key holds every condition the form sends to find_software', () 
   for (const change of [{ os: 'linux' }, { arch: 'arm64' }, { free_only: true }, { offline: true }, { private: true }] as Partial<FormValues>[]) {
     assert.notEqual(searchKey(base), searchKey({ ...base, ...change }), JSON.stringify(change));
   }
+});
+
+test('rules reasons read in zh-TW, including what the docs say it can do', () => {
+  assert.equal(zhRuleClaim('Its docs say it can: export to PDF (not tested by pickfit)', undefined), '它的文件說能做到：export to PDF（pickfit 沒有逐項測試）');
+  assert.equal(zhRuleClaim('Free to use', undefined), '免費使用');
+  assert.equal(zhRuleClaim('A model wrote this', undefined), null);
 });
 
 test('a degraded answer is not cached, so the next identical search tries the model again', async () => {
