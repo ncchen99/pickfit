@@ -1,0 +1,1723 @@
+{
+  "schema_version": "software.v1",
+  "slug": "caddy",
+  "repo_id": "gh:29207621",
+  "name": "Caddy",
+  "summary": "Extensible web server and server platform that serves HTTP/1.1, HTTP/2 and HTTP/3 with automatic HTTPS and TLS by default.",
+  "aliases": [],
+  "status": "listed",
+  "status_reason": null,
+  "category": "infra_devops",
+  "kind": "server_daemon",
+  "audience": "end_user",
+  "maturity": "stable",
+  "tags": [
+    "acme",
+    "automatic-https",
+    "caddy",
+    "caddyfile",
+    "go",
+    "golang",
+    "http",
+    "http-server",
+    "http3",
+    "https"
+  ],
+  "use_cases": [
+    "serve websites over HTTPS with automatically managed certificates",
+    "issue certificates for internal names and IPs via a local CA",
+    "run as a reverse proxy"
+  ],
+  "alternatives_to": [],
+  "features": [
+    "automatic HTTPS with ZeroSSL and Let's Encrypt",
+    "configure sites with the Caddyfile",
+    "change configuration live via JSON API",
+    "serve HTTP/1.1, HTTP/2 and HTTP/3",
+    "extend with plugin modules"
+  ],
+  "capabilities": [
+    {
+      "label": "Automatic HTTPS certificates",
+      "items": [
+        "ZeroSSL",
+        "Let's Encrypt"
+      ],
+      "area": "tls"
+    },
+    {
+      "label": "Run a quick reverse proxy",
+      "area": "subcommands"
+    },
+    {
+      "label": "Run a static file server",
+      "area": "subcommands"
+    },
+    {
+      "label": "Configure with the Caddyfile",
+      "area": "configuration"
+    },
+    {
+      "label": "Change config dynamically via JSON API",
+      "area": "configuration"
+    },
+    {
+      "label": "Convert other config formats to JSON",
+      "items": [
+        "Caddyfile",
+        "JSON 5",
+        "YAML",
+        "TOML",
+        "NGINX config"
+      ],
+      "area": "formats"
+    },
+    {
+      "label": "Local CA for internal names and IPs",
+      "area": "tls"
+    },
+    {
+      "label": "Encrypted ClientHello support",
+      "area": "tls"
+    },
+    {
+      "label": "Coordinate certificates across a cluster",
+      "area": "tls"
+    },
+    {
+      "label": "Extend with plugins",
+      "area": "plugins"
+    },
+    {
+      "label": "Format a Caddyfile",
+      "area": "subcommands"
+    },
+    {
+      "label": "Validate a configuration file",
+      "area": "subcommands"
+    },
+    {
+      "label": "Reload config of running instance",
+      "area": "subcommands"
+    },
+    {
+      "label": "Hash passwords with argon2id or bcrypt",
+      "items": [
+        "argon2id",
+        "bcrypt"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Install CA certificate into trust stores",
+      "area": "subcommands"
+    },
+    {
+      "label": "Return hard-coded HTTP responses",
+      "area": "subcommands"
+    },
+    {
+      "label": "Directory browsing listings",
+      "area": "file server"
+    },
+    {
+      "label": "Zstandard and Gzip compression",
+      "items": [
+        "Zstandard",
+        "Gzip"
+      ],
+      "area": "file server"
+    },
+    {
+      "label": "Serve PHP via FastCGI",
+      "area": "integrations"
+    },
+    {
+      "label": "Add or remove plugin packages",
+      "area": "subcommands"
+    },
+    {
+      "label": "List installed modules",
+      "area": "subcommands"
+    },
+    {
+      "label": "Generate shell completion scripts",
+      "items": [
+        "bash",
+        "zsh",
+        "fish",
+        "powershell"
+      ],
+      "area": "subcommands"
+    },
+    {
+      "label": "Generate man pages",
+      "area": "subcommands"
+    },
+    {
+      "label": "Print environment variables",
+      "area": "subcommands"
+    },
+    {
+      "label": "Upgrade Caddy binary",
+      "area": "subcommands"
+    }
+  ],
+  "why_worth_it": null,
+  "homepage": "https://caddyserver.com",
+  "repo": {
+    "url": "https://github.com/caddyserver/caddy",
+    "full_name": "caddyserver/caddy",
+    "created_at": "2015-01-13T19:45:03Z",
+    "archived": false
+  },
+  "platforms": [],
+  "prerequisites": {
+    "runtimes": [
+      "go>=1.26.0 (to build from source)"
+    ],
+    "system_packages": [],
+    "gpu": null,
+    "apple_silicon_only": null,
+    "min_ram_gb": null,
+    "network": null,
+    "api_keys": []
+  },
+  "install": {
+    "macos": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-caddy-20261120-200736-c00a",
+      "method": "binary",
+      "steps": [
+        {
+          "command": "mkdir -p ~/.local/bin /tmp/caddy && curl -fsSL -o /tmp/caddy/caddy.tar.gz https://github.com/caddyserver/caddy/releases/download/v2.11.9/caddy_2.11.9_linux_amd64.tar.gz && tar -xzf /tmp/caddy/caddy.tar.gz -C /tmp/caddy && install -m 755 /tmp/caddy/caddy ~/.local/bin/caddy",
+          "purpose": "Download the Caddy v2.11.9 linux_amd64 release tarball, extract it and install the binary into ~/.local/bin"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "caddy version",
+        "expected_signal": "v2.11.9"
+      },
+      "first_task": "caddy version"
+    },
+    "windows": null
+  },
+  "pricing": {
+    "model": null,
+    "note": null
+  },
+  "open_source": true,
+  "license": "Apache-2.0",
+  "processing": null,
+  "last_release": {
+    "tag": "v2.11.9",
+    "published_at": "2026-11-05T01:30:24Z",
+    "url": "https://github.com/caddyserver/caddy/releases/tag/v2.11.9"
+  },
+  "verification": {
+    "level": "service",
+    "unverified_reason": null,
+    "checked_at": "2026-11-20T20:08:50.069074+08:00",
+    "runs": [
+      {
+        "id": "verify-caddy-20261120-200736-c00a",
+        "level": "service",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:01363ad5a469",
+        "checked_at": "2026-11-20T20:08:50.069074+08:00",
+        "tool_version": "v2.11.9",
+        "install_method": "binary",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "mkdir -p ~/.local/bin /tmp/caddy && curl -fsSL -o /tmp/caddy/caddy.tar.gz https://github.com/caddyserver/caddy/releases/download/v2.11.9/caddy_2.11.9_linux_amd64.tar.gz && tar -xzf /tmp/caddy/caddy.tar.gz -C /tmp/caddy && install -m 755 /tmp/caddy/caddy ~/.local/bin/caddy",
+            "purpose": "Download the Caddy v2.11.9 linux_amd64 release tarball, extract it and install the binary into ~/.local/bin"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "caddy version",
+            "expected_signal": "v2.11.9",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "v2.11.9 h1:bhZtcRKQOq0fuLvEgCdPYvUxXyGn9kzjG4lh2332DTE=",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "curl -sS http://localhost:8081/",
+            "expected_signal": "Hello from the Caddyfile",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Hello from the Caddyfile",
+            "setup": [
+              {
+                "command": "cat > /home/sbx/work/Caddyfile <<'EOF'\n{\n\tadmin localhost:2019\n\tskip_install_trust\n\thttp_port 8080\n\thttps_port 8443\n}\n\nhttp://localhost:8081 {\n\trespond \"Hello from the Caddyfile\"\n}\n\nhttps://localhost:8443 {\n\ttls internal\n\trespond \"Hello over {http.request.proto}\"\n}\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "caddy run --config /home/sbx/work/Caddyfile --adapter caddyfile",
+                "background": true,
+                "port": 8443
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -sS -k --http2 -D - https://localhost:8443/",
+            "expected_signal": "Hello over HTTP/2.0",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Hello over HTTP/2.0",
+            "setup": [
+              {
+                "command": "cat > /home/sbx/work/Caddyfile <<'EOF'\n{\n\tadmin localhost:2019\n\tskip_install_trust\n\thttp_port 8080\n\thttps_port 8443\n}\n\nhttp://localhost:8081 {\n\trespond \"Hello from the Caddyfile\"\n}\n\nhttps://localhost:8443 {\n\ttls internal\n\trespond \"Hello over {http.request.proto}\"\n}\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "caddy run --config /home/sbx/work/Caddyfile --adapter caddyfile",
+                "background": true,
+                "port": 8443
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "curl -sS -X POST -H 'Content-Type: application/json' --data-binary @/home/sbx/work/api.json http://localhost:2019/load && curl -sS http://localhost:2019/config/apps/http/servers/api/listen && curl -sS http://localhost:9090/",
+            "expected_signal": "Hello from JSON API config",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Hello from JSON API config",
+            "setup": [
+              {
+                "command": "cat > /home/sbx/work/Caddyfile <<'EOF'\n{\n\tadmin localhost:2019\n\tskip_install_trust\n\thttp_port 8080\n\thttps_port 8443\n}\n\nhttp://localhost:8081 {\n\trespond \"Hello from the Caddyfile\"\n}\n\nhttps://localhost:8443 {\n\ttls internal\n\trespond \"Hello over {http.request.proto}\"\n}\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cat > /home/sbx/work/api.json <<'EOF'\n{\"apps\":{\"http\":{\"servers\":{\"api\":{\"listen\":[\":9090\"],\"routes\":[{\"handle\":[{\"handler\":\"static_response\",\"body\":\"Hello from JSON API config\"}]}]}}}}}\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "caddy run --config /home/sbx/work/Caddyfile --adapter caddyfile",
+                "background": true,
+                "port": 8443
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "caddy reload --config /home/sbx/work/Caddyfile --adapter caddyfile && curl -sS -k --http1.1 -D - https://localhost:8443/",
+            "expected_signal": "Hello over HTTP/1.1",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "Hello over HTTP/1.1",
+            "setup": [
+              {
+                "command": "cat > /home/sbx/work/Caddyfile <<'EOF'\n{\n\tadmin localhost:2019\n\tskip_install_trust\n\thttp_port 8080\n\thttps_port 8443\n}\n\nhttp://localhost:8081 {\n\trespond \"Hello from the Caddyfile\"\n}\n\nhttps://localhost:8443 {\n\ttls internal\n\trespond \"Hello over {http.request.proto}\"\n}\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "cat > /home/sbx/work/api.json <<'EOF'\n{\"apps\":{\"http\":{\"servers\":{\"api\":{\"listen\":[\":9090\"],\"routes\":[{\"handle\":[{\"handler\":\"static_response\",\"body\":\"Hello from JSON API config\"}]}]}}}}}\nEOF",
+                "background": false,
+                "port": null
+              },
+              {
+                "command": "caddy run --config /home/sbx/work/Caddyfile --adapter caddyfile",
+                "background": true,
+                "port": 8443
+              },
+              {
+                "command": "curl -sS -X POST -H 'Content-Type: application/json' --data-binary @/home/sbx/work/api.json http://localhost:2019/load && curl -sS http://localhost:2019/config/apps/http/servers/api/listen && curl -sS http://localhost:9090/",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "Build from source: git clone, cd caddy/cmd/caddy, go build (Go 1.26+)",
+            "actually_needed": "I used the README's primary install instead: downloading the prebuilt binary from GitHub Releases. That avoids installing a Go toolchain.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Caddy may bind to low ports; use sudo setcap cap_net_bind_service",
+            "actually_needed": "Without root, set http_port 8080 and https_port 8443 in the global options and use skip_install_trust with tls internal. Then no setcap or sudo is needed.",
+            "kind": "sandbox"
+          },
+          {
+            "readme_said": "Dynamic configuration with the JSON API",
+            "actually_needed": "POST /load replaces the whole running config, so sites from the Caddyfile stop serving until you reload the Caddyfile (command 11 failed with 'connection refused' after the load). This is how /load is meant to work.",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "Caddy served the Caddyfile response on port 8081, answered over HTTP/2 with TLS on 8443, and reported version v2.11.9.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-caddy-20261120-200736-c00a/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-caddy-20261120-200736-c00a/check-1-cmd8.judged.png",
+            "runs/verify/verify-caddy-20261120-200736-c00a/check-2-cmd9.judged.png",
+            "runs/verify/verify-caddy-20261120-200736-c00a/check-3-cmd4.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.20941,
+        "features": [
+          {
+            "feature": "automatic HTTPS with ZeroSSL and Let's Encrypt",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "Getting ZeroSSL or Let's Encrypt certificates needs a public domain and the outside ACME servers. Only the local internal CA was exercised (command 7 log: 'certificate obtained successfully', issuer local)."
+          },
+          {
+            "feature": "configure sites with the Caddyfile",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "change configuration live via JSON API",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "serve HTTP/1.1, HTTP/2 and HTTP/3",
+            "status": "checked",
+            "smoke_tests": [
+              2,
+              4
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "extend with plugin modules",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          }
+        ]
+      }
+    ]
+  },
+  "security": {
+    "version": "sec.v2",
+    "status": "vulnerable",
+    "unchecked_reason": null,
+    "sources": [
+      "github.com/caddyserver/caddy@edcdfa0ed88f",
+      "go.mod",
+      "sbom:verify-caddy-20261120-200736-c00a (149 packages installed)"
+    ],
+    "packages_checked": 203,
+    "findings_total": 11,
+    "advisories_total": 11,
+    "findings": [
+      {
+        "package": "go:github.com/klauspost/compress",
+        "version": "v1.20.1",
+        "advisory": "GO-2026-6865",
+        "cves": [
+          "CVE-2026-116591"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.2",
+        "summary": "Panic on two-block frames in github.com/klauspost/compress",
+        "malicious": false,
+        "dos_only": true,
+        "fix_published_at": "2026-10-12T09:34:06Z",
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/caddy > github.com/klauspost/compress"
+        ],
+        "found_in": "sbom:verify-caddy-20261120-200736-c00a",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00333,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "reachability": {
+          "method": "govulncheck_binary",
+          "result": "reachable",
+          "evidence": [
+            "govulncheck -mode=binary symbol level, /home/sbx/.local/bin/caddy: Decompress"
+          ]
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2022-0969",
+        "cves": [
+          "CVE-2022-27664"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.18.6",
+        "summary": "Denial of service in net/http and golang.org/x/net/http2",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/caddy > stdlib"
+        ],
+        "found_in": "sbom:verify-caddy-20261120-200736-c00a",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.03487,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:ListenAndServe",
+          "symbol:ListenAndServeTLS",
+          "symbol:Serve"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "admin.go:444: if err := server.Serve(ln.(net.Listener)); !errors.Is(err, http.ErrServerClosed) {"
+          ]
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2023-1571",
+        "cves": [
+          "CVE-2022-41723"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.19.6",
+        "summary": "Denial of service via crafted HTTP/2 stream in net/http and golang.org/x/net",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/caddy > stdlib"
+        ],
+        "found_in": "sbom:verify-caddy-20261120-200736-c00a",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04561,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:Client.Do",
+          "symbol:Client.Get",
+          "symbol:Client.Head"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "caddyconfig/httploader.go:139: resp, err := client.Do(request) //nolint:gosec // no SSRF; comes from trusted config"
+          ]
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2023-2102",
+        "cves": [
+          "CVE-2023-39325"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.20.10",
+        "summary": "HTTP/2 rapid reset can cause excessive work in net/http",
+        "malicious": false,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/caddy > stdlib"
+        ],
+        "found_in": "sbom:verify-caddy-20261120-200736-c00a",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.03796,
+        "preconditions": [
+          "symbol:ListenAndServe",
+          "symbol:ListenAndServeTLS",
+          "symbol:Serve"
+        ],
+        "reachability": {
+          "method": "symbol_grep",
+          "result": "reachable",
+          "evidence": [
+            "admin.go:444: if err := server.Serve(ln.(net.Listener)); !errors.Is(err, http.ErrServerClosed) {"
+          ]
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2022-0535",
+        "cves": [
+          "CVE-2020-0601"
+        ],
+        "severity": "UNKNOWN",
+        "fixed_in": "1.12.16",
+        "summary": "Certificate validation bypass on Windows in crypto/x509",
+        "malicious": false,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/caddy > stdlib"
+        ],
+        "found_in": "sbom:verify-caddy-20261120-200736-c00a",
+        "in_artifact": true,
+        "kev": true,
+        "epss": 0.89078,
+        "preconditions": [
+          "symbol:Certificate.systemVerify"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "admin.go:22: \"crypto/x509\"",
+            "no call to Certificate.systemVerify found"
+          ]
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2025-3563",
+        "cves": [
+          "CVE-2025-22871"
+        ],
+        "severity": "CRITICAL",
+        "fixed_in": "1.23.8",
+        "summary": "Request smuggling due to acceptance of invalid chunked data in net/http",
+        "malicious": false,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/caddy > stdlib"
+        ],
+        "found_in": "sbom:verify-caddy-20261120-200736-c00a",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00842,
+        "preconditions": [
+          "symbol:chunkedReader.Read",
+          "symbol:readChunkLine"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:github.com/go-jose/go-jose/v3",
+        "version": "v3.0.5",
+        "advisory": "GHSA-mgcc-cww5-fp2q",
+        "cves": [
+          "CVE-2026-116587"
+        ],
+        "severity": "HIGH",
+        "fixed_in": null,
+        "summary": "Go JOSE: DoS when parsing JWKs that contain RSA keys",
+        "malicious": false,
+        "attack_vector": "network",
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/caddy > github.com/go-jose/go-jose/v3"
+        ],
+        "found_in": "sbom:verify-caddy-20261120-200736-c00a",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.00489,
+        "preconditions": [
+          "denial_of_service"
+        ],
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2021-0142",
+        "cves": [
+          "CVE-2020-16845"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.13.15",
+        "summary": "Unbounded read from invalid inputs in encoding/binary",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/caddy > stdlib"
+        ],
+        "found_in": "sbom:verify-caddy-20261120-200736-c00a",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04861,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:ReadUvarint",
+          "symbol:ReadVarint"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "modules/caddyhttp/reverseproxy/fastcgi/record.go:18: \"encoding/binary\"",
+            "no call to ReadUvarint, ReadVarint found"
+          ]
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2022-0229",
+        "cves": [
+          "CVE-2020-7919"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.12.16",
+        "summary": "Panic in certificate parsing in crypto/x509 and golang.org/x/crypto/cryptobyte",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/caddy > stdlib"
+        ],
+        "found_in": "sbom:verify-caddy-20261120-200736-c00a",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.02647,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:crypto/x509",
+          "symbol:golang.org/x/crypto/cryptobyte"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "admin.go:22: \"crypto/x509\"",
+            "the advisory names no function"
+          ]
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2022-0288",
+        "cves": [
+          "CVE-2021-44716"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.16.12",
+        "summary": "Unbounded memory growth in net/http and golang.org/x/net/http2",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/caddy > stdlib"
+        ],
+        "found_in": "sbom:verify-caddy-20261120-200736-c00a",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.04254,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:http2serverConn.canonicalHeader",
+          "symbol:Server.ServeConn",
+          "symbol:serverConn.canonicalHeader"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "admin.go:31: \"net/http\"",
+            "no call to http2serverConn.canonicalHeader, Server.ServeConn, serverConn.canonicalHeader found"
+          ]
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      },
+      {
+        "package": "go:stdlib",
+        "version": "go1.27.3",
+        "advisory": "GO-2022-0536",
+        "cves": [
+          "CVE-2019-9512",
+          "CVE-2019-9514"
+        ],
+        "severity": "HIGH",
+        "fixed_in": "1.11.13",
+        "summary": "Reset flood in net/http and golang.org/x/net/http",
+        "malicious": false,
+        "dos_only": true,
+        "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/caddy > stdlib"
+        ],
+        "found_in": "sbom:verify-caddy-20261120-200736-c00a",
+        "in_artifact": true,
+        "kev": false,
+        "epss": 0.83958,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:http2serverConn.scheduleFrameWrite",
+          "symbol:http2serverConn.serve",
+          "symbol:http2serverConn.writeFrame"
+        ],
+        "reachability": {
+          "method": "import_grep",
+          "result": "unknown",
+          "evidence": [
+            "admin.go:31: \"net/http\"",
+            "no call to http2serverConn.scheduleFrameWrite, http2serverConn.serve, http2serverConn.writeFrame found"
+          ]
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
+      }
+    ],
+    "database": "OSV.dev",
+    "checked_at": "2026-11-20T20:08:56+08:00",
+    "observation": {
+      "scanner": "pickfit-security",
+      "scanner_version": "sec.v2",
+      "target": "installed_artifact",
+      "commit": "edcdfa0ed88f7dcc1c53720d25218fde9d63eb1e",
+      "run_id": "verify-caddy-20261120-200736-c00a",
+      "tool_version": "v2.11.9",
+      "artifact_sha256": [
+        "a563843e11cbce39c557bd429ebb787d56f49d51d9bbb3292cd9b36b37a60cdf"
+      ],
+      "packages": {
+        "go": 203
+      },
+      "scopes": {
+        "runtime": 203
+      },
+      "advisories_fetched_at": "2026-11-20T20:08:56+08:00",
+      "kev_catalog": "2026.11.18",
+      "epss_date": "2026-11-20",
+      "findings_total": 175,
+      "details": "security/caddy.json",
+      "details_sha256": "abeeeeec19c2193827d5900a20d592888a3964246bcd2ccdb1cdf89233dab414"
+    },
+    "assessment": {
+      "level": "exposed",
+      "policy_version": "sec.v2",
+      "reasons": [
+        "worst:GO-2026-6865 go:github.com/klauspost/compress@v1.20.1 (exposed)",
+        "worst:GO-2022-0969 go:stdlib@go1.27.3 (exposed)",
+        "worst:GO-2023-1571 go:stdlib@go1.27.3 (exposed)"
+      ],
+      "counts": {
+        "exposed": 4,
+        "conditional": 7
+      },
+      "uncounted": 164,
+      "assessed_at": "2026-11-20T20:08:56+08:00"
+    },
+    "coverage": {
+      "state": "complete",
+      "target": "installed_artifact",
+      "packages_found": 203,
+      "packages_checked": 203,
+      "components": [
+        {
+          "ecosystem": "go",
+          "component": "go.mod",
+          "status": "scanned",
+          "packages": 168,
+          "gaps": []
+        },
+        {
+          "ecosystem": "go",
+          "component": "sbom:verify-caddy-20261120-200736-c00a",
+          "status": "scanned",
+          "packages": 149,
+          "gaps": []
+        }
+      ],
+      "gaps": []
+    }
+  },
+  "scores": {
+    "formula_version": "b3.v7",
+    "computed_at": "2026-11-20T20:08:56+08:00",
+    "quality": {
+      "total": 79.0,
+      "raw_total": 83.3,
+      "confidence": 0.9,
+      "cap": 79,
+      "cap_reason": "known_vulnerability",
+      "components": {
+        "sandbox_verification": {
+          "score": 0.85,
+          "weight": 20.0
+        },
+        "install_docs": {
+          "score": 0.5625,
+          "weight": 25.0
+        },
+        "maintenance": {
+          "score": 1.0,
+          "weight": 10.0
+        },
+        "engineering_hygiene": {
+          "score": 1.0,
+          "weight": 5.0
+        },
+        "responsiveness": {
+          "score": 0.8947,
+          "weight": 10.0
+        },
+        "usage_outcomes": {
+          "score": null,
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
+        }
+      },
+      "security": {
+        "level": "exposed",
+        "basis": "assessment",
+        "effect": "capped",
+        "deduction": 0.0
+      }
+    },
+    "popularity": {
+      "score": 99.7,
+      "signals": {
+        "stars": 79315,
+        "monthly_downloads": 8161,
+        "forks": 5292,
+        "dependents": null,
+        "release_downloads": 5743631,
+        "hn_top_score": 778,
+        "registries_count": 1
+      },
+      "age_days": 4328,
+      "packages": [
+        "homebrew:caddy"
+      ]
+    },
+    "treasure": {
+      "is_treasure": false,
+      "value": 0.24
+    },
+    "docs_rubric": {
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:08:50.085255+08:00",
+      "sources_sha": "0f20bdd125f77532d2eb033a11d8d915c5ca73156e9b9e64ff5bd44d1ee36c0c",
+      "items": {
+        "what_it_does": {
+          "score": 2,
+          "quote": "Fast and extensible multi-platform HTTP/1-2-3 web server with automatic HTTPS"
+        },
+        "who_it_is_for": {
+          "score": 1,
+          "quote": "Caddy is most often used as an HTTPS server, but it is suitable for any long-running Go program."
+        },
+        "prerequisites": {
+          "score": 2,
+          "quote": "**Runs anywhere** with **no external dependencies** (not even libc)"
+        },
+        "install_per_os": {
+          "score": 1,
+          "quote": "$ git clone \"https://github.com/caddyserver/caddy.git\"\n$ cd caddy/cmd/caddy/\n$ go build"
+        },
+        "first_run_example": {
+          "score": 0,
+          "quote": null
+        },
+        "config_and_keys": {
+          "score": 1,
+          "quote": "Nearly all of Caddy's configuration is contained in a single config document, rather than being scattered across CLI flags and env variables and a configuration file as with other web servers."
+        },
+        "troubleshooting_uninstall": {
+          "score": 1,
+          "quote": "On Linux, this can be done easily with: `sudo setcap cap_net_bind_service=+ep ./caddy`"
+        },
+        "license_and_platforms": {
+          "score": 1,
+          "quote": "Fast and extensible multi-platform HTTP/1-2-3 web server with automatic HTTPS"
+        }
+      },
+      "unquoted": [],
+      "input_sha": "828d6e8cdeac4fde1b2797b252be0703b6585e3e660468bc7d0ad86e6abec385",
+      "prompt_version": "rubric-p1",
+      "renderer_version": "r1",
+      "grader": "anthropic"
+    },
+    "inputs": {
+      "version": "inputs.v1",
+      "github": {
+        "source": "pipeline_db",
+        "fetched_at": "2026-11-20T20:07:19+08:00",
+        "stars": 79315,
+        "forks": 5292,
+        "open_issues": 289,
+        "created_at": "2015-01-13T19:45:03Z",
+        "pushed_at": "2026-11-19T07:04:45Z",
+        "releases": [
+          {
+            "tag": "v2.11.9",
+            "published_at": "2026-11-05T01:30:24Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 276538
+          },
+          {
+            "tag": "v2.11.8",
+            "published_at": "2026-11-04T01:16:09Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 56180
+          },
+          {
+            "tag": "v2.11.7",
+            "published_at": "2026-10-03T05:58:33Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 1083535
+          },
+          {
+            "tag": "v2.11.6",
+            "published_at": "2026-10-01T15:21:21Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 80216
+          },
+          {
+            "tag": "v2.11.4",
+            "published_at": "2026-06-03T06:52:22Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 1921839
+          },
+          {
+            "tag": "v2.11.3",
+            "published_at": "2026-05-12T15:18:58Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 588879
+          },
+          {
+            "tag": "v2.11.2",
+            "published_at": "2026-03-06T02:43:43Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 1495835
+          },
+          {
+            "tag": "v2.11.1",
+            "published_at": "2026-02-23T04:21:44Z",
+            "prerelease": false,
+            "notes_chars": 4000,
+            "downloads": 186724
+          },
+          {
+            "tag": "v2.11.0-beta.2",
+            "published_at": "2026-01-06T18:02:07Z",
+            "prerelease": true,
+            "notes_chars": 4000,
+            "downloads": 31425
+          },
+          {
+            "tag": "v2.11.0-beta.1",
+            "published_at": "2025-12-04T20:48:19Z",
+            "prerelease": true,
+            "notes_chars": 3999,
+            "downloads": 22460
+          }
+        ],
+        "contributors": null,
+        "files": {
+          "count": 780,
+          "truncated": false,
+          "ci": ".github/workflows/auto-release-pr.yml",
+          "tests": "admin_checkhost_case_test.go",
+          "changelog": ".github/scripts/release-notes.sh",
+          "lockfile": "go.sum"
+        }
+      },
+      "issues": {
+        "source": "github_live",
+        "fetched_at": "2026-11-20T20:08:50+08:00",
+        "items": [
+          {
+            "created_at": "2026-11-20T09:46:36Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T19:10:31Z",
+            "closed_at": "2026-11-20T05:47:29Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T12:00:36Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-19T11:06:31Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-18T12:48:01Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-18T10:28:26Z",
+            "closed_at": "2026-11-18T11:48:23Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-17T17:30:00Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-15T12:00:23Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-15T08:42:53Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-11T10:19:11Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-10T16:35:35Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-10T16:09:38Z",
+            "closed_at": "2026-11-19T07:04:47Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-09T15:28:31Z",
+            "closed_at": "2026-11-10T09:09:20Z",
+            "association": "MEMBER",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-09T10:18:49Z",
+            "closed_at": "2026-11-09T10:23:22Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-09T02:38:33Z",
+            "closed_at": "2026-11-10T08:54:25Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-08T12:30:20Z",
+            "closed_at": "2026-11-08T12:54:51Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-08T12:27:25Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-06T20:32:42Z",
+            "closed_at": "2026-11-08T11:16:11Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-05T17:00:47Z",
+            "closed_at": "2026-11-08T22:04:23Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-05T08:30:55Z",
+            "closed_at": "2026-11-05T08:51:52Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-05T07:23:06Z",
+            "closed_at": "2026-11-07T08:17:54Z",
+            "association": "CONTRIBUTOR",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-04T20:49:11Z",
+            "closed_at": "2026-11-04T21:19:18Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-04T13:17:03Z",
+            "closed_at": "2026-11-04T15:45:37Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-03T20:34:54Z",
+            "closed_at": "2026-11-03T20:40:48Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-03T13:44:00Z",
+            "closed_at": "2026-11-03T13:48:29Z",
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-03T02:49:09Z",
+            "closed_at": null,
+            "association": "NONE",
+            "bot": false
+          },
+          {
+            "created_at": "2026-11-03T01:07:15Z",
+            "closed_at": "2026-11-03T08:32:00Z",
+            "association": "NONE",
+            "bot": false
+          }
+        ],
+        "pull_requests": 73,
+        "page_full": true
+      }
+    }
+  },
+  "outcomes": {
+    "external": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "eval": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "demo": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "dev": {
+      "installed": 0,
+      "install_failed": 0,
+      "first_run_ok": 0,
+      "first_run_failed": 0,
+      "still_using": 0,
+      "replaced": 0,
+      "abandoned": 0
+    },
+    "replaced_by": {},
+    "last_report_at": null,
+    "synced_at": null
+  },
+  "sources": [
+    {
+      "id": "github_api",
+      "kind": "github_api",
+      "url": "https://api.github.com/repos/caddyserver/caddy",
+      "fetched_at": "2026-11-20T20:07:21+08:00"
+    },
+    {
+      "id": "readme",
+      "kind": "readme",
+      "url": "https://github.com/caddyserver/caddy/blob/master/README.md",
+      "fetched_at": "2026-11-20T20:07:19+08:00"
+    },
+    {
+      "id": "release:v2.11.9",
+      "kind": "release",
+      "url": "https://github.com/caddyserver/caddy/releases/tag/v2.11.9",
+      "fetched_at": "2026-11-20T20:07:19+08:00"
+    },
+    {
+      "id": "help:verify-caddy-20261120-200736-c00a:1",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "id": "help:verify-caddy-20261120-200736-c00a:5",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "id": "help:verify-caddy-20261120-200736-c00a:7",
+      "kind": "sandbox",
+      "url": null,
+      "fetched_at": "2026-11-20T20:10:35+08:00"
+    }
+  ],
+  "evidence": [
+    {
+      "field": "/kind",
+      "source_id": "readme",
+      "quote": "Caddy is most often used as an HTTPS server, but it is suitable for any long-running Go program.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:31+08:00"
+    },
+    {
+      "field": "/audience",
+      "source_id": "readme",
+      "quote": "download Caddy from [GitHub Releases](https://github.com/caddyserver/caddy/releases) and place the executable file in your PATH.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:31+08:00"
+    },
+    {
+      "field": "/category",
+      "source_id": "github_api",
+      "quote": "topics: acme, automatic-https, caddy, caddyfile, go, golang, http, http-server, http3, https, privacy, reverse-proxy, security, tls, web-server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:31+08:00"
+    },
+    {
+      "field": "/summary",
+      "source_id": "github_api",
+      "quote": "Fast and extensible multi-platform HTTP/1-2-3 web server with automatic HTTPS",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:31+08:00"
+    },
+    {
+      "field": "/name",
+      "source_id": "readme",
+      "quote": "The name of the software is \"Caddy\"",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:31+08:00"
+    },
+    {
+      "field": "/prerequisites/runtimes/0",
+      "source_id": "readme",
+      "quote": "[Go 1.26.0 or newer](https://golang.org/dl/)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:31+08:00"
+    },
+    {
+      "field": "/repo",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T20:07:21+08:00"
+    },
+    {
+      "field": "/license",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T20:07:21+08:00"
+    },
+    {
+      "field": "/open_source",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "rule",
+      "model": null,
+      "checked_at": "2026-11-20T20:07:21+08:00"
+    },
+    {
+      "field": "/homepage",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T20:07:21+08:00"
+    },
+    {
+      "field": "/tags",
+      "source_id": "github_api",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T20:07:21+08:00"
+    },
+    {
+      "field": "/last_release",
+      "source_id": "release:v2.11.9",
+      "quote": null,
+      "method": "api",
+      "model": null,
+      "checked_at": "2026-11-20T20:07:19+08:00"
+    },
+    {
+      "field": "/maturity",
+      "source_id": "readme",
+      "quote": "**Production-ready** after serving trillions of requests and managing millions of TLS certificates",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:31+08:00"
+    },
+    {
+      "field": "/use_cases/0",
+      "source_id": "readme",
+      "quote": "**Automatic HTTPS** by default",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:31+08:00"
+    },
+    {
+      "field": "/use_cases/1",
+      "source_id": "readme",
+      "quote": "Fully-managed local CA for internal names & IPs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:31+08:00"
+    },
+    {
+      "field": "/use_cases/2",
+      "source_id": "github_api",
+      "quote": "reverse-proxy",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:31+08:00"
+    },
+    {
+      "field": "/features/0",
+      "source_id": "readme",
+      "quote": "[ZeroSSL](https://zerossl.com) and [Let's Encrypt](https://letsencrypt.org) for public names",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:31+08:00"
+    },
+    {
+      "field": "/features/1",
+      "source_id": "readme",
+      "quote": "**Easy configuration** with the [Caddyfile](https://caddyserver.com/docs/caddyfile)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:31+08:00"
+    },
+    {
+      "field": "/features/2",
+      "source_id": "readme",
+      "quote": "**Dynamic configuration** with the [JSON API](https://caddyserver.com/docs/api)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:31+08:00"
+    },
+    {
+      "field": "/features/3",
+      "source_id": "readme",
+      "quote": "**HTTP/1.1, HTTP/2, and HTTP/3** all supported by default",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:31+08:00"
+    },
+    {
+      "field": "/features/4",
+      "source_id": "readme",
+      "quote": "**Highly extensible** [modular architecture](https://caddyserver.com/docs/architecture) lets Caddy do anything without bloat",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:07:31+08:00"
+    },
+    {
+      "field": "/capabilities/0/label",
+      "source_id": "readme",
+      "quote": "**Automatic HTTPS** by default",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/1/label",
+      "source_id": "help:verify-caddy-20261120-200736-c00a:1",
+      "quote": "reverse-proxy  A quick and production-ready reverse proxy",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/2/label",
+      "source_id": "help:verify-caddy-20261120-200736-c00a:1",
+      "quote": "file-server    Spins up a production-ready file server",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/3/label",
+      "source_id": "readme",
+      "quote": "**Easy configuration** with the [Caddyfile](https://caddyserver.com/docs/caddyfile)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/4/label",
+      "source_id": "readme",
+      "quote": "**Dynamic configuration** with the [JSON API](https://caddyserver.com/docs/api)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/5/label",
+      "source_id": "readme",
+      "quote": "Caddyfile, JSON 5, YAML, TOML, NGINX config, and more.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/6/label",
+      "source_id": "readme",
+      "quote": "Fully-managed local CA for internal names & IPs",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/7/label",
+      "source_id": "readme",
+      "quote": "Encrypted ClientHello (ECH) support",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/8/label",
+      "source_id": "readme",
+      "quote": "Can coordinate with other Caddy instances in a cluster",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/9/label",
+      "source_id": "readme",
+      "quote": "Using [our builder tool, `xcaddy`](https://github.com/caddyserver/xcaddy)...",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/10/label",
+      "source_id": "help:verify-caddy-20261120-200736-c00a:1",
+      "quote": "fmt            Formats a Caddyfile",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/11/label",
+      "source_id": "help:verify-caddy-20261120-200736-c00a:1",
+      "quote": "validate       Tests whether a configuration file is valid",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/12/label",
+      "source_id": "help:verify-caddy-20261120-200736-c00a:1",
+      "quote": "reload         Changes the config of the running Caddy instance",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/13/label",
+      "source_id": "help:verify-caddy-20261120-200736-c00a:1",
+      "quote": "hash-password  Hashes a password and writes base64",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/14/label",
+      "source_id": "help:verify-caddy-20261120-200736-c00a:1",
+      "quote": "trust          Installs a CA certificate into local trust stores",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/15/label",
+      "source_id": "help:verify-caddy-20261120-200736-c00a:1",
+      "quote": "respond        Simple, hard-coded HTTP responses for development and testing",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/16/label",
+      "source_id": "help:verify-caddy-20261120-200736-c00a:7",
+      "quote": "-b, --browse                  Enable directory browsing",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/17/label",
+      "source_id": "help:verify-caddy-20261120-200736-c00a:7",
+      "quote": "By default, Zstandard and Gzip compression are enabled.",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/18/label",
+      "source_id": "release:v2.11.9",
+      "quote": "FastCGI transport's (or `php_fastcgi`'s) `env` subdirective",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/19/label",
+      "source_id": "help:verify-caddy-20261120-200736-c00a:1",
+      "quote": "add-package    Adds Caddy packages (EXPERIMENTAL)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/20/label",
+      "source_id": "help:verify-caddy-20261120-200736-c00a:1",
+      "quote": "list-modules   Lists the installed Caddy modules",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/21/label",
+      "source_id": "help:verify-caddy-20261120-200736-c00a:5",
+      "quote": "caddy completion [bash|zsh|fish|powershell]",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/22/label",
+      "source_id": "help:verify-caddy-20261120-200736-c00a:1",
+      "quote": "manpage        Generates the manual pages for Caddy commands",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/23/label",
+      "source_id": "help:verify-caddy-20261120-200736-c00a:1",
+      "quote": "environ        Prints the environment",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    },
+    {
+      "field": "/capabilities/24/label",
+      "source_id": "help:verify-caddy-20261120-200736-c00a:1",
+      "quote": "upgrade        Upgrade Caddy (EXPERIMENTAL)",
+      "method": "model",
+      "model": "claude-opus-5-5",
+      "checked_at": "2026-11-20T20:10:35+08:00"
+    }
+  ],
+  "first_seen_at": "2026-11-20T20:07:19+08:00",
+  "updated_at": "2026-11-20T20:10:35+08:00"
+}
