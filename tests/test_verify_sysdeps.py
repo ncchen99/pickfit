@@ -676,7 +676,11 @@ def test_the_verify_command_takes_packages_by_name() -> None:
     assert cli._packaged(parser.parse_args(["verify", "--fixture", "x.json"]), make) is make
 
 
-def test_the_plan_side_installs_can_be_switched_off(monkeypatch: pytest.MonkeyPatch) -> None:
-    assert sysdeps.enabled()
-    monkeypatch.setenv(sysdeps.ENABLED_ENV, "0")
+def test_the_plan_side_installs_are_off_until_switched_on(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Opt-in (念誠, 11/21): the watch installs a plan's packages only with PICKFIT_SYSDEPS=1, until a real box has
+    shown that apt works. --apt and the probe do not read the switch (the test above this one)."""
+    monkeypatch.delenv(sysdeps.ENABLED_ENV, raising=False)
     assert not sysdeps.enabled()
+    for value, on in (("1", True), (" 1 ", True), ("0", False), ("", False), ("true", False), ("yes", False)):
+        monkeypatch.setenv(sysdeps.ENABLED_ENV, value)
+        assert sysdeps.enabled() is on, value

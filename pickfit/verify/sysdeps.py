@@ -43,9 +43,12 @@ agent's, the replay's, the one that confirms a failure) gets the packages right 
 installs exactly what the agent's box got, and fails to start if it cannot. record() then puts
 `sudo apt-get install -y <names>` first in the run's steps, which become the install guide.
 
-Until the agent can ask for a package itself (privileges.md P2), planned_names() picks the names from what is
-already known, the way box_needs picks a box: the extraction's system packages, and after an attempt that ended
-`needs_root`, the README's own `apt-get install` lines and what that attempt's error names.
+Besides the agent's own request (grants.py: request_capability for a system_package, answered by install_named),
+planned_names() picks names from what is already known, the way box_needs picks a box: the extraction's system
+packages, and after an attempt that ended `needs_root`, the README's own `apt-get install` lines and what that
+attempt's error names. The watch gives a record those packages only with PICKFIT_SYSDEPS=1 (enabled()): the
+plan side starts off, until a real box of each runner has shown that apt works in it. `pickfit verify --apt NAME`
+and the one-box probe below (`python -m pickfit.verify.sysdeps`) do not read the switch.
 """
 
 from __future__ import annotations
@@ -71,7 +74,7 @@ INSTALL_TIMEOUT_S = 300
 MAX_NAMES = 16  # in one request; a tool that needs more is not a "few named packages" case
 MAX_INSTALL_MB = 2048  # what one request's packages, dependencies included, may unpack to
 MAX_PLANNED = 8  # names planned_names() proposes for one record
-ENABLED_ENV = "PICKFIT_SYSDEPS"  # "0" turns the plan-side installs off (watch.routed_verify)
+ENABLED_ENV = "PICKFIT_SYSDEPS"  # "1" turns the plan-side installs on (watch.routed_verify); else they are off
 MARK = "PICKFIT_SYSDEPS "
 # Where a Debian box's packages may come from: the hosts of its configured sources, and the label its releases carry.
 DISTRO_HOSTS = ("deb.debian.org", "security.debian.org")
@@ -636,7 +639,10 @@ _PC_ALIASES = {"gtk+-3.0": "libgtk-3-dev", "gtk4": "libgtk-4-dev", "glib-2.0": "
 
 
 def enabled() -> bool:
-    return os.environ.get(ENABLED_ENV, "").strip() != "0"
+    """May the watch install the packages a record's plan names (watch.routed_verify)? Only when asked to:
+    PICKFIT_SYSDEPS=1. Off otherwise, until apt has been seen to work in a real box. `pickfit verify --apt`, the
+    probe and an agent's granted request (grants.py) do not ask this."""
+    return os.environ.get(ENABLED_ENV, "").strip() == "1"
 
 
 def apt_names(text: str) -> list[str]:

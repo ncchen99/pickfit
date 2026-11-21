@@ -482,9 +482,10 @@ def routed_verify(runner: str, *, limits: Any, make_factory: Callable[..., Any],
     audio=, toolchain=) builds or finds the image once per kind (Modal, EC2). A desktop app gets a display (Modal,
     EC2), a speech tool the simulated microphone (Modal, EC2), a build from source the toolchain box with a longer
     agent time (Modal, EC2), a record that needs PostgreSQL, Redis or a server to talk to the services box (Modal,
-    EC2), a record that requires a GPU a T4 or L4 (Modal only, within the per-record cap). A record whose sources
-    name distribution packages gets them from pickfit's root in every box of its run (verify.sysdeps: Modal, EC2,
-    and Docker through an image; PICKFIT_SYSDEPS=0 turns it off).
+    EC2), a record that requires a GPU a T4 or L4 (Modal only, within the per-record cap). With PICKFIT_SYSDEPS=1,
+    a record whose sources name distribution packages gets them from pickfit's root in every box of its run, a
+    rerun's boxes included (verify.sysdeps: Modal, EC2, and Docker through an image). That is off by default, until
+    a real box has shown that apt works there; box_needs names the packages in the log either way.
     """
     from dataclasses import replace
 
@@ -512,6 +513,9 @@ def routed_verify(runner: str, *, limits: Any, make_factory: Callable[..., Any],
             log(f"box: {', '.join(needs.why)}")
         if needs.blocked:  # the README states more than the extraction did; the lane let it through on the latter
             log(f"box: no GPU: {needs.blocked}")
+        if needs.packages and not sysdeps.enabled():  # box_needs' line above says what would be installed
+            log(f"box: system packages not installed: plan-side installs are off ({sysdeps.ENABLED_ENV}=1 turns "
+                "them on)")
         factory, run_limits = pick(task, needs, log)
         # What a rerun one tier up can add (pipeline.verify_task, on a request the grants policy answers that way):
         # the same box kinds, picked the same way, with the same planned packages (replace() keeps needs.packages).

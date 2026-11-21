@@ -116,6 +116,9 @@ def test_the_repository_policy_is_off_and_names_only_what_pickfit_has():
     assert held.enabled is False  # the agent gets the tool only once the table is switched on
     assert (held.max_escalations, held.max_requests_per_run) == (2, 6)
     assert 0 < held.rerun_reserve_usd < held.max_usd_per_record
+    # One record's spending limit is the loop's limit for one item (loop/budget.json, US$5.00: 念誠, 11/21).
+    budget = json.loads((POLICY_PATH.parents[2] / "loop" / "budget.json").read_text(encoding="utf-8"))
+    assert held.max_usd_per_record == float(budget["item_usd"]) == 5.0
     gaps = set(get_args(FeatureGap.__value__))
     for rule in held.rules:
         assert rule.kind in KINDS and rule.gap in gaps, rule  # no new reason code is made here

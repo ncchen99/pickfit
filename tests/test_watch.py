@@ -1094,6 +1094,14 @@ def test_a_record_that_names_system_packages_gets_them_from_pickfits_root(tmp_pa
     base = extraction(install_methods=[{"method": "pipx", "command": "pipx install tool", "platforms": []}])
     named = {**base, "prerequisites": {**base["prerequisites"], "system_packages": [
         cited("libxkbcommon-dev", "apt install libxkbcommon-dev")]}}
+    # Off unless asked for (PICKFIT_SYSDEPS=1): the record runs with the factory it always had, and so does its rerun.
+    monkeypatch.delenv(sysdeps.ENABLED_ENV, raising=False)
+    off: list[str] = []
+    routed_for("modal")(task_of(named), tmp_path, off.append)
+    assert not isinstance(seen[-1], sysdeps.PackagedBoxes)
+    assert not isinstance(reruns[-1].box(frozenset({"services"}))[0], sysdeps.PackagedBoxes)
+    assert any("system packages not installed" in line and "PICKFIT_SYSDEPS=1" in line for line in off)
+    monkeypatch.setenv(sysdeps.ENABLED_ENV, "1")
     lines: list[str] = []
     routed_for("modal")(task_of(named), tmp_path, lines.append)
     assert isinstance(seen[-1], sysdeps.PackagedBoxes) and seen[-1].names == ("libxkbcommon-dev",)
@@ -1103,13 +1111,13 @@ def test_a_record_that_names_system_packages_gets_them_from_pickfits_root(tmp_pa
     again, _ = reruns[-1].box(frozenset({"services"}))
     assert isinstance(again, sysdeps.PackagedBoxes) and again.names == ("libxkbcommon-dev",)
     assert again is not seen[-1]
-    # A record that names none runs with the factory it always had; so does every record with the switch off.
+    # A record that names none runs with the factory it always had; so does every record with the switch at "0".
     routed_for("modal")(task_of(base), tmp_path, lambda s: None)
     assert not isinstance(seen[-1], sysdeps.PackagedBoxes)
     monkeypatch.setenv(sysdeps.ENABLED_ENV, "0")
     routed_for("modal")(task_of(named), tmp_path, lambda s: None)
     assert not isinstance(seen[-1], sysdeps.PackagedBoxes)
-    monkeypatch.delenv(sysdeps.ENABLED_ENV)
+    monkeypatch.setenv(sysdeps.ENABLED_ENV, "1")
     # macOS and Windows boxes have no apt: their factories are left alone.
     routed_for("tart")(task_of(named), tmp_path, lambda s: None)
     assert not isinstance(seen[-1], sysdeps.PackagedBoxes)
