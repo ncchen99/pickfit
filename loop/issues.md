@@ -56,6 +56,10 @@ reason: needs_root
   - 重播和指南：重播的全新箱子只裝 agent 那個箱子裝成功的套件，少一個就開不起來。通過之後，這次 run 的第一個安裝步驟是 `sudo apt-get install -y <名稱>`。
   - 測試：`tests/test_verify_sysdeps.py`，箱子裡那支 root 腳本是對著一個假的 apt 實際執行的。`limits.py` 的新檢查寫成 `loop/proposals/limits-sysdeps-services.patch`，等人審。
 - 還沒解的：第三種（安裝程式要 root 加 systemd）不在這裡，等全權箱。工具本身只能用 apt 裝的（例如 `sudo apt install hurl`），目前刻意不由 pickfit 代裝，要等 P2 的政策表決定。
+- tried: 11/21 做了全權 VM 箱（`pickfit verify --runner ec2 --runtime rootvm`，程式在 `root_box.py`、`ec2_root.py`），給上面第三種情況用，也就是安裝程式要 root 加 systemd 的那幾筆。
+  - 箱子使用者在一台用完就刪的 EC2 VM 上有 sudo。限制都放在 VM 外面：安全群組只開 DNS、80、443，斷網時換安全群組和 network ACL，metadata 在 instance 層級關掉。
+  - 只用假的 EC2 client 測過，還沒在真的機器上開過，所以這一項維持 open。要先跑 `--runtime rootvm --limits-test`，通過了再拿 hal0、whisper-install、agentloom 來試。
+  - 前兩種情況（缺函式庫、建置要 `-dev` 套件）不歸這個箱子，照原本的方向做。
 
 ## H-004 [open] 沙盒裡沒有 Docker 或 Podman
 
@@ -65,7 +69,7 @@ reason: needs_container
 - symptom: 4 筆紀錄的安裝方式只有 `docker run` 或 `docker compose`。
 - reproduce: 佇列裡 note 是 `needs_container` 的任一筆。
 - 方向（還沒試）：gVisor 箱子裡跑不了 Docker daemon。`--runtime vm` 的 microVM 有自己的核心，先查 rootless Podman 在裡面能不能跑。不行的話看 Modal 能不能直接把那個映像當成另一個沙盒起來。
-- tried:
+- tried: 11/21 沒有照上面的方向去查 Modal 的 `--runtime vm` 跑不跑得動 rootless Podman，改做全權 VM 箱（見 H-003 的紀錄）。映像裡裝了 Docker、compose 和 buildx，箱子使用者在 docker 群組裡。同樣只用假的 client 測過，還沒在真的機器上跑過 `docker run`，這一項維持 open。
 
 ## H-005 [open] 沙盒的記憶體、磁碟或時間不夠
 

@@ -162,6 +162,46 @@ def windows_lane(*, model: str | None, limits: Any = None) -> BoxLane:
                    ensure=ensure, model=model, limits=limits)
 
 
+ROOT_VM_LANE = "linux-root"
+ROOT_VM_CONCURRENCY = 1  # one record at a time: its agent's VM and its replay's are the lane's two instances
+
+
+def root_vm_lane(*, model: str | None, limits: Any = None) -> BoxLane:
+    """Full-privilege VM boxes on EC2 (ec2_root), one per run, for records no other box can install: an installer
+    that needs root and systemd, a `docker run` or compose install, a kernel module (docs/proposals/privileges.md
+    P6, aws.md A3). One record at a time; the instances themselves share EC2's two machine slots with every other
+    pickfit lane on this host, so a third instance never starts.
+
+    Nothing routes a record here yet: pickfit.watch does not build this lane, and must not before its limits test
+    (`pickfit verify --runner ec2 --runtime rootvm --limits-test`) has passed on a real instance. The name is not
+    in BOX_LANES for the same reason."""
+    from pickfit.verify.agent import AgentLimits
+    from pickfit.verify.cli import LIFETIME_MARGIN_S, ROOT_VM, box_factory
+
+    limits = limits or AgentLimits()
+    lifetime = int(limits.max_seconds) + LIFETIME_MARGIN_S
+
+    def check() -> str | None:
+        try:
+            import boto3
+
+            from pickfit.verify.ec2_machine import region_name
+
+            boto3.client("sts", region_name=region_name()).get_caller_identity()
+        except Exception as err:  # noqa: BLE001 - expired login, no credentials, no network: the lane waits
+            return (f"AWS does not answer ({type(err).__name__}); the full-privilege lane waits until `aws login` is "
+                    "renewed")
+        return None
+
+    def ensure(gui: bool) -> Any:
+        from pickfit.verify.ec2_root import ensure_root_image
+
+        return ensure_root_image()
+
+    return BoxLane(ROOT_VM_LANE, "linux", lambda gui: box_factory("ec2", lifetime, runtime=ROOT_VM), check=check,
+                   ensure=ensure, concurrency=ROOT_VM_CONCURRENCY, display=False, model=model, limits=limits)
+
+
 def due_lanes(parked: dict[str, list[datetime]], lanes: dict[str, Lane], now: datetime) -> dict[str, str]:
     """lane -> why it starts now (its policy is due, or it is live and has jobs)."""
     out: dict[str, str] = {}

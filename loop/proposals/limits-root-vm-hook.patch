@@ -1,0 +1,46 @@
+--- a/pickfit/verify/limits.py
++++ b/pickfit/verify/limits.py
+@@ -38,6 +38,11 @@
+ evidence directory is closed to the box user; that xclock reaches tier window
+ with a verified screenshot; that a launch which prints a forged report and
+ double-forks reaches no window and leaves no box-user process behind.
++
++A full-privilege VM box (root_box.RootVmBox: the box user has root, so none
++of the probes above can hold) is handed to its own set, limits_root.py, which
++checks what holds that machine from outside it. Both entry points here hand
++over, so no caller runs this file's probes on such a box by mistake.
+ """
+ 
+ from __future__ import annotations
+@@ -706,6 +711,10 @@
+ 
+ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeResult]:
+     """Run every probe in a started box; restores the network before returning."""
++    if getattr(getattr(box, "capabilities", None), "full_privilege", False):  # root's box: limits_root.py's probes
++        from pickfit.verify.limits_root import run_root_limits_test
++
++        return run_root_limits_test(box, log)
+     results: list[ProbeResult] = []
+ 
+     def add(result: ProbeResult) -> None:
+@@ -892,6 +901,10 @@
+                 ) -> tuple[list[ProbeResult], Path]:
+     began = time.monotonic()
+     box = make_box(f"limits-{taipei_now().strftime('%Y%m%d-%H%M%S')}", "limits")
++    if getattr(getattr(box, "capabilities", None), "full_privilege", False):  # two boxes, and that they are gone after
++        from pickfit.verify.limits_root import root_limits_test
++
++        return root_limits_test(make_box, runs_dir, log)
+     try:
+         box.start()
+         log(f"limits test · {box.runner} · {box.image}{' · GPU ' + str(box.gpu_name) if box.gpu else ''} · "
+--- a/scripts/loop_guard.py
++++ b/scripts/loop_guard.py
+@@ -38,6 +38,7 @@
+     "pickfit/verify/feature_judge.py",
+     "pickfit/verify/failure.py",
+     "pickfit/verify/limits.py",
++    "pickfit/verify/limits_root.py",
+     "pickfit/verify/web_guard.py",
+     "pickfit/score.py",
+     "pickfit/schema.py",

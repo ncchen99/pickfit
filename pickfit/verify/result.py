@@ -191,7 +191,8 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
     if is_passed(level):
         if not replayed:
             notes.append(f"replay did not pass: {replay.error if replay else 'not run'}")
-            level, reason = "unverified", "other"
+            capped = bool(replay and "budget_exceeded:" in (replay.error or ""))  # the replay box's cost cap
+            level, reason = "unverified", "budget_exceeded" if capped else "other"
         else:
             level = weaker(level, replay.level)
             if judge is None or judge.verdict != "working":

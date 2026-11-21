@@ -23,6 +23,10 @@ What a provider has to give:
 
 A new provider takes real runs only after `pickfit verify --limits-test` passes on it.
 
+One kind of machine is handed to the software under test whole: root_box.PrivilegedMachine adds to this class what
+a full-privilege VM box needs (root_box.RootVmBox; EC2's is ec2_root.Ec2RootMachine). Its root is the box user's
+too, so there set_egress, the missing identity and the machine's end are all the provider's to keep, from outside.
+
 A Windows machine is not one of these: nothing of LinuxBox applies to it. win_machine.WinSshMachine is the same
 seam for Windows (create, two logins over SSH, egress, destroy), under windows_box.WindowsBox.
 """

@@ -13,6 +13,11 @@ metadata (169.254.0.0/16) is routed to `unreachable` inside the container by a
 one-off root exec before the agent runs; the box user cannot change routes.
 LinuxBox (linux_box.py) implements the same interface on a cloud provider's machine (machine.py); ModalBox
 (P3.6) is that box on Modal.
+
+One kind of box breaks the non-root rule on purpose (docs/proposals/privileges.md, P6): a full-privilege VM box
+(root_box.RootVmBox), for software whose installer needs root and systemd, a container engine or kernel modules.
+There the software under test gets a whole throwaway VM, and everything that keeps it in is outside the VM. A box
+says what it gives in `capabilities` (BoxCapabilities); every other box gives none of them.
 """
 
 from __future__ import annotations
@@ -85,6 +90,40 @@ class BoxError(RuntimeError):
     """The sandbox itself failed (not the command running inside it)."""
 
 
+class BoxBudgetError(BoxError):
+    """A box stopped, or did not start, because its record's machines reached their cost cap. The run it ends is
+    unverified for `budget_exceeded`, not for a broken box (stop_reason)."""
+
+
+def stop_reason(error: BaseException) -> str:
+    """The agent report's stop_reason for a box that failed: "budget" when a cost cap ended it (result.py reads
+    that as budget_exceeded), "box_error" for anything else."""
+    return "budget" if isinstance(error, BoxBudgetError) else "box_error"
+
+
+@dataclass(frozen=True)
+class BoxCapabilities:
+    """What a box hands the software under test beyond a plain user account. The same four on every provider: a
+    provider that can give a full-privilege VM implements root_box.PrivilegedMachine, and nothing reads a provider's
+    name to learn what a box can do."""
+
+    root: bool = False  # the box user can become root (passwordless sudo)
+    systemd: bool = False  # a real init is PID 1: units can be installed, enabled and started
+    container_engine: str | None = None  # e.g. "docker": the box user can run containers
+    kernel_modules: bool = False  # modules load and TUN, FUSE and raw sockets work (the VM's own kernel)
+
+    @property
+    def full_privilege(self) -> bool:
+        """The software under test may hold root: what is read inside the box can be forged."""
+        return self.root
+
+    def granted(self) -> list[str]:
+        """The names of what is given, for a run's record."""
+        return [name for name, on in (("root", self.root), ("systemd", self.systemd),
+                                      ("container_engine", bool(self.container_engine)),
+                                      ("kernel_modules", self.kernel_modules)) if on]
+
+
 @dataclass(frozen=True)
 class BoxLimits:
     """Hard limits the model cannot change."""
@@ -138,6 +177,8 @@ class Box(ABC):
     # A box that takes minutes to boot (EC2 Windows): the pipeline starts the run's fresh replay box while the agent
     # works (early_box.EarlyBox), so a passed agent does not wait for it. Never the agent's own box.
     early_replay: bool = False
+    # What the box user gets beyond an account (none of it, except in a full-privilege VM box).
+    capabilities: BoxCapabilities = BoxCapabilities()
 
     def reserve(self) -> bool:
         """Take this box's place among the machines its provider may run at once, now and without waiting; False

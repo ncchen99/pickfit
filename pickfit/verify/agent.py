@@ -44,7 +44,7 @@ from pickfit.schema import (COMMAND_MAX, SETUP_MAX, VERIFY_FEATURES_MAX, Install
 from pickfit.verify import gui
 from pickfit.verify import gui_operate
 from pickfit.verify.audio import ListenArgs, run_listen
-from pickfit.verify.box import TOOLCHAIN_LIMITS, Box, BoxError, ExecResult
+from pickfit.verify.box import TOOLCHAIN_LIMITS, Box, BoxError, ExecResult, stop_reason
 from pickfit.verify import features as feature_checks
 from pickfit.verify import help_text
 from pickfit.verify.features import FINISH_FEATURES, FinishFeature, resolve_features
@@ -988,8 +988,8 @@ class VerifyAgent:
             prepare_box(box, self.task)
             self._loop()
             self._capture_help()
-        except BoxError as err:
-            self.report.stop_reason, self.report.error = "box_error", str(err)
+        except BoxError as err:  # "budget" when the box's own cost cap ended it (a full-privilege VM box's)
+            self.report.stop_reason, self.report.error = stop_reason(err), str(err)
         self.report.seconds = round(self._elapsed(), 1)
         self.report.cost_usd = round(sum(t.cost_usd for t in self.report.turns) + self.report.operator_cost_usd, 6)
         self._say(self._summary_line())

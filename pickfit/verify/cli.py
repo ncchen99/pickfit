@@ -13,6 +13,10 @@ TART_MAX_VMS = 2  # Apple's limit on macOS VMs running at once on one Mac
 GUI_LIMITS = {"max_turns": 32, "max_commands": 20, "max_seconds": 35 * 60, "scope_cap_usd": 5.00}
 VBOX_MAX_VMS = 1  # one Windows base, reset from its snapshot for every box
 EC2_CONCURRENCY = 2  # a batch on EC2 by default: two boxes, and room in a new account's quota for a pool member
+# The full-privilege VM box (root_box.py, ec2_root.py): --runner ec2 --runtime rootvm. One record at a time: a record
+# needs an agent's VM and a replay's, and the lane may hold two instances (docs/proposals/aws.md, A3).
+ROOT_VM = "rootvm"
+ROOT_VM_CONCURRENCY = 1
 TOOLCHAIN_AGENT_S = 45 * 60  # --toolchain: a build from source runs once for the agent and once in the replay
 
 
@@ -54,8 +58,16 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
                    help="--display: operate_gui calls per run (default 6); 0 checks install only")
     v.add_argument("--gpu", choices=["T4", "L4", "A10"], default=None,
                    help="Modal: give each box this NVIDIA GPU (for tools whose core job needs one)")
-    v.add_argument("--runtime", choices=["gvisor", "vm"], default="gvisor",
-                   help="Modal: gVisor (default) or a microVM; a VM also drops DNS while the network is off")
+    v.add_argument("--runtime", choices=["gvisor", "vm", ROOT_VM], default="gvisor",
+                   help="Modal: gVisor (default) or a microVM; a VM also drops DNS while the network is off. "
+                        f"ec2: {ROOT_VM} is the full-privilege VM box, for software that needs root and systemd, "
+                        "Docker or kernel modules: the box user has sudo on a whole throwaway VM and the limits are "
+                        "outside it (one record at a time; run its --limits-test on a real instance first)")
+    v.add_argument("--extra-disk-gb", type=int, default=0,
+                   help=f"ec2 --runtime {ROOT_VM}: also attach a blank disk of this size, for partitioning and disk "
+                        "tools to work on (deleted with the VM)")
+    v.add_argument("--kvm", action="store_true",
+                   help=f"ec2 --runtime {ROOT_VM}: launch with nested virtualization, so /dev/kvm is there")
     v.add_argument("--display", action="store_true",
                    help="Modal and ec2: a virtual display (Xvfb); tart: a desktop seen over VNC (the GUI base); "
                         "ec2-windows: the desktop seen over VNC (the display image). Adds "
@@ -100,11 +112,27 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
 
 def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64", gpu: str | None = None,
                 runtime: str = "gvisor", display: bool = False, audio: bool = False, memory_mb: int | None = None,
-                file_mb: int | None = None, toolchain: bool = False, services: bool = False):
+                file_mb: int | None = None, toolchain: bool = False, services: bool = False,
+                extra_disk_gb: int = 0, kvm: bool = False):
     """(run_id, role) -> an unstarted box of the chosen runner. services: the databases and stand-in servers the
-    box user can start (verify/services.py), Modal and EC2 only."""
+    box user can start (verify/services.py), Modal and EC2 only. runtime "rootvm" (EC2 only) is the full-privilege
+    VM box; extra_disk_gb and kvm are its options."""
     from pickfit.verify.box import TOOLCHAIN_LIMITS, BoxLimits, DockerBox
 
+    if runtime == ROOT_VM:
+        if runner != "ec2":
+            raise ValueError(f"--runtime {ROOT_VM} needs --runner ec2 (the one provider of a full-privilege VM so far)")
+        if display or audio or toolchain or services or gpu or file_mb:
+            raise ValueError(f"--runtime {ROOT_VM} takes none of --display, --audio, --toolchain, --services, --gpu "
+                             "and --file-mb: the box user has root there and installs what the software needs")
+        from pickfit.verify.ec2_root import Ec2RootBox
+
+        size = {"memory_mb": memory_mb} if memory_mb else {}
+        return lambda run_id, role: Ec2RootBox(tags={"pickfit.run": run_id, "pickfit.role": role},
+                                               limits=BoxLimits(lifetime_s=lifetime_s, **size),
+                                               extra_disk_gb=extra_disk_gb, kvm=kvm)
+    if extra_disk_gb or kvm:
+        raise ValueError(f"--extra-disk-gb and --kvm need --runner ec2 --runtime {ROOT_VM}")
     if runner not in ("modal", "ec2") and (runtime != "gvisor" or audio or memory_mb or file_mb or toolchain
                                            or services):
         raise ValueError("--runtime, --audio, --toolchain, --services, --memory-mb and --file-mb need --runner modal "
@@ -174,9 +202,11 @@ def run(args: argparse.Namespace) -> int:
             prepare_base(iso=Path(args.iso) if args.iso else None)
             return 0
         if args.runner in ("ec2", "ec2-windows"):
-            box = box_factory(args.runner, 900, display=args.display,
-                              audio=args.audio and args.runner == "ec2",
-                              toolchain=args.toolchain and args.runner == "ec2")("prepare", "prepare")
+            root_vm = args.runner == "ec2" and args.runtime == ROOT_VM  # its own image and its own network
+            box = box_factory(args.runner, 900, display=args.display and not root_vm,
+                              runtime=ROOT_VM if root_vm else "gvisor",
+                              audio=args.audio and args.runner == "ec2" and not root_vm,
+                              toolchain=args.toolchain and args.runner == "ec2" and not root_vm)("prepare", "prepare")
             image = box.machine.prepare()
             print(f"pickfit verify: {args.runner} image {image.get('Name')} ({image['ImageId']}) is ready")
             return 0
@@ -197,6 +227,15 @@ def run(args: argparse.Namespace) -> int:
     if args.display and args.runner not in ("modal", "ec2", "tart", "ec2-windows"):
         print("pickfit verify: --display needs --runner modal, ec2, ec2-windows or tart")
         return 2
+    root_vm = args.runtime == ROOT_VM
+    if root_vm or args.extra_disk_gb or args.kvm:
+        try:  # the same refusals the factory makes, before anything is started
+            box_factory(args.runner, 900, gpu=args.gpu, runtime=args.runtime, display=args.display, audio=args.audio,
+                        memory_mb=args.memory_mb, file_mb=args.file_mb, toolchain=args.toolchain,
+                        services=args.services, extra_disk_gb=args.extra_disk_gb, kvm=args.kvm)
+        except ValueError as err:
+            print(f"pickfit verify: {err}")
+            return 2
     if args.limits_test:
         from pickfit.verify.agent import _runs_dir
         from pickfit.verify.limits import limits_test
@@ -204,6 +243,15 @@ def run(args: argparse.Namespace) -> int:
         if args.gpu and args.runner != "modal":
             print("pickfit verify: --gpu needs --runner modal")
             return 2
+        if root_vm:
+            # limits.py's probes check that the box user is held by root; here the box user is root, and the probes
+            # are the ones of limits_root (until loop/proposals/limits-root-vm-hook.patch makes limits.py hand over).
+            from pickfit.verify.limits_root import root_limits_test
+
+            results, _ = root_limits_test(box_factory(args.runner, 1800, runtime=ROOT_VM, memory_mb=args.memory_mb,
+                                                      extra_disk_gb=args.extra_disk_gb, kvm=args.kvm),
+                                          _runs_dir(None))
+            return 0 if all(r.ok for r in results) else 1
         if args.display and args.runner == "tart":
             # limits.py's display probes are Xvfb's (xdpyinfo, pgrep Xvfb) and can only fail in a macOS guest (11/18,
             # loop/issues.md H-014): limits_mac runs limits.py's other checks unchanged, then the macOS GUI box's own.
@@ -236,10 +284,14 @@ def run(args: argparse.Namespace) -> int:
     make_box = box_factory(args.runner, int(limits.max_seconds) + LIFETIME_MARGIN_S, platform=args.platform,
                            gpu=args.gpu, runtime=args.runtime, display=args.display, audio=args.audio,
                            memory_mb=args.memory_mb, file_mb=args.file_mb, toolchain=args.toolchain,
-                           services=args.services)
+                           services=args.services, extra_disk_gb=args.extra_disk_gb, kvm=args.kvm)
     if args.batch:
         if args.concurrency is None:
             args.concurrency = EC2_CONCURRENCY if args.runner in ("ec2", "ec2-windows") else 5
+        if root_vm and args.concurrency > ROOT_VM_CONCURRENCY:
+            print(f"pickfit verify: the full-privilege lane takes one record at a time (an agent's VM and a replay's "
+                  f"are its two instances); concurrency {args.concurrency} -> {ROOT_VM_CONCURRENCY}")
+            args.concurrency = ROOT_VM_CONCURRENCY
         if args.runner == "tart" and args.concurrency > TART_MAX_VMS:
             print(f"pickfit verify: macOS allows {TART_MAX_VMS} VMs at once; concurrency {args.concurrency} -> "
                   f"{TART_MAX_VMS}")
@@ -350,7 +402,11 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
 
         ensure_published_image(runtime=args.runtime, display=args.display, audio=args.audio,
                                toolchain=args.toolchain, services=args.services)
-    if args.runner == "ec2":  # bake or find the AMI once, not in every thread
+    if args.runner == "ec2" and args.runtime == ROOT_VM:  # its own AMI
+        from pickfit.verify.ec2_root import ensure_root_image
+
+        ensure_root_image()
+    elif args.runner == "ec2":  # bake or find the AMI once, not in every thread
         from pickfit.verify.ec2_machine import ensure_image
         from pickfit.verify.linux_box import image_recipe
 

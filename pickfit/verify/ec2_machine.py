@@ -1061,6 +1061,30 @@ def warm_cloud_config(container_image: str) -> str:
 # -- the image
 
 
+def image_from_builder(ec2: Any, builder: Any, name: str, description: str, tags: dict[str, str]) -> None:
+    """Stop a builder that was sealed and make the AMI `name` from it, waiting until it can be launched. An AMI of
+    that name another harness made meanwhile is left as it is. The image and its snapshot carry `tags`."""
+    ec2.stop_instances(InstanceIds=[builder.machine_id])
+    builder_id = str(builder.machine_id)
+    _wait(f"builder {builder_id} stopping",
+          lambda: _instance(ec2, builder_id).get("State", {}).get("Name") == "stopped", 300, 5)
+    try:
+        made = ec2.create_image(InstanceId=builder.machine_id, Name=name, Description=description,
+                                TagSpecifications=[_tags("image", tags), _tags("snapshot", tags)])
+    except Exception as error:
+        if _code(error) != "InvalidAMIName.Duplicate":  # another harness baked it meanwhile
+            raise
+        return
+
+    def ready() -> bool:
+        state = ec2.describe_images(ImageIds=[made["ImageId"]])["Images"][0].get("State")
+        if state == "failed":
+            raise BoxError(f"AMI {name} failed to build")
+        return state == "available"
+
+    _wait(f"AMI {name} becoming available", ready, 30 * 60, 10)
+
+
 def bake_image(ec2: Any, recipe: ImageRecipe | None = None, *, log: Callable[[str], None] = print,
                region: str | None = None, control: str | None = None, container: ContainerImage | None = None,
                popen: Callable[..., Any] = subprocess.Popen, run: Callable[..., Any] = subprocess.run) -> dict[str, Any]:
@@ -1082,27 +1106,8 @@ def bake_image(ec2: Any, recipe: ImageRecipe | None = None, *, log: Callable[[st
                                "/usr/local/bin/python3", "-c", "print('box image runs')"], 120, f"running {tag}")
         log(f"ec2: {tag} built on {builder.machine_id} in {time.monotonic() - began:.0f}s; making the AMI")
         builder._host_checked(["/usr/bin/bash", "-s"], 120, "sealing the image", stdin=HOST_SEAL.encode())
-        ec2.stop_instances(InstanceIds=[builder.machine_id])
-        builder_id = str(builder.machine_id)
-        _wait(f"builder {builder_id} stopping",
-              lambda: _instance(ec2, builder_id).get("State", {}).get("Name") == "stopped", 300, 5)
-        try:
-            made = ec2.create_image(InstanceId=builder.machine_id, Name=name,
-                                    Description=f"pickfit box host: Debian, Docker, {tag}",
-                                    TagSpecifications=[_tags("image", {"pickfit": "verify", "pickfit:image": tag}),
-                                                       _tags("snapshot", {"pickfit": "verify", "pickfit:image": tag})])
-        except Exception as error:
-            if _code(error) != "InvalidAMIName.Duplicate":  # another harness baked it meanwhile
-                raise
-            made = {}
-        if made:
-            def ready() -> bool:
-                state = ec2.describe_images(ImageIds=[made["ImageId"]])["Images"][0].get("State")
-                if state == "failed":
-                    raise BoxError(f"AMI {name} failed to build")
-                return state == "available"
-
-            _wait(f"AMI {name} becoming available", ready, 30 * 60, 10)
+        image_from_builder(ec2, builder, name, f"pickfit box host: Debian, Docker, {tag}",
+                           {"pickfit": "verify", "pickfit:image": tag})
     finally:
         builder.close()
     image = find_image(ec2, name)

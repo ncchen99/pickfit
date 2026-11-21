@@ -151,3 +151,34 @@ at a service to fix, not at the isolation.
 
 Once limits.py reads them, pickfit/verify/sysdeps.py and pickfit/verify/services.py decide what a limits test
 checks: consider adding both to scripts/loop_guard.py PROTECTED in the same review.
+
+## 11/21: the full-privilege VM box's limits test (limits-root-vm-hook.patch)
+
+On feat/priv-root-vm-box (docs/proposals/privileges.md P6), from the repository root:
+
+```sh
+git apply loop/proposals/limits-root-vm-hook.patch
+uv run pytest -q tests/test_verify_limits_root.py tests/test_verify_root_box.py tests/test_verify_ec2_root.py
+```
+
+pickfit/verify/limits.py and scripts/loop_guard.py (both guarded), 14 added lines, nothing removed:
+
+- `limits.run_limits_test` and `limits.limits_test` hand a box whose `capabilities.full_privilege` is true to
+  pickfit/verify/limits_root.py. In that box the box user has root, so limits.py's own probes (uid 1000 with no
+  capabilities, no user namespaces, the metadata route) cannot hold and would read as a broken box; limits_root
+  checks what holds the machine from outside it. Any other box runs limits.py's probes exactly as before.
+- `pickfit/verify/limits_root.py` joins PROTECTED: once the full-privilege lane takes real records, its probes
+  decide whether that lane may run, as limits.py's do for the others.
+
+Until it is applied nothing is unguarded in practice: `pickfit verify --runner ec2 --runtime rootvm --limits-test`
+calls limits_root itself (pickfit/verify/cli.py), and no record is routed to the lane. Apply it before the lane is
+wired into pickfit.watch.
+
+Checked on 11/21 against a copy of limits.py outside every checkout with the patch applied, loaded under another
+module name and driven with the fake boxes of tests/test_verify_limits_root.py: `run_limits_test` on a
+full-privilege box runs limits_root's 25 probes (24 hold; peer_unreachable fails by design there, since that entry
+point starts no second box), `limits_test` starts the two boxes and all 27 hold, and a plain box still starts with
+limits.py's `non_root`. `limits_test` makes one box to read its capabilities and never starts it; an unstarted
+Ec2RootBox holds no slot and no AWS resource. `git apply --check` passes on feat/priv-root-vm-box at 79e6ca48.
+No real instance was started: the first real run of the limits test is a human's (the report of 11/21 has the
+commands).

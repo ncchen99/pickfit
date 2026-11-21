@@ -60,6 +60,7 @@ from pickfit.verify.judge import (  # noqa: F401 (OPEN_JUDGE_MODEL, judge_model_
 from pickfit.verify.mcp import is_mcp
 from pickfit.verify.replay import Replayer, ReplayResult, judged_launch, plan_from
 from pickfit.verify.result import DATA_DIR, build_run, save_run, write_back
+from pickfit.verify.root_box import save_box_evidence
 from pickfit.verify.sysdeps import record as record_packages
 from pickfit.verify.task import VerifyTask
 
@@ -203,6 +204,7 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
         box_usd, early = box_usd + early.discard(), None  # nothing to replay: closed unused, billed all the same
     evidence_dir = agent.runs_dir / "verify" / run_id
     evidence_dir.mkdir(parents=True, exist_ok=True)
+    save_box_evidence(box, evidence_dir, "agent")  # a full-privilege VM box's mark and outside view; else nothing
     if report.report_path is None:  # the agent never saved (its box failed to start)
         _dump(evidence_dir / "report.json", report.to_dict())
 
@@ -259,6 +261,7 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
         phases["replay_box_s"] = round(time.monotonic() - box_began, 1)
         box_usd += replay_box.usd_per_second() * phases["replay_box_s"]
         _dump(evidence_dir / "replay.json", {"plan": plan.to_dict(), "result": replay.to_dict()})
+        save_box_evidence(replay_box, evidence_dir, "replay")
         if replay.passed:
             judge_model = judge_model_for(model)
             judge_args = dict(model=judge_model, run_id=run_id, scope=f"verify:{task.slug}",
