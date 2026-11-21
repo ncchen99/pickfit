@@ -140,7 +140,27 @@
   },
   "install": {
     "macos": null,
-    "linux": null,
+    "linux": {
+      "basis": "replayed",
+      "run_id": "verify-duckdb-20261121-171554-48d0",
+      "method": "uv",
+      "steps": [
+        {
+          "command": "uv tool install duckdb-cli",
+          "purpose": "uv tool install duckdb-cli"
+        },
+        {
+          "command": "duckdb -c \"INSTALL sqlite; INSTALL excel; INSTALL json; INSTALL parquet;\"",
+          "purpose": "pre-install sqlite, excel, json, parquet extensions so checks run offline"
+        }
+      ],
+      "manual_steps": [],
+      "check": {
+        "command": "duckdb --version",
+        "expected_signal": "v2.0.1 (Cyanoptera)"
+      },
+      "first_task": "duckdb -c \"SELECT region, product, amount, rank() OVER (PARTITION BY region ORDER BY amount DESC) AS rnk, {'r': region, 'tags': [product, upper(product)]} AS nested FROM 'sales.csv' ORDER BY region, rnk;\""
+    },
     "windows": null
   },
   "pricing": {
@@ -156,10 +176,177 @@
     "url": "https://github.com/duckdb/duckdb/releases/tag/v2.0.0"
   },
   "verification": {
-    "level": "unverified",
-    "unverified_reason": "not_run",
-    "checked_at": null,
-    "runs": []
+    "level": "function",
+    "unverified_reason": null,
+    "checked_at": "2026-11-21T17:16:46.871763+08:00",
+    "runs": [
+      {
+        "id": "verify-duckdb-20261121-171554-48d0",
+        "level": "function",
+        "unverified_reason": null,
+        "os": "linux",
+        "arch": "x86_64",
+        "method": "sandbox",
+        "runner": "modal-gvisor",
+        "image": "pickfit-sbx:01363ad5a469",
+        "checked_at": "2026-11-21T17:16:46.871763+08:00",
+        "tool_version": "v2.0.1 (Cyanoptera) 8d78114e90",
+        "install_method": "uv",
+        "replayed": true,
+        "steps": [
+          {
+            "command": "uv tool install duckdb-cli",
+            "purpose": "uv tool install duckdb-cli"
+          },
+          {
+            "command": "duckdb -c \"INSTALL sqlite; INSTALL excel; INSTALL json; INSTALL parquet;\"",
+            "purpose": "pre-install sqlite, excel, json, parquet extensions so checks run offline"
+          }
+        ],
+        "smoke_tests": [
+          {
+            "command": "duckdb --version",
+            "expected_signal": "v2.0.1 (Cyanoptera)",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "v2.0.1 (Cyanoptera) 8d78114e90",
+            "setup": [],
+            "offline": true
+          },
+          {
+            "command": "duckdb -c \"SELECT region, product, amount, rank() OVER (PARTITION BY region ORDER BY amount DESC) AS rnk, {'r': region, 'tags': [product, upper(product)]} AS nested FROM 'sales.csv' ORDER BY region, rnk;\"",
+            "expected_signal": "{'r': south, 'tags': [plum, PLUM]}",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ south │ plum │ 40 │ 1 │ {'r': south, 'tags': [plum, PLUM]} │",
+            "setup": [
+              {
+                "command": "cat > sales.csv <<'EOF'\nregion,product,amount\nnorth,apple,10\nnorth,pear,25\nsouth,apple,7\nsouth,plum,40\nsouth,pear,12\nEOF\npython3 -c \"\nimport sqlite3; c=sqlite3.connect('shop.sqlite'); c.execute('create table customers(id integer, name text)'); c.executemany('insert into customers values(?,?)',[(1,'Ada'),(2,'Linus'),(3,'Grace')]); c.commit()\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "duckdb -c \"LOAD excel; COPY (FROM 'sales.csv') TO 'sales.parquet'; COPY (FROM 'sales.csv') TO 'sales.json'; COPY (FROM 'sales.csv') TO 'sales.xlsx' WITH (FORMAT xlsx, HEADER true); SELECT 'parquet' src, sum(amount) total FROM 'sales.parquet' UNION ALL SELECT 'json', sum(amount) FROM 'sales.json' UNION ALL SELECT 'xlsx', sum(amount::INT) FROM read_xlsx('sales.xlsx');\"",
+            "expected_signal": "│ xlsx │ 94 │",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ xlsx │ 94 │",
+            "setup": [
+              {
+                "command": "cat > sales.csv <<'EOF'\nregion,product,amount\nnorth,apple,10\nnorth,pear,25\nsouth,apple,7\nsouth,plum,40\nsouth,pear,12\nEOF\npython3 -c \"\nimport sqlite3; c=sqlite3.connect('shop.sqlite'); c.execute('create table customers(id integer, name text)'); c.executemany('insert into customers values(?,?)',[(1,'Ada'),(2,'Linus'),(3,'Grace')]); c.commit()\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          },
+          {
+            "command": "duckdb -c \"ATTACH 'shop.sqlite' AS shop (TYPE sqlite); SELECT c.name, count(*) AS n FROM shop.customers c JOIN 'sales.csv' s ON c.id <= 2 GROUP BY c.name ORDER BY c.name;\"",
+            "expected_signal": "│ Linus │ 5 │",
+            "exit_code": 0,
+            "passed": true,
+            "observed_excerpt": "│ Linus │ 5 │",
+            "setup": [
+              {
+                "command": "cat > sales.csv <<'EOF'\nregion,product,amount\nnorth,apple,10\nnorth,pear,25\nsouth,apple,7\nsouth,plum,40\nsouth,pear,12\nEOF\npython3 -c \"\nimport sqlite3; c=sqlite3.connect('shop.sqlite'); c.execute('create table customers(id integer, name text)'); c.executemany('insert into customers values(?,?)',[(1,'Ada'),(2,'Linus'),(3,'Grace')]); c.commit()\"",
+                "background": false,
+                "port": null
+              }
+            ],
+            "offline": true
+          }
+        ],
+        "pitfalls": [
+          {
+            "readme_said": "DuckDB reads and writes Excel (core extension)",
+            "actually_needed": "COPY ... (FORMAT xlsx) failed with 'Copy Function with name xlsx does not exist' even after INSTALL excel; an explicit LOAD excel was needed (not autoloaded for COPY)",
+            "kind": "note"
+          },
+          {
+            "readme_said": "Installation: see install page (pip install duckdb-cli)",
+            "actually_needed": "uv tool install duckdb-cli installs the duckdb executable; extensions (sqlite, excel) are downloaded on first INSTALL, so they were pre-installed for offline use",
+            "kind": "note"
+          }
+        ],
+        "blocking_error": null,
+        "judge": {
+          "verdict": "working",
+          "observed": "All three checks succeeded: the window/nested query produced ranked rows with structs, the parquet/json/xlsx round-trips each summed to 94, and the version string printed.",
+          "model": "claude-opus-5-5"
+        },
+        "evidence": {
+          "trace_path": "runs/verify/verify-duckdb-20261121-171554-48d0/report.json",
+          "log_path": null,
+          "screenshot_paths": [
+            "runs/verify/verify-duckdb-20261121-171554-48d0/check-1-cmd5.judged.png",
+            "runs/verify/verify-duckdb-20261121-171554-48d0/check-2-cmd8.judged.png",
+            "runs/verify/verify-duckdb-20261121-171554-48d0/check-3-cmd2.judged.png"
+          ],
+          "evidence_url": null
+        },
+        "actor_model": "claude-opus-5-5",
+        "cost_usd": 0.164095,
+        "features": [
+          {
+            "feature": "run analytical SQL with window functions, nested types",
+            "status": "checked",
+            "smoke_tests": [
+              1
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "read and write CSV, Parquet, JSON, Excel",
+            "status": "checked",
+            "smoke_tests": [
+              2
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "query remote files on S3, HTTP, cloud storage",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "needs_service",
+            "failure": null,
+            "note": "remote S3/HTTP files need network and outside storage; the replayed checks run offline"
+          },
+          {
+            "feature": "attach and query other databases",
+            "status": "checked",
+            "smoke_tests": [
+              3
+            ],
+            "reason": null,
+            "failure": null,
+            "note": null
+          },
+          {
+            "feature": "work with Iceberg, Delta Lake and DuckLake",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          },
+          {
+            "feature": "install and load extensions at runtime",
+            "status": "not_checked",
+            "smoke_tests": [],
+            "reason": "beyond_budget",
+            "failure": null,
+            "note": "pickfit checks the first 4 listed features one by one"
+          }
+        ]
+      }
+    ]
   },
   "security": {
     "version": "sec.v2",
@@ -290,16 +477,16 @@
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-20T20:07:39+08:00",
+    "computed_at": "2026-11-21T17:16:46+08:00",
     "quality": {
-      "total": 63.0,
-      "raw_total": 63.0,
-      "confidence": 0.4,
+      "total": 81.5,
+      "raw_total": 81.5,
+      "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
-          "score": null,
+          "score": 1.0,
           "weight": 20.0
         },
         "install_docs": {
@@ -323,7 +510,7 @@
           "weight": 10.0
         },
         "feature_results": {
-          "score": null,
+          "score": 1.0,
           "weight": 20.0
         }
       },
@@ -352,8 +539,7 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 0.32,
-      "blocked_by": "unverified"
+      "value": 0.41
     },
     "docs_rubric": {
       "model": "claude-opus-5-5",
@@ -901,5 +1087,5 @@
     }
   ],
   "first_seen_at": "2026-11-20T19:17:23+08:00",
-  "updated_at": "2026-11-20T20:08:06+08:00"
+  "updated_at": "2026-11-21T17:16:46.880236+08:00"
 }
