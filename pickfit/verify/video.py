@@ -228,14 +228,33 @@ def box_runner(run: Any) -> str:
     return "ec2" if runner.startswith("ec2") else "modal"
 
 
+def given_again(source: Path, runner: str) -> tuple[list[Any], tuple[str, ...], dict[str, bool]]:
+    """What a recorded run's boxes were given beyond the plain box, from the grants.json beside its replay.json
+    (grants.py; a run from before grants has none): the grants pickfit gives the fresh box again between the same
+    steps (what the agent asked for), the packages pickfit's root installs before the first step (the plan's), and
+    the kinds of box they need (a services box, the simulated microphone: Modal and EC2 only)."""
+    from pickfit.verify.grants import grants_of
+
+    path = source / "grants.json"
+    given = grants_of(json.loads(path.read_text(encoding="utf-8"))) if path.is_file() else []
+    asked = [g for g in given if g.requested_by == "agent"]
+    packages = tuple(g.name for g in given if g.kind == "system_package" and g.requested_by == "plan")
+    kinds = {"services": any(g.kind == "service" or (g.kind, g.name) == ("model_endpoint", "stand-in") for g in given),
+             "audio": any((g.kind, g.name) == ("virtual_device", "microphone") for g in given)}
+    return asked, packages, {k: True for k, on in kinds.items() if on and runner in ("modal", "ec2")}
+
+
 def record_run(slug: str, run_id: str | None = None, *, data_dir: Path = DATA_DIR, log: Any = print,
                runner: str | None = None, editor: Editor | None = None) -> Path:
     """Replay a record's run in a fresh box with its operations recorded; returns the evidence directory. The box is
-    the run's own kind (box_runner), or `runner`'s."""
+    the run's own kind (box_runner), or `runner`'s, and is given what that run's boxes were given (given_again):
+    the replay's steps do not work without it."""
     from pickfit.verify.agent import new_run_id
     from pickfit.verify.cli import box_factory
+    from pickfit.verify.grants import default_providers, load_policy, regrant
     from pickfit.verify.judge import read_screen_text
     from pickfit.verify.replay import Replayer
+    from pickfit.verify.sysdeps import install_named
     from pickfit.verify.task import VerifyTask
 
     editor = editor or editor_for()
@@ -252,7 +271,9 @@ def record_run(slug: str, run_id: str | None = None, *, data_dir: Path = DATA_DI
     out = REPO_ROOT / "runs" / "video" / vid
     out.mkdir(parents=True, exist_ok=True)
     runner = runner or box_runner(run)
-    box: Any = box_factory(runner, 3600 if runner == "tart" else 2400, display=True)(vid, "video")
+    asked, packages, kinds = given_again(source, runner)
+    policy, providers = load_policy(), default_providers()
+    box: Any = box_factory(runner, 3600 if runner == "tart" else 2400, display=True, **kinds)(vid, "video")
     scope = dict(run_id=vid, scope=f"video:{slug}", scope_cap_usd=editor.cap_usd)
     operator = dict(model=editor.model, read_screen=read_screen_text(rec.name, model=editor.model, log=log, **scope),
                     **scope)
@@ -262,7 +283,15 @@ def record_run(slug: str, run_id: str | None = None, *, data_dir: Path = DATA_DI
     log(f"video {vid}: replaying {run.id} ({len(plan.steps)} steps, {len(plan.checks)} operations) on {run.os}")
     try:
         box.start()
-        result = Replayer(box, log=log, evidence_dir=out, operator=operator).run(plan, task)
+        if packages:  # as sysdeps.PackagedBoxes gave the run's own replay box: all of them, or no recording
+            got = install_named(box, packages, log=log)
+            missing = [name for name in packages if name not in (*got.installed, *got.present)]
+            if missing:
+                raise SystemExit(f"{slug}: the video box did not get the packages {run.id}'s boxes had "
+                                 f"({', '.join(missing)}): {got.describe()}")
+        result = Replayer(box, log=log, evidence_dir=out, operator=operator, grants=asked,
+                          give=lambda fresh, grant: regrant(policy, providers, fresh, grant, run_id=vid,
+                                                            role="video")).run(plan, task)
     finally:
         box.close()
     meta = {"slug": slug, "run": run.id, "source": str(source), "os": run.os, "runner": getattr(box, "runner", runner),

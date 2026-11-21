@@ -682,3 +682,90 @@ def test_the_captions_say_what_pickfit_did_and_mask_a_password():
     assert video.action_caption([{"kind": "key", "key": "Return"}], "linux") == "Press Enter"
     assert video.action_caption([{"kind": "click"}] * 3) == "Click (x3)"
     assert video.action_caption([]) is None
+
+
+def test_the_recorded_box_is_given_what_the_runs_boxes_were_given(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """The plan comes from replay.json, which knows nothing of grants: they come from the grants.json beside it."""
+    from types import SimpleNamespace
+
+    import pickfit.verify.cli as cli_mod
+    import pickfit.verify.judge as judge_mod
+    import pickfit.verify.replay as replay_mod
+    from pickfit.verify.grants import Grant, package_grants, parse_policy
+    from test_verify_grants import KindBox, table
+    from test_verify_sysdeps import RootBox
+
+    held = parse_policy(table())
+    run_id = "verify-tool-20261121-000000-abcd"
+    source = tmp_path / "runs" / "verify" / run_id
+    source.mkdir(parents=True)
+    step = {"command_id": 4, "tool": "run_command", "command": "flatpak install -y x", "port": None, "wait_s": None,
+            "seconds": 40.0, "operate": None}
+    operation = {"run": {"command_id": 6, "tool": "operate_gui", "command": "flatpak run x", "port": None,
+                         "wait_s": 30, "seconds": 90.0, "operate": {"spec": {"goal": "G1"}, "actions": [],
+                                                                    "model": None}},
+                 "setup_ids": [], "expected_exit_code": 0, "expected_signal": "gui check: passed", "kind": "gui_op"}
+    (source / "replay.json").write_text(json.dumps({"plan": {"steps": [step], "setups": [], "checks": [operation]}}))
+    asked = Grant("service", "postgres", 3, "agent", True, fidelity="real", after_command=2)
+    given = [asked, *package_grants(["libxcb1"], held), Grant("virtual_device", "microphone", 3, "plan", False)]
+    (source / "grants.json").write_text(json.dumps({"grants": [g.to_dict() for g in given]}))
+
+    # What given_again reads: the agent's request to give again, the plan's packages, and the kinds of box.
+    assert video.given_again(source, "modal") == ([asked], ("libxcb1",), {"services": True, "audio": True})
+    assert video.given_again(source, "tart")[2] == {}  # a Mac has no services box and no simulated microphone
+    assert video.given_again(tmp_path, "modal") == ([], (), {})  # a run from before grants: a plain display box
+
+    class VideoBox(RootBox, KindBox):
+        """A box pickfit's root can install in (the stand-in apt), of the kind the factory was asked for."""
+
+        def __init__(self, root: Path, world: dict[str, Any] | None = None, **has: bool) -> None:
+            RootBox.__init__(self, root, world, {"pickfit-services start postgres": (0, "postgres: up", "")})
+            for name, value in has.items():
+                setattr(self, name, value)
+
+    made: list[tuple[dict[str, Any], VideoBox]] = []
+    worlds: list[dict[str, Any] | None] = [None, {"install": "fails"}]
+
+    def box_factory(runner: str, lifetime_s: int, **kinds: Any):
+        def make(vid: str, role: str) -> VideoBox:
+            made.append(({"runner": runner, "role": role, **kinds},
+                         VideoBox(tmp_path / f"box{len(made)}", worlds[len(made)],
+                                  **{k: v for k, v in kinds.items() if k != "display"})))
+            return made[-1][1]
+        return make
+
+    replayed: list[tuple[Any, list[Any]]] = []
+
+    class Replayer:
+        def __init__(self, box: Any, *, grants: Any = (), give: Any = None, **kw: Any) -> None:
+            self.box, self.grants, self.give = box, list(grants), give
+
+        def run(self, plan: Any, task: Any) -> Any:
+            replayed.append((plan, [(g.kind, g.name, self.give(self.box, g).granted) for g in self.grants]))
+            return SimpleNamespace(passed=True, to_dict=lambda: {"passed": True})
+
+    run = SimpleNamespace(id=run_id, os="linux", runner="modal-gvisor")
+    monkeypatch.setattr(video, "REPO_ROOT", tmp_path)
+    monkeypatch.setattr(video, "load_record", lambda slug, data_dir: SimpleNamespace(
+        slug=slug, name="Tool", repo=None, category="other"))
+    monkeypatch.setattr(video, "pick_run", lambda rec, run_id=None: run)
+    monkeypatch.setattr(video, "passed_operations", lambda r: [SimpleNamespace(goal="G1")])
+    monkeypatch.setattr(video, "find_evidence", lambda rid: source)
+    monkeypatch.setattr(cli_mod, "box_factory", box_factory)
+    monkeypatch.setattr(replay_mod, "Replayer", Replayer)
+    monkeypatch.setattr(judge_mod, "read_screen_text", lambda *a, **kw: (lambda *x, **y: ""))
+    out = video.record_run("tool", editor=video.EDITORS["rules"], log=lambda s: None)
+    kinds, box = made[0]
+    # A fresh box of the run's kind, with a display, the services and the microphone the run's boxes had.
+    assert kinds == {"runner": "modal", "role": "video", "display": True, "services": True, "audio": True}
+    # pickfit's root installed the plan's package before anything was replayed; the box user ran no apt.
+    assert box.state["installed"] == ["libxau6", "libxcb1"] and len(box.harness) == 1 and box.closed
+    # The replay was handed the agent's grant and how to give it again: the box user's own helper started it.
+    plan, regranted = replayed[0]
+    assert [c.run.command_id for c in plan.checks] == [6] and regranted == [("service", "postgres", True)]
+    assert [c for c, _ in box.ran] == ["pickfit-services start postgres"]
+    assert json.loads((out / "replay.json").read_text(encoding="utf-8"))["video"]["run"] == run_id
+    # A box that does not get the packages records nothing: the steps would not be the run's.
+    with pytest.raises(SystemExit, match="did not get the packages .* \\(libxcb1\\)"):
+        video.record_run("tool", editor=video.EDITORS["rules"], log=lambda s: None)
+    assert len(replayed) == 1 and made[1][1].closed
