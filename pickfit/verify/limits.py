@@ -45,6 +45,11 @@ package's program, cannot remove, replace or reconfigure it, add a package sourc
 A services box (services.py) checks that the box user starts every service, that each answers on loopback and
 on no other address of the box, that the stand-in model endpoint round-trips a request, and that all of it still
 answers with the network off (nothing is fetched at run time).
+
+A full-privilege VM box (root_box.RootVmBox: the box user has root, so none
+of the probes above can hold) is handed to its own set, limits_root.py, which
+checks what holds that machine from outside it. Both entry points here hand
+over, so no caller runs this file's probes on such a box by mistake.
 """
 
 from __future__ import annotations
@@ -784,6 +789,10 @@ def _windows_probes(box: Box, add: Callable[[ProbeResult], None]) -> None:
 
 def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeResult]:
     """Run every probe in a started box; restores the network before returning."""
+    if getattr(getattr(box, "capabilities", None), "full_privilege", False):  # root's box: limits_root.py's probes
+        from pickfit.verify.limits_root import run_root_limits_test
+
+        return run_root_limits_test(box, log)
     results: list[ProbeResult] = []
 
     def add(result: ProbeResult) -> None:
@@ -987,6 +996,10 @@ def limits_test(make_box: Callable[[str, str], Box], runs_dir: Path, log: Callab
                 ) -> tuple[list[ProbeResult], Path]:
     began = time.monotonic()
     box = make_box(f"limits-{taipei_now().strftime('%Y%m%d-%H%M%S')}", "limits")
+    if getattr(getattr(box, "capabilities", None), "full_privilege", False):  # two boxes, and that they are gone after
+        from pickfit.verify.limits_root import root_limits_test
+
+        return root_limits_test(make_box, runs_dir, log)
     try:
         box.start()
         log(f"limits test · {box.runner} · {box.image}{' · GPU ' + str(box.gpu_name) if box.gpu else ''} · "
