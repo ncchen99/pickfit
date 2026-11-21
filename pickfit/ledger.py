@@ -11,6 +11,10 @@ own spend limits only sent email. Since 2026-11-15 no budget has a total or dail
 user sets one (PICKFIT_PIPELINE_TOTAL_CAP_USD, PICKFIT_PIPELINE_DAILY_CAP_USD); what still stops a
 call is a caller's own per-scope cap (`scope_cap_usd`, e.g. one verification run), which keeps a
 loop that went wrong from spending without end. The hackathon's rows stay in the file as they are.
+
+Claude calls sent through Amazon Bedrock (pickfit.bedrock_messages, 2026-11-21) are their own budget,
+"bedrock": that money is AWS's bill, not Anthropic's. Its caps are PICKFIT_BEDROCK_TOTAL_CAP_USD and
+PICKFIT_BEDROCK_DAILY_CAP_USD; a call they refuse goes to the direct API instead (pickfit.meta).
 """
 
 from __future__ import annotations
@@ -59,6 +63,7 @@ CREATE TABLE IF NOT EXISTS calls (
 CREATE INDEX IF NOT EXISTS calls_budget_day ON calls (budget, day);
 CREATE INDEX IF NOT EXISTS calls_budget_scope ON calls (budget, scope);
 CREATE INDEX IF NOT EXISTS calls_response_id ON calls (response_id);
+CREATE INDEX IF NOT EXISTS calls_scope_run ON calls (scope, run_id);
 """
 
 TOKEN_FIELDS = ("input_tokens", "cached_tokens", "output_tokens", "reasoning_tokens", "web_searches")
@@ -99,11 +104,13 @@ NO_CAPS = Caps()
 # - baseten (Muse Spark Open, the hackathon's key): $100 in all; $25 a day, $70 on 11/1, $35 on 11/2.
 # - modal-llm (Muse Spark Open on Modal's endpoint, Modal credits): $100 in all, $50 a day.
 # - openrouter (Meta's models through OpenRouter, 念誠's balance): $50 in all, $40 a day.
-# Each budget keeps its name and its rows; Claude calls are recorded under "pipeline".
+# Each budget keeps its name and its rows; Claude calls are recorded under "pipeline", or under "bedrock"
+# when Amazon Bedrock served them.
 PIPELINE_CAPS = NO_CAPS
 BASETEN_CAPS = NO_CAPS
 MODAL_LLM_CAPS = NO_CAPS
 OPENROUTER_CAPS = NO_CAPS
+BEDROCK_CAPS = NO_CAPS
 
 
 def _cap_setting(name: str) -> float | None:
@@ -116,15 +123,27 @@ def _cap_setting(name: str) -> float | None:
     return value
 
 
+def _caps_from_settings(name: str, default: Caps) -> Caps:
+    """A budget's caps from PICKFIT_<NAME>_TOTAL_CAP_USD and PICKFIT_<NAME>_DAILY_CAP_USD; `default` when
+    neither is set."""
+    total = _cap_setting(f"PICKFIT_{name}_TOTAL_CAP_USD")
+    daily = _cap_setting(f"PICKFIT_{name}_DAILY_CAP_USD")
+    if total is None and daily is None:
+        return default
+    return Caps(total_usd=math.inf if total is None else total,
+                daily_usd=no_daily_cap if daily is None else (lambda day: daily))
+
+
 def pipeline_caps() -> Caps:
     """The pipeline budget's caps: none, unless the user sets PICKFIT_PIPELINE_TOTAL_CAP_USD (all the
     budget's spending, the hackathon's included) or PICKFIT_PIPELINE_DAILY_CAP_USD (one Taipei day)."""
-    total = _cap_setting("PICKFIT_PIPELINE_TOTAL_CAP_USD")
-    daily = _cap_setting("PICKFIT_PIPELINE_DAILY_CAP_USD")
-    if total is None and daily is None:
-        return PIPELINE_CAPS
-    return Caps(total_usd=math.inf if total is None else total,
-                daily_usd=no_daily_cap if daily is None else (lambda day: daily))
+    return _caps_from_settings("PIPELINE", PIPELINE_CAPS)
+
+
+def bedrock_caps() -> Caps:
+    """The bedrock budget's caps: none, unless the user sets PICKFIT_BEDROCK_TOTAL_CAP_USD (everything
+    Bedrock has served) or PICKFIT_BEDROCK_DAILY_CAP_USD (one Taipei day)."""
+    return _caps_from_settings("BEDROCK", BEDROCK_CAPS)
 
 
 def taipei_now(clock: Callable[[], datetime] | None = None) -> datetime:
@@ -201,7 +220,9 @@ class Ledger:
         """Check every cap and hold `estimate_usd`; return the row id to settle later.
 
         `scope_cap_usd` limits what `scope` may spend within this `run_id`, so the same
-        scope (e.g. "verify:<slug>") gets the full cap again in a later run. `batch` marks a request sent
+        scope (e.g. "verify:<slug>") gets the full cap again in a later run. It counts the scope's
+        spending in every budget: a run whose calls moved from Bedrock to the direct API has spent
+        both. `batch` marks a request sent
         through the Message Batches API (pickfit.msg_batch), billed at half price.
         """
         if estimate_usd < 0:
@@ -216,7 +237,8 @@ class Ledger:
             if scope_cap_usd is not None:
                 if not scope:
                     raise ValueError("scope_cap_usd needs a scope")
-                scope_spent = self._spent(conn, " AND scope = ? AND run_id IS ?", (scope, run_id))
+                scope_spent = float(conn.execute(
+                    f"SELECT {_SPEND} FROM calls WHERE scope = ? AND run_id IS ?", (scope, run_id)).fetchone()[0])
                 checks.append((f"scope {scope}", scope_cap_usd, scope_spent))
             for name, limit, spent in checks:
                 if spent + estimate_usd > limit + 1e-9:
@@ -368,6 +390,11 @@ def modal_llm_ledger() -> Ledger:
 def openrouter_ledger() -> Ledger:
     """The openrouter budget in the shared ledger file (Meta's models reached through OpenRouter)."""
     return Ledger(get_env("PICKFIT_LEDGER") or DEFAULT_PATH, budget="openrouter", caps=OPENROUTER_CAPS)
+
+
+def bedrock_ledger() -> Ledger:
+    """The bedrock budget in the shared ledger file (Claude served by Amazon Bedrock, on AWS's bill)."""
+    return Ledger(get_env("PICKFIT_LEDGER") or DEFAULT_PATH, budget="bedrock", caps=bedrock_caps())
 
 
 # ---------------------------------------------------------------- boxes: how long each sandbox machine was up

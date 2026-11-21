@@ -21,7 +21,9 @@ caller keyed them:
 5. Requests the cap held back go in a next wave once the first has settled (worst cases are far above what
    calls cost), until all are sent or a wave sends none.
 
-Only Claude models: the hackathon's providers have no batch API.
+Only Claude models, and only on Anthropic's own API: the hackathon's providers have no batch API, and Amazon
+Bedrock has neither Message Batches nor a batch tier for these models (PICKFIT_CLAUDE_VIA does not move a batch,
+nor the requests sent again after one, which need the direct API's fallback model).
 """
 
 from __future__ import annotations
@@ -297,7 +299,7 @@ def _resend(req: BatchRequest, *, run_id: str | None, ledger: Ledger, runs_dir: 
     """One request the batch did not answer, through call_meta (retries, fallbacks, the full price)."""
     try:
         result = call_meta(req.endpoint, req.body, stage=req.stage, public_data_only=req.public_data_only,
-                           max_output_tokens=req.max_output_tokens, model=req.model,
+                           max_output_tokens=req.max_output_tokens, model=req.model, provider=DEFAULT_PROVIDER,
                            reasoning_effort=req.reasoning_effort, scope=req.scope, scope_cap_usd=req.scope_cap_usd,
                            run_id=run_id, output_model=req.output_model, cache=False, client=client, ledger=ledger,
                            runs_dir=runs_dir)

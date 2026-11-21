@@ -4,15 +4,22 @@ The estimates are what pickfit.verify.meter wrote for every Modal sandbox, EC2 i
 files you export from the providers' own tools; this script reads files only and calls no provider:
 
     uv run python scripts/box_reconcile.py --print-commands --since 2026-11-19 --until 2026-11-26
-    # run those two commands (they need Modal's and AWS's logins), then:
+    # run those three commands (they need Modal's and AWS's logins), then:
     uv run python scripts/box_reconcile.py --since 2026-11-19 --until 2026-11-26 \\
-        --modal-report modal-report.json --aws-cost aws-cost.json [--actual scaleway.csv] [--json]
+        --modal-report modal-report.json --aws-cost aws-cost.json --aws-account aws-account.json \\
+        [--actual scaleway.csv] [--json]
 
 - Modal: `modal billing report --json` (or --csv). Modal bills an app, not a sandbox: the rows of the app the boxes
   run in (--modal-app, pickfit-verify) are compared; other objects of the workspace are shown apart.
 - AWS: Cost Explorer's GetCostAndUsage answer, daily, for instances tagged pickfit=verify, grouped by the
   pickfit:purpose tag. The tags count only once the account's owner has activated them as cost allocation tags,
   and only from then on.
+- The AWS account as a whole: the same answer for every service, credits and refunds left out, grouped by the
+  pickfit tag and by service. The account is shared with other work, so this is where pickfit's own spending is
+  told apart: what carries the tag is pickfit's; Claude on Amazon Bedrock cannot carry it (AWS bills it under the
+  model's own name, through AWS Marketplace) and is compared with the ledger's bedrock calls instead; everything
+  else is listed by service as not tagged pickfit. That last part is other projects' usage, plus the little a tag
+  cannot reach (data transfer, public IPv4 addresses).
 - Anything else (a Scaleway invoice): a CSV with day,provider,usd.
 
 Days are UTC days, as the providers bill them. A box that spans midnight is split by the time it ran on each day.
@@ -26,6 +33,8 @@ import argparse
 import csv
 import io
 import json
+import re
+import sqlite3
 import sys
 from collections import defaultdict
 from datetime import UTC, date, datetime, timedelta
@@ -39,6 +48,11 @@ if str(REPO_ROOT) not in sys.path:
 from pickfit.ledger import DEFAULT_PATH, BoxLedger, box_cost  # noqa: E402
 
 MODAL_APP = "pickfit-verify"
+PICKFIT_TAG = "pickfit"  # every EC2 resource pickfit makes carries pickfit=verify (deploy/watch/aws-watch-policy.json)
+# Services whose lines are Claude through Bedrock. AWS's model card says they are billed under the model provider,
+# not under Amazon Bedrock; the exact names were not seen on a bill when this was written (11/21), so the match is
+# wide and --model-service narrows it.
+MODEL_SERVICE = r"claude|anthropic|bedrock"
 Key = tuple[str, str]  # (UTC day, provider)
 
 
@@ -140,6 +154,47 @@ def aws_actual(text: str) -> tuple[dict[Key, float], dict[str, dict[str, float]]
     return dict(total), dict(by_purpose)
 
 
+def aws_account(text: str, model_service: str = MODEL_SERVICE) -> dict[str, dict[str, dict[str, float]]]:
+    """A GetCostAndUsage answer for the whole account, grouped by the pickfit tag and by service, as three parts,
+    each {day: {service: USD}}: "tagged" (carries the pickfit tag: pickfit's machines), "model" (Claude through
+    Bedrock, which no tag reaches) and "untagged" (the rest: not shown to be pickfit's)."""
+    parts: dict[str, dict[str, dict[str, float]]] = {"tagged": {}, "model": {}, "untagged": {}}
+    is_model = re.compile(model_service, re.I)
+    for period in json.loads(text).get("ResultsByTime", []):
+        day = period["TimePeriod"]["Start"][:10]
+        for group in period.get("Groups") or []:
+            keys = group["Keys"]
+            tag = next((k for k in keys if k.startswith(f"{PICKFIT_TAG}$")), f"{PICKFIT_TAG}$")
+            service = next((k for k in keys if not k.startswith(f"{PICKFIT_TAG}$")), "(no service)")
+            amount = float(group["Metrics"]["UnblendedCost"]["Amount"])
+            part = "tagged" if tag.split("$", 1)[1] else "model" if is_model.search(service) else "untagged"
+            services = parts[part].setdefault(day, {})
+            services[service] = services.get(service, 0.0) + amount
+    return parts
+
+
+def model_estimates(ledger_path: Path | str, provider: str = "bedrock") -> dict[Key, float]:
+    """{(UTC day, provider): USD} of the ledger's model calls one provider served: what pickfit counted for them
+    (a call still open counts its reservation). Empty for a ledger with no calls table."""
+    conn = sqlite3.connect(f"file:{ledger_path}?mode=ro", uri=True)
+    try:
+        rows = conn.execute("SELECT ts, CASE WHEN status = 'reserved' THEN reserved_usd ELSE cost_usd END "
+                            "FROM calls WHERE provider = ?", (provider,)).fetchall()
+    except sqlite3.OperationalError:
+        return {}
+    finally:
+        conn.close()
+    out: dict[Key, float] = defaultdict(float)
+    for ts, usd in rows:
+        out[(_utc(ts).date().isoformat(), provider)] += float(usd or 0.0)
+    return dict(out)
+
+
+def _in_range(days: dict[str, Any], since: date | None, until: date | None) -> dict[str, Any]:
+    return {day: value for day, value in sorted(days.items())
+            if not (since and date.fromisoformat(day) < since) and not (until and date.fromisoformat(day) >= until)}
+
+
 def generic_actual(text: str) -> dict[Key, float]:
     out: dict[Key, float] = defaultdict(float)
     for row in csv.DictReader(io.StringIO(text)):
@@ -189,6 +244,12 @@ def commands(since: date, until: date) -> list[str]:
         f"--time-period Start={since},End={until} --granularity DAILY --metrics UnblendedCost "
         "--filter '{\"Tags\": {\"Key\": \"pickfit\", \"Values\": [\"verify\"]}}' "
         "--group-by Type=TAG,Key=pickfit:purpose > aws-cost.json",
+        # The whole account, so that what is not pickfit's shows apart. Without credits and refunds: they are
+        # negative lines of their own, and a day they cover would otherwise read as free.
+        "aws ce get-cost-and-usage --region us-east-1 "
+        f"--time-period Start={since},End={until} --granularity DAILY --metrics UnblendedCost "
+        "--filter '{\"Not\": {\"Dimensions\": {\"Key\": \"RECORD_TYPE\", \"Values\": [\"Credit\", \"Refund\"]}}}' "
+        f"--group-by Type=TAG,Key={PICKFIT_TAG} Type=DIMENSION,Key=SERVICE > aws-account.json",
     ]
 
 
@@ -207,6 +268,16 @@ def render(lines: list[dict[str, Any]], sums: list[dict[str, Any]], notes: dict[
                f"{notes['shares_skipped']} VM shares of a rented host counted once, as the host")
     for day, cost in sorted((notes.get("modal_other") or {}).items()):
         out.append(f"modal, {day}: US${cost:.4f} for other objects of the workspace (not {MODAL_APP})")
+    account = notes.get("aws_account") or {}
+    for day in sorted({day for part in account.values() for day in part}):
+        tagged, model, untagged = (account[part].get(day, {}) for part in ("tagged", "model", "untagged"))
+        listed = ", ".join(f"{service} {usd:.4f}" for service, usd in sorted(untagged.items(), key=lambda i: -i[1]))
+        out.append(f"aws, {day}: US${sum(tagged.values()):.4f} tagged {PICKFIT_TAG} · US${sum(model.values()):.4f} "
+                   f"Claude on Bedrock · US${sum(untagged.values()):.4f} not tagged {PICKFIT_TAG}"
+                   + (f" ({listed})" if listed else ""))
+    if account:
+        out.append(f"aws: the tagged part and Claude on Bedrock are what the table counts as pickfit's; the part "
+                   f"not tagged {PICKFIT_TAG} is other work in the account, plus what a tag cannot reach")
     return "\n".join(out)
 
 
@@ -218,6 +289,10 @@ def main(argv: list[str] | None = None, *, now: datetime | None = None) -> int:
     parser.add_argument("--modal-report", type=Path, help="`modal billing report --json` (or --csv) output")
     parser.add_argument("--modal-app", default=MODAL_APP, help=f"the Modal app the boxes run in ({MODAL_APP})")
     parser.add_argument("--aws-cost", type=Path, help="Cost Explorer's GetCostAndUsage answer (JSON)")
+    parser.add_argument("--aws-account", type=Path,
+                        help="the same for the whole account, grouped by the pickfit tag and by service (JSON)")
+    parser.add_argument("--model-service", default=MODEL_SERVICE,
+                        help=f"regular expression for the services that are Claude on Bedrock ({MODEL_SERVICE})")
     parser.add_argument("--actual", type=Path, action="append", default=[], help="CSV of day,provider,usd")
     parser.add_argument("--json", action="store_true", help="print JSON instead of a table")
     parser.add_argument("--print-commands", action="store_true", help="print the commands that make the bill files")
@@ -233,6 +308,7 @@ def main(argv: list[str] | None = None, *, now: datetime | None = None) -> int:
     ledger = BoxLedger(args.ledger or get_env("PICKFIT_LEDGER") or DEFAULT_PATH)
     rows = ledger.boxes()
     estimated, notes = estimates(rows, now)
+    estimated.update(model_estimates(ledger.path))
     actual: dict[Key, float] = {}
     purposes: dict[str, dict[str, float]] = {}
     if args.modal_report:
@@ -241,14 +317,24 @@ def main(argv: list[str] | None = None, *, now: datetime | None = None) -> int:
     if args.aws_cost:
         ec2, purposes = aws_actual(args.aws_cost.read_text(encoding="utf-8"))
         actual.update(ec2)
+    account: dict[str, dict[str, dict[str, float]]] = {}
+    if args.aws_account:
+        account = aws_account(args.aws_account.read_text(encoding="utf-8"), args.model_service)
+        for day in {day for part in account.values() for day in part}:
+            # A day the account was billed nothing for a part is a real 0, not a missing bill.
+            actual[(day, "bedrock")] = sum(account["model"].get(day, {}).values())
+            if not args.aws_cost:  # the tagged machines' bill, when the tag-filtered answer was not given
+                actual[(day, "ec2")] = sum(account["tagged"].get(day, {}).values())
+        account = {part: _in_range(by_day, args.since, args.until) for part, by_day in account.items()}
+        notes["aws_account"] = account
     for path in args.actual:
         for key, usd in generic_actual(path.read_text(encoding="utf-8")).items():
             actual[key] = actual.get(key, 0.0) + usd
     lines = reconcile(estimated, actual, since=args.since, until=args.until)
     sums = totals(lines)
     if args.json:
-        print(json.dumps({"days": lines, "totals": sums, "notes": notes, "aws_by_purpose": purposes},
-                         indent=2, ensure_ascii=False))
+        print(json.dumps({"days": lines, "totals": sums, "notes": notes, "aws_by_purpose": purposes,
+                          "aws_account": account}, indent=2, ensure_ascii=False))
     else:
         print(render(lines, sums, notes))
     return 0

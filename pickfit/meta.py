@@ -7,6 +7,12 @@ the answers back. The hackathon's providers (Meta, Baseten, Modal's endpoint, Op
 by naming one of their model ids or `provider=`; nothing routes to them by default. Modal's endpoint is
 still the only one that takes video ("open-modal").
 
+The same Claude models can be reached through Amazon Bedrock (pickfit.bedrock_messages): PICKFIT_CLAUDE_VIA=bedrock
+sends there every Claude call that names no provider, and `provider="bedrock"` one call. The model is the same
+one or the call is refused; the ledger row says provider and budget "bedrock". When Bedrock throttles, is down,
+is over its own cap or its Claude declines the request, the call goes to the direct API instead, and both
+attempts are in the ledger and the trace.
+
 Every call goes through the same steps:
 
 1. Route the model ("dev" and "open" -> Claude Haiku, "prod" or nothing -> Claude Opus) and refuse models
@@ -37,7 +43,7 @@ import re
 import sys
 import threading
 import time
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any, Literal
@@ -46,16 +52,19 @@ import anthropic
 import openai
 from pydantic import BaseModel, ValidationError
 
-from pickfit import anthropic_messages
+from pickfit import anthropic_messages, bedrock_messages
 from pickfit.env import REPO_ROOT, get_env, require_env
 from pickfit.ledger import (
     BudgetExceeded,
     OPENROUTER_CAPS,
     Ledger,
     baseten_ledger,
+    bedrock_caps,
+    bedrock_ledger,
     default_ledger,
     modal_llm_ledger,
     openrouter_ledger,
+    pipeline_caps,
     taipei_date,
     taipei_now,
 )
@@ -73,6 +82,10 @@ class Provider:
 DEFAULT_PROVIDER = "anthropic"
 PROVIDERS: dict[str, Provider] = {
     "anthropic": Provider("https://api.anthropic.com", "ANTHROPIC_API_KEY"),
+    # The same Claude models on Amazon Bedrock, signed with an IAM key that may only invoke them
+    # (deploy/watch/aws-bedrock-policy.json). Reached by provider= or PICKFIT_CLAUDE_VIA, never by default.
+    "bedrock": Provider("https://bedrock-runtime.{region}.amazonaws.com", "PICKFIT_BEDROCK_ACCESS_KEY_ID",
+                        "PICKFIT_BEDROCK_SECRET_ACCESS_KEY"),
     # The hackathon's providers (to 2026-11-04): reached only by one of their model ids or provider=.
     "meta": Provider("https://api.meta.ai/v1", "MODEL_API_KEY"),
     "baseten": Provider("https://inference.baseten.co/v1", "BASETEN_API_KEY"),
@@ -92,6 +105,12 @@ META_VIA = ("meta", "openrouter")
 OPENROUTER_MODELS = {"muse-spark-1.3": "meta/muse-spark-1.3", "muse-spark-1.3-contributor": "meta/muse-spark-1.3",
                      "muse-wonder-1.0": "meta/muse-wonder"}
 OPENROUTER_PIN = {"order": ["meta"], "allow_fallbacks": False, "data_collection": "deny"}
+
+# PICKFIT_CLAUDE_VIA=bedrock sends a Claude call that names no provider through Amazon Bedrock instead of
+# Anthropic's API, when Bedrock serves that same model (bedrock_messages.MODELS); any other Claude model stays on
+# the direct API. A call site that needs what Bedrock lacks says provider="anthropic" (pickfit.msg_batch does).
+CLAUDE_VIA = ("anthropic", "bedrock")
+CLAUDE_PROVIDERS = ("anthropic", "bedrock")
 
 # The tiers the pipeline asks for by name. PICKFIT_MODE picks one when a caller passes none, and prod when it is
 # unset (since 11/19; it was dev, so a `verify --batch` without --model ran its agent on Haiku on 11/16-11/17).
@@ -116,7 +135,7 @@ BASETEN_PREFIX = "meta-models/"
 META_PREFIX = "muse-"
 OPEN_PROVIDERS = ("baseten", "modal")
 # Providers that keep no conversations: previous_response_id means nothing to them.
-STATELESS_PROVIDERS = (*OPEN_PROVIDERS, "openrouter", "anthropic")
+STATELESS_PROVIDERS = (*OPEN_PROVIDERS, "openrouter", *CLAUDE_PROVIDERS)
 
 
 @dataclass(frozen=True)
@@ -153,6 +172,13 @@ PRICES: dict[tuple[str, str], Price] = {
     ("anthropic", "claude-opus-5"): _claude(5.00, 25.00),
     ("anthropic", "claude-opus-4-8"): _claude(5.00, 25.00),
     ("anthropic", "claude-sonnet-5"): _claude(2.00, 10.00),
+    # Amazon Bedrock, global cross-Region inference: aws.amazon.com/bedrock/pricing ("Global Cross-region
+    # Inference", Anthropic models; its price data was published 2026-11-20), read 2026-11-21. The same as
+    # Anthropic's list: Opus 5.5 $4 in, $20 out, $5 a 5-minute and $8 an hour's cache write, $0.20 a cache
+    # read; Haiku 5.5 has its own "Long Context" row at 5x (the 100K threshold is Anthropic's, AWS names none).
+    # A geographic or single-Region profile is 10% more and is not what bedrock_messages.PROFILE sends.
+    ("bedrock", "claude-opus-5-5"): _claude(4.00, 20.00, cached=0.20),
+    ("bedrock", "claude-haiku-5-5"): _claude(0.10, 0.50, cached=0.01, long_context=(100_000, 5.0)),
     # The hackathon's providers, measured or confirmed 2026-10-28.
     ("meta", "muse-spark-1.3"): Price(input=1.25, output=4.25, cached=0.15),
     ("meta", "muse-spark-1.3-contributor"): Price(input=0.10, output=0.20),
@@ -193,6 +219,9 @@ NOT_FOUND_TRIES = 8
 BACKOFF_BASE_S = 2.0
 BACKOFF_MAX_S = 60.0
 CLIENT_TIMEOUT_S = 600.0
+# Bedrock is tried this many times when it throttles or fails before the call goes to the direct API: the
+# long waits above are for a provider with nowhere else to go.
+BEDROCK_TRIES = 2
 
 PING_MAX_OUTPUT_TOKENS = 1_024  # thinking shares this limit, and Claude always thinks
 TRACE_TEXT_LIMIT = 4_000
@@ -367,9 +396,47 @@ def meta_via() -> str:
     return via
 
 
+def claude_via() -> str:
+    """Where Claude calls that name no provider go: "anthropic" (the direct API, the default) or "bedrock"
+    (PICKFIT_CLAUDE_VIA)."""
+    via = get_env("PICKFIT_CLAUDE_VIA") or DEFAULT_PROVIDER
+    if via not in CLAUDE_VIA:
+        raise ValueError(f"PICKFIT_CLAUDE_VIA must be one of {CLAUDE_VIA}, got {via!r}")
+    return via
+
+
+_notes: set[str] = set()  # what has been said once on stderr in this process
+
+
+def _note_once(key: str, text: str) -> None:
+    if key not in _notes:
+        _notes.add(key)
+        print(f"pickfit: {text}", file=sys.stderr)
+
+
+def _provider_by_setting(model: str) -> str:
+    """The provider of a call that named none: the one serving the model id, or Bedrock for a Claude model
+    when PICKFIT_CLAUDE_VIA says so and Bedrock serves that model. One it does not serve stays on the direct
+    API, the same model, and that is said once."""
+    provider = provider_for(model)
+    if provider != DEFAULT_PROVIDER or claude_via() != "bedrock":
+        return provider
+    if bedrock_messages.offers(model):
+        return "bedrock"
+    _note_once(f"not-on-bedrock:{model}", f"{model} is not offered through Amazon Bedrock here; its calls "
+                                          "stay on Anthropic's API")
+    return provider
+
+
 def route(provider: str, model: str) -> tuple[str, str]:
     """The provider a call goes to and the model id it sends: a Meta-model call goes to OpenRouter (under
-    OpenRouter's id) when PICKFIT_META_VIA says so; every other call as it is."""
+    OpenRouter's id) when PICKFIT_META_VIA says so, a Bedrock call names the model's inference profile (and
+    is refused when Bedrock does not serve that model); every other call as it is."""
+    if provider == "bedrock":
+        try:
+            return provider, bedrock_messages.wire_model(model)
+        except bedrock_messages.NotOnBedrock as err:
+            raise ModelRefused(str(err)) from None
     if provider == "meta" and meta_via() == "openrouter":
         provider = "openrouter"
     if provider != "openrouter":
@@ -529,13 +596,13 @@ def _check_policy(provider: str, model: str, public_data_only: bool, effort: str
             f"{model} may train on its inputs; use model='prod' for data that is not public")
     if effort not in EFFORTS:
         raise ValueError(f"reasoning_effort must be one of {EFFORTS}")
-    if effort == "max" and provider != "anthropic" and model not in MAX_EFFORT_MODELS:
+    if effort == "max" and provider not in CLAUDE_PROVIDERS and model not in MAX_EFFORT_MODELS:
         raise ValueError(f"{model} does not support reasoning_effort='max'")
     if not isinstance(max_output_tokens, int) or max_output_tokens <= 0:
         raise ValueError("max_output_tokens must be a positive int")
     if provider in STATELESS_PROVIDERS and body.get("previous_response_id"):
         raise ValueError(f"{provider} keeps no conversations; previous_response_id is not supported")
-    if provider == "anthropic" and _has_web_search(body):
+    if provider in CLAUDE_PROVIDERS and _has_web_search(body):
         raise ValueError("web_search is not wired for Claude models")
 
 
@@ -545,9 +612,15 @@ _clients_lock = threading.Lock()
 
 def make_client(provider: str = DEFAULT_PROVIDER, *, http_client: Any = None) -> Any:
     """A client with `chat.completions.create` and `responses.create`, with SDK retries off (call_meta
-    retries itself): Anthropic's SDK behind pickfit.anthropic_messages.Client, or OpenAI's SDK for the
-    hackathon's providers. The base URL is always pickfit's own, never one from the environment."""
+    retries itself): Anthropic's SDK behind pickfit.anthropic_messages.Client (its Bedrock client behind
+    pickfit.bedrock_messages.Client), or OpenAI's SDK for the hackathon's providers. The base URL is always
+    pickfit's own, never one from the environment."""
     info = PROVIDERS[provider]
+    if provider == "bedrock":
+        region = get_env("PICKFIT_BEDROCK_REGION") or bedrock_messages.DEFAULT_REGION
+        return bedrock_messages.make_client(
+            access_key=require_env(info.key_env), secret_key=require_env(info.secret_env), region=region,
+            base_url=info.base_url.format(region=region), timeout=CLIENT_TIMEOUT_S, http_client=http_client)
     key = require_env(info.key_env) + (f".{require_env(info.secret_env)}" if info.secret_env else "")
     options = dict(api_key=key, base_url=info.base_url, max_retries=0, timeout=CLIENT_TIMEOUT_S,
                    http_client=http_client)
@@ -821,12 +894,13 @@ class _Retry:
     not_found: int = 0
     stream: bool = False
     retry_not_found: bool = True  # Meta's on-and-off 404; any other provider's 404 is a wrong model id
+    tries: int = 0  # tries on a 429 and on a server error; 0 for RATE_LIMIT_TRIES and SERVER_ERROR_TRIES
 
     def after_http_error(self, err: Any) -> bool:
         """Whether to try again after an HTTP error; sleeps first when backing off."""
         if err.status_code == 429:
             self.rate_limited += 1
-            if self.rate_limited >= RATE_LIMIT_TRIES:
+            if self.rate_limited >= (self.tries or RATE_LIMIT_TRIES):
                 return False
             wait = _retry_after_s(err)
             sleep(wait if wait is not None else _backoff_s(self.rate_limited))
@@ -845,7 +919,7 @@ class _Retry:
 
     def after_server_error(self) -> bool:
         self.server_errors += 1
-        if self.server_errors >= SERVER_ERROR_TRIES:
+        if self.server_errors >= (self.tries or SERVER_ERROR_TRIES):
             return False
         sleep(_backoff_s(self.server_errors))
         return True
@@ -914,13 +988,17 @@ def call_meta(
     `output_model` validates the text output as JSON into that pydantic model.
     `cache` defaults to PICKFIT_CACHE, else on for the dev model only.
     `provider` defaults to the one serving the model, and `ledger` to that provider's budget in the shared
-    ledger (Claude calls: "pipeline"). `video_seconds`: the videos' total length, so they are reserved at
+    ledger (Claude calls: "pipeline", or "bedrock" when Amazon Bedrock serves them: PICKFIT_CLAUDE_VIA moves
+    there a call that brings neither a provider nor a client, and such a call comes back from the direct API
+    when Bedrock gives way, see _bedrock_gave_way). `video_seconds`: the videos' total length, so they are reserved at
     their size rather than at VIDEO_TOKENS each. `conversation`: the caller sends this request's history again
     on its next turn (an agent loop), so a Claude call caches it from the first turn on; a single call leaves
     it out, since a cache write nothing reads back costs more than plain input.
     """
     model = resolve_model(model, provider or DEFAULT_PROVIDER)
-    provider, wire_model = route(provider or provider_for(model), model)
+    if provider is None:  # a client the caller built is for the provider serving the model: the setting keeps off
+        provider = _provider_by_setting(model) if client is None else provider_for(model)
+    provider, wire_model = route(provider, model)
     _check_policy(provider, model, public_data_only, reasoning_effort, body, max_output_tokens)
     if provider == "openrouter":
         model = model.removesuffix("-contributor")  # the model that serves it (OPENROUTER_MODELS)
@@ -947,8 +1025,12 @@ def call_meta(
     if provider == "openrouter" and ledger is not None and ledger.budget != "openrouter":
         # A caller's Meta budget: the call now spends OpenRouter's balance, so its budget in the same file counts it.
         ledger = Ledger(ledger.path, budget="openrouter", caps=OPENROUTER_CAPS)
-    ledger = ledger or {"baseten": baseten_ledger, "modal": modal_llm_ledger,
-                        "openrouter": openrouter_ledger}.get(provider, default_ledger)()
+    callers_ledger = ledger
+    if provider == "bedrock" and ledger is not None and ledger.budget != "bedrock":
+        # A caller's Claude budget: the call now spends AWS's bill, so its budget in the same file counts it.
+        ledger = Ledger(ledger.path, budget="bedrock", caps=bedrock_caps(), clock=ledger.clock)
+    ledger = ledger or {"baseten": baseten_ledger, "modal": modal_llm_ledger, "openrouter": openrouter_ledger,
+                        "bedrock": bedrock_ledger}.get(provider, default_ledger)()
     use_cache = _cache_enabled(cache, model)
     if use_cache:
         raw = _cache_read(runs, key)
@@ -964,12 +1046,38 @@ def call_meta(
             return result
 
 
+    def on_the_direct_api(reason: str) -> MetaResult:
+        """The same call on Anthropic's API, after Bedrock gave way; said in the trace and once on stderr."""
+        _append_trace(runs, {**base, "status": "fallback",
+                             "error": {"type": "bedrock_fallback", "message": reason}}, [])
+        _note_once(f"bedrock:{reason.split(':')[0]}", f"Amazon Bedrock {reason}; such calls go to Anthropic's API "
+                                                      "and are recorded under it")
+        direct = callers_ledger
+        if direct is not None and direct.budget == "bedrock":
+            direct = Ledger(direct.path, caps=pipeline_caps(), clock=direct.clock)
+        return call_meta(endpoint, body, stage=stage, public_data_only=public_data_only,
+                         max_output_tokens=max_output_tokens, model=model, provider=DEFAULT_PROVIDER,
+                         reasoning_effort=reasoning_effort, scope=scope, scope_cap_usd=scope_cap_usd, run_id=run_id,
+                         output_model=output_model, cache=cache, ledger=direct, runs_dir=runs_dir,
+                         video_seconds=video_seconds, conversation=conversation)
+
     client = client or _default_client(provider)
     secrets = [client.api_key] if isinstance(getattr(client, "api_key", None), str) else []
-    raw, usage, cost, attempts = _send_with_retries(
-        client, endpoint, request, price, max_output_tokens, ledger, runs, base, secrets,
-        scope_cap_usd=scope_cap_usd, video_seconds=video_seconds, conversation=conversation)
+    try:
+        raw, usage, cost, attempts = _send_with_retries(
+            client, endpoint, request, price, max_output_tokens, ledger, runs, base, secrets,
+            scope_cap_usd=scope_cap_usd, video_seconds=video_seconds, conversation=conversation)
+    except Exception as err:
+        gave_way = _bedrock_gave_way(err) if provider == "bedrock" else None
+        if gave_way is None:
+            raise
+        return on_the_direct_api(gave_way)
     result = make_result(raw, usage, cost, cache_hit=False, attempts=attempts)
+    if provider == "bedrock" and "stop_details" in raw:
+        # Declined by a safety classifier. Bedrock has no fallback model to hand it to (the direct API's
+        # `fallbacks`), so the direct API gets the request; what Bedrock billed for the decline is counted.
+        again = on_the_direct_api("declined: its Claude declined a request and Bedrock has no fallback model")
+        return replace(again, cost_usd=again.cost_usd + cost, attempts=again.attempts + attempts)
     if use_cache and _cacheable(result):
         _cache_write(runs, key, provider, endpoint, raw)
     return result
@@ -977,6 +1085,24 @@ def call_meta(
 
 def _clip(text: str | None) -> str | None:
     return text[:TRACE_TEXT_LIMIT] if text else None
+
+
+def _bedrock_gave_way(err: BaseException) -> str | None:
+    """Why a failed Bedrock call goes to the direct API, or None when it must fail as it is. Throttling and
+    outages do (after BEDROCK_TRIES), and so does the bedrock budget's own daily or total cap. A refused
+    request does not: a 400, a 403 (the key or the model access is wrong) or a 404 would hide a mistake, and
+    a per-scope cap is the caller's limit on any provider."""
+    if isinstance(err, BudgetExceeded):
+        return None if err.cap.startswith("scope") else f"cap: its {err.cap} cap is reached"
+    if isinstance(err, _STATUS_ERRORS):
+        if err.status_code == 429:
+            return "throttled: it kept answering 429"
+        if err.status_code >= 500 or err.status_code == 408:
+            return f"down: it kept answering {err.status_code}"
+        return None
+    if isinstance(err, _CONNECTION_ERRORS):  # timeouts are connection errors too
+        return f"down: {type(err).__name__}"
+    return None
 
 
 def _fallback_model(provider: str, raw: dict[str, Any]) -> str | None:
@@ -1010,7 +1136,7 @@ def _send_with_retries(
     never left is released.
     """
     provider = base["provider"]
-    retry = _Retry(retry_not_found=provider == "meta")
+    retry = _Retry(retry_not_found=provider == "meta", tries=BEDROCK_TRIES if provider == "bedrock" else 0)
     attempt = 0
     while True:
         attempt += 1

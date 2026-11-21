@@ -17,6 +17,7 @@ def _ping(args: argparse.Namespace) -> int:
 
     result = ping(provider=args.provider, model=args.model)
     print(json.dumps({
+        "provider": result.provider,  # "anthropic" after --provider bedrock: Bedrock gave way (see stderr)
         "model": result.model,
         "text": result.text,
         "cost_usd": result.cost_usd,
@@ -27,9 +28,10 @@ def _ping(args: argparse.Namespace) -> int:
 
 
 def _spend(args: argparse.Namespace) -> int:
-    from pickfit.ledger import default_ledger
+    from pickfit.ledger import bedrock_ledger, default_ledger
 
-    print(json.dumps(default_ledger().spend_summary(), ensure_ascii=False, indent=2))
+    ledger = bedrock_ledger() if args.budget == "bedrock" else default_ledger()
+    print(json.dumps(ledger.spend_summary(), ensure_ascii=False, indent=2))
     return 0
 
 
@@ -950,12 +952,15 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command")
 
     p = sub.add_parser("ping", help="make the smallest possible model call through call_meta")
-    p.add_argument("--provider", default="anthropic", choices=["anthropic", "meta", "baseten"],
-                   help="anthropic (default); meta and baseten are the hackathon's providers")
+    p.add_argument("--provider", default="anthropic", choices=["anthropic", "bedrock", "meta", "baseten"],
+                   help="anthropic (default); bedrock is the same Claude model through Amazon Bedrock; meta and "
+                        "baseten are the hackathon's providers")
     p.add_argument("--model", default=None, help='"dev", "prod", or a model id (default: PICKFIT_MODE, else prod)')
     p.set_defaults(func=_ping)
 
     s = sub.add_parser("spend", help="show spending from the shared ledger")
+    s.add_argument("--budget", default="pipeline", choices=["pipeline", "bedrock"],
+                   help="pipeline (default: Claude on Anthropic's API) or bedrock (Claude through Amazon Bedrock)")
     s.set_defaults(func=_spend)
 
     _add_pipeline_commands(sub)

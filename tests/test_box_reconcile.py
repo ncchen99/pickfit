@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pytest
 
-from pickfit.ledger import BoxLedger
+from pickfit.ledger import BoxLedger, Ledger
 
 ROOT = Path(__file__).resolve().parent.parent
 FIXTURES = Path(__file__).parent / "fixtures" / "box_reconcile"
@@ -104,7 +104,62 @@ def test_the_report_gives_each_day_and_provider_its_difference(ledger: Path, cap
 
 def test_it_prints_the_commands_that_make_the_bill_files(capsys: pytest.CaptureFixture[str]):
     box_reconcile.main(["--print-commands", "--since", "2026-11-19", "--until", "2026-11-26"], now=NOW)
-    modal, aws = capsys.readouterr().out.strip().splitlines()
+    modal, aws, account = capsys.readouterr().out.strip().splitlines()
     assert modal.startswith("modal billing report --start 2026-11-19 --end 2026-11-26 --json")
     assert "aws ce get-cost-and-usage" in aws and "Start=2026-11-19,End=2026-11-26" in aws
     assert "Key=pickfit:purpose" in aws and '"Key": "pickfit"' in aws
+    # The whole account by tag and service, with credits left out so that a day they paid for is not read as free.
+    assert "Start=2026-11-19,End=2026-11-26" in account and account.endswith("> aws-account.json")
+    assert "Type=TAG,Key=pickfit Type=DIMENSION,Key=SERVICE" in account and '"Tags"' not in account
+    assert '{"Not": {"Dimensions": {"Key": "RECORD_TYPE", "Values": ["Credit", "Refund"]}}}' in account
+
+
+def test_the_account_bill_shows_pickfits_part_claude_on_bedrock_and_what_is_not_tagged(
+        ledger: Path, capsys: pytest.CaptureFixture[str]):
+    """The AWS account is shared with other work. The fixture's service name for Claude is made up: no bill with
+    one had been seen when this was written."""
+    text = (FIXTURES / "aws_account.json").read_text()
+    parts = box_reconcile.aws_account(text)
+    assert parts["tagged"] == {"2026-11-19": {"Amazon Elastic Compute Cloud - Compute": pytest.approx(0.12),
+                                              "EC2 - Other": pytest.approx(0.01)}}
+    assert parts["model"] == {"2026-11-19": {"Claude Opus 5.5 (Amazon Bedrock Edition)": pytest.approx(0.42)}}
+    assert parts["untagged"]["2026-11-20"] == {"Amazon Elastic Compute Cloud - Compute": pytest.approx(1.5)}
+    # Another wording for the service: nothing is taken for Claude that the pattern does not name.
+    assert box_reconcile.aws_account(text, "no-such-service")["untagged"]["2026-11-19"][
+        "Claude Opus 5.5 (Amazon Bedrock Edition)"] == pytest.approx(0.42)
+
+    # The ledger's own count of what Bedrock served, by UTC day; the direct API's calls are not AWS's bill.
+    on_bedrock = Ledger(ledger, budget="bedrock", clock=lambda: utc(19, 22))  # 06:00 on the 20th in Taipei
+    on_bedrock.settle(on_bedrock.reserve(1.0, provider="bedrock", model="claude-opus-5-5", stage="verify"), 0.40)
+    on_bedrock.reserve(0.05, provider="bedrock", model="claude-opus-5-5", stage="verify")  # still open
+    direct = Ledger(ledger, clock=lambda: utc(19, 10))
+    direct.settle(direct.reserve(1.0, provider="anthropic", model="claude-opus-5-5", stage="verify"), 0.9)
+    assert box_reconcile.model_estimates(ledger) == {("2026-11-19", "bedrock"): pytest.approx(0.45)}
+
+    args = ["--ledger", str(ledger), "--since", "2026-11-19", "--until", "2026-11-20",
+            "--aws-account", str(FIXTURES / "aws_account.json")]
+    assert box_reconcile.main([*args, "--json"], now=NOW) == 0
+    out = json.loads(capsys.readouterr().out)
+    days = {(d["day"], d["provider"]): d for d in out["days"]}
+    assert days[("2026-11-19", "bedrock")]["estimated_usd"] == pytest.approx(0.45)
+    assert days[("2026-11-19", "bedrock")]["actual_usd"] == pytest.approx(0.42)
+    assert days[("2026-11-19", "bedrock")]["diff_usd"] == pytest.approx(-0.03)
+    assert days[("2026-11-19", "ec2")]["actual_usd"] == pytest.approx(0.13)  # the tagged part, with no --aws-cost
+    assert out["aws_account"]["untagged"] == {"2026-11-19": {"Amazon Elastic Compute Cloud - Compute": 1.5,
+                                                             "Amazon Simple Storage Service": 0.4}}  # --until
+    # Beside the tag-filtered answer, that one stays the machines' bill.
+    box_reconcile.main([*args, "--aws-cost", str(FIXTURES / "aws_cost.json"), "--json"], now=NOW)
+    again = {(d["day"], d["provider"]): d for d in json.loads(capsys.readouterr().out)["days"]}
+    assert again[("2026-11-19", "ec2")]["actual_usd"] == pytest.approx(0.125)
+
+    box_reconcile.main(args, now=NOW)
+    table = capsys.readouterr().out
+    assert ("aws, 2026-11-19: US$0.1300 tagged pickfit · US$0.4200 Claude on Bedrock · US$1.9000 not tagged pickfit "
+            "(Amazon Elastic Compute Cloud - Compute 1.5000, Amazon Simple Storage Service 0.4000)") in table
+    assert "aws, 2026-11-20" not in table and "other work in the account" in table
+
+
+def test_a_ledger_with_no_model_calls_has_no_bedrock_line(ledger: Path, capsys: pytest.CaptureFixture[str]):
+    assert box_reconcile.model_estimates(ledger) == {}  # the boxes table alone: no calls table yet
+    box_reconcile.main(["--ledger", str(ledger), "--since", "2026-11-19"], now=NOW)
+    assert "bedrock" not in capsys.readouterr().out

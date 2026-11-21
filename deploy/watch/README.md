@@ -16,7 +16,7 @@
 | Scaleway DEV1-S（nl-ams-1） | 2 vCPU、2 GB、20 GB 本機 SSD | €6.55，加 IPv4 €2.92，共約 €9.5 | 11/18 起用的就是這台。巴黎三個區（fr-par-1/2/3）這個帳號所有一般機型的配額都是 0，阿姆斯特丹、米蘭、華沙、斯德哥爾摩才有 |
 | Scaleway PLAY2-PICO | 1 vCPU、2 GB | €10.4，加 IPv4 €2.92，加 20 GB 區塊磁碟，共約 €15 | 比 DEV1-S 貴，CPU 還少一個 |
 | Scaleway STARDUST1-S | 1 vCPU、1 GB | 更便宜 | 巴黎沒貨、阿姆斯特丹快沒貨，1 GB 跑 Chromium 不夠 |
-| AWS EC2 t4g.small（台北） | 2 vCPU、2 GB | 約 US$35，加 IPv4 US$3.6 | 第三方網站的報價，沒對過 AWS 官方。會占掉 8 vCPU 配額裡的 2 個，驗證箱子能同時開的就少了 |
+| AWS EC2 t4g.small（台北） | 2 vCPU、2 GB | 約 US$14.2，加 IPv4 US$3.6 | 11/21 對過 AWS 官方價格頁的資料：台北每小時 US$0.0194，一個月 730 小時約 US$14.2（美東是 US$0.0168，約 US$12.3）。原本記的 US$35 來自第三方網站，是錯的。磁碟另計。會占掉 8 vCPU 配額裡的 2 個，驗證箱子能同時開的就少了 |
 | GitHub Actions 排程 | 免費（公開 repo） | US$0 | 每次最多 6 小時，Mac 批次可能不夠。job 檔、造訪紀錄要另外存。從美國的 runner 錄 Mac 的畫面一樣慢 |
 | Modal 排程 | 用 Modal 的額度 | 視用量 | 狀態要放 Volume，部署方式綁在 Modal 上 |
 
@@ -162,3 +162,24 @@ watch 原本最多同時跑 2 筆，每筆先保留 US$6，花到約 US$24 就�
 數字都能在 `/etc/pickfit/watch.env` 用 `PICKFIT_WATCH_*` 改，名稱和預設值寫在 `watch.env.example` 的最後一段。`send_secrets.py` 不會送這些變數，要改就在機器上直接加那幾行，再 `systemctl restart pickfit-watch`。之後重跑 `send_secrets.py` 會整份覆寫 `watch.env`，手加的行要再加一次。
 
 watch 每一輪把狀態寫到 `runs/watch/status.json`：每條分流在跑幾筆、上限幾筆、排隊或停著幾筆，以及沒開新工作的原因（錢、格子滿了、harvest 的額度、分流在休息、等 Mac 的那一批）。卡在錢的時候，原因會寫出是哪幾個數字加起來超過上限。`pickfit watch --status` 會一起印出來，journal 裡也看得到同樣的摘要。
+
+## 模型改走 Amazon Bedrock（11/21，預設沒開）
+
+Claude 的呼叫可以改從 Amazon Bedrock 走，帳算在 AWS 那邊。模型是同一個（Opus 5.5，初篩的 Haiku 5.5 也是），11/21 查到的價格和 Anthropic 直連相同。程式在 `pickfit/bedrock_messages.py`，到 11/21 為止只用假的 client 測過，還沒真的呼叫過 Bedrock。
+
+要開的話，在 `watch.env` 加這幾行（名稱在 `watch.env.example` 最後一段）：
+
+- `PICKFIT_CLAUDE_VIA=bedrock`。留空就全部走 Anthropic 直連，跟以前一樣。
+- `PICKFIT_BEDROCK_ACCESS_KEY_ID`、`PICKFIT_BEDROCK_SECRET_ACCESS_KEY`：另一把 IAM 金鑰，政策用 [aws-bedrock-policy.json](aws-bedrock-policy.json)，只能從台北呼叫這兩個模型的 global inference profile。程式不會拿 EC2 那把 `AWS_*` 金鑰，也不讀 AWS 的 profile 或登入 session。
+- `PICKFIT_BEDROCK_DAILY_CAP_USD`、`PICKFIT_BEDROCK_TOTAL_CAP_USD`：Bedrock 這個預算自己的上限，可以不設。
+
+`send_secrets.py` 不認得這些名稱，要用 `--add 名稱` 一個一個加，或直接在機器上改檔案。
+
+開了以後有四種情況會退回 Anthropic 直連，所以 `ANTHROPIC_API_KEY` 要留著：Bedrock 限流（429）、出錯或連不上、Bedrock 的預算上限到了、模型拒答（Bedrock 沒有備援模型可以接手）。前兩種會先在 Bedrock 試兩次。退回的呼叫在帳本記成 `anthropic`，trace 裡有一行 `fallback`。金鑰或權限設錯（403）不會退回，會直接失敗，這樣才看得出設定有問題。Message Batches 一律走直連。
+
+第一次用之前有兩件事要先做，都要念誠用自己的身分做，watch 那把金鑰做不了：
+
+1. 每個模型在帳號裡的第一次呼叫會自動訂閱 AWS Marketplace 上的模型，呼叫的身分要有 `aws-marketplace:Subscribe` 這幾個權限。在 Bedrock 主控台的 playground 各問一句就可以。
+2. 跑一次 `uv run python scripts/bedrock_compare.py`，把同一批請求送到兩邊，比回應格式和 token 數，約 US$0.6。
+
+對帳用 `scripts/box_reconcile.py --aws-account`。這個 AWS 帳號還有別的專案在用，報表會把帶 `pickfit` 標籤的、Bedrock 上的 Claude、其他沒標籤的用量分開列。
