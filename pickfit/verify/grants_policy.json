@@ -1,0 +1,144 @@
+{
+  "version": "grants.v1",
+  "about": "What a verification box may be given when the agent asks (request_capability), read by pickfit/verify/grants.py. The first rule of a kind whose names match decides. grant: its provider gives it in the same box. rerun: it needs a box that has `box`; elsewhere the run ends and the record starts over in one (at most limits.max_escalations times, and only with limits.rerun_reserve_usd of limits.max_usd_per_record left). refuse: never; `gap` is the existing reason code the agent reports the features under. docs/proposals/privileges.md has the ladder the tiers come from.",
+  "enabled": false,
+  "limits": {
+    "max_escalations": 2,
+    "max_usd_per_record": 6.0,
+    "rerun_reserve_usd": 1.0,
+    "max_requests_per_run": 6
+  },
+  "rules": [
+    {
+      "kind": "system_package",
+      "names": ["*"],
+      "answer": "grant",
+      "tier": 2,
+      "gap": "needs_root",
+      "shown_in_guide": true,
+      "guide": "First, as an administrator: sudo apt-get install -y {name}"
+    },
+    {
+      "kind": "service",
+      "names": ["postgres"],
+      "answer": "rerun",
+      "box": "services",
+      "tier": 3,
+      "gap": "needs_service",
+      "shown_in_guide": true,
+      "guide": "Needs a PostgreSQL server the tool can reach (pickfit ran a throwaway one on 127.0.0.1:5432)",
+      "fidelity": "real",
+      "markers": ["127.0.0.1:5432", "localhost:5432", "DATABASE_URL", "postgres"]
+    },
+    {
+      "kind": "service",
+      "names": ["redis"],
+      "answer": "rerun",
+      "box": "services",
+      "tier": 3,
+      "gap": "needs_service",
+      "shown_in_guide": true,
+      "guide": "Needs a Redis server the tool can reach (pickfit ran a throwaway one on 127.0.0.1:6379)",
+      "fidelity": "real",
+      "markers": ["127.0.0.1:6379", "localhost:6379", "REDIS_URL", "redis"]
+    },
+    {
+      "kind": "service",
+      "names": ["http-mock"],
+      "answer": "rerun",
+      "box": "services",
+      "tier": 3,
+      "gap": "needs_service",
+      "fidelity": "stand_in",
+      "markers": ["127.0.0.1:8080", "localhost:8080", "MOCK_URL", "http-mock"]
+    },
+    {
+      "kind": "service",
+      "names": ["*"],
+      "answer": "refuse",
+      "gap": "needs_service",
+      "why": "pickfit runs no such service; it has postgres, redis and http-mock"
+    },
+    {
+      "kind": "model_endpoint",
+      "names": ["stand-in"],
+      "answer": "rerun",
+      "box": "services",
+      "tier": 3,
+      "gap": "needs_account",
+      "shown_in_guide": true,
+      "guide": "Needs an API key for a model provider (pickfit used a stand-in model, which only shows the requests go through)",
+      "fidelity": "stand_in"
+    },
+    {
+      "kind": "model_endpoint",
+      "names": ["*"],
+      "answer": "grant",
+      "tier": 3,
+      "gap": "needs_account",
+      "shown_in_guide": true,
+      "guide": "Needs your own API key for the model provider ({name})",
+      "fidelity": "compatible",
+      "usd": 0.2
+    },
+    {
+      "kind": "root",
+      "names": ["*"],
+      "answer": "rerun",
+      "box": "root",
+      "box_gives": true,
+      "tier": 4,
+      "gap": "needs_root",
+      "shown_in_guide": true,
+      "guide": "Needs administrator rights (sudo)"
+    },
+    {
+      "kind": "container_engine",
+      "names": ["docker", "podman"],
+      "answer": "rerun",
+      "box": "container_engine",
+      "box_gives": true,
+      "tier": 4,
+      "gap": "needs_container",
+      "shown_in_guide": true,
+      "guide": "Needs {name} installed and running"
+    },
+    {
+      "kind": "container_engine",
+      "names": ["*"],
+      "answer": "refuse",
+      "gap": "needs_container",
+      "why": "pickfit gives docker or podman only"
+    },
+    {
+      "kind": "test_identity",
+      "names": ["*"],
+      "answer": "refuse",
+      "gap": "needs_account",
+      "why": "pickfit has no test identity for this service; a person sets one up per service, never the agent"
+    },
+    {
+      "kind": "virtual_device",
+      "names": ["microphone"],
+      "answer": "rerun",
+      "box": "audio",
+      "box_gives": true,
+      "tier": 3,
+      "gap": "needs_hardware"
+    },
+    {
+      "kind": "virtual_device",
+      "names": ["*"],
+      "answer": "refuse",
+      "gap": "needs_hardware",
+      "why": "pickfit has a simulated microphone only"
+    },
+    {
+      "kind": "extra_machine",
+      "names": ["*"],
+      "answer": "refuse",
+      "gap": "needs_more_resources",
+      "why": "pickfit runs one machine per verification"
+    }
+  ]
+}

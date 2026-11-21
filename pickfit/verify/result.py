@@ -27,6 +27,12 @@ An MCP server's run also carries the handshake the replay's probe check saw (too
 names, server name, whether it ran offline) and the probe's notes; a passed MCP
 run without one is unverified, never install.
 
+What the run's boxes were given beyond the plain box (grants.py) and, per feature,
+the fidelity of what it was checked against go into the run once the schema has the
+fields (loop/proposals/privileges-schema.patch); the run's grants.json has them in
+full either way. A grant with shown_in_guide becomes a line of the install guide's
+manual_steps (a `sudo apt-get install` line): something the user does first.
+
 write_back() updates data/software/<slug>.json for a passed, replayed run, or an
 unverified run whose reason describes the software; never for a failed run. The
 run replaces the earlier run on the same OS, arch and method, except that a run
@@ -41,6 +47,7 @@ from __future__ import annotations
 import json
 import os
 import re
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -82,6 +89,7 @@ from pickfit.verify.failure import (
     tool_command,
 )
 from pickfit.verify.features import coverage
+from pickfit.verify.grants import Grant, grants_of, guide_steps
 from pickfit.verify.gui import DISPLAY_NOTE as GUI_DISPLAY
 from pickfit.verify.mcp import handshake as mcp_handshake
 from pickfit.verify.mcp import pitfalls as mcp_pitfalls
@@ -96,6 +104,11 @@ if TYPE_CHECKING:
     from pickfit.verify.replay import ReplayResult
 
 DATA_DIR = REPO_ROOT / "data" / "software"
+# VerificationRun.grants and FeatureCheck.fidelity come with loop/proposals/privileges-schema.patch; until it is
+# applied a run keeps them in its own files only (grants.json beside the report).
+_HAS_GRANTS = "grants" in VerificationRun.model_fields
+_HAS_FIDELITY = "fidelity" in FeatureCheck.model_fields
+GRANTS_MAX = 20
 
 # First command of an install step -> install method (InstallMethod).
 _METHOD_PATTERNS: list[tuple[str, re.Pattern[str]]] = [
@@ -165,13 +178,16 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
               evidence_dir: Path, screenshots: list[Path] | None = None,
               judge_cost_usd: float = 0.0, confirm: FailureCheck | None = None,
               checked_at: datetime | None = None, gui_app: bool = False, mcp: bool = False,
-              feature_verdicts: dict[str, tuple[str, str]] | None = None) -> tuple[VerificationRun, list[str]]:
+              feature_verdicts: dict[str, tuple[str, str]] | None = None, grants: Sequence[Grant] = (),
+              fidelity: Mapping[str, str] | None = None) -> tuple[VerificationRun, list[str]]:
     """The VerificationRun for one verification, plus notes on why the level was lowered.
 
     checked_at is when its last box ran; it defaults to now, right after the boxes ran. A GUI app
     (gui_app) is function only on an operation the replay checked and the feature judge confirmed
     (tier action_checked); whatever else passed, it is install.
     mcp: the software is an MCP server; its run needs the handshake from the replay.
+    grants: what the run's boxes were given (grants.run_grants); fidelity: feature label -> what its checks ran
+    against (grants.feature_fidelity). Both are recorded only by a schema that has the fields.
     """
     notes: list[str] = []
     verdict = report.verdict or {}
@@ -322,6 +338,9 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
         features, feature_notes = coverage(report.features, smoke_index, smoke, replay.failed, _record_check,
                                            feature_verdicts)
         notes += feature_notes
+        if _HAS_FIDELITY and fidelity:
+            features = [f.model_copy(update={"fidelity": fidelity[f.feature]})
+                        if f.feature in fidelity and f.status != "not_checked" else f for f in features]
     if gui is not None and replay is not None:
         gui = gui.model_copy(update={"operations": gui_operations(report, replay, smoke_index)})
         if gui.tier == "ui_rendered" and operated_feature(gui.operations, features):
@@ -370,7 +389,8 @@ def build_run(report: VerifyReport, replay: ReplayResult | None, judge: JudgeRes
                              screenshot_paths=[p for p in map(_rel, screenshots or []) if p]),
         actor_model=report.model, cost_usd=round(report.cost_usd + judge_cost_usd, 6), features=features, gui=gui,
         mcp=handshake if is_passed(level) else None, gpu=_clip(report.box.get("gpu"), 80),
-        microphone=MICROPHONE if report.box.get("audio") else None)
+        microphone=MICROPHONE if report.box.get("audio") else None,
+        **({"grants": [g.record() for g in grants][:GRANTS_MAX]} if _HAS_GRANTS and grants else {}))
     return run, notes
 
 
@@ -476,9 +496,21 @@ def save_run(run: VerificationRun, evidence_dir: Path) -> Path:
 # ---------------------------------------------------------------- write-back
 
 
-def install_guide(run: VerificationRun) -> InstallGuide:
+def saved_grants(run: VerificationRun) -> list[Grant]:
+    """A run's grants when the caller has none at hand: grants.json beside its report (in full), else the five
+    fields the run itself records; none for a run from before grants were recorded."""
+    trace = run.evidence.trace_path
+    path = (REPO_ROOT / trace).with_name("grants.json") if trace else None
+    if path is not None and path.is_file():
+        return grants_of(json.loads(path.read_text(encoding="utf-8")))
+    return [Grant.from_dict(g.model_dump()) for g in getattr(run, "grants", None) or []]
+
+
+def install_guide(run: VerificationRun, grants: Sequence[Grant] | None = None) -> InstallGuide:
     """The Linux install guide a passed, replayed run supports.
 
+    What pickfit gave the box that a user has to bring or do first (a system package installed as root, a database)
+    is in manual_steps, one line per grant with shown_in_guide: the steps alone do not work without them.
     pickfit's MCP probe exists only in its boxes, so a probe check is never the guide's check or first
     task; an MCP server's guide points to the client config instead (the index builds it from run.mcp).
     A GUI launch shows a window, not text in the terminal: it is a first task, never the check.
@@ -494,6 +526,7 @@ def install_guide(run: VerificationRun) -> InstallGuide:
     example = launched or next((t for t in examples if t.offline), examples[0] if examples else None)
     return InstallGuide(
         basis="replayed", run_id=run.id, method=run.install_method or "other", steps=run.steps,
+        manual_steps=guide_steps(saved_grants(run) if grants is None else grants),
         check=Check(command=check.command, expected_signal=check.expected_signal) if check else None,
         first_task=example.command[:300] if example else None)
 
@@ -509,8 +542,10 @@ def _unwritable(run: VerificationRun) -> str | None:
     return f"unverified ({run.unverified_reason}) says nothing about the software"
 
 
-def write_back(run: VerificationRun, slug: str, data_dir: Path = DATA_DIR) -> tuple[bool, str]:
-    """Record a run in data/software/<slug>.json; (written, why)."""
+def write_back(run: VerificationRun, slug: str, data_dir: Path = DATA_DIR,
+               grants: Sequence[Grant] | None = None) -> tuple[bool, str]:
+    """Record a run in data/software/<slug>.json; (written, why). grants: the run's, for the install guide's
+    lines; without them they are read from the run's own files (saved_grants)."""
     why = _unwritable(run)
     if why:
         return False, f"not written: {why}"
@@ -539,7 +574,7 @@ def write_back(run: VerificationRun, slug: str, data_dir: Path = DATA_DIR) -> tu
     data: dict[str, Any] = record.model_dump(mode="json")
     data["verification"] = verification.model_dump(mode="json")
     if is_passed(run.level):
-        data["install"] = {**data["install"], run.os: install_guide(run).model_dump(mode="json")}
+        data["install"] = {**data["install"], run.os: install_guide(run, grants).model_dump(mode="json")}
     now = taipei_now()
     data["updated_at"] = now.isoformat()
     # The sandbox component and the quality cap follow the runs: recompute them, no model call.

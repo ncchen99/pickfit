@@ -182,3 +182,51 @@ limits.py's `non_root`. `limits_test` makes one box to read its capabilities and
 Ec2RootBox holds no slot and no AWS resource. `git apply --check` passes on feat/priv-root-vm-box at 79e6ca48.
 No real instance was started: the first real run of the limits test is a human's (the report of 11/21 has the
 commands).
+
+## 11/21: grants and fidelity in the record (privileges-schema.patch)
+
+On feat/priv-records-request (docs/proposals/privileges.md P1; the harness side is pickfit/verify/grants.py), from the
+repository root:
+
+```sh
+git apply loop/proposals/privileges-schema.patch
+uv run python scripts/export_schema.py --check
+uv run pytest -q
+```
+
+pickfit/schema.py, schema/software.v1.json (scripts/export_schema.py's output) and a new tests/test_grants_schema.py:
+
+- VerificationRun gets `grants` (at most 20, each listed once): what the run's boxes were given beyond the plain box.
+  A Grant has `kind` (system_package, service, model_endpoint, root, container_engine, test_identity, virtual_device,
+  extra_machine), `name` (one plain name), `tier` (1-5 on the proposal's ladder), `requested_by` (agent or plan) and
+  `shown_in_guide`.
+- FeatureCheck gets an optional `fidelity`: real, compatible or stand_in. A feature not checked has none.
+
+Both are left out of the JSON when empty, so no record changes, nothing is migrated and no score moves (neither
+pickfit/score.py nor pickfit/coverage.py reads them). A record from before loads with no grants and no fidelity, and is
+written back as it was.
+
+Until it is applied, pickfit/verify/result.py writes neither field (it looks for them, as pickfit/profiles.py does for
+Capability.area). Nothing is lost meanwhile: each run's grants.json, beside its report, holds its grants in full, the
+fidelity of each feature, every request and its answer, and the install guide's lines are made from that file. Runs
+verified before the patch do not get the two fields afterwards: a record takes them from its next run.
+
+Checked on 11/21 in a copy of the branch outside every checkout, applied with `patch -p1` (and `git apply --check` on
+the branch): every hunk lands at its stated line, `export_schema.py --check` passes, pytest 2569 passed and 7 skipped
+(2565 and 7 before the patch; the four added tests are the new file's).
+
+Not in this patch: the page and the MCP answer do not read `fidelity` yet (pickfit/index.py's feature coverage, the
+Worker). Until they do, a feature checked against a stand-in still shows as checked there, as it does today for a check
+against the HTTP mock. That belongs with the coverage proposal's page work.
+
+### privileges-guard-policy.patch (for 念誠 to decide)
+
+```sh
+git apply loop/proposals/privileges-guard-policy.patch
+uv run pytest -q tests/test_loop_guard.py
+```
+
+One line in scripts/loop_guard.py: pickfit/verify/grants_policy.json joins PROTECTED. The table decides what a box may
+be given on the agent's request and how much a record may spend, so a loop session that could edit it could widen its
+own grants. Without the patch the table is an ordinary file. PICKFIT_GRANTS_POLICY names another table for one process
+(a trial with the table switched on); a loop's environment is set by scripts/loop.sh, which is guarded already.

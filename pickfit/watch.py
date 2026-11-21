@@ -477,7 +477,8 @@ def routed_verify(runner: str, *, limits: Any, make_factory: Callable[..., Any],
     """verify(task, data_dir, log) that gives each record the box it needs (pickfit.verify.box_needs).
 
     make_factory(lifetime_s, display=, gpu=, audio=, toolchain=) -> a box factory (verify.cli.box_factory with the
-    runner bound); run(task, factory, limits=, log=, data_dir=) -> the outcome (verify_task); publish(display=,
+    runner bound); run(task, factory, limits=, log=, data_dir=, rerun=) -> the outcome (verify_task; rerun is how
+    it starts the record over in a box with more, when the grants policy answers a request so); publish(display=,
     audio=, toolchain=) builds or finds the image once per kind (Modal, EC2). A desktop app gets a display (Modal,
     EC2), a speech tool the simulated microphone (Modal, EC2), a build from source the toolchain box with a longer
     agent time (Modal, EC2), a record that needs PostgreSQL, Redis or a server to talk to the services box (Modal,
@@ -493,27 +494,39 @@ def routed_verify(runner: str, *, limits: Any, make_factory: Callable[..., Any],
 
     display_ok = runner in ("modal", "ec2")
     extras_ok = runner in ("modal", "ec2")  # audio and toolchain boxes
+    rerun_needs = ("services", "audio", "toolchain")  # BoxNeeds fields a rerun can turn on
     lock = threading.Lock()
     factories: dict[tuple[Any, ...], Any] = {}
     images: set[tuple[bool, bool, bool, bool]] = set()
 
     def verify(task: VerifyTask, data_dir: Path, log: Callable[[str], None]) -> Any:
+        from pickfit.verify.pipeline import Rerun
+
         base = int(limits.max_seconds) + margin_s
         reason, error = sysdeps.earlier_attempt(data_dir, task.slug)
         needs = box_needs(task.extraction, readme=task.readme, lifetime_s=base,
                           toolchain_lifetime_s=max(limits.max_seconds, toolchain_agent_s) + margin_s,
                           gpu_available=runner == "modal", earlier_reason=reason, earlier_error=error,
                           own_names=(task.slug, task.extraction.name.value))
+        if needs.why:
+            log(f"box: {', '.join(needs.why)}")
+        if needs.blocked:  # the README states more than the extraction did; the lane let it through on the latter
+            log(f"box: no GPU: {needs.blocked}")
+        factory, run_limits = pick(task, needs, log)
+        # What a rerun one tier up can add (pipeline.verify_task, on a request the grants policy answers that way):
+        # the same box kinds, picked the same way, with the same planned packages (replace() keeps needs.packages).
+        more = frozenset(n for n in rerun_needs if extras_ok and not getattr(needs, n))
+        rerun = Rerun(more, lambda added: pick(task, replace(needs, **{n: True for n in added}), log))
+        return run(task, factory, limits=run_limits, log=log, data_dir=data_dir, rerun=rerun)
+
+    def pick(task: VerifyTask, needs: Any, log: Callable[[str], None]) -> tuple[Any, Any]:
+        """The box factory and the agent limits for a record with these needs: the first attempt's and a rerun's."""
         gui = display_ok and task.extraction.kind.value == "desktop_app"
         audio = extras_ok and needs.audio
         toolchain = extras_ok and needs.toolchain
         services = extras_ok and needs.services
         gpu = needs.gpu if runner == "modal" else None
         run_limits = replace(limits, max_seconds=max(limits.max_seconds, toolchain_agent_s)) if toolchain else limits
-        if needs.why:
-            log(f"box: {', '.join(needs.why)}")
-        if needs.blocked:  # the README states more than the extraction did; the lane let it through on the latter
-            log(f"box: no GPU: {needs.blocked}")
         key = (gui, gpu, audio, toolchain, services)
         with lock:  # build or fetch each image once, not in every thread
             if publish is not None and (gui, audio, toolchain, services) not in images:
@@ -525,7 +538,7 @@ def routed_verify(runner: str, *, limits: Any, make_factory: Callable[..., Any],
         factory = sized_for_build(factories[key], task)
         if needs.packages and sysdeps.enabled() and runner in ("modal", "ec2", "docker"):
             factory = sysdeps.PackagedBoxes(factory, needs.packages, log=log)  # this run's boxes, and only its
-        return run(task, factory, limits=run_limits, log=log, data_dir=data_dir)
+        return factory, run_limits
 
     return verify
 
@@ -559,8 +572,8 @@ def live_steps(*, runner: str = "modal") -> Steps:
     verify = routed_verify(
         runner, limits=limits, margin_s=LIFETIME_MARGIN_S, toolchain_agent_s=TOOLCHAIN_AGENT_S,
         make_factory=lambda lifetime, **kind: box_factory(runner, lifetime, **kind),
-        run=lambda task, factory, *, limits, log, data_dir: verify_task(task, factory, model=MODEL, limits=limits,
-                                                                         log=log, write=True, data_dir=data_dir),
+        run=lambda task, factory, *, limits, log, data_dir, rerun=None: verify_task(
+            task, factory, model=MODEL, limits=limits, log=log, write=True, data_dir=data_dir, rerun=rerun),
         publish=publish if runner in ("modal", "ec2") else None)
 
     def score(data_dir: Path, slug: str) -> str | None:

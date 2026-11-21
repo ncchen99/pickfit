@@ -803,8 +803,8 @@ def routed(runner: str = "modal") -> tuple[Any, list[dict[str, Any]], list[dict[
     runs: list[dict[str, Any]] = []
     published: list[str] = []
 
-    def run(task: Any, factory: Any, *, limits: Any, log: Any, data_dir: Path) -> str:
-        runs.append({"slug": task.slug, "max_seconds": limits.max_seconds})
+    def run(task: Any, factory: Any, *, limits: Any, log: Any, data_dir: Path, rerun: Any = None) -> str:
+        runs.append({"slug": task.slug, "max_seconds": limits.max_seconds, "rerun": rerun})
         return "outcome"
 
     verify = watch_mod().routed_verify(
@@ -845,6 +845,26 @@ def test_a_build_from_source_gets_the_toolchain_box_and_more_time() -> None:
                                      {"method": "cargo", "command": "cargo install tool", "platforms": []}])
     verify(task_of(ex), Path("."), lambda s: None)
     assert made[0]["toolchain"] is False
+
+
+def test_a_rerun_one_tier_up_picks_its_box_the_way_the_first_box_was_picked() -> None:
+    """What verify_task gets for a request the grants policy answers with a rerun (pipeline.Rerun)."""
+    verify, made, runs, published = routed()
+    ex = extraction(summary=cited("Dictation from your microphone to text.", "speak into your microphone"),
+                    install_methods=[{"method": "pipx", "command": "pipx install tool", "platforms": []}])
+    verify(task_of(ex), Path("."), lambda s: None)
+    rerun = runs[0]["rerun"]
+    assert rerun.needs == {"services", "toolchain"}  # the box already has the microphone
+    _, limits = rerun.box(frozenset({"services"}))
+    assert made[1] == {"lifetime": 20 * 60 + 120, "display": False, "gpu": None, "audio": True, "toolchain": False,
+                       "services": True}  # what the first box had, and the services
+    assert limits.max_seconds == 20 * 60 and len(published) == 2  # its image is published like any other
+    _, limits = rerun.box(frozenset({"services", "toolchain"}))
+    assert made[2]["toolchain"] is True and limits.max_seconds == 45 * 60
+    # A runner with plain boxes only has nothing to rerun in.
+    verify, _, runs, _ = routed("docker")
+    verify(task_of(ex), Path("."), lambda s: None)
+    assert runs[0]["rerun"].needs == frozenset()
 
 
 def test_a_gpu_record_gets_a_card_sized_to_its_stated_memory() -> None:
@@ -1059,12 +1079,17 @@ def test_a_record_that_names_system_packages_gets_them_from_pickfits_root(tmp_pa
     from pickfit.verify.agent import AgentLimits
 
     seen: list[Any] = []
+    reruns: list[Any] = []
+
+    def ran(task: Any, factory: Any, *, limits: Any, log: Any, data_dir: Any, rerun: Any = None) -> str:
+        seen.append(factory)
+        reruns.append(rerun)
+        return "outcome"
 
     def routed_for(runner: str) -> Any:
         return watch_mod().routed_verify(
             runner, limits=AgentLimits(), margin_s=120, toolchain_agent_s=45 * 60,
-            make_factory=lambda lifetime, **kind: (lambda r, role: None),
-            run=lambda task, factory, *, limits, log, data_dir: seen.append(factory) or "outcome")
+            make_factory=lambda lifetime, **kind: (lambda r, role: None), run=ran)
 
     base = extraction(install_methods=[{"method": "pipx", "command": "pipx install tool", "platforms": []}])
     named = {**base, "prerequisites": {**base["prerequisites"], "system_packages": [
@@ -1073,6 +1098,11 @@ def test_a_record_that_names_system_packages_gets_them_from_pickfits_root(tmp_pa
     routed_for("modal")(task_of(named), tmp_path, lines.append)
     assert isinstance(seen[-1], sysdeps.PackagedBoxes) and seen[-1].names == ("libxkbcommon-dev",)
     assert any("pickfit's root installs libxkbcommon-dev" in line for line in lines)
+    # A rerun one tier up (grants: a request the policy answers with a services box) picks its boxes the same
+    # way: a fresh factory of the new kind, wrapped with the same planned packages.
+    again, _ = reruns[-1].box(frozenset({"services"}))
+    assert isinstance(again, sysdeps.PackagedBoxes) and again.names == ("libxkbcommon-dev",)
+    assert again is not seen[-1]
     # A record that names none runs with the factory it always had; so does every record with the switch off.
     routed_for("modal")(task_of(base), tmp_path, lambda s: None)
     assert not isinstance(seen[-1], sysdeps.PackagedBoxes)

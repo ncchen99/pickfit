@@ -21,6 +21,14 @@
 
 Boxes come from a factory, so the same flow runs on DockerBox or ModalBox.
 The agent and the judge share the per-run cap of the `verify:<slug>` scope.
+
+Grants (grants.py): when the policy table is on, the agent can ask for what its box
+lacks. What it is granted, the replay's fresh box (and the confirm box) is given
+again by pickfit. A request the policy answers with "rerun" ends that attempt, and
+verify_task starts the record over in a fresh box one tier up, from the caller's
+Rerun (the same box kinds box_needs picks: services, audio, toolchain), at most
+policy.max_escalations times. The run records what it was given (grants.json beside
+the report; VerificationRun.grants once the schema has the field).
 """
 
 from __future__ import annotations
@@ -28,7 +36,7 @@ from __future__ import annotations
 import json
 import time
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -47,6 +55,18 @@ from pickfit.verify.failure import (
     failure_plan,
     output_limit,
     tool_command,
+)
+from pickfit.verify.grants import (
+    Desk,
+    Grant,
+    Policy,
+    Provided,
+    Providers,
+    default_providers,
+    feature_fidelity,
+    load_policy,
+    regrant,
+    run_grants,
 )
 from pickfit.verify.judge import (  # noqa: F401 (OPEN_JUDGE_MODEL, judge_model_for: also read from here)
     OPEN_JUDGE_MODEL,
@@ -67,6 +87,16 @@ from pickfit.verify.task import VerifyTask
 BoxFactory = Callable[[str, str], Box]  # (run_id, role: agent, replay, confirm) -> a box not yet started
 
 
+@dataclass(frozen=True)
+class Rerun:
+    """How a caller starts a record over one tier up: the box needs it can add on its runner (box attributes, as
+    box_needs names them: services, audio, toolchain), and the factory and agent limits of the record's box with
+    some of them added."""
+
+    needs: frozenset[str]
+    box: Callable[[frozenset[str]], tuple[BoxFactory, AgentLimits]]
+
+
 @dataclass
 class Outcome:
     slug: str
@@ -80,6 +110,10 @@ class Outcome:
     box_usd: float = 0.0  # estimated sandbox cost (Modal); model cost is cost_usd
     written: bool = False
     write_note: str | None = None
+    grants: list[dict[str, Any]] = field(default_factory=list)  # grants.Grant: what the run's boxes were given
+    fidelity: dict[str, str] = field(default_factory=dict)  # feature label -> real, compatible or stand_in
+    escalation: dict[str, Any] | None = None  # this attempt ended on a request for a box one tier up
+    escalations: list[dict[str, Any]] = field(default_factory=list)  # the earlier attempts that did
 
     @property
     def passed(self) -> bool:
@@ -92,7 +126,9 @@ class Outcome:
                 "blocking_error": r.blocking_error, "seconds": self.seconds, "cost_usd": self.cost_usd,
                 "box_usd": round(self.box_usd, 5),
                 "phases": self.phases, "runner": r.runner, "written": self.written,
-                "evidence": str(self.evidence_dir)}
+                "evidence": str(self.evidence_dir),
+                **({"grants": [f"{g['kind']} {g['name']}" for g in self.grants]} if self.grants else {}),
+                **({"escalations": self.escalations} if self.escalations else {})}
 
 
 def _dump(path: Path, data: Any) -> None:
@@ -168,19 +204,66 @@ def _judge_features(task: VerifyTask, report: VerifyReport, replay: ReplayResult
     return judged.verdicts, judged.cost_usd
 
 
-@discarding  # an early replay box this run did not hand to the replay is closed, however the run ends
 def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = None,
                 mode: HistoryMode = DEFAULT_MODE, limits: AgentLimits = AgentLimits(),
                 runs_dir: Path | str | None = None, log: Callable[[str], None] = print,
                 write: bool = False, data_dir: Path = DATA_DIR, keep_agent_box: bool = False,
-                run_id: str | None = None, **call_kwargs: Any) -> Outcome:
-    """Verify one tool; returns the VerificationRun and where its evidence is."""
+                run_id: str | None = None, policy: Policy | None = None, providers: Providers | None = None,
+                rerun: Rerun | None = None, **call_kwargs: Any) -> Outcome:
+    """Verify one tool; returns the VerificationRun and where its evidence is.
+
+    policy, providers: the grants table and what gives each kind (grants.py); the defaults are the repository's.
+    rerun: how to start the record over in a box one tier up when the policy answers a request that way. Each
+    attempt is a whole run in fresh boxes with its own run id (the first has `run_id`); the outcome is the last
+    attempt's, carrying every attempt's cost, and only it is written back. A rerun's model calls are capped at
+    what is left of the record's spending limit (policy.max_usd_per_record).
+    """
+    policy = policy or load_policy()
+    providers = providers or default_providers()
+    earlier: list[Outcome] = []
+    added: frozenset[str] = frozenset()
+    box_usd = seconds = 0.0
+    while True:
+        attempt_id = run_id if run_id and not earlier else new_run_id(task.slug)
+        desk = Desk(policy, providers, escalations=len(earlier), run_id=attempt_id,
+                    spent_usd=(earlier[-1].cost_usd if earlier else 0.0) + box_usd,
+                    raisable=(rerun.needs - added) if rerun else frozenset(),
+                    carried=tuple(f"{o.escalation['kind']} {o.escalation['name']}" for o in earlier if o.escalation),
+                    ) if policy.enabled else None
+        outcome = _verify_once(
+            task, make_box, model=model, mode=mode, limits=limits, runs_dir=runs_dir, log=log, write=write,
+            data_dir=data_dir, keep_agent_box=keep_agent_box, run_id=attempt_id, desk=desk, policy=policy,
+            providers=providers, carried_usd=earlier[-1].cost_usd if earlier else 0.0,
+            escalations=[{"run_id": o.run_id, **(o.escalation or {})} for o in earlier], **call_kwargs)
+        box_usd, seconds = box_usd + outcome.box_usd, seconds + outcome.seconds
+        asked = outcome.escalation
+        # The desk only answers "rerun" within the cap and for a box the caller can make; this is the backstop.
+        if asked is None or rerun is None or len(earlier) >= policy.max_escalations or asked["box"] not in rerun.needs:
+            break
+        earlier.append(outcome)
+        added |= {asked["box"]}
+        log(f"rerun · {task.slug} · {asked['kind']} {asked['name']} needs a box with {asked['box']} · "
+            f"attempt {len(earlier) + 1} of at most {policy.max_escalations + 1}")
+        make_box, limits = rerun.box(added)
+        left = policy.max_usd_per_record - outcome.cost_usd - box_usd
+        limits = replace(limits, scope_cap_usd=max(min(limits.scope_cap_usd, left), 0.0))
+    outcome.box_usd, outcome.seconds = box_usd, round(seconds, 1)
+    return outcome
+
+
+@discarding  # an early replay box this run did not hand to the replay is closed, however the run ends
+def _verify_once(task: VerifyTask, make_box: BoxFactory, *, model: str | None, mode: HistoryMode,
+                 limits: AgentLimits, runs_dir: Path | str | None, log: Callable[[str], None], write: bool,
+                 data_dir: Path, keep_agent_box: bool, run_id: str, desk: Desk | None, policy: Policy,
+                 providers: Providers, carried_usd: float = 0.0, escalations: list[dict[str, Any]] | None = None,
+                 **call_kwargs: Any) -> Outcome:
+    """One attempt: an agent in one fresh box, then the replay, the judges and the run. carried_usd: the model
+    cost of the record's earlier attempts, which the run's cost includes."""
     began = time.monotonic()
-    run_id = run_id or new_run_id(task.slug)
     phases: dict[str, float] = {}
     box = make_box(run_id, "agent")
     agent = VerifyAgent(task, box, model=model, mode=mode, limits=limits, run_id=run_id, log=log,
-                        runs_dir=runs_dir, **call_kwargs)
+                        runs_dir=runs_dir, desk=desk, **call_kwargs)
     report: VerifyReport
     box_began = time.monotonic()
     early: EarlyBox | None = None  # a slow-booting lane's fresh replay box, started while the agent works
@@ -208,6 +291,12 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
     if report.report_path is None:  # the agent never saved (its box failed to start)
         _dump(evidence_dir / "report.json", report.to_dict())
 
+    given = run_grants(report, policy)
+    asked = [g for g in given if g.requested_by == "agent"]  # pickfit gives every other box of the run the same
+
+    def give(fresh: Box, grant: Grant, role: str = "replay") -> Provided:
+        return regrant(policy, providers, fresh, grant, run_id=run_id, role=role)
+
     replay: ReplayResult | None = None
     judge: JudgeResult | None = None
     verdicts: dict[str, tuple[str, str]] | None = None  # the feature judge's, when it ran
@@ -228,7 +317,9 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
         box_began = time.monotonic()
         try:
             phases["confirm_box_start"] = _start(confirm_box)
-            confirm = confirm_failure(confirm_box, plan_failure, task, log=log)
+            lost = next((g for g in asked if not give(confirm_box, g, "confirm").granted), None)
+            confirm = FailureCheck(reproduced=False, error=f"grant {lost.kind} {lost.name} was not given again") \
+                if lost else confirm_failure(confirm_box, plan_failure, task, log=log)
         except BoxError as err:
             confirm = FailureCheck(reproduced=False, error=f"box error: {err}")
             log(f"confirm box failed: {err}")
@@ -248,7 +339,8 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
                                                      **scope, **call_kwargs), **scope, **call_kwargs)
         try:
             phases["replay_box_start"] = early.wait() if early else _start(replay_box)
-            replay = Replayer(replay_box, log=log, evidence_dir=evidence_dir, operator=operator).run(plan, task)
+            replay = Replayer(replay_box, log=log, evidence_dir=evidence_dir, operator=operator, grants=asked,
+                              give=give).run(plan, task)
             if replay.passed:  # what the person gets, read before the box is gone (pickfit/sbom.py; never raises)
                 collect_sbom(replay_box, evidence_dir, run_id=run_id, tool_version=(report.finish or {}).get(
                     "tool_version"), log=log)
@@ -288,19 +380,25 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
 
     judge_cost = (judge.cost_usd if judge else 0.0) + feature_cost + (replay.cost_usd if replay else 0.0)
     save_app_log(evidence_dir, report, replay)
+    fidelity = feature_fidelity(report.features, report.verdict,
+                                {c.command_id: c.command for c in report.commands if c.command_id is not None}, given)
     run, build_notes = build_run(report, replay, judge, evidence_dir=evidence_dir,
                                  screenshots=[Path(p) for p in (judge.annotated or judge.screenshots)] if judge else [],
-                                 judge_cost_usd=judge_cost, confirm=confirm,
+                                 judge_cost_usd=judge_cost + carried_usd, confirm=confirm,
                                  gui_app=_kind(task) == "desktop_app", mcp=is_mcp(task),
-                                 feature_verdicts=verdicts)
+                                 feature_verdicts=verdicts, grants=given, fidelity=fidelity)
     notes += build_notes
     run = record_packages(run, make_box, evidence_dir)  # distro packages pickfit's root installed lead the guide
     save_run(run, evidence_dir)
     outcome = Outcome(slug=task.slug, run_id=run_id, run=run, notes=notes, evidence_dir=evidence_dir,
                       seconds=round(time.monotonic() - began, 1), cost_usd=run.cost_usd or 0.0, phases=phases,
-                      box_usd=box_usd)
-    if write:
-        outcome.written, outcome.write_note = write_back(run, task.slug, data_dir)
+                      box_usd=box_usd, grants=[g.to_dict() for g in given], fidelity=fidelity,
+                      escalation=report.escalation, escalations=escalations or [])
+    if given or report.requests or outcome.escalations:  # in full beside the report: the record keeps five fields
+        _dump(evidence_dir / "grants.json", {"grants": outcome.grants, "fidelity": fidelity,
+                                             "requests": report.requests, "escalations": outcome.escalations})
+    if write and report.escalation is None:  # an attempt that ended for a rerun is not the record's run
+        outcome.written, outcome.write_note = write_back(run, task.slug, data_dir, grants=given)
         log(f"write-back: {outcome.write_note}")
     flags = f"replayed {run.replayed} · judge {run.judge.verdict if run.judge else '-'}"
     offline = f" · offline {replay.offline}" if replay and replay.passed else ""

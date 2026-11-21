@@ -5,7 +5,10 @@ the checks that passed, each as the exact command the agent ran (in a bash box, 
 step without the looking around chained into it: install_command). In a new box:
 
 1. write the README and the sample files, as the agent had them;
-2. run the steps in order with the network on; stop at the first failure;
+2. run the steps in order with the network on; stop at the first failure. What pickfit
+   granted the agent's box on request (grants.py: a system package, a service) it gives
+   this box again, in the same order and between the same steps; a grant that cannot be
+   given again fails the replay;
 3. run the checks' setup commands (input files, background servers) online; a
    setup that fails fails the checks that need it, not the others;
 4. cut the network and run every check: install online, smoke test offline;
@@ -54,6 +57,7 @@ from pickfit.verify.verdict import (
 
 if TYPE_CHECKING:
     from pickfit.verify.agent import CommandRecord
+    from pickfit.verify.grants import Grant, Provided
     from pickfit.verify.task import VerifyTask
     from pickfit.verify.verdict import LogVerdict
 
@@ -212,6 +216,7 @@ class ReplayResult:
     seconds: float = 0.0
     box: dict[str, Any] = field(default_factory=dict)
     cost_usd: float = 0.0  # operations: the operator's and the screen reader's calls
+    grants: list[dict[str, Any]] = field(default_factory=list)  # what pickfit gave this box again, in order
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -222,8 +227,12 @@ class Replayer:
 
     def __init__(self, box: Box, *, log: Callable[[str], None] = print,
                  command_timeout_s: int = COMMAND_TIMEOUT_S, evidence_dir: Path | None = None,
-                 operator: dict[str, Any] | None = None) -> None:
+                 operator: dict[str, Any] | None = None, grants: Sequence[Grant] = (),
+                 give: Callable[[Box, Grant], Provided] | None = None) -> None:
         self.box = box
+        # What the agent's box was granted, and how pickfit gives a fresh box the same (grants.regrant).
+        self.pending = sorted(grants, key=lambda g: g.after_command)
+        self.give = give
         self.log = log
         # A box that allows longer commands (a macOS GUI box: GUI_COMMAND_S) gives its install steps that long too.
         self.timeout = max(command_timeout_s, getattr(getattr(box, "limits", None), "max_command_s", 0) or 0)
@@ -346,6 +355,23 @@ class Replayer:
         self.log(f"  replay {verdict} · level {result.level} · offline {result.offline} · {result.seconds:.0f}s")
         return result
 
+    def _regrant(self, result: ReplayResult, before: int | None = None) -> bool:
+        """Give this box each grant the agent's box got before its command `before` (None: every one left), in
+        order; False, with the replay's error set, when one is not given."""
+        while self.pending and (before is None or self.pending[0].after_command < before):
+            grant = self.pending.pop(0)
+            if self.give is None:
+                result.error = f"grant {grant.kind} {grant.name}: nothing gives it to the fresh box"
+                return False
+            given = self.give(self.box, grant)
+            result.grants.append({**grant.to_dict(), "granted": given.granted, "message": given.message})
+            self.log(f"  replay grant {grant.kind} {grant.name} → {'given' if given.granted else 'not given'}")
+            if not given.granted:
+                result.error = (f"grant {grant.kind} {grant.name} was not given again in the fresh box: "
+                                f"{_one_line(given.message)}")
+                return False
+        return True
+
     def _run(self, plan: ReplayPlan, task: VerifyTask, result: ReplayResult) -> None:
         box = self.box
         box.set_network(True)
@@ -354,11 +380,15 @@ class Replayer:
             result.error = "no steps to replay"
             return
         for step in plan.steps:
+            if not self._regrant(result, before=step.command_id):
+                return
             ran = self.rerun(step, install=True)
             result.steps.append(ran)
             if not ran.ok:
                 result.error = f"step {step.command_id} exited {ran.exit_code}: {_one_line(step.command)}"
                 return
+        if not self._regrant(result):  # the rest, while the network is still on
+            return
         broken: dict[int, str] = {}  # setup id -> why it failed
         for setup in plan.setups:
             ran = self.rerun(setup)
