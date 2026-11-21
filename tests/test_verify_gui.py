@@ -91,6 +91,12 @@ class GuiBox(FakeBox):
         if "PICKFIT_KILLED" in source:
             out = "PICKFIT_KILL_FAILED ['77']\n" if self.survivors else "PICKFIT_KILLED 0\n"
             return ExecResult("stop", 1 if self.survivors else 0, out, "", 0.2)
+        if "PICKFIT_SYSDEPS" in source:  # sysdeps.install_named: root installs jq and knows no other name
+            names = json.loads(argv[-1])["names"]
+            found = {"installed": names if names == ["jq"] else [], "present": [], "added": [], "command": None,
+                     "refused": {} if names == ["jq"] else {n: "not a package in the repository" for n in names},
+                     "error": None, "megabytes": None}
+            return ExecResult("apt-get", 0, f"PICKFIT_SYSDEPS {json.dumps(found)}\n", "", 0.2)
         if "MARK = " in source:
             nonce, shot = re.search(r'\d+, "([0-9a-f]{24})", "([^"]+)"\n', source).groups()
             data = dict(self.shown)
@@ -469,6 +475,11 @@ def test_limits_test_on_a_display_box():
         "org.freedesktop.Flatpak.SystemHelper": (0, "Error org.freedesktop.DBus.Error.ServiceUnknown: x\n"
                                                     "Error org.freedesktop.DBus.Error.ServiceUnknown: y\n"
                                                     "Error org.freedesktop.DBus.Error.AccessDenied: z\n", ""),
+        # What the box user sees of the package pickfit's root installed: it runs, and nothing about it can be changed.
+        "jq --version": (0, "jq-1.7.1\nls: cannot open directory: Permission denied\nrm: cannot remove "
+                            "'/usr/bin/jq': Permission denied\ndpkg: error: requested operation requires superuser "
+                            "privilege\nE: Unable to acquire the dpkg frontend lock, are you root?\n\"still there\"\n",
+                         "bash: /etc/apt/sources.list.d/x.list: Permission denied\n"),
     }
 
     class Box(GuiBox):
@@ -488,6 +499,7 @@ def test_limits_test_on_a_display_box():
             "multicast_no_answer", "gateway_ports_closed", "display_no_tcp", "display_no_network",
             "system_bus_inert"} <= set(results)
     assert "root sees 172.20.0.1 172.21.0.1" in results["gateway_ports_closed"].detail
+    assert results["package_held"].ok and results["package_needs_network"].ok  # a box with a root channel
     assert [name for name, r in results.items() if not r.ok] == ["offline_dns"]  # a resolver that answers fails
     assert results["display_report_unforgeable"].detail.startswith("tier process_alive; child running True")
     assert "control as root: OPEN 2 52" in results["vsock_closed"].detail

@@ -122,6 +122,21 @@ type FeatureGap = Literal[
 ]
 # Who a failed feature test points at, as pitfall kinds do: only this box, or the tool itself.
 type FeatureFailure = Literal["sandbox", "tool"]
+# What a run's box was given beyond the plain box (docs/proposals/privileges.md P1; pickfit/verify/grants.py).
+type GrantKind = Literal[
+    "system_package",  # a named package of the distribution, installed by pickfit as root
+    "service",  # a database, queue or mock in the same box
+    "model_endpoint",  # a stand-in model, or a ticket for the billing proxy
+    "root",
+    "container_engine",
+    "test_identity",  # a test account a person set up
+    "virtual_device",  # a simulated microphone, speaker, camera
+    "extra_machine",
+]
+# What a feature's check ran against, when it used something outside the tool: real: the real service; compatible:
+# a compatible endpoint with a real model behind it; stand_in: a stand-in or made-up data, which shows only that
+# the wiring works and is never presented as verified to work.
+type Fidelity = Literal["real", "compatible", "stand_in"]
 type CapReason = Literal["archived", "verification_failed", "not_a_tool", "unverified", "known_vulnerability"]
 type SourceKind = Literal[
     "github_api", "readme", "release", "manifest", "package_registry",
@@ -219,6 +234,8 @@ CAPABILITY_AREA_MAX = 30
 # An MCP client config snippet (a `claude mcp add` line or an mcpServers JSON entry).
 MCP_SNIPPET_MAX = 1500
 MCP_TOOLS_MAX = 200
+# What one run's boxes were given: requests are capped per run (grants_policy.json), plus what the box came with.
+GRANTS_MAX = 20
 
 # --- Constrained strings ----------------------------------------------------
 
@@ -831,6 +848,31 @@ class Pitfall(_Model):
     )
 
 
+class Grant(_Model):
+    """One thing a run's box was given beyond the plain box: asked for by the agent and allowed by pickfit's policy
+    table, or there from the start because the extraction said the tool needs it. The fresh replay box was given
+    the same. That a tool needs sudo, Docker or a model key is itself something a user wants to know."""
+
+    kind: GrantKind
+    name: str = Field(
+        pattern=r"^[A-Za-z0-9][A-Za-z0-9+._:@-]{0,79}$",
+        description="The package, service, provider, engine, device or identity, by its plain name.",
+    )
+    tier: int = Field(
+        ge=1, le=5,
+        description=(
+            "The rung of pickfit's ladder it sits on: 1 the plain box, 2 named system packages installed for it, "
+            "3 a service or model endpoint in the same box, 4 a throwaway VM with root, 5 special hardware."
+        ),
+    )
+    requested_by: Literal["agent", "plan"] = Field(
+        description="agent: the verification agent asked for it; plan: the box came with it, from the extraction."
+    )
+    shown_in_guide: bool = Field(
+        description="The install guide says so (needs sudo, needs a database): a user has to bring it."
+    )
+
+
 class FeatureCheck(_Model):
     """Whether a run exercised one of the tool's advertised features, and with which smoke tests.
 
@@ -857,6 +899,16 @@ class FeatureCheck(_Model):
         ),
     )
     note: str | None = Field(default=None, max_length=300)
+    fidelity: Fidelity | None = Field(
+        default=None,
+        exclude_if=lambda value: value is None,
+        description=(
+            "What its check ran against, when that was something outside the tool: real (the real service), "
+            "compatible (a compatible endpoint with a real model behind it) or stand_in (a stand-in or made-up "
+            "data: only the wiring was shown, never say it was verified to work). Absent: nothing outside the "
+            "tool was used, or the run is from before this was recorded."
+        ),
+    )
 
     @model_validator(mode="after")
     def _status_fields(self) -> FeatureCheck:
@@ -864,6 +916,8 @@ class FeatureCheck(_Model):
             raise ValueError("a checked feature has no reason or failure")
         if self.status == "not_checked" and (self.reason is None or self.failure):
             raise ValueError("a feature not checked needs a reason and no failure")
+        if self.status == "not_checked" and self.fidelity is not None:
+            raise ValueError("a feature not checked ran against nothing: no fidelity")
         if self.reason == "other" and not (self.note or "").strip():
             raise ValueError("reason other needs a note saying what was seen")
         if self.status == "test_failed" and (self.failure is None or not self.smoke_tests):
@@ -1270,6 +1324,22 @@ class VerificationRun(_Model):
         exclude_if=lambda value: value is None,
         description="GUI and web apps: a captioned clip of pickfit operating the app to check its features.",
     )
+    grants: list[Grant] = Field(
+        default=[],
+        max_length=GRANTS_MAX,
+        exclude_if=lambda value: not value,
+        description=(
+            "What this run's boxes were given beyond the plain box, in the order given. Empty: nothing, or the "
+            "run is from before grants were recorded."
+        ),
+    )
+
+    @model_validator(mode="after")
+    def _check_grants(self) -> VerificationRun:
+        given = [(g.kind, g.name) for g in self.grants]
+        if len(set(given)) != len(given):
+            raise ValueError("a run lists each grant once")
+        return self
 
     @model_validator(mode="after")
     def _check_video(self) -> VerificationRun:

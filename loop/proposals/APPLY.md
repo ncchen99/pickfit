@@ -183,6 +183,15 @@ Ec2RootBox holds no slot and no AWS resource. `git apply --check` passes on feat
 No real instance was started: the first real run of the limits test is a human's (the report of 11/21 has the
 commands).
 
+Not applied on feat/privileges-aws-integration (11/21), where the other three patches of that day are: as first
+written it collides with both of them (the same paragraph of limits.py's docstring as limits-sysdeps-services.patch,
+the same lines of PROTECTED as privileges-guard-policy.patch), and the session that integrated the branches ran
+under the loop guard, which refused the command that would have resolved it. The patch file was rebased onto that
+branch instead, with no change in what it adds (the same 14 lines in the same places: the docstring paragraph now
+follows the packages and services one, and limits_root.py's line in PROTECTED still follows limits.py's).
+`git apply --check loop/proposals/limits-root-vm-hook.patch` passes there, so the command above applies it as it is;
+on a tree without the other two patches, take the patch from feat/priv-root-vm-box.
+
 ## 11/21: grants and fidelity in the record (privileges-schema.patch)
 
 On feat/priv-records-request (docs/proposals/privileges.md P1; the harness side is pickfit/verify/grants.py), from the

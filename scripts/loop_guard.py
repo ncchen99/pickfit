@@ -39,6 +39,8 @@ PROTECTED = (
     "pickfit/verify/failure.py",
     "pickfit/verify/limits.py",
     "pickfit/verify/web_guard.py",
+    # What a box may be given on request, and the spending limit of a record: a loop does not widen its own grants.
+    "pickfit/verify/grants_policy.json",
     "pickfit/score.py",
     "pickfit/schema.py",
     "schema/",

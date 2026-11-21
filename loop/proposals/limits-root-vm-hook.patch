@@ -1,9 +1,9 @@
 --- a/pickfit/verify/limits.py
 +++ b/pickfit/verify/limits.py
-@@ -38,6 +38,11 @@
- evidence directory is closed to the box user; that xclock reaches tier window
- with a verified screenshot; that a launch which prints a forged report and
- double-forks reaches no window and leaves no box-user process behind.
+@@ -45,6 +45,11 @@
+ A services box (services.py) checks that the box user starts every service, that each answers on loopback and
+ on no other address of the box, that the stand-in model endpoint round-trips a request, and that all of it still
+ answers with the network off (nothing is fetched at run time).
 +
 +A full-privilege VM box (root_box.RootVmBox: the box user has root, so none
 +of the probes above can hold) is handed to its own set, limits_root.py, which
@@ -12,7 +12,7 @@
  """
  
  from __future__ import annotations
-@@ -706,6 +711,10 @@
+@@ -784,6 +789,10 @@
  
  def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeResult]:
      """Run every probe in a started box; restores the network before returning."""
@@ -23,7 +23,7 @@
      results: list[ProbeResult] = []
  
      def add(result: ProbeResult) -> None:
-@@ -892,6 +901,10 @@
+@@ -987,6 +996,10 @@
                  ) -> tuple[list[ProbeResult], Path]:
      began = time.monotonic()
      box = make_box(f"limits-{taipei_now().strftime('%Y%m%d-%H%M%S')}", "limits")
@@ -42,5 +42,5 @@
      "pickfit/verify/limits.py",
 +    "pickfit/verify/limits_root.py",
      "pickfit/verify/web_guard.py",
-     "pickfit/score.py",
-     "pickfit/schema.py",
+     # What a box may be given on request, and the spending limit of a record: a loop does not widen its own grants.
+     "pickfit/verify/grants_policy.json",

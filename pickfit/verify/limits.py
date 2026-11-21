@@ -38,6 +38,13 @@ the box user's kill and a second server on :99, does not listen on TCP; that the
 evidence directory is closed to the box user; that xclock reaches tier window
 with a verified screenshot; that a launch which prints a forged report and
 double-forks reaches no window and leaves no box-user process behind.
+
+A Linux box with a root channel (sysdeps.py) checks that pickfit's root installs a named package of the
+distribution while refusing a .deb, a URL, an option and sudo, and that the box user, who can then run the
+package's program, cannot remove, replace or reconfigure it, add a package source or install anything itself.
+A services box (services.py) checks that the box user starts every service, that each answers on loopback and
+on no other address of the box, that the stand-in model endpoint round-trips a request, and that all of it still
+answers with the network off (nothing is fetched at run time).
 """
 
 from __future__ import annotations
@@ -50,7 +57,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from pickfit.ledger import taipei_now
-from pickfit.verify import audio, gui
+from pickfit.verify import audio, gui, services, sysdeps
 from pickfit.verify.box import Box, BoxError, BoxLimits, ExecResult
 
 PYPI = "curl -sS -I -m 15 -o /dev/null -w '%{http_code}' https://pypi.org/simple/pip/"
@@ -300,6 +307,41 @@ for h in $hosts; do for p in 22 80 443 2375 2376 3000 5000 6443 8000 8080 8443 9
   timeout 3 bash -c "echo > /dev/tcp/$h/$p" 2>/dev/null && echo "open $h:$p"; done; done; true"""
 
 
+PACKAGE = "jq"  # a small package of the distribution with a program of its own
+# The box user: use the package, then try to undo or widen what root did. Nothing may be writable, every attempt
+# must fail, and the program must still run.
+PACKAGE_PROBE = r"""jq --version
+for f in $(dpkg -L jq 2>/dev/null) /var/lib/dpkg/status /etc/apt /etc/apt/sources.list.d /usr/sbin/policy-rc.d \
+    /var/lib/pickfit-sysdeps; do { [ -f "$f" ] || [ -d "$f" ]; } && [ -w "$f" ] && echo "writable $f"; done
+ls /var/lib/pickfit-sysdeps 2>&1 | tail -n 1
+rm -f "$(command -v jq)" 2>&1 | tail -n 1
+echo 'deb http://deb.example.invalid/ stable main' 2>&1 > /etc/apt/sources.list.d/x.list | tail -n 1
+dpkg -r jq 2>&1 | tail -n 1
+apt-get remove -y jq 2>&1 | tail -n 1
+apt-get install -y sl 2>&1 | tail -n 1
+jq -n '"still " + "there"'"""
+# The box user: every service's port answers on loopback (the control) and on no other address the box has.
+SERVICES_PROBE = r"""/usr/local/bin/python3 -I -S - <<'PICKFIT_PY'
+import socket, subprocess
+ports = [%s]
+listed = subprocess.run(["/usr/bin/ip", "-4", "-o", "addr", "show"], capture_output=True, text=True).stdout
+others = sorted({line.split()[3].split("/")[0] for line in listed.splitlines() if len(line.split()) > 3} - {"127.0.0.1"})
+def reach(host, port):
+    try:
+        socket.create_connection((host, port), 2).close()
+        return True
+    except OSError:
+        return False
+for port in ports:
+    print("local", port, "open" if reach("127.0.0.1", port) else "closed")
+for host in others:
+    print("tried", host)
+    for port in ports:
+        if reach(host, port):
+            print("outside", host, port, "open")
+PICKFIT_PY""" % ", ".join(str(port) for port in (*(port for _, port in services.KINDS), 3000))
+
+
 @dataclass
 class ProbeResult:
     name: str
@@ -319,6 +361,42 @@ def _probe(box: Box, name: str, command: str, timeout_s: int, expect: str,
            check: Callable[[ExecResult], bool]) -> ProbeResult:
     result = box.exec(command, timeout_s)
     return ProbeResult(name, bool(check(result)), expect, result.exit_code, result.seconds, _detail(result))
+
+
+def _package_held(box: Box) -> ProbeResult:
+    """pickfit's root installs a named package and refuses what is not one; the box user can use the package and
+    cannot undo it, add a source or install anything."""
+    began = time.monotonic()
+    refused = sysdeps.install_named(box, ["./tool.deb", "https://example.com/tool.deb", "--allow-unauthenticated",
+                                          "sudo", "no-such-package-pickfit"])
+    given = sysdeps.install_named(box, [PACKAGE])
+    seen = box.exec(PACKAGE_PROBE, 90)
+    out = f"{seen.stdout}\n{seen.stderr}"
+    ok = (given.installed == (PACKAGE,) and given.ok and not refused.installed and len(refused.refused) == 5
+          and "jq-" in seen.stdout and '"still there"' in seen.stdout and "writable" not in out
+          and out.count("Permission denied") >= 3 and ("are you root" in out or "superuser" in out))
+    return ProbeResult("package_held", ok, f"pickfit's root installs {PACKAGE} and refuses a .deb, a URL, an option, "
+                       "sudo and an unknown name; the box user runs it and cannot remove, replace or reconfigure it, "
+                       "add a source or install a package", seen.exit_code, round(time.monotonic() - began, 1),
+                       " ".join(f"{given.describe()}; {refused.describe()}; {out}".split())[-300:])
+
+
+def _services_loopback(box: Box) -> ProbeResult:
+    """The box user starts every service; each answers on loopback and on no other address of the box."""
+    began = time.monotonic()
+    started = box.exec("pickfit-services start " + " ".join(services.KIND_NAMES), 420)
+    seen = box.exec(SERVICES_PROBE, 120)
+    checked = box.exec("pickfit-services check llm-stub", 120)
+    lines = seen.stdout.splitlines()
+    local = [line for line in lines if line.startswith("local ")]
+    ok = (started.exit_code == 0 and len(local) == len(services.KINDS) + 1
+          and all(line.endswith(" open") for line in local) and any(line.startswith("tried ") for line in lines)
+          and not any(line.startswith("outside ") for line in lines)
+          and checked.exit_code == 0 and "ok: one chat completion round-tripped" in checked.stdout)
+    return ProbeResult("services_loopback", ok, "the box user starts every service; each answers on 127.0.0.1 and on "
+                       "no other address of the box, and the stand-in model endpoint round-trips a request",
+                       started.exit_code, round(time.monotonic() - began, 1),
+                       " ".join(f"{started.stderr} {seen.stdout} {checked.stdout} {checked.stderr}".split())[-300:])
 
 
 def _same_pid(stdout: str) -> bool:
@@ -822,6 +900,10 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
                    "169.254.169.254 unreachable", lambda r: r.exit_code != 0))
         add(_probe(box, "private_blocked", "curl -sS -m 5 http://10.0.0.1/", 20,
                    "10.0.0.1 unreachable", lambda r: r.exit_code != 0))
+        if sysdeps.root_channel(box):  # a box whose root pickfit can use (not DockerBox): sysdeps.install_named
+            add(_package_held(box))
+        if getattr(box, "services", False):
+            add(_services_loopback(box))
     box.exec(f"{box.detach} python3 -m http.server 8765 --bind 127.0.0.1 >/dev/null 2>&1 < /dev/null & "
              "sleep 2", 20)
     box.set_network(False)
@@ -841,8 +923,21 @@ def run_limits_test(box: Box, log: Callable[[str], None] = print) -> list[ProbeR
                        _netns_held))
         add(_probe(box, "offline_localhost", "curl -sS -m 5 -o /dev/null -w '%{http_code}' http://127.0.0.1:8765/",
                    20, "localhost still answers with the network off", lambda r: r.stdout.strip() == "200"))
+        if getattr(box, "services", False):
+            add(_probe(box, "services_offline", "pickfit-services status; pickfit-services check llm-stub", 150,
+                       "with the network off every service still answers on loopback and the model endpoint "
+                       "round-trips a request (nothing is fetched at run time)",
+                       lambda r: r.stdout.count(": running") == len(services.KINDS)
+                       and "ok: one chat completion round-tripped" in r.stdout))
+        if not macos and sysdeps.root_channel(box):
+            offline = sysdeps.install_named(box, [PACKAGE])
+            add(ProbeResult("package_needs_network", not offline.installed and "network is off" in (
+                offline.error or ""), "with the network off pickfit's root installs nothing", None,
+                offline.seconds, offline.describe()[-300:]))
     finally:
         box.set_network(True)
+    if getattr(box, "services", False):
+        box.exec("pickfit-services stop", 60)
     if not macos:
         add(_probe(box, "online_again", PYPI, 30, "PyPI answers again after the network is back",
                    lambda r: r.stdout.strip() == "200"))
