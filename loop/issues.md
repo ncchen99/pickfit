@@ -77,7 +77,19 @@ reason: needs_more_resources
 - 要守住的：驗收照舊由 pickfit 自己檢查（檔案、剪貼簿、畫面上的字、nonce），被測的 App 與操作它的套件都不能替自己回報結果。套件只換掉「送動作、拿截圖與元件清單」這一層，也就是 `gui_operate.py` 裡 display 的介面（`screenshot`、`click`、`type_text`、`key`、`scroll`）。
 - 授權：MIT、Apache、BSD 可以，AGPL 不行（11/1 已經因此沒裝 cua 的影像辨識擴充）。新增前記進 `NOTICE`。
 - 方向：見 `docs/loop.md` 的「GUI 操作改用現成套件」一節。
-- tried: 11/1 試過 MIT 授權的 cua-driver 取元件編號清單（brief 2.1 節）。
+- tried: 11/1 試過 MIT 授權的 cua-driver 取元件編號清單（brief 2.1 節）。11/16 做完 Linux 這半的執行端，模型端先擴充 pickfit 自己的動作格式（分支 `claude/sad-cori-9f0919`）：
+  - 執行端：display uid 的 hands（`gui_operate._HANDS`）改照 computer-use-demo 執行器（`ComputerToolset20260801`）的 xdotool 指令序列。`computer_toolset_20260801` 的 17 個成員做了 16 個：左中右鍵、雙擊、三擊、按住修飾鍵點擊、拖曳、按下與放開、移動、四個方向的捲動加格數、打字、組合鍵加重複次數、按住某鍵、放大、等待，截圖就是每一步原本那張。沒做的是 `cursor_position`，游標在哪 pickfit 自己知道。授權 MIT，釘在 claude-quickstarts `4a4224bd`（`computer.py` 最後一次改在 `5264b729`，就是加上 toolset 那次），記在 `NOTICE`。
+  - 沒有整份照搬。上游組的是 shell 字串，點擊時按住的修飾鍵沒加引號，xdotool 本身又能用 `exec` 串指令，所以 pickfit 傳 argv，按鍵與修飾鍵先過自己的白名單。拖曳在按下與放開之間分 12 步移動，上游是直接跳到終點。放大在主機上裁那一步的截圖，不進箱子。一步做到一半失敗時，按住的鍵和滑鼠鍵會放開。操作結束時滑鼠鍵還按著的話，等 App 停掉後放開。
+  - 模型端：`pickfit/anthropic_messages.py` 還沒進 `main`，所以照指示擴充 pickfit 的動作格式。`OperatorAction` 多了 drag、move、mouse_down、mouse_up、hold_key、zoom 六種動作，和 x2、y2、hold、repeat、amount 五個欄位。Mac 的 schema 和提示逐字比對過沒變（`BasicOperatorAction`）。
+  - 紀錄格式只加不改：舊的 click、type、key、scroll、wait 照原樣重播，沒寫 amount 的 scroll 照舊捲 3 格。zoom 不寫進重播清單。
+  - 驗收：單元測試全過，新增的 28 個在 `tests/test_verify_gui_toolset.py`，hands 接一個假的 xdotool 真的跑一遍，記下的 argv 逐一對照上游的指令序列。`--limits-test --runner modal --display` 31/31。LibreSprite 那次 Modal 紀錄（`verify-libresprite-20261104-191755-508f`，四個 GUI 操作）用 `scripts/rereplay.py` 在新箱子重播，五個檢查照舊通過，離線也過，四個操作都靠舊的紀錄動作完成，沒有退回模型。拖曳的示範是 `scripts/probe_gui_drag.py`，在 Chromium 裡放一個 HTML 拖放和一個用指標事件做的滑桿，拖到位才會下載一個含 nonce 的檔案，由 pickfit 自己找檔案驗收。兩種都通過，只點一下的對照組都沒過，換新箱子照紀錄重播也都通過（證據在主 checkout 的 `runs/probe-gui-drag/20261116-002046/`）。
+  - 花費：Modal 約 US$0.047（limits test 約 US$0.005、LibreSprite 重播 US$0.030、拖曳 probe 兩次共 US$0.013）。模型 US$0，三次 Baseten 呼叫都回 400，沒有計費。
+  - 卡住的：Baseten 上 Muse Spark Open 的部署從 11/16 00:15 起回 400「Model version wpgy40e is deactivated」，11/15 23:23 還正常。GUI operator 現在叫不動，所以拖曳示範用的是照顏色算出位置的紀錄動作，沒有讓模型從目標自己選 drag。新的動作格式還沒在真的模型上試過。
+  - 11/21 併進分支 `merge/h006-20261121`，等念誠推上 main：main 這段期間加了 Windows 桌面和 OCR 標記，`operate()` 有三處衝突。解法是 Mac 和 Windows 照舊用基本五種動作加編號文字（`MacOperatorAction`），只有 pickfit 的 Xvfb 用新的動作格式。Windows 的提示原本從 `OPERATOR_INSTRUCTIONS` 產生，合併後那份會變成新格式的文字，git 沒有標成衝突，已改成從 `BASIC_INSTRUCTIONS` 產生，並補了測試。測試 2547 過、7 略過。還沒做的有兩件：新的動作格式仍然沒在真的模型上試過（`scripts/probe_gui_drag.py --operator`），做合併的 session 拿不到金鑰；影片的字幕和動作清單（`video.py`）只認 click、type、key、scroll，拖曳這些新動作不會有字幕。
+- 下一步：
+  - toolset 接線：`anthropic_messages.py` 合進 `main` 後，operator 是 Claude 時送 `{"type": "computer_toolset_20260801"}`。每個 tool_use（成員名稱加輸入）照 `gui_operate.py` 開頭那張對照表轉成 pickfit 的動作，一樣先過 `to_action` 的檢查才執行。座標是模型看到的那張圖的像素，要用那一輪的 `View` 換回螢幕座標。tool_result 要帶 `toolset_name: "computer"` 和下一張截圖。done 與 give_up 另外給一個工具。驗收方式不變。
+  - 拖曳的起點也可以像點擊一樣再對準一次（`aim`），現在只有點擊會。
+  - macOS 照原計畫換成 cua-driver，經 `tart exec` 呼叫。
 
 ## H-007 [open] 顯示箱子沒有 zenity 或 kdialog：靠它們開檔案對話框的 App 存不了檔
 

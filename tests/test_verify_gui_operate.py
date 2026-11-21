@@ -198,8 +198,8 @@ def test_a_right_click_reaches_the_displays_right_click_or_stops():
 
     with pytest.raises(op.DisplayError, match="right-click"):
         op.perform(LeftOnly(), {"kind": "click", "x": 3, "y": 4, "count": 1, "button": "right"})
-    # Linux: the display uid's hands press button 3 for it.
-    assert '3 if ACT.get("button") == "right" else 1' in op._HANDS
+    # Linux: the display uid's hands press button 3 for it (run for real in test_verify_gui_toolset.py).
+    assert 'BUTTONS = {"left": 1, "middle": 2, "right": 3}' in op._HANDS
 
 
 def test_the_operator_sees_what_the_app_draws_zoomed_with_its_last_click_marked():
