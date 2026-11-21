@@ -169,3 +169,32 @@ node --env-file=../../../../.env bench/capability.ts src/generated/index.json be
 ```
 
 注意：`baseline-backfill50-model.json` 的 Opus 結果是 11/20 跑的，當時還是 60 張卡片、舊的 index。卡片瘦身（50 張）和之後的資料更新都會影響結果。要公平比較，就在同一個 build 用 `--model-id claude-opus-5-5 --out bench/capability/opus-check-model-20261121.json` 再跑一次 Opus（約 US$5）。
+
+## Sonnet 5.5 結果（2026-11-21）
+
+念誠在這個 worktree 跑了上面的指令。46 題全部由 claude-sonnet-5-5 回答，沒有退回 rules，花費 US$2.5142，平均每題 US$0.055。帳本 `capability-bench`，run `capability-model-20261121-sonnet`。逐筆結果在 `sonnet-check-model.json`，和 Opus 對照用：
+
+```sh
+uv run python scripts/capability_opus_report.py --rows worker/bench/capability/sonnet-check-model.json --against worker/bench/capability/baseline-backfill50-model.json
+```
+
+**這次和 11/20 的 Opus 不是同一個 build，比較要打折。** Opus 跑的時候只有 50 筆補了能力，卡片是 60 張；這次 Sonnet 跑的時候，全量回補已經完成，卡片 50 張，index 從 1,211 筆變成 1,244 筆。Sonnet 這次挑了、Opus 當時沒挑的工具裡，wshm、tricorderkit、coderai、thundertalk、eli-v2-0、xh 在 Opus 跑的時候還沒有能力清單，卡片上不會出現 `capabilities_matched`，所以 Opus 那時根本沒看到這些誘因。rules 路徑在這 15 題的 2 分 pick 也從 4 個掉到 2 個，代表候選池本身就變了。
+
+**次要功能查詢：** Sonnet 推到目標工具 28/31，Opus 是 29/31，兩邊都沒有 guard 全部擋掉、也沒有退回 rules。共同沒中的是 c049（khive）和 c099（serena，沒進候選）。只有 Sonnet 沒中的是 c094：要「執行指令前先徵求同意、在 Linux 上用 OS 層級沙盒」的 coding agent。rustcode 在兩次都進得了候選，Opus 選了它，Sonnet 選了 fuigo、alysiscode、apexo-code。
+
+**dev 查詢（15 題，用 `bench/fit-fresh/labels.json` 評分）：**
+
+| | Opus 5.5（11/20） | Sonnet 5.5（11/21） |
+|---|---|---|
+| pick 數 | 17 | 24 |
+| 標註 2 分 | 7 | 2 |
+| 標註 1 分 | 0 | 2 |
+| 沒標註過 | 10 | 20 |
+| 回答「沒有合適的」的題數 | 7 | 4 |
+
+- **兩邊看到的誘因一樣時，Sonnet 也擋得住。** Opus 當時擋掉的回補工具（atuin、whisper-cpp、github-mcp-server、jj），Sonnet 一個都沒推。hurl 兩邊都推在 q26（OpenAPI、契約測試）和 q36。
+- **一題是同條件下 Sonnet 推錯：** q10 要一個連 Figma 的 MCP bridge，Sonnet 推了 chrome-devtools-mcp。這個工具在 Opus 跑的時候就有能力清單，而它沒有任何和 Figma 有關的項目；Opus 當時一個都沒推。
+- **兩題 Sonnet 放掉了 2 分的工具：** q06（本機看圖、回答問題）Opus 推了 inferbridge、cluaiz、pocketllm，三個都是 2 分；Sonnet 換成 chimera（1 分）、llama-cpp（沒標註）和 pocketllm。q11（NAS 上自架的離線聊天介面）Opus 推了 homebotbuild、overtchat（2 分），Sonnet 推 chimera（1 分）、eullm、turbollm。用免費的 shortlist 重建看，inferbridge、cluaiz、homebotbuild、overtchat 在今天的 50 張卡片裡都還在，所以比較像是 Sonnet 自己的選擇，不是候選池變了。這一點要等同版 Opus 才能確定，因為正式流程的候選是由模型給的關鍵字決定的。
+- **其餘差異分不出是模型還是資料：** q23（S3 加密同步）Sonnet 推了 tricorderkit 和 wshm，兩個都只是「有備份」或「能匯出到 S3」，不是同步工具。q34（聲音複製加即時變聲）推了 coderai、thundertalk、eli-v2-0，前兩個能複製聲音，但都沒有即時變聲。q35 多推了 ketch，它只會照 sitemap 爬網頁，不會檢查壞連結。q36 推了 xh，它是 HTTP 用戶端，不能查 DNS 或憑證到期。這些工具在 Opus 跑的時候都還沒有能力清單。
+
+**結論：** 花費約是同版 Opus 的一半（今天正式站 Opus 一次 match 約 US$0.11，Sonnet 約 US$0.055）。次要功能的命中率差不多，但 dev 查詢的品質有退步的跡象：2 分的 pick 從 7 個變 2 個，「沒有合適的」也答得比較少。這兩項有一部分是資料變了造成的，所以切換前要先跑同版的 Opus 對照（約 US$5）。
