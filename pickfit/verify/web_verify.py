@@ -1066,7 +1066,8 @@ def web_spend(ledger_path: Path | None = None) -> dict[str, float]:
         for provider, usd in conn.execute(f"SELECT provider, {cost} FROM calls WHERE stage LIKE 'web-%' "
                                           "AND stage != 'web-match-check' GROUP BY provider"):
             spend[provider if provider in spend else "meta"] += float(usd)
-        spend["pipeline_total"] = float(conn.execute(f"SELECT {cost} FROM calls WHERE budget = 'pipeline'").fetchone()[0])
+        spend["pipeline_total"] = float(conn.execute(  # every Claude call: the direct API's budget and Bedrock's
+            f"SELECT {cost} FROM calls WHERE budget IN ('pipeline', 'bedrock')").fetchone()[0])
     for result in runs_dir().glob("*/web-*/web_result.json"):
         try:
             spend["modal"] += float(json.loads(result.read_text(encoding="utf-8")).get("costs", {}).get("sandbox_usd") or 0)

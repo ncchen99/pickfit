@@ -130,7 +130,9 @@ HOST_RESERVE_MB = 1024  # the VM's kernel, sshd and dockerd, next to the box's c
 IPV4_USD_PER_HOUR = 0.005  # a public IPv4 address, every region
 HOURS_PER_MONTH = 730
 DISK_GB = 16  # the plain box: the host, the image, and the box user's 1.5 GB of files
-DISK_GB_EXTRA = {"gui": 8, "audio": 2, "build": 24}
+# svc: the services image (the databases, moto, llama.cpp's server and its model) is about 0.8 GB larger than
+# when it held PostgreSQL and Redis alone, and each service keeps its data on the same disk.
+DISK_GB_EXTRA = {"gui": 8, "audio": 2, "build": 24, "svc": 4}
 
 GROUPS = {"control": "pickfit-box-control", "online": "pickfit-box-online", "offline": "pickfit-box-offline"}
 GROUP_NOTES = {"control": "pickfit: SSH in from the harness, nothing out",

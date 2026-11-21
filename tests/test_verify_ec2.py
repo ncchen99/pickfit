@@ -552,6 +552,12 @@ def test_the_image_follows_the_dockerfile_the_recipe_and_the_host_setup(monkeypa
     assert "apt-get install -y nftables build-essential" in text
     assert text.rstrip().splitlines()[-1].startswith('RUN ["/bin/sh", "-c", ') and "rustc --version" in text
     assert e.disk_gb(build) > e.disk_gb(plain)
+    # The services image (the databases, moto, llama.cpp's server and its model) gets room of its own; every kind
+    # of image a recipe can name has a size on file, so none is baked on the plain box's disk by oversight.
+    services = lb.image_recipe("vm", services=True)
+    assert "svc" in services.kinds and e.disk_gb(services) == e.disk_gb(plain) + 4
+    every = lb.image_recipe("vm", display=True, audio=True, toolchain=True, services=True)
+    assert set(every.kinds) - {"vm"} == set(e.DISK_GB_EXTRA)
     assert "'install vsock /bin/false'" in e.HOST_SETUP and "update-initramfs -u" in e.HOST_SETUP
 
 

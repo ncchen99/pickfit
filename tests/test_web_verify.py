@@ -304,6 +304,23 @@ def test_a_batch_stops_only_at_its_own_max_usd():
     assert "--max-usd 20.00" in stop, "each site is checked against a worst case before it starts"
 
 
+def test_the_pipelines_total_counts_claude_calls_bedrock_served_too(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """Claude calls are recorded under the budget "pipeline", or "bedrock" when Amazon Bedrock served them."""
+    from pickfit.ledger import Ledger
+
+    path = tmp_path / "ledger.sqlite"
+    monkeypatch.setenv("PICKFIT_RUNS_DIR", str(tmp_path / "runs"))
+    for budget, provider, stage, usd in (("pipeline", "anthropic", "web-operate", 0.30),
+                                         ("pipeline", "anthropic", "verify", 1.00),
+                                         ("bedrock", "bedrock", "verify", 0.50),
+                                         ("baseten", "baseten", "web-operate", 0.07)):
+        ledger = Ledger(path, budget=budget)
+        ledger.settle(ledger.reserve(usd, stage=stage, provider=provider, model="m"), usd)
+    spend = wv.web_spend(path)
+    assert spend["pipeline_total"] == pytest.approx(1.80), "pipeline 1.30 and bedrock 0.50; not baseten's"
+    assert (spend["anthropic"], spend["baseten"]) == (pytest.approx(0.30), pytest.approx(0.07))
+
+
 def test_typed_text_counts_only_when_the_app_rendered_it_outside_inputs():
     claim = outcome("page_state", "pickfitab12 hello world")
     typed = ["pickfitab12 hello world"]
