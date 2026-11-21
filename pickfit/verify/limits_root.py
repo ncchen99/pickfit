@@ -103,7 +103,7 @@ IMDS_UNDO = ("/usr/sbin/nft flush ruleset 2>&1; /usr/sbin/iptables -F 2>&1; /usr
 # which holds nothing else but the public half of this machine's login key).
 SCAN_PY = r"""import os, re, sys
 ROOTS = ("/root", "/home", "/etc", "/opt", "/srv", "/tmp", "/var/tmp", "/run", "/var/lib/cloud", "/var/lib/docker/volumes")
-OWN = re.compile(r"^(/etc/ssh/ssh_host_[a-z0-9_]+_key|/var/lib/cloud/.*)$")
+OWN = re.compile(r"^(/etc/ssh/ssh_host_[a-z0-9_]+_key|/var/lib/cloud/.*|/run/cloud-init/.*)$")
 PATTERNS = (("key-id", re.compile(rb"\b(AKIA|ASIA)[0-9A-Z]{16}\b")),
             ("secret-name", re.compile(rb"aws_secret_access_key|aws_session_token", re.I)),
             ("private-key", re.compile(rb"-----BEGIN [A-Z ]*PRIVATE KEY-----")))
@@ -192,6 +192,13 @@ GONE = ("shutting-down", "terminated", "gone")
 def _py(script: str, *args: str) -> str:
     """Bash that runs a Python script as root with those arguments (the script on stdin, never spliced)."""
     return f"{SUDO} {PYTHON} -I - {' '.join(args)} <<'PICKFIT_PY'\n{script}PICKFIT_PY"
+
+
+def planted_scan() -> str:
+    """Bash for the scan's control: plant a key id in root's home, scan, take it away. The scan's here-document
+    ends at a line that is its terminator alone, so what follows starts on a line of its own (measured 2026-11-21
+    on a real box: joined with "; " the terminator never matched and Python was handed the rest as code)."""
+    return _root(PLANT) + "; " + _py(SCAN_PY) + "\n" + _root(UNPLANT)
 
 
 def _root(command: str) -> str:
@@ -352,7 +359,7 @@ def _no_identity(box: Any, add: Callable[[ProbeResult], None]) -> None:
     add(_probe(box, "no_credentials_on_disk", _py(SCAN_PY), 180,
                "root's scan finds no cloud key, no private key but the VM's own host key, no secret variable",
                lambda r: scan_clean(r.stdout)))
-    planted = box.exec(_root(PLANT) + "; " + _py(SCAN_PY) + f"; {_root(UNPLANT)}", 180)
+    planted = box.exec(planted_scan(), 180)
     add(ProbeResult("no_credentials_control", "planted" in planted.stdout and not scan_clean(planted.stdout)
                     and "found key-id /root/.aws/credentials" in planted.stdout,
                     "with a key id planted in /root/.aws (this box only), the same scan finds it",

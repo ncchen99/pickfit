@@ -383,3 +383,22 @@ def test_it_is_not_the_limits_test_of_a_box_whose_user_is_not_root():
     plain.capabilities = BoxCapabilities()  # type: ignore[misc]
     with pytest.raises(BoxError, match="limits.py's"):
         lr.run_root_limits_test(plain, lambda line: None)
+
+
+def test_the_scans_control_ends_its_here_document_on_a_line_of_its_own():
+    """Measured 2026-11-21 on a real box: `PICKFIT_PY; sudo …` is not the terminator, so Python read the rest."""
+    lines = lr.planted_scan().splitlines()
+    assert [line for line in lines if line.startswith("PICKFIT_PY")] == ["PICKFIT_PY"]
+    assert lines[-1].endswith("/root/.aws'") and "rm -rf" in lines[-1]  # the plant is taken away after the scan
+
+
+def test_cloud_inits_own_copies_of_the_host_key_are_the_vms_own():
+    """cloud-init keeps the user data it was given, the VM's host key in it, under /var/lib/cloud and /run/cloud-init
+    (measured 2026-11-21: /run/cloud-init/combined-cloud-config.json). A key anywhere else is still found."""
+    import re
+
+    own = re.compile(re.search(r'^OWN = re\.compile\(r"(.*)"\)$', lr.SCAN_PY, re.M).group(1))
+    assert own.match("/run/cloud-init/combined-cloud-config.json")
+    assert own.match("/var/lib/cloud/instances/i-0/user-data.txt") and own.match("/etc/ssh/ssh_host_ed25519_key")
+    assert not own.match("/home/sbx/.ssh/id_ed25519") and not own.match("/root/.aws/credentials")
+    assert not own.match("/run/secrets/key") and not own.match("/tmp/run/cloud-init/x")
