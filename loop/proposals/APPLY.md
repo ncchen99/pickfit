@@ -239,3 +239,27 @@ One line in scripts/loop_guard.py: pickfit/verify/grants_policy.json joins PROTE
 be given on the agent's request and how much a record may spend, so a loop session that could edit it could widen its
 own grants. Without the patch the table is an ordinary file. PICKFIT_GRANTS_POLICY names another table for one process
 (a trial with the table switched on); a loop's environment is set by scripts/loop.sh, which is guarded already.
+
+## 2026-11-22: the full-privilege box's credential probes, after their first run on a real instance
+
+### limits-root-credential-probes.patch (for 念誠 to decide)
+
+```sh
+git apply loop/proposals/limits-root-credential-probes.patch
+uv run pytest -q tests/test_verify_limits_root.py
+uv run pickfit verify --runner ec2 --runtime rootvm --limits-test --extra-disk-gb 8
+```
+
+The first limits test of the full-privilege VM box on EC2 (21 Nov, `runs/verify/limits-ec2-rootvm-20261121-235809.json`)
+held 25 of 27. Both misses are the probes' own, read again on a second instance:
+
+- `no_credentials_on_disk` found a private key in `/run/cloud-init/combined-cloud-config.json`. That is cloud-init's
+  copy of the user data pickfit gave the VM, with the VM's own SSH host key in it, as under `/var/lib/cloud`, which the
+  scan already counts as the VM's own. The patch adds `/run/cloud-init/` to that list and nothing else; a key anywhere
+  else is still found.
+- `no_credentials_control` joined the scan's here-document to the next command with `; `, so the terminator never
+  matched and Python was handed the rest as code. The planted key was therefore never scanned for, and never removed
+  (on a box that was destroyed a minute later). The patch puts the next command on its own line; on the second
+  instance the control then read `planted`, `found aws-dir /root/.aws`, `found key-id /root/.aws/credentials`.
+
+Two tests come with it. In a copy outside the checkout, with the patch applied, the file's 61 tests pass.
