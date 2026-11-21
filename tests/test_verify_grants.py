@@ -5,7 +5,6 @@ from __future__ import annotations
 import dataclasses
 import json
 from pathlib import Path
-from types import SimpleNamespace
 from typing import Any, get_args
 
 import pytest
@@ -16,6 +15,7 @@ from pickfit.ledger import Caps, Ledger
 from pickfit.schema import Cited, FeatureGap, SoftwareRecord, UnverifiedReason
 from pickfit.verify import grants as grants_mod
 from pickfit.verify import result as result_mod
+from pickfit.verify import services, sysdeps
 from pickfit.verify.agent import AgentLimits, CommandRecord, FinishArgs, VerifyAgent
 from pickfit.verify.grants import (
     KINDS,
@@ -30,17 +30,21 @@ from pickfit.verify.grants import (
     grants_of,
     guide_steps,
     load_policy,
+    package_grants,
     parse_policy,
     pickfit_services,
     plan_grants,
     regrant,
+    stand_in_model,
     system_packages,
 )
 from pickfit.verify.pipeline import Rerun, verify_task
 from pickfit.verify.replay import Replayer, plan_from
 from pickfit.verify.result import install_guide, saved_grants
+from pickfit.verify.root_box import FULL
 from pickfit.verify.task import VerifyTask, load_fixture
 from pickfit.verify.verdict import log_verdict
+from test_verify_sysdeps import RootBox
 from verify_fakes import FakeBox, FakeServer, finish, response, run_cmd
 
 FIXTURES = Path(__file__).parent / "fixtures"
@@ -209,8 +213,9 @@ def test_refused_names_the_reason_code_pickfit_already_has():
 
     assert refused("test_identity", "notion")[0] == "needs_account"  # the policy never gives it
     assert refused("extra_machine", "second-node")[0] == "needs_more_resources"
-    assert refused("service", "kafka") == ("needs_service", "pickfit runs no such service; it has postgres, redis "
-                                                            "and http-mock")
+    assert refused("service", "kafka") == (
+        "needs_service", "pickfit runs no such service; it has postgres, redis, mysql, http-mock, smtp, aws, git and "
+                         "llm-stub")
     assert refused("model_endpoint", "openai") == ("needs_account", "pickfit cannot give this yet")  # no provider
     assert refused("root", "sudo")[0] == "needs_root"  # no root box on this runner
     assert refused("system_package", "not-a-package") == (
@@ -295,7 +300,12 @@ def test_providers_are_registered_by_kind_and_a_name_may_have_its_own():
     assert providers.give(FakeBox(), Ask("root", "sudo")) is None
     with pytest.raises(ValueError, match="unknown grant kind"):
         providers.register("kernel_module", lambda b, ask: Provided(True))
-    assert default_providers().get("service") is pickfit_services
+    held = default_providers()
+    assert held.get("service") is pickfit_services and held.get("system_package") is not None
+    # The stand-in model endpoint has a provider; any other model endpoint is the billing proxy's, which is not built.
+    assert held.get("model_endpoint", "stand-in") is stand_in_model and held.get("model_endpoint", "openai") is None
+    # Root and a container engine are never a provider's to give: the box has them or the request is refused.
+    assert held.get("root", "sudo") is None and held.get("container_engine", "docker") is None
 
 
 def test_the_services_helper_is_started_by_the_box_user_and_its_failure_is_a_refusal():
@@ -306,28 +316,78 @@ def test_the_services_helper_is_started_by_the_box_user_and_its_failure_is_a_ref
 
 
 def test_the_system_package_adapter_reads_what_the_installer_reports():
-    """sysdeps.install_named(box, names, timeout_s) -> installed, refused, command (the expected shape)."""
+    """sysdeps.install_named(box, names, timeout_s) -> sysdeps.Installed: installed and present are tuples,
+    refused maps a name to why, command is root's own apt-get call (never what a user types), error says why
+    nothing could be installed at all."""
     calls: list[tuple[list[str], int]] = []
+    root_ran = "/usr/bin/apt-get -o DPkg::Lock::Timeout=60 install -y --no-remove -- libgl1"
 
-    def install_named(box: Any, names: list[str], timeout_s: int) -> Any:
+    def install_named(box: Any, names: list[str], timeout_s: int) -> sysdeps.Installed:
         calls.append((names, timeout_s))
-        ok = [n for n in names if n.startswith("lib")]
-        return SimpleNamespace(installed=ok, refused=[n for n in names if n not in ok],
-                               command=f"sudo apt-get install -y {' '.join(ok)}" if ok else None)
+        name = names[0]
+        if name == "libgl1":
+            return sysdeps.Installed(requested=(name,), installed=(name,), added=("libgl1=1.7.0-1",), command=root_ran)
+        if name == "libc6":
+            return sysdeps.Installed(requested=(name,), present=(name,))
+        if name == "libbroken1":
+            return sysdeps.Installed(requested=(name,), error="apt-get install failed: dpkg returned an error code")
+        return sysdeps.Installed(requested=(name,), refused={name: "not a package in the distribution's repository"})
 
     provider = system_packages(install_named, timeout_s=240)
     given = provider(FakeBox(), Ask("system_package", "libgl1"))
-    assert (given.granted, given.guide_step) == (True, "sudo apt-get install -y libgl1")
-    assert calls == [(["libgl1"], 240)]
+    # The guide line is sysdeps' own guide step, what a user types; root's command with pickfit's options is not it.
+    assert (given.granted, given.recorded, given.guide_step) == (True, True, "sudo apt-get install -y libgl1")
+    assert given.guide_step == sysdeps.guide_steps(["libgl1"])[0].command and calls == [(["libgl1"], 240)]
+    # Already in the box: the agent may go on, and nothing was given, so nothing is recorded or shown in a guide.
+    there = provider(FakeBox(), Ask("system_package", "libc6"))
+    assert (there.granted, there.recorded, there.guide_step) == (True, False, None)
     refused = provider(FakeBox(), Ask("system_package", "docker-ce"))
-    assert not refused.granted and "not a named package" in refused.message
-    # pickfit's own root call is not what a user types: the desk then takes the guide line from the policy.
-    as_root = system_packages(lambda box, names, timeout_s: SimpleNamespace(
-        installed=names, refused=[], command="apt-get install -y --no-install-recommends libgl1"))
-    assert as_root(FakeBox(), Ask("system_package", "libgl1")).guide_step is None
-    desk = Desk(policy(), Providers({"system_package": as_root}))
-    desk.request(FakeBox(), "system_package", "libgl1")
-    assert desk.grants[0].guide_step == "First, as an administrator: sudo apt-get install -y libgl1"
+    assert not refused.granted and "not a package in the distribution's repository" in refused.message
+    failed = provider(FakeBox(), Ask("system_package", "libbroken1"))
+    assert not failed.granted and "apt-get install failed" in failed.message
+    desk = Desk(policy(), Providers({"system_package": provider}))
+    assert [desk.request(FakeBox(), "system_package", n).answer for n in ("libgl1", "libc6", "docker-ce")] == [
+        "granted", "granted", "refused"]
+    assert [(g.name, g.guide_step) for g in desk.grants] == [("libgl1", "sudo apt-get install -y libgl1")]
+
+
+def test_a_requested_package_is_installed_by_sysdeps_and_its_refusals_keep_an_existing_code(tmp_path: Path):
+    """The registered provider is sysdeps.install_named itself: root's script runs here against the stand-in apt."""
+    desk = Desk(policy(max_requests_per_run=20), default_providers(), run_id=RUN_ID)
+    box = RootBox(tmp_path / "agent")
+    granted = desk.request(box, "system_package", "libxcb1", "error while loading shared libraries: libxcb.so.1")
+    assert granted.answer == "granted" and box.state["installed"] == ["libxau6", "libxcb1"]
+    assert box.ran == [], "pickfit's root installed it: the box user ran nothing and got no root"
+    assert [g.to_dict() for g in desk.grants] == [{
+        "kind": "system_package", "name": "libxcb1", "tier": 2, "requested_by": "agent", "shown_in_guide": True,
+        "guide_step": "sudo apt-get install -y libxcb1", "fidelity": None, "markers": [], "after_command": 0}]
+    # What the box already has is granted without a grant: there is nothing to give a fresh box or to tell a user.
+    assert desk.request(box, "system_package", "libc6").answer == "granted" and len(desk.grants) == 1
+
+    def refused(name: str) -> str:
+        decision = desk.request(box, "system_package", name)
+        assert (decision.answer, decision.gap, decision.grant) == ("refused", "needs_root", None), name
+        return decision.message
+
+    # sysdeps' own refusals, each under the reason code pickfit already has for a lack of root.
+    assert sysdeps.FULL_MACHINE_REASON in refused("docker.io") and sysdeps.FULL_MACHINE_REASON in refused("sudo")
+    assert "not a package in the distribution's repository" in refused("no-such-package")
+    assert "outside the distribution's repository" in refused("vendor-tool")
+    assert "a file or a path" in refused("tool.deb")
+    assert "a name only" in refused("libc6:i386")
+    assert box.state["installed"] == ["libxau6", "libxcb1"] and len(desk.grants) == 1
+    assert {r["gap"] for r in desk.requests if r["answer"] == "refused"} == {"needs_root"}
+    # A box pickfit has no root channel in (a DockerBox, a test double) installs nothing; neither does a Mac.
+    assert "no root channel" in Desk(policy(), default_providers()).request(
+        FakeBox(), "system_package", "libxcb1").message
+    mac = RootBox(tmp_path / "mac")
+    mac.os = "macos"
+    decision = Desk(policy(), default_providers()).request(mac, "system_package", "libxcb1")
+    assert (decision.answer, decision.gap) == ("refused", "needs_root") and mac.harness == []
+    # The fresh replay box is given the same by the same provider, as root.
+    replay = RootBox(tmp_path / "replay")
+    again = regrant(policy(), default_providers(), replay, desk.grants[0], run_id=RUN_ID)
+    assert again.granted and replay.state["installed"] == ["libxau6", "libxcb1"] and replay.ran == []
 
 
 # ---------------------------------------------------------------- the agent's tool
@@ -794,3 +854,210 @@ def test_a_stand_in_endpoint_marks_the_run_and_leaves_a_model_endpoint_grant(tmp
         assert outcome.fidelity == {"render a graph as ASCII art": fidelity}
         saved = json.loads((outcome.evidence_dir / "grants.json").read_text(encoding="utf-8"))
         assert saved["fidelity"] == outcome.fidelity
+
+
+# ---------------------------------------------------------------- the seams to sysdeps, services and the root box
+
+
+def test_packages_the_plan_installed_are_grants_requested_by_the_plan():
+    held = policy()
+    found = package_grants(["libxcb1", "jq"], held)
+    assert [g.to_dict() for g in found] == [
+        {"kind": "system_package", "name": name, "tier": 2, "requested_by": "plan", "shown_in_guide": True,
+         "guide_step": f"sudo apt-get install -y {name}", "fidelity": None, "markers": [], "after_command": 0}
+        for name in ("libxcb1", "jq")]
+    # Not listed twice when the agent also asked, and nothing for a factory that installed nothing.
+    asked = [grant("jq")]
+    assert [g.name for g in package_grants(["libxcb1", "jq"], held, asked)] == ["libxcb1"]
+    assert package_grants(sysdeps.given_names(lambda run_id, role: None), held) == []
+    # They came with every box of the run (PackagedBoxes installs them as each starts): the desk gives nothing again.
+    box = FakeBox()
+    assert regrant(held, default_providers(), box, found[0]).granted and box.ran == []
+    # The guide: the packages are the run's first step already, so they get no second line; a package the agent
+    # asked for (never a step of the run) keeps its line.
+    steps = ["sudo apt-get install -y libxcb1 jq", "uv tool install graphtty"]
+    assert sysdeps.step_names(steps) == {"libxcb1", "jq"} and sysdeps.step_names(steps[1:]) == frozenset()
+    assert guide_steps([*found, grant("libgl1", guide_step="sudo apt-get install -y libgl1")], held, steps=steps) == [
+        "sudo apt-get install -y libgl1"]
+    # A record's own five fields (no guide_step) are skipped the same way, by kind and name.
+    assert guide_steps([g.record() for g in found], held, steps=steps) == []
+    assert guide_steps(found, held) == ["sudo apt-get install -y libxcb1", "sudo apt-get install -y jq"]
+
+
+def test_a_run_whose_plan_installed_packages_records_them_once(tmp_path: Path):
+    """One record of what the boxes were given: the grants, with sysdeps.json as evidence and the guide's step."""
+    made: dict[str, RootBox] = {}
+
+    def make(run_id: str, role: str) -> RootBox:
+        made[role] = RootBox(tmp_path / "boxes" / role, script=dict(SCRIPT))
+        return made[role]
+
+    path = bare_record(tmp_path / "data")
+    boxes = sysdeps.PackagedBoxes(make, ["libxcb1", "libc6", "tool.deb"], log=lambda s: None)
+    # The repository's table, switched off: plan grants are recorded all the same.
+    outcome, _, server = verify(tmp_path, [*work(), judge_answer()], boxes, policy=load_policy(), write=True,
+                                data_dir=path.parent)
+    assert outcome.passed and outcome.run.replayed and outcome.written
+    assert "request_capability" not in [t["name"] for t in server.requests[0]["tools"]]
+    # The installed package is a grant of the plan's; the one already there and the refused one are not.
+    assert [(g["kind"], g["name"], g["tier"], g["requested_by"], g["shown_in_guide"]) for g in outcome.grants] == [
+        ("system_package", "libxcb1", 2, "plan", True)]
+    saved = json.loads((outcome.evidence_dir / "grants.json").read_text(encoding="utf-8"))
+    assert saved["grants"] == outcome.grants and saved["requests"] == []
+    assert [g.model_dump() for g in outcome.run.grants] == [{
+        "kind": "system_package", "name": "libxcb1", "tier": 2, "requested_by": "plan", "shown_in_guide": True}]
+    # sysdeps' evidence survives beside it: what each box installed, and what was refused.
+    evidence = json.loads((outcome.evidence_dir / "sysdeps.json").read_text(encoding="utf-8"))
+    assert evidence["agent"]["installed"] == evidence["replay"]["installed"] == ["libxcb1"]
+    assert evidence["agent"]["present"] == ["libc6"] and "tool.deb" in evidence["agent"]["refused"]
+    # The fresh replay box got it from PackagedBoxes as it started, once: the replay was given no grant again.
+    assert all(len(box.harness) == 1 for box in made.values()) and sorted(made) == ["agent", "replay"]
+    replay = json.loads((outcome.evidence_dir / "replay.json").read_text(encoding="utf-8"))["result"]
+    assert replay["grants"] == []
+    # The guide says it once: the run's first step. No second line among the manual steps.
+    assert [s.command for s in outcome.run.steps] == ["sudo apt-get install -y libxcb1", "uv tool install graphtty"]
+    record = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8"))
+    guide = record.install.linux
+    assert [s.command for s in guide.steps] == ["sudo apt-get install -y libxcb1", "uv tool install graphtty"]
+    assert guide.manual_steps == []
+    assert sum("apt-get install" in line for line in [*guide.manual_steps, *(s.command for s in guide.steps)]) == 1
+    # Written back later from the run alone (scripts/guarded_write_back.py), the guide is the same.
+    assert install_guide(outcome.run).manual_steps == []
+
+
+def test_every_service_kind_has_a_rule_with_its_fidelity_and_its_url():
+    held = load_policy()
+    for kind, port in services.KINDS:
+        rule = held.rule("service", kind)
+        assert rule is not None and kind in rule.names, kind  # its own rule, not the fallback
+        assert (rule.answer, rule.box, rule.tier, rule.gap) == ("rerun", "services", 3, "needs_service"), kind
+        # A stand-in only shows the wiring works; a throwaway server of the real thing is real.
+        assert rule.fidelity == ("stand_in" if kind in services.STAND_INS else "real"), kind
+        assert f"127.0.0.1:{port}" in rule.markers and f"localhost:{port}" in rule.markers, kind
+        if rule.shown_in_guide:
+            assert rule.guide and ("stand" in rule.guide or "only shows" in rule.guide) == (
+                kind in services.STAND_INS), kind  # the guide never passes a stand-in off as the real thing
+    assert held.rule("service", "s3") is held.rule("service", "aws")  # pickfit-services' other name for it
+    fallback = held.rule("service", "kafka")
+    assert fallback.answer == "refuse" and all(kind in fallback.why for kind in services.KIND_NAMES)
+    # Each kind's URL, as pickfit-services prints it, shows one of its markers.
+    urls = {"postgres": services.PG_URL, "redis": services.REDIS_URL, "http-mock": services.MOCK_URL,
+            "mysql": services.MYSQL_URL, "smtp": services.SMTP_URL, "aws": services.AWS_URL,
+            "git": services.GIT_URL, "llm-stub": services.LLM_URL}
+    assert set(urls) == set(services.KIND_NAMES)
+    for kind, url in urls.items():
+        assert any(marker in url for marker in held.rule("service", kind).markers), kind
+    assert any(marker in services.GIT_HTTP_URL for marker in held.rule("service", "git").markers)
+
+
+def test_services_the_plan_started_are_recorded_like_postgres_and_redis():
+    held = policy()
+    cited = ["pickfit-services start mysql smtp", "pickfit-services start s3", "uv tool install tool",
+             "pickfit-services start git llm-stub && tool push git://127.0.0.1:9418/pickfit.git"]
+    found = plan_grants({}, cited, held)
+    assert [(g.kind, g.name, g.tier, g.requested_by, g.fidelity) for g in found] == [
+        ("service", "mysql", 3, "plan", "real"), ("service", "smtp", 3, "plan", "stand_in"),
+        ("service", "s3", 3, "plan", "stand_in"), ("service", "git", 3, "plan", "stand_in"),
+        ("service", "llm-stub", 3, "plan", "stand_in")]
+    assert all(g.markers for g in found)
+    # A check that shows a stand-in's URL is marked stand_in; one that shows the real database's is real.
+    commands = {1: "pickfit-services start mysql smtp", 2: "uv tool install tool",
+                3: "tool migrate --db mysql://pickfit:pickfit@127.0.0.1:3306/pickfit",
+                4: "tool notify --smtp-host 127.0.0.1 --smtp-port 1025 --to a@example.com", 5: "tool --version"}
+    verdict = {"step_ids": [1, 2], "checks": [{"command_id": n, "setup_ids": []} for n in (3, 4, 5)]}
+    features = features_of(("run migrations", "checked", [3]), ("send a notification", "checked", [4]),
+                           ("print the version", "checked", [5]))
+    assert feature_fidelity(features, verdict, commands, found[:2]) == {
+        "run migrations": "real", "send a notification": "stand_in"}
+    # An agent's request for one, in a services box, is the box user's own helper; elsewhere it is a rerun.
+    box = KindBox({"pickfit-services start mysql": (0, f"mysql: {services.MYSQL_URL} (MariaDB)", "")}, services=True)
+    desk = Desk(held, default_providers())
+    decision = desk.request(box, "service", "mysql")
+    assert decision.answer == "granted" and services.MYSQL_URL in decision.message
+    assert (desk.grants[0].fidelity, desk.grants[0].tier) == ("real", 3)
+    assert Desk(held, default_providers(), raisable=frozenset({"services"})).request(
+        FakeBox(), "service", "smtp").answer == "rerun"
+
+
+def test_the_stand_in_model_endpoint_is_the_services_boxs_llm_stub():
+    started = {"pickfit-services start llm-stub": (0, f"llm-stub: {services.LLM_URL} (OpenAI-compatible)", "")}
+    box = KindBox(started, services=True)
+    desk = Desk(policy(), default_providers(), run_id=RUN_ID)
+    decision = desk.request(box, "model_endpoint", "stand-in", "the tool needs OPENAI_API_KEY", after_command=2)
+    assert decision.answer == "granted" and [c for c, _ in box.ran] == ["pickfit-services start llm-stub"]
+    # The agent is told where it is and that it is a stand-in; the key is the stub's placeholder, nobody's key.
+    assert services.LLM_URL in decision.message and services.LLM_KEY in decision.message
+    assert "stand-in" in decision.message and "never what it says" in decision.message
+    held = desk.grants[0]
+    assert (held.kind, held.name, held.tier, held.requested_by, held.fidelity, held.shown_in_guide) == (
+        "model_endpoint", "stand-in", 3, "agent", "stand_in", True)
+    assert held.markers == (services.LLM_URL,) and held.after_command == 2
+    assert "stand-in model" in held.guide_step  # the guide says what it was checked against
+    # A check that shows the endpoint's base URL is a stand_in check; with it hidden, every later check is.
+    commands = {1: "pipx install chat-tool", 2: "chat-tool --version",
+                3: f"OPENAI_BASE_URL={services.LLM_URL} OPENAI_API_KEY=x chat-tool ask hi", 4: "chat-tool history"}
+    verdict = {"step_ids": [1], "checks": [{"command_id": 3, "setup_ids": []}, {"command_id": 4, "setup_ids": []}]}
+    features = features_of(("answer a question", "checked", [3]), ("list the history", "checked", [4]))
+    assert feature_fidelity(features, verdict, commands, [held]) == {"answer a question": "stand_in"}
+    assert feature_fidelity(features, verdict, {**commands, 3: "chat-tool ask hi"}, [held]) == {
+        "answer a question": "stand_in", "list the history": "stand_in"}
+    # The fresh replay box gets it the same way; a box without the services gets nothing, and the agent a rerun.
+    replay = KindBox(started, services=True)
+    assert regrant(policy(), default_providers(), replay, held).granted
+    assert [c for c, _ in replay.ran] == ["pickfit-services start llm-stub"]
+    assert not regrant(policy(), default_providers(), FakeBox(), held).granted
+    plain = Desk(policy(), default_providers(), raisable=frozenset({"services"}))
+    assert plain.request(FakeBox(), "model_endpoint", "stand-in").answer == "rerun"
+    # A stub that does not start is a refusal, under the code for a missing account.
+    down = KindBox({"pickfit-services start llm-stub": (1, "", "llm-stub did not start; its log: ...")}, services=True)
+    refused = Desk(policy(), default_providers()).request(down, "model_endpoint", "stand-in")
+    assert (refused.answer, refused.gap) == ("refused", "needs_account") and "did not start" in refused.message
+    # The billing proxy is not built: any other model endpoint has no provider, in any box.
+    for other in (FakeBox(), KindBox(started, services=True)):
+        proxy = Desk(policy(), default_providers()).request(other, "model_endpoint", "openai")
+        assert (proxy.answer, proxy.gap, proxy.message) == ("refused", "needs_account", "pickfit cannot give this yet")
+
+
+class PrivilegedBox(FakeBox):
+    """A test double of the full-privilege VM box: it says what it hands the software under test."""
+
+    capabilities = FULL
+
+
+def test_root_and_a_container_engine_are_the_boxs_own_capabilities():
+    held = policy()
+    # In a full-privilege VM box the desk reads the box: granted, the box has it. No provider acts, nothing runs.
+    box = PrivilegedBox()
+    desk = Desk(held, default_providers(), run_id=RUN_ID)
+    root = desk.request(box, "root", "sudo", "the installer writes a systemd unit")
+    engine = desk.request(box, "container_engine", "docker", "the tool is a docker image")
+    assert (root.answer, root.tier, engine.answer, engine.tier) == ("granted", 4, "granted", 4)
+    assert "passwordless sudo" in root.message and "container engine here is docker" in engine.message
+    assert box.ran == [] and desk.rerun is None
+    assert [g.record() for g in desk.grants] == [
+        {"kind": "root", "name": "sudo", "tier": 4, "requested_by": "agent", "shown_in_guide": True},
+        {"kind": "container_engine", "name": "docker", "tier": 4, "requested_by": "agent", "shown_in_guide": True}]
+    assert guide_steps(desk.grants, held) == ["Needs administrator rights (sudo)", "Needs docker installed and running"]
+    # The replay's fresh box is asked the same question: a full-privilege box has it, any other box does not.
+    assert all(regrant(held, default_providers(), PrivilegedBox(), g).granted for g in desk.grants)
+    lacking = regrant(held, default_providers(), FakeBox(), desk.grants[0])
+    assert not lacking.granted and lacking.message == "this box has no root"
+    # Any other box: refused with the existing codes. The watch can rerun into services, audio and a toolchain,
+    # never into root, so there is no box to start over in.
+    for plain in (FakeBox(), KindBox(services=True, audio=True, toolchain=True)):
+        desk = Desk(held, default_providers(), raisable=frozenset({"services", "audio", "toolchain"}))
+        root = desk.request(plain, "root", "sudo")
+        engine = desk.request(plain, "container_engine", "podman")
+        assert (root.answer, root.gap, engine.answer, engine.gap) == (
+            "refused", "needs_root", "refused", "needs_container")
+        assert "needs a box with root" in root.message and "needs a box with container_engine" in engine.message
+        assert desk.grants == [] and desk.rerun is None and plain.ran == []
+    # A box that merely carries an attribute of that name has not been given root: only its capabilities count.
+    assert Desk(held, default_providers()).request(KindBox(root=True), "root", "sudo").answer == "refused"
+    # A box whose machine gives root but no container engine answers for each on its own.
+    class RootOnly(FakeBox):
+        capabilities = dataclasses.replace(FULL, container_engine=None)
+
+    desk = Desk(held, default_providers())
+    assert desk.request(RootOnly(), "root", "sudo").answer == "granted"
+    assert desk.request(RootOnly(), "container_engine", "docker").gap == "needs_container"

@@ -12,8 +12,15 @@ answers from the policy table, a data file (grants_policy.json), never from the 
 
 A request is only a request. What a README or a command's output tells the agent to ask for changes nothing: the
 name must be one plain name, the rule that matches it is the policy's, and a record's spending limit is the policy's
-too. Providers are a seam: kind (and optionally name) -> a callable that acts on a box. The system-package installer
-(sysdeps.py), the root box and the billing proxy register theirs; until then such a request is refused.
+too. Providers are a seam: kind (and optionally name) -> a callable that acts on a box. Registered today
+(default_providers): a service the box user starts with pickfit-services, a named system package pickfit's root
+installs (sysdeps.install_named, with its refusals), and the stand-in model endpoint (pickfit-services' llm-stub).
+Root and a container engine are the box's own (Box.capabilities): a full-privilege VM box has them, no other box is
+given them. The billing proxy has no provider yet, so that request is refused.
+
+What the plan gave without a request is recorded the same way, as grants with requested_by "plan": the simulated
+microphone, each service a cited command started, and the packages pickfit's root installed in every box of the
+run (sysdeps.PackagedBoxes).
 
 Everything granted to the agent's box is given again by pickfit in the fresh replay box, in the same order between
 the same install steps (replay.py), so the fresh-box rule stands: nothing carries over from one box to the next.
@@ -38,7 +45,8 @@ from pathlib import Path
 from typing import Any, get_args
 
 from pickfit.schema import FeatureGap
-from pickfit.verify.box import Box, BoxError
+from pickfit.verify import services, sysdeps
+from pickfit.verify.box import Box, BoxCapabilities, BoxError
 
 KINDS: tuple[str, ...] = ("system_package", "service", "model_endpoint", "root", "container_engine",
                           "test_identity", "virtual_device", "extra_machine")
@@ -118,6 +126,7 @@ class Provided:
     fidelity: str | None = None
     markers: tuple[str, ...] = ()
     usd: float = 0.0  # what giving it cost, or can cost at most (a proxy ticket's allowance)
+    recorded: bool = True  # False: the box had it already, so nothing was given and the run records no grant
 
 
 Provider = Callable[[Box, Ask], Provided]
@@ -163,33 +172,51 @@ def pickfit_services(box: Box, ask: Ask) -> Provided:
     return Provided(True, f"{said}. `pickfit-services env` prints the URLs as environment variables.")
 
 
-def system_packages(install_named: Callable[..., Any], timeout_s: int = 300) -> Provider:
-    """system_package through sysdeps.install_named(box, names, timeout_s), whose result names what it installed,
-    what it refused and the command a user would run. pickfit runs it as root; the box user gets no root."""
+def system_packages(install_named: Callable[..., sysdeps.Installed] = sysdeps.install_named,
+                    timeout_s: int = sysdeps.INSTALL_TIMEOUT_S) -> Provider:
+    """system_package through sysdeps.install_named(box, names, timeout_s) -> sysdeps.Installed. pickfit runs it
+    as root; the box user gets no root. What sysdeps refuses is refused here with its reason: a name that is not a
+    named package of the distribution, one that needs the full-machine box (sudo, docker.io, systemd), a box that
+    cannot install (macOS, Windows, a DockerBox, the network off), an install that failed."""
 
     def provide(box: Box, ask: Ask) -> Provided:
         result = install_named(box, [ask.name], timeout_s)
-        if ask.name not in (getattr(result, "installed", None) or ()):
-            refused = getattr(result, "refused", None) or ()
-            why = "it is not a named package of the distribution" if ask.name in refused else "the install failed"
-            return Provided(False, f"pickfit did not install {ask.name}: {why}")
-        # The guide shows what a user types. A command that is pickfit's own root call (no sudo) is not that:
-        # the policy's line stands in.
-        command = str(getattr(result, "command", None) or "")
-        return Provided(True, f"pickfit installed the system package {ask.name} as root.",
-                        guide_step=command if command.startswith("sudo ") else None)
+        if ask.name in result.installed:
+            # The guide shows what a user types, which is sysdeps' own guide step: Installed.command is root's
+            # apt-get call in the box, with pickfit's options.
+            step = sysdeps.guide_steps([ask.name])[0].command
+            return Provided(True, f"pickfit installed the system package {ask.name} as root.", guide_step=step)
+        if ask.name in result.present:
+            return Provided(True, f"the system package {ask.name} is already in this box; nothing was installed.",
+                            recorded=False)
+        why = result.refused.get(ask.name) or result.error or "the install failed"
+        return Provided(False, f"pickfit did not install {ask.name}: {_one_line(why, 300)}")
 
     return provide
 
 
+def stand_in_model(box: Box, ask: Ask) -> Provided:
+    """model_endpoint "stand-in": the services box's llm-stub (services.py), an OpenAI-compatible server with a
+    135M model behind it, started by the box user on 127.0.0.1. It shows that a tool's requests go out and an
+    answer comes back, nothing about what the answer says: fidelity stand_in. Its base URL is the marker that
+    tells which checks used it. No key of anyone's is involved; the stub takes any."""
+    result = box.exec("pickfit-services start llm-stub", PROVIDER_TIMEOUT_S)
+    if not result.ok:
+        said = _one_line((result.stderr or result.stdout).strip(), 300)
+        return Provided(False, f"pickfit-services could not start llm-stub: {said or f'exit {result.exit_code}'}")
+    return Provided(
+        True, f"A stand-in model endpoint runs at {services.LLM_URL} (OpenAI-compatible, also Anthropic's "
+              f"/v1/messages). Set OPENAI_BASE_URL={services.LLM_URL} and OPENAI_API_KEY={services.LLM_KEY} (it "
+              f"takes any key; model {services.LLM_MODEL}), or run `pickfit-services env`. It is a 135M model: check "
+              "that a reply arrives, never what it says, and say in the feature's note that a stand-in answered.",
+        fidelity="stand_in", markers=(services.LLM_URL,))
+
+
 def default_providers() -> Providers:
-    """What pickfit can give today: services in a services box, and named system packages once sysdeps.py is in."""
-    providers = Providers({"service": pickfit_services})
-    try:
-        from pickfit.verify.sysdeps import install_named  # type: ignore[import-not-found]
-    except ImportError:
-        return providers
-    providers.register("system_package", system_packages(install_named))
+    """What pickfit can give today: services in a services box, named system packages (sysdeps.py) and the
+    stand-in model endpoint. Any other model endpoint is the billing proxy's, which is not built: no provider."""
+    providers = Providers({"service": pickfit_services, "system_package": system_packages()})
+    providers.register("model_endpoint", stand_in_model, name="stand-in")
     return providers
 
 
@@ -278,9 +305,28 @@ def load_policy(path: Path | str | None = None) -> Policy:
     return parse_policy(json.loads(source.read_text(encoding="utf-8")))
 
 
+_CAPABILITIES = frozenset(BoxCapabilities.__dataclass_fields__)  # root, systemd, container_engine, kernel_modules
+
+
 def has(box: Box, need: str | None) -> bool:
-    """Does the box have what a rerun rule needs (Box.services, .audio, .toolchain, .root, ...)?"""
-    return bool(need) and bool(getattr(box, need, False))
+    """Does the box have what a rerun rule needs? A kind of box (Box.services, .audio, .toolchain) is the box's own
+    attribute; root, a container engine and the like are what the box says it hands the software under test
+    (Box.capabilities), which only a full-privilege VM box does."""
+    if not need:
+        return False
+    if need in _CAPABILITIES:
+        return bool(getattr(getattr(box, "capabilities", None), need, False))
+    return bool(getattr(box, need, False))
+
+
+def _box_has(box: Box, need: str) -> str:
+    """What the agent is told when the box itself is the grant."""
+    caps = getattr(box, "capabilities", None)
+    if need == "container_engine" and getattr(caps, "container_engine", None):
+        return f"this box has it: the container engine here is {caps.container_engine}, and the box user may run it"
+    if need == "root":
+        return "this box has it: the box user has passwordless sudo here"
+    return f"this box has it ({need})"
 
 
 def provide(policy: Policy, providers: Providers, box: Box, ask: Ask) -> tuple[Rule | None, Provided]:
@@ -292,7 +338,7 @@ def provide(policy: Policy, providers: Providers, box: Box, ask: Ask) -> tuple[R
     if rule.answer == "rerun" and not has(box, rule.box):
         return rule, Provided(False, f"this box has no {rule.box}")
     if rule.box_gives:
-        return rule, Provided(True, f"this box has it ({rule.box})")
+        return rule, Provided(True, _box_has(box, rule.box or ""))
     return rule, providers.give(box, ask) or Provided(False, NO_PROVIDER)
 
 
@@ -390,6 +436,8 @@ class Desk:
         _, given = provide(policy, self.providers, box, Ask(kind, name, why, self.run_id, "agent"))
         if not given.granted:
             return self._refuse(kind, name, rule, given.message or "pickfit could not give it")
+        if not given.recorded:  # the box had it: the agent may go on, and there is nothing to give a fresh box
+            return Decision("granted", kind, name, given.message or "this box has it", tier=rule.tier)
         self.granted_usd += max(given.usd, rule.usd)
         grant = Grant(kind, name, rule.tier or 1, "agent", rule.shown_in_guide,
                       guide_step=given.guide_step or guide_line(rule, name), fidelity=given.fidelity or rule.fidelity,
@@ -412,13 +460,17 @@ def guide_line(rule: Rule | None, name: str) -> str | None:
     return rule.guide.replace("{name}", name) if rule and rule.guide else None
 
 
-def guide_steps(grants: Iterable[Grant | Mapping[str, Any]], policy: Policy | None = None) -> list[str]:
+def guide_steps(grants: Iterable[Grant | Mapping[str, Any]], policy: Policy | None = None, *,
+                steps: Iterable[str] = ()) -> list[str]:
     """The install guide's lines for what a user must have or do first (a `sudo apt-get install` line): one per
-    grant with shown_in_guide, in the order given. A record's grant (five fields) gets its line from the policy."""
+    grant with shown_in_guide, in the order given. A record's grant (five fields) gets its line from the policy.
+    steps: the commands of the run's own install steps. A system package one of them already installs (the
+    `sudo apt-get install -y` step sysdeps puts first for the plan's packages) gets no second line here."""
     lines: list[str] = []
+    stepped = sysdeps.step_names(steps)
     for item in grants:
         grant = item if isinstance(item, Grant) else Grant.from_dict(item)
-        if not grant.shown_in_guide:
+        if not grant.shown_in_guide or (grant.kind == "system_package" and grant.name in stepped):
             continue
         line = grant.guide_step
         if not line:
@@ -446,6 +498,24 @@ def plan_grants(box: Mapping[str, Any], commands: Iterable[str], policy: Policy,
         have.add((kind, name))
         grants.append(Grant(kind, name, rule.tier or 1, "plan", rule.shown_in_guide, guide_step=guide_line(rule, name),
                             fidelity=rule.fidelity, markers=rule.markers))
+    return grants
+
+
+def package_grants(names: Iterable[str], policy: Policy, held: Iterable[Grant] = ()) -> list[Grant]:
+    """The distribution packages pickfit's root installed in the run's boxes because the plan named them
+    (sysdeps.PackagedBoxes: box_needs' names in the watch, --apt by hand), as grants. They came with every box of
+    the run, so the replay is given nothing for them here (regrant), and their guide line is the run's own first
+    step (sysdeps.with_guide_steps), named in guide_step for a run whose steps do not carry it."""
+    have = {(g.kind, g.name) for g in held}
+    grants: list[Grant] = []
+    for name in names:
+        if ("system_package", name) in have:
+            continue
+        have.add(("system_package", name))
+        rule = policy.rule("system_package", name)
+        tier = rule.tier if rule and rule.tier else 2  # the table's, else the ladder's tier for packages
+        grants.append(Grant("system_package", name, tier, "plan", True,
+                            guide_step=sysdeps.guide_steps([name])[0].command))
     return grants
 
 

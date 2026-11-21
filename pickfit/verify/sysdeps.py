@@ -41,7 +41,9 @@ Which boxes can do it (read from the code; nothing here started a box):
 Every verification still uses a fresh box. PackagedBoxes wraps a box factory so that each box of one run (the
 agent's, the replay's, the one that confirms a failure) gets the packages right after it starts: the replay box
 installs exactly what the agent's box got, and fails to start if it cannot. record() then puts
-`sudo apt-get install -y <names>` first in the run's steps, which become the install guide.
+`sudo apt-get install -y <names>` first in the run's steps, which become the install guide, and the pipeline
+records the same packages as the run's grants, requested by the plan (given_names, grants.package_grants): one
+record of what a box was given, whoever asked.
 
 Besides the agent's own request (grants.py: request_capability for a system_package, answered by install_named),
 planned_names() picks names from what is already known, the way box_needs picks a box: the extraction's system
@@ -565,6 +567,22 @@ def guide_steps(names: Sequence[str]) -> list[InstallStep]:
     if line:
         steps.append(InstallStep(command=GUIDE_PREFIX + " ".join(line), purpose=GUIDE_PURPOSE))
     return steps
+
+
+def step_names(commands: Iterable[str]) -> frozenset[str]:
+    """The packages that guide steps among `commands` install: the names of each `sudo apt-get install -y` line."""
+    return frozenset(name for command in commands if (command or "").startswith(GUIDE_PREFIX)
+                     for name in command[len(GUIDE_PREFIX):].split())
+
+
+def given_names(make_box: Any) -> tuple[str, ...]:
+    """What a run's boxes were given by a PackagedBoxes factory: the packages pickfit's root installed in the
+    agent's box (every later box of the run got exactly those, or failed to start). None for any other factory,
+    and none for a package the box already had."""
+    if not isinstance(make_box, PackagedBoxes):
+        return ()
+    first = make_box.results.get("agent")
+    return first.installed if first is not None else ()
 
 
 def with_guide_steps(run: VerificationRun, names: Sequence[str]) -> VerificationRun:

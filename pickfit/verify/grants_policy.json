@@ -54,10 +54,68 @@
     },
     {
       "kind": "service",
+      "names": ["mysql"],
+      "answer": "rerun",
+      "box": "services",
+      "tier": 3,
+      "gap": "needs_service",
+      "shown_in_guide": true,
+      "guide": "Needs a MySQL or MariaDB server the tool can reach (pickfit ran a throwaway MariaDB on 127.0.0.1:3306)",
+      "fidelity": "real",
+      "markers": ["127.0.0.1:3306", "localhost:3306", "MYSQL_URL", "MYSQL_HOST", "mysql"]
+    },
+    {
+      "kind": "service",
+      "names": ["smtp"],
+      "answer": "rerun",
+      "box": "services",
+      "tier": 3,
+      "gap": "needs_service",
+      "shown_in_guide": true,
+      "guide": "Needs an SMTP server to send through (pickfit used a mail sink on 127.0.0.1:1025 that delivers nothing, which only shows the mail was handed over)",
+      "fidelity": "stand_in",
+      "markers": ["127.0.0.1:1025", "localhost:1025", "SMTP_URL", "SMTP_HOST", "smtp"]
+    },
+    {
+      "kind": "service",
+      "names": ["aws", "s3"],
+      "answer": "rerun",
+      "box": "services",
+      "tier": 3,
+      "gap": "needs_service",
+      "shown_in_guide": true,
+      "guide": "Needs an AWS account or an S3-compatible endpoint (pickfit used an emulator on 127.0.0.1:4566, which only shows the requests go through)",
+      "fidelity": "stand_in",
+      "markers": ["127.0.0.1:4566", "localhost:4566", "AWS_ENDPOINT_URL", "S3_ENDPOINT", "pickfit-services start aws", "pickfit-services start s3"]
+    },
+    {
+      "kind": "service",
+      "names": ["git"],
+      "answer": "rerun",
+      "box": "services",
+      "tier": 3,
+      "gap": "needs_service",
+      "fidelity": "stand_in",
+      "markers": ["127.0.0.1:9418", "localhost:9418", "127.0.0.1:3000", "localhost:3000", "GIT_URL", "GIT_HTTP_URL"]
+    },
+    {
+      "kind": "service",
+      "names": ["llm-stub"],
+      "answer": "rerun",
+      "box": "services",
+      "tier": 3,
+      "gap": "needs_service",
+      "shown_in_guide": true,
+      "guide": "Needs an API key for a model provider (pickfit used a stand-in model, which only shows the requests go through)",
+      "fidelity": "stand_in",
+      "markers": ["127.0.0.1:8081", "localhost:8081", "OPENAI_BASE_URL", "OPENAI_API_BASE", "ANTHROPIC_BASE_URL", "llm-stub"]
+    },
+    {
+      "kind": "service",
       "names": ["*"],
       "answer": "refuse",
       "gap": "needs_service",
-      "why": "pickfit runs no such service; it has postgres, redis and http-mock"
+      "why": "pickfit runs no such service; it has postgres, redis, mysql, http-mock, smtp, aws, git and llm-stub"
     },
     {
       "kind": "model_endpoint",

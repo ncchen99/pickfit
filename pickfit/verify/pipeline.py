@@ -24,11 +24,13 @@ The agent and the judge share the per-run cap of the `verify:<slug>` scope.
 
 Grants (grants.py): when the policy table is on, the agent can ask for what its box
 lacks. What it is granted, the replay's fresh box (and the confirm box) is given
-again by pickfit. A request the policy answers with "rerun" ends that attempt, and
-verify_task starts the record over in a fresh box one tier up, from the caller's
-Rerun (the same box kinds box_needs picks: services, audio, toolchain), at most
-policy.max_escalations times. The run records what it was given (grants.json beside
-the report; VerificationRun.grants once the schema has the field).
+again by pickfit. What the plan gave is recorded the same way (requested_by "plan"):
+the microphone, the services a cited command started, the packages pickfit's root
+installed in every box (sysdeps.py). A request the policy answers with "rerun"
+ends that attempt, and verify_task starts the record over in a fresh box one tier
+up, from the caller's Rerun (the same box kinds box_needs picks: services, audio,
+toolchain), at most policy.max_escalations times. The run records what it was given
+(grants.json beside the report, and VerificationRun.grants).
 """
 
 from __future__ import annotations
@@ -65,6 +67,7 @@ from pickfit.verify.grants import (
     default_providers,
     feature_fidelity,
     load_policy,
+    package_grants,
     regrant,
     run_grants,
 )
@@ -81,6 +84,7 @@ from pickfit.verify.mcp import is_mcp
 from pickfit.verify.replay import Replayer, ReplayResult, judged_launch, plan_from
 from pickfit.verify.result import DATA_DIR, build_run, save_run, write_back
 from pickfit.verify.root_box import save_box_evidence
+from pickfit.verify.sysdeps import given_names as packages_given
 from pickfit.verify.sysdeps import record as record_packages
 from pickfit.verify.task import VerifyTask
 
@@ -292,6 +296,9 @@ def _verify_once(task: VerifyTask, make_box: BoxFactory, *, model: str | None, m
         _dump(evidence_dir / "report.json", report.to_dict())
 
     given = run_grants(report, policy)
+    # The packages the plan named, which pickfit's root installed in this box and installs in each later box of the
+    # run as it starts (sysdeps.PackagedBoxes): grants like the others, requested by the plan.
+    given += package_grants(packages_given(make_box), policy, given)
     asked = [g for g in given if g.requested_by == "agent"]  # pickfit gives every other box of the run the same
 
     def give(fresh: Box, grant: Grant, role: str = "replay") -> Provided:
@@ -388,7 +395,9 @@ def _verify_once(task: VerifyTask, make_box: BoxFactory, *, model: str | None, m
                                  gui_app=_kind(task) == "desktop_app", mcp=is_mcp(task),
                                  feature_verdicts=verdicts, grants=given, fidelity=fidelity)
     notes += build_notes
-    run = record_packages(run, make_box, evidence_dir)  # distro packages pickfit's root installed lead the guide
+    # The plan's packages lead the guide as a step of the run, and sysdeps.json keeps what each box installed. The
+    # same packages are among `given` (requested_by plan); the guide does not list them a second time (result.py).
+    run = record_packages(run, make_box, evidence_dir)
     save_run(run, evidence_dir)
     outcome = Outcome(slug=task.slug, run_id=run_id, run=run, notes=notes, evidence_dir=evidence_dir,
                       seconds=round(time.monotonic() - began, 1), cost_usd=run.cost_usd or 0.0, phases=phases,

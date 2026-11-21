@@ -526,7 +526,8 @@ def install_guide(run: VerificationRun, grants: Sequence[Grant] | None = None) -
     example = launched or next((t for t in examples if t.offline), examples[0] if examples else None)
     return InstallGuide(
         basis="replayed", run_id=run.id, method=run.install_method or "other", steps=run.steps,
-        manual_steps=guide_steps(saved_grants(run) if grants is None else grants),
+        manual_steps=guide_steps(saved_grants(run) if grants is None else grants,
+                                 steps=[s.command for s in run.steps]),
         check=Check(command=check.command, expected_signal=check.expected_signal) if check else None,
         first_task=example.command[:300] if example else None)
 

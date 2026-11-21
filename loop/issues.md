@@ -60,6 +60,12 @@ reason: needs_root
   - 箱子使用者在一台用完就刪的 EC2 VM 上有 sudo。限制都放在 VM 外面：安全群組只開 DNS、80、443，斷網時換安全群組和 network ACL，metadata 在 instance 層級關掉。
   - 只用假的 EC2 client 測過，還沒在真的機器上開過，所以這一項維持 open。要先跑 `--runtime rootvm --limits-test`，通過了再拿 hal0、whisper-install、agentloom 來試。
   - 前兩種情況（缺函式庫、建置要 `-dev` 套件）不歸這個箱子，照原本的方向做。
+- 11/21 合併到 `feat/privileges-aws-integration` 之後的狀態，一樣還沒在真的箱子裡跑過：
+  - watch 代裝套件預設關，設 `PICKFIT_SYSDEPS=1` 才開（念誠 11/21 決定，等真的箱子確認 apt 跑得動）。上面寫的 `PICKFIT_SYSDEPS=0` 是合併前的做法。`pickfit verify --apt <名稱>` 和單箱探測不看這個開關。
+  - agent 用 `request_capability` 要 `system_package` 時，由 `sysdeps.install_named` 代裝。sysdeps 不收的名稱照樣拒絕，代號是 `needs_root`。政策表 `grants_policy.json` 還關著，所以 agent 現在沒有這個工具。
+  - 代裝的套件記進這次 run 的 grants，`requested_by` 是 `plan`。`sysdeps.json` 和指南的第一步照舊，指南不會重複列一次。
+  - 全權箱裡 agent 要 `root` 或 `container_engine`，政策表直接回「箱子有」。其他箱子一律拒絕，代號 `needs_root`、`needs_container`。watch 還是不會把紀錄送進全權箱。
+  - `limits-sysdeps-services.patch` 已經套用。`limits-root-vm-hook.patch` 還沒套，原因和套法寫在 `loop/proposals/APPLY.md`。
 
 ## H-004 [open] 沙盒裡沒有 Docker 或 Podman
 
