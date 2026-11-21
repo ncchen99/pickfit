@@ -48,7 +48,14 @@ reason: needs_root
   - 建置要特定的 `-dev` 套件：datanexa（webkit2gtk、appindicator、rsvg）、neoth 的桌面功能（ALSA）、ducklab 的桌面版（GTK、WebKit）。這才是「由 harness 以 root 代裝具名套件」要解的。
   - 安裝程式本身要 root 加 systemd：hal0（apt、podman、systemd 當 PID 1）、whisper-install、agentloom 的 bootstrap 腳本。代裝套件不夠，要一台開好機的系統，多半是 `--runtime vm` 的事，或照實記成驗不了。
   - 另外有 5 筆掛在這裡其實是缺編譯器，建置箱子（H-002）就解了：dog、gutsy、holdspeak 已經驗過。
-- tried:
+- tried: 11/21 前兩種做法都寫好了，還沒在真的箱子裡跑過（分支 `feat/priv-packages-services`，這個 session 沒開箱子，本機的 Docker 也沒在跑）。
+  - 基底映像：`sandbox.Dockerfile` 多裝 libxcb1、libgl1、libglib2.0-0。映像標籤從 `pickfit-sbx:01363ad5a469` 變成 `pickfit-sbx:0fc69b8367dd`，每一種箱子都要重建、重跑 `--limits-test`。照 Debian 13 套件索引的 Installed-Size 估，libgl1 會帶進 Mesa 和 libllvm19，三個套件合起來多約 200 MB。
+  - 代裝具名套件：`pickfit/verify/sysdeps.py` 的 `install_named(box, names, timeout_s)`。pickfit 用自己在箱子裡的 root 跑 `apt-get install -y --no-remove -- <名稱>`，箱子使用者還是 uid 1000。名稱先在主機上檢查，選項、版本、萬用字元、路徑、`.deb`、網址、套件來源都不收。sudo、docker.io、systemd、linux-headers 這類要整台機器的也不收，理由寫明要換全權箱。進箱子之後再確認兩件事：箱子設定的套件來源只有 deb.debian.org 和 security.debian.org，apt 打算裝的每個套件（含相依）都標著 Debian 的 label。
+  - 每一種箱子能不能裝，是從程式讀出來的：Modal（gVisor 和 VM）和 EC2 的 root 檔案系統可寫，`harness_exec` 走得通。本機的 DockerBox 是唯讀 root，也沒有 root 通道，改成先在一個用完就丟的 root 容器裝好，commit 成 `pickfit-sbx-pkg:<hash>` 再開箱子。gVisor 裡 apt 跑不跑得動還沒實測，一行指令可以確認：`uv run python -m pickfit.verify.sysdeps --runner modal jq`。
+  - 觸發：agent 還不能自己開口要（privileges.md 的 P2 是另一個 session 在做），先由 `box_needs` 從抽取結果的 system_packages 挑名稱。上一次停在 `needs_root` 的紀錄，再加讀 README 自己寫的 `apt-get install` 那幾行。`pickfit verify --apt <名稱>` 可以手動指定，`PICKFIT_SYSDEPS=0` 關掉 watch 這一段。
+  - 重播和指南：重播的全新箱子只裝 agent 那個箱子裝成功的套件，少一個就開不起來。通過之後，這次 run 的第一個安裝步驟是 `sudo apt-get install -y <名稱>`。
+  - 測試：`tests/test_verify_sysdeps.py`，箱子裡那支 root 腳本是對著一個假的 apt 實際執行的。`limits.py` 的新檢查寫成 `loop/proposals/limits-sysdeps-services.patch`，等人審。
+- 還沒解的：第三種（安裝程式要 root 加 systemd）不在這裡，等全權箱。工具本身只能用 apt 裝的（例如 `sudo apt install hurl`），目前刻意不由 pickfit 代裝，要等 P2 的政策表決定。
 
 ## H-004 [open] 沙盒裡沒有 Docker 或 Podman
 

@@ -260,9 +260,10 @@ class ImageRecipe:
 
 def image_recipe(runtime: str = "gvisor", display: bool = False, audio: bool = False,
                  toolchain: bool = False, services: bool = False) -> ImageRecipe:
-    """The packages and commands a kind of box needs on top of sandbox.Dockerfile. services: PostgreSQL, Redis
-    and the pickfit-services helper (services.py), started by the box user on 127.0.0.1 only."""
-    from pickfit.verify.services import SERVICE_PACKAGES, SERVICES_INSTALL
+    """The packages and commands a kind of box needs on top of sandbox.Dockerfile. services: the database
+    packages, moto, llama.cpp's server with its small model, and the pickfit-services helper (services.py); the
+    box user starts each on 127.0.0.1 only."""
+    from pickfit.verify.services import SERVICE_PACKAGES, SERVICES_COMMANDS
 
     packages = (*(VM_PACKAGES if runtime == "vm" else ()), *(GUI_PACKAGES if display else ()),
                 *(FLATPAK_PACKAGES if display else ()), *(AUDIO_PACKAGES if audio else ()),
@@ -270,7 +271,7 @@ def image_recipe(runtime: str = "gvisor", display: bool = False, audio: bool = F
     kinds = tuple(k for k, on in (("vm", runtime == "vm"), ("gui", display), ("audio", audio),
                                   ("build", toolchain), ("svc", services)) if on)
     commands = (*((VGL_INSTALL,) if display else ()), *((TOOLCHAIN_INSTALL,) if toolchain else ()),
-                *((SERVICES_INSTALL,) if services else ()))
+                *(SERVICES_COMMANDS if services else ()))
     return ImageRecipe(kinds, packages, commands)
 
 
@@ -403,7 +404,7 @@ class LinuxBox(Box):
         self.display = DISPLAY if display else None
         self.audio = audio
         self.toolchain = toolchain
-        self.services = services  # PostgreSQL, Redis and an HTTP mock the box user can start (services.py)
+        self.services = services  # databases and stand-in servers the box user can start (services.py)
         self.image = machine.image
         self.log = log
         self.started = False

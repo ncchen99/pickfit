@@ -60,6 +60,7 @@ from pickfit.verify.judge import (  # noqa: F401 (OPEN_JUDGE_MODEL, judge_model_
 from pickfit.verify.mcp import is_mcp
 from pickfit.verify.replay import Replayer, ReplayResult, judged_launch, plan_from
 from pickfit.verify.result import DATA_DIR, build_run, save_run, write_back
+from pickfit.verify.sysdeps import record as record_packages
 from pickfit.verify.task import VerifyTask
 
 BoxFactory = Callable[[str, str], Box]  # (run_id, role: agent, replay, confirm) -> a box not yet started
@@ -290,6 +291,7 @@ def verify_task(task: VerifyTask, make_box: BoxFactory, *, model: str | None = N
                                  gui_app=_kind(task) == "desktop_app", mcp=is_mcp(task),
                                  feature_verdicts=verdicts)
     notes += build_notes
+    run = record_packages(run, make_box, evidence_dir)  # distro packages pickfit's root installed lead the guide
     save_run(run, evidence_dir)
     outcome = Outcome(slug=task.slug, run_id=run_id, run=run, notes=notes, evidence_dir=evidence_dir,
                       seconds=round(time.monotonic() - began, 1), cost_usd=run.cost_usd or 0.0, phases=phases,

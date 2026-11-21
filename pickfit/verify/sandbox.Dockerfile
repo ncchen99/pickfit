@@ -8,11 +8,17 @@
 # namespace reaches out only through it, so the network cut can close DNS too.
 # libicu: .NET aborts without it (exit 134), and nearly every desktop Linux has it;
 # its package name carries the ICU version, so it is looked up.
+# libxcb1, libgl1, libglib2.0-0: the same reason. A desktop Linux has them, so a wheel or a prebuilt binary that
+# loads libxcb.so.1, libGL.so.1 or libglib-2.0.so.0 (opencv, Qt, GTK and Electron tools) assumes them, and a box
+# user who is not root cannot add them (loop/issues.md H-003). libgl1 brings Mesa's software renderer; on Debian
+# 13 libglib2.0-0 is provided by libglib2.0-0t64, which apt selects for the name. What a tool needs beyond these
+# is installed by name, by pickfit's root, per run (sysdeps.py).
 FROM python:3.12-slim
 
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       bzip2 ca-certificates curl file git iproute2 libgomp1 procps slirp4netns unzip xz-utils zstd \
+      libxcb1 libgl1 libglib2.0-0 \
       $(apt-cache pkgnames libicu | grep -E '^libicu[0-9]+$') \
  && rm -rf /var/lib/apt/lists/*
 

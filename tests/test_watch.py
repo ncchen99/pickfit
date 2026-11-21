@@ -1052,3 +1052,40 @@ def test_an_extraction_from_an_older_prompt_is_read_again(env: dict[str, Any], t
     assert seen == [extract.PROMPT_VERSION] and pipeline.calls == ["extract"]  # p5 is older: read again
     w._extract({"repo_id": "gh:7"}, "r3", job)
     assert pipeline.calls == ["extract"] and "extraction reused" in job.notes  # the p6 row stands
+
+
+def test_a_record_that_names_system_packages_gets_them_from_pickfits_root(tmp_path: Path, monkeypatch) -> None:
+    from pickfit.verify import sysdeps
+    from pickfit.verify.agent import AgentLimits
+
+    seen: list[Any] = []
+
+    def routed_for(runner: str) -> Any:
+        return watch_mod().routed_verify(
+            runner, limits=AgentLimits(), margin_s=120, toolchain_agent_s=45 * 60,
+            make_factory=lambda lifetime, **kind: (lambda r, role: None),
+            run=lambda task, factory, *, limits, log, data_dir: seen.append(factory) or "outcome")
+
+    base = extraction(install_methods=[{"method": "pipx", "command": "pipx install tool", "platforms": []}])
+    named = {**base, "prerequisites": {**base["prerequisites"], "system_packages": [
+        cited("libxkbcommon-dev", "apt install libxkbcommon-dev")]}}
+    lines: list[str] = []
+    routed_for("modal")(task_of(named), tmp_path, lines.append)
+    assert isinstance(seen[-1], sysdeps.PackagedBoxes) and seen[-1].names == ("libxkbcommon-dev",)
+    assert any("pickfit's root installs libxkbcommon-dev" in line for line in lines)
+    # A record that names none runs with the factory it always had; so does every record with the switch off.
+    routed_for("modal")(task_of(base), tmp_path, lambda s: None)
+    assert not isinstance(seen[-1], sysdeps.PackagedBoxes)
+    monkeypatch.setenv(sysdeps.ENABLED_ENV, "0")
+    routed_for("modal")(task_of(named), tmp_path, lambda s: None)
+    assert not isinstance(seen[-1], sysdeps.PackagedBoxes)
+    monkeypatch.delenv(sysdeps.ENABLED_ENV)
+    # macOS and Windows boxes have no apt: their factories are left alone.
+    routed_for("tart")(task_of(named), tmp_path, lambda s: None)
+    assert not isinstance(seen[-1], sysdeps.PackagedBoxes)
+    # After an attempt that ended needs_root, the README's own apt line is read too.
+    (tmp_path / "tool.json").write_text(json.dumps({"verification": {"runs": [
+        {"os": "linux", "method": "sandbox", "unverified_reason": "needs_root"}]}}), encoding="utf-8")
+    routed_for("ec2")(task_of(base, readme="## Linux\nsudo apt-get install -y libudev-dev\n"), tmp_path,
+                      lambda s: None)
+    assert isinstance(seen[-1], sysdeps.PackagedBoxes) and seen[-1].names == ("libudev-dev",)

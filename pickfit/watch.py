@@ -481,10 +481,13 @@ def routed_verify(runner: str, *, limits: Any, make_factory: Callable[..., Any],
     audio=, toolchain=) builds or finds the image once per kind (Modal, EC2). A desktop app gets a display (Modal,
     EC2), a speech tool the simulated microphone (Modal, EC2), a build from source the toolchain box with a longer
     agent time (Modal, EC2), a record that needs PostgreSQL, Redis or a server to talk to the services box (Modal,
-    EC2), a record that requires a GPU a T4 or L4 (Modal only, within the per-record cap).
+    EC2), a record that requires a GPU a T4 or L4 (Modal only, within the per-record cap). A record whose sources
+    name distribution packages gets them from pickfit's root in every box of its run (verify.sysdeps: Modal, EC2,
+    and Docker through an image; PICKFIT_SYSDEPS=0 turns it off).
     """
     from dataclasses import replace
 
+    from pickfit.verify import sysdeps
     from pickfit.verify.box import sized_for_build
     from pickfit.verify.box_needs import box_needs
 
@@ -496,9 +499,11 @@ def routed_verify(runner: str, *, limits: Any, make_factory: Callable[..., Any],
 
     def verify(task: VerifyTask, data_dir: Path, log: Callable[[str], None]) -> Any:
         base = int(limits.max_seconds) + margin_s
+        reason, error = sysdeps.earlier_attempt(data_dir, task.slug)
         needs = box_needs(task.extraction, readme=task.readme, lifetime_s=base,
                           toolchain_lifetime_s=max(limits.max_seconds, toolchain_agent_s) + margin_s,
-                          gpu_available=runner == "modal")
+                          gpu_available=runner == "modal", earlier_reason=reason, earlier_error=error,
+                          own_names=(task.slug, task.extraction.name.value))
         gui = display_ok and task.extraction.kind.value == "desktop_app"
         audio = extras_ok and needs.audio
         toolchain = extras_ok and needs.toolchain
@@ -517,7 +522,10 @@ def routed_verify(runner: str, *, limits: Any, make_factory: Callable[..., Any],
             if key not in factories:
                 factories[key] = make_factory(int(run_limits.max_seconds) + margin_s, display=gui, gpu=gpu,
                                               audio=audio, toolchain=toolchain, services=services)
-        return run(task, sized_for_build(factories[key], task), limits=run_limits, log=log, data_dir=data_dir)
+        factory = sized_for_build(factories[key], task)
+        if needs.packages and sysdeps.enabled() and runner in ("modal", "ec2", "docker"):
+            factory = sysdeps.PackagedBoxes(factory, needs.packages, log=log)  # this run's boxes, and only its
+        return run(task, factory, limits=run_limits, log=log, data_dir=data_dir)
 
     return verify
 

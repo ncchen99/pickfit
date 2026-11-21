@@ -69,8 +69,13 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
                         "g++, clang, make, cmake, Rust and Go in the image, 4 vCPU, 6 GiB and 30 minutes per command "
                         "(the agent gets 45 minutes). The box user is still not root")
     v.add_argument("--services", action="store_true",
-                   help="Modal, EC2: PostgreSQL, Redis and an HTTP mock the box user starts with pickfit-services, on "
-                        "127.0.0.1 only (verify/services.py)")
+                   help="Modal, EC2: PostgreSQL, Redis, MariaDB, an HTTP mock, a mail sink, an AWS emulator, a git "
+                        "remote and a stand-in model endpoint the box user starts with pickfit-services, on 127.0.0.1 "
+                        "only (verify/services.py)")
+    v.add_argument("--apt", action="append", metavar="PACKAGE",
+                   help="Linux boxes: pickfit's root installs this Debian package in every box of the run, from the "
+                        "distribution's own repository (repeatable; verify/sysdeps.py). The box user is still not "
+                        "root, and the install guide gains `sudo apt-get install -y ...` as its first step")
     v.add_argument("--memory-mb", type=int, default=None,
                    help="Modal: the box's memory (default 2048), for a model that needs more")
     v.add_argument("--file-mb", type=int, default=None,
@@ -96,7 +101,7 @@ def add_parser(sub: argparse._SubParsersAction) -> None:
 def box_factory(runner: str, lifetime_s: int, *, platform: str = "linux/amd64", gpu: str | None = None,
                 runtime: str = "gvisor", display: bool = False, audio: bool = False, memory_mb: int | None = None,
                 file_mb: int | None = None, toolchain: bool = False, services: bool = False):
-    """(run_id, role) -> an unstarted box of the chosen runner. services: PostgreSQL, Redis and an HTTP mock the
+    """(run_id, role) -> an unstarted box of the chosen runner. services: the databases and stand-in servers the
     box user can start (verify/services.py), Modal and EC2 only."""
     from pickfit.verify.box import TOOLCHAIN_LIMITS, BoxLimits, DockerBox
 
@@ -246,10 +251,20 @@ def run(args: argparse.Namespace) -> int:
     from pickfit.verify.box import sized_for_build
 
     task = load_fixture(args.fixture)
-    outcome = verify_task(task, sized_for_build(make_box, task), model=args.model, mode=args.mode or DEFAULT_MODE,
-                          limits=limits, write=args.write_back, keep_agent_box=args.keep_box)
+    outcome = verify_task(task, _packaged(args, sized_for_build(make_box, task)), model=args.model,
+                          mode=args.mode or DEFAULT_MODE, limits=limits, write=args.write_back,
+                          keep_agent_box=args.keep_box)
     print(json.dumps(outcome.summary(), ensure_ascii=False, indent=2))
     return 0 if outcome.passed else 1
+
+
+def _packaged(args: argparse.Namespace, make_box, log=print):
+    """The factory of one run's boxes, with --apt's packages installed by pickfit's root in each (sysdeps.py)."""
+    if not getattr(args, "apt", None):
+        return make_box
+    from pickfit.verify.sysdeps import PackagedBoxes
+
+    return PackagedBoxes(make_box, args.apt, log=log)
 
 
 def _rejudge(args: argparse.Namespace) -> int:
@@ -348,8 +363,9 @@ def _batch(args: argparse.Namespace, make_box, limits) -> int:
     from pickfit.verify.box import sized_for_build
 
     def verify(task, log):  # a build box that compiles Rust or Go gets more cores (sized_for_build)
-        return verify_task(task, sized_for_build(make_box, task), model=args.model, mode=args.mode or DEFAULT_MODE,
-                           limits=limits, runs_dir=runs_dir, log=log, write=args.write_back, data_dir=data_dir)
+        return verify_task(task, _packaged(args, sized_for_build(make_box, task), log), model=args.model,
+                           mode=args.mode or DEFAULT_MODE, limits=limits, runs_dir=runs_dir, log=log,
+                           write=args.write_back, data_dir=data_dir)
 
     summary = run_batch(items, verify, concurrency=args.concurrency, runs_dir=runs_dir,
                         meta={"db": str(db), "runner": args.runner, "runtime": args.runtime, "display": args.display,

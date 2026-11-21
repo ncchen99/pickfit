@@ -118,3 +118,36 @@ Nothing is judged again by applying it: it changes new runs. The feature judge c
 checked features; recovering the 492 not_shown ones from saved evidence needs a mode that also restores a feature the
 judge now confirms (rebuilding its smoke-test indexes from report.json and replay.json), about US$1.5-2 for the 273
 records whose evidence is on the machine that ran them. Not written yet.
+
+## 11/21: limits checks for harness-installed packages and the services box (limits-sysdeps-services.patch)
+
+On feat/priv-packages-services (or wherever pickfit/verify/sysdeps.py and the eight-kind pickfit/verify/services.py
+are merged), from the repository root:
+
+```sh
+git apply loop/proposals/limits-sysdeps-services.patch
+uv run pytest -q tests/test_verify_limits_packages.py tests/test_verify_gui.py tests/test_verify_modal.py
+```
+
+pickfit/verify/limits.py (guarded), one new test file and twelve lines of tests/test_verify_gui.py (its display box
+has a root channel, so the limits test now installs a package in it). What the limits test gains:
+
+- `package_held`, on a Linux box whose root pickfit can use (Modal, EC2; not DockerBox): pickfit's root is asked for
+  a .deb, a URL, an option, sudo and an unknown name and installs none of them, then installs `jq`; the box user
+  runs it, finds none of its files, dpkg's status, apt's sources or policy-rc.d writable, and fails to remove it,
+  to add a package source, and to run dpkg or apt-get itself.
+- `package_needs_network`: with the network off, pickfit's root installs nothing.
+- `services_loopback`, on a services box: the box user starts all eight kinds; each port answers on 127.0.0.1 (the
+  control) and on no other address the box has; `pickfit-services check llm-stub` round-trips a chat completion.
+- `services_offline`: with the network off every service still answers and the model endpoint still round-trips
+  (nothing is fetched at run time).
+
+A plain box without a root channel runs exactly the probes it ran before (23 on the fake box of
+tests/test_verify_modal.py). Checked on 11/21 in a copy outside every checkout: the patch applies with `patch -p1`
+and `git apply --check`, and the limits tests of every lane pass with it (modal, gui, ec2, tart, windows, mac
+host). Not run against a real box: the new probes are the first time MariaDB, moto, llama.cpp's server, the mail
+sink and the git host start in a box, so a first `--limits-test --services` that fails `services_loopback` points
+at a service to fix, not at the isolation.
+
+Once limits.py reads them, pickfit/verify/sysdeps.py and pickfit/verify/services.py decide what a limits test
+checks: consider adding both to scripts/loop_guard.py PROTECTED in the same review.

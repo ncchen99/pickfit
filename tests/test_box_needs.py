@@ -83,13 +83,29 @@ def test_services_for_a_database_or_an_http_client() -> None:
 
 def test_the_services_image_and_helper() -> None:
     from pickfit.verify.linux_box import image_recipe
-    from pickfit.verify.services import HELPER, HELPER_PATH, MOCK_PATH, SERVICE_PACKAGES, SERVICES_INSTALL
+    from pickfit.verify.services import (HELPER, HELPER_PATH, MOCK_PATH, SERVICE_PACKAGES, SERVICES_COMMANDS,
+                                         SERVICES_INSTALL)
 
     recipe = image_recipe(services=True)
     assert recipe.kinds == ("svc",) and set(SERVICE_PACKAGES) <= set(recipe.packages)
-    assert recipe.commands == (SERVICES_INSTALL,) and recipe.tag("plain").startswith("pickfit-sbx-svc:")
+    assert recipe.commands == SERVICES_COMMANDS and recipe.tag("plain").startswith("pickfit-sbx-svc:")
+    assert SERVICES_COMMANDS[-1] == SERVICES_INSTALL  # the helper last: editing it rebuilds one layer
     assert image_recipe().tag("plain") == "plain"  # the plain box is unchanged
     assert HELPER_PATH in SERVICES_INSTALL and MOCK_PATH in SERVICES_INSTALL
     # Every service binds to loopback only, and nothing in the helper asks for root.
     assert "--bind 127.0.0.1" in HELPER and "-h 127.0.0.1" in HELPER and "127.0.0.1 8080" in HELPER
     assert "sudo" not in HELPER and "su " not in HELPER and "0.0.0.0" not in HELPER
+
+
+def test_packages_the_sources_name_are_planned_for_pickfits_root() -> None:
+    tool = ex(pre={"system_packages": [cited("ffmpeg", "requires ffmpeg"), cited("libxkbcommon-dev", "xkb headers")]})
+    need = box_needs(tool)
+    assert need.packages == ("ffmpeg", "libxkbcommon-dev")
+    assert need.describe() == "packages ffmpeg libxkbcommon-dev"
+    assert "system packages -> pickfit's root installs ffmpeg, libxkbcommon-dev" in need.why
+    assert box_needs(ex()).packages == () and box_needs(ex()).describe() == "plain box"
+    # A README's apt line counts only after an attempt that stopped for lack of root; the tool is never its own package.
+    readme = "sudo apt-get install -y libudev-dev tool"
+    assert box_needs(ex(), readme=readme).packages == ()
+    assert box_needs(ex(), readme=readme, earlier_reason="needs_root", own_names=("tool",)).packages == (
+        "libudev-dev",)

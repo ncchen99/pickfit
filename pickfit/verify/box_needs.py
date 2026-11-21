@@ -13,11 +13,15 @@ caller has it; nothing is fetched and no model is asked.
 - Audio: the sources describe recording, a microphone, speech to text, dictation or voice input, or the tool needs
   an audio capture library (PortAudio, ALSA, PulseAudio). The box gets audio.py's simulated microphone, which
   limits.py's audio checks already cover.
-- Services: the tool needs PostgreSQL or Redis, or it is an HTTP/API client with nothing to talk to: the box gets
-  services.py's PostgreSQL, Redis and HTTP mock, which the box user starts on 127.0.0.1 only.
+- Services: the tool needs a database (PostgreSQL, Redis, MySQL), a mail server, AWS or S3, a git remote or a
+  model endpoint, or it is an HTTP/API client with nothing to talk to: the box gets services.py's servers and
+  stand-ins, which the box user starts on 127.0.0.1 only.
 - Toolchain: the install step pickfit would run first builds from source (cargo or go install/build, make, cmake,
   meson, ./configure), or every install path does. A prebuilt binary or a package manager path ranked first needs
   no build box.
+- Packages: the distribution packages pickfit's root installs in each box before the agent starts (sysdeps.py):
+  the system packages the extraction names, and after an attempt that ended needs_root, the README's own
+  `apt-get install` lines and what that attempt's error names. Not a kind of box: any Linux box takes them.
 
 GPU only runs under gVisor on Modal (modal_box.py), so a GPU box is never a VM; the EC2 and Docker runners have no
 GPU, so callers ask for one only with the Modal runner.
@@ -60,12 +64,14 @@ class BoxNeeds:
     audio: bool = False
     toolchain: bool = False
     services: bool = False
+    packages: tuple[str, ...] = ()  # distribution packages for pickfit's root to install (sysdeps.planned_names)
     blocked: str | None = None  # why no box pickfit can give runs it (a GPU it cannot have), or None
     why: tuple[str, ...] = field(default_factory=tuple)  # one short reason per need, for the log
 
     def describe(self) -> str:
         parts = [p for p, on in ((f"GPU {self.gpu}", self.gpu), ("microphone", self.audio),
-                                 ("toolchain", self.toolchain), ("services", self.services)) if on]
+                                 ("toolchain", self.toolchain), ("services", self.services),
+                                 (f"packages {' '.join(self.packages)}", self.packages)) if on]
         return ", ".join(parts) or "plain box"
 
 
@@ -158,11 +164,14 @@ def needs_toolchain(ex: Any) -> bool:
 
 def box_needs(ex: Any, *, readme: str | None = None, lifetime_s: float = 22 * 60,
               toolchain_lifetime_s: float | None = None, gpu_available: bool = True,
-              max_gpu_usd: float | None = None) -> BoxNeeds:
+              max_gpu_usd: float | None = None, earlier_reason: str | None = None,
+              earlier_error: str | None = None, own_names: Iterable[str] = ()) -> BoxNeeds:
     """The box this record needs.
 
     gpu_available: the runner can give a GPU (Modal). lifetime_s: each box's lifetime; toolchain_lifetime_s: a build
-    box's (longer), used for the GPU cost when the record also builds from source.
+    box's (longer), used for the GPU cost when the record also builds from source. earlier_reason, earlier_error:
+    why the record's last Linux attempt stopped (sysdeps.earlier_attempt), which widens the packages after a
+    needs_root; own_names: the tool's own names, never installed as a package of its own.
     """
     why: list[str] = []
     audio = needs_audio(ex, readme)
@@ -171,11 +180,17 @@ def box_needs(ex: Any, *, readme: str | None = None, lifetime_s: float = 22 * 60
     toolchain = needs_toolchain(ex)
     if toolchain:
         why.append("builds from source -> toolchain")
-    from pickfit.verify.services import needs_services
+    from pickfit.verify.services import service_kinds
+    from pickfit.verify.sysdeps import planned_names
 
-    services = needs_services(ex, readme)
+    kinds = service_kinds(ex, readme)
+    services = bool(kinds)
     if services:
-        why.append("needs a database or a server to talk to -> PostgreSQL, Redis, HTTP mock")
+        why.append(f"needs a server to talk to ({', '.join(kinds)}) -> the services box")
+    packages = planned_names(ex, readme=readme, earlier_reason=earlier_reason, earlier_error=earlier_error,
+                             own_names=own_names)
+    if packages:
+        why.append(f"system packages -> pickfit's root installs {', '.join(packages)}")
     lifetime = max(lifetime_s, toolchain_lifetime_s or 0) if toolchain else lifetime_s
     gpu = None
     blocked = None
@@ -194,4 +209,5 @@ def box_needs(ex: Any, *, readme: str | None = None, lifetime_s: float = 22 * 60
         else:
             gpu = card
             why.insert(0, f"GPU required{f' ({need:g} GB stated)' if need else ''} -> {card}")
-    return BoxNeeds(gpu=gpu, audio=audio, toolchain=toolchain, services=services, blocked=blocked, why=tuple(why))
+    return BoxNeeds(gpu=gpu, audio=audio, toolchain=toolchain, services=services, packages=packages,
+                    blocked=blocked, why=tuple(why))
