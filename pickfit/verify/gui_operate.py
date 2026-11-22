@@ -174,8 +174,14 @@ INPUT_DIR = f"{BOX_HOME}/pickfit-in"
 OUTPUT_DIR = f"{BOX_HOME}/pickfit-out"  # made before the app starts, for goals that save a file
 NONCE_FIELD = "{nonce}"
 FORMATS = ("text", "json", "html", "svg", "csv", "srt", "png", "jpeg", "gif", "webp", "avif", "mp4", "pdf", "zip", "gguf",
-           "wav")
-SAMPLES = ("png", "jpeg", "gif", "pdf", "wav", "mp4", "zip")
+           "wav", "docx", "pptx", "xlsx")
+SAMPLES = ("png", "jpeg", "gif", "pdf", "wav", "mp4", "zip", "svg", "docx", "pptx", "xlsx")
+# Track C's office formats: the OOXML part _rels/.rels names as the officeDocument, and its root element.
+_OOXML = "http://schemas.openxmlformats.org"
+OFFICE_ROOTS = {"docx": f"{{{_OOXML}/wordprocessingml/2006/main}}document",
+                "pptx": f"{{{_OOXML}/presentationml/2006/main}}presentation",
+                "xlsx": f"{{{_OOXML}/spreadsheetml/2006/main}}workbook"}
+OFFICE_UNZIPPED_MAX = 64_000_000  # a zip that unpacks to more than this is refused unread (a zip bomb)
 BOX_UID = 1000  # the box user (box.py runs every box command as it)
 # A goal or check may not hold pickfit's own result lines, so nothing the agent writes reads as one.
 _OWN_LINES = re.compile(r"gui\s+(?:check|result|tier|goal|operate)\b", re.I)
@@ -439,16 +445,31 @@ def _plain(value: Any) -> Any:
 
 
 class GuiInput(BaseModel):
-    """A file pickfit writes before the app starts: text, or one of pickfit's own sample images."""
+    """A file pickfit puts under ~/pickfit-in/ before the app starts: text, one of pickfit's own samples, or
+    (source "mcp_output") the file an earlier step made: the software's own MCP tool call or script, in the same
+    box (track C: the agent's interface makes the file, the GUI edits it, pickfit checks what was saved).
+
+    source is None for the two older shapes (text or sample, as before) and may name them; "mcp_output" takes
+    from_path, the upstream file in the box user's home, which pickfit copies to `path` after ~/pickfit-out/ is
+    emptied and before the app starts, keeping its sha256 and size."""
 
     path: str = Field(description=f"Where, under {INPUT_DIR}/ (~/pickfit-in/).")
     text: str | None = Field(default=None, max_length=4_000)
-    sample: Literal["png", "jpeg", "gif", "pdf", "wav", "mp4", "zip"] | None = None
+    sample: Literal["png", "jpeg", "gif", "pdf", "wav", "mp4", "zip", "svg", "docx", "pptx", "xlsx"] | None = None
+    source: Literal["text", "sample", "mcp_output"] | None = None
+    from_path: str | None = Field(default=None, description="mcp_output: the file the upstream step wrote.")
 
-    @field_validator("text", "sample", mode="before")
+    @field_validator("text", "sample", "source", "from_path", mode="before")
     @classmethod
     def _nulls(cls, value: Any) -> Any:
         return _plain(value)
+
+    @property
+    def kind(self) -> str:
+        """text, sample or mcp_output: the one this input is."""
+        if self.source:
+            return self.source
+        return "mcp_output" if self.from_path is not None else "sample" if self.sample is not None else "text"
 
 
 class GuiCheckSpec(BaseModel):
@@ -543,8 +564,24 @@ def spec_problems(args: OperateArgs, readme: str = "", home: str = BOX_HOME) -> 
             continue
         if not where.startswith(input_dir + "/") or where.endswith("/"):
             problems.append(f"input {item.path!r} must be a file under ~/pickfit-in/")
-        if (item.text is None) == (item.sample is None):
+        given = [name for name, value in (("text", item.text), ("sample", item.sample),
+                                          ("from_path", item.from_path)) if value is not None]
+        wanted = {"text": "text", "sample": "sample", "mcp_output": "from_path"}[item.kind]
+        if item.from_path is None and item.source != "mcp_output" and len(given) != 1:
             problems.append(f"input {item.path!r} needs exactly one of text or sample")
+        elif given != [wanted]:
+            problems.append(f"input {item.path!r} of source {item.kind} takes {wanted} and nothing else")
+        elif item.kind == "mcp_output":
+            try:
+                upstream = home_path(item.from_path or "", home)
+            except ValueError as err:
+                problems.append(str(err))
+            else:
+                if not upstream.startswith(home + "/") or upstream.endswith("/"):
+                    problems.append(f"mcp_output {item.from_path!r} must be a file in the box user's home")
+                elif upstream.startswith((input_dir + "/", f"{home}/pickfit-out/")):
+                    problems.append(f"mcp_output {item.from_path!r}: pickfit empties ~/pickfit-out/ and writes "
+                                    "~/pickfit-in/ before the app starts; the upstream step saves elsewhere")
     if any(not s.strip() or len(s) > 200 for s in check.contains):
         problems.append("each expected text is 1-200 characters")
     if check.format is not None and check.format not in FORMATS:
@@ -631,6 +668,10 @@ def sample_file(kind: str) -> bytes:
                 book.writestr(f"page{page:02d}.png", image.getvalue())
     elif kind == "mp4":
         return _sample_mp4()
+    elif kind == "svg":
+        return SAMPLE_SVG.encode()
+    elif kind in OFFICE_PARTS:
+        return office_sample(kind)
     else:
         raise ValueError(f"no sample of kind {kind!r}")
     return out.getvalue()
@@ -655,6 +696,338 @@ def _sample_mp4() -> bytes:
                             "-pix_fmt", "yuv420p", "-c:v", "libx264", "-y", str(target)], check=True, timeout=60)
             _MP4.append(target.read_bytes())
     return _MP4[0]
+
+
+# ---------------------------------------------------------------- track C's document samples and format checks
+
+
+SAMPLE_TEXT = "pickfit sample"
+SAMPLE_SVG = """<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="320" viewBox="0 0 480 320">
+  <rect width="480" height="320" fill="#faf8f0"/>
+  <rect id="square" x="40" y="40" width="160" height="160" fill="#c83c32"/>
+  <circle id="circle" cx="330" cy="150" r="90" fill="#286ec8"/>
+  <text id="label" x="280" y="290" font-family="sans-serif" font-size="16">pickfit sample</text>
+</svg>
+"""
+
+_CT = f"{_OOXML}/package/2006/content-types"
+_PR = f"{_OOXML}/package/2006/relationships"
+_OR = f"{_OOXML}/officeDocument/2006/relationships"
+_DML = f"{_OOXML}/drawingml/2006/main"
+_PML = f"{_OOXML}/presentationml/2006/main"
+_XML = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+
+
+def _rels(*targets: tuple[str, str]) -> str:
+    """A .rels part: (type's last segment, target) for each relationship, rId1 onwards."""
+    items = "".join(f'<Relationship Id="rId{i}" Type="{_OR}/{kind}" Target="{target}"/>'
+                    for i, (kind, target) in enumerate(targets, 1))
+    return f'{_XML}<Relationships xmlns="{_PR}">{items}</Relationships>'
+
+
+def _types(defaults: bool, *overrides: tuple[str, str]) -> str:
+    items = "".join(f'<Override PartName="{part}" ContentType="application/vnd.openxmlformats-{ct}+xml"/>'
+                    for part, ct in overrides)
+    base = ('<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+            '<Default Extension="xml" ContentType="application/xml"/>') if defaults else ""
+    return f'{_XML}<Types xmlns="{_CT}">{base}{items}</Types>'
+
+
+_THEME = (f'{_XML}<a:theme xmlns:a="{_DML}" name="pickfit"><a:themeElements>'
+          '<a:clrScheme name="pickfit"><a:dk1><a:srgbClr val="000000"/></a:dk1><a:lt1><a:srgbClr val="FFFFFF"/></a:lt1>'
+          '<a:dk2><a:srgbClr val="1F2937"/></a:dk2><a:lt2><a:srgbClr val="F3F4F6"/></a:lt2>'
+          + "".join(f'<a:accent{i}><a:srgbClr val="{c}"/></a:accent{i}>'
+                    for i, c in enumerate(("C83C32", "286EC8", "3CA050", "E0A030", "7050C0", "30A0A0"), 1))
+          + '<a:hlink><a:srgbClr val="0563C1"/></a:hlink><a:folHlink><a:srgbClr val="954F72"/></a:folHlink></a:clrScheme>'
+          '<a:fontScheme name="pickfit"><a:majorFont><a:latin typeface="DejaVu Sans"/><a:ea typeface=""/><a:cs typeface=""/>'
+          '</a:majorFont><a:minorFont><a:latin typeface="DejaVu Sans"/><a:ea typeface=""/><a:cs typeface=""/></a:minorFont>'
+          '</a:fontScheme><a:fmtScheme name="pickfit">'
+          '<a:fillStyleLst>' + '<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>' * 3 + '</a:fillStyleLst>'
+          '<a:lnStyleLst>' + '<a:ln w="9525"><a:solidFill><a:schemeClr val="phClr"/></a:solidFill></a:ln>' * 3
+          + '</a:lnStyleLst><a:effectStyleLst>' + '<a:effectStyle><a:effectLst/></a:effectStyle>' * 3
+          + '</a:effectStyleLst><a:bgFillStyleLst>' + '<a:solidFill><a:schemeClr val="phClr"/></a:solidFill>' * 3
+          + '</a:bgFillStyleLst></a:fmtScheme></a:themeElements></a:theme>')
+_TREE = ('<p:cSld><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr>'
+         '<p:grpSpPr/>{shapes}</p:spTree></p:cSld>')
+_SLIDE_TEXT = ('<p:sp><p:nvSpPr><p:cNvPr id="2" name="Text"/><p:cNvSpPr txBox="1"/><p:nvPr/></p:nvSpPr>'
+               '<p:spPr><a:xfrm><a:off x="914400" y="914400"/><a:ext cx="7315200" cy="914400"/></a:xfrm>'
+               '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr><p:txBody><a:bodyPr/><a:lstStyle/>'
+               f'<a:p><a:r><a:rPr lang="en-US"/><a:t>{SAMPLE_TEXT}</a:t></a:r></a:p></p:txBody></p:sp>')
+_P = f'xmlns:a="{_DML}" xmlns:r="{_OR}" xmlns:p="{_PML}"'
+_MAP = ('<p:clrMap bg1="lt1" tx1="dk1" bg2="lt2" tx2="dk2" accent1="accent1" accent2="accent2" accent3="accent3" '
+        'accent4="accent4" accent5="accent5" accent6="accent6" hlink="hlink" folHlink="folHlink"/>')
+
+# Each format's parts, smallest a word processor, spreadsheet or slide app opens: one paragraph, one cell, one
+# slide (with the master, layout and theme a slide needs), each holding SAMPLE_TEXT.
+OFFICE_PARTS: dict[str, dict[str, str]] = {
+    "docx": {
+        "[Content_Types].xml": _types(True, ("/word/document.xml",
+                                             "officedocument.wordprocessingml.document.main")),
+        "_rels/.rels": _rels(("officeDocument", "word/document.xml")),
+        "word/document.xml": (f'{_XML}<w:document xmlns:w="{_OOXML}/wordprocessingml/2006/main"><w:body>'
+                              f'<w:p><w:r><w:t>{SAMPLE_TEXT}</w:t></w:r></w:p>'
+                              '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/></w:sectPr></w:body></w:document>'),
+    },
+    "xlsx": {
+        "[Content_Types].xml": _types(True, ("/xl/workbook.xml", "officedocument.spreadsheetml.sheet.main"),
+                                      ("/xl/worksheets/sheet1.xml", "officedocument.spreadsheetml.worksheet")),
+        "_rels/.rels": _rels(("officeDocument", "xl/workbook.xml")),
+        "xl/workbook.xml": (f'{_XML}<workbook xmlns="{_OOXML}/spreadsheetml/2006/main" xmlns:r="{_OR}">'
+                            '<sheets><sheet name="Sheet1" sheetId="1" r:id="rId1"/></sheets></workbook>'),
+        "xl/_rels/workbook.xml.rels": _rels(("worksheet", "worksheets/sheet1.xml")),
+        "xl/worksheets/sheet1.xml": (f'{_XML}<worksheet xmlns="{_OOXML}/spreadsheetml/2006/main"><sheetData>'
+                                     f'<row r="1"><c r="A1" t="inlineStr"><is><t>{SAMPLE_TEXT}</t></is></c>'
+                                     '<c r="B1"><v>42</v></c></row></sheetData></worksheet>'),
+    },
+    "pptx": {
+        "[Content_Types].xml": _types(
+            True, ("/ppt/presentation.xml", "officedocument.presentationml.presentation.main"),
+            ("/ppt/slides/slide1.xml", "officedocument.presentationml.slide"),
+            ("/ppt/slideLayouts/slideLayout1.xml", "officedocument.presentationml.slideLayout"),
+            ("/ppt/slideMasters/slideMaster1.xml", "officedocument.presentationml.slideMaster"),
+            ("/ppt/theme/theme1.xml", "officedocument.theme")),
+        "_rels/.rels": _rels(("officeDocument", "ppt/presentation.xml")),
+        "ppt/presentation.xml": (f'{_XML}<p:presentation {_P}>'
+                                 '<p:sldMasterIdLst><p:sldMasterId id="2147483648" r:id="rId1"/></p:sldMasterIdLst>'
+                                 '<p:sldIdLst><p:sldId id="256" r:id="rId2"/></p:sldIdLst>'
+                                 '<p:sldSz cx="9144000" cy="6858000"/><p:notesSz cx="6858000" cy="9144000"/>'
+                                 '</p:presentation>'),
+        "ppt/_rels/presentation.xml.rels": _rels(("slideMaster", "slideMasters/slideMaster1.xml"),
+                                                 ("slide", "slides/slide1.xml"), ("theme", "theme/theme1.xml")),
+        "ppt/slides/slide1.xml": f'{_XML}<p:sld {_P}>{_TREE.format(shapes=_SLIDE_TEXT)}</p:sld>',
+        "ppt/slides/_rels/slide1.xml.rels": _rels(("slideLayout", "../slideLayouts/slideLayout1.xml")),
+        "ppt/slideLayouts/slideLayout1.xml": (f'{_XML}<p:sldLayout {_P} type="blank">'
+                                              f'{_TREE.format(shapes="")}</p:sldLayout>'),
+        "ppt/slideLayouts/_rels/slideLayout1.xml.rels": _rels(("slideMaster", "../slideMasters/slideMaster1.xml")),
+        "ppt/slideMasters/slideMaster1.xml": (f'{_XML}<p:sldMaster {_P}>{_TREE.format(shapes="")}{_MAP}'
+                                              '<p:sldLayoutIdLst><p:sldLayoutId id="2147483649" r:id="rId1"/>'
+                                              '</p:sldLayoutIdLst></p:sldMaster>'),
+        "ppt/slideMasters/_rels/slideMaster1.xml.rels": _rels(("slideLayout", "../slideLayouts/slideLayout1.xml"),
+                                                              ("theme", "../theme/theme1.xml")),
+        "ppt/theme/theme1.xml": _THEME,
+    },
+}
+
+
+def office_sample(kind: str) -> bytes:
+    """pickfit's own docx, xlsx or pptx (OFFICE_PARTS), the same bytes every time (a fixed date in each entry)."""
+    import zipfile
+
+    out = io.BytesIO()
+    with zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as book:
+        for name, text in OFFICE_PARTS[kind].items():
+            book.writestr(zipfile.ZipInfo(name, date_time=(1980, 1, 1, 0, 0, 0)), text.encode(),
+                          compress_type=zipfile.ZIP_DEFLATED)
+    return out.getvalue()
+
+
+def _office_book(data: bytes, kind: str) -> tuple[Any, str | None, str | None]:
+    """(the zip, its main part's name, why not) for an OOXML file of kind docx, pptx or xlsx."""
+    import xml.etree.ElementTree as ET
+    import zipfile
+
+    if not data.startswith(b"PK\x03\x04"):
+        return None, None, "not a zip (an OOXML file is one)"
+    try:
+        book = zipfile.ZipFile(io.BytesIO(data))
+        if sum(i.file_size for i in book.infolist()) > OFFICE_UNZIPPED_MAX:
+            return None, None, f"unpacks to more than {OFFICE_UNZIPPED_MAX} bytes"
+        bad = book.testzip()
+        if bad is not None:
+            return None, None, f"a damaged zip entry: {bad}"
+        names = set(book.namelist())
+        for part in ("[Content_Types].xml", "_rels/.rels"):
+            if part not in names:
+                return None, None, f"no {part}"
+        parsed = {n: ET.fromstring(book.read(n)) for n in sorted(names) if n.endswith((".xml", ".rels"))}
+        main = [r.get("Target", "").lstrip("/") for r in parsed["_rels/.rels"]
+                if r.get("Type", "").endswith("/officeDocument")]
+        if len(main) != 1 or main[0] not in parsed:
+            return None, None, "_rels/.rels names no officeDocument part in the zip"
+        root = parsed[main[0]].tag
+    except (zipfile.BadZipFile, ET.ParseError, KeyError, ValueError, EOFError, OSError) as err:
+        return None, None, f"unreadable: {type(err).__name__}: {err}"[:200]
+    if root != OFFICE_ROOTS[kind]:
+        return None, None, f"{main[0]} is a {root}, not a {kind} ({OFFICE_ROOTS[kind]})"
+    return book, main[0], None
+
+
+def format_problem(data: bytes, kind: str) -> str | None:
+    """Why `data` is not a well-formed file of `kind` (svg, docx, pptx, xlsx, or any of FORMATS); None when it is.
+
+    svg: XML that parses, with an <svg> root (in the SVG namespace or none). docx, pptx, xlsx: a zip that is
+    whole, with [Content_Types].xml and _rels/.rels that parse, whose officeDocument part parses and has the
+    format's root element. Other formats: root's file check's own test (_FILE_PY's fmt, run here)."""
+    import xml.etree.ElementTree as ET
+
+    if kind in OFFICE_ROOTS:
+        return _office_book(data, kind)[2]
+    if kind == "svg":
+        try:
+            root = ET.fromstring(data).tag
+        except ET.ParseError as err:
+            return f"not well-formed XML: {err}"
+        return None if root in ("svg", "{http://www.w3.org/2000/svg}svg") else f"the root is {root}, not <svg>"
+    if kind not in FORMATS:
+        raise ValueError(f"no format {kind!r}")
+    try:
+        return None if _box_fmt()(data, kind) else f"not a {kind} file"
+    except Exception as err:  # noqa: BLE001 - fmt raises on what it cannot decode
+        return f"not a {kind} file ({type(err).__name__})"
+
+
+_FMT: list[Callable[[bytes, str], bool]] = []
+
+
+def _box_fmt() -> Callable[[bytes, str], bool]:
+    """Root's file check's own format test (_FILE_PY's fmt, pickfit's constant source), for files on the host."""
+    if not _FMT:
+        scope: dict[str, Any] = {}
+        part = _FILE_PY[_FILE_PY.index("OOXML = "):_FILE_PY.index("def judge(path, data, st):")]
+        exec("import json, re\n" + part, scope)  # noqa: S102 - pickfit's own source, no outside input
+        _FMT.append(scope["fmt"])
+    return _FMT[0]
+
+
+def document_text(data: bytes, kind: str) -> str:
+    """The text a document holds, whitespace folded: an svg's, or every part of an OOXML file ('' when unreadable)."""
+    import xml.etree.ElementTree as ET
+
+    try:
+        if kind in OFFICE_ROOTS:
+            book, _, why = _office_book(data, kind)
+            if why:
+                return ""
+            parts = [n for n in book.namelist() if n.endswith(".xml") and not n.startswith(("[", "_rels/"))
+                     and "/_rels/" not in n]
+            texts = [" ".join(ET.fromstring(book.read(n)).itertext()) for n in sorted(parts)]
+        else:
+            texts = [" ".join(ET.fromstring(data).itertext())] if kind == "svg" else [data.decode("utf-8", "replace")]
+    except (ET.ParseError, KeyError, ValueError):
+        return ""
+    return " ".join(" ".join(texts).split())
+
+
+# ---------------------------------------------------------------- track C: the agent's file, the GUI's edit
+
+
+@dataclass
+class FileState:
+    """A file as pickfit saw it: missing, or its size, sha256 and mtime."""
+
+    path: str
+    exists: bool
+    bytes: int | None = None
+    sha256: str | None = None
+    mtime: float | None = None
+
+    @classmethod
+    def of(cls, path: Path) -> FileState:
+        if not path.is_file() or path.is_symlink():
+            return cls(str(path), False)
+        data = path.read_bytes()
+        return cls(str(path), True, len(data), hashlib.sha256(data).hexdigest(), path.stat().st_mtime)
+
+
+def stage_mcp_output(upstream: Path, input_dir: Path, name: str | None = None) -> FileState:
+    """Copy the file an MCP tool call or script made into the GUI's input folder; its state there (the hash the
+    GUI's edit is compared with). ValueError when the upstream file is missing, a symlink, or bigger than
+    FILE_MAX_BYTES, or `name` leaves input_dir."""
+    import shutil
+
+    if upstream.is_symlink() or not upstream.is_file():
+        raise ValueError(f"{upstream}: the upstream step left no regular file")
+    if upstream.stat().st_size > FILE_MAX_BYTES:
+        raise ValueError(f"{upstream}: more than {FILE_MAX_BYTES} bytes")
+    target = input_dir / (name or upstream.name)
+    if target.resolve().parent != input_dir.resolve():
+        raise ValueError(f"{name!r}: not a file name in {input_dir}")
+    input_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(upstream, target)
+    return FileState.of(target)
+
+
+@dataclass
+class CoeditResult:
+    """verify_coedit_roundtrip's answer: passed, why not, and the evidence (states before and after, checks)."""
+
+    passed: bool
+    format: str
+    upstream: FileState
+    before: FileState
+    after: FileState
+    why: str | None = None
+    checks: dict[str, bool] = field(default_factory=dict)
+    contains: dict[str, bool] = field(default_factory=dict)
+    operate_error: str | None = None
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+
+# operate(path) edits the staged file in the GUI (or saves elsewhere: then output names that file).
+CoeditOperate = Callable[[Path], Any]
+
+
+def verify_coedit_roundtrip(upstream: Path, workdir: Path, operate: CoeditOperate, *, format: str,
+                            output: str | None = None, contains: list[str] | None = None,
+                            name: str | None = None) -> CoeditResult:
+    """Track C's round trip on files pickfit can read (brief 15.3 C, 15.10-5): the agent's interface made
+    `upstream` (an MCP tool call or a script), pickfit copies it into workdir/pickfit-in and records its sha256 and
+    mtime, `operate` edits it in the GUI and saves, and pickfit checks the saved file.
+
+    Passes when: the upstream file is a well-formed `format` file; after operate, the saved file (`output` under
+    workdir, else the staged copy) exists, its sha256 differs from the staged copy's (an mtime that moved over the
+    same bytes is a save without an edit, and fails), it is still a well-formed `format` file, and its text holds
+    each of `contains`. operate's exception fails the round trip with its message; it is never raised.
+    """
+    if format not in FORMATS:
+        raise ValueError(f"no format {format!r}")
+    up = FileState.of(upstream)
+    missing = FileState(str(upstream), False)
+
+    def failed(why: str, before: FileState = missing, after: FileState = missing, **more: Any) -> CoeditResult:
+        return CoeditResult(False, format, up, before, after, why=why, **more)
+
+    if not up.exists:
+        return failed("the upstream step left no file")
+    problem = format_problem(upstream.read_bytes(), format)
+    if problem:
+        return failed(f"the upstream file is not a well-formed {format}: {problem}")
+    try:
+        before = stage_mcp_output(upstream, workdir / "pickfit-in", name)
+    except ValueError as err:
+        return failed(str(err))
+    staged = Path(before.path)
+    target = workdir / output if output else staged
+    if output and (".." in Path(output).parts or Path(output).is_absolute()):
+        return failed(f"{output!r}: a path under the work folder, without ..", before)
+    error = None
+    try:
+        operate(staged)
+    except Exception as err:  # noqa: BLE001 - the GUI step's failure is this check's answer
+        error = f"{type(err).__name__}: {err}"[:300]
+    after = FileState.of(target)
+    checks = {"exists": after.exists}
+    if after.exists:
+        data = target.read_bytes()
+        checks["sha256_changed"] = after.sha256 != before.sha256
+        checks["mtime_changed"] = after.mtime != before.mtime or target != staged
+        problem = format_problem(data, format)
+        checks["format_ok"] = problem is None
+        text = document_text(data, format) if problem is None else ""
+        found = {c: " ".join(c.split()) in text for c in contains or []}
+    else:
+        found = {c: False for c in contains or []}
+    why = (f"the GUI step failed: {error}" if error and not checks.get("sha256_changed") else
+           f"no file at {target} after the GUI step" if not after.exists else
+           "the saved file has the same sha256 as the input: nothing was edited" if not checks["sha256_changed"] else
+           f"the saved file is not a well-formed {format}: {problem}" if not checks["format_ok"] else
+           f"the saved file lacks {[c for c, ok in found.items() if not ok]}" if not all(found.values()) else
+           f"the GUI step failed: {error}" if error else None)
+    return CoeditResult(why is None, format, up, before, after, why=why, checks=checks, contains=found,
+                        operate_error=error)
 
 
 # ---------------------------------------------------------------- root's file check
@@ -777,8 +1150,23 @@ if os.name == "nt":  # a Windows box: run by the administrator; the box user is 
             os.close(fd)
 def norm(text):
     return " ".join(text.split())
+OOXML = "http://schemas.openxmlformats.org"
+OFFICE = {"docx": "wordprocessingml/2006/main}document", "pptx": "presentationml/2006/main}presentation",
+          "xlsx": "spreadsheetml/2006/main}workbook"}
+def office(data, name):  # format_problem's office half (gui_operate.py), on the stdlib alone
+    import io, zipfile
+    import xml.etree.ElementTree as ET
+    book = zipfile.ZipFile(io.BytesIO(data))
+    if sum(i.file_size for i in book.infolist()) > 64000000 or book.testzip() is not None:
+        return False
+    parsed = {n: ET.fromstring(book.read(n)) for n in book.namelist() if n.endswith((".xml", ".rels"))}
+    main = [r.get("Target", "").lstrip("/") for r in parsed["_rels/.rels"]
+            if r.get("Type", "").endswith("/officeDocument")]
+    return "[Content_Types].xml" in parsed and len(main) == 1 and main[0] in parsed and \
+        parsed[main[0]].tag == "{" + OOXML + "/" + OFFICE[name]
 def fmt(data, name):
     head = data[:16]
+    if name in OFFICE: return head.startswith(b"PK\x03\x04") and office(data, name)
     text = data.decode("utf-8", "strict") if name in ("text", "json", "html", "svg", "csv", "srt") else None
     if name == "png": return head.startswith(b"\x89PNG\r\n\x1a\n")
     if name == "jpeg": return head.startswith(b"\xff\xd8\xff")
@@ -2074,9 +2462,22 @@ def run_operation(box: Box, args: OperateArgs, tag: str | int, *, actions: list[
     else:
         box.exec(f"rm -rf {home}/pickfit-out && mkdir -p {home}/pickfit-in {home}/pickfit-out", 30)
     written: list[str] = []
-    for item in args.inputs:
+    for i, item in enumerate(args.inputs):
         path = home_path(item.path, home)
-        box.write_file(path, sample_file(item.sample) if item.sample else fill(item.text or "", nonce))
+        if item.kind == "mcp_output":  # the upstream step's file, copied as the box user reads it
+            upstream = home_path(item.from_path or "", home)
+            try:
+                data = box.read_file(upstream, FILE_MAX_BYTES + 1)
+            except Exception as err:  # noqa: BLE001 - a BoxError of any box kind
+                op.error = op.error or f"the upstream step's file {upstream} cannot be read: {err}"[:300]
+                continue
+            if len(data) > FILE_MAX_BYTES:
+                op.error = op.error or f"the upstream step's file {upstream} is more than {FILE_MAX_BYTES} bytes"
+                continue
+            op.inputs[i]["staged"] = {"from": upstream, "bytes": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+            box.write_file(path, data)
+        else:
+            box.write_file(path, sample_file(item.sample) if item.sample else fill(item.text or "", nonce))
         written.append(path)
     target = home_path(args.check.path, home) if args.check.kind in ("file", "gone") and args.check.path else None
     before = file_probe(box, {"mode": "before", "target": target or home + "/"})
