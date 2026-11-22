@@ -551,7 +551,7 @@ def test_writing_a_visual_check_refreshes_the_score_so_the_deduction_follows_at_
              "checked_at": "2026-11-03T20:00:00+08:00", "cost_usd": 0.03}
     write_visual_check(path, check)
     written = SoftwareRecord.model_validate(json.loads(path.read_text(encoding="utf-8")))
-    assert written.scores.formula_version == "b3.v7+visual.v1"
+    assert written.scores.formula_version == "b3.v8+visual.v1"
     assert written.scores.quality.total == round(before * 0.95, 1) and written.scores.quality.visual.before == before
 
 

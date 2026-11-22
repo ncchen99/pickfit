@@ -540,3 +540,22 @@ def test_the_recompute_moves_b3_v6_records_and_writes_only_its_out_dir(tmp_path:
     assert set(summary["R9"]) >= {"option_1_no_unchecked", "option_2_keep_unchecked (default)"}
     assert (reports / "changes.md").read_text().startswith("共 ")
     assert recompute(["--data-dir", str(out), "--out", str(reports), "--assume", "vulnerable=exposed"]) == 0
+
+
+def test_b3_v7_scores_move_to_b3_v8_by_refresh_with_the_new_cadence_and_survival_discount(tmp_path: Path) -> None:
+    """b3.v8 (brief 15.4, 15.6) changes only record-derived parts (maintenance cadence from the stored GitHub inputs,
+    confidence by standing), so b3.v7 scores move by refresh_scores and what b3.v7 gave is kept in history."""
+    assert FORMULA_VERSION == "b3.v8" and "b3.v7" in score_module.REFRESHABLE_FROM
+    db_path, out = setup_records(tmp_path)
+    score_module.score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=LATER,
+                               grade=fake_grade())
+    record = json.loads((out / "tinyq.json").read_text())
+    current = copy.deepcopy(record["scores"])
+    old = {**record["scores"], "formula_version": "b3.v7"}
+    moved = {**record, "standing": "new", "scores": old}
+    assert refresh_scores(moved, LATER) == "scores moved from formula b3.v7 to b3.v8, refreshed from the record"
+    assert moved["scores"]["history"][0]["formula_version"] == "b3.v7"
+    assert moved["scores"]["quality"]["total"] == current["quality"]["total"]
+    assert moved["scores"]["quality"]["confidence"] == round(
+        current["quality"]["confidence"] * score_module.NEW_CONFIDENCE_FACTOR, 2)
+    SoftwareRecord.model_validate(moved)
