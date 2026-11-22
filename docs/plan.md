@@ -375,3 +375,4 @@ Meta Global AI Developer Hackathon（2026-10-27 – 11-04 ET）已正式結束�
 4. **擴增軟體類別（Category Expansion）**：
    - 目前僅有 `dev_cli`、`local_ai`、`mcp_server`、`other` 四類，導致大量網頁應用、開發維運、生產力、影音、資安等軟體全數擠在 `other`（截至 11/5 已有 246 筆）。賽後將擴增軟體類別 enum 並同步更新 schema、管線與前端介面。
 5. **網站主機改為 Google Cloud Run（11/18）**：pickfit.app 的網頁與 MCP server 跑在 Cloud Run（`worker/cloudrun/`）；目錄資料庫仍是 Cloudflare D1、驗證影片仍在 R2。
+6. **賽後定位修訂（11/22）**：產品定位、三條收錄賽道（agent 用的能力、人用的 UI 網頁、人機協作的創作與文件工具）、過期與重驗、自己做還是重用、停止新增教學錄影，見 [brief.md](brief.md) 第 15 節。
