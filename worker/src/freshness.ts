@@ -4,7 +4,7 @@
  * its re-verification cycle (the record's reverify_cycle_days, else STALE_DAYS). The MCP answer and the tool page say
  * the same thing; neither claims the steps broke, only that pickfit has not run them since.
  */
-import type { Entry, Standing } from './catalog.ts';
+import { isVerified, type Entry, type Standing } from './catalog.ts';
 import { L } from './i18n.ts';
 
 /** The re-verification cycle when the record sets none. */
@@ -52,6 +52,30 @@ export function lastPassed(entry: Entry): string | null {
   const passed = entry.verification.last_passed_at;
   if (valid(passed)) return passed;
   return valid(entry.verification.checked_at) ? entry.verification.checked_at : null;
+}
+
+/** The home page's window for "verified in the last N days" (brief 15.1: verified this month, not little known). */
+export const RECENT_DAYS = 30;
+
+/**
+ * When the record last *passed* a check: last_passed_at, else checked_at for a record with a passing run (a check
+ * that failed leaves isVerified false). Null for a record that never passed, or a broken one with no last_passed_at.
+ */
+export function passedAt(entry: Entry): string | null {
+  const passed = entry.verification.last_passed_at;
+  if (valid(passed)) return passed;
+  // Broken: checked_at is the re-verification that failed, so without last_passed_at there is no pass to date.
+  if (entry.standing === 'broken') return null;
+  return isVerified(entry) && valid(entry.verification.checked_at) ? entry.verification.checked_at : null;
+}
+
+/** It passed a check within `days` of `now`, and its standing is not broken (a later re-verification failed). */
+export function passedWithin(entry: Entry, now: Date, days = RECENT_DAYS): boolean {
+  if (entry.standing === 'broken') return false;
+  const at = passedAt(entry);
+  if (!at || Number.isNaN(now.getTime())) return false;
+  const ms = now.getTime() - Date.parse(at);
+  return ms >= 0 ? ms <= days * 86_400_000 : true;
 }
 
 /** Whole days since the record last passed a check, for the card; null without a check. */

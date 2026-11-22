@@ -366,3 +366,129 @@ test('/agents: one tab per client, each in that client’s own format', async ()
   assert.match(html, /Add custom connector/);
   assert.ok(!text.includes('"type": "http"'), 'no Claude Code-style JSON offered to other clients');
 });
+
+// ---------------------------------------------------------------- brief 15 brand (P2-09)
+
+type IndexEntry = {
+  slug: string;
+  used_by?: string;
+  standing?: string;
+  standing_note?: string;
+  verification: { checked_at: string | null; last_passed_at?: string; reverify_cycle_days?: number };
+};
+
+/** The site on a copy of the fixture index changed by `edit` (its build time, a record's brief 15 fields). */
+function siteWith(edit: (index: { built_at: string; entries: IndexEntry[] }, bySlug: (slug: string) => IndexEntry) => void) {
+  const index = fixtureIndex() as { built_at: string; entries: IndexEntry[] };
+  edit(index, (slug) => index.entries.find((e) => e.slug === slug)!);
+  const worker = makeWorker(index, { fetch: (async () => { throw new Error('no model call expected'); }) as unknown as typeof fetch, now: () => new Date('2026-10-30T12:00:00Z') });
+  const ctx = { waitUntil() {}, passThroughOnException() {} } as unknown as ExecutionContext;
+  return async (url: string) => {
+    const res = await worker.fetch(new Request(url.startsWith('http') ? url : `http://127.0.0.1:8787${url}`, { headers: { accept: 'text/html' } }), { DB: makeD1().db, ANTHROPIC_API_KEY: 'k' } as Env, ctx);
+    assert.equal(res.status, 200, url);
+    return res.text();
+  };
+}
+
+const proofOf = (html: string) => /<ul class="proof">(.*?)<\/ul>/s.exec(html)?.[1] ?? '';
+
+test('home: the headline number is how many passed a check in the last 30 days; hidden gems are not in it', async () => {
+  // On 29 Nov the 31 Oct and 2 Nov runs are inside 30 days, the 28 Oct ones are not.
+  const get = siteWith((index) => { index.built_at = '2026-11-29T12:00:00Z'; });
+  const proof = proofOf(await get('/'));
+  assert.match(proof, /<strong>2<\/strong> verified in the last 30 days/);
+  assert.doesNotMatch(proof, /hidden gem/i, 'gems are no longer the headline');
+  const zh = proofOf(await get('/?lang=zh-TW'));
+  assert.match(zh, /<strong>2<\/strong> 款近 30 天驗證過/);
+  assert.doesNotMatch(zh, /寶藏/);
+  // A re-verification that passed counts (last_passed_at); a broken record never does.
+  const moved = siteWith((index, bySlug) => {
+    index.built_at = '2026-11-29T12:00:00Z';
+    bySlug('fixture-llm-runner').verification.last_passed_at = '2026-11-25T00:00:00Z';
+    bySlug('fixture-web-sketch').standing = 'broken';
+  });
+  assert.match(proofOf(await moved('/')), /<strong>2<\/strong> verified in the last 30 days/);
+  // Gems stay a secondary mark: the browse filter still offers them.
+  assert.match(await get('/browse'), /[Hh]idden gem/);
+});
+
+test('home: one line under the search box takes an agent to /agents, with the MCP command to copy', async () => {
+  const get = siteWith(() => {});
+  const home = await get('https://pickfit.app/');
+  const hero = home.slice(home.indexOf('<div class="hero-form">'), home.indexOf('<ul class="proof">'));
+  const entry = /<div class="agent-entry">.*?<\/button><\/div><\/div>/s.exec(hero)?.[0] ?? '';
+  assert.ok(entry, 'the agent line sits between the search form and the numbers');
+  assert.match(entry, /Using an agent\? Let it ask pickfit before it builds\./);
+  assert.match(entry, /<a href="\/agents">Connect your agent/);
+  assert.ok(commandText(entry).includes('<code>claude mcp add --transport http pickfit https://pickfit.app/mcp</code>'), 'the exact command');
+  assert.match(entry, /class="copy" aria-label="Copy command"/);
+  assert.ok(!/ style="/.test(home), 'no inline style attribute');
+  const zh = await get('https://pickfit.app/?lang=zh-TW');
+  assert.match(zh, /在用 agent 嗎？讓它動手前先來問 pickfit。/);
+  assert.match(zh, /<a href="\/agents">接上你的 agent/);
+});
+
+test('At a glance says who uses it and how fresh the last pass is, against the record’s own cycle (else 90 days)', async () => {
+  const sheet = (html: string) => /<dl class="measure glance-sheet">(.*?)<\/dl>/s.exec(html)?.[1] ?? '';
+  const row = (html: string, label: string) => new RegExp(`<div class="(m[^"]*)"><dt>${label}</dt><dd>(.*?)</dd></div>`, 's').exec(sheet(html));
+  // Built 10 Nov: llm-runner's shown run is 28 Oct 09:00 (13 days).
+  const get = siteWith((index, bySlug) => {
+    index.built_at = '2026-11-10T09:00:00Z';
+    bySlug('fixture-llm-runner').used_by = 'agent';
+    bySlug('fixture-llm-runner').verification.reverify_cycle_days = 30;
+    bySlug('fixture-notes-mcp').used_by = 'both';
+    bySlug('fixture-json-query').verification.reverify_cycle_days = 7;
+    delete bySlug('fixture-chat-tui').used_by;
+    delete bySlug('fixture-chat-tui').verification.reverify_cycle_days;
+  });
+  const runner = await get('/tool/fixture-llm-runner');
+  assert.equal(row(runner, 'For')?.[2], 'Agents');
+  assert.match(row(runner, 'Freshness')?.[1] ?? '', /m-pass/);
+  assert.equal(row(runner, 'Freshness')?.[2], 'Passed 13 days ago <small>re-verified every 30 days</small>');
+  assert.equal(row(await get('/tool/fixture-notes-mcp'), 'For')?.[2], 'People and agents');
+  // No cycle on the record: the default 90 days; who uses it not assessed reads "not stated".
+  const tui = await get('/tool/fixture-chat-tui');
+  assert.match(row(tui, 'Freshness')?.[2] ?? '', /re-verified every 90 days/);
+  assert.match(row(tui, 'For')?.[1] ?? '', /m-quiet/);
+  // Past its own 7-day cycle: caution.
+  const due = row(await get('/tool/fixture-json-query'), 'Freshness');
+  assert.match(due?.[1] ?? '', /m-caution/);
+  assert.match(due?.[2] ?? '', /re-verified every 7 days/);
+  const zh = await get('/tool/fixture-llm-runner?lang=zh-TW');
+  assert.equal(row(zh, '給誰用')?.[2], 'Agent');
+  assert.equal(row(zh, '驗證新鮮度')?.[2], '13 天前通過 <small>每 30 天重驗</small>');
+});
+
+test('a broken record says so at the top of its tool page: the failed re-verification, not recommended, its note', async () => {
+  const get = siteWith((index, bySlug) => {
+    index.built_at = '2026-11-10T09:00:00Z';
+    const e = bySlug('fixture-llm-runner');
+    e.standing = 'broken';
+    e.standing_note = 'The install script now 404s.';
+    e.verification.last_passed_at = '2026-10-20T08:00:00Z';
+  });
+  const html = await get('/tool/fixture-llm-runner');
+  const head = /<section class="head tool-head">(.*?)<\/section>/s.exec(html)?.[1] ?? '';
+  const banner = /<div class="broken-banner" role="note" aria-labelledby="broken-title">(.*?)<\/div><\/div>/s.exec(head)?.[1] ?? '';
+  assert.ok(banner, 'the banner is in the page head');
+  assert.match(banner, /<h2 id="broken-title">Its latest re-verification failed<\/h2>/);
+  assert.match(banner, /pickfit re-ran it on 28 Oct 2026 and it no longer works as recorded, so pickfit does not recommend it\. It last passed on 20 Oct 2026\./);
+  assert.match(banner, /<p class="small">The install script now 404s\.<\/p>/);
+  assert.match(head, /<a class="badge-link" href="#broken-title"><span class="badge badge-fail[^"]*"[^>]*>.*?Not recommended/s);
+  assert.match(html, /<div class="m m-fail[^"]*"><dt>Freshness<\/dt><dd>Re-verification failed on 28 Oct 2026/);
+  assert.ok(!/ style="/.test(html), 'no inline style attribute');
+  const zh = await get('/tool/fixture-llm-runner?lang=zh-TW');
+  assert.match(zh, /<h2 id="broken-title">最近一次重驗失敗<\/h2>/);
+  assert.match(zh, /所以 pickfit 不推薦它。上次通過是 2026年10月20日。/);
+  assert.match(zh, /不列入推薦/);
+  // The note is the record's own text, escaped like every value from the data.
+  const hostile = siteWith((_, bySlug) => {
+    bySlug('fixture-chat-tui').standing = 'broken';
+    bySlug('fixture-chat-tui').standing_note = '<img src=x onerror=alert(1)>';
+  });
+  const raw = await hostile('/tool/fixture-chat-tui');
+  assert.ok(raw.includes('&lt;img src=x onerror=alert(1)&gt;') && !raw.includes('<img src=x'));
+  // Not broken: no banner, no badge.
+  const fine = await (await site().get('/tool/fixture-llm-runner')).text();
+  assert.ok(!fine.includes('class="broken-banner"') && !fine.includes('Not recommended'));
+});
