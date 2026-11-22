@@ -283,7 +283,7 @@ button.badge{cursor:help;min-height:24px;text-decoration:underline dotted;text-d
 .meter-quiet .tape-fill{fill:color-mix(in srgb,var(--ink) 26%,var(--sunk))}
 .tape-ticks{stroke:color-mix(in srgb,var(--sunk) 70%,transparent);stroke-width:1.2;vector-effect:non-scaling-stroke}
 .tape-mark{stroke:var(--ink);stroke-width:2.5;vector-effect:non-scaling-stroke}
-.cov-ok{fill:var(--pass)}.cov-fail{fill:var(--fail)}.cov-open{fill:color-mix(in srgb,var(--ink) 18%,var(--sunk))}
+.cov-ok{fill:var(--pass)}.cov-standin{fill:color-mix(in srgb,var(--pass) 42%,var(--sunk))}.cov-fail{fill:var(--fail)}.cov-open{fill:color-mix(in srgb,var(--ink) 18%,var(--sunk))}
 
 /* Fitz says */
 .says{display:flex;align-items:flex-end;gap:12px}
@@ -1075,6 +1075,9 @@ body.has-tray .showcase video{max-height:max(400px,calc(100svh - 356px - var(--t
 .feat-state[data-tip]{position:relative}
 .feat-state[data-tip]:hover::after,.feat-state[data-tip]:focus::after{content:attr(data-tip);position:absolute;left:auto;right:0;bottom:calc(100% + 6px);z-index:3;padding:6px 9px;border-radius:var(--r-ctl);background:var(--ink);color:var(--paper);font:600 .78rem/1.3 var(--sans);width:max-content;max-width:260px;white-space:normal;pointer-events:none}
 .feat-open .feat-title{color:var(--ink-2)}
+/* Checked against a stand-in: it connected, so no tick; a plug in quiet ink, and one short line under the feature. */
+.feat-standin .feat-state{color:var(--ink-2)}
+.feat-note{display:block;font-size:var(--t-small);font-weight:400;color:var(--ink-2)}
 @media (hover:none){.feat-state[data-tip]{cursor:default}}
 .side a{overflow-wrap:anywhere}
 .uses{columns:2;column-gap:32px}.uses li{break-inside:avoid;margin-bottom:6px}

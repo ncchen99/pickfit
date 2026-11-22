@@ -2,8 +2,13 @@
  * Which advertised features the run behind an install guide exercised, built by code from the
  * index. A feature is shown as checked only when a smoke test of that run that covers it passed;
  * every other feature is not checked, with the reason. No model writes any of it.
+ *
+ * A checked feature also says what its check ran against when that was something outside the tool
+ * (fidelity, docs/proposals/privileges.md P1). One checked against a stand-in stays in `checked`,
+ * because its test did pass, but it shows only that the tool connects: nothing here, on a page or in
+ * an answer may present it as verified to work (standInOnly, shownWorking).
  */
-import { webCheck, type Entry, type FeatureCoverage, type InstallGuide } from './catalog.ts';
+import { FIDELITIES, webCheck, type Entry, type FeatureCoverage, type Fidelity, type InstallGuide } from './catalog.ts';
 
 export const NOT_CHECKED_REASONS = [
   'needs_account',
@@ -55,12 +60,28 @@ const REASON_TEXT: Record<NotCheckedReason, string> = {
   other: 'not checked',
 };
 
+export interface CheckedFeature {
+  feature: string;
+  check: string;
+  /** What the check ran against, when that was outside the tool; left out when the run recorded none. */
+  fidelity?: Fidelity;
+}
+
 export interface FeaturesOut {
   /** false: the run behind these steps did not record features (verified earlier, or none listed). */
   recorded: boolean;
-  checked: { feature: string; check: string }[];
+  checked: CheckedFeature[];
   not_checked: { feature: string; reason: NotCheckedReason; detail: string }[];
 }
+
+/** Checked only against a stand-in: the tool connected, and nothing shows it works with the real service. */
+export const standInOnly = (features: FeaturesOut): CheckedFeature[] => features.checked.filter((f) => f.fidelity === 'stand_in');
+
+/** Checked through a compatible endpoint with a real model behind it, not the service the tool names. */
+export const viaCompatible = (features: FeaturesOut): CheckedFeature[] => features.checked.filter((f) => f.fidelity === 'compatible');
+
+/** The checked features a page may tick, or count as working: every one but those a stand-in backs. */
+export const shownWorking = (features: FeaturesOut): CheckedFeature[] => features.checked.filter((f) => f.fidelity !== 'stand_in');
 
 function notChecked(f: FeatureCoverage): { reason: NotCheckedReason; detail: string } {
   let reason: NotCheckedReason;
@@ -95,16 +116,47 @@ export function featuresOut(entry: Entry, guide: InstallGuide | null): FeaturesO
   const out: FeaturesOut = { recorded: true, checked: [], not_checked: [] };
   for (const f of coverage) {
     const passed = f.checks.find((c) => c.passed);
-    if (passed) out.checked.push({ feature: f.feature, check: passed.command });
+    // Only a value the index is known to write; the key is left out otherwise, as before fidelity was recorded.
+    const fidelity = (FIDELITIES as readonly string[]).includes(f.fidelity ?? '') ? (f.fidelity as Fidelity) : null;
+    if (passed) out.checked.push({ feature: f.feature, check: passed.command, ...(fidelity ? { fidelity } : {}) });
     else out.not_checked.push({ feature: f.feature, ...notChecked(f) });
   }
   return out;
 }
 
-/** "It exercised 2 of the 3 features its README advertises; ..." for how_we_know, or null. */
+const named = (list: CheckedFeature[]) => list.map((f) => f.feature).join('; ');
+
+/** "Checked only against a stand-in (...): <features>." for an answer's text, or null when there are none. */
+export function standInSentence(features: FeaturesOut): string | null {
+  const list = features.recorded ? standInOnly(features) : [];
+  if (!list.length) return null;
+  return (
+    `Checked only against a stand-in, not the real service: ${named(list)}. ` +
+    'That shows the tool connects; do not say these were verified to work.'
+  );
+}
+
+/** "Checked through a compatible endpoint ...: <features>." for an answer's text, or null when there are none. */
+export function compatibleSentence(features: FeaturesOut): string | null {
+  const list = features.recorded ? viaCompatible(features) : [];
+  return list.length ? `Checked through a compatible endpoint with a real model behind it, not the service the tool names: ${named(list)}.` : null;
+}
+
+/**
+ * "It exercised 2 of the 3 features its README advertises; ..." for how_we_know, or null. The count is of features
+ * whose test passed; when a stand-in backed some of them, the next sentence says how many and which.
+ */
 export function featureSentence(features: FeaturesOut): string | null {
   const total = features.checked.length + features.not_checked.length;
   if (!features.recorded || total === 0) return null;
   const rest = features.not_checked.length ? '; see features for the ones it did not check and why' : '';
-  return `The run exercised ${features.checked.length} of the ${total} main features its README advertises${rest}.`;
+  const standIn = standInOnly(features);
+  const compatible = viaCompatible(features);
+  return (
+    `The run exercised ${features.checked.length} of the ${total} main features its README advertises${rest}.` +
+    (standIn.length
+      ? ` ${standIn.length} of those ${features.checked.length} ran only against a stand-in, not the real service (${named(standIn)}): that shows the tool connects, not that the feature works.`
+      : '') +
+    (compatible.length ? ` ${compatible.length} ran through a compatible endpoint with a real model behind it (${named(compatible)}).` : '')
+  );
 }

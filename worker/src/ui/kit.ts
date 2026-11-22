@@ -6,7 +6,7 @@
  */
 import type { Arch, Category, Entry, GuiEvidence, OS } from '../catalog.ts';
 import { operatedText } from '../evidence.ts';
-import type { FeaturesOut } from '../features.ts';
+import { standInOnly, type FeaturesOut } from '../features.ts';
 import { L } from '../i18n.ts';
 import { day, formOf, KIND, osName, system } from './facts.ts';
 import { esc, listOf } from './html.ts';
@@ -354,8 +354,12 @@ export function confidenceRow(confidence: number | undefined, unmeasured: string
   );
 }
 
-/** Features the run exercised vs the README's list: one segmented bar, counts in words beside it. */
+/**
+ * Features the run exercised vs the README's list: one segmented bar, counts in words beside it. The ones checked only
+ * against a stand-in are in the count, said apart, and their segment is paler than a feature that was seen working.
+ */
 export function coverage(features: FeaturesOut, opts: { pop?: string } = {}): string {
+  const standIn = standInOnly(features).length;
   const checked = features.checked.length;
   const failed = features.not_checked.filter((f) => f.reason === 'test_failed').length;
   const open = features.not_checked.length - failed;
@@ -374,13 +378,14 @@ export function coverage(features: FeaturesOut, opts: { pop?: string } = {}): st
   };
   const words = [
     L(`${checked} of ${total} checked`, `已檢查 ${checked}/${total} 項`),
+    standIn ? L(`${standIn} of them against a stand-in`, `其中 ${standIn} 項是用替身驗的`) : '',
     failed ? L(`${failed} failed`, `${failed} 項失敗`) : '',
   ]
     .filter(Boolean)
     .join(L(', ', '，'));
   return (
     `<div class="meter meter-cov" role="img" aria-label="${L(`Features: ${esc(words)}`, `功能：${esc(words)}`)}">${label}` +
-    `<svg class="tape" viewBox="0 0 200 14" preserveAspectRatio="none" aria-hidden="true">${seg(checked, 'cov-ok')}${seg(failed, 'cov-fail')}${seg(open, 'cov-open')}</svg>` +
+    `<svg class="tape" viewBox="0 0 200 14" preserveAspectRatio="none" aria-hidden="true">${seg(checked - standIn, 'cov-ok')}${seg(standIn, 'cov-standin')}${seg(failed, 'cov-fail')}${seg(open, 'cov-open')}</svg>` +
     `<span class="meter-read meter-wide" aria-hidden="true">${esc(words)}</span></div>`
   );
 }

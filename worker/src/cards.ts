@@ -5,7 +5,7 @@
  */
 import { bestGuide, isWebApp, OSES, verifiedOn, verifiedOnUserSystem, webCheck, type Arch, type Entry, type InstallGuide, type OS } from './catalog.ts';
 import { matchedCapabilities } from './capabilities.ts';
-import { featuresOut } from './features.ts';
+import { featuresOut, shownWorking, standInOnly } from './features.ts';
 import { runDay } from './evidence.ts';
 
 const MCP_TOOLS_SHOWN = 40;
@@ -113,10 +113,15 @@ export function toCard(entry: Entry, os?: OS, arch?: Arch, query: readonly strin
     maturity: entry.maturity,
     tags: entry.tags,
     use_cases: entry.use_cases,
-    features_checked: features.checked.map((f) => f.feature),
+    // A feature checked only against a stand-in is not one pickfit saw work (privileges.md P1): the matcher may not
+    // cite it as checked, and reads it with the others it did not see work (prompt rule 6), with why.
+    features_checked: shownWorking(features).map((f) => f.feature),
     // The reason only when it says something about the tool (needs a GPU, failed its test); not that the run did not
     // get to it, checked only four, or predates feature checks.
-    features_not_checked: features.not_checked.map((f) => (SILENT_REASONS.has(f.reason) ? f.feature : `${f.feature} (${f.reason})`)),
+    features_not_checked: [
+      ...standInOnly(features).map((f) => `${f.feature} (${STAND_IN_ONLY})`),
+      ...features.not_checked.map((f) => (SILENT_REASONS.has(f.reason) ? f.feature : `${f.feature} (${f.reason})`)),
+    ],
     alternatives_to: entry.alternatives_to,
     platforms: entry.platforms,
     verified_on: web ? webLabel(entry) : verifiedOn(entry).map((name) => runLabel(entry, name)),
@@ -146,6 +151,9 @@ export function toCard(entry: Entry, os?: OS, arch?: Arch, query: readonly strin
     ...matchedFields(entry, query),
   };
 }
+
+/** On a card, beside a feature whose check ran only against a stand-in: it connected, the real service was not tried. */
+export const STAND_IN_ONLY = 'stand_in_only';
 
 /** Why a feature was not checked, when it says nothing about the tool itself. */
 const SILENT_REASONS = new Set<string>(['not_attempted', 'beyond_budget', 'not_recorded', 'other']);

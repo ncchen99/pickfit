@@ -28,6 +28,14 @@ def test_prose_takes_sentences_and_skips_commands_names_and_codes():
     ]
 
 
+def test_a_features_fidelity_is_a_code_the_page_words_itself_never_a_sentence_to_translate():
+    entry = {"install": {"linux": {"features": [
+        {"feature": "send mail over SMTP", "status": "checked", "reason": None, "note": None, "fidelity": "stand_in",
+         "checks": [{"command": "x send", "passed": True}]}]}},
+        "coverage": {"dimensions": {"function": {"status": "verified", "done": 1, "of": 1, "stand_in": 1}}}}
+    assert prose(entry) == ["send mail over SMTP"]
+
+
 def test_a_video_s_captions_and_chapter_titles_are_translated_like_the_page_s_sentences():
     video = {"clip": "x-20261119-1000.mp4", "raw": [{"file": "x-20261119-1000-raw-1.mp4", "sha256": "a" * 64}],
              "features": ["write a note"],

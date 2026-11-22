@@ -67,6 +67,52 @@ def test_guides_carry_feature_coverage_with_the_checks_behind_it(data_dir: Path)
     assert entries["fixture-json-query"]["features"] == []
 
 
+def _set_fidelity(record: dict, feature: str, fidelity: str) -> None:
+    for run in record["verification"]["runs"]:
+        for f in run.get("features", []):
+            if f["feature"] == feature:
+                f["fidelity"] = fidelity
+
+
+def test_a_features_fidelity_reaches_the_index_only_when_the_run_recorded_it(data_dir: Path) -> None:
+    """privileges.md P1: what a feature's check ran against (real, compatible, stand_in) goes to the Worker, which
+    never shows a stand_in one as plainly verified. A run that recorded none keeps its entry exactly as it was."""
+    before = {e["slug"]: e for e in build_index(data_dir).index["entries"]}
+    assert '"fidelity"' not in json.dumps(before) and '"stand_in"' not in json.dumps(before)
+
+    served = "serve an OpenAI-compatible API"
+    edit(data_dir / "fixture-llm-runner.json", lambda r: _set_fidelity(r, served, "stand_in"))
+    entries = {e["slug"]: e for e in build_index(data_dir).index["entries"]}
+    coverage = {f["feature"]: f for f in entries["fixture-llm-runner"]["install"]["linux"]["features"]}
+    assert coverage[served]["fidelity"] == "stand_in" and coverage[served]["status"] == "checked"
+    assert "fidelity" not in coverage["pull models from a registry"]  # none recorded: no key, not a null
+    # The coverage's function count still includes it (it reached a verdict), and says how many were a stand-in.
+    assert entries["fixture-llm-runner"]["coverage"]["dimensions"]["function"] == {
+        "status": "partial", "done": 1, "of": 2, "unit": "feature", "gaps": ["sandbox_missing"], "stand_in": 1}
+    # Every other entry is byte for byte what it was.
+    assert {slug: e for slug, e in entries.items() if slug != "fixture-llm-runner"} == {
+        slug: e for slug, e in before.items() if slug != "fixture-llm-runner"}
+
+    for fidelity in ("compatible", "real"):
+        edit(data_dir / "fixture-llm-runner.json", lambda r, fidelity=fidelity: _set_fidelity(r, served, fidelity))
+        runner = {e["slug"]: e for e in build_index(data_dir).index["entries"]}["fixture-llm-runner"]
+        assert runner["install"]["linux"]["features"][0]["fidelity"] == fidelity
+        assert "stand_in" not in runner["coverage"]["dimensions"]["function"]
+
+
+def test_a_feature_another_passed_run_checked_for_real_is_not_counted_as_a_stand_in(data_dir: Path) -> None:
+    def two_runs(record: dict) -> None:
+        linux, macos = record["verification"]["runs"]
+        _set_fidelity(record, "serve an OpenAI-compatible API", "stand_in")
+        macos["features"] = [{"feature": "serve an OpenAI-compatible API", "status": "checked", "smoke_tests": [0]}]
+
+    edit(data_dir / "fixture-llm-runner.json", two_runs)
+    runner = {e["slug"]: e for e in build_index(data_dir).index["entries"]}["fixture-llm-runner"]
+    assert runner["install"]["linux"]["features"][0]["fidelity"] == "stand_in"  # that run's own guide still says so
+    assert "fidelity" not in runner["install"]["macos"]["features"][0]
+    assert "stand_in" not in runner["coverage"]["dimensions"]["function"]
+
+
 def test_unlisted_records_are_skipped(data_dir: Path) -> None:
     edit(data_dir / "fixture-chat-tui.json", lambda r: r.update(status="hidden"))
     result = build_index(data_dir)
@@ -347,7 +393,7 @@ def test_entries_carry_a_short_coverage_summary(data_dir: Path) -> None:
         assert set(cov["dimensions"]) == applies, slug
         for name, dim in cov["dimensions"].items():
             assert dim["status"] == full["dimensions"][name]["status"]
-            assert set(dim) <= {"status", "done", "of", "unit", "blocked_by", "gaps"}
+            assert set(dim) <= {"status", "done", "of", "unit", "blocked_by", "gaps", "stand_in"}
             assert len(dim.get("gaps", [])) <= 3
             assert set(dim.get("gaps", [])) <= set(CATEGORIES) | set(GAP_CATEGORIES)
             assert ("unit" in dim) == (name == "function" and "done" in dim)

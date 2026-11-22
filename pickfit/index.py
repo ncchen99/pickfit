@@ -281,11 +281,33 @@ def _first_task_setup(run: VerificationRun, first_task: str | None) -> list[dict
 
 
 def _feature_coverage(run: VerificationRun) -> list[dict[str, Any]]:
-    """The run's feature checks, each with the smoke tests it cites (command and whether it passed)."""
-    return [{"feature": f.feature, "status": f.status, "reason": f.reason, "failure": f.failure, "note": f.note,
-             "checks": [{"command": run.smoke_tests[i].command, "passed": run.smoke_tests[i].passed}
-                        for i in f.smoke_tests]}
-            for f in run.features]
+    """The run's feature checks, each with the smoke tests it cites (command and whether it passed), and what its
+    check ran against when that was something outside the tool (fidelity: real, compatible or stand_in). The key is
+    left out when the run recorded none, so an entry from before fidelity reads as it always did. The Worker never
+    shows a stand_in feature as plainly verified (privileges.md P1)."""
+    out = []
+    for f in run.features:
+        item = {"feature": f.feature, "status": f.status, "reason": f.reason, "failure": f.failure, "note": f.note,
+                "checks": [{"command": run.smoke_tests[i].command, "passed": run.smoke_tests[i].passed}
+                           for i in f.smoke_tests]}
+        if f.fidelity is not None:
+            item["fidelity"] = f.fidelity
+        out.append(item)
+    return out
+
+
+def _stand_in_only(record: SoftwareRecord) -> int:
+    """How many features a passed run checked only against a stand-in: no passed run checked them against the real
+    service, a compatible endpoint, or with nothing outside the tool. The coverage's function count includes them
+    (they reached a verdict), so the page says how many of that count this is."""
+    held: dict[str, bool] = {}
+    for run in record.verification.runs:
+        if not is_passed(run.level):
+            continue
+        for f in run.features:
+            if f.status == "checked":
+                held[f.feature] = held.get(f.feature, True) and f.fidelity == "stand_in"
+    return sum(held.values())
 
 
 # The note scripts/note_tmp_launch.py put on two records (11/1). The Worker now writes those launch commands with a
@@ -341,6 +363,10 @@ def _coverage(record: SoftwareRecord) -> dict[str, Any]:
             # Each dimension counts one unit, but function counts features, or checks when there is no feature list.
             if name == "function":
                 out["unit"] = measure.get("unit")
+                # Of the features counted, the ones checked only against a stand-in; left out when there are none.
+                stand_in = _stand_in_only(record) if measure.get("unit") == "feature" else 0
+                if stand_in:
+                    out["stand_in"] = stand_in
         if dim.get("blocked_by"):
             out["blocked_by"] = dim["blocked_by"]
         categories = list(dict.fromkeys(g["category"] for g in dim["gaps"] if g.get("category")))

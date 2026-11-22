@@ -3,9 +3,11 @@
  * block used to repeat it as JSON, so a client that hands both to its model paid for it twice. It is now a short
  * plain-text answer with what an agent needs to reply and act: the picks with their fit, reasons, trade-offs and
  * warnings, the rec_id, and for an install guide every step and check. Evidence URLs, scores, per-feature checks and
- * advisory lists stay in structuredContent only. A client that shows the model only the text can still answer and
- * install from it.
+ * advisory lists stay in structuredContent only, with one exception: the features checked only against a stand-in
+ * are named here too, so an agent that reads only the text cannot report them as verified to work. A client that
+ * shows the model only the text can still answer and install from it.
  */
+import { compatibleSentence, standInSentence } from './features.ts';
 import type { AlternativesOutput, FindOutput, PickOut } from './find.ts';
 import type { InstallOutput } from './install.ts';
 
@@ -32,6 +34,7 @@ function pickLines(p: PickOut, n: number): string[] {
   if (p.vs_well_known) lines.push(`   vs the well-known choice: ${p.vs_well_known}`);
   if (p.security_warning) lines.push(`   Security: ${p.security_warning}`);
   if (p.freshness.warning) lines.push(`   Freshness: ${p.freshness.warning}`);
+  for (const line of [standInSentence(p.features), compatibleSentence(p.features)]) if (line) lines.push(`   Features: ${line}`);
   for (const r of p.readme_wrong) lines.push(`   README is wrong: ${r}`);
   return lines;
 }
@@ -76,6 +79,7 @@ export function installSummary(out: InstallOutput, readonly = false): string {
   if (out.verify) lines.push(`Verify: ${out.verify.command}   (expect "${out.verify.expected_contains}")`);
   for (const s of out.first_task_setup) lines.push(`Before the first task${s.run_in_background ? ' (keep running)' : ''}: ${s.command}`);
   if (out.first_task) lines.push(`First task: ${out.first_task}`);
+  for (const line of [standInSentence(out.features), compatibleSentence(out.features)]) if (line) lines.push(`Features: ${line}`);
   for (const k of out.known_issues.filter((k) => k.kind === 'readme_wrong' || !k.kind)) {
     lines.push(`README is wrong: it says ${k.readme_said}; actually needed: ${k.actually_needed}`);
   }

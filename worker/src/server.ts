@@ -2,7 +2,7 @@
 import { McpServer } from '@modelcontextprotocol/server';
 import * as z from 'zod/v4';
 import { CARD_FIELDS } from './cards.ts';
-import { NAMED_CATEGORIES, SECURITY_LEVELS } from './catalog.ts';
+import { FIDELITIES, NAMED_CATEGORIES, SECURITY_LEVELS } from './catalog.ts';
 import { findAlternatives, findSoftware, type Deps } from './find.ts';
 import { installGuide, PITFALL_KINDS, UnknownSlugError } from './install.ts';
 import { NOT_CHECKED_REASONS } from './features.ts';
@@ -56,8 +56,22 @@ const features = z
       .boolean()
       .describe('false = the run behind these steps did not check features one by one (verified earlier, or none listed)'),
     checked: z
-      .array(z.object({ feature: z.string(), check: z.string().describe('The command whose passing test exercised it') }))
-      .describe('Advertised features a passing test in the verification run exercised'),
+      .array(
+        z.object({
+          feature: z.string(),
+          check: z.string().describe('The command whose passing test exercised it'),
+          fidelity: z
+            .enum(FIDELITIES)
+            .optional()
+            .describe(
+              'What the check ran against, when that was outside the tool. stand_in = a stand-in (a mail sink, a storage emulator, a tiny model, an HTTP mock): ' +
+                'it shows the tool connects, so never tell the user this feature was verified to work. ' +
+                'compatible = a compatible endpoint with a real model behind it, not the service the tool names. real = the real service. ' +
+                'Absent = nothing outside the tool was used, or the run predates this field',
+            ),
+        }),
+      )
+      .describe('Advertised features a passing test in the verification run exercised; one with fidelity stand_in only connected to a stand-in'),
     not_checked: z
       .array(
         z.object({

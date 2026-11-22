@@ -6,7 +6,7 @@
  * ranked.
  */
 import { bestGuide, isWebApp, nameKey, OSES, verifiedOn, webCheck, type Arch, type Catalog, type Entry, type OS } from '../catalog.ts';
-import { featuresOut } from '../features.ts';
+import { featuresOut, shownWorking } from '../features.ts';
 import { isZh, L } from '../i18n.ts';
 import { day, levelLabel, OS_NAME, osName, PRICE, PROCESSING, passed, readerIssues, setupWords, webLevelLabel } from '../ui/facts.ts';
 import { esc, link, listOf, SLUG } from '../ui/html.ts';
@@ -172,7 +172,7 @@ export function compareTable(entries: Entry[], opts: Opts): string {
   rows.push(group(L('Measures', '分數')));
   rows.push(row(L('Quality', '品質'), entries.map((e) => tape(L('Quality', '品質'), e.scores?.quality ?? null)), bestOf(entries.map((e) => e.scores?.quality ?? null)), L('Highest quality score', '品質分數最高')));
   rows.push(row(L('Popularity', '知名度'), entries.map((e) => tape(L('Popularity', '知名度'), e.scores?.popularity ?? null, { tone: 'quiet' }))));
-  rows.push(row(L('Features', '功能'), feats.map((f) => coverage(f)), bestOf(feats.map((f) => (f.recorded && f.checked.length + f.not_checked.length ? f.checked.length : null))), L('Most features checked', '檢查過的功能最多')));
+  rows.push(row(L('Features', '功能'), feats.map((f) => coverage(f)), bestOf(feats.map((f) => (f.recorded && f.checked.length + f.not_checked.length ? shownWorking(f).length : null))), L('Most features checked', '檢查過的功能最多')));
 
   rows.push(group(L('Cost, licence, upkeep', '費用、授權、維護')));
   rows.push(row(L('Price', '價格'), entries.map((e) => (e.pricing ? esc(PRICE[e.pricing]) : unknown) + (e.pricing_note ? `<div class="small quiet">${esc(e.pricing_note)}</div>` : ''))));
