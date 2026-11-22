@@ -191,6 +191,13 @@ test('browse lists verified tools only unless asked, filters by plain links, and
   // Junk parameters are ignored, never echoed.
   const junk = await (await s.get('/browse?kind=%3Cx%3E&os=beos')).text();
   assert.ok(!junk.includes('<x>') && !junk.includes('beos'));
+  // "Tried every tool here" holds only while the unverified ones are left out.
+  assert.match(all, /<h1>Browse verified tools<\/h1>/);
+  assert.match(all, /pickfit has tried every tool here itself/);
+  const everything = await (await s.get('/browse?all=1')).text();
+  assert.match(everything, /<h1>Browse all listed tools<\/h1>/);
+  assert.match(everything, /ones it has only read about so far/);
+  assert.doesNotMatch(everything, /tried every tool here/);
 });
 
 test('compare takes two to four known tools, marks "best" only on recorded numbers, and says where each ran', async () => {

@@ -1640,6 +1640,53 @@ def live_snapshot(gh: Any, full_name: str, now: datetime) -> dict[str, Any] | No
             "details_pushed_at": repo.get("pushed_at"), **gh.details(repo)}
 
 
+def refresh_last_release(raw: dict[str, Any], snapshot: dict[str, Any] | None) -> bool:
+    """Set raw's last_release to the snapshot's newest non-prerelease release, in the shape profiles writes it
+    (`pickfit/profiles.py`), with its release source and /last_release evidence; True when it changed. A
+    snapshot with no release keeps the stored one (GitHub may hide old ones; a release is never un-published)."""
+    from pickfit.profiles import _newest_release
+
+    release = _newest_release(snapshot or {})
+    if release is None:
+        return False
+    new = {"tag": release["tag"][:100], "published_at": release["published_at"], "url": release.get("url")}
+    if raw.get("last_release") == new:
+        return False
+    fetched_at = snapshot.get("details_at")
+    rid = f"release:{new['tag']}"
+    old = raw.get("last_release")
+    old_rid = f"release:{old['tag']}" if old else None
+    raw["last_release"] = new
+    evidence = [e for e in raw.get("evidence") or [] if e.get("field") != "/last_release"]
+    evidence.append({"field": "/last_release", "source_id": rid, "quote": None, "method": "api", "model": None,
+                     "checked_at": fetched_at})
+    sources = list(raw.get("sources") or [])
+    if old_rid and old_rid != rid and not any(e.get("source_id") == old_rid for e in evidence):
+        sources = [s for s in sources if s.get("id") != old_rid]  # nothing else cites the old release
+    if not any(s.get("id") == rid for s in sources):
+        sources.append({"id": rid, "kind": "release", "url": new["url"], "fetched_at": fetched_at})
+    raw["sources"], raw["evidence"] = sources, evidence
+    return True
+
+
+def _write_rescored(path: Path, row: dict[str, Any], old: Any, scores: dict[str, Any], snapshot: dict[str, Any] | None,
+                    *, now: datetime, dry_run: bool) -> dict[str, Any]:
+    """Write the new scores, and the newest release when the snapshot was fetched live; unchanged when neither
+    moved."""
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    released = row.get("snapshot") == "live" and refresh_last_release(raw, snapshot)
+    if released:
+        row["last_release"] = raw["last_release"]["tag"]
+    if not released and _same_scores(old.model_dump(mode="json") if old else None, scores):
+        row["status"] = "unchanged"
+        return row
+    text = _with_scores(raw, scores, now.isoformat(timespec="seconds"))
+    if not dry_run:
+        _write(path, text)
+    row["status"] = "written"
+    return row
+
+
 def package_names(record: SoftwareRecord, snapshot: dict[str, Any] | None) -> dict[str, set[str]]:
     """Registry names to try: install commands pickfit saw (README claims, replayed steps) and root manifests."""
     from pickfit.registries import command_names, manifest_names, merge_names
@@ -1670,9 +1717,11 @@ def score_one(path: Path, *, snapshot: dict[str, Any] | None, gh: Any, model: st
               now: datetime, force: bool, dry_run: bool, grade: Callable[..., Graded] = grade_docs,
               registries: Any = None, regrade_before: str | None = None,
               regrade_models: frozenset[str] = frozenset(), extraction_rubrics: dict[str, DocsRubric] | None = None,
-              **call: Any) -> dict[str, Any]:
+              github_only: bool = False, **call: Any) -> dict[str, Any]:
     """Score one record file; returns a summary row (written, unchanged or error). extraction_rubrics: repo id ->
-    the rubric its extraction call graded (R4), used instead of a rubric call when its raw text is the same."""
+    the rubric its extraction call graded (R4), used instead of a rubric call when its raw text is the same.
+    github_only (`--github-only`): the stored docs rubric is kept as it is, never graded again, whatever the README
+    says now. A live snapshot also refreshes last_release."""
     from pickfit.extract import build_sources, input_sha, older_than
 
     record, rubric = load_for_scoring(path)
@@ -1692,7 +1741,9 @@ def score_one(path: Path, *, snapshot: dict[str, Any] | None, gh: Any, model: st
         if registry.errors:
             row["registry_errors"] = registry.errors
     old = record.scores
-    if snapshot and (snapshot.get("readme") or "").strip():
+    if github_only:
+        row["rubric"] = "kept" if rubric is not None else "none"
+    elif snapshot and (snapshot.get("readme") or "").strip():
         sources = build_sources(snapshot)
         current = None if force else rubric_reuse(rubric, snapshot, sources, regrade_before=regrade_before,
                                                   regrade_models=regrade_models)
@@ -1727,14 +1778,7 @@ def score_one(path: Path, *, snapshot: dict[str, Any] | None, gh: Any, model: st
                treasure=scores["treasure"]["is_treasure"], treasure_value=scores["treasure"]["value"],
                components={k: c["score"] for k, c in scores["quality"]["components"].items()},
                features=feature_coverage(record.verification))
-    if _same_scores(old.model_dump(mode="json") if old else None, scores):
-        row["status"] = "unchanged"
-        return row
-    text = _with_scores(json.loads(path.read_text(encoding="utf-8")), scores, now.isoformat(timespec="seconds"))
-    if not dry_run:
-        _write(path, text)
-    row["status"] = "written"
-    return row
+    return _write_rescored(path, row, old, scores, snapshot, now=now, dry_run=dry_run)
 
 
 def _score_web(path: Path, record: SoftwareRecord, row: dict[str, Any], *, snapshot: dict[str, Any] | None, gh: Any,
@@ -1763,14 +1807,7 @@ def _score_web(path: Path, record: SoftwareRecord, row: dict[str, Any], *, snaps
                treasure=scores["treasure"]["is_treasure"], treasure_value=scores["treasure"]["value"],
                components={k: c["score"] for k, c in scores["quality"]["components"].items()},
                features=feature_coverage(record.verification))
-    if _same_scores(old.model_dump(mode="json") if old else None, scores):
-        row["status"] = "unchanged"
-        return row
-    text = _with_scores(json.loads(path.read_text(encoding="utf-8")), scores, now.isoformat(timespec="seconds"))
-    if not dry_run:
-        _write(path, text)
-    row["status"] = "written"
-    return row
+    return _write_rescored(path, row, old, scores, snapshot, now=now, dry_run=dry_run)
 
 
 def extraction_rubric(db: Any, repo_id: str, model: str) -> DocsRubric | None:
@@ -1790,10 +1827,22 @@ def score_records(data_dir: Path, *, db_path: Path | None, model: str, slugs: li
                   use_registries: bool = True, concurrency: int = DEFAULT_CONCURRENCY, limit: int | None = None,
                   now: datetime | None = None, log: Callable[[str], None] | None = None,
                   registries: Any = None, regrade_before: str | None = None,
-                  regrade_models: Iterable[str] = (), **call: Any) -> ScoreSummary:
-    """Score records under data_dir (all, or `slugs`); writes only `scores` and `updated_at`. regrade_before (a
-    rubric prompt or renderer version) and regrade_models grade those rubrics again (R2, R3)."""
+                  regrade_models: Iterable[str] = (), github_only: bool = False, **call: Any) -> ScoreSummary:
+    """Score records under data_dir (all, or `slugs`); writes only `scores` and `updated_at`, and `last_release`
+    (with its source and evidence) when a live GitHub snapshot has a newer one. regrade_before (a rubric prompt
+    or renderer version) and regrade_models grade those rubrics again (R2, R3).
+
+    github_only (`pickfit score --github-only`): fetch every repo from GitHub now (repo, README, releases, files,
+    issues), skip the pipeline database, no registry or Hacker News lookup and no rubric call (the stored rubric
+    and registry signals are kept), then recompute. Free apart from GitHub's rate limit."""
     from pickfit import extract
+
+    if github_only:
+        if not use_github:
+            raise ValueError("--github-only needs GitHub; drop --no-github")
+        if force or regrade_before or regrade_models:
+            raise ValueError("--github-only never grades the README; drop --force and --regrade-*")
+        db_path, use_registries, registries = None, False, None
 
     log = log or (lambda line: None)
     now = now or taipei_now()
@@ -1839,7 +1888,7 @@ def score_records(data_dir: Path, *, db_path: Path | None, model: str, slugs: li
     def work(path: Path) -> dict[str, Any]:
         return score_one(path, snapshot=snapshots.get(path.stem), gh=gh, model=model, run_id=run_id,
                          now=now, force=force, dry_run=dry_run, registries=registries, regrade_before=regrade_before,
-                         regrade_models=regrade, extraction_rubrics=merged, **call)
+                         regrade_models=regrade, extraction_rubrics=merged, github_only=github_only, **call)
 
     try:
         with ThreadPoolExecutor(max_workers=max(1, concurrency)) as pool:
@@ -1924,6 +1973,9 @@ def main_score(args: Any) -> int:
     from pickfit.profiles import DEFAULT_OUT
 
     started = time.monotonic()
+    if getattr(args, "refresh", False) and getattr(args, "github_only", False):
+        print("pickfit score: --refresh makes no call and --github-only calls GitHub; pick one", file=sys.stderr)
+        return 2
     if getattr(args, "refresh", False):
         summary = refresh_records(Path(args.data_dir) if args.data_dir else DEFAULT_OUT, slugs=args.slug,
                                   kind=getattr(args, "kind", None), dry_run=args.dry_run, log=lambda line: print(line, file=sys.stderr))
@@ -1943,7 +1995,11 @@ def main_score(args: Any) -> int:
                                 concurrency=args.concurrency, limit=args.limit,
                                 regrade_before=getattr(args, "regrade_before", None),
                                 regrade_models=getattr(args, "regrade_model", None) or (),
+                                github_only=getattr(args, "github_only", False),
                                 log=lambda line: print(line, file=sys.stderr))
+    except ValueError as err:  # flags that contradict --github-only
+        print(f"pickfit score: {err}", file=sys.stderr)
+        return 2
     except GitHubError as err:
         print(f"pickfit score: {err} (or pass --no-github)", file=sys.stderr)
         return 2
