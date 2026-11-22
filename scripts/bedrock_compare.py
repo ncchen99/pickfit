@@ -22,6 +22,10 @@ The cases are the request shapes the pipeline sends, each asked of both provider
 - switch: a conversation begun on one provider and continued on the other, as after a fall back. Does the second
   turn succeed with the first provider's thinking blocks in its history?
 
+The tool loop's message asks for a version, not for anything about the machine: on 2026-11-22 Bedrock's Claude
+declined "find out which shell this is" 7 times in 8 (category cyber) and the direct API never did, and a turn
+the direct API answers in Bedrock's place compares nothing. Such a turn is listed and left out of the comparison.
+
 Each prompt starts with the time of the run, so a second run does not read the first one's cache. Exit 0 when the
 two sides agree, 1 when something differs or failed (the table says what), 2 when the cap stopped it.
 """
@@ -49,6 +53,7 @@ PROVIDERS = ("anthropic", "bedrock")
 DEFAULT_MAX_USD = 2.0
 SCOPE = "bedrock-compare"
 TOLERANCE = 0.02  # input counts may differ by the tool preamble each platform adds
+SLACK = 32  # tokens: the same preamble against a small count (a second turn's 139 written against 150)
 CALLS = 14  # single 2, agent 4, hour 4, switch 4
 TOOLS = [{"type": "function", "name": "run_command", "description": "Run one shell command in the sandbox.",
           "parameters": {"type": "object", "properties": {"cmd": {"type": "string"}}, "required": ["cmd"],
@@ -102,11 +107,12 @@ def run_cases(ask, nonce: str) -> dict[str, dict[str, Any]]:
                  {"type": "input_image", "image_url": png()}]}],
              "text": {"format": {"type": "json_schema", "name": "verdict", "schema": VERDICT, "strict": True}}}
     first = {"instructions": prefix(nonce, "agent"), "tools": TOOLS, "reasoning": {"summary": "auto"},
-             "input": [{"role": "user", "content": "Check 12: find out which shell this is. Call run_command once."}]}
+             "input": [{"role": "user", "content": "Check 12: print the version of the tool under test. Call "
+                                                 "run_command once, with `tinyq --version`."}]}
     extract = {"instructions": prefix(nonce, "reader"), "prompt_cache_retention": "1h"}
 
     def second(turn_one: MetaResult) -> dict[str, Any]:
-        outputs = [{"type": "function_call_output", "call_id": call.call_id, "output": "/bin/sh"}
+        outputs = [{"type": "function_call_output", "call_id": call.call_id, "output": "tinyq 1.4.2"}
                    for call in turn_one.tool_calls]
         return {**first, "input": [*first["input"], *turn_one.output_items, *outputs,
                                    {"role": "user", "content": "Now say in one sentence what you found."}]}
@@ -129,7 +135,12 @@ def differences(cases: dict[str, dict[str, list[dict[str, Any]]]]) -> list[str]:
     found: list[str] = []
 
     def close(a: int | None, b: int | None) -> bool:
-        return a == b or (a is not None and b is not None and abs(a - b) <= TOLERANCE * max(a, b, 1))
+        return a == b or (a is not None and b is not None
+                          and abs(a - b) <= max(SLACK, TOLERANCE * max(a, b, 1)))
+
+    def shape(call: dict[str, Any], field: str) -> Any:
+        # Whether the model thought before answering varies from one run to the next on either side.
+        return [item for item in call[field] if item != "reasoning"] if field == "items" else call[field]
 
     for case, sides in cases.items():
         for key, calls in sides.items():
@@ -141,14 +152,19 @@ def differences(cases: dict[str, dict[str, list[dict[str, Any]]]]) -> list[str]:
             continue
         direct, bedrock = sides["anthropic"], sides["bedrock"]
         for n, (a, b) in enumerate(zip(direct, bedrock, strict=True), 1):
+            if b["fell_back"]:
+                continue  # the direct API answered in Bedrock's place: there is no Bedrock answer to compare
             for field in ("items", "tool_calls", "parsed"):
-                if a[field] != b[field]:
+                if shape(a, field) != shape(b, field):
                     found.append(f"{case} call {n}: {field} {a[field]} on the direct API, {b[field]} on Bedrock")
             for field in ("input", "cache_read", "cache_write", "cache_write_1h"):
                 if not close(a[field], b[field]):
                     found.append(f"{case} call {n}: {field} {a[field]} on the direct API, {b[field]} on Bedrock")
     agent = cases["agent"]["bedrock"]
-    if not agent[0]["cache_write"] or not agent[1]["cache_read"]:
+    if any(c["fell_back"] for c in agent):
+        found.append("agent: the cache across a tool loop was not shown, since Bedrock gave way on a turn "
+                     "(the trace has the usage of what Bedrock itself answered or declined)")
+    elif not agent[0]["cache_write"] or not agent[1]["cache_read"]:
         found.append("agent: Bedrock did not write the first turn to the cache and read it on the second "
                      "(the explicit breakpoint is not doing what automatic caching does)")
     hour = cases["hour"]["bedrock"]

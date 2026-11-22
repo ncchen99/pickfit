@@ -691,5 +691,15 @@ def test_the_comparison_script_asks_both_sides_the_same_and_says_where_they_diff
     hooks = (anthropic_messages.from_message.__name__, bedrock_messages.with_usage.__name__)
     assert hooks == ("from_message", "with_usage")  # the recording hooks are taken off again
 
+    # A turn the direct API answered in Bedrock's place is listed and compared with nothing: its cache counts
+    # are the direct API's, and say nothing about Bedrock's breakpoint (the first real run, 2026-11-22).
+    gave_way = json.loads(json.dumps(report["cases"]))
+    for turn in gave_way["agent"]["bedrock"]:
+        turn.update(provider="anthropic", fell_back=True, cache_write=0, cache_read=0)
+    said = compare.differences(gave_way)
+    assert sum("Bedrock gave way)" in line for line in said) == 2 and not any("breakpoint" in line for line in said)
+    assert any(line.startswith("agent: the cache across a tool loop was not shown") for line in said)
+    assert not any(line.startswith("agent call") for line in said)
+
     assert compare.main(["--dry-run"]) == 0 and "14 calls" in capsys.readouterr().out
     assert len(direct.requests) == compare.CALLS // 2  # the dry run asked nobody
