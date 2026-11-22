@@ -31,6 +31,8 @@ from pickfit.schema import (
 )
 from pickfit.score import (
     FORMULA_VERSION,
+    NEW_CONFIDENCE_FACTOR,
+    YOUNG_ONE_RELEASE_CADENCE,
     Graded,
     compose_quality,
     fetch_outcomes,
@@ -39,6 +41,7 @@ from pickfit.score import (
     install_actions,
     issue_inputs,
     maintenance_score,
+    new_confidence,
     popularity,
     readme_fix,
     readme_fixes,
@@ -178,7 +181,9 @@ def test_maintenance_counts_push_release_and_cadence_not_commits() -> None:
     assert maintenance_score({"repo": repo, "releases": two}, as_of) == 1.0
     assert maintenance_score({"repo": repo, "releases": two[:1]}, as_of) == 0.7  # one release, old repo
     young = {**repo, "created_at": "2026-08-01T00:00:00Z"}
-    assert maintenance_score({"repo": young, "releases": two[:1]}, as_of) == 1.0
+    # b3.v8: a young repo with one release gets half the cadence, not all of it for being young.
+    assert maintenance_score({"repo": young, "releases": two[:1]}, as_of) == 0.85
+    assert maintenance_score({"repo": young, "releases": two}, as_of) == 1.0
     assert maintenance_score({"repo": repo, "releases": []}, as_of) == 0.35
     stale = {**repo, "pushed_at": "2025-08-01T00:00:00Z"}
     assert maintenance_score({"repo": stale, "releases": []}, as_of) == 0.0
@@ -553,6 +558,84 @@ def test_a_rescore_without_lookups_keeps_the_stored_signals(tmp_path: Path) -> N
     after = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8")).scores
     assert again.unchanged == ["tinyq"] and after.quality == before.quality and after.inputs == before.inputs
     assert after.popularity.signals == before.popularity.signals and after.popularity.packages == ["npm:tinyq"]
+
+
+def test_a_young_repo_with_one_release_no_longer_gets_the_full_cadence() -> None:
+    """b3.v8 (brief 15.4, 15.6): youth earns no extra; one release is neutral until history or a second release."""
+    as_of = datetime(2026, 10, 28, 12, 0, tzinfo=TAIPEI)
+    young = {"pushed_at": "2026-10-20T00:00:00Z", "created_at": "2026-09-01T00:00:00Z"}
+    one = [{"published_at": "2026-10-01T00:00:00Z"}]
+    old = {**young, "created_at": "2024-01-01T00:00:00Z"}
+    single = maintenance_score({"repo": young, "releases": one}, as_of)
+    assert single == round(0.35 + 0.35 + 0.3 * YOUNG_ONE_RELEASE_CADENCE, 4) < 1.0
+    assert maintenance_score({"repo": old, "releases": one}, as_of) < single  # an old repo's one release still 0
+    assert maintenance_score({"repo": young, "releases": one * 2}, as_of) == 1.0
+
+
+def test_a_new_record_has_less_confidence_than_an_active_one_and_the_same_total(tmp_path: Path) -> None:
+    """b3.v8: standing new (not yet through a re-verification cycle) multiplies confidence by NEW_CONFIDENCE_FACTOR."""
+    assert new_confidence(0.8, "new") == round(0.8 * NEW_CONFIDENCE_FACTOR, 2)
+    assert new_confidence(0.8, "active") == new_confidence(0.8, None) == 0.8
+    db_path, out = setup_records(tmp_path)
+    score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=NOW,
+                  grade=fake_grade())
+    base = json.loads((out / "tinyq.json").read_text(encoding="utf-8"))
+    active, new = json.loads(json.dumps(base)), json.loads(json.dumps(base))
+    active["standing"], new["standing"] = "active", "new"
+    refresh_scores(active, LATER)
+    refresh_scores(new, LATER)
+    full = active["scores"]["quality"]["confidence"]
+    assert full > 0 and new["scores"]["quality"]["confidence"] == round(full * NEW_CONFIDENCE_FACTOR, 2) < full
+    assert new["scores"]["quality"]["total"] == active["scores"]["quality"]["total"]
+    # once it lives through a cycle (standing active), refresh gives it the full confidence back
+    new["standing"] = "active"
+    assert refresh_scores(new, LATER) == "scores refreshed from the record"
+    assert new["scores"]["quality"]["confidence"] == full
+    # a full rescore applies it the same way
+    path = out / "tinyq.json"
+    path.write_text(json.dumps({**base, "standing": "new"}), encoding="utf-8")
+    score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=LATER,
+                  grade=fake_grade())
+    rescored = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8")).scores
+    assert rescored.quality.confidence == round(full * NEW_CONFIDENCE_FACTOR, 2)
+
+
+def test_the_registry_latest_publish_time_goes_into_maintenance_signals_and_keeps_the_others(tmp_path: Path) -> None:
+    """P2-04: score writes RegistrySignals.registry_latest_at into maintenance_signals.registry_latest_at; the site
+    signals stay, and a lookup with no publish time keeps the stored one."""
+    from pickfit.registries import RegistrySignals
+
+    class Fixed:
+        def __init__(self, latest: str | None) -> None:
+            self.latest = latest
+
+        def lookup(self, *_: Any, **__: Any) -> RegistrySignals:
+            return RegistrySignals(monthly_downloads=900, registries_count=1, hn_top_score=None,
+                                   packages=["pypi:tinyq"], registry_latest_at=self.latest)
+
+    db_path, out = setup_records(tmp_path)
+    path = out / "tinyq.json"
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    raw["maintenance_signals"] = {"site_alive_at": "2026-10-29T03:00:00Z",
+                                  "content_updated_at": "2026-10-01T00:00:00Z"}
+    path.write_text(json.dumps(raw), encoding="utf-8")
+    score_records(out, db_path=db_path, model=MODEL, use_github=False, now=NOW, grade=fake_grade(),
+                  registries=Fixed("2026-10-15T08:30:00Z"))
+    signals = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8")).maintenance_signals
+    assert signals.registry_latest_at == datetime.fromisoformat("2026-10-15T08:30:00Z")
+    assert signals.site_alive_at == datetime.fromisoformat("2026-10-29T03:00:00Z")
+    assert signals.content_updated_at == datetime.fromisoformat("2026-10-01T00:00:00Z")
+    again = score_records(out, db_path=db_path, model=MODEL, use_github=False, now=LATER, grade=fake_grade(),
+                          registries=Fixed(None))
+    assert again.unchanged == ["tinyq"]  # nothing read: the stored time stays, the file is not rewritten
+    kept = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8")).maintenance_signals
+    assert kept == signals
+    newer = score_records(out, db_path=db_path, model=MODEL, use_github=False, now=LATER, grade=fake_grade(),
+                          registries=Fixed("2026-10-30T00:00:00Z"))
+    assert newer.written == ["tinyq"]
+    moved = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8")).maintenance_signals
+    assert moved.registry_latest_at == datetime.fromisoformat("2026-10-30T00:00:00Z")
+    assert moved.site_alive_at == signals.site_alive_at
 
 
 class LiveGitHub:
@@ -965,13 +1048,13 @@ def test_gui_v1_weighs_usability_and_a_treasure_needs_seventy(monkeypatch: pytes
     assert components["usability"]["score"] == 0.85 and components["sandbox_verification"]["score"] == 1.0
     assert scores["quality"]["total"] == round(100 * (1.0 * 25 + 0.85 * 30) / 55, 1)
     Scores.model_validate(scores)
-    # A command-line tool keeps b3.v7 and no usability component.
+    # A command-line tool keeps b3.v8 and no usability component.
     tool = json.loads(CHAT_FIXTURE.read_text(encoding="utf-8"))
     assert build_scores(SoftwareRecord.model_validate(tool), None, None, None, now=NOW)["formula_version"] == FORMULA_VERSION
     high = {"total": 90.0, "components": {"usability": {"score": 0.69, "weight": 30}}}
     assert treasure(high, 30.0, ease=True)["is_treasure"] is False
     assert treasure(high | {"components": {"usability": {"score": 0.7, "weight": 30}}}, 30.0, ease=True)["is_treasure"]
-    assert treasure(high, 30.0)["is_treasure"]  # b3.v7 and web.v1 do not look at usability
+    assert treasure(high, 30.0)["is_treasure"]  # b3.v8 and web.v1 do not look at usability
     shown = scores | {"popularity": scores["popularity"] | {"score": 30.0},
                       "quality": scores["quality"] | {"total": 90.0, "raw_total": 90.0, "components": components | {
                           "usability": {"score": 0.69, "weight": 30}}},
@@ -987,7 +1070,7 @@ def test_refresh_moves_records_to_the_usability_formulas_and_back(monkeypatch: p
     web["usability"] = ease(web["verification"]["runs"][0]["id"], 60.0)
     web["scores"] = web_scores(web)
     monkeypatch.setattr(score_module, "EASE_SCORED", True)
-    assert refresh_scores(data, LATER) == "scores moved from formula b3.v7 to gui.v1, refreshed from the record"
+    assert refresh_scores(data, LATER) == "scores moved from formula b3.v8 to gui.v1, refreshed from the record"
     assert data["scores"]["quality"]["components"]["usability"]["score"] == 0.85
     assert refresh_scores(web, LATER) == "scores moved from formula web.v1 to web.v2, refreshed from the record"
     components = web["scores"]["quality"]["components"]
@@ -1000,13 +1083,13 @@ def test_refresh_moves_records_to_the_usability_formulas_and_back(monkeypatch: p
     assert refresh_scores(data, LATER) == "scores refreshed from the record"
     assert data["scores"]["quality"]["components"]["usability"]["score"] is None
     monkeypatch.setattr(score_module, "EASE_SCORED", False)
-    assert refresh_scores(data, LATER) == "scores moved from formula gui.v1 to b3.v7, refreshed from the record"
+    assert refresh_scores(data, LATER) == "scores moved from formula gui.v1 to b3.v8, refreshed from the record"
     assert "usability" not in data["scores"]["quality"]["components"]
     assert refresh_scores(web, LATER) == "scores moved from formula web.v2 to web.v1, refreshed from the record"
     SoftwareRecord.model_validate(data)
 
 
-# --- measurable visual defects: an app-caused defect takes 5% off (b3.v7+visual.v1, web.v1+visual.v1) ------------
+# --- measurable visual defects: an app-caused defect takes 5% off (b3.v8+visual.v1, web.v1+visual.v1) ------------
 
 
 def visual(run_id: str, score: int = 1) -> dict[str, Any]:
@@ -1028,8 +1111,8 @@ def test_a_visual_defect_takes_five_percent_off_and_a_clean_or_missing_check_cha
     for score, factor in ((0, 0.95), (1, 0.95), (2, 1.0)):  # severity is not used
         desk["visual_check"] = visual(run_id, score)
         scores = build_scores(SoftwareRecord.model_validate(desk), None, None, None, now=NOW)
-        assert scores["formula_version"] == "b3.v7+visual.v1"
-        assert scores["quality"]["components"] == plain["quality"]["components"]  # the formula itself is b3.v7
+        assert scores["formula_version"] == "b3.v8+visual.v1"
+        assert scores["quality"]["components"] == plain["quality"]["components"]  # the formula itself is b3.v8
         assert scores["quality"]["total"] == round(plain["quality"]["total"] * factor, 1)
         assert scores["quality"]["visual"] == {"factor": factor, "before": plain["quality"]["total"],
                                                "defects": 0 if score == 2 else 1}
@@ -1072,7 +1155,7 @@ def test_refresh_applies_and_removes_the_deduction_and_moves_the_branch_formulas
     web["scores"] = web_scores(web)
     desk["visual_check"] = visual(desk["verification"]["runs"][0]["id"], 0)
     web["visual_check"] = visual(web["verification"]["runs"][0]["id"], 2)
-    assert refresh_scores(desk, LATER) == "scores moved from formula b3.v7 to b3.v7+visual.v1, refreshed from the record"
+    assert refresh_scores(desk, LATER) == "scores moved from formula b3.v8 to b3.v8+visual.v1, refreshed from the record"
     assert desk["scores"]["quality"]["total"] == round(before * 0.95, 1)
     assert refresh_scores(web, LATER) == "scores moved from formula web.v1 to web.v1+visual.v1, refreshed from the record"
     assert web["scores"]["quality"]["visual"]["factor"] == 1.0
@@ -1081,12 +1164,12 @@ def test_refresh_applies_and_removes_the_deduction_and_moves_the_branch_formulas
         assert refresh_scores(record, LATER) is None
     # A re-verified record whose check read a run it no longer has goes back until it is checked again.
     desk["visual_check"]["run_id"] = "verify-gone"
-    assert refresh_scores(desk, LATER) == "scores moved from formula b3.v7+visual.v1 to b3.v7, refreshed from the record"
+    assert refresh_scores(desk, LATER) == "scores moved from formula b3.v8+visual.v1 to b3.v8, refreshed from the record"
     assert desk["scores"]["quality"]["total"] == before and "visual" not in desk["scores"]["quality"]
     # gui.v2 (the additive version tried on this branch) moves to the deduction.
     desk["visual_check"]["run_id"] = desk["verification"]["runs"][0]["id"]
     desk["scores"]["formula_version"] = "gui.v2"
-    assert "to b3.v7+visual.v1" in refresh_scores(desk, LATER)
+    assert "to b3.v8+visual.v1" in refresh_scores(desk, LATER)
     assert "visual_quality" not in desk["scores"]["quality"]["components"]
 
 

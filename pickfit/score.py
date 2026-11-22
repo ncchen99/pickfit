@@ -1,4 +1,4 @@
-"""Scores (P5.1, arch B.3): quality, popularity and treasure, kept apart, formula "b3.v7".
+"""Scores (P5.1, arch B.3): quality, popularity and treasure, kept apart, formula "b3.v8".
 
 quality (0-100) is a weighted mean of seven components, each 0-1:
 
@@ -21,7 +21,8 @@ quality (0-100) is a weighted mean of seven components, each 0-1:
   points / 16). Every item above 0 needs a verbatim quote; an item whose quote is not in the
   sources counts 0. The answer is kept in scores.docs_rubric and reused while the sources stay
   the same, so rescoring costs nothing.
-- maintenance 10: last push (0.35), last release (0.35), >=2 releases in a year (0.3).
+- maintenance 10: last push (0.35), last release (0.35), >=2 releases in a year (0.3; a repo under 180 days with one
+  release gets half of it from b3.v8).
 - engineering_hygiene 5: CI, tests, OSI license, changelog or release notes, lockfile.
 - responsiveness 10: issues opened by people outside the project (>=2), as they stood at the
   snapshot time: share closed and mean time to close.
@@ -66,6 +67,13 @@ below); confidence comes from the coverage. R6 (pull thin data toward the catego
 depth) moved to Verification Coverage: they say how much was verified, not how good the software is. Earlier
 formulas' results are kept in scores.history. b3.v6 scores move to b3.v7 by refresh_scores; with the default
 settings only popularity of "other" and the subject categories (R8) moves, no quality total.
+b3.v8 (brief 15.4 and 15.6, gap audit P3-03, 11/22): survival over youth. Maintenance cadence no longer pays a repo
+for being young: under 180 days with one release in the year it gets YOUNG_ONE_RELEASE_CADENCE (0.5) where b3.v7 gave
+1.0, and two releases still give 1.0. A record with standing "new" (not yet through a re-verification cycle) keeps
+NEW_CONFIDENCE_FACTOR (0.85) of its coverage confidence until its standing is "active"; the total does not move. Both
+parts follow the record and scores.inputs, so b3.v7 scores move to b3.v8 by refresh_scores, with no call. Rescoring also
+writes the registry lookup's latest publish time into maintenance_signals.registry_latest_at (P2-04), keeping the site
+signals. Web apps (web.v1) are unchanged.
 
 Hosted web apps (kind web_app, brief 2.2) use formula "web.v1" (WEB_FORMULA_VERSION), whether or not they
 have a repository, since what a user meets is the site, not the code:
@@ -185,13 +193,22 @@ from pickfit.schema import (
     visual_check_factor,
 )
 
-FORMULA_VERSION = "b3.v7"
+FORMULA_VERSION = "b3.v8"
 # Earlier formulas that differ from this one only in what refresh_scores recomputes from the record and its stored
 # inputs (sandbox, features and usage, the repository components, cap, security, confidence, total, popularity,
 # treasure). Their docs rubric and registry signals are still valid, so their scores move to this
 # formula instead of being cleared. b3.v5 changed only how README fixes are counted: a tagged pitfall's kind decides.
-# b3.v6 changed only the sandbox part; b3.v7 is described in the module docstring.
-REFRESHABLE_FROM = frozenset({"b3.v4", "b3.v5", "b3.v5+visual.v1", "b3.v6", "b3.v6+visual.v1"})
+# b3.v6 changed only the sandbox part; b3.v7 and b3.v8 are described in the module docstring.
+REFRESHABLE_FROM = frozenset({"b3.v4", "b3.v5", "b3.v5+visual.v1", "b3.v6", "b3.v6+visual.v1",
+                              "b3.v7", "b3.v7+visual.v1"})
+# b3.v8 maintenance cadence (maintenance_score): a repo this young with a single release in the year gets this, not 1.0.
+YOUNG_REPO_DAYS = 180
+YOUNG_ONE_RELEASE_CADENCE = 0.5
+# b3.v8 survival (brief 15.4 "新作信心較低", 15.6 "看行為與時間"): a record with standing "new" has not yet lived through
+# a re-verification cycle, so its quality.confidence is multiplied by NEW_CONFIDENCE_FACTOR (new_confidence). The
+# total does not move: what it rests on is the same, only how far time has borne it out is not. "active" (and a
+# standing not assessed, null) keeps the coverage's confidence; stale and broken are handled by recommendation, not here.
+NEW_CONFIDENCE_FACTOR = 0.85
 WEB_FORMULA_VERSION = "web.v1"
 # Usability in quality (pickfit/usability.py). Off: the ease.v1 pilot failed its calibration twice (11/2,
 # docs/usability-pilot.md section 6), so usability is shown, not scored. Turning it on would move records to these
@@ -518,7 +535,12 @@ def _ladder(age_days: float, steps: tuple[tuple[float, float], ...]) -> float:
 
 
 def maintenance_score(snapshot: dict[str, Any], as_of: datetime) -> float | None:
-    """Last push 0.35, last release 0.35, >=2 releases in the past year 0.3 (B.3; no commit counts)."""
+    """Last push 0.35, last release 0.35, >=2 releases in the past year 0.3 (B.3; no commit counts).
+
+    Cadence from b3.v8 (brief 15.4, 15.6): two releases in the year earn it in full. A repo younger than
+    YOUNG_REPO_DAYS with one release gets YOUNG_ONE_RELEASE_CADENCE, neutral, where b3.v7 gave it the full 1.0 for
+    being young: a single release says nothing yet about whether the project keeps going. An older repo with one
+    release in the year still gets 0, as before."""
     repo = snapshot["repo"]
     pushed = _time(snapshot.get("details_pushed_at") or repo.get("pushed_at"))
     if pushed is None:
@@ -529,8 +551,8 @@ def maintenance_score(snapshot: dict[str, Any], as_of: datetime) -> float | None
     release = _ladder(_days(as_of, published[0]), ((180, 1.0), (365, 0.6), (730, 0.3))) if published else 0.0
     in_year = sum(1 for p in published if _days(as_of, p) <= 365)
     created = _time(repo.get("created_at"))
-    young = created is not None and _days(as_of, created) < 180
-    cadence = 1.0 if in_year >= 2 or (young and in_year >= 1) else 0.0
+    young = created is not None and _days(as_of, created) < YOUNG_REPO_DAYS
+    cadence = 1.0 if in_year >= 2 else YOUNG_ONE_RELEASE_CADENCE if young and in_year == 1 else 0.0
     return round(0.35 * push + 0.35 * release + 0.3 * cadence, 4)
 
 
@@ -916,6 +938,13 @@ def coverage_confidence(data: dict[str, Any], quality: dict[str, Any], *, docs_r
     weights = {name: part["weight"] for name, part in quality["components"].items()}
     external = Outcomes.model_validate(data.get("outcomes") or {}).external.total()
     return quality_confidence(compute_coverage(view), weights, external)
+
+
+def new_confidence(confidence: float, standing: str | None) -> float:
+    """b3.v8 survival discount (brief 15.4, 15.6): a new record (standing "new", not yet through a re-verification
+    cycle) keeps NEW_CONFIDENCE_FACTOR of its coverage confidence; it gets all of it once its standing is "active".
+    Any other standing, null included, is left as it is."""
+    return round(confidence * NEW_CONFIDENCE_FACTOR, 2) if standing == "new" else confidence
 
 
 def weights(usage_weight: float, nominal: dict[str, float] = NOMINAL_WEIGHTS) -> dict[str, float]:
@@ -1346,7 +1375,8 @@ def build_scores(record: SoftwareRecord, snapshot: dict[str, Any] | None, issues
     pop = popularity(signals, record.category, age_days)
     data = record.model_dump(mode="json")
     docs_rubric = rubric.model_dump(mode="json") if rubric else None
-    quality["confidence"] = coverage_confidence(data, quality, docs_rubric=docs_rubric, inputs=inputs)
+    quality["confidence"] = new_confidence(
+        coverage_confidence(data, quality, docs_rubric=docs_rubric, inputs=inputs), record.standing)
     out = {
         "formula_version": version,
         "computed_at": now.isoformat(timespec="seconds"),
@@ -1429,7 +1459,8 @@ def refresh_scores(data: dict[str, Any], now: datetime) -> str | None:
         verification=verification, outcomes=outcomes, open_source=data.get("open_source"),
         security=data.get("security"), usability=data.get("usability"), visual=data.get("visual_check"),
         inputs=inputs, install_docs=(stored.get("install_docs") or {}).get("score"))
-    quality["confidence"] = coverage_confidence(data, quality, docs_rubric=scores.get("docs_rubric"), inputs=inputs)
+    quality["confidence"] = new_confidence(
+        coverage_confidence(data, quality, docs_rubric=scores.get("docs_rubric"), inputs=inputs), data.get("standing"))
     popularity_score = popularity(scores["popularity"]["signals"], data["category"], scores["popularity"]["age_days"])
     new_treasure = treasure(quality, popularity_score, ease=target == GUI_FORMULA_VERSION,
                             blocked=treasure_block_of(data))
@@ -1669,15 +1700,32 @@ def refresh_last_release(raw: dict[str, Any], snapshot: dict[str, Any] | None) -
     return True
 
 
+def refresh_registry_latest(raw: dict[str, Any], latest: str | None) -> bool:
+    """Set raw's maintenance_signals.registry_latest_at to what the registry lookup read (brief 15.4, P2-04); True
+    when it changed. The other signals (site_alive_at, content_updated_at) are kept as they are, and a lookup that
+    found no publish time (None) keeps the stored one."""
+    if not latest:
+        return False
+    before = raw.get("maintenance_signals") or {}
+    stored = _time(before.get("registry_latest_at"))
+    if stored is not None and stored == _time(latest):
+        return False
+    raw["maintenance_signals"] = {**before, "registry_latest_at": latest}
+    return True
+
+
 def _write_rescored(path: Path, row: dict[str, Any], old: Any, scores: dict[str, Any], snapshot: dict[str, Any] | None,
-                    *, now: datetime, dry_run: bool) -> dict[str, Any]:
-    """Write the new scores, and the newest release when the snapshot was fetched live; unchanged when neither
-    moved."""
+                    *, now: datetime, dry_run: bool, registry_latest_at: str | None = None) -> dict[str, Any]:
+    """Write the new scores, the newest release when the snapshot was fetched live, and the registry's latest
+    publish time when the lookup read one; unchanged when none of them moved."""
     raw = json.loads(path.read_text(encoding="utf-8"))
     released = row.get("snapshot") == "live" and refresh_last_release(raw, snapshot)
     if released:
         row["last_release"] = raw["last_release"]["tag"]
-    if not released and _same_scores(old.model_dump(mode="json") if old else None, scores):
+    signalled = refresh_registry_latest(raw, registry_latest_at)
+    if signalled:
+        row["registry_latest_at"] = registry_latest_at
+    if not released and not signalled and _same_scores(old.model_dump(mode="json") if old else None, scores):
         row["status"] = "unchanged"
         return row
     text = _with_scores(raw, scores, now.isoformat(timespec="seconds"))
@@ -1778,7 +1826,8 @@ def score_one(path: Path, *, snapshot: dict[str, Any] | None, gh: Any, model: st
                treasure=scores["treasure"]["is_treasure"], treasure_value=scores["treasure"]["value"],
                components={k: c["score"] for k, c in scores["quality"]["components"].items()},
                features=feature_coverage(record.verification))
-    return _write_rescored(path, row, old, scores, snapshot, now=now, dry_run=dry_run)
+    return _write_rescored(path, row, old, scores, snapshot, now=now, dry_run=dry_run,
+                           registry_latest_at=getattr(registry, "registry_latest_at", None))
 
 
 def _score_web(path: Path, record: SoftwareRecord, row: dict[str, Any], *, snapshot: dict[str, Any] | None, gh: Any,

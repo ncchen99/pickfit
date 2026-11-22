@@ -1570,7 +1570,7 @@ class QualityComponent(_Model):
 
 
 class QualityComponents(_Model):
-    """The quality components of formulas b3.v6 and b3.v7 (nominal weights 20/20/25/10/5/10/10+; pickfit/score.py).
+    """The quality components of formulas b3.v6, b3.v7 and b3.v8 (nominal weights 20/20/25/10/5/10/10+; pickfit/score.py).
 
     A hosted web app (formula web.v1, pickfit/score.py) adds browser_facts and gives the four components a
     README and a repository feed weight 0: it is opened, not installed. Other records never carry it.
@@ -1659,7 +1659,8 @@ class Quality(_Model):
     confidence: float = Field(ge=0, le=1, description=(
         "Share of the formula's weight whose inputs pickfit verified. From b3.v7 on it is derived from the record's "
         "Verification Coverage (pickfit/coverage.py quality_confidence), the same number as before; the security "
-        "dimension is never in it."))
+        "dimension is never in it. From b3.v8 on a record with standing new keeps 0.85 of it (pickfit/score.py "
+        "NEW_CONFIDENCE_FACTOR, brief 15.4 and 15.6) until its standing is active."))
     cap: int | None = Field(
         ge=0, le=100, description="QUALITY_CAPS[cap_reason]; the lowest cap that applies."
     )
