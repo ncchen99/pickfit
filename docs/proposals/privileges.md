@@ -168,7 +168,7 @@ EULA、遙測同意這類條款，在箱子裡同意，安裝指南上標出來�
 | 安裝程式要 root 加 systemd、寫 `/etc`、裝成服務 | P6 |
 | 只有 `docker run` 或 compose | P6 |
 | 核心模組、eBPF、FUSE、TUN、raw socket | P6 |
-| 要 `/dev/kvm` | P6，機型要支援巢狀虛擬化，還沒查 |
+| 要 `/dev/kvm` | P6 加 `--kvm`。11/22 在台北實測可以用 |
 | macOS 的 `.pkg` 要管理者密碼、TCC 權限、系統擴充功能 | VM 裡的使用者給 sudo，TCC 在基底映像先授權，做不到的記 gap。等有 Mac 主機再做 |
 | Windows 的 UAC、驅動程式、SmartScreen | Windows 箱用管理者身分裝，指南標「需要管理者權限」 |
 | 模型供應商的 API key | P4 的替身，不夠再走 P5 |
@@ -233,12 +233,13 @@ EULA、遙測同意這類條款，在箱子裡同意，安裝指南上標出來�
 - **全權箱真的驗一筆。** agent-database-cli，agent 用 `sudo apt-get install` 自己裝了 Redis，驗到 `function`，重播通過，6 項功能驗了 4 項，約 200 秒，模型 US$0.31，機器不到 US$0.01。同一筆在一般箱子只驗到 2 項。
 - **這一筆跑出兩個問題，都修了。** 第一個是紀錄的 `grants` 是空的，沒記下這次用了 root。現在全權箱的 report 會寫箱子給了什麼，有步驟用了 `sudo` 或容器引擎，就記成 `requested_by` 是 `plan` 的 grant。第二個是 SBOM 收不到，因為全權箱的映像沒有 syft 那三支程式，`python3` 和 `npm` 也不在 `sbom.py` 叫的路徑。映像照 `sandbox.Dockerfile` 的版本和 SHA-256 補上了。重烘之後限制檢查 27/27，同一筆驗證的 `grants` 有 `root sudo`，SBOM 收到 4 個套件、沒有錯誤。
 - **政策表試跑。** 把表打開跑了兩次。服務箱那次是計畫給的 PostgreSQL 和 Redis，記成 `fidelity` real。一般箱子那次 agent 開口要 Redis，被拒絕，4 項功能記成 not_checked，其他照驗。
+- **補查的兩件事（11/22）。** `/dev/kvm`：全權箱在台北用 `--kvm` 開巢狀虛擬化，`/dev/kvm` 在，也建得出一台 KVM 虛擬機。Modal 的 `--runtime vm` 跑不跑得動 rootless Podman：跑不動。VM 箱的加固把 `user.max_user_namespaces` 設成 0，Podman 一啟動就停在 `user namespaces are not enabled`。這是箱子規則擋的，所以要容器就用全權箱，[loop/issues.md](../../loop/issues.md) 的 H-004 有紀錄。
 - **還沒在真的 run 出現過的：** 政策表「同箱直接給」和「換箱子重跑」這兩種答案、代裝套件（`PICKFIT_SYSDEPS=1`）接在一筆真的驗證裡、全權箱從 watch 進來。
 
 ## 還沒確認的
 
 - needs_account 的組成。替身端點、計費代理和測試身分各能解多少，要先分類才知道。
-- EC2 哪些機型支援巢狀虛擬化，配額夠不夠。
+- EC2 的巢狀虛擬化 11/22 在台北的 c7i-flex.large 實測可以用。別的機型和配額還沒看。
 - 服務目錄每個候選專案的授權和取得方式。
 - 全權箱開機到可以用要多久。11/22 在台北量到 44 到 60 秒（五次）。現在的 EC2 Linux 箱冷開機約 71 秒（us-east-1）。
 - 箱外蒐證做到什麼程度才夠。關機後讀磁碟會拉長每筆的時間，值不值得要實測。

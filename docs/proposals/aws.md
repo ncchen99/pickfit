@@ -45,6 +45,12 @@
 - [machines-cost.md](machines-cost.md) 的 M1、M2 已經規劃 `boxes` 表和對帳指令。這裡多兩件帳號設定，由念誠決定要不要開：`pickfit:purpose` 設成 cost allocation tag、AWS Budgets 每 US$1,000 通知一次。
 - 對帳時把 pickfit 以外的用量分開列，才看得出 pickfit 自己花了多少。
 
+11/22 做了的：
+
+- `loop/budget.json` 不用另外加一格。loop 的模型上限是照帳本裡每一家的呼叫加總的（[scripts/loop_budget.py](../../scripts/loop_budget.py)），Bedrock 的呼叫本來就算在裡面。Bedrock 自己的上限用 `PICKFIT_BEDROCK_DAILY_CAP_USD` 和 `PICKFIT_BEDROCK_TOTAL_CAP_USD`，開 Bedrock 的時候一起設。
+- 三個 tag 啟用成 cost allocation tag：`pickfit`、`pickfit:purpose`、`pickfit:run_id`。帳單要過一天左右才開始照這些 tag 分。
+- AWS Budgets 建了一份：不算額度折抵的用量，每滿 US$1,000 寄一次信。自訂期間超過 14 個月要另外開多年歷史資料，所以這份只到 2027 年底，到時候要重建。
+
 ### A3 全權 VM 箱的 lane（可以並行做）
 
 箱子怎麼做寫在 [privileges.md](privileges.md) 的 P6。這裡只管預算和並行：

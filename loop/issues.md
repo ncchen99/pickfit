@@ -76,6 +76,7 @@ reason: needs_container
 - reproduce: 佇列裡 note 是 `needs_container` 的任一筆。
 - 方向（還沒試）：gVisor 箱子裡跑不了 Docker daemon。`--runtime vm` 的 microVM 有自己的核心，先查 rootless Podman 在裡面能不能跑。不行的話看 Modal 能不能直接把那個映像當成另一個沙盒起來。
 - tried: 11/21 沒有照上面的方向去查 Modal 的 `--runtime vm` 跑不跑得動 rootless Podman，改做全權 VM 箱（見 H-003 的紀錄）。映像裡裝了 Docker、compose 和 buildx，箱子使用者在 docker 群組裡。同樣只用假的 client 測過，還沒在真的機器上跑過 `docker run`，這一項維持 open。
+- tried: 11/22 兩件事都在真的機器上跑了。全權 VM 箱的限制檢查裡，箱子使用者用 Docker 拉映像、跑容器，通過（EC2，27/27）。另外補查了上面的方向：開一台 Modal `--runtime vm` 的箱子，由 harness 的 root 裝好 Podman 5.4，箱子使用者一跑就停在 `user namespaces are not enabled`。原因是 VM 箱自己的加固把 `user.max_user_namespaces` 設成 0（`linux_box.py` 的 `VM_HARDEN`，`limits.py` 有一項檢查守著它），所以 rootless Podman 在一般箱子裡跑不起來是規則擋的，這條路不走。要容器就用全權箱。還沒有任何一筆 `needs_container` 的紀錄真的從這條 lane 驗過，全權箱也還沒接進 watch，維持 open。
 
 ## H-005 [open] 沙盒的記憶體、磁碟或時間不夠
 
