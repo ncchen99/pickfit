@@ -187,5 +187,6 @@ Claude 的呼叫可以改從 Amazon Bedrock 走，帳算在 AWS 那邊。模型�
 - 新帳號的 Bedrock 配額是 0，每次呼叫都回 `ValidationException: Operation not allowed`。在 Service Quotas 送配額申請後，AWS 在案件裡要求做一次身分驗證，驗證完才開通。Service Quotas 只收大於預設值的數字。
 - 開通之後 us-east-1 和 us-west-2 可以呼叫，台北（ap-east-2）的配額還是 0，連舊型號也被拒絕。所以預設區域和政策檔都改成 us-east-1，要換區域就設 `PICKFIT_BEDROCK_REGION`，政策檔裡的區域也要跟著改。global profile 的價格和從哪個區域送無關。
 - Bedrock 主控台有一條提示，說 Anthropic 要求第一次使用的客戶提交使用情境。11/22 還沒填，呼叫照樣成功。
+- 請求裡提到跑 shell 指令時，Bedrock 上的 Opus 5.5 常常拒答，類別是 `cyber`。同樣的請求直連沒有被拒。拒答的那次 Bedrock 照收輸入 token 的錢，退回直連又算一次，所以驗證 agent 走 Bedrock 可能比直連貴。細節在 [docs/proposals/aws.md](../../docs/proposals/aws.md) 的「11/22 第一次真的呼叫」。trace 的 `fallback` 那一行會寫拒答的類別。
 
 對帳用 `scripts/box_reconcile.py --aws-account`。這個 AWS 帳號還有別的專案在用，報表會把帶 `pickfit` 標籤的、Bedrock 上的 Claude、其他沒標籤的用量分開列。

@@ -90,10 +90,25 @@ GPU 機型和 Mac 專用主機各有自己的配額，新帳號常常是 0，跟
 - **台北沒有 GPU 機型，也沒有 Mac 專用主機。** Mac 最近的在新加坡，mac2（M1）每小時 US$0.779。美東的 mac2 是 US$0.65，租滿最少的 24 小時是 US$15.60。美東的 g4dn.xlarge（T4 16 GB）每小時 US$0.526。A5 如果要做，機器不會開在台北。
 - **巢狀虛擬化**（實作全權 VM 箱的 subagent 查的）：c7i-flex、m7i-flex 都在支援清單上，不用換機型。台北能不能用還沒透過 API 確認。
 
+## 11/22 第一次真的呼叫
+
+念誠建了只能呼叫這兩個型號的 IAM 金鑰，協調 session 跑了 `pickfit ping` 和 `scripts/bedrock_compare.py`（Opus 5.5，兩邊合計約 US$0.51）。跟「11/21 查到的」不一樣的地方，以這一節為準。
+
+- **新帳號的配額是 0。** 每次呼叫都回 `Operation not allowed`。在 Service Quotas 送申請之後，AWS 在案件裡要求做一次身分驗證，驗證完才開通。Service Quotas 只收大於預設值的數字。
+- **台北不能用，改從 us-east-1 送。** 開通後 us-east-1 和 us-west-2 的配額是預設值，台北還是 0，連舊型號也被拒絕。預設區域和金鑰的政策檔都改成 us-east-1。global profile 的價格和從哪裡送無關。
+- **token 數和快取跟直連對得上。** 帶圖片和 JSON schema 的單次判定，兩邊的輸入都是 7,971 個 token。工具迴圈第一輪寫入 8,089，第二輪讀到 8,089、再寫 240，直連是 233。一小時的快取 Bedrock 有回報寫入多少（7,693），第二次也讀到了。
+- **換邊接續可以。** 在直連開始、帶著 thinking block 的對話，第二輪送到 Bedrock 有成功。
+- **提到跑 shell 指令的請求常被拒答。** 訊息是「查這是哪個 shell，呼叫一次 run_command」。送到 Bedrock 8 次，7 次回 `refusal`，類別 `cyber`，說明文字要人去申請 Cyber Verification Program。拿掉工具定義也一樣被拒，所以被擋的是訊息內容。同樣的請求直連 Opus 5.5 都有回答，沒有換成備援模型。
+- **拒答要付兩次錢。** 被拒的那次 Bedrock 照收輸入 token 的錢（寫快取的那次照寫入價），退回直連再算一次。驗證 agent 的工作就是在沙盒裡跑指令，照這個比例，agent 走 Bedrock 會比直連貴。抽取、判定這類不提指令的請求沒有被拒。
+- **比對腳本這次的結論有一條不能看。** 它說「明確的 breakpoint 沒有做到自動快取做的事」，那是因為 Bedrock 那一邊的回應其實是退回直連後拿到的。看 trace 裡 Bedrock 自己的用量，快取有寫也有讀。
+- **用途表可能還是要填。** Bedrock 主控台有提示說 Anthropic 要求第一次使用的客戶提交使用情境。還沒填，呼叫照樣成功。
+
+接下來要決定的：哪些步驟走 Bedrock。照這次的結果，抽取、評分、判定、翻譯可以走，驗證 agent 要先拿真的驗證跑一次，數拒答的比例，或者申請 Cyber Verification Program 之後再試。
+
 ## 還沒確認的
 
-- 這個帳號實際能不能用 Opus 5.5、真正的 token 配額多少。公開的預設值是 global profile 每分鐘 3,000 萬 token，文件說新帳號可能比較低。
+- 台北什麼時候能用。11/22 us-east-1 的配額是預設值（Opus 5.5 每分鐘 3,000 萬 token），台北是 0。
 - 這筆額度到底抵不抵 Bedrock 上的 Claude。等第一筆小額帳單出來看。
-- Bedrock 回報的快取 token 和回應格式是不是跟直連一樣。`scripts/bedrock_compare.py` 就是用來比這個的，約 US$0.6，還沒跑。
+- 真的驗證 agent 在 Bedrock 上被拒答的比例。11/22 只用比對腳本的一句訊息試過。
 - GPU 機型和 Mac 專用主機的配額。
 - pickfit 以外的用量每月實際多少。US$700 是照機型牌價估的。

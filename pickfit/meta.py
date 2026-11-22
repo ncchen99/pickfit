@@ -1076,7 +1076,9 @@ def call_meta(
     if provider == "bedrock" and "stop_details" in raw:
         # Declined by a safety classifier. Bedrock has no fallback model to hand it to (the direct API's
         # `fallbacks`), so the direct API gets the request; what Bedrock billed for the decline is counted.
-        again = on_the_direct_api("declined: its Claude declined a request and Bedrock has no fallback model")
+        category = (raw.get("stop_details") or {}).get("category")  # in the trace: which safeguard it was
+        again = on_the_direct_api(f"declined{f' ({category})' if category else ''}: its Claude declined a request "
+                                  "and Bedrock has no fallback model")
         return replace(again, cost_usd=again.cost_usd + cost, attempts=again.attempts + attempts)
     if use_cache and _cacheable(result):
         _cache_write(runs, key, provider, endpoint, raw)

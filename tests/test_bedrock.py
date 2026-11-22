@@ -532,6 +532,8 @@ def test_a_request_claude_declines_on_bedrock_goes_to_the_direct_api_and_its_fal
     assert [row[:3] for row in billed] == [("bedrock", PROD_MODEL, "settled"), ("anthropic", PROD_MODEL, "settled")]
     assert result.cost_usd == pytest.approx(billed[0][3] + billed[1][3]) and result.attempts == 2
     assert billed[0][3] == pytest.approx(900 * 4.00 / 1e6)  # what Bedrock billed for the decline is not lost
+    (gave_way,) = [trace for trace in traces(tmp_path) if trace["status"] == "fallback"]
+    assert gave_way["error"]["message"].startswith("declined (cyber): ")  # the trace says which safeguard
 
 
 def test_the_bedrock_budgets_own_cap_sends_the_call_to_the_direct_api_but_a_scope_cap_stops_it(monkeypatch,
