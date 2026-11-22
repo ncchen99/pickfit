@@ -374,3 +374,53 @@ def test_text_drawn_outside_the_dom_counts_when_only_the_after_screenshot_shows_
 def test_the_task_asks_for_a_visible_result_and_explains_canvas_apps():
     task = wv.task_text(TARGET, "pickfitab12", ["/home/web/samples/sample.txt"], 10)
     assert "Never report a result you cannot see" in task and "send_keys" in task
+
+
+# ---------------------------------------------------------------- the phone-size look (P2-07)
+
+MOBILE = {"viewport": "390x844", "scroll_width": 512, "inner_width": 390, "horizontal_overflow": True,
+          "tap_targets": 20, "small_tap_targets": 6, "screenshot": "mobile.png"}
+
+
+def test_mobile_facts_keep_the_harness_dom_numbers():
+    assert wv.mobile_facts({"mobile": MOBILE}) == {
+        "viewport": "390x844", "horizontal_overflow": True, "small_tap_targets": 6, "screenshot": "mobile.png",
+        "scroll_width": 512, "inner_width": 390, "tap_targets": 20}
+
+
+@pytest.mark.parametrize("mobile", [
+    None, "390x844", {"viewport": "390x844", "error": "TargetClosedError: gone"},
+    MOBILE | {"horizontal_overflow": "yes"}, MOBILE | {"small_tap_targets": -1},
+    MOBILE | {"small_tap_targets": True}, MOBILE | {"small_tap_targets": 2.5}, MOBILE | {"viewport": "phone"},
+])
+def test_a_failed_or_malformed_phone_look_is_not_recorded(mobile):
+    assert wv.mobile_facts({"mobile": mobile}) is None
+
+
+def test_a_phone_screenshot_is_only_pickfits_own_file():
+    assert wv.mobile_facts({"mobile": MOBILE | {"screenshot": "../../etc/passwd"}})["screenshot"] is None
+    without = {k: v for k, v in MOBILE.items() if k != "screenshot"}
+    assert wv.mobile_facts({"mobile": without})["screenshot"] is None
+
+
+def test_evaluate_records_the_phone_look_without_a_model(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    def no_model(*args: Any, **kwargs: Any) -> Any:
+        raise AssertionError("the phone-size look calls no model")
+
+    for name in ("judge_page", "judge_function", "read_screenshot"):
+        monkeypatch.setattr(wv, name, no_model)
+
+    def visit(install: dict[str, Any]) -> dict[str, Any]:
+        result: dict[str, Any] = {"run_id": "r", "site": "tiny.example.com", "costs": {}}
+        seen = {"install": install, "install_ok": False, "install_problem": "a sign-in wall",
+                "install_judge": {"screen": "sign_in_wall"}}
+        return wv.evaluate(TARGET, result, seen, tmp_path, lambda level, reason=None: result | {"level": level},
+                           run_id="r", scope="s", log=lambda _: None)
+
+    measured = visit({"url": TARGET.url, "text": "Tiny Tool", "mobile": MOBILE})
+    assert measured["mobile"]["horizontal_overflow"] is True and measured["mobile"]["small_tap_targets"] == 6
+    assert visit({"url": TARGET.url, "text": "Tiny Tool"})["mobile"] is None
+
+
+def test_the_page_judge_still_sees_the_desktop_viewport():
+    assert "1280x900" in wv.PAGE_INSTRUCTIONS

@@ -631,6 +631,25 @@ def text_overlap(a: str, b: str) -> float:
     return len(wa & wb) / max(1, len(wa | wb))
 
 
+def mobile_facts(state: dict[str, Any]) -> dict[str, Any] | None:
+    """The harness's phone-size measurements (web_harness.mobile_check), checked; None when it measured nothing.
+    No model: the numbers come from the page's DOM."""
+    mobile = state.get("mobile")
+    if not isinstance(mobile, dict) or mobile.get("error"):
+        return None
+    overflow, small = mobile.get("horizontal_overflow"), mobile.get("small_tap_targets")
+    viewport = mobile.get("viewport")
+    if not isinstance(overflow, bool) or isinstance(small, bool) or not isinstance(small, int) or small < 0 \
+            or not isinstance(viewport, str) or not re.fullmatch(r"[1-9]\d{1,3}x[1-9]\d{1,3}", viewport):
+        return None
+    facts: dict[str, Any] = {"viewport": viewport, "horizontal_overflow": overflow, "small_tap_targets": small,
+                             "screenshot": mobile.get("screenshot") if mobile.get("screenshot") == "mobile.png" else None}
+    for key in ("scroll_width", "inner_width", "tap_targets"):
+        if isinstance(mobile.get(key), int) and not isinstance(mobile.get(key), bool):
+            facts[key] = mobile[key]
+    return facts
+
+
 def is_pwa(state: dict[str, Any]) -> bool:
     return bool(state.get("manifest")) and any(w.get("active") for w in state.get("service_workers") or [])
 
@@ -913,6 +932,7 @@ def evaluate(target: WebTarget, result: dict[str, Any], seen: dict[str, Any], ou
     result["install"] = {k: install.get(k) for k in ("url", "title", "inputs", "passwords", "buttons", "canvas",
                                                       "manifest", "service_workers", "screenshot")} if install else None
     result["install_judge"] = judge or None
+    result["mobile"] = mobile_facts(install)
     result["pwa"] = is_pwa(install)
     if result.get("error") and not install:
         return finish("unverified", f"the visit failed: {result['error'][:200]}")

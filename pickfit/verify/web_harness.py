@@ -45,6 +45,10 @@ CDP_PORT = 9222
 PROXY = "http://127.0.0.1:8080"
 TEXT_LIMIT = 12_000
 VIEWPORT = (1280, 900)
+# The phone-size look after the page loads (brief 15.3 B, gap audit P2-07): DOM measurements only, no model.
+MOBILE_VIEWPORT = (390, 844)
+MIN_TAP_TARGET_PX = 44
+TAP_TARGETS = 'a,button,input,select,textarea,[role="button"],[onclick]'
 ELEMENTS_CHARS = 12_000  # browser-use's element list per step (default 40,000): most of each call's tokens
 # A shorter attribute list for that element list, tried only when the host asks (start["element_attributes"]
 # "compact"; docs/proposals/tokens.md, T6): browser-use 0.13's own list without the validation, input-format and
@@ -245,6 +249,54 @@ CAPTURE_JS = r"""(async () => {
                                   href: a.href})).slice(0, 300),
   });
 })()""" % (TEXT_LIMIT, TEXT_LIMIT, TEXT_LIMIT)
+
+
+MOBILE_JS = r"""(() => {
+  const min = %d;
+  const de = document.documentElement;
+  const scrollWidth = Math.max(de ? de.scrollWidth : 0, document.body ? document.body.scrollWidth : 0);
+  const innerWidth = window.innerWidth;
+  let targets = 0, small = 0;
+  for (const el of document.querySelectorAll('%s')) {
+    if (el.matches('input[type=hidden]')) continue;
+    const r = el.getBoundingClientRect(); const s = getComputedStyle(el);
+    if (!(r.width > 0 && r.height > 0) || s.visibility === 'hidden' || s.display === 'none') continue;
+    if (r.right <= 0 || r.bottom + window.scrollY <= 0) continue;  // moved off the page (skip links and the like)
+    targets += 1;
+    if (r.width < min || r.height < min) small += 1;
+  }
+  return JSON.stringify({scroll_width: scrollWidth, inner_width: innerWidth,
+                         horizontal_overflow: scrollWidth > innerWidth, tap_targets: targets, small_tap_targets: small});
+})()""" % (MIN_TAP_TARGET_PX, TAP_TARGETS)
+
+
+async def set_viewport(session: Any, size: tuple[int, int], *, mobile: bool) -> None:
+    _, sid = await page_session(session)
+    await session.cdp_client.send.Emulation.setDeviceMetricsOverride(
+        params={"width": size[0], "height": size[1], "deviceScaleFactor": 1, "mobile": mobile}, session_id=sid)
+
+
+async def mobile_check(session: Any, settle_s: float = 2.0) -> dict[str, Any]:
+    """The page at MOBILE_VIEWPORT, in the same visit: its width against the viewport's, the visible tap targets
+    smaller than MIN_TAP_TARGET_PX, and mobile.png; the viewport is set back to VIEWPORT before returning."""
+    state: dict[str, Any] = {"viewport": f"{MOBILE_VIEWPORT[0]}x{MOBILE_VIEWPORT[1]}"}
+    try:
+        await set_viewport(session, MOBILE_VIEWPORT, mobile=True)
+        await settle(settle_s)
+        state.update(await evaluate(session, MOBILE_JS) or {})
+        png = await session.take_screenshot(full_page=False, format="png")
+        (EVIDENCE / "mobile.png").write_bytes(png)
+        state["screenshot"] = "mobile.png"
+    except Exception as err:
+        state["error"] = f"{type(err).__name__}: {err}"[:300]
+    finally:
+        try:
+            await set_viewport(session, VIEWPORT, mobile=False)
+            await settle(1)
+        except Exception as err:
+            state["restore_error"] = f"{type(err).__name__}: {err}"[:300]
+    (EVIDENCE / "mobile.json").write_text(json.dumps(state, ensure_ascii=False, indent=1))
+    return state
 
 
 async def page_session(session: Any) -> tuple[Any, str]:
@@ -625,6 +677,8 @@ async def run(channel: Channel) -> None:
         if install.get("service_workers"):
             await settle(4)  # let a just-registered worker activate and cache
             install["service_workers"] = (await capture(session, "install_sw")).get("service_workers")
+        if not install.get("error"):  # after the desktop capture, so the judge still sees 1280x900
+            install["mobile"] = await mobile_check(session)
         send({"type": "observe", "phase": "install", "state": install})
         go = await channel.wait("continue")
         if not go.get("function"):

@@ -678,6 +678,26 @@ def test_web_app_record_validates_and_round_trips(web_app):
     assert record.model_dump(mode="json") == web_app
 
 
+def test_a_web_run_without_a_phone_look_dumps_as_before(web_app):
+    # Runs from before P2-07 have no mobile block: it stays out of what is written.
+    assert "mobile" not in web_app["verification"]["runs"][0]["web"]
+    run = SoftwareRecord.model_validate(web_app).verification.runs[0]
+    assert run.web.mobile is None
+    assert "mobile" not in SoftwareRecord.model_validate(web_app).model_dump(mode="json")["verification"]["runs"][0]["web"]
+
+
+def test_a_web_runs_phone_look_validates_and_round_trips(web_app):
+    mobile = {"viewport": "390x844", "horizontal_overflow": True, "small_tap_targets": 7,
+              "screenshot_path": "runs/web/fixture-web-sketch/r1/mobile.png"}
+    web_app["verification"]["runs"][0]["web"]["mobile"] = mobile
+    record = SoftwareRecord.model_validate(web_app)
+    phone = record.verification.runs[0].web.mobile
+    assert (phone.viewport, phone.horizontal_overflow, phone.small_tap_targets) == ("390x844", True, 7)
+    assert record.model_dump(mode="json") == web_app
+    del mobile["screenshot_path"]
+    assert SoftwareRecord.model_validate(web_app).verification.runs[0].web.mobile.screenshot_path is None
+
+
 def test_records_without_web_facts_dump_as_before(example):
     # Existing records have no web block on the record or its runs: nothing new appears when they are written.
     dumped = SoftwareRecord.model_validate(example).model_dump(mode="json")
@@ -719,6 +739,15 @@ WEB_MUTATIONS = {
     "fewer domains than hosts": ("at least the number of hosts", _web_set("third_party_domains", 0)),
     "host with a scheme": ("String should match pattern", _web_set("third_party_hosts", ["https://x.example"])),
     "unknown data_sent value": ("Input should be", _web_set("data_sent", "maybe")),
+    "mobile viewport not WxH": ("String should match pattern", _web_set("mobile", {
+        "viewport": "phone", "horizontal_overflow": False, "small_tap_targets": 0})),
+    "negative small tap targets": ("greater than or equal to 0", _web_set("mobile", {
+        "viewport": "390x844", "horizontal_overflow": False, "small_tap_targets": -1})),
+    "mobile without overflow": ("Field required", _web_set("mobile", {"viewport": "390x844",
+                                                                      "small_tap_targets": 0})),
+    "mobile screenshot with a scheme": ("String should match pattern", _web_set("mobile", {
+        "viewport": "390x844", "horizontal_overflow": True, "small_tap_targets": 3,
+        "screenshot_path": "https://x.example/mobile.png"})),
 }
 
 

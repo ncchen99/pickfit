@@ -32,6 +32,7 @@ from pickfit.schema import (
     Verification,
     VerificationRun,
     WebCheck,
+    WebMobile,
     WebOperation,
     best_level,
     is_passed,
@@ -178,12 +179,17 @@ def web_run(result: dict[str, Any], features: list[str], run_dir: Path) -> Verif
         data_sent, note = "unknown", None
     network = result.get("network") or {}
     hosts = [h for h in network.get("third_party_sites") or [] if _HOST.match(h)][:50]
+    mobile = result.get("mobile") or None
+    shot = run_dir / "mobile.png"
+    phone = WebMobile(viewport=mobile["viewport"], horizontal_overflow=mobile["horizontal_overflow"],
+                      small_tap_targets=mobile["small_tap_targets"],
+                      screenshot_path=_rel(shot) if mobile.get("screenshot") and shot.exists() else None) if mobile else None
     web = WebCheck(url=url, final_url=_https(install.get("url")) if install.get("url") != url else None,
                    screen=SCREENS.get(page.get("screen"), "other"), browser=_browser(result),
                    account_needed=result.get("account_required"), ads_seen=network.get("ads"),
                    third_party_domains=max(len(hosts), network.get("third_party_count") or 0)
                    if network else None, third_party_hosts=hosts, data_sent=data_sent, data_sent_note=note,
-                   pwa=result.get("pwa"), offline=offline, operations=operations)
+                   pwa=result.get("pwa"), offline=offline, operations=operations, mobile=phone)
     checked = {i for i, op in enumerate(operations) if op.passed and op.feature}
     feature_checks = []
     for n, label in enumerate(features):
@@ -196,7 +202,8 @@ def web_run(result: dict[str, Any], features: list[str], run_dir: Path) -> Verif
         else:
             gap = "needs_account" if result.get("account_required") else "not_attempted"
             feature_checks.append(FeatureCheck(feature=label, status="not_checked", reason=gap))
-    shots = [p for name in ("install.png", "after.png", "offline.png", "offline_agent_after.png", "offline_replay.png")
+    shots = [p for name in ("install.png", "mobile.png", "after.png", "offline.png", "offline_agent_after.png",
+                          "offline_replay.png")
              if (run_dir / name).exists() and (p := _rel(run_dir / name))]
     costs = result.get("costs") or {}
     return VerificationRun(

@@ -67,6 +67,14 @@ def test_a_function_visit_becomes_a_valid_web_run(tmp_path: Path):
     assert "HeadlessChrome" not in web.browser and web.browser.startswith("Chromium 156")
 
 
+def test_the_phone_look_goes_into_the_web_run(tmp_path: Path):
+    assert web_run(visit(), FEATURES, tmp_path).web.mobile is None, "a visit from before P2-07 has none"
+    mobile = {"viewport": "390x844", "horizontal_overflow": False, "small_tap_targets": 3, "screenshot": "mobile.png"}
+    phone = web_run(visit(mobile=mobile), FEATURES, tmp_path).web.mobile
+    assert (phone.viewport, phone.horizontal_overflow, phone.small_tap_targets) == ("390x844", False, 3)
+    assert phone.screenshot_path is None, "no mobile.png in the run's folder"
+
+
 def test_a_web_run_checks_the_first_four_features_and_lists_the_rest_beyond_budget(tmp_path: Path):
     six = [*FEATURES, "share a link", "work offline", "import Visio files", "collaborate live"]
     run = web_run(visit(), six, tmp_path)
