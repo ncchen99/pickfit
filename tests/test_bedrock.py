@@ -181,12 +181,12 @@ def test_the_setting_sends_a_claude_call_to_bedrock_signed_for_its_region(monkey
     result = call(run_id="r1", scope="extract:tinyq")
 
     (sent,) = bedrock.requests
-    assert bedrock.urls == [f"https://bedrock-runtime.ap-east-2.amazonaws.com{INVOKE}"]
+    assert bedrock.urls == [f"https://bedrock-runtime.us-east-1.amazonaws.com{INVOKE}"]
     assert "model" not in sent and sent["anthropic_version"]  # the profile is in the path, as InvokeModel has it
     assert sent["max_tokens"] == 1000 and sent["output_config"] == {"effort": "low"}
     assert "fallbacks" not in sent and "anthropic_beta" not in sent and "cache_control" not in sent
     auth = bedrock.headers[0]["authorization"]
-    assert auth.startswith(f"AWS4-HMAC-SHA256 Credential={ACCESS_KEY}/") and "/ap-east-2/bedrock/aws4_request" in auth
+    assert auth.startswith(f"AWS4-HMAC-SHA256 Credential={ACCESS_KEY}/") and "/us-east-1/bedrock/aws4_request" in auth
     assert SECRET_KEY not in json.dumps(bedrock.headers)
 
     assert (result.provider, result.model, result.text) == ("bedrock", PROD_MODEL, "pong")
@@ -197,12 +197,12 @@ def test_the_setting_sends_a_claude_call_to_bedrock_signed_for_its_region(monkey
 
 
 def test_the_region_is_a_setting_and_the_base_url_never_comes_from_the_environment(monkeypatch):
-    monkeypatch.setenv("PICKFIT_BEDROCK_REGION", "us-east-1")
+    monkeypatch.setenv("PICKFIT_BEDROCK_REGION", "us-west-2")
     monkeypatch.setenv("ANTHROPIC_BEDROCK_BASE_URL", "https://elsewhere.example")
     bedrock = FakeServer(ok(message(text("pong"))))
     call(provider="bedrock", client=bedrock.bedrock())
-    assert bedrock.urls == [f"https://bedrock-runtime.us-east-1.amazonaws.com{INVOKE}"]
-    assert "/us-east-1/bedrock/aws4_request" in bedrock.headers[0]["authorization"]
+    assert bedrock.urls == [f"https://bedrock-runtime.us-west-2.amazonaws.com{INVOKE}"]
+    assert "/us-west-2/bedrock/aws4_request" in bedrock.headers[0]["authorization"]
 
 
 def test_bedrock_needs_its_own_key_and_takes_none_from_the_aws_environment(monkeypatch):

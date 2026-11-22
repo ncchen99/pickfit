@@ -170,7 +170,7 @@ Claude 的呼叫可以改從 Amazon Bedrock 走，帳算在 AWS 那邊。模型�
 要開的話，在 `watch.env` 加這幾行（名稱在 `watch.env.example` 最後一段）：
 
 - `PICKFIT_CLAUDE_VIA=bedrock`。留空就全部走 Anthropic 直連，跟以前一樣。
-- `PICKFIT_BEDROCK_ACCESS_KEY_ID`、`PICKFIT_BEDROCK_SECRET_ACCESS_KEY`：另一把 IAM 金鑰，政策用 [aws-bedrock-policy.json](aws-bedrock-policy.json)，只能從台北呼叫這兩個模型的 global inference profile。程式不會拿 EC2 那把 `AWS_*` 金鑰，也不讀 AWS 的 profile 或登入 session。
+- `PICKFIT_BEDROCK_ACCESS_KEY_ID`、`PICKFIT_BEDROCK_SECRET_ACCESS_KEY`：另一把 IAM 金鑰，政策用 [aws-bedrock-policy.json](aws-bedrock-policy.json)，只能從 us-east-1 呼叫這兩個模型的 global inference profile。程式不會拿 EC2 那把 `AWS_*` 金鑰，也不讀 AWS 的 profile 或登入 session。
 - `PICKFIT_BEDROCK_DAILY_CAP_USD`、`PICKFIT_BEDROCK_TOTAL_CAP_USD`：Bedrock 這個預算自己的上限，可以不設。
 
 `send_secrets.py` 不認得這些名稱，要用 `--add 名稱` 一個一個加，或直接在機器上改檔案。
@@ -179,7 +179,13 @@ Claude 的呼叫可以改從 Amazon Bedrock 走，帳算在 AWS 那邊。模型�
 
 第一次用之前有兩件事要先做，都要念誠用自己的身分做，watch 那把金鑰做不了：
 
-1. 每個模型在帳號裡的第一次呼叫會自動訂閱 AWS Marketplace 上的模型，呼叫的身分要有 `aws-marketplace:Subscribe` 這幾個權限。在 Bedrock 主控台的 playground 各問一句就可以。
+1. 每個模型在帳號裡的第一次呼叫會自動訂閱 AWS Marketplace 上的模型，呼叫的身分要有 `aws-marketplace:Subscribe` 這幾個權限。在 Bedrock 主控台的 playground 各問一句就可以，用 `aws bedrock-runtime converse` 送一次也行。
 2. 跑一次 `uv run python scripts/bedrock_compare.py`，把同一批請求送到兩邊，比回應格式和 token 數，約 US$0.6。
+
+11/22 第一次真的呼叫時遇到的事：
+
+- 新帳號的 Bedrock 配額是 0，每次呼叫都回 `ValidationException: Operation not allowed`。在 Service Quotas 送配額申請後，AWS 在案件裡要求做一次身分驗證，驗證完才開通。Service Quotas 只收大於預設值的數字。
+- 開通之後 us-east-1 和 us-west-2 可以呼叫，台北（ap-east-2）的配額還是 0，連舊型號也被拒絕。所以預設區域和政策檔都改成 us-east-1，要換區域就設 `PICKFIT_BEDROCK_REGION`，政策檔裡的區域也要跟著改。global profile 的價格和從哪個區域送無關。
+- Bedrock 主控台有一條提示，說 Anthropic 要求第一次使用的客戶提交使用情境。11/22 還沒填，呼叫照樣成功。
 
 對帳用 `scripts/box_reconcile.py --aws-account`。這個 AWS 帳號還有別的專案在用，報表會把帶 `pickfit` 標籤的、Bedrock 上的 Claude、其他沒標籤的用量分開列。

@@ -9,8 +9,11 @@ platform.claude.com/docs/en/build-with-claude/claude-on-amazon-bedrock-legacy); 
 
 - The model is named by an inference profile. `global.anthropic.claude-opus-5-5` routes to any commercial
   Region at Anthropic's list price; a geographic profile (us., eu., jp., au.) or a single Region costs 10% more.
-  Only the global profile can be called from Taipei (ap-east-2). A model without an entry in MODELS is refused:
-  pickfit never moves a call to another model because of where it is sent.
+  A model without an entry in MODELS is refused: pickfit never moves a call to another model because of where
+  it is sent.
+- Requests are signed for and sent to us-east-1. On 2026-11-22, the first day of real calls, the account's
+  Bedrock quotas in Taipei (ap-east-2) were 0 and every call there was refused ("Operation not allowed"), while
+  us-east-1 answered for both models. The global profile costs the same from any Region.
 - Automatic caching (a top-level `cache_control`) is not taken by InvokeModel, so the breakpoint
   anthropic_messages asks for there is put on the last block of the request, which is where automatic caching
   puts it. The system prompt's own breakpoint goes through as it is.
@@ -36,7 +39,7 @@ from pickfit.anthropic_messages import Plan
 # pickfit's model id -> Bedrock's. The same model on both sides, or no entry.
 MODELS = {"claude-opus-5-5": "anthropic.claude-opus-5-5", "claude-haiku-5-5": "anthropic.claude-haiku-5-5"}
 PROFILE = "global"  # cross-Region routing with no price premium; PRICES in pickfit.meta are this profile's
-DEFAULT_REGION = "ap-east-2"  # where the request is signed for and sent; the profile decides where it runs
+DEFAULT_REGION = "us-east-1"  # where the request is signed for and sent; the profile decides where it runs
 _MARKABLE = frozenset({"text", "image", "document", "tool_use", "tool_result"})  # blocks that take cache_control
 
 
