@@ -16,7 +16,8 @@ and, when a server rejects that with a JSON-RPC error, the stateless 2026-07-28 
 What it prints is all a model or a person sees of the server. Tool, argument and server names
 are cut down to safe characters. Tool descriptions never leave the box: the probe checks them
 for instruction-like text aimed at the calling agent ("tool poisoning"), and the server's own
-`instructions` too, and prints only the names of the patterns that matched. The last line is `pickfit-mcp: <JSON>`, which pickfit
+`instructions` too, and prints only the names of the patterns that matched, and how many tools
+declare each annotation hint (readOnlyHint, destructiveHint, openWorldHint). The last line is `pickfit-mcp: <JSON>`, which pickfit
 parses; every value in it is one of those reduced names, a count or a version string.
 
 Exit codes: 0 the handshake completed (and the tool call, when asked, returned no error);
@@ -121,6 +122,24 @@ def flags_for(tool: dict, own_names: set[str] | None = None) -> list[str]:
     if "hidden_unicode" not in found and FLAGS[-1][1].search(raw_name):
         found.append("hidden_unicode")
     return found
+
+
+# MCP ToolAnnotations hints, as pickfit counts them (schema.McpToolAnnotationsSummary).
+ANNOTATION_HINTS = (("read_only", "readOnlyHint"), ("destructive", "destructiveHint"), ("open_world", "openWorldHint"))
+
+
+def annotation_counts(tools: list) -> dict[str, int]:
+    """How many tools set each annotation hint to true. Only `true` counts: a hint the server leaves out, or
+    sets to anything else, is not claimed. What a server says of its own tools, so a count, never the text."""
+    counts = {key: 0 for key, _ in ANNOTATION_HINTS}
+    for tool in tools:
+        notes = tool.get("annotations") if isinstance(tool, dict) else None
+        if not isinstance(notes, dict):
+            continue
+        for key, hint in ANNOTATION_HINTS:
+            if notes.get(hint) is True:
+                counts[key] += 1
+    return counts
 
 
 def arg_names(tool: dict) -> list[str]:
@@ -430,7 +449,9 @@ def run(argv: list[str], *, timeout: float, call: str | None, call_args: dict, u
             print(f"tool: {name} args={','.join(arg_names(tool)) or '-'}")
         for name, found in flags.items():
             print(f"flag: {name} {','.join(found)}")
-        summary.update(tools=names[:MAX_TOOLS_SHOWN], count=len(tools), flags=flags)
+        annotations = annotation_counts(tools)
+        print("annotations: " + " ".join(f"{key}={n}" for key, n in annotations.items()))
+        summary.update(tools=names[:MAX_TOOLS_SHOWN], count=len(tools), flags=flags, annotations=annotations)
         if not tools:
             raise ProbeError(4, "tools/list returned no tools")
         if call:

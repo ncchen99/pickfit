@@ -48,7 +48,7 @@ import json
 import os
 import re
 from collections.abc import Mapping, Sequence
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -91,6 +91,7 @@ from pickfit.verify.failure import (
 from pickfit.verify.features import coverage
 from pickfit.verify.grants import Grant, grants_of, guide_steps
 from pickfit.verify.gui import DISPLAY_NOTE as GUI_DISPLAY
+from pickfit.verify.mcp import FLAG_TEXT
 from pickfit.verify.mcp import handshake as mcp_handshake
 from pickfit.verify.mcp import pitfalls as mcp_pitfalls
 from pickfit.verify.mcp import probe_kind
@@ -474,6 +475,12 @@ def _mcp_handshake(replay: ReplayResult | None) -> tuple[McpHandshake | None, li
         found = mcp_handshake(check.run.stdout, check.command, offline=any(c.offline for c in probes),
                               background=background)
         if found is not None:
+            # The same server's tool list in every probe: a pattern any passing probe matched is kept.
+            seen = [mcp_handshake(c.run.stdout, c.command, offline=None, background=[
+                s.command for s in c.setup if s.tool == "run_background"]) for c in probes if c is not check]
+            codes = {code for h in [found, *seen] if h and h.description_flags for code in h.description_flags}
+            if codes:
+                found = found.model_copy(update={"description_flags": [c for c in FLAG_TEXT if c in codes]})
             return found, mcp_pitfalls(check.run.stdout)
     return None, []
 
@@ -570,20 +577,97 @@ def write_back(run: VerificationRun, slug: str, data_dir: Path = DATA_DIR,
     runs.append(run)
     level = best_level(runs)
     newest = max((r for r in runs if r.level == "unverified"), key=lambda r: r.checked_at, default=None)
+    old = record.verification
+    passed = [r.checked_at for r in runs if is_passed(r.level)]
+    # last_passed_at only moves forward; a re-verification cycle stays and its due date follows the last pass.
+    last_passed = max([*passed, *([old.last_passed_at] if old.last_passed_at else [])]) if passed else None
+    if old.last_passed_at is None and not is_passed(run.level):
+        last_passed = None  # never recorded before and this run did not pass: leave it for the backfill
     verification = Verification(level=level, unverified_reason=newest.unverified_reason if level == "unverified"
-                                and newest else None, checked_at=max(r.checked_at for r in runs), runs=runs)
+                                and newest else None, checked_at=max(r.checked_at for r in runs), runs=runs,
+                                last_passed_at=last_passed, reverify_cycle_days=old.reverify_cycle_days,
+                                reverify_due_at=_due(last_passed, old.reverify_cycle_days, old.reverify_due_at))
     data: dict[str, Any] = record.model_dump(mode="json")
     data["verification"] = verification.model_dump(mode="json")
     if is_passed(run.level):
         data["install"] = {**data["install"], run.os: install_guide(run, grants).model_dump(mode="json")}
+        _unbreak(data)
     now = taipei_now()
     data["updated_at"] = now.isoformat()
     # The sandbox component and the quality cap follow the runs: recompute them, no model call.
     scores_note = refresh_scores(data, now)
     updated = SoftwareRecord.model_validate(data)
     note = f"written; {scores_note}" if scores_note else "written"
+    _save(updated, path)
+    return True, note
+
+
+# ---------------------------------------------------------------- re-verification standing (brief 15.4)
+
+STANDING_NOTE_MAX = 200
+
+
+def _save(record: SoftwareRecord, path: Path) -> None:
     tmp = path.with_suffix(".json.tmp")
-    tmp.write_text(json.dumps(updated.model_dump(mode="json"), ensure_ascii=False, indent=2) + "\n",
+    tmp.write_text(json.dumps(record.model_dump(mode="json"), ensure_ascii=False, indent=2) + "\n",
                    encoding="utf-8")
     os.replace(tmp, path)
-    return True, note
+
+
+def _due(last_passed: datetime | None, cycle_days: int | None, current: datetime | None) -> datetime | None:
+    """The next re-verification date: the last pass plus the cycle; without both, whatever was there."""
+    if last_passed is not None and cycle_days is not None:
+        return last_passed + timedelta(days=cycle_days)
+    return current
+
+
+def _unbreak(data: dict[str, Any]) -> None:
+    """A pass ends a broken standing (the record dict, as dumped)."""
+    if data.get("standing") == "broken":
+        data["standing"] = "active"
+        data.pop("standing_note", None)
+
+
+def note_passed(slug: str, passed_at: datetime, data_dir: Path = DATA_DIR) -> tuple[bool, str]:
+    """A re-verification passed with the steps the record already has, so its runs stay as they are: move
+    verification.last_passed_at (and reverify_due_at, when a cycle is set) to this pass, and end a broken
+    standing. (written, why); nothing is written when the record has no passed run to stand on."""
+    path = data_dir / f"{slug}.json"
+    if not path.exists():
+        return False, f"not written: {_rel(path) or path} does not exist"
+    record = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8"))
+    v = record.verification
+    passed = [r.checked_at for r in v.runs if is_passed(r.level)]
+    if not passed:
+        return False, "not written: the record has no passed run for last_passed_at to stand on"
+    last = max([passed_at, *passed, *([v.last_passed_at] if v.last_passed_at else [])])
+    data: dict[str, Any] = record.model_dump(mode="json")
+    data["verification"] = {**data["verification"], "last_passed_at": last.isoformat()}
+    due = _due(last, v.reverify_cycle_days, v.reverify_due_at)
+    if due is not None:
+        data["verification"]["reverify_due_at"] = due.isoformat()
+    was_broken = data.get("standing") == "broken"
+    _unbreak(data)
+    if data == record.model_dump(mode="json"):
+        return False, "not written: last_passed_at already at this pass"
+    data["updated_at"] = taipei_now().isoformat()
+    _save(SoftwareRecord.model_validate(data), path)
+    return True, "last_passed_at moved" + ("; standing broken -> active" if was_broken else "")
+
+
+def mark_broken(slug: str, note: str, data_dir: Path = DATA_DIR) -> tuple[bool, str]:
+    """A re-verification did not pass: standing = broken with a short note. verification.level and the runs stay
+    as they are (the pipeline never writes failed, schema.Verification); the record stays in the catalog."""
+    path = data_dir / f"{slug}.json"
+    if not path.exists():
+        return False, f"not written: {_rel(path) or path} does not exist"
+    record = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8"))
+    note = " ".join(note.split())
+    if len(note) > STANDING_NOTE_MAX:
+        note = note[:STANDING_NOTE_MAX - 1].rstrip() + "…"
+    if record.standing == "broken" and record.standing_note == note:
+        return False, "not written: already broken with this note"
+    data: dict[str, Any] = record.model_dump(mode="json")
+    data.update(standing="broken", standing_note=note, updated_at=taipei_now().isoformat())
+    _save(SoftwareRecord.model_validate(data), path)
+    return True, "standing broken"
