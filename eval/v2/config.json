@@ -1,0 +1,57 @@
+{
+  "_comment": "v2 'with vs without pickfit' eval (brief 15.8, gap audit P2-10). Fix before the first paid run; after that, change only through an erratum section in eval/v2/README.md.",
+  "version": 2,
+  "claude_bin": "claude",
+  "claude_code_version": "pin-before-first-run",
+  "model": "claude-opus-5-5",
+  "preamble": "You are working in /work inside a disposable Linux sandbox (Ubuntu 24.04, x86_64, internet access, sudo allowed). Do the task below for the user, start to finish, in this sandbox. If the best answer is a website the user opens themselves, do not build anything: give its URL. If an existing tool fits, install and use it. If a short throwaway script or something already built into the system is enough, say so plainly and do it that way instead of installing anything. When you are done, end your reply with exactly these three lines:\nDECISION: <use_existing | extend_existing | build_it_yourself | builtin_enough>\nTOOL: <name of the main tool or website you chose, or none>\nURL: <the website URL if the answer is a website, otherwise none>",
+  "timeout_s": 1500,
+  "per_run_budget_usd": 4.0,
+  "caps_usd": {
+    "estimate": 10.0,
+    "run1": 80.0
+  },
+  "estimate_tasks": ["v2-a01", "v2-h01"],
+  "runs_per_task": 1,
+  "sandbox": {
+    "image": "ubuntu:24.04",
+    "workdir": "/work",
+    "verify_dir": "/opt/verify",
+    "_verify_note": "Check tools live in /opt/verify, mounted read-only and NOT on the agent's PATH; the grader adds it only when running the check."
+  },
+  "groups": {
+    "control": {
+      "label": "agent without pickfit",
+      "tools": ["Bash", "Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch"],
+      "mcp": {},
+      "expected_mcp_tools": []
+    },
+    "treatment": {
+      "label": "agent with pickfit MCP",
+      "tools": ["Bash", "Read", "Write", "Edit", "Glob", "Grep", "WebSearch", "WebFetch"],
+      "mcp": {
+        "pickfit": {
+          "type": "http",
+          "url": "https://pickfit-mcp-eval.ncchen99.workers.dev/mcp"
+        }
+      },
+      "expected_mcp_tools": [
+        "mcp__pickfit__find_software",
+        "mcp__pickfit__find_alternatives",
+        "mcp__pickfit__get_install_guide"
+      ]
+    }
+  },
+  "price_per_mtok_usd": {
+    "_note": "Only used by the dry-run estimate and as a fallback when the CLI result lacks total_cost_usd. Re-check against the current price list before a paid run.",
+    "input": 5.0,
+    "output": 25.0,
+    "cache_read": 0.5,
+    "cache_write": 6.25
+  },
+  "dry_run_estimate_tokens": {
+    "input": 40000,
+    "cache_read": 360000,
+    "output": 12000
+  }
+}
