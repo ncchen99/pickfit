@@ -796,6 +796,14 @@ def test_the_box_the_plan_chose_leaves_its_grants_too():
     asked = [Grant("service", "postgres", 3, "agent", True)]
     assert [g.name for g in plan_grants({}, cited, held, asked)] == ["redis", "http-mock"]
     assert plan_grants({"audio": False}, ["uv tool install tool"], held) == []
+    # A full-privilege box: root and the container engine are grants when a cited command used them, once each.
+    root_box = {"capabilities": ["root", "systemd", "container_engine", "kernel_modules"], "container_engine": "docker"}
+    used = ["sudo apt-get update && sudo apt-get install -y redis-server", "docker run --rm hello-world",
+            "cd app && sudo systemctl start tool", "pseudo --version", "podman ps"]
+    assert [(g.kind, g.name, g.tier, g.requested_by, g.shown_in_guide) for g in plan_grants(root_box, used, held)] == [
+        ("root", "sudo", 4, "plan", True), ("container_engine", "docker", 4, "plan", True)]
+    assert plan_grants(root_box, ["uv tool install tool", "pseudo --version"], held) == []  # could, and did not
+    assert plan_grants({}, used, held) == []  # a plain box gives neither, whatever a command says
 
 
 def features_of(*items: tuple[str, str, list[int]]) -> list[dict[str, Any]]:

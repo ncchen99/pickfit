@@ -4,12 +4,15 @@ API and a fake ssh. Nothing leaves the process: no AWS call, no connection."""
 from __future__ import annotations
 
 import datetime
+import re
 import shlex
 import time
+from pathlib import Path
 from typing import Any
 
 import pytest
 
+from pickfit import sbom
 from pickfit.verify import ec2_machine as e
 from pickfit.verify import ec2_reaper as reaper
 from pickfit.verify import ec2_root as r
@@ -838,6 +841,14 @@ def test_the_image_is_baked_on_an_ordinary_builder_and_older_ones_are_removed_wi
                    "NOPASSWD:ALL", "loginctl enable-linger sbx"):
         assert needed in setup
     assert "AKIA" not in setup and "aws" not in setup.lower().replace("ec2", "")
+    # What pickfit/sbom.py runs in a replay box is here by the Dockerfile's releases and sums, at sbom.py's paths.
+    dockerfile = (Path(r.__file__).with_name("sandbox.Dockerfile")).read_text(encoding="utf-8")
+    sums = re.findall(r"echo '([0-9a-f]{64})  /tmp/(?:syft|cargo-audit|go)\.tgz'", dockerfile)
+    assert len(sums) == 3 and all(f"echo '{digest}  /tmp/" in setup for digest in sums)
+    assert "govulncheck@v1.9.0" in setup and "govulncheck@v1.9.0" in dockerfile
+    for path in (sbom.SYFT, sbom.CARGO_AUDIT, sbom.PYTHON, sbom.NPM):
+        assert path in setup
+    assert "GOBIN=/usr/local/bin" in setup and sbom.GOVULNCHECK == "/usr/local/bin/govulncheck"
     assert r.root_ami_name().startswith("pickfit-rootvm-host-") and ":" not in r.root_ami_name()
 
 

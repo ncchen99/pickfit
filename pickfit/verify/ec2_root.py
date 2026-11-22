@@ -140,8 +140,11 @@ BOOT_WAIT_S = 240
 # kind of box is for: Docker with compose and buildx (bridge networking on, as an install guide expects), sudo,
 # FUSE and kmod, disk tools for the extra volume. The box user is uid 1000 with passwordless sudo, in the docker
 # group, with a systemd user manager of its own (linger). uv is its project's release from PyPI, as in
-# sandbox.Dockerfile. The two boot fixes are ec2_machine.HOST_SETUP's (measured there): cloud-init asks only the
-# IPv4 metadata address, and a unit reads the container runtime's programs early in the boot.
+# sandbox.Dockerfile. So are the three programs pickfit/sbom.py runs in a replay box (syft, cargo-audit and
+# govulncheck: the same releases and SHA-256 sums as there), and python3 and npm answer at /usr/local/bin, where
+# sbom.py calls them: the first real verification here (2026-11-22) collected no SBOM for want of them. The two
+# boot fixes are ec2_machine.HOST_SETUP's (measured there): cloud-init asks only the IPv4 metadata address, and a
+# unit reads the container runtime's programs early in the boot.
 ROOT_HOST_SETUP = r"""set -eu
 export DEBIAN_FRONTEND=noninteractive
 systemctl disable --now apt-daily.timer apt-daily-upgrade.timer unattended-upgrades.service 2>/dev/null || true
@@ -151,6 +154,22 @@ apt-get -o DPkg::Lock::Timeout=180 install -y --no-install-recommends \
   procps iproute2 kmod fuse3 nftables iptables dbus-user-session parted e2fsprogs dosfstools \
   python3 python3-pip python3-venv pipx nodejs npm
 PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/local/bin pipx install uv
+curl -fsSL -o /tmp/syft.tgz https://github.com/anchore/syft/releases/download/v1.56.0/syft_1.56.0_linux_amd64.tar.gz
+echo '1c2493cfcf52d3367d6cb25780d9190c111c2219c34c820574c43e8bae15c528  /tmp/syft.tgz' | sha256sum -c -
+mkdir /tmp/syft && tar -xzf /tmp/syft.tgz -C /tmp/syft
+install -m 0755 "$(find /tmp/syft -type f -name syft | head -n 1)" /usr/local/bin/syft
+curl -fsSL -o /tmp/cargo-audit.tgz https://github.com/rustsec/rustsec/releases/download/cargo-audit/v0.22.2/cargo-audit-x86_64-unknown-linux-musl-v0.22.2.tgz
+echo '7fb9497f8594b389e5fce5ef9b92db08432996895b2e0c5a0167a69ed445c428  /tmp/cargo-audit.tgz' | sha256sum -c -
+mkdir /tmp/cargo-audit && tar -xzf /tmp/cargo-audit.tgz -C /tmp/cargo-audit
+install -m 0755 "$(find /tmp/cargo-audit -type f -name cargo-audit | head -n 1)" /usr/local/bin/cargo-audit
+curl -fsSL -o /tmp/go.tgz https://go.dev/dl/go1.27.4.linux-amd64.tar.gz
+echo '7226736c2339719cda28fbf3a54d71aa63bcefe376e98cef00034268dab24840  /tmp/go.tgz' | sha256sum -c -
+tar -xzf /tmp/go.tgz -C /tmp
+HOME=/root GOBIN=/usr/local/bin GOPATH=/tmp/gopath GOCACHE=/tmp/gocache GOTOOLCHAIN=local CGO_ENABLED=0 \
+  /tmp/go/bin/go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
+rm -rf /tmp/syft /tmp/syft.tgz /tmp/cargo-audit /tmp/cargo-audit.tgz /tmp/go /tmp/go.tgz /tmp/gopath /tmp/gocache
+ln -sf /usr/bin/python3 /usr/local/bin/python3
+ln -sf /usr/bin/npm /usr/local/bin/npm
 useradd --uid 1000 --create-home --shell /bin/bash sbx
 usermod -aG docker sbx
 printf '%s\n' 'sbx ALL=(ALL:ALL) NOPASSWD:ALL' > /etc/sudoers.d/90-pickfit-sbx
@@ -173,6 +192,8 @@ runuser -u sbx -- sudo -n id -u
 runuser -u sbx -- docker info --format 'docker {{.ServerVersion}} cgroup v{{.CgroupVersion}}'
 docker compose version
 uv --version
+syft version > /dev/null && cargo-audit --version && govulncheck -version > /dev/null
+/usr/local/bin/python3 --version && /usr/local/bin/npm --version
 """
 
 

@@ -63,6 +63,8 @@ NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9+._:@-]{0,79}$")
 PROVIDER_TIMEOUT_S = 120
 NO_PROVIDER = "pickfit cannot give this yet"
 _SERVICES_START = re.compile(r"\bpickfit-services\s+start((?:[ \t]+[a-z0-9][a-z0-9-]*)+)")
+_AS_ROOT = re.compile(r"(?:^|[\s;&|(])sudo\b")  # a command that became root
+_ENGINE = re.compile(r"(?:^|[\s;&|(])(docker|podman)\b")  # a command that ran the container engine
 
 
 # ---------------------------------------------------------------- grants
@@ -484,12 +486,19 @@ def guide_steps(grants: Iterable[Grant | Mapping[str, Any]], policy: Policy | No
 def plan_grants(box: Mapping[str, Any], commands: Iterable[str], policy: Policy,
                 held: Iterable[Grant] = ()) -> list[Grant]:
     """What the box had because the extraction said the tool needs it (box_needs.py), not because the agent asked:
-    the simulated microphone, and each service a cited command started with pickfit-services."""
+    the simulated microphone, and each service a cited command started with pickfit-services. In a full-privilege
+    box (its report names the box's capabilities) root and the container engine count when a cited command used
+    them: a run that never became root needed none, whatever its box could have given."""
     have = {(g.kind, g.name) for g in held}
     found: list[tuple[str, str]] = [("virtual_device", "microphone")] if box.get("audio") else []
+    gives, engine = set(box.get("capabilities") or ()), box.get("container_engine")
     for command in commands:
         for match in _SERVICES_START.finditer(command or ""):
             found += [("service", name) for name in match.group(1).split()]
+        if "root" in gives and _AS_ROOT.search(command or ""):
+            found.append(("root", "sudo"))
+        if "container_engine" in gives:
+            found += [("container_engine", m.group(1)) for m in _ENGINE.finditer(command or "") if m.group(1) == engine]
     grants: list[Grant] = []
     for kind, name in found:
         rule = policy.rule(kind, name)

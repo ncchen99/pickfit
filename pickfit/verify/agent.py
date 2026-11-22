@@ -1028,6 +1028,9 @@ class VerifyAgent:
         box = self.box
         self.report.box = {"runner": box.runner, "image": box.image, "os": box.os, "arch": box.arch,
                            "start_s": getattr(box, "start_s", None), "gpu": box.gpu_name, "audio": box.audio}
+        given = getattr(box, "capabilities", None)
+        if given is not None and given.granted():  # a full-privilege box: grants.plan_grants reads these
+            self.report.box |= {"capabilities": given.granted(), "container_engine": given.container_engine}
         self._say(f"verify {self.task.slug} · run {self.run_id} · {self.model} · mode {self.mode} · "
                   f"{box.runner} {box.os}/{box.arch}")
         try:
