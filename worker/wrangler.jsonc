@@ -1,6 +1,6 @@
-// pickfit MCP server. Since 2026-11-18 https://pickfit.app is served by Google Cloud Run (cloudrun/README.md),
-// which reads this file's top-level "vars", D1 and R2 names. This Worker still serves
-// https://pickfit-mcp.ncchen99.workers.dev/mcp for existing MCP clients. Local: `npm run dev` (see README.md).
+// pickfit MCP server and web site: https://pickfit.app/mcp (also https://pickfit-mcp.ncchen99.workers.dev/mcp).
+// From 2026-11-18 to 11-22 pickfit.app ran on Google Cloud Run (cloudrun/README.md); since 2026-11-22 this
+// Worker serves it again. Local: `npm run dev` (see README.md).
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "pickfit-mcp",
@@ -8,7 +8,10 @@
   // The web page's static files: Fitz (copied from brand/mascot by `npm run sync:assets`) and the font.
   "assets": { "directory": "./public" },
   "compatibility_date": "2026-10-01",
-  // No routes: pickfit.app (zone on this Cloudflare account) points at Cloud Run, so a deploy must not claim it back.
+  // pickfit.app (bought 11/2, zone on this Cloudflare account), back on this Worker since 2026-11-22 (Cloud Run is
+  // off); workers.dev stays on for existing MCP clients.
+  "routes": [{ "pattern": "pickfit.app", "custom_domain": true }],
+  // Declaring routes turns workers.dev off unless it is set explicitly.
   "workers_dev": true,
   "preview_urls": true,
   "d1_databases": [

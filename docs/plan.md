@@ -374,5 +374,5 @@ Meta Global AI Developer Hackathon（2026-10-27 – 11-04 ET）已正式結束�
    - **原因**：CLI 與 MCP 工具在 Linux 沙盒的安裝與執行行為，與 macOS 及 Windows 具有高度一致性；在目前缺乏專職 macOS / Windows 實體驗證機器的情況下，先聚焦 Linux / CLI / MCP / Web 能以最低成本維持高可靠度的實測覆蓋。暫緩大量收錄驗證成本高的 macOS / Windows 桌面 GUI App。
 4. **擴增軟體類別（Category Expansion）**：
    - 目前僅有 `dev_cli`、`local_ai`、`mcp_server`、`other` 四類，導致大量網頁應用、開發維運、生產力、影音、資安等軟體全數擠在 `other`（截至 11/5 已有 246 筆）。賽後將擴增軟體類別 enum 並同步更新 schema、管線與前端介面。
-5. **網站主機改為 Google Cloud Run（11/18）**：pickfit.app 的網頁與 MCP server 跑在 Cloud Run（`worker/cloudrun/`）；目錄資料庫仍是 Cloudflare D1、驗證影片仍在 R2。
+5. **網站主機切回 Cloudflare Worker（11/22）**：11/18 起 pickfit.app 曾改由 Google Cloud Run 服務（`worker/cloudrun/`），11/22 停用 Cloud Run。現在 pickfit.app 的網頁與 MCP server 回到 Cloudflare Worker `pickfit-mcp`，這個 Worker 也同時服務 workers.dev；推到 main 時，CI 只部署這個 Worker。目錄資料庫仍是 Cloudflare D1，驗證影片仍在 R2。`worker/cloudrun/` 的程式碼保留，供追溯。
 6. **賽後定位修訂（11/22）**：產品定位、三條收錄賽道（agent 用的能力、人用的 UI 網頁、人機協作的創作與文件工具）、過期與重驗、自己做還是重用、停止新增教學錄影，見 [brief.md](brief.md) 第 15 節。
