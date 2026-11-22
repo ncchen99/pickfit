@@ -121,8 +121,11 @@ export function renderBrowse(catalog: Catalog, params: URLSearchParams, nonce: s
   const kindPart = q.kind ? ` · ${esc(KIND_PLURAL[q.kind])}` : '';
   const osPart = q.os ? L(` · verified on ${esc(OS_NAME[q.os])}`, ` · 已在 ${esc(OS_NAME[q.os])} 驗證`) : '';
   const main =
-    `<section class="head"><div class="wrap head-row"><div><h1>${L('Browse verified tools', '所有驗證過的工具')}</h1>` +
-    `<p class="lede">${L('pickfit has tried every tool here itself', '這裡的每款工具，pickfit 都親自試過')}</p></div>` +
+    // With "include not yet verified" on, the list also holds tools pickfit has only read about: the head says so.
+    `<section class="head"><div class="wrap head-row"><div><h1>${q.all ? L('Browse all listed tools', '所有收錄的工具') : L('Browse verified tools', '所有驗證過的工具')}</h1>` +
+    `<p class="lede">${q.all
+      ? L('Tools pickfit has tried itself, and ones it has only read about so far; each card says which', '有 pickfit 親自試過的工具，也有目前只讀過介紹、還沒實測的；每張卡片都會標明')
+      : L('pickfit has tried every tool here itself', '這裡的每款工具，pickfit 都親自試過')}</p></div>` +
     `${fitz('idle', 96, { eager: true })}</div></section>` +
     `<div class="wrap layout layout-browse"><aside class="side side-left">${filters}</aside><div>` +
     `<p class="cat-count">${L(

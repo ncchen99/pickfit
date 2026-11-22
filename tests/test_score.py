@@ -527,6 +527,110 @@ def test_a_rescore_without_lookups_keeps_the_stored_signals(tmp_path: Path) -> N
     assert after.popularity.signals == before.popularity.signals and after.popularity.packages == ["npm:tinyq"]
 
 
+class LiveGitHub:
+    """GitHub as score_records sees it, offline: a newer push, more stars, a newer release, a changed README."""
+
+    def __init__(self, token: str = "", **_: Any) -> None:
+        self.calls: list[str] = []
+
+    def repo(self, full_name: str) -> dict[str, Any]:
+        self.calls.append(f"repo:{full_name}")
+        owner, name = full_name.split("/")
+        return {"id": 7, "full_name": full_name, "name": name, "owner": {"login": owner},
+                "html_url": f"https://github.com/{full_name}", "description": "Query JSON Lines",
+                "created_at": "2026-03-01T00:00:00Z", "pushed_at": "2026-10-30T00:00:00Z",
+                "default_branch": "main", "stargazers_count": 99, "license": {"spdx_id": "MIT"}}
+
+    def details(self, repo: dict[str, Any]) -> dict[str, Any]:
+        self.calls.append(f"details:{repo['full_name']}")
+        url = f"https://github.com/{repo['full_name']}/releases/tag"
+        return {"readme": README + "\nA new paragraph the rubric has not seen.\n", "readme_path": "README.md",
+                "files": ["src/main.rs"], "files_truncated": False, "manifests": {},
+                "releases": [{"tag": "v0.4.0-rc1", "name": None, "prerelease": True,
+                              "published_at": "2026-10-29T00:00:00Z", "url": f"{url}/v0.4.0-rc1", "body": "",
+                              "assets": []},
+                             {"tag": "v0.3.0", "name": None, "prerelease": False,
+                              "published_at": "2026-10-28T00:00:00Z", "url": f"{url}/v0.3.0", "body": "",
+                              "assets": []}]}
+
+    def issues(self, full_name: str) -> list[dict[str, Any]]:
+        self.calls.append(f"issues:{full_name}")
+        return [issue(closed_days=1)]
+
+    def close(self) -> None:
+        pass
+
+
+def test_github_only_refetches_github_updates_last_release_and_never_calls_the_rubric_or_registries(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    import pickfit.discover.github as github
+    import pickfit.registries as registries_module
+
+    db_path, out = setup_records(tmp_path)
+    score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=NOW,
+                  grade=fake_grade())
+    path = out / "tinyq.json"
+    before = json.loads(path.read_text(encoding="utf-8"))
+    assert before["last_release"]["tag"] == "v0.1.0"
+    rubric_before = before["scores"]["docs_rubric"]
+
+    live = LiveGitHub()
+    monkeypatch.setattr(github, "GitHub", lambda token, **_: live)
+    monkeypatch.setattr(github, "github_token", lambda: "token")
+    monkeypatch.setattr(registries_module, "Registries",
+                        lambda *a, **k: pytest.fail("--github-only must not look up registries"))
+
+    class NoDB:
+        def __init__(self, *_: Any, **__: Any) -> None:
+            pytest.fail("--github-only must not read the pipeline database")
+
+    monkeypatch.setattr("pickfit.discover.store.PipelineDB", NoDB)
+    summary = score_records(out, db_path=db_path, model=MODEL, now=LATER, github_only=True,
+                            grade=lambda *a, **k: pytest.fail("--github-only must not call the docs rubric"))
+    assert summary.written == ["tinyq"] and summary.cost_usd == 0 and summary.graded == 0 and not summary.errors
+    assert live.calls == ["repo:someone/tinyq", "details:someone/tinyq", "issues:someone/tinyq"]
+    row = summary.rows[0]
+    assert (row["snapshot"], row["rubric"], row["last_release"]) == ("live", "kept", "v0.3.0")
+
+    after = json.loads(path.read_text(encoding="utf-8"))
+    # last_release in the shape profiles writes it, prereleases skipped, with its source and evidence
+    assert after["last_release"] == {"tag": "v0.3.0", "published_at": "2026-10-28T00:00:00Z",
+                                     "url": "https://github.com/someone/tinyq/releases/tag/v0.3.0"}
+    assert [s["id"] for s in after["sources"] if s["kind"] == "release"] == ["release:v0.3.0"]
+    assert [e["source_id"] for e in after["evidence"] if e["field"] == "/last_release"] == ["release:v0.3.0"]
+    assert {k for k in after if after[k] != before.get(k)} == {"scores", "updated_at", "last_release", "sources",
+                                                               "evidence"}
+    record = SoftwareRecord.model_validate(after)
+    assert record.scores.docs_rubric.model_dump(mode="json") == rubric_before  # kept though the README changed
+    assert record.scores.popularity.signals.stars == 99
+    assert record.scores.inputs.github.pushed_at.isoformat().startswith("2026-10-30")
+    assert record.scores.inputs.github.source == "github_live"
+    assert record.scores.inputs.issues is not None and len(record.scores.inputs.issues.items) == 1
+
+    # Same answers from GitHub: nothing to write.
+    again = score_records(out, db_path=db_path, model=MODEL, now=LATER, github_only=True,
+                          grade=lambda *a, **k: pytest.fail("no rubric"))
+    assert again.unchanged == ["tinyq"] and "last_release" not in again.rows[0]
+
+    with pytest.raises(ValueError, match="needs GitHub"):
+        score_records(out, db_path=None, model=MODEL, github_only=True, use_github=False)
+    with pytest.raises(ValueError, match="never grades"):
+        score_records(out, db_path=None, model=MODEL, github_only=True, force=True)
+
+
+def test_github_only_is_a_score_flag() -> None:
+    import argparse
+
+    from pickfit.cli import _add_score_command
+    from pickfit.score import main_score
+
+    parser = argparse.ArgumentParser()
+    _add_score_command(parser.add_subparsers(dest="command"))
+    args = parser.parse_args(["score", "--github-only", "--slug", "tinyq"])
+    assert args.github_only is True and args.slug == ["tinyq"] and args.func is main_score
+    assert main_score(parser.parse_args(["score", "--github-only", "--refresh"])) == 2
+
+
 def test_unverified_records_keep_their_score_but_cannot_be_treasures(tmp_path: Path) -> None:
     db_path, out = setup_records(tmp_path, verified=False)
     score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=NOW, grade=fake_grade())

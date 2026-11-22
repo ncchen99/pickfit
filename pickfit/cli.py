@@ -367,6 +367,10 @@ def _add_score_command(sub: argparse._SubParsersAction) -> None:
                    help="no GitHub calls: keep the stored responsiveness; no live snapshots for repos not in --db")
     s.add_argument("--no-registries", action="store_true",
                    help="no npm, PyPI, crates.io, Homebrew or Hacker News lookups: keep the stored signals")
+    s.add_argument("--github-only", action="store_true",
+                   help="fetch only GitHub again (repo, push time, issues, latest release; last_release is updated) "
+                        "and recompute: no docs rubric call, no registry or Hacker News lookup, no pipeline database "
+                        "($0; mind the GITHUB_TOKEN rate limit)")
     s.add_argument("--concurrency", type=int, default=DEFAULT_CONCURRENCY, help="records at once")
     s.add_argument("--refresh", action="store_true",
                    help="recompute every part from the record and the stored inputs (the docs rubric and registry "
