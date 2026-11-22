@@ -8,7 +8,7 @@
  */
 import { CARD_FIELDS, type Card, type CardValue } from './cards.ts';
 import { nameKey, type Entry } from './catalog.ts';
-import type { ModelAnswer, ModelPick, ModelReason } from './prompt.ts';
+import { REUSE_MODES, type ModelAnswer, type ModelPick, type ModelReason, type ReuseMode } from './prompt.ts';
 
 const norm = (text: string) => text.trim().toLowerCase().replace(/\s+/g, ' ');
 
@@ -113,6 +113,21 @@ export interface GuardedPick {
   reasons: ModelReason[];
   tradeoffs: string[];
   vs_well_known: string | null;
+  /** How to use it (prompt rule 13); null when the model did not say or the guard dropped it. */
+  reuse: ReuseMode | null;
+  reuse_note: string | null;
+}
+
+/**
+ * Prompt rule 13: a known mode, and a note only beside one. The note is a claim about this tool: plain prose with no
+ * link or command, not contradicting the card, and not saying anyone checked it. A bad note goes; the mode stays.
+ */
+export function guardReuse(card: Card, pick: Pick<ModelPick, 'reuse' | 'reuse_note'>): { reuse: ReuseMode | null; reuse_note: string | null } {
+  const reuse = (REUSE_MODES as readonly string[]).includes(pick.reuse as string) ? (pick.reuse as ReuseMode) : null;
+  if (!reuse) return { reuse: null, reuse_note: null };
+  const note = clip(pick.reuse_note, 200);
+  const ok = note !== null && !PLACEHOLDER.test(note) && plainProse(note) && contradiction(card, note) === null;
+  return { reuse, reuse_note: ok ? note : null };
 }
 
 export interface GuardResult {
@@ -154,6 +169,7 @@ export function guardPicks(answer: ModelAnswer, cards: Map<string, Card>, limit:
       tradeoffs: (pick.tradeoffs ?? []).map((t) => t.trim().slice(0, 200)).filter(Boolean).slice(0, 3),
       // A comparison is a claim about this tool too; one the card contradicts is left out.
       vs_well_known: vsWellKnown && contradiction(card, vsWellKnown) === null ? vsWellKnown : null,
+      ...guardReuse(card, pick),
     });
   }
   return { picks, droppedPicks, droppedReasons };
@@ -249,15 +265,38 @@ export function guardWellKnown(answer: ModelAnswer, entries: Entry[], current?: 
 }
 
 /**
- * no_install_option names something the person already has, from the model's general knowledge (prompt rule 9). It
- * gets the well-known option's checks that apply: plain prose with no link or command, and no claim that anyone
- * checked it. One that breaks a rule is dropped whole.
+ * Code in advice the model writes from general knowledge (product-ux-cost-audit Q3), beyond COMMAND's installers: an
+ * interpreter run on a script or with a flag, a command-line flag, a shell operator, a file path.
  */
-export function guardNoInstall(text: string | null | undefined): string | null {
+const CODE_LIKE =
+  /\b(python3?|node|deno|bun|bash|sh|zsh|pwsh|powershell|perl|ruby|php)\s+(-\S|\S+\.(py|js|ts|sh|ps1|pl|rb|php)\b)|(^|\s)--?[a-z][\w-]*(?=$|[\s.,;:])|&&|\|\||\$\(|(^|\s)[~.]?\/[\w.-]+\/[\w.-]/i;
+
+/** Plain prose that names no link, command or code, and does not claim pickfit or anyone checked something. */
+const plainProse = (text: string) =>
+  PROSE.test(text) && !URL_LIKE.test(text) && !COMMAND.test(text) && !CODE_LIKE.test(text) && !CLAIMS_CHECKED.test(text);
+
+/**
+ * Advice the model gives from general knowledge, not from any card: no_install_option (prompt rule 9, something the
+ * person already has) and build_it_yourself (rule 14, a small one-off job simpler to write). Both get the well-known
+ * option's checks that apply and Q3's: one plain sentence or two (at most 300 characters), no link, command or code,
+ * no mention of pickfit and no claim that anyone verified, tested or checked it. One that breaks a rule is dropped
+ * whole, never cut.
+ */
+export function guardAdvice(text: string | null | undefined): string | null {
+  if (typeof text !== 'string' || text.trim().length > 300) return null;
   const said = clip(text, 300);
-  if (!said || PLACEHOLDER.test(said)) return null;
-  if (!PROSE.test(said) || URL_LIKE.test(said) || COMMAND.test(said) || CLAIMS_CHECKED.test(said)) return null;
+  if (!said || PLACEHOLDER.test(said) || !plainProse(said)) return null;
   return said;
+}
+
+export const guardNoInstall = guardAdvice;
+
+/**
+ * build_it_yourself (prompt rule 14) with guardAdvice's checks, and null beside a no_install_option: something the
+ * person already has beats writing code, and two answers to "do I need a tool" would disagree.
+ */
+export function guardBuildItYourself(text: string | null | undefined, noInstall: string | null): string | null {
+  return noInstall ? null : guardAdvice(text);
 }
 
 /** Minimal shape check; strict decoding should guarantee it, but code does not assume. */

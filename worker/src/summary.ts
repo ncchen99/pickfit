@@ -10,8 +10,16 @@
 import { compatibleSentence, standInSentence } from './features.ts';
 import type { AlternativesOutput, FindOutput, PickOut } from './find.ts';
 import type { InstallOutput } from './install.ts';
+import type { ReuseMode } from './prompt.ts';
 
-const STRUCTURED = 'Evidence links, scores, feature checks and advisory details are in structuredContent.';
+/** The reuse modes (prompt rule 13) as an agent reads them in the text block. */
+const REUSE_WORDS: Record<ReuseMode, string> = {
+  use_directly: 'use it directly',
+  extend: 'extend it',
+  reference: 'use it as a reference and write your own',
+};
+
+const STRUCTURED ='Evidence links, scores, feature checks and advisory details are in structuredContent.';
 
 function facts(p: PickOut): string {
   const parts: string[] = [p.pricing];
@@ -32,6 +40,7 @@ function pickLines(p: PickOut, n: number): string[] {
   if (p.why.length) lines.push(`   Why: ${p.why.map((r) => r.claim).join('; ')}`);
   if (p.tradeoffs.length) lines.push(`   Trade-offs: ${p.tradeoffs.join('; ')}`);
   if (p.vs_well_known) lines.push(`   vs the well-known choice: ${p.vs_well_known}`);
+  if (p.reuse) lines.push(`   Reuse: ${REUSE_WORDS[p.reuse]}${p.reuse_note ? `: ${p.reuse_note}` : ''}`);
   if (p.security_warning) lines.push(`   Security: ${p.security_warning}`);
   const fresh = [p.freshness.warning ?? p.freshness.verified_ago, p.freshness.note].filter(Boolean);
   if (fresh.length) lines.push(`   Freshness: ${fresh.join(' ')}`);
@@ -54,6 +63,16 @@ export function findSummary(out: FindOutput | AlternativesOutput, readonly = fal
     lines.push(`Best free: ${out.best_free.slug}: ${out.best_free.reason}`);
   }
   if (out.no_install_option) lines.push(`Without installing anything: ${out.no_install_option}`);
+  if (out.build_it_yourself) {
+    lines.push(`Build it yourself (not checked by pickfit): ${out.build_it_yourself.advice}`);
+    for (const s of out.build_it_yourself.similar) {
+      const learn = [
+        ...(s.tested_features.length ? [`worth testing: ${s.tested_features.join('; ')}`] : []),
+        ...(s.pitfalls.length ? [`pitfalls: ${s.pitfalls.join('; ')}`] : []),
+      ];
+      if (learn.length) lines.push(`   Similar: ${s.name} (${s.slug}): ${learn.join('. ')}`);
+    }
+  }
   if (out.well_known_option) lines.push(`Well-known option (not verified by pickfit): ${out.well_known_option.name}: ${out.well_known_option.why}`);
   lines.push(`rec_id: ${out.rec_id} (pass it to get_install_guide${readonly ? '' : ' and report_outcome'}).`, STRUCTURED);
   return lines.join('\n');

@@ -6,7 +6,8 @@ import { MATCH_INSTRUCTIONS } from '../src/prompt.ts';
 import { answer, harness, modelResponse, sentSlugs, systemText } from './helpers.ts';
 
 const MAC_OFFLINE: FindInput = {
-  need: '我想要一個 Mac 上、免費、能離線跑本地 LLM 的工具 (secret-project-xyz)',
+  // "chat": the install-level chat TUI fits best, so it comes in as P2-01's fallback (filter.ts strictPool).
+  need: '我想要一個 Mac 上、免費、能離線跑本地 LLM 的 chat 工具 (secret-project-xyz)',
   os: 'macos',
   budget: 'free_only',
   must_run_locally: true,
@@ -33,9 +34,13 @@ test('model path: picks come from claude-opus-5-5 and are checked against the ca
   assert.match(runner.how_we_know, /Chosen by claude-opus-5-5 among 5 tools/);
   assert.equal(runner.evidence_url, 'https://example.invalid/runs/run-20261028-macos-1');
   assert.deepEqual(runner.scores, { quality: 84, popularity: 12, treasure: true });
-  // Verified only on Linux: the response says so even though the model did not.
+  // Install-level (P2-01) and verified only on Linux: the response says both even though the model did not, the
+  // install-only note first.
   assert.equal(chat.verification.verified_on_user_os, false);
-  assert.match(chat.tradeoffs[0], /Verified on linux only/);
+  assert.equal(chat.tradeoffs[0], 'pickfit only confirmed it installs; its core features have not been verified yet.');
+  assert.match(chat.tradeoffs[1], /Verified on linux only/);
+  assert.deepEqual(runner.tradeoffs, ['Needs 8 GB of RAM']); // function level: no such note
+  assert.match(out.coverage_note ?? '', /tools it only installed are included/);
   assert.deepEqual(out.best_free, { slug: 'fixture-llm-runner', reason: 'Free, open source and runs offline.' });
 });
 

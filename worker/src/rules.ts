@@ -4,7 +4,8 @@
  * Order: (find_alternatives only) the profile names the current tool in
  * alternatives_to, then relevance to the request (rulesRelevance,
  * relevance.ts), then, for equal relevance, verification on the user's OS,
- * then treasure value (quality high, popularity low). A web app goes ahead of
+ * then a tool pickfit saw work ahead of one it only installed (P2-01), then
+ * treasure value (quality high, popularity low). A web app goes ahead of
  * tools to install whose relevance is within WEB_BAND of its own (no install,
  * just open it), unless the request leans to installed tools (leansInstall),
  * when those go ahead of web apps within the same band.
@@ -12,7 +13,21 @@
 import { isWebApp, webCheck, type Entry, type OS } from './catalog.ts';
 import type { Card } from './cards.ts';
 import type { ModelReason } from './prompt.ts';
-import { replacesCurrent, runsLocally } from './filter.ts';
+import { beyondInstall, replacesCurrent, runsLocally } from './filter.ts';
+
+/**
+ * The trade-off every install-level pick carries (P2-01): it is in the candidates only as a fallback (filter.ts
+ * strictPool), and the person should know pickfit did not see its core features work. Prompt rule 6 asks the model
+ * for the same; find.ts adds it when a model's trade-offs leave it out.
+ */
+export const INSTALL_ONLY_NOTE = 'pickfit only confirmed it installs; its core features have not been verified yet.';
+
+/** INSTALL_ONLY_NOTE for a tool pickfit only installed (or a web app it only opened); null otherwise. */
+export const installOnlyNote = (entry: Entry): string | null => (beyondInstall(entry) ? null : INSTALL_ONLY_NOTE);
+
+/** A trade-off that already says pickfit only checked the install, in English or Chinese. */
+export const saysInstallOnly = (text: string) =>
+  /\b(only|just)\b[^.;]{0,40}\binstall|\bcore features?\b[^.;]{0,40}\bnot\b[^.;]{0,20}\b(verified|checked|tested)|只(確認|驗證|檢查)[^。；]{0,10}(裝|安裝)/i.test(text);
 
 /** Scores this close count as equal, so OS verification and treasure decide. */
 const SAME_SCORE = 1e-6;
@@ -59,6 +74,7 @@ export function rankByRules(entries: Entry[], relevance: Map<string, number>, os
       replaces: replacesCurrent(entry, current),
       score: relevance.get(entry.slug) ?? 0,
       onOs: os !== undefined && entry.install[os] !== undefined,
+      works: beyondInstall(entry),
       treasure: entry.scores?.treasure_value ?? -1,
     }))
     .sort(
@@ -66,6 +82,7 @@ export function rankByRules(entries: Entry[], relevance: Map<string, number>, os
         Number(b.replaces) - Number(a.replaces) ||
         (Math.abs(b.score - a.score) > SAME_SCORE ? b.score - a.score : 0) ||
         Number(b.onOs) - Number(a.onOs) ||
+        Number(b.works) - Number(a.works) ||
         b.treasure - a.treasure ||
         a.entry.slug.localeCompare(b.entry.slug),
     );

@@ -222,7 +222,7 @@ def test_the_unverified_cap_can_become_a_coverage_rule(tmp_path: Path, monkeypat
 
 def test_coverage_thresholds_block_a_treasure_only_when_set(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _, _, data = scored(tmp_path)
-    assert treasure_block_of(data) is None  # no threshold by default
+    assert treasure_block_of(data) is None  # a function-level record passes the default (P2-01) threshold
     monkeypatch.setattr(schema, "TREASURE_MIN_FUNCTION_COVERAGE", 0.5)
     assert coverage.dimension_share(coverage.compute_coverage(data)["dimensions"]["function"]) == 1.0
     assert treasure_block_of(data) is None

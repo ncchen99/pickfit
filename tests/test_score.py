@@ -48,6 +48,7 @@ from pickfit.score import (
     sandbox_score,
     score_records,
     treasure,
+    treasure_block_of,
     usage_outcomes_weight,
     usage_score,
     weights,
@@ -458,6 +459,33 @@ def test_feature_coverage_is_shown_and_refresh_follows_the_features(tmp_path: Pa
     after = json.loads(path.read_text())
     assert after["scores"]["quality"]["components"]["feature_results"]["score"] == 1.0
     assert refresh_scores(after, LATER) is None  # write-back's refresh sees nothing to change either
+
+
+def test_an_install_only_record_is_never_a_treasure_by_default(tmp_path: Path) -> None:
+    """P2-01 (brief 15.6, recommend strictly): the function-coverage rule is on, so a record pickfit only saw
+    install is not a treasure, whatever its score; a function-level one with a feature judged keeps its chance."""
+    from pickfit import schema
+
+    assert schema.TREASURE_MIN_FUNCTION_COVERAGE is not None and schema.TREASURE_MIN_FUNCTION_COVERAGE > 0.0
+    db_path, out = setup_records(tmp_path)
+    score_records(out, db_path=db_path, model=MODEL, use_github=False, use_registries=False, now=LATER,
+                  grade=fake_grade())
+    data = json.loads((out / "tinyq.json").read_text(encoding="utf-8"))
+    assert treasure_block_of(data) is None  # function level, a check beyond --version passed
+    data["verification"]["runs"][0]["level"] = "install"
+    data["verification"]["level"] = "install"
+    assert treasure_block_of(data) == "function_coverage"
+    refresh_scores(data, LATER)
+    t = data["scores"]["treasure"]
+    assert t["blocked_by"] == "function_coverage" and t["is_treasure"] is False
+    SoftwareRecord.model_validate(data)
+    # An install-level run that still judged a listed feature has a share above zero: not blocked by this rule.
+    smoke = data["verification"]["runs"][0]["smoke_tests"]
+    smoke.append({"command": "tinyq .a sample.jsonl", "expected_signal": "1", "exit_code": 0, "passed": True})
+    data["verification"]["runs"][0]["features"] = [
+        {"feature": "query JSON Lines", "status": "checked", "smoke_tests": [1]},
+        {"feature": "stream from stdin", "status": "not_checked", "reason": "not_attempted"}]
+    assert treasure_block_of(data) is None
 
 
 def test_b3_v5_scores_move_to_the_current_formula_by_refresh(tmp_path: Path) -> None:

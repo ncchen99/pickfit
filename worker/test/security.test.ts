@@ -234,7 +234,7 @@ test('get_install_guide: the security field, and a warning to tell the user befo
 test('find_software: each pick carries its security check', async () => {
   const h = harness(() => modelResponse(answer()));
   h.deps.catalog = loadCatalog(indexWith(VULNERABLE));
-  const out = await findSoftware({ need: 'run a language model offline on my laptop', os: 'macos', must_run_locally: true }, h.deps);
+  const out = await findSoftware({ need: 'chat with a language model offline on my laptop', os: 'macos', must_run_locally: true }, h.deps);
   await h.settle();
   const runner = out.picks.find((p) => p.slug === SLUG)!;
   assert.equal(runner.security.status, 'vulnerable');

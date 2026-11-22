@@ -10,7 +10,7 @@ const MODERN_META = {
   'io.modelcontextprotocol/clientInfo': { name: 'test', version: '0' },
   'io.modelcontextprotocol/clientCapabilities': {},
 };
-const ARGS = { need: 'run a language model offline on my laptop', os: 'macos', must_run_locally: true };
+const ARGS = { need: 'chat with a language model offline on my laptop', os: 'macos', must_run_locally: true };
 
 function setup(env: Partial<Env> = {}, fake?: () => Response) {
   const { db, sqlite } = makeD1();
@@ -58,8 +58,9 @@ test('legacy clients: initialize, list and call without a session', async () => 
   assert.match(initMsg.result.instructions, /^pickfit matches software to the user's need; each was installed and tested in a sandbox\. Scope: .*desktop GUI apps/);
   // Every client loads these each session: keep them short (they grew past 512 with the answer guidance, past 900 with the GUI scope,
   // past 1000 with the known-vulnerability sentence, past 1030 with the five categories added on 2026-11-15, past 1060
-  // with the security level's conditional case on 2026-11-19).
-  assert.ok(initMsg.result.instructions.length <= 1100);
+  // with the security level's conditional case on 2026-11-19, past 1100 with "check before building" on 2026-11-22, P2-02).
+  assert.ok(initMsg.result.instructions.length <= 1200);
+  assert.match(initMsg.result.instructions, /Before writing a new tool, script or integration for the user, call find_software with the job\./);
   assert.match(initMsg.result.instructions, /Scope: dev CLIs, local AI tools, MCP servers, DevOps, security, data, docs and media tools, desktop GUI apps, web apps\. /);
 
   const list = await message(
@@ -69,9 +70,11 @@ test('legacy clients: initialize, list and call without a session', async () => 
   assert.deepEqual(Object.keys(tools).sort(), ['find_alternatives', 'find_software', 'get_install_guide', 'report_outcome', 'submit_software']);
   for (const tool of Object.values(tools) as any[]) {
     assert.equal(tool.outputSchema.type, 'object', tool.name);
-    // Short enough to load every session; find_software's coverage sentence grew by the five categories added on 2026-11-15.
-    assert.ok(tool.description.length <= 1050, tool.name);
+    // Short enough to load every session; find_software's coverage sentence grew by the five categories added on 2026-11-15,
+    // and by "check before building" with reuse and build_it_yourself on 2026-11-22 (P2-02).
+    assert.ok(tool.description.length <= 1250, tool.name);
   }
+  assert.match(tools.find_software.description, /Before writing a new tool, script or integration for the user, call find_software with the job/);
   assert.equal(tools.find_software.annotations.readOnlyHint, true);
   assert.equal(tools.find_alternatives.annotations.readOnlyHint, true);
   assert.equal(tools.get_install_guide.annotations.readOnlyHint, true);

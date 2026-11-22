@@ -314,9 +314,13 @@ UNCHECKED_CAN_BE_TREASURE = True
 UNVERIFIED_CAP = False
 # A treasure needs at least this share of its packages checked (security), or of its listed features judged
 # (function): pickfit/coverage.py's measures, applied by pickfit/score.py (blocked_by "security_coverage",
-# "function_coverage"). None: no such rule (default).
+# "function_coverage"). None: no such rule.
+# Function: on since 11/22 (P2-01 of docs/proposals/brief-v15-gap-audit.md, brief 15.6 "recommend strictly"): any
+# share above zero, so a record pickfit only saw install (no feature judged, no check beyond --version) is not a
+# treasure, while a function-level one with one or more features judged keeps its chance. The share is never between
+# 0 and this value in practice; 0.0 itself would block nothing (the check is share < threshold).
 TREASURE_MIN_SECURITY_COVERAGE: float | None = None
-TREASURE_MIN_FUNCTION_COVERAGE: float | None = None
+TREASURE_MIN_FUNCTION_COVERAGE: float | None = 1e-9
 type TreasureBlock = Literal["security_blocked", "security_exposed", "security_conditional",
                              "security_present_unreachable", "security_not_shipped", "security_unchecked",
                              "security_coverage", "function_coverage", "unverified"]

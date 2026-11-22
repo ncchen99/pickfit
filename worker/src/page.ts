@@ -904,6 +904,13 @@ export function renderResults(
         `<p class="quiet small">${L('pickfit hasn’t checked it.', 'pickfit 沒有驗證過。')}</p></div>`,
     );
   }
+  // P2-02: a small one-off job may be simpler to write than to install a tool for.
+  if (out.build_it_yourself) {
+    parts.push(
+      `<div class="aside ask-note"><h3>${L('Writing it yourself may be simpler', '自己寫可能更簡單')}</h3><p>${esc(out.build_it_yourself.advice)}</p>` +
+        `<p class="quiet small">${L('pickfit hasn’t checked it.', 'pickfit 沒有驗證過。')}</p></div>`,
+    );
+  }
   if (out.picks.length) {
     // The answer first: one pick in full, then the others under their own heading.
     const instead = insteadLines(out.picks, catalog, form);
