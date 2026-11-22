@@ -7,9 +7,13 @@
   "aliases": [],
   "status": "listed",
   "status_reason": null,
+  "standing": "new",
   "category": "mcp_server",
   "kind": "mcp_server_or_agent_plugin",
   "audience": "end_user",
+  "used_by": "agent",
+  "track": "A",
+  "track_basis": "rule",
   "maturity": null,
   "tags": [
     "docker",
@@ -119,7 +123,8 @@
     "level": "unverified",
     "unverified_reason": "not_run",
     "checked_at": null,
-    "runs": []
+    "runs": [],
+    "reverify_cycle_days": 30
   },
   "mcp": {
     "transports": [
@@ -162,22 +167,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "sdr-mcp-native > tauri > plist > quick-xml"
+        ],
         "workspace": "native",
         "found_in": "native/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "sdr-mcp-native > tauri > plist > quick-xml"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -188,22 +193,19 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "sdr-mcp-native > tauri > plist > quick-xml"
+        ],
         "workspace": "native",
         "found_in": "native/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:NsReader"
-        ],
-        "paths": [
-          "sdr-mcp-native > tauri > plist > quick-xml"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -211,7 +213,10 @@
           "evidence": [
             "the project's source does not use NsReader, but other packages depend on quick-xml"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:react-router",
@@ -224,23 +229,20 @@
         "fixed_in": "7.14.2",
         "summary": "React Router's vendored turbo-stream v2 allows arbitrary constructor invocation via TYPE_ERROR deserialization leading to Unauth RCE",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-21T14:15:49Z",
         "scope": "runtime",
+        "paths": [
+          ". > react-router-dom > react-router"
+        ],
         "workspace": ".",
         "found_in": "web_sota/package-lock.json",
         "kev": false,
         "epss": 0.00416,
-        "fix_published_at": "2026-04-21T14:15:49Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity",
           "option:TYPE_ERROR"
-        ],
-        "paths": [
-          ". > react-router-dom > react-router"
         ],
         "reachability": {
           "method": "option_grep",
@@ -248,7 +250,10 @@
           "evidence": [
             "the project's source does not use TYPE_ERROR, but other packages depend on react-router"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:react-router",
@@ -261,24 +266,24 @@
         "fixed_in": "7.13.2",
         "summary": "React Router vulnerable to XSS in unstable RSC redirect handling via javascript: redirect targets",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-03-23T13:50:39Z",
         "scope": "runtime",
+        "paths": [
+          ". > react-router-dom > react-router"
+        ],
         "workspace": ".",
         "found_in": "web_sota/package-lock.json",
         "kev": false,
         "epss": 0.00189,
-        "fix_published_at": "2026-03-23T13:50:39Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "user_interaction",
           "high_complexity"
         ],
-        "paths": [
-          ". > react-router-dom > react-router"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:react-router",
@@ -291,23 +296,23 @@
         "fixed_in": "7.15.0",
         "summary": "React Router vulnerable to DoS via unbounded path expansion in __manifest endpoint",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-05-05T14:32:57Z",
         "scope": "runtime",
+        "paths": [
+          ". > react-router-dom > react-router"
+        ],
         "workspace": ".",
         "found_in": "web_sota/package-lock.json",
         "kev": false,
         "epss": 0.00299,
-        "fix_published_at": "2026-05-05T14:32:57Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > react-router-dom > react-router"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:react-router",
@@ -320,23 +325,23 @@
         "fixed_in": "7.18.0",
         "summary": "React Router: Unauthenticated Denial of Service via Inefficient Route Matching",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-16T14:12:39Z",
         "scope": "runtime",
+        "paths": [
+          ". > react-router-dom > react-router"
+        ],
         "workspace": ".",
         "found_in": "web_sota/package-lock.json",
         "kev": false,
         "epss": 0.00708,
-        "fix_published_at": "2026-06-16T14:12:39Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > react-router-dom > react-router"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:react-router",
@@ -347,22 +352,22 @@
         "fixed_in": "7.18.2",
         "summary": "React Router: RSC Mode CSRF Bypass Allows Action Execution Before 400 Response",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-07-28T21:53:08Z",
         "scope": "runtime",
+        "paths": [
+          ". > react-router-dom > react-router"
+        ],
         "workspace": ".",
         "found_in": "web_sota/package-lock.json",
         "kev": false,
-        "fix_published_at": "2026-07-28T21:53:08Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "user_interaction"
         ],
-        "paths": [
-          ". > react-router-dom > react-router"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:react-router",
@@ -375,23 +380,23 @@
         "fixed_in": "7.14.0",
         "summary": "React Router vulnerable to Denial of Service via reflected user input in single-fetch",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-04-02T20:32:25Z",
         "scope": "runtime",
+        "paths": [
+          ". > react-router-dom > react-router"
+        ],
         "workspace": ".",
         "found_in": "web_sota/package-lock.json",
         "kev": false,
         "epss": 0.00294,
-        "fix_published_at": "2026-04-02T20:32:25Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > react-router-dom > react-router"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",

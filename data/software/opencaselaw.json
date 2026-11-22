@@ -7,9 +7,13 @@
   "aliases": [],
   "status": "listed",
   "status_reason": null,
+  "standing": "new",
   "category": "mcp_server",
   "kind": "mcp_server_or_agent_plugin",
   "audience": "end_user",
+  "used_by": "agent",
+  "track": "A",
+  "track_basis": "rule",
   "maturity": null,
   "tags": [
     "ai-agents",
@@ -266,7 +270,8 @@
           "offline": false
         }
       }
-    ]
+    ],
+    "reverify_cycle_days": 30
   },
   "mcp": {
     "transports": [
@@ -329,24 +334,21 @@
         "fixed_in": "5.1.16",
         "summary": "nanoid: non-secure generators can loop indefinitely with negative size",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-24T18:37:08Z",
         "scope": "runtime",
+        "paths": [
+          ". > docx > nanoid"
+        ],
         "workspace": ".",
         "found_in": "web_ui/package-lock.json",
         "kev": false,
         "epss": 0.0033,
-        "fix_published_at": "2026-06-24T18:37:08Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "high_complexity",
           "denial_of_service",
           "symbol:nanoid/non-secure"
-        ],
-        "paths": [
-          ". > docx > nanoid"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -354,7 +356,10 @@
           "evidence": [
             "the project's source does not use nanoid/non-secure, but other packages depend on nanoid"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:nanoid",
@@ -367,23 +372,23 @@
         "fixed_in": "5.1.11",
         "summary": "nanoid: Integer Overflow or Wraparound",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-04-30T22:06:42Z",
         "scope": "runtime",
+        "paths": [
+          ". > docx > nanoid"
+        ],
         "workspace": ".",
         "found_in": "web_ui/package-lock.json",
         "kev": false,
         "epss": 0.00296,
-        "fix_published_at": "2026-04-30T22:06:42Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity"
         ],
-        "paths": [
-          ". > docx > nanoid"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",

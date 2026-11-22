@@ -7,9 +7,13 @@
   "aliases": [],
   "status": "listed",
   "status_reason": null,
+  "standing": "new",
   "category": "local_ai",
   "kind": "cli_tool",
   "audience": "end_user",
+  "used_by": "agent",
+  "track": "A",
+  "track_basis": "rule",
   "maturity": null,
   "tags": [
     "agentic",
@@ -190,7 +194,8 @@
     "level": "unverified",
     "unverified_reason": "not_run",
     "checked_at": null,
-    "runs": []
+    "runs": [],
+    "reverify_cycle_days": 90
   },
   "security": {
     "version": "sec.v2",
@@ -215,22 +220,22 @@
         "fixed_in": "3.6.0",
         "summary": "Unbounded tool schema cache in Streamable HTTP server transport",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-20T05:53:35Z",
         "scope": "runtime",
+        "paths": [
+          "retrograd-tools > rmcp"
+        ],
         "workspace": "crates/retrograd-tools",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-20T05:53:35Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "retrograd-tools > rmcp"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:markdown-it",
@@ -243,23 +248,23 @@
         "fixed_in": "14.3.3",
         "summary": "markdown-it: Quadratic-time rendering of a single multi-line link reference definition with default options (regression since 14.0)",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-16T01:47:54Z",
         "scope": "runtime",
+        "paths": [
+          ". > markdown-it"
+        ],
         "workspace": ".",
         "found_in": "web/bun.lock",
         "kev": false,
         "epss": 0.0055,
-        "fix_published_at": "2026-10-16T01:47:54Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > markdown-it"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:source-map-js",
@@ -272,23 +277,23 @@
         "fixed_in": "1.2.2",
         "summary": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-30T14:08:09Z",
         "scope": "runtime",
+        "paths": [
+          ". > vue > @vue/compiler-sfc > source-map-js"
+        ],
         "workspace": ".",
         "found_in": "web/bun.lock",
         "kev": false,
         "epss": 0.00455,
-        "fix_published_at": "2026-09-30T14:08:09Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > vue > @vue/compiler-sfc > source-map-js"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:pyo3",
@@ -299,22 +304,19 @@
         "fixed_in": "0.29.0",
         "summary": "PyO3 has an Out-of-bounds Read in `nth` / `nth_back` for `PyList` and `PyTuple` iterators",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "retrograd-python > pyo3"
+        ],
         "workspace": "python/native",
         "found_in": "python/native/Cargo.lock",
         "kev": false,
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:nth_back",
           "symbol:PyList",
           "symbol:PyTuple"
-        ],
-        "paths": [
-          "retrograd-python > pyo3"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -322,7 +324,10 @@
           "evidence": [
             "no source file uses nth_back, PyList, PyTuple; only the project depends on pyo3"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",

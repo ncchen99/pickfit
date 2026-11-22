@@ -7,9 +7,13 @@
   "aliases": [],
   "status": "listed",
   "status_reason": null,
+  "standing": "new",
   "category": "security_net",
   "kind": "tui",
   "audience": "end_user",
+  "used_by": "both",
+  "track": "A",
+  "track_basis": "rule",
   "maturity": null,
   "tags": [
     "go",
@@ -152,7 +156,8 @@
     "level": "unverified",
     "unverified_reason": "not_run",
     "checked_at": null,
-    "runs": []
+    "runs": [],
+    "reverify_cycle_days": 90
   },
   "security": {
     "version": "sec.v2",
@@ -177,25 +182,22 @@
         "fixed_in": "1.8.3",
         "summary": "Logrus is vulnerable to DoS when using Entry.Writer()",
         "malicious": false,
-        "level": "exposed",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2023-05-15T10:31:28Z",
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/sirupsen/logrus"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00675,
-        "fix_published_at": "2023-05-15T10:31:28Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:Entry.Writer",
           "symbol:Entry.WriterLevel",
           "symbol:Entry.writerScanner"
-        ],
-        "paths": [
-          "go.mod > github.com/sirupsen/logrus"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -203,7 +205,10 @@
           "evidence": [
             "utils.go:683: return log.NewEntry(l).WithField(key, val).WriterLevel(log.ErrorLevel)"
           ]
-        }
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/antchfx/xpath",
@@ -216,26 +221,26 @@
         "fixed_in": "1.3.6",
         "summary": "XPath: Boolean expression infinite loop leads to denial of service via CPU exhaustion",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-02-21T13:32:17Z",
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/antchfx/xpath"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00551,
-        "fix_published_at": "2026-02-21T13:32:17Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:Expr.Evaluate",
           "symbol:NodeIterator.MoveNext",
           "symbol:ancestorQuery.Evaluate"
         ],
-        "paths": [
-          "go.mod > github.com/antchfx/xpath"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/gin-gonic/gin",
@@ -248,26 +253,26 @@
         "fixed_in": "1.7.7",
         "summary": "Inconsistent Interpretation of HTTP Requests in github.com/gin-gonic/gin",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2021-11-24T13:54:13Z",
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/gin-gonic/gin"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.01332,
-        "fix_published_at": "2021-11-24T13:54:13Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "user_interaction",
           "symbol:Context.ClientIP",
           "symbol:Context.Next",
           "symbol:Context.RemoteIP"
         ],
-        "paths": [
-          "go.mod > github.com/gin-gonic/gin"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -330,17 +335,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 48.7,
+      "raw_total": 48.7,
       "confidence": 0.5,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.625,
@@ -360,10 +362,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 48.7,
       "security": {
         "level": "exposed",
         "basis": "assessment",

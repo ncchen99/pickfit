@@ -7,9 +7,13 @@
   "aliases": [],
   "status": "listed",
   "status_reason": null,
+  "standing": "new",
   "category": "dev_cli",
   "kind": "cli_tool",
   "audience": "end_user",
+  "used_by": "agent",
+  "track": "A",
+  "track_basis": "rule",
   "maturity": null,
   "tags": [
     "agentic-ai",
@@ -226,7 +230,10 @@
           }
         ]
       }
-    ]
+    ],
+    "last_passed_at": "2026-11-01T03:12:00.608071+08:00",
+    "reverify_cycle_days": 30,
+    "reverify_due_at": "2026-12-01T03:12:00.608071+08:00"
   },
   "security": {
     "version": "sec.v2",
@@ -251,25 +258,22 @@
         "fixed_in": null,
         "summary": "Excelize: Unbounded <col max> attribute is loaded with no MaxColumns check and expanded per-column by flatCols(), so any column mutator hangs or OOMs the process",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/xuri/excelize/v2"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.0037,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "user_interaction",
           "denial_of_service",
           "symbol:File.SetColOutlineLevel",
           "symbol:File.SetColStyle",
           "symbol:File.SetColVisible"
-        ],
-        "paths": [
-          "go.mod > github.com/xuri/excelize/v2"
         ],
         "reachability": {
           "method": "import_grep",
@@ -278,7 +282,10 @@
             "internal/documents/xlsx_extract.go:12: \"github.com/xuri/excelize/v2\"",
             "no call to File.SetColOutlineLevel, File.SetColStyle, File.SetColVisible found"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -335,7 +342,7 @@
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-20T02:22:48+08:00",
+    "computed_at": "2026-11-22T19:52:05+08:00",
     "quality": {
       "total": 87.0,
       "raw_total": 87.0,
@@ -394,8 +401,9 @@
       "packages": []
     },
     "treasure": {
-      "is_treasure": true,
-      "value": 57.51
+      "is_treasure": false,
+      "value": 57.51,
+      "blocked_by": "function_coverage"
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -721,5 +729,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:42:13+08:00",
-  "updated_at": "2026-11-20T02:22:48+08:00"
+  "updated_at": "2026-11-22T19:52:05+08:00"
 }

@@ -7,9 +7,13 @@
   "aliases": [],
   "status": "listed",
   "status_reason": null,
+  "standing": "new",
   "category": "dev_cli",
   "kind": "cli_tool",
   "audience": "end_user",
+  "used_by": "agent",
+  "track": "A",
+  "track_basis": "rule",
   "maturity": "prototype",
   "tags": [
     "cli",
@@ -270,7 +274,10 @@
           }
         ]
       }
-    ]
+    ],
+    "last_passed_at": "2026-10-31T03:54:04.580174+08:00",
+    "reverify_cycle_days": 90,
+    "reverify_due_at": "2027-01-29T03:54:04.580174+08:00"
   },
   "security": {
     "version": "sec.v2",
@@ -295,20 +302,20 @@
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-17T18:45:16Z",
         "scope": "runtime",
+        "paths": [
+          "loxone-config > zip"
+        ],
         "workspace": "crates/loxone-config",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.0032,
-        "fix_published_at": "2026-10-17T18:45:16Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "loxone-config > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -321,23 +328,23 @@
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "loxone-config > zip"
+        ],
         "workspace": "crates/loxone-config",
         "found_in": "Cargo.lock",
         "kev": false,
         "epss": 0.00461,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "loxone-config > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -348,23 +355,23 @@
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "loxone-config > zip"
+        ],
         "workspace": "crates/loxone-config",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction"
         ],
-        "paths": [
-          "loxone-config > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -375,21 +382,18 @@
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "loxone-config > zip"
+        ],
         "workspace": "crates/loxone-config",
         "found_in": "Cargo.lock",
         "kev": false,
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:ZipStreamReader::extract",
           "symbol:ZipArchive::extract"
-        ],
-        "paths": [
-          "loxone-config > zip"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -397,7 +401,10 @@
           "evidence": [
             "no source file uses ZipStreamReader::extract, ZipArchive::extract; only the project depends on zip"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -459,7 +466,7 @@
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-20T02:22:48+08:00",
+    "computed_at": "2026-11-22T19:52:05+08:00",
     "quality": {
       "total": 85.5,
       "raw_total": 85.5,
@@ -519,7 +526,8 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 45.32
+      "value": 45.32,
+      "blocked_by": "function_coverage"
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -885,5 +893,5 @@
     }
   ],
   "first_seen_at": "2026-10-30T23:40:29+08:00",
-  "updated_at": "2026-11-20T02:22:48+08:00"
+  "updated_at": "2026-11-22T19:52:05+08:00"
 }

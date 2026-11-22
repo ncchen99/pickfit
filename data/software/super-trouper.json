@@ -7,9 +7,13 @@
   "aliases": [],
   "status": "listed",
   "status_reason": null,
+  "standing": "new",
   "category": "mcp_server",
   "kind": "mcp_server_or_agent_plugin",
   "audience": "end_user",
+  "used_by": "agent",
+  "track": "A",
+  "track_basis": "rule",
   "maturity": null,
   "tags": [
     "application-security",
@@ -317,7 +321,10 @@
           }
         ]
       }
-    ]
+    ],
+    "last_passed_at": "2026-10-31T03:04:31.353552+08:00",
+    "reverify_cycle_days": 30,
+    "reverify_due_at": "2026-11-30T03:04:31.353552+08:00"
   },
   "mcp": {
     "transports": [
@@ -397,23 +404,20 @@
         "fixed_in": "1.19.6",
         "summary": "Denial of service via crafted HTTP/2 stream in net/http and golang.org/x/net",
         "malicious": false,
-        "level": "exposed",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "installed > /.local/lib/node_modules/@crissyfield/super-trouper/node_modules/@crissyfield/super-trouper-linux-x64-gnu/bin/super-trouper > stdlib"
+        ],
         "found_in": "sbom:verify-super-trouper-20261031-030323-b01e",
         "in_artifact": true,
         "kev": false,
         "epss": 0.04561,
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:Client.Do",
           "symbol:Client.Get",
           "symbol:Client.Head"
-        ],
-        "paths": [
-          "installed > /.local/lib/node_modules/@crissyfield/super-trouper/node_modules/@crissyfield/super-trouper-linux-x64-gnu/bin/super-trouper > stdlib"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -421,7 +425,10 @@
           "evidence": [
             "internal/codeshare/codeshare.go:175: response, err := c.client.Do(request)"
           ]
-        }
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:stdlib",
@@ -434,10 +441,10 @@
         "fixed_in": "1.12.16",
         "summary": "Certificate validation bypass on Windows in crypto/x509",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
         "scope": "runtime",
+        "paths": [
+          "installed > /.local/lib/node_modules/@crissyfield/super-trouper/node_modules/@crissyfield/super-trouper-linux-x64-gnu/bin/super-trouper > stdlib"
+        ],
         "found_in": "sbom:verify-super-trouper-20261031-030323-b01e",
         "in_artifact": true,
         "kev": true,
@@ -445,9 +452,9 @@
         "preconditions": [
           "symbol:Certificate.systemVerify"
         ],
-        "paths": [
-          "installed > /.local/lib/node_modules/@crissyfield/super-trouper/node_modules/@crissyfield/super-trouper-linux-x64-gnu/bin/super-trouper > stdlib"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:stdlib",
@@ -460,10 +467,10 @@
         "fixed_in": "1.23.8",
         "summary": "Request smuggling due to acceptance of invalid chunked data in net/http",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
         "scope": "runtime",
+        "paths": [
+          "installed > /.local/lib/node_modules/@crissyfield/super-trouper/node_modules/@crissyfield/super-trouper-linux-x64-gnu/bin/super-trouper > stdlib"
+        ],
         "found_in": "sbom:verify-super-trouper-20261031-030323-b01e",
         "in_artifact": true,
         "kev": false,
@@ -472,9 +479,9 @@
           "symbol:chunkedReader.Read",
           "symbol:readChunkLine"
         ],
-        "paths": [
-          "installed > /.local/lib/node_modules/@crissyfield/super-trouper/node_modules/@crissyfield/super-trouper-linux-x64-gnu/bin/super-trouper > stdlib"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:stdlib",
@@ -487,23 +494,23 @@
         "fixed_in": "1.13.15",
         "summary": "Unbounded read from invalid inputs in encoding/binary",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "installed > /.local/lib/node_modules/@crissyfield/super-trouper/node_modules/@crissyfield/super-trouper-linux-x64-gnu/bin/super-trouper > stdlib"
+        ],
         "found_in": "sbom:verify-super-trouper-20261031-030323-b01e",
         "in_artifact": true,
         "kev": false,
         "epss": 0.04861,
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:ReadUvarint",
           "symbol:ReadVarint"
         ],
-        "paths": [
-          "installed > /.local/lib/node_modules/@crissyfield/super-trouper/node_modules/@crissyfield/super-trouper-linux-x64-gnu/bin/super-trouper > stdlib"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:stdlib",
@@ -516,23 +523,23 @@
         "fixed_in": "1.12.16",
         "summary": "Panic in certificate parsing in crypto/x509 and golang.org/x/crypto/cryptobyte",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "installed > /.local/lib/node_modules/@crissyfield/super-trouper/node_modules/@crissyfield/super-trouper-linux-x64-gnu/bin/super-trouper > stdlib"
+        ],
         "found_in": "sbom:verify-super-trouper-20261031-030323-b01e",
         "in_artifact": true,
         "kev": false,
         "epss": 0.02647,
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:crypto/x509",
           "symbol:golang.org/x/crypto/cryptobyte"
         ],
-        "paths": [
-          "installed > /.local/lib/node_modules/@crissyfield/super-trouper/node_modules/@crissyfield/super-trouper-linux-x64-gnu/bin/super-trouper > stdlib"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:stdlib",
@@ -545,23 +552,20 @@
         "fixed_in": "1.16.12",
         "summary": "Unbounded memory growth in net/http and golang.org/x/net/http2",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "installed > /.local/lib/node_modules/@crissyfield/super-trouper/node_modules/@crissyfield/super-trouper-linux-x64-gnu/bin/super-trouper > stdlib"
+        ],
         "found_in": "sbom:verify-super-trouper-20261031-030323-b01e",
         "in_artifact": true,
         "kev": false,
         "epss": 0.04254,
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:http2serverConn.canonicalHeader",
           "symbol:Server.ServeConn",
           "symbol:serverConn.canonicalHeader"
-        ],
-        "paths": [
-          "installed > /.local/lib/node_modules/@crissyfield/super-trouper/node_modules/@crissyfield/super-trouper-linux-x64-gnu/bin/super-trouper > stdlib"
         ],
         "reachability": {
           "method": "import_grep",
@@ -570,7 +574,10 @@
             "internal/codeshare/codeshare.go:8: \"net/http\"",
             "no call to http2serverConn.canonicalHeader, Server.ServeConn, serverConn.canonicalHeader found"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:stdlib",
@@ -584,23 +591,20 @@
         "fixed_in": "1.11.13",
         "summary": "Reset flood in net/http and golang.org/x/net/http",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "installed > /.local/lib/node_modules/@crissyfield/super-trouper/node_modules/@crissyfield/super-trouper-linux-x64-gnu/bin/super-trouper > stdlib"
+        ],
         "found_in": "sbom:verify-super-trouper-20261031-030323-b01e",
         "in_artifact": true,
         "kev": false,
         "epss": 0.83958,
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:http2serverConn.scheduleFrameWrite",
           "symbol:http2serverConn.serve",
           "symbol:http2serverConn.writeFrame"
-        ],
-        "paths": [
-          "installed > /.local/lib/node_modules/@crissyfield/super-trouper/node_modules/@crissyfield/super-trouper-linux-x64-gnu/bin/super-trouper > stdlib"
         ],
         "reachability": {
           "method": "import_grep",
@@ -609,7 +613,10 @@
             "internal/codeshare/codeshare.go:8: \"net/http\"",
             "no call to http2serverConn.scheduleFrameWrite, http2serverConn.serve, http2serverConn.writeFrame found"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:stdlib",
@@ -622,23 +629,20 @@
         "fixed_in": "1.18.6",
         "summary": "Denial of service in net/http and golang.org/x/net/http2",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "installed > /.local/lib/node_modules/@crissyfield/super-trouper/node_modules/@crissyfield/super-trouper-linux-x64-gnu/bin/super-trouper > stdlib"
+        ],
         "found_in": "sbom:verify-super-trouper-20261031-030323-b01e",
         "in_artifact": true,
         "kev": false,
         "epss": 0.03487,
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:ListenAndServe",
           "symbol:ListenAndServeTLS",
           "symbol:Serve"
-        ],
-        "paths": [
-          "installed > /.local/lib/node_modules/@crissyfield/super-trouper/node_modules/@crissyfield/super-trouper-linux-x64-gnu/bin/super-trouper > stdlib"
         ],
         "reachability": {
           "method": "import_grep",
@@ -647,7 +651,10 @@
             "internal/codeshare/codeshare.go:8: \"net/http\"",
             "no call to ListenAndServe, ListenAndServeTLS, Serve found"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:stdlib",
@@ -660,10 +667,10 @@
         "fixed_in": "1.20.10",
         "summary": "HTTP/2 rapid reset can cause excessive work in net/http",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
         "scope": "runtime",
+        "paths": [
+          "installed > /.local/lib/node_modules/@crissyfield/super-trouper/node_modules/@crissyfield/super-trouper-linux-x64-gnu/bin/super-trouper > stdlib"
+        ],
         "found_in": "sbom:verify-super-trouper-20261031-030323-b01e",
         "in_artifact": true,
         "kev": false,
@@ -673,9 +680,6 @@
           "symbol:ListenAndServeTLS",
           "symbol:Serve"
         ],
-        "paths": [
-          "installed > /.local/lib/node_modules/@crissyfield/super-trouper/node_modules/@crissyfield/super-trouper-linux-x64-gnu/bin/super-trouper > stdlib"
-        ],
         "reachability": {
           "method": "import_grep",
           "result": "unknown",
@@ -683,7 +687,10 @@
             "internal/codeshare/codeshare.go:8: \"net/http\"",
             "no call to ListenAndServe, ListenAndServeTLS, Serve found"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -778,20 +785,17 @@
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-20T12:24:26+08:00",
+    "computed_at": "2026-11-22T19:52:05+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 84.9,
       "confidence": 0.6,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 1.0,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.6875,
@@ -811,10 +815,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 84.9,
       "security": {
         "level": "exposed",
         "basis": "assessment",
@@ -840,7 +847,8 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 29.7
+      "value": 29.7,
+      "blocked_by": "function_coverage"
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -1422,5 +1430,5 @@
     }
   ],
   "first_seen_at": "2026-10-31T00:18:19+08:00",
-  "updated_at": "2026-11-20T12:24:26+08:00"
+  "updated_at": "2026-11-22T19:52:05+08:00"
 }

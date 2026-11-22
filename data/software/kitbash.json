@@ -7,9 +7,13 @@
   "aliases": [],
   "status": "listed",
   "status_reason": null,
+  "standing": "new",
   "category": "mcp_server",
   "kind": "mcp_server_or_agent_plugin",
   "audience": "end_user",
+  "used_by": "agent",
+  "track": "A",
+  "track_basis": "rule",
   "maturity": null,
   "tags": [
     "agent",
@@ -79,7 +83,8 @@
     "level": "unverified",
     "unverified_reason": "not_run",
     "checked_at": null,
-    "runs": []
+    "runs": [],
+    "reverify_cycle_days": 30
   },
   "mcp": {
     "transports": [
@@ -141,22 +146,19 @@
         "fixed_in": "2.0.8",
         "summary": "proxy-addr vulnerable to IP spoofing via IPv4-mapped IPv6 trust subnet",
         "malicious": false,
-        "level": "exposed",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-09-15T06:12:45Z",
         "scope": "runtime",
+        "paths": [
+          ". > @modelcontextprotocol/sdk > express > proxy-addr"
+        ],
         "workspace": ".",
         "found_in": "package-lock.json",
         "kev": false,
         "epss": 0.0026,
-        "fix_published_at": "2026-09-15T06:12:45Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "entry:the MCP SDK's HTTP server transports"
-        ],
-        "paths": [
-          ". > @modelcontextprotocol/sdk > express > proxy-addr"
         ],
         "reachability": {
           "method": "entry_point_grep",
@@ -164,7 +166,10 @@
           "evidence": [
             "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
           ]
-        }
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:body-parser",
@@ -177,23 +182,20 @@
         "fixed_in": "2.4.0",
         "summary": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
         "malicious": false,
-        "level": "exposed",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-22T11:39:38Z",
         "scope": "runtime",
+        "paths": [
+          ". > @modelcontextprotocol/sdk > express > body-parser"
+        ],
         "workspace": ".",
         "found_in": "package-lock.json",
         "kev": false,
         "epss": 0.00388,
-        "fix_published_at": "2026-10-22T11:39:38Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "entry:the MCP SDK's HTTP server transports"
-        ],
-        "paths": [
-          ". > @modelcontextprotocol/sdk > express > body-parser"
         ],
         "reachability": {
           "method": "entry_point_grep",
@@ -201,7 +203,10 @@
           "evidence": [
             "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
           ]
-        }
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:ip-address",
@@ -214,22 +219,19 @@
         "fixed_in": "10.3.1",
         "summary": "ip-address: Address4 decodes leading-zero octets as decimal while resolvers decode them as octal, allowing SSRF and trust-boundary bypass",
         "malicious": false,
-        "level": "exposed",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-07-25T08:00:07Z",
         "scope": "runtime",
+        "paths": [
+          ". > @modelcontextprotocol/sdk > express-rate-limit > ip-address"
+        ],
         "workspace": ".",
         "found_in": "package-lock.json",
         "kev": false,
         "epss": 0.00465,
-        "fix_published_at": "2026-07-25T08:00:07Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "entry:the MCP SDK's HTTP server transports"
-        ],
-        "paths": [
-          ". > @modelcontextprotocol/sdk > express-rate-limit > ip-address"
         ],
         "reachability": {
           "method": "entry_point_grep",
@@ -237,7 +239,10 @@
           "evidence": [
             "src/server.ts:16: import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';"
           ]
-        }
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:fast-uri",
@@ -250,20 +255,20 @@
         "fixed_in": "3.1.6",
         "summary": "fast-uri vulnerable to host confusion via skipped IDN canonicalization on scheme-relative references",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-08-23T01:42:00Z",
         "scope": "runtime",
+        "paths": [
+          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+        ],
         "workspace": ".",
         "found_in": "package-lock.json",
         "kev": false,
         "epss": 0.00398,
-        "fix_published_at": "2026-08-23T01:42:00Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:fast-uri",
@@ -276,20 +281,20 @@
         "fixed_in": "3.1.5",
         "summary": "fast-uri vulnerable to host confusion via backslash authority introducer",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-07-31T09:16:56Z",
         "scope": "runtime",
+        "paths": [
+          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+        ],
         "workspace": ".",
         "found_in": "package-lock.json",
         "kev": false,
         "epss": 0.0038,
-        "fix_published_at": "2026-07-31T09:16:56Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:fast-uri",
@@ -302,20 +307,20 @@
         "fixed_in": "3.1.6",
         "summary": "fast-uri vulnerable to server-side request forgery via malformed IPv6 normalization",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-08-23T01:42:00Z",
         "scope": "runtime",
+        "paths": [
+          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+        ],
         "workspace": ".",
         "found_in": "package-lock.json",
         "kev": false,
         "epss": 0.0022,
-        "fix_published_at": "2026-08-23T01:42:00Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:fast-uri",
@@ -328,20 +333,20 @@
         "fixed_in": "3.1.6",
         "summary": "fast-uri vulnerable to server-side request forgery via repeated hostname percent-decoding",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-08-23T01:42:00Z",
         "scope": "runtime",
+        "paths": [
+          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+        ],
         "workspace": ".",
         "found_in": "package-lock.json",
         "kev": false,
         "epss": 0.0022,
-        "fix_published_at": "2026-08-23T01:42:00Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:fast-uri",
@@ -354,20 +359,20 @@
         "fixed_in": "3.1.6",
         "summary": "fast-uri vulnerable to host confusion via percent-encoded scheme normalization",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-08-23T01:42:00Z",
         "scope": "runtime",
+        "paths": [
+          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+        ],
         "workspace": ".",
         "found_in": "package-lock.json",
         "kev": false,
         "epss": 0.00232,
-        "fix_published_at": "2026-08-23T01:42:00Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:fast-uri",
@@ -380,20 +385,20 @@
         "fixed_in": "3.1.7",
         "summary": "fast-uri vulnerable to authority injection via an unvalidated port in serialize",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-09-02T11:06:41Z",
         "scope": "runtime",
+        "paths": [
+          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+        ],
         "workspace": ".",
         "found_in": "package-lock.json",
         "kev": false,
         "epss": 0.00239,
-        "fix_published_at": "2026-09-02T11:06:41Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:fast-uri",
@@ -406,20 +411,20 @@
         "fixed_in": "3.1.4",
         "summary": "fast-uri vulnerable to host confusion via literal backslash authority delimiter",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-07-19T07:42:54Z",
         "scope": "runtime",
+        "paths": [
+          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
+        ],
         "workspace": ".",
         "found_in": "package-lock.json",
         "kev": false,
         "epss": 0.00436,
-        "fix_published_at": "2026-07-19T07:42:54Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          ". > @modelcontextprotocol/sdk > ajv > fast-uri"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -483,17 +488,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 63.1,
+      "raw_total": 63.1,
       "confidence": 0.4,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": null,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.75,
@@ -513,10 +515,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 63.1,
       "security": {
         "level": "exposed",
         "basis": "assessment",

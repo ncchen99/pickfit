@@ -7,9 +7,13 @@
   "aliases": [],
   "status": "listed",
   "status_reason": null,
+  "standing": "new",
   "category": "local_ai",
   "kind": "cli_tool",
   "audience": null,
+  "used_by": "agent",
+  "track": "A",
+  "track_basis": "rule",
   "maturity": null,
   "tags": [
     "agents",
@@ -86,7 +90,8 @@
     "level": "unverified",
     "unverified_reason": "not_run",
     "checked_at": null,
-    "runs": []
+    "runs": [],
+    "reverify_cycle_days": 90
   },
   "security": {
     "version": "sec.v2",
@@ -109,21 +114,21 @@
         "fixed_in": "2026.10.18",
         "summary": "certifi bundles emSign root CAs with compromised intermediate CA keys",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
-        "scope": "runtime",
-        "found_in": "uv.lock",
-        "kev": false,
-        "fix_published_at": "2026-10-18T16:21:06Z",
         "attack_vector": "network",
         "dos_only": false,
+        "fix_published_at": "2026-10-18T16:21:06Z",
+        "scope": "runtime",
+        "paths": [
+          "uv.lock > certifi"
+        ],
+        "found_in": "uv.lock",
+        "kev": false,
         "preconditions": [
           "high_complexity"
         ],
-        "paths": [
-          "uv.lock > certifi"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "pypi:filelock",
@@ -136,22 +141,22 @@
         "fixed_in": "4.2.1",
         "summary": "filelock ReadWriteLock: SQLite reopens the lock database by name, so a planted symlink or journal file makes the lock user's process overwrite or unlink its own files",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-10-17T16:48:12Z",
         "scope": "runtime",
+        "paths": [
+          "uv.lock > filelock"
+        ],
         "found_in": "uv.lock",
         "kev": false,
         "epss": 0.0019,
-        "fix_published_at": "2026-10-17T16:48:12Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access"
         ],
-        "paths": [
-          "uv.lock > filelock"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",

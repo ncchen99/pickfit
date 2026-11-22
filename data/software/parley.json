@@ -7,9 +7,13 @@
   "aliases": [],
   "status": "listed",
   "status_reason": null,
+  "standing": "new",
   "category": "mcp_server",
   "kind": "desktop_app",
   "audience": "end_user",
+  "used_by": "human",
+  "track": "none",
+  "track_basis": "rule",
   "maturity": null,
   "tags": [
     "ai",
@@ -229,7 +233,8 @@
     "level": "unverified",
     "unverified_reason": "not_run",
     "checked_at": null,
-    "runs": []
+    "runs": [],
+    "reverify_cycle_days": 30
   },
   "mcp": {
     "transports": [
@@ -300,20 +305,20 @@
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-17T18:45:16Z",
         "scope": "runtime",
+        "paths": [
+          "parley > tauri-plugin-updater > zip"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.0032,
-        "fix_published_at": "2026-10-17T18:45:16Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "parley > tauri-plugin-updater > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -324,22 +329,19 @@
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "parley > tauri-plugin-updater > zip"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:ZipStreamReader::extract",
           "symbol:ZipArchive::extract"
-        ],
-        "paths": [
-          "parley > tauri-plugin-updater > zip"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -347,7 +349,10 @@
           "evidence": [
             "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -358,22 +363,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "parley > plist > quick-xml"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "parley > plist > quick-xml"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -384,22 +389,19 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "parley > plist > quick-xml"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:NsReader"
-        ],
-        "paths": [
-          "parley > plist > quick-xml"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -407,7 +409,10 @@
           "evidence": [
             "the project's source does not use NsReader, but other packages depend on quick-xml"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -420,23 +425,23 @@
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "parley > tauri-plugin-updater > zip"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.00461,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "parley > tauri-plugin-updater > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -447,23 +452,23 @@
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "parley > tauri-plugin-updater > zip"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction"
         ],
-        "paths": [
-          "parley > tauri-plugin-updater > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:@fastify/busboy",
@@ -476,23 +481,23 @@
         "fixed_in": "3.2.1",
         "summary": "@fastify/busboy vulnerable to Denial of Service via prototype-named multipart part header",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-08-12T20:05:52Z",
         "scope": "runtime",
+        "paths": [
+          ". > @ai-sdk/anthropic > @ai-sdk/provider-utils > undici > @fastify/busboy"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
         "epss": 0.00493,
-        "fix_published_at": "2026-08-12T20:05:52Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > @ai-sdk/anthropic > @ai-sdk/provider-utils > undici > @fastify/busboy"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:brace-expansion",
@@ -505,23 +510,23 @@
         "fixed_in": "5.0.7",
         "summary": "brace-expansion: DoS via exponential-time expansion of consecutive non-expanding {} groups",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T03:47:11Z",
         "scope": "runtime",
+        "paths": [
+          ". > shadcn > ts-morph > @ts-morph/common > minimatch > brace-expansion"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
         "epss": 0.00364,
-        "fix_published_at": "2026-06-29T03:47:11Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > shadcn > ts-morph > @ts-morph/common > minimatch > brace-expansion"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:brace-expansion",
@@ -534,23 +539,23 @@
         "fixed_in": "5.0.10",
         "summary": "brace-expansion: DoS via uncontrolled recursion in parseCommaParts causing stack exhaustion",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-14T21:37:19Z",
         "scope": "runtime",
+        "paths": [
+          ". > shadcn > ts-morph > @ts-morph/common > minimatch > brace-expansion"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
         "epss": 0.00455,
-        "fix_published_at": "2026-09-14T21:37:19Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > shadcn > ts-morph > @ts-morph/common > minimatch > brace-expansion"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:brace-expansion",
@@ -563,23 +568,23 @@
         "fixed_in": "5.0.8",
         "summary": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-07-23T11:39:25Z",
         "scope": "runtime",
+        "paths": [
+          ". > shadcn > ts-morph > @ts-morph/common > minimatch > brace-expansion"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
         "epss": 0.00643,
-        "fix_published_at": "2026-07-23T11:39:25Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > shadcn > ts-morph > @ts-morph/common > minimatch > brace-expansion"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:brace-expansion",
@@ -592,23 +597,23 @@
         "fixed_in": "5.0.11",
         "summary": "brace-expansion: DoS via uncontrolled recursion on nested brace groups causing stack exhaustion",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-14T21:49:31Z",
         "scope": "runtime",
+        "paths": [
+          ". > shadcn > ts-morph > @ts-morph/common > minimatch > brace-expansion"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
         "epss": 0.00491,
-        "fix_published_at": "2026-09-14T21:49:31Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > shadcn > ts-morph > @ts-morph/common > minimatch > brace-expansion"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:brace-expansion",
@@ -621,23 +626,23 @@
         "fixed_in": "5.0.9",
         "summary": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-07-30T10:00:32Z",
         "scope": "runtime",
+        "paths": [
+          ". > shadcn > ts-morph > @ts-morph/common > minimatch > brace-expansion"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
         "epss": 0.00647,
-        "fix_published_at": "2026-07-30T10:00:32Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > shadcn > ts-morph > @ts-morph/common > minimatch > brace-expansion"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:browserslist",
@@ -650,23 +655,23 @@
         "fixed_in": "4.28.7",
         "summary": "Browserslist: Uncaught crash / prototype write via untrusted browserslist-stats.json custom stats (normalizeStats)",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-07-21T17:30:54Z",
         "scope": "runtime",
+        "paths": [
+          ". > shadcn > browserslist"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
         "epss": 0.00658,
-        "fix_published_at": "2026-07-21T17:30:54Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > shadcn > browserslist"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:browserslist",
@@ -679,23 +684,23 @@
         "fixed_in": "4.28.7",
         "summary": "Browserslist: Unbounded memory growth (no cache eviction) via distinct query results, leading to eventual OOM",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-07-21T17:30:54Z",
         "scope": "runtime",
+        "paths": [
+          ". > shadcn > browserslist"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
         "epss": 0.00655,
-        "fix_published_at": "2026-07-21T17:30:54Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > shadcn > browserslist"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:fast-uri",
@@ -708,20 +713,20 @@
         "fixed_in": "3.1.3",
         "summary": "fast-uri vulnerable to host confusion via failed IDN canonicalization",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-06-29T12:53:35Z",
         "scope": "runtime",
+        "paths": [
+          ". > shadcn > @modelcontextprotocol/sdk > ajv > fast-uri"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
         "epss": 0.00692,
-        "fix_published_at": "2026-06-29T12:53:35Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          ". > shadcn > @modelcontextprotocol/sdk > ajv > fast-uri"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:fast-uri",
@@ -734,20 +739,20 @@
         "fixed_in": "3.1.5",
         "summary": "fast-uri vulnerable to host confusion via backslash authority introducer",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-07-31T09:16:56Z",
         "scope": "runtime",
+        "paths": [
+          ". > shadcn > @modelcontextprotocol/sdk > ajv > fast-uri"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
         "epss": 0.0038,
-        "fix_published_at": "2026-07-31T09:16:56Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          ". > shadcn > @modelcontextprotocol/sdk > ajv > fast-uri"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:fast-uri",
@@ -760,20 +765,20 @@
         "fixed_in": "3.1.6",
         "summary": "fast-uri vulnerable to server-side request forgery via malformed IPv6 normalization",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-08-23T01:42:00Z",
         "scope": "runtime",
+        "paths": [
+          ". > shadcn > @modelcontextprotocol/sdk > ajv > fast-uri"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
         "epss": 0.0022,
-        "fix_published_at": "2026-08-23T01:42:00Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          ". > shadcn > @modelcontextprotocol/sdk > ajv > fast-uri"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:fast-uri",
@@ -786,20 +791,20 @@
         "fixed_in": "3.1.6",
         "summary": "fast-uri vulnerable to server-side request forgery via repeated hostname percent-decoding",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-08-23T01:42:00Z",
         "scope": "runtime",
+        "paths": [
+          ". > shadcn > @modelcontextprotocol/sdk > ajv > fast-uri"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
         "epss": 0.0022,
-        "fix_published_at": "2026-08-23T01:42:00Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          ". > shadcn > @modelcontextprotocol/sdk > ajv > fast-uri"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:fast-uri",
@@ -812,20 +817,20 @@
         "fixed_in": "3.1.6",
         "summary": "fast-uri vulnerable to host confusion via percent-encoded scheme normalization",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-08-23T01:42:00Z",
         "scope": "runtime",
+        "paths": [
+          ". > shadcn > @modelcontextprotocol/sdk > ajv > fast-uri"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
         "epss": 0.00232,
-        "fix_published_at": "2026-08-23T01:42:00Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          ". > shadcn > @modelcontextprotocol/sdk > ajv > fast-uri"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:fast-uri",
@@ -838,20 +843,20 @@
         "fixed_in": "3.1.7",
         "summary": "fast-uri vulnerable to authority injection via an unvalidated port in serialize",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-09-02T11:06:41Z",
         "scope": "runtime",
+        "paths": [
+          ". > shadcn > @modelcontextprotocol/sdk > ajv > fast-uri"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
         "epss": 0.00239,
-        "fix_published_at": "2026-09-02T11:06:41Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          ". > shadcn > @modelcontextprotocol/sdk > ajv > fast-uri"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:proxy-addr",
@@ -864,21 +869,18 @@
         "fixed_in": "2.0.8",
         "summary": "proxy-addr vulnerable to IP spoofing via IPv4-mapped IPv6 trust subnet",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          ". > shadcn > @modelcontextprotocol/sdk > express > proxy-addr"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
         "epss": 0.0026,
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "entry:the MCP SDK's HTTP server transports"
-        ],
-        "paths": [
-          ". > shadcn > @modelcontextprotocol/sdk > express > proxy-addr"
         ],
         "reachability": {
           "method": "entry_point_grep",
@@ -886,7 +888,10 @@
           "evidence": [
             "no source file imports the MCP SDK's HTTP server transports (@modelcontextprotocol/sdk entry points)"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:@modelcontextprotocol/sdk",
@@ -899,21 +904,18 @@
         "fixed_in": "1.32.0",
         "summary": "MCP TypeScript SDK: Experimental tasks were not tied to the session that created them",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          ". > shadcn > @modelcontextprotocol/sdk"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
         "epss": 0.00345,
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "entry:the MCP SDK's HTTP server transports"
-        ],
-        "paths": [
-          ". > shadcn > @modelcontextprotocol/sdk"
         ],
         "reachability": {
           "method": "entry_point_grep",
@@ -921,7 +923,10 @@
           "evidence": [
             "no source file imports the MCP SDK's HTTP server transports (@modelcontextprotocol/sdk entry points)"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:@modelcontextprotocol/sdk",
@@ -934,22 +939,19 @@
         "fixed_in": "1.32.0",
         "summary": "MCP TypeScript SDK: One HTTP request within the default size limit could exhaust server memory during validation",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          ". > shadcn > @modelcontextprotocol/sdk"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
         "epss": 0.00598,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "entry:the MCP SDK's HTTP server transports"
-        ],
-        "paths": [
-          ". > shadcn > @modelcontextprotocol/sdk"
         ],
         "reachability": {
           "method": "entry_point_grep",
@@ -957,7 +959,10 @@
           "evidence": [
             "no source file imports the MCP SDK's HTTP server transports (@modelcontextprotocol/sdk entry points)"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:@modelcontextprotocol/sdk",
@@ -970,21 +975,18 @@
         "fixed_in": "1.31.0",
         "summary": "MCP TypeScript SDK: OAuth client could send credentials to an authorization server chosen by the MCP server",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          ". > shadcn > @modelcontextprotocol/sdk"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
         "epss": 0.00282,
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "entry:the MCP SDK's HTTP client and OAuth"
-        ],
-        "paths": [
-          ". > shadcn > @modelcontextprotocol/sdk"
         ],
         "reachability": {
           "method": "entry_point_grep",
@@ -992,7 +994,10 @@
           "evidence": [
             "no source file imports the MCP SDK's HTTP client and OAuth (@modelcontextprotocol/sdk entry points)"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:@modelcontextprotocol/sdk",
@@ -1003,21 +1008,18 @@
         "fixed_in": "1.30.1",
         "summary": "MCP TypeScript SDK: HTTP server transports and handlers did not limit request body size or JSON-RPC batch length",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          ". > shadcn > @modelcontextprotocol/sdk"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "entry:the MCP SDK's HTTP server transports"
-        ],
-        "paths": [
-          ". > shadcn > @modelcontextprotocol/sdk"
         ],
         "reachability": {
           "method": "entry_point_grep",
@@ -1025,7 +1027,10 @@
           "evidence": [
             "no source file imports the MCP SDK's HTTP server transports (@modelcontextprotocol/sdk entry points)"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:body-parser",
@@ -1038,22 +1043,19 @@
         "fixed_in": "2.4.0",
         "summary": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          ". > shadcn > @modelcontextprotocol/sdk > express > body-parser"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
         "epss": 0.00388,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "entry:the MCP SDK's HTTP server transports"
-        ],
-        "paths": [
-          ". > shadcn > @modelcontextprotocol/sdk > express > body-parser"
         ],
         "reachability": {
           "method": "entry_point_grep",
@@ -1061,7 +1063,10 @@
           "evidence": [
             "no source file imports the MCP SDK's HTTP server transports (@modelcontextprotocol/sdk entry points)"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:ip-address",
@@ -1074,21 +1079,18 @@
         "fixed_in": "10.3.1",
         "summary": "ip-address: Address4 decodes leading-zero octets as decimal while resolvers decode them as octal, allowing SSRF and trust-boundary bypass",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          ". > shadcn > @modelcontextprotocol/sdk > express-rate-limit > ip-address"
+        ],
         "workspace": ".",
         "found_in": "bun.lock",
         "kev": false,
         "epss": 0.00465,
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "entry:the MCP SDK's HTTP server transports"
-        ],
-        "paths": [
-          ". > shadcn > @modelcontextprotocol/sdk > express-rate-limit > ip-address"
         ],
         "reachability": {
           "method": "entry_point_grep",
@@ -1096,7 +1098,10 @@
           "evidence": [
             "no source file imports the MCP SDK's HTTP server transports (@modelcontextprotocol/sdk entry points)"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",

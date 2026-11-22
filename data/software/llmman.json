@@ -7,9 +7,13 @@
   "aliases": [],
   "status": "listed",
   "status_reason": null,
+  "standing": "new",
   "category": "local_ai",
   "kind": "cli_tool",
   "audience": null,
+  "used_by": "agent",
+  "track": "A",
+  "track_basis": "rule",
   "maturity": null,
   "tags": [
     "claude-code",
@@ -247,7 +251,10 @@
           }
         ]
       }
-    ]
+    ],
+    "last_passed_at": "2026-11-02T17:43:55.950283+08:00",
+    "reverify_cycle_days": 90,
+    "reverify_due_at": "2027-01-31T17:43:55.950283+08:00"
   },
   "security": {
     "version": "sec.v2",
@@ -276,22 +283,19 @@
         "fixed_in": "1.20.2",
         "summary": "Panic on two-block frames in github.com/klauspost/compress",
         "malicious": false,
-        "level": "exposed",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "dos_only": true,
+        "fix_published_at": "2026-10-12T09:34:06Z",
         "scope": "runtime",
+        "paths": [
+          "go-shim/go.mod > github.com/klauspost/compress"
+        ],
         "workspace": "go-shim",
         "found_in": "go-shim/go.mod",
         "in_artifact": true,
         "kev": false,
         "epss": 0.00333,
-        "fix_published_at": "2026-10-12T09:34:06Z",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
-        ],
-        "paths": [
-          "go-shim/go.mod > github.com/klauspost/compress"
         ],
         "reachability": {
           "method": "govulncheck_binary",
@@ -299,7 +303,10 @@
           "evidence": [
             "govulncheck -mode=binary symbol level, /home/sbx/.local/bin/llmman: EstimateSizes"
           ]
-        }
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:stdlib",
@@ -312,23 +319,20 @@
         "fixed_in": "1.19.6",
         "summary": "Denial of service via crafted HTTP/2 stream in net/http and golang.org/x/net",
         "malicious": false,
-        "level": "exposed",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/llmman > stdlib"
+        ],
         "found_in": "sbom:verify-llmman-20261102-174231-7765",
         "in_artifact": true,
         "kev": false,
         "epss": 0.04561,
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:Client.Do",
           "symbol:Client.Get",
           "symbol:Client.Head"
-        ],
-        "paths": [
-          "installed > /.local/bin/llmman > stdlib"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -336,7 +340,10 @@
           "evidence": [
             "go-shim/referrers.go:444: resp, err := client.Do(req)"
           ]
-        }
+        },
+        "counted": true,
+        "level": "exposed",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:stdlib",
@@ -349,10 +356,10 @@
         "fixed_in": "1.12.16",
         "summary": "Certificate validation bypass on Windows in crypto/x509",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
         "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/llmman > stdlib"
+        ],
         "found_in": "sbom:verify-llmman-20261102-174231-7765",
         "in_artifact": true,
         "kev": true,
@@ -360,9 +367,9 @@
         "preconditions": [
           "symbol:Certificate.systemVerify"
         ],
-        "paths": [
-          "installed > /.local/bin/llmman > stdlib"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:stdlib",
@@ -375,10 +382,10 @@
         "fixed_in": "1.23.8",
         "summary": "Request smuggling due to acceptance of invalid chunked data in net/http",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
         "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/llmman > stdlib"
+        ],
         "found_in": "sbom:verify-llmman-20261102-174231-7765",
         "in_artifact": true,
         "kev": false,
@@ -387,9 +394,9 @@
           "symbol:chunkedReader.Read",
           "symbol:readChunkLine"
         ],
-        "paths": [
-          "installed > /.local/bin/llmman > stdlib"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quinn-proto",
@@ -400,22 +407,19 @@
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-14T10:08:32Z",
         "scope": "runtime",
+        "paths": [
+          "llmman > hf-xet > xet-client > reqwest > quinn > quinn-proto"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-09-14T10:08:32Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "option:ACK_FREQUENCY"
-        ],
-        "paths": [
-          "llmman > hf-xet > xet-client > reqwest > quinn > quinn-proto"
         ],
         "reachability": {
           "method": "option_grep",
@@ -423,7 +427,10 @@
           "evidence": [
             "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quinn-proto",
@@ -434,22 +441,22 @@
         "fixed_in": "0.11.17",
         "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-08-17T17:32:41Z",
         "scope": "runtime",
+        "paths": [
+          "llmman > hf-xet > xet-client > reqwest > quinn > quinn-proto"
+        ],
         "workspace": ".",
         "found_in": "Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-08-17T17:32:41Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "llmman > hf-xet > xet-client > reqwest > quinn > quinn-proto"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:stdlib",
@@ -462,23 +469,23 @@
         "fixed_in": "1.13.15",
         "summary": "Unbounded read from invalid inputs in encoding/binary",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/llmman > stdlib"
+        ],
         "found_in": "sbom:verify-llmman-20261102-174231-7765",
         "in_artifact": true,
         "kev": false,
         "epss": 0.04861,
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:ReadUvarint",
           "symbol:ReadVarint"
         ],
-        "paths": [
-          "installed > /.local/bin/llmman > stdlib"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:stdlib",
@@ -491,23 +498,23 @@
         "fixed_in": "1.12.16",
         "summary": "Panic in certificate parsing in crypto/x509 and golang.org/x/crypto/cryptobyte",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/llmman > stdlib"
+        ],
         "found_in": "sbom:verify-llmman-20261102-174231-7765",
         "in_artifact": true,
         "kev": false,
         "epss": 0.02647,
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:crypto/x509",
           "symbol:golang.org/x/crypto/cryptobyte"
         ],
-        "paths": [
-          "installed > /.local/bin/llmman > stdlib"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:stdlib",
@@ -520,23 +527,20 @@
         "fixed_in": "1.16.12",
         "summary": "Unbounded memory growth in net/http and golang.org/x/net/http2",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/llmman > stdlib"
+        ],
         "found_in": "sbom:verify-llmman-20261102-174231-7765",
         "in_artifact": true,
         "kev": false,
         "epss": 0.04254,
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:http2serverConn.canonicalHeader",
           "symbol:Server.ServeConn",
           "symbol:serverConn.canonicalHeader"
-        ],
-        "paths": [
-          "installed > /.local/bin/llmman > stdlib"
         ],
         "reachability": {
           "method": "import_grep",
@@ -545,7 +549,10 @@
             "go-shim/backend_docker.go:17: \"net/http\"",
             "no call to http2serverConn.canonicalHeader, Server.ServeConn, serverConn.canonicalHeader found"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:stdlib",
@@ -559,23 +566,20 @@
         "fixed_in": "1.11.13",
         "summary": "Reset flood in net/http and golang.org/x/net/http",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/llmman > stdlib"
+        ],
         "found_in": "sbom:verify-llmman-20261102-174231-7765",
         "in_artifact": true,
         "kev": false,
         "epss": 0.83958,
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:http2serverConn.scheduleFrameWrite",
           "symbol:http2serverConn.serve",
           "symbol:http2serverConn.writeFrame"
-        ],
-        "paths": [
-          "installed > /.local/bin/llmman > stdlib"
         ],
         "reachability": {
           "method": "import_grep",
@@ -584,7 +588,10 @@
             "go-shim/backend_docker.go:17: \"net/http\"",
             "no call to http2serverConn.scheduleFrameWrite, http2serverConn.serve, http2serverConn.writeFrame found"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:stdlib",
@@ -597,23 +604,20 @@
         "fixed_in": "1.18.6",
         "summary": "Denial of service in net/http and golang.org/x/net/http2",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/llmman > stdlib"
+        ],
         "found_in": "sbom:verify-llmman-20261102-174231-7765",
         "in_artifact": true,
         "kev": false,
         "epss": 0.03487,
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:ListenAndServe",
           "symbol:ListenAndServeTLS",
           "symbol:Serve"
-        ],
-        "paths": [
-          "installed > /.local/bin/llmman > stdlib"
         ],
         "reachability": {
           "method": "import_grep",
@@ -622,7 +626,10 @@
             "go-shim/backend_docker.go:17: \"net/http\"",
             "no call to ListenAndServe, ListenAndServeTLS, Serve found"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:stdlib",
@@ -635,10 +642,10 @@
         "fixed_in": "1.20.10",
         "summary": "HTTP/2 rapid reset can cause excessive work in net/http",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
         "scope": "runtime",
+        "paths": [
+          "installed > /.local/bin/llmman > stdlib"
+        ],
         "found_in": "sbom:verify-llmman-20261102-174231-7765",
         "in_artifact": true,
         "kev": false,
@@ -648,9 +655,6 @@
           "symbol:ListenAndServeTLS",
           "symbol:Serve"
         ],
-        "paths": [
-          "installed > /.local/bin/llmman > stdlib"
-        ],
         "reachability": {
           "method": "import_grep",
           "result": "unknown",
@@ -658,7 +662,10 @@
             "go-shim/backend_docker.go:17: \"net/http\"",
             "no call to ListenAndServe, ListenAndServeTLS, Serve found"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:decode-uri-component",
@@ -671,24 +678,24 @@
         "fixed_in": "0.5.1",
         "summary": "decode-uri-component vulnerable to denial of service via quadratic replacement of percent-encoded runs",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-23T12:48:46Z",
         "scope": "runtime",
+        "paths": [
+          ". > expo-router > query-string > decode-uri-component"
+        ],
         "workspace": ".",
         "found_in": "app/package-lock.json",
         "kev": false,
         "epss": 0.00318,
-        "fix_published_at": "2026-10-23T12:48:46Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "high_complexity",
           "denial_of_service"
         ],
-        "paths": [
-          ". > expo-router > query-string > decode-uri-component"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:zod",
@@ -701,22 +708,22 @@
         "fixed_in": "4.6.6",
         "summary": "Zod can exhaust memory while validating oversized constrained collections",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-11T16:18:23Z",
         "scope": "runtime",
+        "paths": [
+          ". > expo > @expo/cli > zod"
+        ],
         "workspace": ".",
         "found_in": "app/package-lock.json",
         "kev": false,
-        "fix_published_at": "2026-10-11T16:18:23Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          ". > expo > @expo/cli > zod"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -882,20 +889,17 @@
   },
   "scores": {
     "formula_version": "b3.v7",
-    "computed_at": "2026-11-20T12:24:26+08:00",
+    "computed_at": "2026-11-22T19:52:05+08:00",
     "quality": {
       "total": 79.0,
+      "raw_total": 82.8,
       "confidence": 0.7,
       "cap": 79,
       "cap_reason": "known_vulnerability",
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": null,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.6875,
@@ -915,10 +919,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": null,
+          "weight": 20.0
         }
       },
-      "raw_total": 82.8,
       "security": {
         "level": "exposed",
         "basis": "assessment",
@@ -944,7 +951,8 @@
     },
     "treasure": {
       "is_treasure": false,
-      "value": 9.88
+      "value": 9.88,
+      "blocked_by": "function_coverage"
     },
     "docs_rubric": {
       "model": "muse-spark-1.3",
@@ -1222,5 +1230,5 @@
     }
   ],
   "first_seen_at": "2026-11-02T17:27:57+08:00",
-  "updated_at": "2026-11-20T12:24:26+08:00"
+  "updated_at": "2026-11-22T19:52:05+08:00"
 }

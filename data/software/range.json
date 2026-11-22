@@ -7,9 +7,13 @@
   "aliases": [],
   "status": "listed",
   "status_reason": null,
+  "standing": "new",
   "category": "dev_cli",
   "kind": "cli_tool",
   "audience": "end_user",
+  "used_by": "agent",
+  "track": "A",
+  "track_basis": "rule",
   "maturity": null,
   "tags": [],
   "use_cases": [
@@ -403,7 +407,10 @@
           }
         ]
       }
-    ]
+    ],
+    "last_passed_at": "2026-11-01T19:31:44.078860+08:00",
+    "reverify_cycle_days": 90,
+    "reverify_due_at": "2027-01-30T19:31:44.078860+08:00"
   },
   "security": {
     "version": "sec.v2",
@@ -428,23 +435,20 @@
         "fixed_in": "1.20.2",
         "summary": "Panic on two-block frames in github.com/klauspost/compress",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/klauspost/compress"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00333,
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:Compress",
           "symbol:Decompress",
           "symbol:Scratch.readNCount"
-        ],
-        "paths": [
-          "go.mod > github.com/klauspost/compress"
         ],
         "reachability": {
           "method": "import_grep",
@@ -452,7 +456,10 @@
           "evidence": [
             "no .go file imports github.com/klauspost/compress/fse, github.com/klauspost/compress/huff0; go.mod requires github.com/klauspost/compress directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
@@ -512,17 +519,14 @@
     "computed_at": "2026-11-20T00:17:01+08:00",
     "quality": {
       "total": 84.9,
+      "raw_total": 84.9,
       "confidence": 0.8,
       "cap": null,
       "cap_reason": null,
       "components": {
         "sandbox_verification": {
           "score": 0.85,
-          "weight": 20
-        },
-        "feature_results": {
-          "score": 1.0,
-          "weight": 20
+          "weight": 20.0
         },
         "install_docs": {
           "score": 0.6875,
@@ -542,10 +546,13 @@
         },
         "usage_outcomes": {
           "score": null,
-          "weight": 10
+          "weight": 10.0
+        },
+        "feature_results": {
+          "score": 1.0,
+          "weight": 20.0
         }
       },
-      "raw_total": 84.9,
       "security": {
         "level": "present_unreachable",
         "basis": "assessment",

@@ -7,9 +7,13 @@
   "aliases": [],
   "status": "listed",
   "status_reason": null,
+  "standing": "new",
   "category": "local_ai",
   "kind": "desktop_app",
   "audience": null,
+  "used_by": "human",
+  "track": "none",
+  "track_basis": "rule",
   "maturity": null,
   "tags": [
     "agent-framework",
@@ -71,7 +75,8 @@
     "level": "unverified",
     "unverified_reason": "not_run",
     "checked_at": null,
-    "runs": []
+    "runs": [],
+    "reverify_cycle_days": 90
   },
   "security": {
     "version": "sec.v2",
@@ -102,20 +107,20 @@
         "fixed_in": "9.0.5",
         "summary": "zip: Critical Parser Differential & Security Control Bypass via Dual-Header Inconsistencies (Zip Cloaking) Leading to Arbitrary File Overwrite & RCE",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-17T18:45:16Z",
         "scope": "runtime",
+        "paths": [
+          "abu > tauri-plugin-updater > zip"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.0032,
-        "fix_published_at": "2026-10-17T18:45:16Z",
-        "attack_vector": "network",
-        "dos_only": false,
-        "paths": [
-          "abu > tauri-plugin-updater > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -126,22 +131,19 @@
         "fixed_in": "9.0.0",
         "summary": "ZipStreamReader::extract() and ZipArchive::extract() apply Unix permissions through symlinks without confining the target",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "abu > tauri-plugin-updater > zip"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:ZipStreamReader::extract",
           "symbol:ZipArchive::extract"
-        ],
-        "paths": [
-          "abu > tauri-plugin-updater > zip"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -149,7 +151,10 @@
           "evidence": [
             "the project's source does not use ZipStreamReader::extract, ZipArchive::extract, but other packages depend on zip"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -160,22 +165,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "native-helper > xcap > xcb > quick-xml"
+        ],
         "workspace": "electron/native-helper",
         "found_in": "electron/native-helper/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "native-helper > xcap > xcb > quick-xml"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -186,30 +191,30 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
-        "scope": "runtime",
-        "workspace": "electron/native-helper",
-        "found_in": "electron/native-helper/Cargo.lock",
-        "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
         "attack_vector": "network",
         "dos_only": true,
-        "preconditions": [
-          "denial_of_service",
-          "symbol:NsReader"
-        ],
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "scope": "runtime",
         "paths": [
           "native-helper > xcap > xcb > quick-xml"
         ],
+        "workspace": "electron/native-helper",
+        "found_in": "electron/native-helper/Cargo.lock",
+        "kev": false,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
+        ],
         "reachability": {
           "method": "symbol_grep",
           "result": "unknown",
           "evidence": [
             "the project's source does not use NsReader, but other packages depend on quick-xml"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -220,22 +225,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "abu > tauri-plugin-notification > notify-rust > tauri-winrt-notification > quick-xml"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "abu > tauri-plugin-notification > notify-rust > tauri-winrt-notification > quick-xml"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -246,30 +251,30 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
-        "scope": "runtime",
-        "workspace": "src-tauri",
-        "found_in": "src-tauri/Cargo.lock",
-        "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
         "attack_vector": "network",
         "dos_only": true,
-        "preconditions": [
-          "denial_of_service",
-          "symbol:NsReader"
-        ],
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "scope": "runtime",
         "paths": [
           "abu > tauri-plugin-notification > notify-rust > tauri-winrt-notification > quick-xml"
         ],
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
+        ],
         "reachability": {
           "method": "symbol_grep",
           "result": "unknown",
           "evidence": [
             "the project's source does not use NsReader, but other packages depend on quick-xml"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -280,22 +285,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "abu > tauri > plist > quick-xml"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "abu > tauri > plist > quick-xml"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -306,30 +311,30 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
-        "scope": "runtime",
-        "workspace": "src-tauri",
-        "found_in": "src-tauri/Cargo.lock",
-        "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
         "attack_vector": "network",
         "dos_only": true,
-        "preconditions": [
-          "denial_of_service",
-          "symbol:NsReader"
-        ],
+        "fix_published_at": "2026-06-29T18:04:43Z",
+        "scope": "runtime",
         "paths": [
           "abu > tauri > plist > quick-xml"
         ],
+        "workspace": "src-tauri",
+        "found_in": "src-tauri/Cargo.lock",
+        "kev": false,
+        "preconditions": [
+          "denial_of_service",
+          "symbol:NsReader"
+        ],
         "reachability": {
           "method": "symbol_grep",
           "result": "unknown",
           "evidence": [
             "the project's source does not use NsReader, but other packages depend on quick-xml"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -340,22 +345,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "abu > xcap > libwayshot-xcap > wayland-client > wayland-scanner > quick-xml"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "abu > xcap > libwayshot-xcap > wayland-client > wayland-scanner > quick-xml"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -366,22 +371,19 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "abu > xcap > libwayshot-xcap > wayland-client > wayland-scanner > quick-xml"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:NsReader"
-        ],
-        "paths": [
-          "abu > xcap > libwayshot-xcap > wayland-client > wayland-scanner > quick-xml"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -389,7 +391,10 @@
           "evidence": [
             "the project's source does not use NsReader, but other packages depend on quick-xml"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -400,22 +405,22 @@
         "fixed_in": "0.41.0",
         "summary": "Quadratic run time when checking a start tag for duplicate attribute names",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "native-helper > xcap > libwayshot-xcap > wayland-client > wayland-scanner > quick-xml"
+        ],
         "workspace": "electron/native-helper",
         "found_in": "electron/native-helper/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "native-helper > xcap > libwayshot-xcap > wayland-client > wayland-scanner > quick-xml"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quick-xml",
@@ -426,22 +431,19 @@
         "fixed_in": "0.41.0",
         "summary": "Unbounded namespace-declaration allocation in `NsReader` enables memory-exhaustion denial of service",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-06-29T18:04:43Z",
         "scope": "runtime",
+        "paths": [
+          "native-helper > xcap > libwayshot-xcap > wayland-client > wayland-scanner > quick-xml"
+        ],
         "workspace": "electron/native-helper",
         "found_in": "electron/native-helper/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-06-29T18:04:43Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:NsReader"
-        ],
-        "paths": [
-          "native-helper > xcap > libwayshot-xcap > wayland-client > wayland-scanner > quick-xml"
         ],
         "reachability": {
           "method": "symbol_grep",
@@ -449,7 +451,10 @@
           "evidence": [
             "the project's source does not use NsReader, but other packages depend on quick-xml"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quinn-proto",
@@ -460,22 +465,19 @@
         "fixed_in": "0.11.18",
         "summary": "Peer minimum ACK delay can panic quinn-proto when ACK_FREQUENCY transmission is enabled",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-09-14T10:08:32Z",
         "scope": "runtime",
+        "paths": [
+          "abu > tauri-plugin-http > reqwest > quinn > quinn-proto"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-09-14T10:08:32Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "option:ACK_FREQUENCY"
-        ],
-        "paths": [
-          "abu > tauri-plugin-http > reqwest > quinn > quinn-proto"
         ],
         "reachability": {
           "method": "option_grep",
@@ -483,7 +485,10 @@
           "evidence": [
             "the project's source does not use ACK_FREQUENCY, but other packages depend on quinn-proto"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:quinn-proto",
@@ -494,22 +499,22 @@
         "fixed_in": "0.11.17",
         "summary": "Stream reassembly memory-exhaustion guard in quinn-proto can be bypassed",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-08-17T17:32:41Z",
         "scope": "runtime",
+        "paths": [
+          "abu > tauri-plugin-http > reqwest > quinn > quinn-proto"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-08-17T17:32:41Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "abu > tauri-plugin-http > reqwest > quinn > quinn-proto"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -522,23 +527,23 @@
         "fixed_in": "9.0.0",
         "summary": "zip: Unbounded Symlink-Target Handling Can Abort Or Exhaust Memory During Extraction",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "abu > tauri-plugin-updater > zip"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
         "epss": 0.00461,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "abu > tauri-plugin-updater > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "crates:zip",
@@ -549,23 +554,23 @@
         "fixed_in": "9.0.0",
         "summary": "Insecure Preservation of SUID/SGID Bits during ZIP Extraction Leading to Potential Privilege Escalation",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2026-10-09T04:48:51Z",
         "scope": "runtime",
+        "paths": [
+          "abu > tauri-plugin-updater > zip"
+        ],
         "workspace": "src-tauri",
         "found_in": "src-tauri/Cargo.lock",
         "kev": false,
-        "fix_published_at": "2026-10-09T04:48:51Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction"
         ],
-        "paths": [
-          "abu > tauri-plugin-updater > zip"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:electron",
@@ -578,24 +583,24 @@
         "fixed_in": "43.4.1",
         "summary": "Electron: <webview> can enable Node.js integration in Web Workers despite embedder restrictions",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-08-19T01:44:13Z",
         "scope": "runtime",
+        "paths": [
+          ". > electron"
+        ],
         "workspace": ".",
         "found_in": "package-lock.json",
         "kev": false,
         "epss": 0.00479,
-        "fix_published_at": "2026-08-19T01:44:13Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "user_interaction",
           "high_complexity"
         ],
-        "paths": [
-          ". > electron"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:electron",
@@ -608,23 +613,23 @@
         "fixed_in": "43.4.1",
         "summary": "Electron: Windows opened from a sandboxed top-level document do not inherit its sandbox restrictions",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-08-19T01:44:13Z",
         "scope": "runtime",
+        "paths": [
+          ". > electron"
+        ],
         "workspace": ".",
         "found_in": "package-lock.json",
         "kev": false,
         "epss": 0.00236,
-        "fix_published_at": "2026-08-19T01:44:13Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "user_interaction"
         ],
-        "paths": [
-          ". > electron"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:electron",
@@ -637,23 +642,23 @@
         "fixed_in": "43.4.1",
         "summary": "Electron: File and HTTP protocol handlers allow cross-origin reads without corsEnabled",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-08-19T01:44:13Z",
         "scope": "runtime",
+        "paths": [
+          ". > electron"
+        ],
         "workspace": ".",
         "found_in": "package-lock.json",
         "kev": false,
         "epss": 0.00214,
-        "fix_published_at": "2026-08-19T01:44:13Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "user_interaction"
         ],
-        "paths": [
-          ". > electron"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "npm:electron",
@@ -666,23 +671,23 @@
         "fixed_in": "43.8.1",
         "summary": "Electron: Mitigation for compromised eMudhra intermediate certificates",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-10-20T02:54:21Z",
         "scope": "runtime",
+        "paths": [
+          ". > electron"
+        ],
         "workspace": ".",
         "found_in": "package-lock.json",
         "kev": false,
         "epss": 0.00377,
-        "fix_published_at": "2026-10-20T02:54:21Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "high_complexity"
         ],
-        "paths": [
-          ". > electron"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",

@@ -7,9 +7,13 @@
   "aliases": [],
   "status": "listed",
   "status_reason": null,
+  "standing": "new",
   "category": "security_net",
   "kind": "cli_tool",
   "audience": null,
+  "used_by": "agent",
+  "track": "A",
+  "track_basis": "rule",
   "maturity": null,
   "tags": [
     "capability",
@@ -258,7 +262,10 @@
           }
         ]
       }
-    ]
+    ],
+    "last_passed_at": "2026-11-02T17:46:19.638496+08:00",
+    "reverify_cycle_days": 90,
+    "reverify_due_at": "2027-01-31T17:46:19.638496+08:00"
   },
   "security": {
     "version": "sec.v2",
@@ -283,24 +290,21 @@
         "fixed_in": "1.79.3",
         "summary": "gRPC-Go has an authorization bypass via missing leading slash in :path",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
+        "fix_published_at": "2026-03-17T23:13:23Z",
         "scope": "runtime",
+        "paths": [
+          "go.mod > google.golang.org/grpc"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.01731,
-        "fix_published_at": "2026-03-17T23:13:23Z",
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:Server.Serve",
           "symbol:Server.ServeHTTP",
           "symbol:Server.handleStream"
-        ],
-        "paths": [
-          "go.mod > google.golang.org/grpc"
         ],
         "reachability": {
           "method": "import_grep",
@@ -309,7 +313,10 @@
             "pkg/plugins/pluginutils/grpc_utils.go:22: \"google.golang.org/grpc\"",
             "no call to Server.Serve, Server.ServeHTTP, Server.handleStream found"
           ]
-        }
+        },
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/docker/cli",
@@ -322,24 +329,24 @@
         "fixed_in": "29.2.0",
         "summary": "Docker CLI Plugins: Uncontrolled Search Path Element Leads to Local Privilege Escalation on Windows",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/docker/cli"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00549,
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction",
           "symbol:defaultSystemPluginDirs"
         ],
-        "paths": [
-          "go.mod > github.com/docker/cli"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/docker/docker",
@@ -352,25 +359,25 @@
         "fixed_in": null,
         "summary": "Docker: Race condition in docker cp allows bind mount redirection to host path",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/docker/docker"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00104,
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction",
           "high_complexity",
           "symbol:Daemon.openContainerFS"
         ],
-        "paths": [
-          "go.mod > github.com/docker/docker"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/docker/docker",
@@ -383,25 +390,25 @@
         "fixed_in": null,
         "summary": "Docker: `PUT /containers/{id}/archive` executes container binary on the host",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/docker/docker"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00318,
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction",
           "high_complexity",
           "symbol:Daemon.containerExtractToDir"
         ],
-        "paths": [
-          "go.mod > github.com/docker/docker"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/docker/docker",
@@ -414,17 +421,17 @@
         "fixed_in": null,
         "summary": "Moby has AuthZ plugin bypass when provided oversized request bodies in github.com/docker/docker",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/docker/docker"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.09469,
-        "paths": [
-          "go.mod > github.com/docker/docker"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/opencontainers/runc",
@@ -437,26 +444,26 @@
         "fixed_in": "1.2.8",
         "summary": "runc container escape via \"masked path\" abuse due to mount race conditions",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2025-11-05T09:03:40Z",
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/opencontainers/runc"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.01245,
-        "fix_published_at": "2025-11-05T09:03:40Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction",
           "high_complexity",
           "symbol:github.com/opencontainers/runc/libcontainer"
         ],
-        "paths": [
-          "go.mod > github.com/opencontainers/runc"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/opencontainers/runc",
@@ -469,25 +476,25 @@
         "fixed_in": "1.2.8",
         "summary": "runc container escape and denial of service due to arbitrary write gadgets and procfs write redirects",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2025-11-05T09:03:40Z",
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/opencontainers/runc"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00784,
-        "fix_published_at": "2025-11-05T09:03:40Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction",
           "high_complexity"
         ],
-        "paths": [
-          "go.mod > github.com/opencontainers/runc"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/opencontainers/runc",
@@ -500,17 +507,17 @@
         "fixed_in": "1.2.8",
         "summary": "runc container escape with malicious config due to /dev/console mount and related races",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "local",
+        "dos_only": false,
+        "fix_published_at": "2025-11-05T09:03:40Z",
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/opencontainers/runc"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00811,
-        "fix_published_at": "2025-11-05T09:03:40Z",
-        "attack_vector": "local",
-        "dos_only": false,
         "preconditions": [
           "local_access",
           "user_interaction",
@@ -519,9 +526,9 @@
           "symbol:CloneSelfExe",
           "symbol:sealFile"
         ],
-        "paths": [
-          "go.mod > github.com/opencontainers/runc"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:golang.org/x/crypto",
@@ -534,21 +541,18 @@
         "fixed_in": "0.52.0",
         "summary": "golang.org/x/crypto vulnerable to auth bypass via unenforced @revoked status",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "go.mod > golang.org/x/crypto"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.0691,
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:hostKeyDB.IsRevoked"
-        ],
-        "paths": [
-          "go.mod > golang.org/x/crypto"
         ],
         "reachability": {
           "method": "import_grep",
@@ -556,7 +560,10 @@
           "evidence": [
             "no .go file imports golang.org/x/crypto/ssh/knownhosts; go.mod requires golang.org/x/crypto directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:golang.org/x/crypto",
@@ -569,23 +576,20 @@
         "fixed_in": "0.52.0",
         "summary": "golang.org/x/crypto: FIDO/U2F security key physical presence check can be bypassed",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "go.mod > golang.org/x/crypto"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00478,
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:CertChecker.Authenticate",
           "symbol:CertChecker.CheckCert",
           "symbol:CertChecker.CheckHostKey"
-        ],
-        "paths": [
-          "go.mod > golang.org/x/crypto"
         ],
         "reachability": {
           "method": "import_grep",
@@ -593,7 +597,10 @@
           "evidence": [
             "no .go file imports golang.org/x/crypto/ssh; go.mod requires golang.org/x/crypto directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:golang.org/x/crypto",
@@ -606,22 +613,19 @@
         "fixed_in": "0.52.0",
         "summary": "golang.org/x/crypto doesn't drop invoking agent constraints when forwarding keys",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "go.mod > golang.org/x/crypto"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00683,
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:client.Add",
           "symbol:keyring.Add"
-        ],
-        "paths": [
-          "go.mod > golang.org/x/crypto"
         ],
         "reachability": {
           "method": "import_grep",
@@ -629,7 +633,10 @@
           "evidence": [
             "no .go file imports golang.org/x/crypto/ssh/agent; go.mod requires golang.org/x/crypto directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:golang.org/x/crypto",
@@ -642,21 +649,18 @@
         "fixed_in": "0.52.0",
         "summary": "golang.org/x/crypto doesn't enforce invoking key constraints",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "go.mod > golang.org/x/crypto"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00469,
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:keyring.Add"
-        ],
-        "paths": [
-          "go.mod > golang.org/x/crypto"
         ],
         "reachability": {
           "method": "import_grep",
@@ -664,7 +668,10 @@
           "evidence": [
             "no .go file imports golang.org/x/crypto/ssh/agent; go.mod requires golang.org/x/crypto directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:golang.org/x/crypto",
@@ -677,23 +684,20 @@
         "fixed_in": "0.52.0",
         "summary": "golang.org/x/crypto vulnerable to infinite loop on large channel writes",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "go.mod > golang.org/x/crypto"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00597,
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:Dial",
           "symbol:NewClientConn",
           "symbol:NewServerConn"
-        ],
-        "paths": [
-          "go.mod > golang.org/x/crypto"
         ],
         "reachability": {
           "method": "import_grep",
@@ -701,7 +705,10 @@
           "evidence": [
             "no .go file imports golang.org/x/crypto/ssh; go.mod requires golang.org/x/crypto directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:golang.org/x/crypto",
@@ -714,23 +721,20 @@
         "fixed_in": "0.52.0",
         "summary": "golang.org/x/crypto: Invoking client can cause server deadlock on unexpected responses",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "go.mod > golang.org/x/crypto"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00683,
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:Client.Listen",
           "symbol:Client.ListenTCP",
           "symbol:Client.ListenUnix"
-        ],
-        "paths": [
-          "go.mod > golang.org/x/crypto"
         ],
         "reachability": {
           "method": "import_grep",
@@ -738,7 +742,10 @@
           "evidence": [
             "no .go file imports golang.org/x/crypto/ssh; go.mod requires golang.org/x/crypto directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:golang.org/x/crypto",
@@ -751,22 +758,19 @@
         "fixed_in": "0.52.0",
         "summary": "golang.org/x/crypto: Invoking VerifiedPublicKeyCallback permissions skip enforcement",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": false,
         "scope": "runtime",
+        "paths": [
+          "go.mod > golang.org/x/crypto"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00556,
-        "attack_vector": "network",
-        "dos_only": false,
         "preconditions": [
           "symbol:NewServerConn",
           "symbol:connection.serverAuthenticate"
-        ],
-        "paths": [
-          "go.mod > golang.org/x/crypto"
         ],
         "reachability": {
           "method": "import_grep",
@@ -774,7 +778,10 @@
           "evidence": [
             "no .go file imports golang.org/x/crypto/ssh; go.mod requires golang.org/x/crypto directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:golang.org/x/crypto",
@@ -787,24 +794,21 @@
         "fixed_in": "0.52.0",
         "summary": "golang.org/x/crypto: Invoking byte arithmetic causes underflow and panic",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "go.mod > golang.org/x/crypto"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00473,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:Dial",
           "symbol:NewClientConn",
           "symbol:NewServerConn"
-        ],
-        "paths": [
-          "go.mod > golang.org/x/crypto"
         ],
         "reachability": {
           "method": "import_grep",
@@ -812,7 +816,10 @@
           "evidence": [
             "no .go file imports golang.org/x/crypto/ssh; go.mod requires golang.org/x/crypto directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:golang.org/x/crypto",
@@ -825,24 +832,21 @@
         "fixed_in": "0.52.0",
         "summary": "golang.org/x/crypto: Invoking pathological RSA/DSA parameters may cause DoS",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "go.mod > golang.org/x/crypto"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00467,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:Dial",
           "symbol:NewClientConn",
           "symbol:NewServerConn"
-        ],
-        "paths": [
-          "go.mod > golang.org/x/crypto"
         ],
         "reachability": {
           "method": "import_grep",
@@ -850,7 +854,10 @@
           "evidence": [
             "no .go file imports golang.org/x/crypto/ssh; go.mod requires golang.org/x/crypto directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:google.golang.org/grpc",
@@ -863,24 +870,21 @@
         "fixed_in": "1.82.2",
         "summary": "gRPC-Go xDS servers: Denial of Service (DoS) via crash due to missing `:authority` and `Host` headers",
         "malicious": false,
-        "level": "present_unreachable",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
         "scope": "runtime",
+        "paths": [
+          "go.mod > google.golang.org/grpc"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00641,
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:http2Server.HandleStreams",
           "symbol:http2Server.operateHeaders",
           "symbol:RouteAndProcess"
-        ],
-        "paths": [
-          "go.mod > google.golang.org/grpc"
         ],
         "reachability": {
           "method": "import_grep",
@@ -888,7 +892,10 @@
           "evidence": [
             "no .go file imports google.golang.org/grpc/internal/transport, google.golang.org/grpc/internal/xds/server; go.mod requires google.golang.org/grpc directly"
           ]
-        }
+        },
+        "counted": true,
+        "level": "present_unreachable",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",

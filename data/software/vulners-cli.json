@@ -7,9 +7,13 @@
   "aliases": [],
   "status": "listed",
   "status_reason": null,
+  "standing": "new",
   "category": "security_net",
   "kind": "cli_tool",
   "audience": "end_user",
+  "used_by": "agent",
+  "track": "A",
+  "track_basis": "rule",
   "maturity": null,
   "tags": [
     "cli",
@@ -91,7 +95,8 @@
     "level": "unverified",
     "unverified_reason": "not_run",
     "checked_at": null,
-    "runs": []
+    "runs": [],
+    "reverify_cycle_days": 30
   },
   "security": {
     "version": "sec.v2",
@@ -116,25 +121,25 @@
         "fixed_in": "1.2.7",
         "summary": "Excessive memory allocation when decompressing crafted streams in github.com/andybalholm/brotli",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "dos_only": true,
+        "fix_published_at": "2026-10-23T17:03:27Z",
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/andybalholm/brotli"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": true,
         "epss": 0.8237,
-        "fix_published_at": "2026-10-23T17:03:27Z",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:Reader.Read",
           "symbol:decodeBlockTypeAndLength",
           "symbol:decodeCommandBlockSwitch"
         ],
-        "paths": [
-          "go.mod > github.com/andybalholm/brotli"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/go-jose/go-jose/v4",
@@ -147,23 +152,23 @@
         "fixed_in": "4.1.6",
         "summary": "Go JOSE: DoS when parsing JWKs that contain RSA keys",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-10-14T22:46:21Z",
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/go-jose/go-jose/v4"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00489,
-        "fix_published_at": "2026-10-14T22:46:21Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service"
         ],
-        "paths": [
-          "go.mod > github.com/go-jose/go-jose/v4"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:github.com/klauspost/compress",
@@ -176,25 +181,25 @@
         "fixed_in": "1.20.2",
         "summary": "Panic on two-block frames in github.com/klauspost/compress",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "dos_only": true,
+        "fix_published_at": "2026-10-12T09:34:06Z",
         "scope": "runtime",
+        "paths": [
+          "go.mod > github.com/klauspost/compress"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00333,
-        "fix_published_at": "2026-10-12T09:34:06Z",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:Compress",
           "symbol:Decompress",
           "symbol:Scratch.readNCount"
         ],
-        "paths": [
-          "go.mod > github.com/klauspost/compress"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       },
       {
         "package": "go:google.golang.org/grpc",
@@ -207,26 +212,26 @@
         "fixed_in": "1.83.2",
         "summary": "gRPC-Go xDS servers: Denial of Service (DoS) via crash due to missing `:authority` and `Host` headers",
         "malicious": false,
-        "level": "conditional",
-        "policy_version": "sec.v2",
-        "counted": true,
+        "attack_vector": "network",
+        "dos_only": true,
+        "fix_published_at": "2026-08-25T15:47:16Z",
         "scope": "runtime",
+        "paths": [
+          "go.mod > google.golang.org/grpc"
+        ],
         "workspace": ".",
         "found_in": "go.mod",
         "kev": false,
         "epss": 0.00641,
-        "fix_published_at": "2026-08-25T15:47:16Z",
-        "attack_vector": "network",
-        "dos_only": true,
         "preconditions": [
           "denial_of_service",
           "symbol:http2Server.HandleStreams",
           "symbol:http2Server.operateHeaders",
           "symbol:RouteAndProcess"
         ],
-        "paths": [
-          "go.mod > google.golang.org/grpc"
-        ]
+        "counted": true,
+        "level": "conditional",
+        "policy_version": "sec.v2"
       }
     ],
     "database": "OSV.dev",
