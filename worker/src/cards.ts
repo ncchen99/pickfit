@@ -8,12 +8,13 @@ import { matchedCapabilities } from './capabilities.ts';
 import { featuresOut, shownWorking, standInOnly } from './features.ts';
 import { runDay } from './evidence.ts';
 import { verifiedDaysAgo } from './freshness.ts';
+import { CARD_EGRESS_SHOWN } from './mcprisk.ts';
 
 const MCP_TOOLS_SHOWN = 40;
 
 export type CardValue = string | number | boolean | string[] | null;
 export type Card = Record<CoreField, CardValue> &
-  Partial<Record<WebField | MatchedField | StandingField, CardValue>> & { slug: string };
+  Partial<Record<WebField | MatchedField | StandingField | McpSafetyField, CardValue>> & { slug: string };
 
 /** Brief 15 facts, each only when the record has it: its track, who uses it, its standing (new, stale; broken never
  * reaches a card, filter.ts), and whole days since it last passed a check, counted here so the model never works out
@@ -31,6 +32,11 @@ export const WEB_FIELDS = [
   'works_offline',
 ] as const;
 export type WebField = (typeof WEB_FIELDS)[number];
+
+/** An MCP server's safety facts (entry.mcp_safety), each only when its run recorded it: the probe's injection pattern
+ * codes, how many tools declare destructive / open-world hints, and the public hosts the sandbox saw it reach. */
+export const MCP_SAFETY_FIELDS = ['mcp_injection_flags', 'mcp_destructive_tools', 'mcp_open_world_tools', 'mcp_egress_hosts'] as const;
+export type McpSafetyField = (typeof MCP_SAFETY_FIELDS)[number];
 
 /** Only when the request's words name some: the tool's documented capabilities they name (capabilities.ts).
  * The docs claim them; pickfit did not check them one by one. Other cards leave the field out. */
@@ -75,7 +81,7 @@ const CORE_FIELDS = [
 type CoreField = (typeof CORE_FIELDS)[number];
 
 /** Fields a reason may cite. The model's schema enumerates exactly these. */
-export const CARD_FIELDS = [...CORE_FIELDS, ...WEB_FIELDS, ...MATCHED_FIELDS, ...STANDING_FIELDS] as const;
+export const CARD_FIELDS = [...CORE_FIELDS, ...WEB_FIELDS, ...MATCHED_FIELDS, ...STANDING_FIELDS, ...MCP_SAFETY_FIELDS] as const;
 export type CardField = (typeof CARD_FIELDS)[number];
 
 /** "linux x86_64: function check passed 2026-10-28, sandbox, replayed": the OS first (rules and the guard read it). */
@@ -168,7 +174,21 @@ export function toCard(entry: Entry, os?: OS, arch?: Arch, query: readonly strin
     ...webFields(entry),
     ...matchedFields(entry, query),
     ...standingFields(entry, now),
+    ...mcpSafetyFields(entry),
   };
+}
+
+function mcpSafetyFields(entry: Entry): Partial<Record<McpSafetyField, CardValue>> {
+  const safety = entry.mcp_safety;
+  const out: Partial<Record<McpSafetyField, CardValue>> = {};
+  if (!safety) return out;
+  if (safety.description_flags) out.mcp_injection_flags = safety.description_flags;
+  if (safety.tool_annotations) {
+    out.mcp_destructive_tools = safety.tool_annotations.destructive;
+    out.mcp_open_world_tools = safety.tool_annotations.open_world;
+  }
+  if (safety.egress_hosts) out.mcp_egress_hosts = safety.egress_hosts.slice(0, CARD_EGRESS_SHOWN);
+  return out;
 }
 
 /** On a card, beside a feature whose check ran only against a stand-in: it connected, the real service was not tried. */

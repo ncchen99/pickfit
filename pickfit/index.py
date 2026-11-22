@@ -430,6 +430,7 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
             **_verification_cycle(record),
         },
         **_standing(record),
+        **_mcp_safety(install),
         "install": install,
         "mcp": record.mcp.model_dump() if record.mcp else None,
         "web": _web(record),
@@ -458,6 +459,23 @@ def _standing(record: SoftwareRecord) -> dict[str, Any]:
     fields = {"used_by": record.used_by, "track": record.track, "standing": record.standing,
               "standing_note": record.standing_note}
     return {key: value for key, value in fields.items() if value is not None}
+
+
+MCP_SAFETY_FIELDS = ("description_flags", "tool_annotations", "egress_hosts")
+
+
+def _mcp_safety(install: dict[str, Any]) -> dict[str, Any]:
+    """Brief 15.7's MCP safety facts from the handshake of a verified guide's run (Linux first), under "mcp_safety":
+    the probe's injection pattern codes, the tool annotation counts and the hosts the box's egress log saw, with the
+    tool count they are out of. Only those recorded; nothing when the run recorded none of the three, so an entry
+    for an older run is exactly what it was."""
+    guides = [install[os_name] for os_name in ("linux", *sorted(set(install) - {"linux"})) if os_name in install]
+    for guide in guides:
+        handshake = guide.get("mcp") or {}
+        facts = {key: handshake[key] for key in MCP_SAFETY_FIELDS if handshake.get(key) is not None}
+        if facts:
+            return {"mcp_safety": {**facts, "tool_count": handshake["tool_count"]}}
+    return {}
 
 
 def _preview(record: SoftwareRecord) -> dict[str, Any]:

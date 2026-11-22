@@ -23,6 +23,7 @@ from pickfit.verify.mcp import (
     pitfalls,
     probe_kind,
     remote_proxy,
+    with_egress,
 )
 from pickfit.verify.replay import CheckResult, RanCommand, ReplayResult
 from pickfit.verify.result import build_run, install_guide
@@ -110,6 +111,18 @@ def test_handshake_and_notes_from_the_probe_output() -> None:
     assert "<IMPORTANT>-style tag" in notes[0].actually_needed and "2 other line(s)" in notes[1].actually_needed
     server = pitfalls(summary(flags={"(server instructions)": ["override"]}))
     assert server[0].actually_needed.startswith("The server's instructions have instruction-like text")
+
+
+def test_the_handshake_records_egress_hosts_only_when_logged() -> None:
+    assert handshake(summary(), PROBE, offline=None).egress_hosts is None
+    assert "egress_hosts" not in handshake(summary(), PROBE, offline=None).model_dump(mode="json")
+    seen = handshake(summary(), PROBE, offline=None, egress_hosts=["API.notes.example", "api.notes.example"])
+    assert seen.egress_hosts == ["api.notes.example"]
+    assert handshake(summary(), PROBE, offline=None, egress_hosts=[]).egress_hosts == []
+    log = ("[  12.1] pickfit-egress: IN= OUT=eth0 SRC=10.0.0.2 DST=93.184.216.34 PROTO=TCP SPT=40000 DPT=443\n"
+           "[  12.2] pickfit-egress: IN= OUT=lo SRC=127.0.0.1 DST=127.0.0.1 PROTO=TCP SPT=40001 DPT=8080\n")
+    logged = with_egress(handshake(summary(), PROBE, offline=None), log, {"93.184.216.34": "sync.notes.example"})
+    assert logged.egress_hosts == ["sync.notes.example"] and logged.tools == ["search_notes", "read_note"]
 
 
 def test_the_handshake_keeps_flag_codes_and_annotation_counts() -> None:

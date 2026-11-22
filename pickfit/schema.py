@@ -1041,6 +1041,12 @@ class RunEvidence(_Model):
 # A probe pattern code (pickfit/verify/mcp_probe.py FLAGS): pickfit's own label, never text from the server.
 type McpDescriptionFlag = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,39}$")]
 MCP_DESCRIPTION_FLAGS_MAX = 20
+# A host the sandbox's egress log saw: a DNS name (fonts.googleapis.com), an IPv4 address, or an IPv6 address.
+type EgressHost = Annotated[str, StringConstraints(
+    pattern=r"^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9])?(?:\.[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9])?)+"
+            r"|\d{1,3}(?:\.\d{1,3}){3}|[0-9a-f:]*:[0-9a-f:.]+)$",
+    max_length=253)]
+MCP_EGRESS_HOSTS_MAX = 50
 
 
 class McpToolAnnotationsSummary(_Model):
@@ -1089,6 +1095,25 @@ class McpHandshake(_Model):
         default=None, exclude_if=_is_none,
         description="How many listed tools declare each MCP annotation hint; null: not recorded (older runs).",
     )
+    egress_hosts: list[EgressHost] | None = Field(
+        default=None, max_length=MCP_EGRESS_HOSTS_MAX, exclude_if=_is_none,
+        description="Public hosts (names, else IPs) the box's logged egress reached while the server ran "
+                    "(pickfit/verify/egress.py), lower case, each once; [] when it logged none; null: not "
+                    "recorded (older runs).",
+    )
+
+    @field_validator("egress_hosts", mode="before")
+    @classmethod
+    def _normal_hosts(cls, value: Any) -> Any:
+        """Lower case, a trailing dot dropped, each host once in first-seen order."""
+        if not isinstance(value, list):
+            return value
+        out: list[Any] = []
+        for host in value:
+            host = host.strip().lower().rstrip(".") if isinstance(host, str) else host
+            if host not in out:
+                out.append(host)
+        return out
 
     @model_validator(mode="after")
     def _count_covers_names(self) -> McpHandshake:

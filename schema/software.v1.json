@@ -512,6 +512,11 @@
       ],
       "type": "string"
     },
+    "EgressHost": {
+      "maxLength": 253,
+      "pattern": "^(?:[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9])?(?:\\.[a-z0-9_](?:[a-z0-9_-]{0,61}[a-z0-9])?)+|\\d{1,3}(?:\\.\\d{1,3}){3}|[0-9a-f:]*:[0-9a-f:.]+)$",
+      "type": "string"
+    },
     "EvidenceMethod": {
       "enum": [
         "api",
@@ -1722,6 +1727,22 @@
           ],
           "default": null,
           "description": "Prompt-injection pattern codes the probe matched in the tool list (pickfit/verify/mcp_probe.py FLAGS), each once; [] when it looked and matched none; null: not recorded (older runs)."
+        },
+        "egress_hosts": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/EgressHost"
+              },
+              "maxItems": 50,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Public hosts (names, else IPs) the box's logged egress reached while the server ran (pickfit/verify/egress.py), lower case, each once; [] when it logged none; null: not recorded (older runs)."
         },
         "launch": {
           "description": "argv that started the server, as the replay ran it: the probe's own over stdio, the background setup's over HTTP.",

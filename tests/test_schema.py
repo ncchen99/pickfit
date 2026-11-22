@@ -896,6 +896,17 @@ def test_handshake_keeps_flags_and_annotation_counts():
     assert McpHandshake.model_validate({**HANDSHAKE, "description_flags": []}).description_flags == []
 
 
+def test_handshake_egress_hosts_are_optional_lower_case_and_each_once():
+    assert "egress_hosts" not in McpHandshake.model_validate(HANDSHAKE).model_dump(mode="json")
+    assert McpHandshake.model_validate({**HANDSHAKE, "egress_hosts": []}).model_dump(mode="json")["egress_hosts"] == []
+    doc = {**HANDSHAKE, "egress_hosts": ["API.Example.com.", "api.example.com", "93.184.216.34", "2606:4700::1111"]}
+    handshake = McpHandshake.model_validate(doc)
+    assert handshake.egress_hosts == ["api.example.com", "93.184.216.34", "2606:4700::1111"]
+    assert McpHandshake.model_validate(handshake.model_dump(mode="json")) == handshake
+    many = [f"h{i}.example.com" for i in range(50)]
+    assert McpHandshake.model_validate({**HANDSHAKE, "egress_hosts": many + many}).egress_hosts == many
+
+
 def test_handshake_flag_codes_cover_the_probe():
     from pickfit.verify.mcp_probe import FLAGS
 
@@ -911,6 +922,11 @@ def test_handshake_flag_codes_cover_the_probe():
         {"tool_annotations": {"read_only": -1}},
         {"tool_annotations": {"destructive": 4}},
         {"tool_annotations": {"idempotent": 1}},
+        {"egress_hosts": ["not a host"]},
+        {"egress_hosts": ["https://api.example.com/v1"]},
+        {"egress_hosts": ["api.example.com; rm -rf ~"]},
+        {"egress_hosts": [f"h{i}.example.com" for i in range(51)]},
+        {"egress_hosts": "api.example.com"},
     ],
 )
 def test_invalid_handshake_facts_rejected(extra):

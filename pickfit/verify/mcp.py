@@ -26,12 +26,14 @@ from __future__ import annotations
 import json
 import re
 import shlex
+from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from pydantic import ValidationError
 
-from pickfit.schema import MCP_TOOLS_MAX, McpHandshake, McpToolAnnotationsSummary, Pitfall
+from pickfit.schema import MCP_EGRESS_HOSTS_MAX, MCP_TOOLS_MAX, McpHandshake, McpToolAnnotationsSummary, Pitfall
+from pickfit.verify.egress import parse_egress_hosts
 
 if TYPE_CHECKING:
     from pickfit.verify.box import Box
@@ -188,10 +190,12 @@ def credentials(command: str) -> list[str]:
 
 
 def handshake(check_stdout: str, command: str, *, offline: bool | None,
-              background: list[str] | None = None) -> McpHandshake | None:
+              background: list[str] | None = None, egress_hosts: list[str] | None = None) -> McpHandshake | None:
     """The handshake a passing probe check shows, or None when its output does not prove one.
 
     Over HTTP the probe did not start the server: its launch is the check's last background setup.
+    egress_hosts: the public hosts the box's egress log saw while the server ran (egress.parse_egress_hosts);
+    None when the box did not log them.
     """
     summary = parse_summary(check_stdout)
     http = bool(summary) and summary.get("transport") == "streamable_http"
@@ -217,9 +221,15 @@ def handshake(check_stdout: str, command: str, *, offline: bool | None,
             server_version=_short(summary.get("version"), 60), tools=tools, tool_count=max(count, len(tools)),
             called_tool=called[:80] if called else None, offline=offline,
             description_flags=description_flags(summary), tool_annotations=tool_annotations(summary,
-                                                                                          max(count, len(tools))))
+                                                                                          max(count, len(tools))),
+            egress_hosts=egress_hosts[:MCP_EGRESS_HOSTS_MAX] if egress_hosts is not None else None)
     except ValidationError:  # e.g. a URL the record does not accept: no handshake rather than a crash
         return None
+
+
+def with_egress(found: McpHandshake, log_text: str, dns_map: Mapping[str, str] | None = None) -> McpHandshake:
+    """found with the public hosts an egress log (nftables, ss, DNS or SNI lines; egress.py) shows the box reached."""
+    return McpHandshake.model_validate({**found.model_dump(), "egress_hosts": parse_egress_hosts(log_text, dns_map)})
 
 
 def description_flags(summary: dict[str, Any]) -> list[str] | None:

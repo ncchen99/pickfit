@@ -252,6 +252,23 @@ const pick = z.object({
     .string()
     .nullable()
     .describe('Say this to the user before recommending the tool (vulnerable, unchecked or partly checked); null: nothing to say'),
+  mcp_risk: z
+    .object({
+      prompt_injection: z
+        .boolean()
+        .nullable()
+        .describe("true = the server's tool list or instructions carry instruction-like text aimed at the agent; null = not checked"),
+      injection_patterns: z.array(z.string()).describe("pickfit's pattern codes matched (never the server's text)"),
+      tool_count: z.number().int(),
+      destructive_tools: z.number().int().nullable().describe('Tools that declare destructiveHint (the server\'s own claim); null = not counted'),
+      open_world_tools: z.number().int().nullable().describe('Tools that declare openWorldHint; null = not counted'),
+      read_only_tools: z.number().int().nullable().describe('Tools that declare readOnlyHint; null = not counted'),
+      egress_hosts: z.number().int().nullable().describe("Public hosts pickfit's sandbox saw it connect to while it ran; null = not logged"),
+      egress_examples: z.array(z.string()).describe('Up to five of those hosts'),
+      warning: z.string().nullable().describe('Say this to the user before they add the server to a client; null: nothing to say'),
+    })
+    .optional()
+    .describe("MCP servers: what pickfit's probe and sandbox saw that matters before connecting it. Absent for other software and older runs"),
   readme_wrong: z.array(z.string()).describe("Where the README's install instructions were wrong in pickfit's run; mention before the user follows the README"),
   repo: z.string().nullable(),
   homepage: z.string().nullable(),
