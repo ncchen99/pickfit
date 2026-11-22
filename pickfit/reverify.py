@@ -25,7 +25,11 @@ This takes the pending rows, oldest first, and for each one:
    the same OS, arch and method is kept. The record's `git diff` is printed and
    saved under runs/reverify/, and the record is committed alone (unless
    `commit` is off); a failed commit puts the file back. Deploying stays a
-   person's `pickfit publish`, after reading the diff;
+   person's `pickfit publish`, after reading the diff. Two smaller writes go the
+   same way (brief 15.4): a pass with the record's own steps moves
+   verification.last_passed_at (and reverify_due_at), and a conclusive run that
+   did not pass sets standing = broken with a short note, leaving level and
+   runs as they are; any pass ends a broken standing;
 5. marks the queue row done, only for the event it took (a pending row is
    never changed by the Worker, so a newer report queues once this is done).
 
@@ -56,7 +60,7 @@ from pickfit.discover.store import PipelineDB, repo_key
 from pickfit.ledger import taipei_now
 from pickfit.schema import ExtractionResult, InstallGuide, SoftwareRecord, is_passed
 from pickfit.verify.batch import NEVER_RAN, not_in_box
-from pickfit.verify.result import install_guide, write_back
+from pickfit.verify.result import install_guide, mark_broken, note_passed, write_back
 from pickfit.verify.task import ReportedFailure, VerifyTask
 from pickfit.watch import DONE_EXTRACTIONS, MODEL, git, stop_reason
 
@@ -417,9 +421,16 @@ class Reverifier:
             result.old_steps, result.old_first_task = commands(guide), guide.first_task
         if not (is_passed(run.level) and run.replayed):
             result.outcome = "not_passed"
-            result.notes.append(f"the fresh run did not pass ({run.level}"
-                                f"{', ' + run.unverified_reason if run.unverified_reason else ''}); the record is "
-                                "unchanged (the pipeline never writes failed), so a person should check")
+            why = f"{run.level}{', ' + run.unverified_reason if run.unverified_reason else ''}"
+            result.notes.append(f"the fresh run did not pass ({why}); its level and runs are unchanged (the "
+                                "pipeline never writes failed), so a person should check")
+            note = (f"Re-verification {run.checked_at.date().isoformat()} on {run.os} did not pass ({why}) after a "
+                    f"reported {report.reason}; run {outcome.run_id}")
+            with self.git_lock:  # kept in the catalog, never recommended (brief 15.4)
+                self._record(report, path, result, lambda: mark_broken(record.slug, note, self.data_dir),
+                             f"Re-verify {record.slug}: broken after a reported {report.reason} on {report.os}",
+                             f"Event {report.first_event_id} (reporter {report.reporter or 'unknown'}); fresh run "
+                             f"{outcome.run_id} did not pass ({why}). standing = broken; level unchanged.")
             return
         new = install_guide(run)
         result.new_steps, result.new_first_task = commands(new), new.first_task
@@ -429,6 +440,12 @@ class Reverifier:
         if same:
             result.outcome = "unchanged"
             result.notes.append(f"the recorded {run.os} steps still work in a fresh box")
+            with self.git_lock:  # the steps stay; when it last passed moves (brief 15.4)
+                self._record(report, path, result, lambda: note_passed(record.slug, run.checked_at, self.data_dir),
+                             f"Re-verify {record.slug}: still passes on {run.os} after a reported {report.reason}",
+                             f"Event {report.first_event_id} (reporter {report.reporter or 'unknown'}); fresh run "
+                             f"{outcome.run_id}, {run.level}, replayed, with the recorded steps. last_passed_at "
+                             "moved.")
             return
         result.held = ungrounded([*result.new_steps, *([new.first_task] if new.first_task else [])],
                                  trusted_text(record, readme), record.repo.full_name)
@@ -441,12 +458,22 @@ class Reverifier:
 
     def _write(self, report: Report, record: SoftwareRecord, outcome: Any, path: Path, result: Result) -> None:
         run = outcome.run
+        written = self._record(
+            report, path, result, lambda: write_back(run, record.slug, self.data_dir),
+            f"Re-verify {record.slug} after a reported {report.reason} on {report.os}",
+            f"Event {report.first_event_id} (reporter {report.reporter or 'unknown'}); fresh run "
+            f"{outcome.run_id}, {run.level}, replayed. The {run.os} install steps changed.")
+        result.outcome = "rewritten" if written else "kept"
+
+    def _record(self, report: Report, path: Path, result: Result, change: Callable[[], tuple[bool, str]],
+                subject: str, body: str) -> bool:
+        """Apply `change` to the record file, save its git diff and commit the file alone (unless commit is
+        off). A failed commit puts the file back and raises, so the report stays pending. Whether it wrote."""
         before = path.read_bytes()
-        written, note = write_back(run, record.slug, self.data_dir)
+        written, note = change()
         result.notes.append(f"write-back: {note}")
         if not written:
-            result.outcome = "kept"
-            return
+            return False
         try:
             result.diff = git(self.data_dir, "diff", "--", path.name)
             diff_path = self.out_dir / f"{report.slug}-{report.os}-{self.clock().strftime('%Y%m%d-%H%M%S')}.diff"
@@ -454,10 +481,7 @@ class Reverifier:
             result.diff_path = str(diff_path)
             if self.commit:
                 git(self.data_dir, "add", "--", path.name)
-                git(self.data_dir, "commit", "-q", "-m",
-                    f"Re-verify {record.slug} after a reported {report.reason} on {report.os}\n\n"
-                    f"Event {report.first_event_id} (reporter {report.reporter or 'unknown'}); fresh run "
-                    f"{outcome.run_id}, {run.level}, replayed. The {run.os} install steps changed.", "--", path.name)
+                git(self.data_dir, "commit", "-q", "-m", f"{subject}\n\n{body}", "--", path.name)
                 result.commit = git(self.data_dir, "rev-parse", "--short", "HEAD").strip()
         except Exception:
             # Put the record back, so the report stays pending and the next try writes it again.
@@ -466,7 +490,7 @@ class Reverifier:
             path.write_bytes(before)
             result.diff = result.diff_path = None
             raise
-        result.outcome = "rewritten"
+        return True
 
     def _extraction(self, candidate: dict[str, Any], run_id: str, result: Result) -> dict[str, Any]:
         from pickfit.extract import SIDE_STATUSES, extraction_is_current

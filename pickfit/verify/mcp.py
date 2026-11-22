@@ -31,7 +31,7 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import ValidationError
 
-from pickfit.schema import MCP_TOOLS_MAX, McpHandshake, Pitfall
+from pickfit.schema import MCP_TOOLS_MAX, McpHandshake, McpToolAnnotationsSummary, Pitfall
 
 if TYPE_CHECKING:
     from pickfit.verify.box import Box
@@ -215,9 +215,35 @@ def handshake(check_stdout: str, command: str, *, offline: bool | None,
             transport="streamable_http" if http else "stdio", launch=[a[:200] for a in argv[:40]], url=url,
         protocol_version=_short(summary.get("protocol"), 40), server_name=_short(summary.get("server"), 80),
             server_version=_short(summary.get("version"), 60), tools=tools, tool_count=max(count, len(tools)),
-            called_tool=called[:80] if called else None, offline=offline)
+            called_tool=called[:80] if called else None, offline=offline,
+            description_flags=description_flags(summary), tool_annotations=tool_annotations(summary,
+                                                                                          max(count, len(tools))))
     except ValidationError:  # e.g. a URL the record does not accept: no handshake rather than a crash
         return None
+
+
+def description_flags(summary: dict[str, Any]) -> list[str] | None:
+    """The probe's pattern codes over every tool and the server's instructions, each once, in FLAG_TEXT's
+    order; [] when the probe looked and matched none; None for a summary from before it looked. Codes pickfit
+    does not know are dropped: the summary comes out of the box."""
+    flags = summary.get("flags")
+    if not isinstance(flags, dict):
+        return None
+    found = {k for kinds in flags.values() if isinstance(kinds, list) for k in kinds if isinstance(k, str)}
+    return [code for code in FLAG_TEXT if code in found]
+
+
+def tool_annotations(summary: dict[str, Any], tool_count: int) -> McpToolAnnotationsSummary | None:
+    """How many tools declare each annotation hint (the probe's counts, at most tool_count each); None when the
+    probe did not count them."""
+    counts = summary.get("annotations")
+    if not isinstance(counts, dict):
+        return None
+    values = {}
+    for key in ("read_only", "destructive", "open_world"):
+        n = counts.get(key, 0)
+        values[key] = min(n, tool_count) if isinstance(n, int) and not isinstance(n, bool) and n >= 0 else 0
+    return McpToolAnnotationsSummary(**values)
 
 
 def _short(value: Any, limit: int) -> str | None:

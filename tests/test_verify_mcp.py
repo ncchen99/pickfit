@@ -112,6 +112,30 @@ def test_handshake_and_notes_from_the_probe_output() -> None:
     assert server[0].actually_needed.startswith("The server's instructions have instruction-like text")
 
 
+def test_the_handshake_keeps_flag_codes_and_annotation_counts() -> None:
+    flagged = summary(flags={"read_note": ["sensitive_files", "override"], "(server instructions)": ["override"],
+                             "search_notes": ["made_up_code", 3]},
+                      annotations={"read_only": 2, "destructive": 0, "open_world": 1})
+    seen = handshake(flagged, PROBE, offline=None)
+    # Each code once, in FLAG_TEXT's order; a code pickfit does not know never reaches the record.
+    assert seen.description_flags == ["override", "sensitive_files"]
+    assert seen.tool_annotations.model_dump() == {"read_only": 2, "destructive": 0, "open_world": 1}
+    # The probe looked and matched nothing: [] and zero counts, not null.
+    clean = handshake(summary(annotations={"read_only": 0, "destructive": 0, "open_world": 0}), PROBE, offline=None)
+    assert clean.description_flags == [] and clean.tool_annotations.model_dump() == {
+        "read_only": 0, "destructive": 0, "open_world": 0}
+    # An older probe without annotations (or flags): not recorded, so the record dumps as before.
+    old = summary()
+    old_data = json.loads(old.splitlines()[-1].removeprefix(MARKER))
+    old_data.pop("flags")
+    legacy = handshake("\n".join([*old.splitlines()[:-1], MARKER + json.dumps(old_data)]), PROBE, offline=None)
+    assert legacy.description_flags is None and legacy.tool_annotations is None
+    assert "description_flags" not in legacy.model_dump(mode="json")
+    # Counts out of the box are capped at the tool count and bad values are zero.
+    odd = handshake(summary(annotations={"read_only": 9, "destructive": -1, "open_world": True}), PROBE, offline=None)
+    assert odd.tool_annotations.model_dump() == {"read_only": 2, "destructive": 0, "open_world": 0}
+
+
 def test_is_mcp_prefers_the_record_category() -> None:
     task = VerifyTask(slug="x", repo_url="https://github.com/a/x", readme="", extraction=None, category="mcp_server")
     assert is_mcp(task)
@@ -253,6 +277,8 @@ def test_a_passed_mcp_run_carries_the_replays_handshake(tmp_path: Path) -> None:
     assert run.mcp is not None and run.mcp.called_tool == "search_notes" and run.mcp.offline is True
     assert run.mcp.tools == ["search_notes", "read_note"]
     assert [p.kind for p in run.pitfalls] == []  # flags come from the probe check that decided the handshake
+    # The structured codes are kept from every passing probe of the server, though.
+    assert run.mcp.description_flags == ["override"]
     # Users have no probe: the guide's check and first task are never probe commands.
     guide = install_guide(run)
     assert guide.check is None and guide.first_task is None and guide.steps[0].command == "npm install -g notes-mcp"

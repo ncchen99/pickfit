@@ -118,22 +118,85 @@ def test_a_features_only_reading_gives_the_agent_the_features(env: dict[str, Any
     assert task.extraction.kind.value == stored["result"]["kind"]["value"]
 
 
-def test_steps_that_still_work_leave_the_record_alone(env: dict[str, Any]) -> None:
+def _set(env: dict[str, Any], **fields: Any) -> dict[str, Any]:
+    """Commit the example record with some fields changed (verification.* via a 'verification' dict to merge)."""
+    path = env["data"] / "frobtail.json"
+    data = json.loads(path.read_text())
+    data["verification"].update(fields.pop("verification", {}))
+    data.update(fields)
+    SoftwareRecord.model_validate(data)
+    path.write_text(json.dumps(data, indent=2) + "\n")
+    git(env["data"], "commit", "-qam", "set fields")
+    return data
+
+
+def test_steps_that_still_work_keep_the_steps_and_move_last_passed_at(env: dict[str, Any]) -> None:
+    """brief 15.4: a pass with the same steps changes no run or guide, but it is the newest pass, and a broken
+    standing ends."""
+    before = _set(env, standing="broken", standing_note="an older re-verification failed",
+                  verification={"last_passed_at": "2026-10-31T08:20:00Z", "reverify_cycle_days": 30,
+                                "reverify_due_at": "2026-11-30T08:20:00Z"})
     report(env["d1"])
-    verify = FakeVerify(env["tmp"], passed_run("run-20261031-linux-9", ["pipx install frobtail"]))
-    [result] = reverifier(env, verify).run()
-    assert (result.outcome, result.done, result.diff) == ("unchanged", True, None)
+    fresh = passed_run("run-20261031-linux-9", ["pipx install frobtail"], checked_at="2026-11-20T10:00:00+08:00")
+    [result] = reverifier(env, FakeVerify(env["tmp"], fresh)).run()
+    assert (result.outcome, result.done) == ("unchanged", True)
     assert "the recorded linux steps still work in a fresh box" in result.notes
-    assert git(env["data"], "status", "--porcelain") == ""
+    assert "write-back: last_passed_at moved; standing broken -> active" in result.notes
+    record = SoftwareRecord.model_validate_json((env["data"] / "frobtail.json").read_text())
+    assert record.verification.last_passed_at == datetime(2026, 11, 20, 10, 0, tzinfo=TAIPEI)
+    assert record.verification.reverify_due_at == datetime(2026, 12, 20, 10, 0, tzinfo=TAIPEI)
+    assert (record.standing, record.standing_note) == ("active", None)
+    # The runs, their level and the install steps are as they were.
+    assert [r.id for r in record.verification.runs] == [r["id"] for r in before["verification"]["runs"]]
+    assert record.verification.level == before["verification"]["level"]
+    assert record.install.linux.model_dump(mode="json") == SoftwareRecord.model_validate(
+        before).install.linux.model_dump(mode="json")
+    assert git(env["data"], "status", "--porcelain") == "" and result.commit
+    assert git(env["data"], "log", "-1", "--format=%s").strip() == ("Re-verify frobtail: still passes on linux after a "
+                                                           "reported install_failed")
 
 
-def test_a_run_that_does_not_pass_never_writes_failed(env: dict[str, Any]) -> None:
+def test_a_run_that_does_not_pass_marks_broken_and_never_writes_failed(env: dict[str, Any]) -> None:
+    before = json.loads((env["data"] / "frobtail.json").read_text())
     report(env["d1"])
     [result] = reverifier(env, FakeVerify(env["tmp"], unverified_run("run-20261031-linux-9",
                                                                       "suspected_tool_fault"))).run()
     assert (result.outcome, result.done) == ("not_passed", True)
-    assert "never writes failed" in result.notes[-1] and "suspected_tool_fault" in result.notes[-1]
-    assert git(env["data"], "status", "--porcelain") == ""
+    assert any("never writes failed" in n and "suspected_tool_fault" in n for n in result.notes)
+    record = SoftwareRecord.model_validate_json((env["data"] / "frobtail.json").read_text())
+    assert record.standing == "broken" and len(record.standing_note) <= 200
+    assert "did not pass (unverified, suspected_tool_fault)" in record.standing_note
+    assert "run-20261031-linux-9" in record.standing_note and EXCERPT not in record.standing_note
+    # level, runs and steps stay: broken is a standing, not a verification result.
+    assert record.verification.level == before["verification"]["level"]
+    assert [r.id for r in record.verification.runs] == [r["id"] for r in before["verification"]["runs"]]
+    assert record.install.linux.steps[0].command == "pipx install frobtail"
+    assert git(env["data"], "status", "--porcelain") == "" and result.commit
+    assert git(env["data"], "log", "-1", "--format=%s").startswith("Re-verify frobtail: broken after")
+
+
+def test_marking_broken_twice_writes_once(env: dict[str, Any]) -> None:
+    report(env["d1"])
+    reverifier(env, FakeVerify(env["tmp"], unverified_run("run-20261031-linux-9", "other"))).run()
+    report(env["d1"], event="evt_2", os="macos", rec="rec_" + "b" * 32)  # checked on Linux all the same
+    [again] = reverifier(env, FakeVerify(env["tmp"], unverified_run("run-20261031-linux-9", "other"))).run()
+    assert again.outcome == "not_passed" and again.commit is None
+    assert "write-back: not written: already broken with this note" in again.notes
+
+
+def test_a_new_passing_run_written_back_ends_broken_and_moves_last_passed_at(env: dict[str, Any]) -> None:
+    _set(env, standing="broken", standing_note="an older re-verification failed",
+         verification={"last_passed_at": "2026-10-31T08:20:00Z", "reverify_cycle_days": 90})
+    report(env["d1"])
+    run = passed_run("run-20261031-linux-9", ["uv tool install frobtail"], method="uv",
+                     checked_at="2026-11-20T10:00:00+08:00")
+    [result] = reverifier(env, FakeVerify(env["tmp"], run)).run()
+    assert result.outcome == "rewritten"
+    record = SoftwareRecord.model_validate_json((env["data"] / "frobtail.json").read_text())
+    assert record.standing == "active" and record.standing_note is None
+    assert record.verification.last_passed_at == run.checked_at
+    assert record.verification.reverify_cycle_days == 90
+    assert record.verification.reverify_due_at == datetime(2027, 2, 18, 10, 0, tzinfo=TAIPEI)
 
 
 def test_a_stronger_passed_run_is_kept(env: dict[str, Any]) -> None:

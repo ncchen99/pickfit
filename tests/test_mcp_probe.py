@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from pickfit.verify.mcp import MARKER, parse_summary
-from pickfit.verify.mcp_probe import flags_for, safe_name
+from pickfit.verify.mcp_probe import annotation_counts, flags_for, safe_name
 
 PROBE = Path(__file__).resolve().parent.parent / "pickfit" / "verify" / "mcp_probe.py"
 # The probe runs inside Linux boxes and stops the server with POSIX signals (SIGKILL).
@@ -96,6 +96,29 @@ def test_handshake_lists_tools_and_ends_with_a_summary(tmp_path: Path) -> None:
     assert "id_rsa" not in shown and "sidenote" not in shown
     assert "id_rsa" not in json.dumps({k: v for k, v in summary.items() if k != "launch"})
     assert out.stdout.splitlines()[-1].startswith(MARKER)
+
+
+@POSIX_ONLY
+def test_the_summary_counts_annotation_hints_and_keeps_flag_codes_only(tmp_path: Path) -> None:
+    reader = {**TIME_TOOL, "annotations": {"readOnlyHint": True, "openWorldHint": False, "title": "Time"}}
+    writer = {"name": "write_file", "description": "Write a file.",
+              "annotations": {"destructiveHint": True, "openWorldHint": True, "readOnlyHint": "yes"}}
+    out = probe(tmp_path, tools=[reader, writer, POISONED])
+    assert out.returncode == 0, out.stdout + out.stderr
+    summary = parse_summary(out.stdout)
+    # Only true counts: "yes" and false claim nothing, a missing annotations object neither.
+    assert summary["annotations"] == {"read_only": 1, "destructive": 1, "open_world": 1}
+    assert "annotations: read_only=1 destructive=1 open_world=1" in out.stdout
+    assert set(summary["flags"]) == {"add"} and all(
+        code in {"instruction_tag", "override", "conceal_from_user", "side_channel", "sensitive_files",
+                 "other_tools", "hidden_unicode"} for code in summary["flags"]["add"])
+
+
+def test_annotation_counts() -> None:
+    assert annotation_counts([]) == {"read_only": 0, "destructive": 0, "open_world": 0}
+    tools = [{"annotations": {"readOnlyHint": True, "destructiveHint": True, "openWorldHint": True}},
+             {"annotations": "readOnlyHint"}, {"annotations": None}, "not a tool", {"name": "x"}]
+    assert annotation_counts(tools) == {"read_only": 1, "destructive": 1, "open_world": 1}
 
 
 @POSIX_ONLY
