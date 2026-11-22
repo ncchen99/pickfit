@@ -11,6 +11,7 @@
 import { bestGuide, isVerified, isWebApp, verifiedOn, verifiedOnUserSystem, webCheck, type Arch, type Catalog, type Entry, type InstallGuide, type OS } from './catalog.ts';
 import type { FindOutput, PickOut } from './find.ts';
 import { fitNote } from './fit.ts';
+import { passedWithin, RECENT_DAYS } from './freshness.ts';
 import { isZh, L, withLang } from './i18n.ts';
 import { PIPE_TO_SHELL, type InstallOutput, type VerifiedInPickfit } from './install.ts';
 import { compareTable } from './pages/compare.ts';
@@ -50,20 +51,25 @@ export interface CatalogStats {
   verified: number;
   replayed: number;
   byHand: number;
+  /** Hidden gems: kept as a secondary mark (browse filter, badges, /how), no longer the headline number. */
   gems: number;
+  /** Records that passed a check in the last RECENT_DAYS days (against the index's build), broken ones left out. */
+  fresh: number;
   /** Web apps a sandboxed browser run passed on (they have no install steps to replay). */
   web: number;
 }
 
 const runsOf = (entry: Entry) => Object.values(entry.install).map((guide) => guide!.run);
 
-export function catalogStats(catalog: Catalog): CatalogStats {
+/** `now` defaults to the index's build time, as the tool page's ages do, so one deploy shows one stable number. */
+export function catalogStats(catalog: Catalog, now: Date = new Date(catalog.built_at)): CatalogStats {
   return {
     listed: catalog.count,
     verified: catalog.entries.filter(isVerified).length,
     replayed: catalog.entries.filter((e) => runsOf(e).some((r) => r.method === 'sandbox' && r.replayed)).length,
     byHand: catalog.entries.filter((e) => runsOf(e).some((r) => r.method === 'human')).length,
     gems: catalog.entries.filter((e) => e.scores?.treasure).length,
+    fresh: catalog.entries.filter((e) => passedWithin(e, now)).length,
     web: catalog.entries.filter((e) => isWebApp(e) && webCheck(e) !== null).length,
   };
 }
@@ -1123,6 +1129,19 @@ export interface PageInput {
   results: string;
 }
 
+/**
+ * One line under the search box (brief 15.2: an agent is the default caller), not a second hero: the way in from an
+ * agent, linked to /agents, and the one command to copy. The copy button needs the page script; the text selects without it.
+ */
+function agentEntry(mcp: string): string {
+  return (
+    `<div class="agent-entry"><p>${L('Using an agent? Let it ask pickfit before it builds.', '在用 agent 嗎？讓它動手前先來問 pickfit。')} ` +
+    `<a href="/agents">${L('Connect your agent', '接上你的 agent')}${icon('arrow-right')}</a></p>` +
+    command(`claude mcp add --transport http pickfit ${mcp}`) +
+    `</div>`
+  );
+}
+
 export function renderPage(input: PageInput): string {
   const { form, showcase } = input;
   const { stats } = showcase;
@@ -1136,6 +1155,7 @@ export function renderPage(input: PageInput): string {
       '說說你想做什麼，pickfit 會推薦它親自裝過、測過的工具，還附上實際跑得動的指令',
     )}</p>` +
     `<div class="hero-form">${searchForm(form)}</div>` +
+    agentEntry(mcp) +
     `<div class="tries js-only"><span class="label">${L('Or try', '或試試')}</span>${examples()
       .map(([label, need]) => `<button type="button" class="try" data-need="${esc(need)}" title="${esc(need)}">${esc(label)}</button>`)
       .join('')}</div>` +
@@ -1150,7 +1170,11 @@ export function renderPage(input: PageInput): string {
           `<strong>${stats.web}</strong> 款網頁應用在瀏覽器實測過`,
         )}</span></li>`
       : '') +
-    `<li>${icon('gem')}<span>${L(`<strong>${stats.gems}</strong> hidden gems`, `<strong>${stats.gems}</strong> 款寶藏`)}</span></li></ul>` +
+    // The headline is how much passed a check this month (brief 15.1); hidden gems stay a secondary mark on browse and cards.
+    `<li>${icon('refresh-cw')}<span>${L(
+      `<strong>${stats.fresh}</strong> verified in the last ${RECENT_DAYS} days`,
+      `<strong>${stats.fresh}</strong> 款近 ${RECENT_DAYS} 天驗證過`,
+    )}</span></li></ul>` +
     `</div><div class="hero-fitz">${fitz('hello', 320, { eager: true })}</div></div>` +
     `<div class="ruler" aria-hidden="true"></div></section>` +
     `<p id="status" class="sr" aria-live="polite"></p>` +

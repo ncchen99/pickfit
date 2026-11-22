@@ -603,6 +603,12 @@ clip-path:inset(0 100% 0 0);transition:clip-path .45s var(--ease-out)}
 .run-age{margin:-6px 0 10px}
 .run-stale{display:flex;gap:8px;align-items:flex-start;margin:0 0 12px;color:var(--ink-2)}
 .run-stale .i{flex:none;width:18px;height:18px;color:var(--caution)}
+/* standing broken: the top of the tool page says it before anything that reads like a recommendation */
+.broken-banner{display:flex;gap:12px;align-items:flex-start;margin:20px 0 0;padding:14px 16px;max-width:72ch;border:1px solid var(--fail);border-radius:var(--r-ctl);color:var(--ink)}
+.broken-banner>.i{flex:none;width:20px;height:20px;margin-top:2px;color:var(--fail)}
+.broken-banner h2{font-size:var(--t-head);margin:0 0 4px;color:var(--fail)}
+.broken-banner p{margin:0}
+.broken-banner p+p{margin-top:6px}
 .report{margin:18px 0 0}
 .report-form{display:grid;gap:10px;margin:10px 0 0;max-width:36rem}
 .report-form label{display:grid;gap:4px;font-size:var(--t-small)}
@@ -863,6 +869,13 @@ const PAGES = `
 .proof li{display:inline-flex;align-items:baseline;gap:6px}
 .proof strong{font:700 1.05rem/1 var(--display);color:var(--ink);font-variant-numeric:tabular-nums}
 .proof .i{display:none}
+/* the agent's way in: one quiet line under the form and its command, never a second call to action */
+.agent-entry{margin:20px 0 0;max-width:72ch}
+.agent-entry p{margin:0;color:var(--ink-2);font-size:.95rem}
+.agent-entry a{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.agent-entry a .i{width:16px;height:16px}
+.agent-entry .cmd{margin:8px 0 0}
+body.is-results .agent-entry{display:none}
 body.is-results .hero{padding:12px 0 0}
 body.is-results .hero-grid{grid-template-columns:minmax(0,1fr)}
 body.is-results .hero h1,body.is-results .hero .lede,body.is-results .proof,body.is-results .tries{display:none}

@@ -9,7 +9,7 @@
 import { bestGuide, isVerified, isWebApp, OSES, securityOf, verifiedOn, webCheck, type Catalog, type Entry, type InstallGuide, type OS, type RunVideo, type GapCategory, type SecurityCheck, type SecurityFinding } from '../catalog.ts';
 import { featuresOut, shownWorking, standInOnly, type FeaturesOut, type NotCheckedReason } from '../features.ts';
 import { advisoriesOf } from '../security.ts';
-import { freshness } from '../freshness.ts';
+import { freshness, passedAt } from '../freshness.ts';
 import { ERROR_EXCERPT_MAX } from '../outcome.ts';
 import { L, lang } from '../i18n.ts';
 import { installGuide, type InstallOutput } from '../install.ts';
@@ -32,6 +32,7 @@ const MATURITY: Record<string, string> = {
 
 /** Fitz looks pleased only when a run reached the tool's main function and passed. */
 function faceFor(entry: Entry): FitzName {
+  if (entry.standing === 'broken') return 'test-failed';
   const web = webCheck(entry);
   if (isWebApp(entry)) return web ? (web.level === 'install' ? 'testing' : 'success') : 'thinking';
   const guide = bestGuide(entry);
@@ -81,7 +82,57 @@ function factSheet(entry: Entry, now: Date): string {
     ...(web ? [] : [fact(L('Last release', '最新版本'), entry.last_release, (d) => `${esc(day(d))} <small>(${esc(age(d, now) ?? '')})</small>`)]),
   ];
   if (entry.maturity) rows.push({ label: L('Maturity', '成熟度'), value: esc(MATURITY[entry.maturity] ?? entry.maturity) });
+  rows.push(fact(L('For', '給誰用'), entry.used_by ? USED_BY[entry.used_by] : null, esc), freshnessRow(entry, now));
   return measure(rows, { cls: 'glance-sheet' });
+}
+
+/** Who uses it once recommended (brief 15.2): the record's used_by, in words. */
+const USED_BY: Record<string, string> = {
+  get agent() { return L('Agents', 'Agent'); },
+  get human() { return L('People', '人'); },
+  get both() { return L('People and agents', '人與 Agent'); },
+};
+
+/**
+ * How fresh the last passing check is (brief 15.4): its age and the record's own re-verification cycle (else
+ * STALE_DAYS). Pass while inside the cycle, caution once due, fail when the latest re-verification failed.
+ */
+function freshnessRow(entry: Entry, now: Date): MeasureRow {
+  const label = L('Freshness', '驗證新鮮度');
+  const v = entry.verification;
+  const f = freshness(passedAt(entry), null, now, { cycleDays: v.reverify_cycle_days ?? null, dueAt: v.reverify_due_at ?? null, standing: entry.standing ?? null });
+  const every = `<small>${esc(L(`re-verified every ${f.cycle_days} days`, `每 ${f.cycle_days} 天重驗`))}</small>`;
+  if (entry.standing === 'broken') {
+    const when = v.checked_at ? L(` on ${day(v.checked_at)}`, `（${day(v.checked_at)}）`) : '';
+    return { label, value: `${esc(L(`Re-verification failed${when}`, `最近一次重驗失敗${when}`))} ${every}`, tone: 'fail' };
+  }
+  if (f.age_days === null) return { label, value: esc(L('Not verified yet', '尚未驗證')), tone: 'caution' };
+  const ago = f.age_days === 0 ? L('Passed today', '今天通過') : L(`Passed ${f.age_days} ${f.age_days === 1 ? 'day' : 'days'} ago`, `${f.age_days} 天前通過`);
+  return { label, value: `${esc(ago)} ${every}`, tone: f.overdue ? 'caution' : 'pass' };
+}
+
+/**
+ * The tool's latest re-verification failed (standing broken, brief 15.4): said at the top of the page, before anything
+ * that reads like a recommendation. The record is kept, not deleted, so an agent does not spend a try on it.
+ */
+function brokenBanner(entry: Entry): string {
+  if (entry.standing !== 'broken') return '';
+  const v = entry.verification;
+  const failed = v.checked_at ? day(v.checked_at) : null;
+  const last = v.last_passed_at ? day(v.last_passed_at) : null;
+  const text = L(
+    `pickfit re-ran it${failed ? ` on ${failed}` : ''} and it no longer works as recorded, so pickfit does not recommend it.` +
+      (last ? ` It last passed on ${last}.` : '') +
+      ' The record stays here so agents and people don’t spend a try on it.',
+    `pickfit ${failed ? `在 ${failed} ` : ''}重驗時，它已經不能照紀錄運作，所以 pickfit 不推薦它。` +
+      (last ? `上次通過是 ${last}。` : '') +
+      '紀錄保留在這裡，讓 agent 和人不必白試一次。',
+  );
+  const note = entry.standing_note ? `<p class="small">${esc(entry.standing_note)}</p>` : '';
+  return (
+    `<div class="broken-banner" role="note" aria-labelledby="broken-title">${icon('triangle-alert')}<div>` +
+    `<h2 id="broken-title">${L('Its latest re-verification failed', '最近一次重驗失敗')}</h2><p>${esc(text)}</p>${note}</div></div>`
+  );
 }
 
 /** What the README says you need first; nothing when it lists nothing. */
@@ -1067,6 +1118,7 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string, opts: 
   const web = isWebApp(entry) ? webCheck(entry) : null;
   const on = listOf(verifiedOn(entry).map((os) => OS_NAME[os]));
   const badges = [
+    entry.standing === 'broken' ? `<a class="badge-link" href="#broken-title">${badge('fail', L('Not recommended', '不列入推薦'), { icon: 'triangle-alert' })}</a>` : '',
     web ? badge('info', L(NO_INSTALL_LABEL, '免安裝'), { icon: 'globe' }) : '',
     web
       ? badge('pass', L('Tested in a browser', '已在瀏覽器實測'), { icon: 'badge-check' })
@@ -1110,7 +1162,9 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string, opts: 
     `<section class="head tool-head"><div class="wrap head-row"><div>` +
     `<p class="crumbs"><a href="/browse">${L('Browse', '瀏覽')}</a><span class="crumb-sep" aria-hidden="true">/</span>${crumb(entry)}</p>` +
     `<h1>${esc(entry.name)}</h1><p class="lede">${esc(entry.summary)}</p>` +
-    `<div class="tool-facts"><p class="badges">${badges}</p><p class="tool-links">${links}${verified ? compareToggle(entry.slug, entry.name) : ''}</p></div></div>` +
+    `<div class="tool-facts"><p class="badges">${badges}</p><p class="tool-links">${links}${verified ? compareToggle(entry.slug, entry.name) : ''}</p></div>` +
+    brokenBanner(entry) +
+    `</div>` +
     `${fitz(faceFor(entry), 96, { eager: true })}</div></section>` +
     (wide ? `<div class="wrap tool-clip">${clip}</div>` : '') +
     `<div class="wrap layout tool-layout"><div class="tool-main">` +

@@ -15,6 +15,7 @@ import { command } from '../src/ui/kit.ts';
 import { makeWorker } from '../src/worker.ts';
 import { costUsd } from '../src/meta.ts';
 import { answer, commandText, fixtureCatalog, fixtureIndex, makeD1, modelResponse, USAGE_READ } from './helpers.ts';
+import { loadCatalog } from '../src/catalog.ts';
 
 const MAC_LLM = { need: 'run a language model offline on my laptop', os: 'macos', offline: '1' };
 const NOW = new Date('2026-10-30T12:00:00Z');
@@ -658,7 +659,18 @@ test('render: a best free option outside the picks, a no-install option and a ca
 });
 
 test('catalog stats come from the index', () => {
-  assert.deepEqual(catalogStats(fixtureCatalog()), { listed: 7, verified: 7, replayed: 6, byHand: 1, gems: 1, web: 1 });
+  // fresh: passed in the last 30 days of `now`; the fixtures ran 28 Oct to 2 Nov, so on 29 Nov only the 31 Oct and 2 Nov runs count.
+  assert.deepEqual(catalogStats(fixtureCatalog(), new Date('2026-11-29T12:00:00Z')), { listed: 7, verified: 7, replayed: 6, byHand: 1, gems: 1, fresh: 2, web: 1 });
+});
+
+test('catalog stats: fresh counts the last pass (last_passed_at first), and never a broken or never-passed record', () => {
+  const now = new Date('2026-11-29T12:00:00Z');
+  const index = fixtureIndex() as { entries: { slug: string; standing?: string; install: Record<string, unknown>; verification: { last_passed_at?: string; checked_at: string | null } }[] };
+  const bySlug = (slug: string) => index.entries.find((e) => e.slug === slug)!;
+  bySlug('fixture-llm-runner').verification.last_passed_at = '2026-11-20T00:00:00Z'; // re-verified with the same steps
+  bySlug('fixture-notes-mcp').standing = 'broken'; // its latest re-verification failed
+  assert.equal(catalogStats(loadCatalog(index), now).fresh, 2, 'llm-runner joins, notes-mcp leaves');
+  assert.equal(catalogStats(loadCatalog(index), new Date('2027-06-01T00:00:00Z')).fresh, 0, 'nothing passed in the last 30 days');
 });
 
 test('render: the offline check is shown when it failed, and said when it was never run but asked for', () => {
