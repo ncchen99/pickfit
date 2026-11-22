@@ -40,6 +40,7 @@ import { leansInstall, rankByRules, templateReasons } from './rules.ts';
 import { webAppOut, webRanSentence, type WebAppOut } from './webapp.ts';
 import { cycleOf, freshness, type Freshness } from './freshness.ts';
 import { withLang } from './i18n.ts';
+import { enqueueDueReverify, REVERIFY_DUE_DAILY_CAP, type DuePick } from './outcome.ts';
 
 /** The language the web page asks the model to write its sentences in; MCP answers stay English. */
 export type AnswerLanguage = 'zh-TW';
@@ -648,6 +649,19 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
       latency_ms: Date.now() - started,
     }).catch(logFailure(req.kind, output.rec_id)),
   );
+  // Re-verify what gets asked about (brief 15.4): a pick past its cycle queues a re-run, in the background, and a
+  // failure here never touches the answer. A web app has no install steps to re-run; its browser check is separate.
+  const due: DuePick[] = output.picks
+    .filter((pick) => pick.freshness.overdue && !isWebApp(entries.get(pick.slug)!))
+    .map((pick) => ({ slug: pick.slug, os: pick.verification.os ?? 'linux' }));
+  if (due.length > 0) {
+    deps.waitUntil(
+      enqueueDueReverify(deps.db, due, deps.settings.reverifyDueDailyCap ?? REVERIFY_DUE_DAILY_CAP, {
+        now,
+        recId: output.rec_id,
+      }).catch(logFailure('reverify_due', output.rec_id)),
+    );
+  }
   return { output, keepCurrent: choice.keepCurrent };
 }
 

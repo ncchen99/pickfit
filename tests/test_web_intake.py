@@ -505,3 +505,113 @@ def test_a_failing_capabilities_step_does_not_stop_a_site_reading(dirs):
     got = read(fakes, dirs)
     assert any(n.startswith("capabilities not added: RuntimeError") for n in got.notes)
     assert "capabilities" not in json.loads(got.record_path.read_text())
+
+
+# --- pickfit web-check (P2-05): one HEAD per web app, signals written only with write ----------------------------
+
+FIXTURES = Path(__file__).parent / "fixtures"
+SITE = "https://fixture-sketch.example.invalid/"
+
+
+def web_records(tmp_path: Path, extra_sites: dict[str, str] | None = None) -> Path:
+    """data/software with the web app fixture (and copies under other slugs and URLs), plus a CLI record."""
+    data = tmp_path / "software"
+    data.mkdir()
+    web = json.loads((FIXTURES / "record_web_app.json").read_text())
+    (data / f"{web['slug']}.json").write_text(json.dumps(web, indent=2) + "\n")
+    for slug, url in (extra_sites or {}).items():
+        copy = json.loads(json.dumps(web).replace(SITE, url))
+        copy["slug"] = slug
+        (data / f"{slug}.json").write_text(json.dumps(copy, indent=2) + "\n")
+    (data / "software-example.json").write_text((FIXTURES / "software_example.json").read_text())
+    return data
+
+
+def head_server(answers: dict[str, Any], seen: list[Any]) -> Any:
+    import httpx2
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        seen.append(request)
+        answer = answers.get(str(request.url))
+        if isinstance(answer, Exception):
+            raise answer
+        return answer if answer is not None else httpx2.Response(404)
+
+    return httpx2.Client(transport=httpx2.MockTransport(handler), headers={"User-Agent": "pickfit-test"})
+
+
+def test_web_check_is_a_dry_run_by_default_and_sends_one_head_per_web_app(tmp_path: Path) -> None:
+    import httpx2
+
+    data = web_records(tmp_path)
+    before = {p.name: p.read_text() for p in data.iterdir()}
+    seen: list[Any] = []
+    http = head_server({SITE: httpx2.Response(200, headers={"Last-Modified": "Tue, 10 Nov 2026 08:00:00 GMT"})}, seen)
+    lines: list[str] = []
+    [check] = wi.web_check(data, http=http, now=lambda: NOW, interval_s=0, log=lines.append)
+    assert (check.slug, check.status, check.alive, check.written) == ("fixture-web-sketch", 200, True, False)
+    assert check.last_modified == "2026-11-10T08:00:00Z"
+    assert [(r.method, str(r.url)) for r in seen] == [("HEAD", SITE)]  # the CLI record is not touched
+    assert seen[0].headers["user-agent"] == "pickfit-test" and seen[0].content == b""
+    assert {p.name: p.read_text() for p in data.iterdir()} == before
+    assert "dry run" in lines[0]
+
+
+def test_web_check_write_sets_site_alive_at_and_content_updated_at(tmp_path: Path) -> None:
+    import httpx2
+
+    data = web_records(tmp_path, {"other-site": "https://other.example.invalid/"})
+    seen: list[Any] = []
+    http = head_server({SITE: httpx2.Response(200, headers={"Last-Modified": "Tue, 10 Nov 2026 08:00:00 GMT"}),
+                        # a redirect answers too, and is not followed
+                        "https://other.example.invalid/": httpx2.Response(301, headers={"Location": "https://x.invalid/"})},
+                       seen)
+    pauses: list[float] = []
+    checks = wi.web_check(data, http=http, write=True, now=lambda: NOW, interval_s=1.0, sleep=pauses.append,
+                          log=lambda line: None)
+    assert [(c.slug, c.status, c.written) for c in checks] == [("fixture-web-sketch", 200, True),
+                                                               ("other-site", 301, True)]
+    assert len(seen) == 2 and pauses == [1.0]  # one site at a time, a pause between
+    sketch = SoftwareRecord.model_validate_json((data / "fixture-web-sketch.json").read_text())
+    assert sketch.maintenance_signals.site_alive_at == NOW
+    assert sketch.maintenance_signals.content_updated_at.isoformat() == "2026-11-10T08:00:00+00:00"
+    other = SoftwareRecord.model_validate_json((data / "other-site.json").read_text())
+    assert other.maintenance_signals.site_alive_at == NOW and other.maintenance_signals.content_updated_at is None
+
+
+def test_web_check_leaves_a_site_that_did_not_answer_as_it_is(tmp_path: Path) -> None:
+    import httpx2
+
+    data = web_records(tmp_path, {"down-site": "https://down.example.invalid/"})
+    before = {p.name: p.read_text() for p in data.iterdir()}
+    http = head_server({SITE: httpx2.Response(503),
+                        "https://down.example.invalid/": httpx2.ConnectTimeout("timed out")}, [])
+    checks = wi.web_check(data, http=http, write=True, now=lambda: NOW, interval_s=0, log=lambda line: None)
+    assert [(c.slug, c.status, c.alive, c.error) for c in checks] == [
+        ("down-site", None, False, "ConnectTimeout"), ("fixture-web-sketch", 503, False, None)]
+    assert {p.name: p.read_text() for p in data.iterdir()} == before
+
+
+def test_web_check_limit_takes_the_sites_checked_longest_ago_first(tmp_path: Path) -> None:
+    import httpx2
+
+    data = web_records(tmp_path, {"a-site": "https://a.example.invalid/", "b-site": "https://b.example.invalid/"})
+    a = json.loads((data / "a-site.json").read_text())
+    a["maintenance_signals"] = {"site_alive_at": "2026-11-01T00:00:00+08:00"}
+    (data / "a-site.json").write_text(json.dumps(a, indent=2) + "\n")
+    seen: list[Any] = []
+    http = head_server({}, seen)
+    checks = wi.web_check(data, http=http, limit=2, now=lambda: NOW, interval_s=0, log=lambda line: None)
+    assert [c.slug for c in checks] == ["b-site", "fixture-web-sketch"]  # never checked first; a-site waits
+    assert all(r.method == "HEAD" for r in seen)
+    assert wi._http_date("not a date") is None and wi._http_date(None) is None
+
+
+def test_web_check_cli_defaults_to_a_dry_run(tmp_path: Path, monkeypatch: Any) -> None:
+    from pickfit import cli
+
+    calls: list[dict[str, Any]] = []
+    monkeypatch.setattr(wi, "web_check", lambda data_dir, **kw: calls.append({"data_dir": data_dir, **kw}) or [])
+    assert cli.main(["web-check", "--data", str(tmp_path)]) == 0
+    assert cli.main(["web-check", "--data", str(tmp_path), "--write", "--limit", "3"]) == 0
+    assert [(c["write"], c["limit"]) for c in calls] == [(False, None), (True, 3)]

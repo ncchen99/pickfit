@@ -96,6 +96,56 @@ async function queueReverify(db: D1Database, now: Date, slug: string, os: string
   return (result.meta.changes ?? 0) > 0 ? 'queued' : 'already_queued';
 }
 
+/** Due re-runs find_software may queue per UTC day when REVERIFY_DUE_DAILY_CAP is unset. */
+export const REVERIFY_DUE_DAILY_CAP = 10;
+/** A re-run that finished this recently is not queued again: its result waits for a person to publish it. */
+export const DUE_REQUEUE_AFTER_DAYS = 7;
+
+export interface DuePick {
+  slug: string;
+  /** The OS of the shown check; the queue's key is (slug, os). */
+  os: OS;
+}
+
+/**
+ * Queue re-runs for picks find_software returned past their re-verification cycle (brief 15.4, P2-03: re-verify what
+ * gets asked about, nothing else). reason = "due", the find's rec_id stands in for first_event_id (no outcome event
+ * is behind it). At most `dailyCap` due rows are queued per UTC day; a slug with any pending row, or a re-run that
+ * finished in the last DUE_REQUEUE_AFTER_DAYS, is skipped. Each insert checks the cap itself, so two finds racing
+ * cannot both take the last slot. Returns the slugs queued.
+ */
+export async function enqueueDueReverify(
+  db: D1Database,
+  picks: readonly DuePick[],
+  dailyCap: number,
+  opts: { now: Date; recId: string },
+): Promise<string[]> {
+  if (!(dailyCap > 0) || picks.length === 0) return [];
+  const nowIso = opts.now.toISOString();
+  const dayStart = `${nowIso.slice(0, 10)}T00:00:00.000Z`;
+  const recent = new Date(opts.now.getTime() - DUE_REQUEUE_AFTER_DAYS * 86_400_000).toISOString();
+  const queued: string[] = [];
+  const seen = new Set<string>();
+  for (const pick of picks) {
+    if (seen.has(pick.slug)) continue;
+    seen.add(pick.slug);
+    const result = await db
+      .prepare(
+        `INSERT INTO reverify_queue (slug, os, reason, first_event_id, queued_at)
+         SELECT ?1, ?2, 'due', ?3, ?4
+          WHERE (SELECT count(*) FROM reverify_queue WHERE reason = 'due' AND queued_at >= ?5) < ?6
+            AND NOT EXISTS (SELECT 1 FROM reverify_queue WHERE slug = ?1 AND (done_at IS NULL OR done_at >= ?7))
+         ON CONFLICT(slug, os) DO UPDATE SET reason = excluded.reason, first_event_id = excluded.first_event_id,
+                                             queued_at = excluded.queued_at, done_at = NULL
+          WHERE reverify_queue.done_at IS NOT NULL`,
+      )
+      .bind(pick.slug, pick.os, opts.recId, nowIso, dayStart, Math.floor(dailyCap), recent)
+      .run();
+    if ((result.meta.changes ?? 0) > 0) queued.push(pick.slug);
+  }
+  return queued;
+}
+
 /**
  * What the agent may tell the user about a failure report. A queued re-run is a batch job that pickfit's maintainers
  * start and review (`pickfit reverify`), not something already running, so the hint says so; when no re-run was

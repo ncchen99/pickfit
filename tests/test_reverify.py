@@ -479,3 +479,55 @@ def test_a_gui_record_without_a_display_box_is_not_paid_for(env: dict[str, Any])
     verify = FakeVerify(env["tmp"], passed_run("run-20261031-linux-9", ["pipx install frobtail"]))
     [result] = reverifier(env, verify, display=True).run()
     assert result.outcome == "unchanged" and verify.tasks[0].category == "dev_cli"
+
+
+def due(db: Any, *, slug: str = "frobtail", os: str = "linux", rec: str = "rec_" + "d" * 32,
+        queued_at: str = "2026-10-31T00:55:00.000Z") -> None:
+    """The row find_software writes for a pick past its re-verification cycle (worker/src/outcome.ts
+    enqueueDueReverify): reason due, the find's rec_id in first_event_id, no outcome event behind it."""
+    db.execute(sql("INSERT INTO reverify_queue (slug, os, reason, first_event_id, queued_at) VALUES "
+                   "(?1, ?2, 'due', ?3, ?4)", slug, os, rec, queued_at))
+
+
+def test_a_due_row_is_checked_without_a_reported_failure(env: dict[str, Any]) -> None:
+    """P2-03: nobody reported a failure, so the agent is told of none; steps that still work move last_passed_at."""
+    due(env["d1"])
+    [row] = pending(env["d1"], 5)
+    assert (row.reason, row.reporter, row.error_excerpt) == ("due", None, None)
+    verify = FakeVerify(env["tmp"], passed_run("run-20261031-linux-9", ["pipx install frobtail"]))
+    [result] = reverifier(env, verify).run()
+    assert (result.outcome, result.stage, result.done) == ("unchanged", "due", True)
+    assert verify.tasks[0].reported is None
+    subject, body = git(env["data"], "log", "-1", "--format=%s%n%b").split("\n", 1)
+    assert subject == "Re-verify frobtail: still passes on linux after a due re-verification"
+    assert "by find_software (past its re-verification cycle)" in body
+    assert done_at(env["d1"]) == "2026-10-31T01:00:00.000Z"
+
+
+def test_a_due_row_that_fails_marks_the_record_broken(env: dict[str, Any]) -> None:
+    due(env["d1"])
+    verify = FakeVerify(env["tmp"], unverified_run("run-20261031-linux-9", "suspected_tool_fault"))
+    [result] = reverifier(env, verify).run()
+    assert result.outcome == "not_passed"
+    record = SoftwareRecord.model_validate_json((env["data"] / "frobtail.json").read_text())
+    assert record.standing == "broken" and "after a due re-verification" in (record.standing_note or "")
+
+
+def test_max_cost_usd_stops_before_the_next_row(env: dict[str, Any]) -> None:
+    """Each fake run costs $0.08 model + $0.004 box; with a $0.05 cap the first runs and the second waits."""
+    due(env["d1"])
+    due(env["d1"], os="windows", rec="rec_" + "e" * 32, queued_at="2026-10-31T00:56:00.000Z")
+    verify = FakeVerify(env["tmp"], passed_run("run-20261031-linux-9", ["pipx install frobtail"]),
+                        passed_run("run-20261031-linux-10", ["pipx install frobtail"]))
+    lines: list[str] = []
+    rv = reverifier(env, verify, lines=lines)
+    assert rv.spent_today() == 0.0
+    results = rv.run(5, max_cost_usd=0.05)
+    assert [r.os for r in results] == ["linux"]
+    assert rv.spent_today() == pytest.approx(0.084)
+    assert any("not starting frobtail/windows: today's re-runs cost $0.08, the daily cap is $0.05" in line
+               for line in lines)
+    assert done_at(env["d1"], os="windows") is None
+    # Without a cap (or with room left), the waiting row runs.
+    [later] = rv.run(5, max_cost_usd=1.0)
+    assert later.os == "windows" and later.outcome == "unchanged"

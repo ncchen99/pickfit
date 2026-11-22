@@ -14,6 +14,11 @@ source does not have (a package too new to be indexed, a failed lookup) are None
 monthly_downloads is None unless every package found has a known count. Names to try come from the
 install commands pickfit saw (README claims and replayed steps) and the root manifests.
 dependents stays uncounted: the only free source for it has not agreed to this use (arch G.4).
+
+When the latest version was published (maintenance_signals.registry_latest_at, brief 15.4) is read from the same
+responses, with no request of its own: PyPI's newest file upload time of the latest release, and crates.io's
+created_at of the crate's newest version. npm's /latest manifest and Homebrew's formula JSON carry no publish time
+(npm has it only in the full package document, which can be megabytes), so theirs stays None.
 """
 
 from __future__ import annotations
@@ -229,6 +234,37 @@ def _retry_after(value: str | None, default: float) -> float:
     return min(60.0, max(1.0, seconds))
 
 
+def _utc_iso(value: Any) -> str | None:
+    """A registry timestamp as an ISO 8601 UTC string (YYYY-MM-DDTHH:MM:SSZ); None when it is not one.
+    A time without a zone is read as UTC, as PyPI's upload_time is."""
+    if not isinstance(value, str) or not value.strip():
+        return None
+    try:
+        at = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if at.tzinfo is None:
+        at = at.replace(tzinfo=UTC)
+    return at.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _latest(values: Iterable[str | None]) -> str | None:
+    """The latest of some _utc_iso strings (they sort as text); None when there are none."""
+    return max((v for v in values if v), default=None)
+
+
+def _crate_latest(doc: dict[str, Any], crate: dict[str, Any]) -> str | None:
+    """created_at of the crate's newest version (newest_version, else max_version) in the same response's
+    `versions`; else the newest created_at among versions not yanked. crate.updated_at is left out: metadata
+    edits move it too."""
+    versions = [v for v in doc.get("versions") or [] if isinstance(v, dict)]
+    newest = crate.get("newest_version") or crate.get("max_version")
+    for version in versions:
+        if newest and version.get("num") == newest:
+            return _utc_iso(version.get("created_at"))
+    return _latest(_utc_iso(v.get("created_at")) for v in versions if not v.get("yanked"))
+
+
 # --- the lookups --------------------------------------------------------------------------------
 
 
@@ -237,6 +273,7 @@ class Package:
     registry: str
     name: str
     monthly_downloads: int | None
+    latest_at: str | None = None  # when the latest version was published (ISO UTC); None: the registry did not say
 
 
 @dataclass
@@ -246,6 +283,8 @@ class RegistrySignals:
     hn_top_score: int | None
     packages: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
+    # maintenance_signals.registry_latest_at: the newest publish time among the packages found (ISO UTC), or None.
+    registry_latest_at: str | None = None
 
 
 class Registries:
@@ -332,7 +371,11 @@ class Registries:
             counts = [_count(data.get(k)) for k in ("last_month", "last_week", "last_day")] if isinstance(
                 data, dict) else []
             downloads = max((c for c in counts if c is not None), default=None)
-        return Package("pypi", name, downloads)
+        # `urls` lists the latest release's files; the newest upload is when that release came out.
+        files = doc.get("urls") if isinstance(doc.get("urls"), list) else []
+        latest = _latest(_utc_iso(f.get("upload_time_iso_8601") or f.get("upload_time"))
+                         for f in files if isinstance(f, dict))
+        return Package("pypi", name, downloads, latest)
 
     def crates(self, name: str, repos: list[str]) -> Package | None:
         doc = self.get_json(f"https://crates.io/api/v1/crates/{name}")
@@ -340,7 +383,7 @@ class Registries:
         if not isinstance(crate, dict) or not links_repo([crate.get("repository"), crate.get("homepage")], repos):
             return None
         recent = _count(crate.get("recent_downloads"))
-        return Package("crates", name, round(recent / 3) if recent is not None else None)
+        return Package("crates", name, round(recent / 3) if recent is not None else None, _crate_latest(doc, crate))
 
     def homebrew(self, name: str, repos: list[str]) -> Package | None:
         doc = self.get_json(f"https://formulae.brew.sh/api/formula/{name}.json")
@@ -403,4 +446,5 @@ class Registries:
             hn_top_score=hn,
             packages=[f"{p.registry}:{p.name}" for p in found.values()],
             errors=errors,
+            registry_latest_at=_latest(p.latest_at for p in found.values()),
         )

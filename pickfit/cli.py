@@ -643,7 +643,7 @@ def _reverify(args: argparse.Namespace) -> int:
                             commit=not args.no_commit, log=lambda line: print(line, flush=True))
     ledger = default_ledger()
     results = reverifier.run(args.limit, blocked=lambda: budget_blocked(
-        [("Model pipeline", ledger, WORST_CASE_META_USD)]))
+        [("Model pipeline", ledger, WORST_CASE_META_USD)]), max_cost_usd=args.max_cost_usd)
     print(json.dumps([{k: v for k, v in vars(r).items() if k != "diff"} for r in results], ensure_ascii=False,
                      indent=2))
     return 0 if all(r.outcome != "retry" for r in results) else 1
@@ -652,6 +652,7 @@ def _reverify(args: argparse.Namespace) -> int:
 def _add_queue_commands(sub: argparse._SubParsersAction) -> None:
     from pickfit.d1 import DEFAULT_WORKER_DIR
     from pickfit.profiles import DEFAULT_OUT
+    from pickfit.reverify import DEFAULT_MAX_COST_USD
     from pickfit.watch import (DEFAULT_CONCURRENCY, DEFAULT_DAILY_USD, DEFAULT_HARVEST_SLOTS, DEFAULT_INTERVAL_S,
                                DEFAULT_MAX_USD, DEFAULT_USER_RESERVE_USD, DEFAULT_WEB_CONCURRENCY,
                                DEFAULT_WINDOWS_CONCURRENCY, WINDOWS_MAX_BOXES)
@@ -751,6 +752,9 @@ def _add_queue_commands(sub: argparse._SubParsersAction) -> None:
                                         "write back changed steps and show the record's git diff (paid)")
     common(r)
     r.add_argument("--limit", type=int, default=5, help="queued reports to take (default 5)")
+    r.add_argument("--max-cost-usd", type=float, default=DEFAULT_MAX_COST_USD,
+                   help="stop before the next queued row once today's re-runs (model and box) cost this much "
+                        f"(default {DEFAULT_MAX_COST_USD})")
     r.add_argument("--list", action="store_true", help="read-only: list submissions and the reverify queue")
     r.set_defaults(func=_reverify)
 
@@ -788,6 +792,38 @@ def _add_outcomes_command(sub: argparse._SubParsersAction) -> None:
     s.add_argument("--worker", type=Path, default=DEFAULT_WORKER_DIR, help="the Worker directory (wrangler runs there)")
     s.add_argument("--data", type=Path, default=DEFAULT_OUT, help="records directory (default data/software)")
     s.set_defaults(func=_outcomes_sync)
+
+
+# --- web-check (P2-05): are the web apps' sites still answering? -------------------------
+
+
+def _web_check(args: argparse.Namespace) -> int:
+    from dataclasses import asdict
+
+    from pickfit import web_intake
+
+    checks = web_intake.web_check(args.data, write=args.write, limit=args.limit,
+                                  log=lambda line: print(line, file=sys.stderr, flush=True))
+    print(json.dumps({"write": args.write, "checked": len(checks), "alive": sum(c.alive for c in checks),
+                      "written": sum(c.written for c in checks), "sites": [asdict(c) for c in checks]},
+                     ensure_ascii=False, indent=2))
+    return 0
+
+
+def _add_web_check_command(sub: argparse._SubParsersAction) -> None:
+    from pickfit.profiles import DEFAULT_OUT
+
+    w = sub.add_parser("web-check", help="one polite HEAD per web_app record (10 s timeout, no redirect followed); "
+                                         "a 2xx/3xx sets maintenance_signals.site_alive_at and, from Last-Modified, "
+                                         "content_updated_at ($0; dry run unless --write)")
+    w.add_argument("--data", type=Path, default=DEFAULT_OUT, help="records directory (default data/software)")
+    mode = w.add_mutually_exclusive_group()
+    mode.add_argument("--dry-run", dest="write", action="store_false", help="check and print only (the default)")
+    mode.add_argument("--write", dest="write", action="store_true", help="write the signals into the records")
+    w.set_defaults(write=False)
+    w.add_argument("--limit", type=int, default=None,
+                   help="sites to check, the ones checked longest ago first (default all)")
+    w.set_defaults(func=_web_check)
 
 
 # --- publish (P4.2) ---------------------------------------------------------------
@@ -982,6 +1018,7 @@ def main(argv: list[str] | None = None) -> int:
     add_maintenance_parser(sub)
     _add_queue_commands(sub)
     _add_outcomes_command(sub)
+    _add_web_check_command(sub)
     _add_publish_command(sub)
     _add_harvest_command(sub)
 

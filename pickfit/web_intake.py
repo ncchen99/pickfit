@@ -581,3 +581,125 @@ def verify_site_record(record_dir: Path, slug: str, *, steps: SiteSteps, log: Ca
         raise TryLater(f"the browser visit did not start ({detail})")
     visit.why = _visit_why(result)
     return visit
+
+
+# --- pickfit web-check: is each web app's site still answering? (brief 15.4, 15.3 B; P2-05) ----------------------
+#
+# One polite HEAD per web_app record: pickfit's User-Agent, a 10-second timeout, no redirect followed (a 3xx
+# answers too), no body read, no form, cookie or anything else with a side effect; one site at a time with a pause
+# between. A 2xx or 3xx sets maintenance_signals.site_alive_at to the check's time, and a Last-Modified header sets
+# maintenance_signals.content_updated_at. Anything else (an error status, a timeout, no answer) leaves the record as
+# it is: a site down once is not proof it is gone, and the browser check judges that. Dry run unless write.
+
+WEB_CHECK_TIMEOUT_S = 10.0
+WEB_CHECK_INTERVAL_S = 1.0
+
+
+@dataclass
+class SiteCheck:
+    slug: str
+    url: str
+    status: int | None
+    alive: bool
+    last_modified: str | None = None  # ISO UTC, from Last-Modified
+    error: str | None = None
+    written: bool = False
+
+
+def _http_date(value: str | None) -> str | None:
+    """A Last-Modified header as ISO UTC (YYYY-MM-DDTHH:MM:SSZ); None when missing or not a date."""
+    from datetime import UTC
+    from email.utils import parsedate_to_datetime
+
+    if not value:
+        return None
+    try:
+        at = parsedate_to_datetime(value)
+    except (TypeError, ValueError, IndexError):
+        return None
+    if at is None:
+        return None
+    if at.tzinfo is None:
+        at = at.replace(tzinfo=UTC)
+    return at.astimezone(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def head_site(http: Any, slug: str, url: str) -> SiteCheck:
+    """One HEAD to url, never raising: what it answered."""
+    import httpx2
+
+    try:
+        resp = http.head(url, follow_redirects=False, timeout=WEB_CHECK_TIMEOUT_S)
+    except httpx2.HTTPError as err:
+        return SiteCheck(slug=slug, url=url, status=None, alive=False, error=type(err).__name__)
+    alive = 200 <= resp.status_code < 400
+    return SiteCheck(slug=slug, url=url, status=resp.status_code, alive=alive,
+                     last_modified=_http_date(resp.headers.get("last-modified")) if alive else None)
+
+
+def _save_signals(path: Path, check: SiteCheck, at: datetime) -> bool:
+    """Write site_alive_at (and content_updated_at) into the record; False when nothing changed."""
+    record = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8"))
+    data = record.model_dump(mode="json")
+    before = data.get("maintenance_signals") or {}
+    signals = {**before, "site_alive_at": at.isoformat()}
+    if check.last_modified:
+        signals["content_updated_at"] = check.last_modified
+    data["maintenance_signals"] = signals
+    checked = SoftwareRecord.model_validate(data)
+    if checked.model_dump(mode="json") == record.model_dump(mode="json"):
+        return False
+    tmp = path.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(checked.model_dump(mode="json"), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(path)
+    return True
+
+
+def web_check(data_dir: Path, *, http: Any = None, write: bool = False, limit: int | None = None,
+              now: Callable[[], datetime] | None = None, interval_s: float = WEB_CHECK_INTERVAL_S,
+              sleep: Callable[[float], None] | None = None,
+              log: Callable[[str], None] = print) -> list[SiteCheck]:
+    """HEAD the site of each kind web_app record in data_dir, at most `limit` of them; write the signals only when
+    `write`. Sites checked longest ago (or never) go first, so a limit rotates through the catalog."""
+    import time
+
+    import httpx2
+
+    from pickfit.discover.github import USER_AGENT
+
+    clock = now or taipei_now
+    pause = sleep or time.sleep
+    records: list[tuple[str, str, Path, str]] = []
+    for path in sorted(data_dir.glob("*.json")):
+        try:
+            record = SoftwareRecord.model_validate_json(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError) as err:
+            log(f"[web-check] skipped {path.name}: {type(err).__name__}")
+            continue
+        if record.kind != "web_app" or record.web is None:
+            continue
+        signals = record.maintenance_signals
+        last = signals.site_alive_at.isoformat() if signals and signals.site_alive_at else ""
+        records.append((last, record.slug, path, str(record.web.url)))
+    records.sort(key=lambda item: (item[0], item[1]))
+    if limit is not None:
+        records = records[:max(0, limit)]
+    own = http is None
+    client = http or httpx2.Client(headers={"User-Agent": USER_AGENT, "Accept": "text/html,*/*;q=0.8"})
+    results: list[SiteCheck] = []
+    try:
+        for i, (_, slug, path, url) in enumerate(records):
+            if i and interval_s > 0:
+                pause(interval_s)
+            check = head_site(client, slug, url)
+            if check.alive and write:
+                check.written = _save_signals(path, check, clock())
+            state = f"HTTP {check.status}" if check.status is not None else f"no answer ({check.error})"
+            modified = f" · Last-Modified {check.last_modified}" if check.last_modified else ""
+            done = " · written" if check.written else (" · dry run" if check.alive and not write else "")
+            log(f"[web-check] {slug} {url}: {state}{modified}{done}")
+            results.append(check)
+    finally:
+        if own:
+            client.close()
+    return results
