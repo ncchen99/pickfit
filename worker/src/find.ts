@@ -38,7 +38,7 @@ import { instructions, matchInput, matchSchema, type MatchKind, type ModelAnswer
 import { dropNegated, queryTerms, rulesRelevance, rulesTerms, termsAsSaid } from './relevance.ts';
 import { leansInstall, rankByRules, templateReasons } from './rules.ts';
 import { webAppOut, webRanSentence, type WebAppOut } from './webapp.ts';
-import { freshness, type Freshness } from './freshness.ts';
+import { cycleOf, freshness, type Freshness } from './freshness.ts';
 import { withLang } from './i18n.ts';
 
 /** The language the web page asks the model to write its sentences in; MCP answers stay English. */
@@ -101,7 +101,8 @@ export interface PickOut {
   };
   /** Advertised features the run behind the shown guide exercised, and the ones it did not, with why. */
   features: FeaturesOut;
-  /** How old the shown check is, the last release, and a warning when the steps may be out of date. */
+  /** How old the shown check is (said for every pick), its re-verification cycle, the last release, a warning when the
+   * steps may be out of date, and a note for new work. */
   freshness: Freshness;
   how_we_know: string;
   evidence_url: string | null;
@@ -239,7 +240,9 @@ function pickOut(
     },
     features: featuresOut(entry, guide),
     // English for agents, like the rest of the answer.
-    freshness: withLang('en', () => freshness(guide?.run.checked_at ?? web?.checked_at ?? null, isWebApp(entry) ? null : entry.last_release, now)),
+    freshness: withLang('en', () =>
+      freshness(guide?.run.checked_at ?? web?.checked_at ?? null, isWebApp(entry) ? null : entry.last_release, now, cycleOf(entry)),
+    ),
     how_we_know: howWeKnow(entry, guide, matchedBy, considered, videoBase),
     evidence_url: guide?.run.evidence_url ?? web?.evidence_url ?? null,
     scores: {
@@ -520,7 +523,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
   // A card shows the documented capabilities the request's words, or the model's keywords for them, name.
   const keywords = expansion?.keywords ?? [];
   const asked = [...new Set([...ruleTerms(...keywords), ...(keywords.length ? queryTerms(req.rulesText, ...keywords) : [])])];
-  const cards = new Map(candidates.map((entry) => [entry.slug, toCard(entry, cond.os, cond.arch, asked)]));
+  const cards = new Map(candidates.map((entry) => [entry.slug, toCard(entry, cond.os, cond.arch, asked, now)]));
 
   let choice: Choice;
   let matchedBy = 'rules';

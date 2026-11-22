@@ -272,6 +272,11 @@ export interface UsageGuide {
   features: FeatureGuide[];
 }
 
+/** pickfit/schema.py UsedBy, Track and Standing (brief 15). */
+export type UsedBy = 'human' | 'agent' | 'both';
+export type Track = 'A' | 'B' | 'C' | 'none';
+export type Standing = 'active' | 'new' | 'stale' | 'broken';
+
 export interface Entry {
   slug: string;
   name: string;
@@ -313,7 +318,20 @@ export interface Entry {
     level: string;
     checked_at: string | null;
     passed_runs: RunSummary[];
+    /** When a check last passed (brief 15.4); unlike checked_at, a later failure leaves it. Absent: not recorded. */
+    last_passed_at?: string;
+    /** Days between re-verifications for this record; absent: the default (freshness.ts STALE_DAYS). */
+    reverify_cycle_days?: number;
+    /** When it is next due for re-verification; absent: no cycle set. */
+    reverify_due_at?: string;
   };
+  /** Who uses it once recommended (brief 15.2); absent: not assessed. */
+  used_by?: UsedBy;
+  /** Brief 15.3's track: A agent capability, B human web UI, C human-agent creative tool; absent: not assessed. */
+  track?: Track;
+  /** Apart from status (brief 15.4): broken = a re-verification failed, kept for the tool page, never recommended. */
+  standing?: Standing;
+  standing_note?: string;
   install: Partial<Record<OS, InstallGuide>>;
   /** MCP servers only: what the README says about using it from an MCP client. */
   mcp?: McpFacts | null;

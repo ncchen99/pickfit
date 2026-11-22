@@ -427,7 +427,9 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
             "level": record.verification.level,
             "checked_at": _iso(record.verification.checked_at),
             "passed_runs": [_run_summary(r) for r in record.verification.runs if is_passed(r.level)],
+            **_verification_cycle(record),
         },
+        **_standing(record),
         "install": install,
         "mcp": record.mcp.model_dump() if record.mcp else None,
         "web": _web(record),
@@ -447,6 +449,22 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
         } if scores else None,
         "sources": [s.url for s in record.sources if s.url][:5],
     }
+
+
+def _standing(record: SoftwareRecord) -> dict[str, Any]:
+    """Brief 15 fields on the record (who uses it, track, standing): only those set, so an entry for a record written
+    before them is exactly what it was."""
+    fields = {"used_by": record.used_by, "track": record.track, "standing": record.standing,
+              "standing_note": record.standing_note}
+    return {key: value for key, value in fields.items() if value is not None}
+
+
+def _verification_cycle(record: SoftwareRecord) -> dict[str, Any]:
+    """When a check last passed and the re-verification cycle (brief 15.4): only those set."""
+    v = record.verification
+    fields = {"last_passed_at": _iso(v.last_passed_at), "reverify_cycle_days": v.reverify_cycle_days,
+              "reverify_due_at": _iso(v.reverify_due_at)}
+    return {key: value for key, value in fields.items() if value is not None}
 
 
 def build_index(data_dir: Path = DEFAULT_DATA_DIR, now: datetime | None = None) -> BuildResult:

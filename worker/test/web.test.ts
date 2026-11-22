@@ -583,7 +583,7 @@ function pick(overrides: Partial<PickOut> = {}): PickOut {
     security: { status: 'unchecked', level: null, coverage: null, reason: 'not_run', checked_at: null, count: 0, advisories: 0, findings: [] },
     security_warning: null,
     readme_wrong: [],
-    freshness: { age_days: 1, last_release: null, warning: null },
+    freshness: { age_days: 1, verified_ago: 'pickfit verified it 1 day ago (2026-10-29).', cycle_days: 90, overdue: false, last_release: null, warning: null, note: null },
     repo: 'https://github.com/a/tool',
     homepage: null,
     web_app: null,

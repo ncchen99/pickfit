@@ -4,7 +4,8 @@ import { toCard } from '../src/cards.ts';
 import { hardFilter, MAX_CARDS, type Conditions } from '../src/filter.ts';
 import { contradiction, reasonHolds, valueMatches } from '../src/guard.ts';
 import { templateReasons } from '../src/rules.ts';
-import { fixtureCatalog } from './helpers.ts';
+import { loadCatalog, type Entry } from '../src/catalog.ts';
+import { fixtureCatalog, fixtureIndex } from './helpers.ts';
 
 const catalog = fixtureCatalog();
 const slugs = (cond: Conditions) => hardFilter(catalog.entries, cond).candidates.map((e) => e.slug);
@@ -30,6 +31,23 @@ test('hard filters: category, OS claims and exclusions', () => {
   assert.deepEqual(slugs({ budget: 'free_or_paid' }).length, 7);
   assert.deepEqual(slugs({ category: 'mcp_server' }), ['fixture-notes-mcp']);
   assert.deepEqual(slugs({ category: 'mcp_server', os: 'macos' }), []); // claims and runs are Linux only
+});
+
+test('a broken standing is never a candidate; other standings and the catalog itself are untouched', () => {
+  const standing = (slug: string, value: Entry['standing']) =>
+    catalog.entries.map((e) => (e.slug === slug ? { ...e, standing: value } : e));
+  const broken = standing('fixture-json-query', 'broken');
+  const slugsOf = (entries: Entry[], cond: Conditions = {}) => hardFilter(entries, cond).candidates.map((e) => e.slug);
+  assert.ok(!slugsOf(broken).includes('fixture-json-query'));
+  assert.ok(!slugsOf(broken, { os: 'macos', budget: 'free_only', must_run_locally: true }).includes('fixture-json-query'));
+  assert.equal(slugsOf(broken).length, 6);
+  // Still in the catalog (its tool page reads it there).
+  assert.ok(loadCatalog({ ...(fixtureIndex() as object), entries: broken }).bySlug.has('fixture-json-query'));
+  for (const kept of ['active', 'new', 'stale', undefined] as const) {
+    assert.ok(slugsOf(standing('fixture-json-query', kept)).includes('fixture-json-query'), String(kept));
+  }
+  // A broken web app is dropped too.
+  assert.ok(!slugsOf(standing('fixture-web-sketch', 'broken')).includes('fixture-web-sketch'));
 });
 
 test('must_run_locally rejects cloud processing, required network and API keys', () => {
