@@ -5431,6 +5431,18 @@
           "default": null,
           "description": "Where it ended after redirects, when different."
         },
+        "mobile": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WebMobile"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The page at a phone's size; null when not measured (before 11/22)."
+        },
         "offline": {
           "$ref": "#/$defs/PwaOffline",
           "description": "verified: a PWA reloaded with the network off and still worked; only PWAs are tested."
@@ -5508,6 +5520,45 @@
         "clipboard"
       ],
       "type": "string"
+    },
+    "WebMobile": {
+      "additionalProperties": false,
+      "description": "The page at a phone's size, measured in the same visit (brief 15.3 B; gap audit P2-07).\n\nAfter the page loaded, pickfit set the viewport to a phone's size, measured the layout from the DOM alone (no\nmodel looks at it), saved a screenshot and set the viewport back before anything else ran.",
+      "properties": {
+        "horizontal_overflow": {
+          "description": "The page is wider than the viewport (scrollWidth > innerWidth).",
+          "type": "boolean"
+        },
+        "screenshot_path": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RelPath"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "pickfit's screenshot at that size."
+        },
+        "small_tap_targets": {
+          "description": "Visible links, buttons and fields less than 44 CSS pixels wide or high.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "viewport": {
+          "description": "width x height, e.g. 390x844.",
+          "pattern": "^[1-9][0-9]{1,3}x[1-9][0-9]{1,3}$",
+          "type": "string"
+        }
+      },
+      "required": [
+        "viewport",
+        "horizontal_overflow",
+        "small_tap_targets"
+      ],
+      "title": "WebMobile",
+      "type": "object"
     },
     "WebOperation": {
       "additionalProperties": false,

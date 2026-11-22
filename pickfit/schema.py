@@ -1247,6 +1247,19 @@ class WebOperation(_Model):
     operator_model: str | None = Field(default=None, max_length=80)
 
 
+class WebMobile(_Model):
+    """The page at a phone's size, measured in the same visit (brief 15.3 B; gap audit P2-07).
+
+    After the page loaded, pickfit set the viewport to a phone's size, measured the layout from the DOM alone (no
+    model looks at it), saved a screenshot and set the viewport back before anything else ran."""
+
+    viewport: str = Field(pattern=r"^[1-9][0-9]{1,3}x[1-9][0-9]{1,3}$", description="width x height, e.g. 390x844.")
+    horizontal_overflow: bool = Field(description="The page is wider than the viewport (scrollWidth > innerWidth).")
+    small_tap_targets: int = Field(
+        ge=0, description="Visible links, buttons and fields less than 44 CSS pixels wide or high.")
+    screenshot_path: RelPath | None = Field(default=None, description="pickfit's screenshot at that size.")
+
+
 class WebCheck(_Model):
     """What pickfit saw of a hosted web app (kind web_app) in a sandboxed browser.
 
@@ -1277,6 +1290,8 @@ class WebCheck(_Model):
     operations: list[WebOperation] = Field(
         default=[], max_length=VERIFY_FEATURES_MAX * 2, exclude_if=lambda value: not value,
         description="Goals pickfit operated the site toward, and what its checks found.")
+    mobile: WebMobile | None = Field(default=None, exclude_if=lambda value: value is None,
+                                     description="The page at a phone's size; null when not measured (before 11/22).")
 
     @model_validator(mode="after")
     def _facts_fit(self) -> WebCheck:
