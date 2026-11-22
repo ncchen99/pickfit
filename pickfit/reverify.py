@@ -38,6 +38,10 @@ pending for the next try; after MAX_ATTEMPTS tries it is marked done with the
 reason in the result. The box is Linux (Modal): a report from macOS or Windows
 is still checked there and the result says so; steps that still work on Linux
 leave the record as it is, and a person has to check on that OS.
+
+find_software also queues a row with reason "due" (brief 15.4, P2-03) when it returns a pick whose check is past
+its re-verification cycle: nobody reported a failure, so the run is told of none and checks the project as it
+stands. `max_cost_usd` stops the queue before a row once the re-runs saved today (model and box) cost that much.
 """
 
 from __future__ import annotations
@@ -69,6 +73,10 @@ MAX_ATTEMPTS = 3
 EXTRACTION_MODELS = (MODEL, "muse-spark-1.3", "muse-spark-1.3-contributor")
 LEVEL_ORDER = ("inference", "service", "function", "install")
 STAGES = ("install_failed", "first_run_failed")
+DUE = "due"  # find_software returned the pick past its re-verification cycle; no failure was reported
+REASONS = (*STAGES, DUE)
+DEFAULT_MAX_COST_USD = 5.0  # a day's re-runs, model and box together
+_RESULT_DAY = re.compile(r"-(\d{8})-\d{6}\.json$")  # result files: <slug>-<os>-YYYYMMDD-HHMMSS.json
 CLAIM_STALE_S = 2 * 3600  # a claim older than this lost its process (a run takes at most about 25 minutes)
 
 _URL = re.compile(r"https?://[^\s'\"`<>()\[\]]+")
@@ -123,7 +131,7 @@ def ungrounded(commands: list[str], trusted: str, full_name: str) -> list[str]:
 class Report:
     slug: str
     os: str
-    reason: str  # install_failed | first_run_failed
+    reason: str  # install_failed | first_run_failed | due
     first_event_id: str
     queued_at: str
     reporter: str | None
@@ -140,7 +148,7 @@ def pending(d1: Database, limit: int) -> list[Report]:
         "WHERE q.done_at IS NULL ORDER BY q.queued_at, q.slug LIMIT ?1", limit))
     reports = [Report(**row) for row in rows]
     for report in reports:  # D1's CHECKs cover os and arch; reason is plain text there
-        if report.reason not in STAGES:
+        if report.reason not in REASONS:
             report.reason = "install_failed"
         if report.arch not in ("arm64", "x86_64"):
             report.arch = None
@@ -308,11 +316,32 @@ class Reverifier:
             f.write(f"{os.getpid()} {report.first_event_id}\n")
         return path
 
-    def run(self, limit: int = 5, blocked: Callable[[], str | None] | None = None) -> list[Result]:
-        """Re-verify up to `limit` pending reports; `blocked` (a budget check) can stop before each one."""
+    def spent_today(self) -> float:
+        """What the re-runs saved today (by this machine's clock) cost, model and box together."""
+        day = self.clock().strftime("%Y%m%d")
+        total = 0.0
+        for path in self.out_dir.glob("*.json"):
+            match = _RESULT_DAY.search(path.name)
+            if not match or match.group(1) != day:
+                continue
+            try:
+                saved = json.loads(path.read_text(encoding="utf-8"))
+                total += float(saved.get("cost_usd") or 0) + float(saved.get("box_usd") or 0)
+            except (OSError, ValueError, TypeError, AttributeError):
+                continue
+        return total
+
+    def run(self, limit: int = 5, blocked: Callable[[], str | None] | None = None,
+            max_cost_usd: float | None = None) -> list[Result]:
+        """Re-verify up to `limit` pending reports; `blocked` (a budget check) can stop before each one, and so
+        does `max_cost_usd` once today's re-runs (spent_today) cost that much."""
         results = []
         for report in pending(self.d1, limit):
             why = blocked() if blocked else None
+            if not why and max_cost_usd is not None:
+                spent = self.spent_today()
+                if spent >= max_cost_usd:
+                    why = f"today's re-runs cost ${spent:.2f}, the daily cap is ${max_cost_usd:.2f}"
             if why:
                 self.log(f"[reverify] not starting {report.slug}/{report.os}: {why}")
                 break
@@ -399,11 +428,16 @@ class Reverifier:
             result.outcome = "no_box"
             result.notes.append(f"pickfit's Linux box cannot run it ({why}); a person should check on {report.os}")
             return
+        due = report.reason == DUE
+        # A due re-run has no report behind it: the agent is told of no failure and checks the project as it is.
+        reported = None if due else ReportedFailure(
+            stage=report.reason, os=report.os, arch=report.arch,
+            steps=tuple(commands(followed[1]) or []) if followed else (), guide_os=followed[0] if followed else None)
         task = VerifyTask(slug=record.slug, repo_url=record.repo.url, readme=readme, extraction=ex,
-                          category=record.category,
-                          reported=ReportedFailure(stage=report.reason, os=report.os, arch=report.arch,
-                                                   steps=tuple(commands(followed[1]) or []) if followed else (),
-                                                   guide_os=followed[0] if followed else None))
+                          category=record.category, reported=reported)
+        after = "a due re-verification" if due else f"a reported {report.reason}"
+        source = (f"Queued {report.queued_at} by find_software (past its re-verification cycle)" if due
+                  else f"Event {report.first_event_id} (reporter {report.reporter or 'unknown'})")
         outcome = self.steps.verify(task, log)
         run = outcome.run
         result.level, result.run_id, result.run_os = run.level, outcome.run_id, run.os
@@ -424,13 +458,12 @@ class Reverifier:
             why = f"{run.level}{', ' + run.unverified_reason if run.unverified_reason else ''}"
             result.notes.append(f"the fresh run did not pass ({why}); its level and runs are unchanged (the "
                                 "pipeline never writes failed), so a person should check")
-            note = (f"Re-verification {run.checked_at.date().isoformat()} on {run.os} did not pass ({why}) after a "
-                    f"reported {report.reason}; run {outcome.run_id}")
+            note = (f"Re-verification {run.checked_at.date().isoformat()} on {run.os} did not pass ({why}) after "
+                    f"{after}; run {outcome.run_id}")
             with self.git_lock:  # kept in the catalog, never recommended (brief 15.4)
                 self._record(report, path, result, lambda: mark_broken(record.slug, note, self.data_dir),
-                             f"Re-verify {record.slug}: broken after a reported {report.reason} on {report.os}",
-                             f"Event {report.first_event_id} (reporter {report.reporter or 'unknown'}); fresh run "
-                             f"{outcome.run_id} did not pass ({why}). standing = broken; level unchanged.")
+                             f"Re-verify {record.slug}: broken after {after} on {report.os}",
+                             f"{source}; fresh run {outcome.run_id} did not pass ({why}). standing = broken; level unchanged.")
             return
         new = install_guide(run)
         result.new_steps, result.new_first_task = commands(new), new.first_task
@@ -442,9 +475,8 @@ class Reverifier:
             result.notes.append(f"the recorded {run.os} steps still work in a fresh box")
             with self.git_lock:  # the steps stay; when it last passed moves (brief 15.4)
                 self._record(report, path, result, lambda: note_passed(record.slug, run.checked_at, self.data_dir),
-                             f"Re-verify {record.slug}: still passes on {run.os} after a reported {report.reason}",
-                             f"Event {report.first_event_id} (reporter {report.reporter or 'unknown'}); fresh run "
-                             f"{outcome.run_id}, {run.level}, replayed, with the recorded steps. last_passed_at "
+                             f"Re-verify {record.slug}: still passes on {run.os} after {after}",
+                             f"{source}; fresh run {outcome.run_id}, {run.level}, replayed, with the recorded steps. last_passed_at "
                              "moved.")
             return
         result.held = ungrounded([*result.new_steps, *([new.first_task] if new.first_task else [])],
@@ -454,15 +486,15 @@ class Reverifier:
             result.notes.append("new steps not written: something in them is not grounded; a person decides")
             return
         with self.git_lock:
-            self._write(report, record, outcome, path, result)
+            self._write(report, record, outcome, path, result, after, source)
 
-    def _write(self, report: Report, record: SoftwareRecord, outcome: Any, path: Path, result: Result) -> None:
+    def _write(self, report: Report, record: SoftwareRecord, outcome: Any, path: Path, result: Result,
+               after: str, source: str) -> None:
         run = outcome.run
         written = self._record(
             report, path, result, lambda: write_back(run, record.slug, self.data_dir),
-            f"Re-verify {record.slug} after a reported {report.reason} on {report.os}",
-            f"Event {report.first_event_id} (reporter {report.reporter or 'unknown'}); fresh run "
-            f"{outcome.run_id}, {run.level}, replayed. The {run.os} install steps changed.")
+            f"Re-verify {record.slug} after {after} on {report.os}",
+            f"{source}; fresh run {outcome.run_id}, {run.level}, replayed. The {run.os} install steps changed.")
         result.outcome = "rewritten" if written else "kept"
 
     def _record(self, report: Report, path: Path, result: Result, change: Callable[[], tuple[bool, str]],

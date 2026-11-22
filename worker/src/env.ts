@@ -37,6 +37,8 @@ export interface Env {
   KEYWORDS_ENGLISH?: string;
   /** R2 bucket pickfit-videos: verification clips at <slug>/<file>. Without it, /video/ answers 404. */
   VIDEOS?: R2Bucket;
+  /** Re-runs find_software may queue per UTC day for picks past their re-verification cycle (default 10; 0 = none). */
+  REVERIFY_DUE_DAILY_CAP?: string;
 }
 
 export type ToolSet = 'all' | 'readonly';
@@ -53,6 +55,8 @@ export interface Settings {
   tools: ToolSet;
   /** KEYWORDS_ENGLISH: skip the keyword call for an English request; absent = call it. */
   skipEnglishKeywords?: boolean;
+  /** REVERIFY_DUE_DAILY_CAP: due re-runs queued per UTC day; absent = REVERIFY_DUE_DAILY_CAP's default (10). */
+  reverifyDueDailyCap?: number;
   /** A bench run's model (worker/bench/capability.ts --model-id); never read from Env, so the product stays on MATCH_MODEL. */
   matchModel?: string;
 }
@@ -87,6 +91,7 @@ export function settings(env: Env): Settings {
     submitHourlyCap: number(env.SUBMIT_HOURLY_CAP, 20),
     tools: toolSet(env.TOOLS),
     skipEnglishKeywords: (env.KEYWORDS_ENGLISH ?? '').trim().toLowerCase() === 'skip',
+    reverifyDueDailyCap: number(env.REVERIFY_DUE_DAILY_CAP, 10),
   };
 }
 

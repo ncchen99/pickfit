@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { logEvent, reporterFrom } from '../src/events.ts';
 import { findSoftware } from '../src/find.ts';
-import { reportOutcome, UnknownToolError, type OutcomeInput } from '../src/outcome.ts';
+import { enqueueDueReverify, reportOutcome, UnknownToolError, type OutcomeInput } from '../src/outcome.ts';
 import { scrub } from '../src/scrub.ts';
 import { harness, type Harness } from './helpers.ts';
 
@@ -284,4 +284,96 @@ test('unknown slugs are refused; the reporter label comes from a header', async 
   assert.equal(reporterFrom('eval'), 'eval');
   assert.equal(reporterFrom('admin'), 'external');
   assert.equal(reporterFrom(null), 'external');
+});
+
+// --- P2-03: find_software queues picks past their re-verification cycle (reason = due) ----------------------------
+
+const NOW = new Date('2026-11-22T08:00:00Z');
+const LATER = () => new Date('2027-10-30T12:00:00Z'); // a year after the fixtures' checks: past any cycle
+const NEED = { need: 'run a small language model offline with an OpenAI API', os: 'macos' as const, limit: 1 };
+const dueRows = (h: Harness) =>
+  h.sqlite
+    .prepare("SELECT slug, os, reason, first_event_id, queued_at, done_at FROM reverify_queue WHERE reason = 'due' ORDER BY slug")
+    .all() as any[];
+
+test('enqueueDueReverify queues due slugs once, up to the daily cap', async () => {
+  const h = harness(null, { modelEnabled: false });
+  const picks = [
+    { slug: 'a', os: 'linux' as const },
+    { slug: 'b', os: 'macos' as const },
+    { slug: 'a', os: 'linux' as const }, // the same slug twice in one answer
+    { slug: 'c', os: 'linux' as const },
+  ];
+  assert.deepEqual(await enqueueDueReverify(h.deps.db, picks, 2, { now: NOW, recId: 'rec_1' }), ['a', 'b']);
+  assert.deepEqual(
+    dueRows(h).map((r) => [r.slug, r.os, r.first_event_id, r.queued_at]),
+    [
+      ['a', 'linux', 'rec_1', NOW.toISOString()],
+      ['b', 'macos', 'rec_1', NOW.toISOString()],
+    ],
+  );
+  // The cap is per UTC day: later the same day nothing more is queued, the next day there is room again.
+  assert.deepEqual(await enqueueDueReverify(h.deps.db, [{ slug: 'c', os: 'linux' }], 2, { now: NOW, recId: 'rec_2' }), []);
+  const tomorrow = new Date('2026-11-23T00:30:00Z');
+  const next = [{ slug: 'a', os: 'linux' as const }, { slug: 'c', os: 'linux' as const }];
+  assert.deepEqual(await enqueueDueReverify(h.deps.db, next, 2, { now: tomorrow, recId: 'rec_3' }), ['c']); // a is still pending
+  // A cap of 0 turns it off.
+  assert.deepEqual(await enqueueDueReverify(h.deps.db, [{ slug: 'd', os: 'linux' }], 0, { now: tomorrow, recId: 'rec_4' }), []);
+});
+
+test('enqueueDueReverify skips a slug a failure report queued, on any OS, and one re-run lately', async () => {
+  const h = harness(null, { modelEnabled: false });
+  const insert = h.sqlite.prepare(
+    'INSERT INTO reverify_queue (slug, os, reason, first_event_id, queued_at, done_at) VALUES (?, ?, ?, ?, ?, ?)',
+  );
+  insert.run('a', 'macos', 'install_failed', 'evt_1', '2026-11-21T00:00:00.000Z', null); // pending
+  insert.run('b', 'linux', 'due', 'rec_0', '2026-11-01T00:00:00.000Z', '2026-11-20T00:00:00.000Z'); // done two days ago
+  insert.run('c', 'linux', 'due', 'rec_0', '2026-10-01T00:00:00.000Z', '2026-10-02T00:00:00.000Z'); // done long ago
+  const picks = ['a', 'b', 'c'].map((slug) => ({ slug, os: 'linux' as const }));
+  assert.deepEqual(await enqueueDueReverify(h.deps.db, picks, 10, { now: NOW, recId: 'rec_9' }), ['c']);
+  const c = dueRows(h).find((r) => r.slug === 'c');
+  assert.equal(c.done_at, null);
+  assert.equal(c.first_event_id, 'rec_9');
+  const a = h.sqlite.prepare("SELECT reason FROM reverify_queue WHERE slug = 'a'").get() as any;
+  assert.equal(a.reason, 'install_failed'); // the report's row is left as it is
+});
+
+test('find_software queues a due re-run for an overdue pick in the background, never for a fresh one', async () => {
+  const fresh = harness(null, { modelEnabled: false });
+  await recommend(fresh);
+  assert.equal(dueRows(fresh).length, 0);
+
+  const h = harness(null, { modelEnabled: false });
+  h.deps.now = LATER;
+  const out = await findSoftware(NEED, h.deps);
+  await h.settle();
+  assert.equal(out.picks[0].freshness.overdue, true);
+  const [row] = dueRows(h);
+  assert.equal(row.slug, out.picks[0].slug);
+  assert.equal(row.first_event_id, out.rec_id);
+  assert.equal(row.os, out.picks[0].verification.os ?? 'linux');
+
+  // REVERIFY_DUE_DAILY_CAP=0 (settings) queues nothing.
+  const off = harness(null, { modelEnabled: false, reverifyDueDailyCap: 0 });
+  off.deps.now = LATER;
+  await findSoftware(NEED, off.deps);
+  await off.settle();
+  assert.equal(dueRows(off).length, 0);
+});
+
+test('a failed due insert is logged, never thrown into the answer', async () => {
+  const h = harness(null, { modelEnabled: false });
+  h.deps.now = LATER;
+  h.sqlite.exec('DROP TABLE reverify_queue');
+  const errors: string[] = [];
+  const original = console.error;
+  console.error = (line: string) => void errors.push(line);
+  try {
+    const out = await findSoftware(NEED, h.deps);
+    await h.settle();
+    assert.equal(out.picks.length, 1);
+  } finally {
+    console.error = original;
+  }
+  assert.ok(errors.some((line) => line.includes('"what":"reverify_due"')));
 });

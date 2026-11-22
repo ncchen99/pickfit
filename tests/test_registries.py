@@ -164,3 +164,55 @@ def test_hn_counts_a_homepage_only_when_it_is_the_projects_own() -> None:
         reg.hn_top_score("someone/tinyq", ["tinyq"], homepage)
     assert queries == ["github.com/someone/tinyq", "github.com/someone/tinyq", "tinyq.dev",
                        "github.com/someone/tinyq", "janedoe.github.io/tinyq", "github.com/someone/tinyq"]
+
+
+def test_the_latest_publish_time_comes_from_the_same_responses() -> None:
+    """P2-04: registry_latest_at from PyPI's latest files and crates.io's newest version, no extra request."""
+    calls: list[str] = []
+    routes = {
+        "pypi.org/pypi/tinyq/json": {**LINKED, "urls": [
+            {"upload_time_iso_8601": "2026-09-01T10:00:00.123456Z"},
+            {"upload_time": "2026-09-01T10:05:00"}]},  # no zone: PyPI's upload_time is UTC
+        "crates.io/api/v1/crates/tinyq": {
+            "crate": {"repository": "https://github.com/someone/tinyq", "newest_version": "0.3.0",
+                      "updated_at": "2026-11-20T00:00:00+00:00", "recent_downloads": 90},
+            "versions": [{"num": "0.4.0-rc1", "created_at": "2026-11-01T00:00:00+00:00", "yanked": True},
+                         {"num": "0.3.0", "created_at": "2026-10-15T08:30:00.5+02:00"}]},
+        "registry.npmjs.org/tinyq/latest": {"repository": "github:someone/tinyq",
+                                            "homepage": "https://github.com/someone/tinyq"},
+        "api.npmjs.org/downloads/point/last-month/tinyq": {"downloads": 5},
+    }
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        key = f"{request.url.host}{request.url.path}"
+        calls.append(key)
+        return httpx2.Response(200, json=routes[key]) if key in routes else httpx2.Response(404)
+
+    reg = Registries(http=httpx2.Client(transport=httpx2.MockTransport(handler)), min_interval_s={},
+                     pypi_downloads=False)
+    assert reg.pypi("tinyq", ["someone/tinyq"]).latest_at == "2026-09-01T10:05:00Z"
+    assert reg.crates("tinyq", ["someone/tinyq"]).latest_at == "2026-10-15T06:30:00Z"  # newest, not updated_at
+    assert reg.npm("tinyq", ["someone/tinyq"]).latest_at is None  # /latest carries no publish time
+    calls.clear()
+    sig = reg.lookup("someone/tinyq", names={"npm": {"tinyq"}, "pypi": {"tinyq"}, "crates": {"tinyq"}})
+    assert sig.registry_latest_at == "2026-10-15T06:30:00Z"  # the newest across registries
+    # One request per registry document, as before: the date costs nothing extra.
+    assert sorted(c for c in calls if "hn.algolia" not in c) == sorted([
+        "registry.npmjs.org/tinyq/latest", "api.npmjs.org/downloads/point/last-month/tinyq",
+        "pypi.org/pypi/tinyq/json", "crates.io/api/v1/crates/tinyq", "formulae.brew.sh/api/formula/tinyq.json"])
+
+
+def test_no_date_or_a_bad_one_stays_unknown() -> None:
+    from pickfit.registries import _utc_iso
+
+    crate = {"crate": {"repository": "https://github.com/someone/tinyq"},
+             "versions": [{"num": "1.0.0", "created_at": "2025-01-02T03:04:05Z"},
+                          {"num": "1.1.0", "created_at": "2025-03-01T00:00:00Z", "yanked": True}]}
+    reg = Registries(http=server({"pypi.org/pypi/tinyq/json": {**LINKED, "urls": [{"upload_time": "soon"}]},
+                                  "crates.io/api/v1/crates/tinyq": crate}),
+                     min_interval_s={}, pypi_downloads=False)
+    assert reg.pypi("tinyq", ["someone/tinyq"]).latest_at is None
+    # Without newest_version: the newest version not yanked.
+    assert reg.crates("tinyq", ["someone/tinyq"]).latest_at == "2025-01-02T03:04:05Z"
+    assert reg.lookup("someone/tinyq", names={"pypi": {"tinyq"}}).registry_latest_at is None
+    assert _utc_iso(None) is None and _utc_iso("") is None and _utc_iso(12) is None
