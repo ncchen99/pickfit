@@ -60,6 +60,30 @@ function fits(entry: Entry, cond: Conditions): boolean {
   return true;
 }
 
+/** Levels at which pickfit saw the tool do its job, not only install (brief 15.6, P2-01): strongest first. */
+export const BEYOND_INSTALL = ['inference', 'service', 'function'] as const;
+const LEVELS = [...BEYOND_INSTALL, 'install'];
+
+/** The strongest level pickfit's passed checks reached: any OS's install guide, or a web app's browser run. */
+export function verifiedLevel(entry: Entry): string {
+  const levels = [
+    ...verifiedOn(entry).map((os) => entry.install[os]!.run.level),
+    ...(webCheck(entry) ? [webCheck(entry)!.level] : []),
+  ];
+  const best = levels.sort((a, b) => LEVELS.indexOf(a) - LEVELS.indexOf(b))[0];
+  return best ?? entry.verification.level;
+}
+
+/** pickfit saw it work (function, service or inference), not only install or open. */
+export const beyondInstall = (entry: Entry) => (BEYOND_INSTALL as readonly string[]).includes(verifiedLevel(entry));
+
+/**
+ * Recommend strictly (brief 15.6, P2-01): only tools pickfit saw work go to the shortlist. Install-level tools come in
+ * as a fallback only when fewer than this many tools pickfit saw work fit the request; each one that does is
+ * labeled "pickfit only confirmed it installs" (rules.ts INSTALL_ONLY_NOTE, prompt rule 6).
+ */
+export const MIN_BEYOND_INSTALL = 2;
+
 /** Shortlist slots kept for the highest treasure values, so good general picks are not lost to keyword matches. 3 since
  * 11/20: with fewer cards, ten such slots pushed out more fitting tools than they let in (bench, as for MAX_CARDS). */
 export const TREASURE_SLOTS = 3;
@@ -78,8 +102,12 @@ export interface Filtered {
   passed: number;
   /** Shortlist slots filled by fit to the request rather than treasure value; 0 when all passed or nothing matched. */
   byRelevance: number;
-  /** The scorer's relevance of every entry that passed. */
+  /** The scorer's relevance of every entry that met the hard conditions. */
   relevance: Map<string, number>;
+  /** Install-level tools are among the candidates: too few tools pickfit saw work fit the request (P2-01). */
+  installFallback: boolean;
+  /** Install-level tools that met the conditions but were held back for tools pickfit saw work. */
+  heldBack: number;
 }
 
 const treasure = (entry: Entry) => entry.scores?.treasure_value ?? -1;
@@ -102,10 +130,36 @@ export function replacesCurrent(entry: Entry, current: string | undefined): bool
 /** Every entry that meets the hard conditions, in catalog order. */
 export const passing = (entries: Entry[], cond: Conditions) => entries.filter((entry) => fits(entry, cond));
 
+/** A tool fits the request about as well as the best match when its relevance is at least this share of the best's. */
+export const CLOSE_FIT = 0.5;
+
+/**
+ * The tools a request may be recommended (P2-01): those pickfit saw work, unless fewer than MIN_BEYOND_INSTALL of them
+ * fit the request about as well as the best match does (names the current tool, or relevance within CLOSE_FIT of the
+ * best). Then the install-level tools that fit come in as a fallback: there is no better choice among the tools pickfit
+ * saw work. With no word matching any tool (no words, or none in the profiles' language) code cannot tell which tools
+ * fit, so none is held back: the model prefers the tools pickfit saw work (prompt rule 3) and every install-level pick
+ * says what pickfit checked (rule 6, find.ts).
+ */
+function strictPool(met: Entry[], scores: Map<string, number>, current: string | undefined): { pool: Entry[]; installFallback: boolean } {
+  const score = (entry: Entry) => scores.get(entry.slug) ?? 0;
+  const best = Math.max(0, ...met.map(score));
+  const deep = met.filter(beyondInstall);
+  if (best === 0 && !met.some((entry) => replacesCurrent(entry, current))) {
+    return { pool: met, installFallback: deep.length < met.length };
+  }
+  const fitsRequest = (entry: Entry) => replacesCurrent(entry, current) || (score(entry) > 0 && score(entry) >= CLOSE_FIT * best);
+  if (deep.filter(fitsRequest).length >= MIN_BEYOND_INSTALL || deep.length === met.length) return { pool: deep, installFallback: false };
+  const pool = met.filter((entry) => beyondInstall(entry) || fitsRequest(entry));
+  return { pool, installFallback: pool.length > deep.length };
+}
+
 export function hardFilter(entries: Entry[], cond: Conditions, query: Query = { terms: [] }): Filtered {
-  const passed = passing(entries, cond);
-  const scores = (query.scorer === 'rules' ? rulesRelevance : relevance)(entries, passed, query.terms);
-  if (passed.length <= MAX_CARDS) return { candidates: passed, passed: passed.length, byRelevance: 0, relevance: scores };
+  const met = passing(entries, cond);
+  const scores = (query.scorer === 'rules' ? rulesRelevance : relevance)(entries, met, query.terms);
+  const { pool: passed, installFallback } = strictPool(met, scores, query.current);
+  const strict = { installFallback, heldBack: met.length - passed.length };
+  if (passed.length <= MAX_CARDS) return { candidates: passed, passed: passed.length, byRelevance: 0, relevance: scores, ...strict };
   const fit = passed
     .map((entry) => ({ entry, replaces: replacesCurrent(entry, query.current), score: scores.get(entry.slug)! }))
     .filter((item) => item.replaces || item.score > 0)
@@ -124,5 +178,5 @@ export function hardFilter(entries: Entry[], cond: Conditions, query: Query = { 
     .sort((a, b) => treasure(b) - treasure(a) || a.slug.localeCompare(b.slug))
     .slice(0, MAX_CARDS - fit.length);
   const candidates = [...fit, ...rest].sort((a, b) => a.slug.localeCompare(b.slug));
-  return { candidates, passed: passed.length, byRelevance: fit.length, relevance: scores };
+  return { candidates, passed: passed.length, byRelevance: fit.length, relevance: scores, ...strict };
 }

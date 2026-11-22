@@ -17,7 +17,7 @@ import { costUsd } from '../src/meta.ts';
 import { answer, commandText, fixtureCatalog, fixtureIndex, makeD1, modelResponse, USAGE_READ } from './helpers.ts';
 import { loadCatalog } from '../src/catalog.ts';
 
-const MAC_LLM = { need: 'run a language model offline on my laptop', os: 'macos', offline: '1' };
+const MAC_LLM = { need: 'chat with a language model offline on my laptop', os: 'macos', offline: '1' };
 const NOW = new Date('2026-10-30T12:00:00Z');
 /** What one fake answer (helpers USAGE) costs. */
 const ONE_CALL_USD = costUsd(USAGE_READ);
@@ -122,7 +122,7 @@ test('a search is find_software plus get_install_guide: reasons, verification, s
   // One claude-opus-5-5 call, with the same request find_software sends.
   assert.equal(s.modelCalls.length, 1);
   assert.equal(s.modelCalls[0].model, 'claude-opus-5-5');
-  assert.match(JSON.stringify(s.modelCalls[0].messages), /run a language model offline on my laptop/);
+  assert.match(JSON.stringify(s.modelCalls[0].messages), /chat with a language model offline on my laptop/);
   // The heading says what came back; how many met the conditions, which model picked and how reasons were checked
   // are pickfit's own process (on /how and in the MCP answer's how_we_know), not lines on the page.
   assert.doesNotMatch(html, /verified tools meet your conditions|Code checked every reason|class="match-line"|claude-opus-5-5 picked/);
@@ -169,7 +169,7 @@ test('a search is find_software plus get_install_guide: reasons, verification, s
 
 test('without an OS the steps shown are the ones pickfit ran, and the badge asks for the OS', async () => {
   const s = site();
-  const html = await (await s.search({ need: 'run a language model offline on my laptop' })).text();
+  const html = await (await s.search({ need: 'chat with a language model offline on my laptop' })).text();
   const second = html.split('<article class="pick"')[2];
   assert.match(second, /<p class="small quiet">Choose your OS above to see whether it ran on your system\./);
   assert.match(second, /Install steps that worked on <span class="sys"><svg class="os os-linux"[^>]*>.*?<\/svg>Linux x86_64/);
@@ -279,7 +279,7 @@ test('without the binding, an in-memory count limits each visitor', async () => 
 test('identical web searches share one model call; MCP calls are never cached', async () => {
   const s = site();
   await s.search(MAC_LLM);
-  const again = await (await s.search({ ...MAC_LLM, need: '  Run a language model   OFFLINE on my laptop ' })).text();
+  const again = await (await s.search({ ...MAC_LLM, need: '  Chat with a language model   OFFLINE on my laptop ' })).text();
   assert.equal(s.modelCalls.length, 1);
   assert.match(again, /Shown from the same search made in the last few minutes/);
   // Different conditions are a different search.
@@ -350,7 +350,7 @@ test('another site cannot post to /search, and a bad need is refused before the 
 
 test('without the script, the form posts and gets the whole page back', async () => {
   const s = site();
-  const res = await s.search({ ...MAC_LLM, need: 'run a language model offline <for "me">' }, { 'x-pickfit-fragment': '' });
+  const res = await s.search({ ...MAC_LLM, need: 'chat with a language model offline <for "me">' }, { 'x-pickfit-fragment': '' });
   const html = await res.text();
   assert.match(html, /^<!doctype html>/);
   assert.ok(html.includes('offline &lt;for &quot;me&quot;&gt;</textarea>'));
@@ -571,6 +571,8 @@ function pick(overrides: Partial<PickOut> = {}): PickOut {
     why: [],
     tradeoffs: [],
     vs_well_known: null,
+    reuse: null,
+    reuse_note: null,
     platforms: ['linux'],
     pricing: 'free',
     processing: 'local',
@@ -604,6 +606,7 @@ function output(picks: PickOut[]): FindOutput {
     picks,
     best_free: null,
     no_install_option: null,
+    build_it_yourself: null,
     well_known_option: null,
     clarifying_question: null,
     coverage_note: null,

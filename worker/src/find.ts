@@ -25,18 +25,28 @@ import {
 import { toCard, type Card } from './cards.ts';
 import { checkBudget, recordSpend } from './budget.ts';
 import { ranSentence, videoSentence } from './evidence.ts';
-import { featureSentence, featuresOut, type FeaturesOut } from './features.ts';
+import { featureSentence, featuresOut, shownWorking, type FeaturesOut } from './features.ts';
 import { securityLine, securityOut, type SecurityOut } from './security.ts';
 import type { Settings } from './env.ts';
 import { logEvent, logFailure, newId, type Reporter } from './events.ts';
 import { englishKeywords, EXPAND_TIMEOUT_MS, type Expansion } from './expand.ts';
 import { fitNote, fitOf, jobOf, type Fit, type MatchQuality } from './fit.ts';
-import { hardFilter, MAX_CARDS, needsOffline, replacesCurrent, type Conditions } from './filter.ts';
-import { clip, guardNoInstall, guardPicks, guardWellKnown, NO_WELL_KNOWN, parseAnswer, type GuardedPick, type GuardedWellKnown } from './guard.ts';
+import { hardFilter, MAX_CARDS, MIN_BEYOND_INSTALL, needsOffline, replacesCurrent, type Conditions } from './filter.ts';
+import {
+  clip,
+  guardBuildItYourself,
+  guardNoInstall,
+  guardPicks,
+  guardWellKnown,
+  NO_WELL_KNOWN,
+  parseAnswer,
+  type GuardedPick,
+  type GuardedWellKnown,
+} from './guard.ts';
 import { callModel, estimateCostUsd, MATCH_MODEL, ModelCallError, requestBody } from './meta.ts';
-import { instructions, matchInput, matchSchema, type MatchKind, type ModelAnswer, type ModelReason } from './prompt.ts';
+import { instructions, matchInput, matchSchema, type MatchKind, type ModelAnswer, type ModelReason, type ReuseMode } from './prompt.ts';
 import { dropNegated, queryTerms, rulesRelevance, rulesTerms, termsAsSaid } from './relevance.ts';
-import { leansInstall, rankByRules, templateReasons } from './rules.ts';
+import { installOnlyNote, leansInstall, rankByRules, saysInstallOnly, templateReasons } from './rules.ts';
 import { webAppOut, webRanSentence, type WebAppOut } from './webapp.ts';
 import { cycleOf, freshness, type Freshness } from './freshness.ts';
 import { withLang } from './i18n.ts';
@@ -84,6 +94,11 @@ export interface PickOut {
   why: ModelReason[];
   tradeoffs: string[];
   vs_well_known: string | null;
+  /** How to use it (brief 15.5): as it is, through its extension point, or as a reference for writing your own; null when
+   * not judged (rules, or the model could not tell from the card). */
+  reuse: ReuseMode | null;
+  /** One sentence on why, naming the extension point for extend; null without reuse. */
+  reuse_note: string | null;
   platforms: OS[];
   pricing: 'free' | 'freemium' | 'paid' | 'unknown';
   processing: 'local' | 'cloud' | 'hybrid' | 'unknown';
@@ -136,12 +151,32 @@ export interface FindOutput {
   picks: PickOut[];
   best_free: { slug: string; reason: string } | null;
   no_install_option: string | null;
+  /** A small one-off job that is simpler to write than to install a tool for (brief 15.5), with what similar tools in
+   * pickfit's data teach; null otherwise. */
+  build_it_yourself: BuildItYourself | null;
   /** A well-known free tool outside pickfit's data that may fit better; never verified by pickfit. */
   well_known_option: { name: string; why: string; verified: false; how_we_know: string } | null;
   clarifying_question: string | null;
   coverage_note: string | null;
   /** Rules only: the best pick's label, or none when no pick reaches partial; absent when the model chose. */
   match_quality?: MatchQuality;
+}
+
+/** What a similar tool pickfit ran teaches someone writing their own: where its README was wrong, what it saw work. */
+export interface SimilarTool {
+  slug: string;
+  name: string;
+  /** "README says X; actually needed Y", and the other pitfalls of the shown run. */
+  pitfalls: string[];
+  /** Features pickfit saw work on that run: cases worth testing in your own version. */
+  tested_features: string[];
+}
+
+export interface BuildItYourself {
+  /** The model's sentence from general knowledge (guard.ts guardAdvice); not checked by pickfit. */
+  advice: string;
+  /** Up to BUILD_SIMILAR_MAX similar tools from this request's candidates, picks first. */
+  similar: SimilarTool[];
 }
 
 export interface AlternativesOutput extends FindOutput {
@@ -151,6 +186,35 @@ export interface AlternativesOutput extends FindOutput {
 
 /** How many README mistakes a pick names; get_install_guide lists them all. */
 const README_WRONG_MAX = 2;
+
+/** build_it_yourself: how many similar tools, and how many pitfalls and features of each. */
+const BUILD_SIMILAR_MAX = 2;
+const BUILD_ITEMS_MAX = 3;
+
+const pitfallLine = (p: InstallGuide['pitfalls'][number]) =>
+  `README says ${clip(p.readme_said, 160) ?? ''}; actually needed ${clip(p.actually_needed, 160) ?? ''}`;
+
+/** Similar tools for build_it_yourself: the picks, else the candidates that best match the request's words. */
+function similarTools(picks: string[], candidates: Entry[], relevance: Map<string, number>, os: OS | undefined): SimilarTool[] {
+  const byMatch = candidates
+    .filter((entry) => (relevance.get(entry.slug) ?? 0) > 0)
+    .sort((a, b) => (relevance.get(b.slug) ?? 0) - (relevance.get(a.slug) ?? 0) || a.slug.localeCompare(b.slug))
+    .map((entry) => entry.slug);
+  const bySlug = new Map(candidates.map((entry) => [entry.slug, entry]));
+  return [...new Set([...picks, ...byMatch])]
+    .slice(0, BUILD_SIMILAR_MAX)
+    .map((slug) => bySlug.get(slug)!)
+    .map((entry) => {
+      const guide = bestGuide(entry, os);
+      return {
+        slug: entry.slug,
+        name: entry.name,
+        pitfalls: (guide?.pitfalls ?? []).slice(0, BUILD_ITEMS_MAX).map(pitfallLine),
+        // Not those checked only against a stand-in: nothing shows they work.
+        tested_features: shownWorking(featuresOut(entry, guide)).map((f) => f.feature).slice(0, BUILD_ITEMS_MAX),
+      };
+    });
+}
 
 function howWeKnow(entry: Entry, guide: InstallGuide | null, matchedBy: string, considered: number, videoBase?: string | null): string {
   const parts: string[] = [];
@@ -216,6 +280,9 @@ function pickOut(
       );
     }
   }
+  // P2-01: an install-level pick is a fallback, and says so first whoever chose it (rules, or a model that left it out).
+  const installOnly = installOnlyNote(entry);
+  if (installOnly && !tradeoffs.some(saysInstallOnly)) tradeoffs.unshift(installOnly);
   return {
     slug: entry.slug,
     name: entry.name,
@@ -224,6 +291,8 @@ function pickOut(
     why: chosen.reasons,
     tradeoffs: tradeoffs.slice(0, 3),
     vs_well_known: chosen.vs_well_known,
+    reuse: chosen.reuse,
+    reuse_note: chosen.reuse_note,
     platforms: entry.platforms,
     pricing: entry.pricing ?? 'unknown',
     processing: entry.processing ?? 'unknown',
@@ -269,6 +338,8 @@ interface Choice {
   picks: (GuardedPick & { match?: Fit })[];
   bestFree: { slug: string; reason: string } | null;
   noInstall: string | null;
+  /** The model's guarded build_it_yourself sentence; the similar tools are added in recommend. */
+  buildItYourself: string | null;
   question: string | null;
   parsedNeed: Record<string, unknown> | null;
   emptyByModel: boolean;
@@ -290,6 +361,7 @@ const NO_CHOICE: Choice = {
   picks: [],
   bestFree: null,
   noInstall: null,
+  buildItYourself: null,
   question: null,
   parsedNeed: null,
   emptyByModel: false,
@@ -321,10 +393,12 @@ function fromModel(
   const free = answer.best_free_slug ? entries.get(answer.best_free_slug) : undefined;
   const need = answer.need;
   const keep = answer.keep_current;
+  const noInstall = guardNoInstall(answer.no_install_option);
   return {
     picks,
     bestFree: bestFreeOf(free, clip(answer.best_free_reason, 200), picks),
-    noInstall: guardNoInstall(answer.no_install_option),
+    noInstall,
+    buildItYourself: guardBuildItYourself(answer.build_it_yourself, noInstall),
     question: clip(answer.clarifying_question, 200),
     parsedNeed: {
       task: clip(need.task, 120),
@@ -372,12 +446,16 @@ function fromRules(
       slug: entry.slug,
       fit: entry.summary,
       reasons: templateReasons(entry, cards.get(entry.slug)!, os),
-      tradeoffs: [fitNote(fits[i])].filter((note): note is string => note !== null),
+      // An install-level pick is here as a fallback (filter.ts strictPool): say so first.
+      tradeoffs: [installOnlyNote(entry), fitNote(fits[i])].filter((note): note is string => note !== null),
       vs_well_known: null,
+      reuse: null, // rules cannot tell how to use it
+      reuse_note: null,
       match: fits[i],
     })),
     bestFree: free ? { slug: free.slug, reason: 'The highest-ranked free tool by rules.' } : null,
     noInstall: null,
+    buildItYourself: null,
     question: !os && osSets.size > 1 ? 'Which OS will you use it on: macOS, Linux or Windows?' : null,
     parsedNeed: null,
     emptyByModel: false,
@@ -514,7 +592,7 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
       filtered = hardFilter(corpus, cond, { terms, current: req.currentTool });
     }
   }
-  const { candidates, passed, byRelevance } = filtered;
+  const { candidates, passed, byRelevance, installFallback } = filtered;
   // The rules rank with their own scorer, adding the model's keywords when there are some.
   const rulesScores = () =>
     expansion?.keywords
@@ -579,6 +657,11 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     const gaps = choice.gaps?.length ? `: the closest, ${choice.closest}, does not mention ${choice.gaps.join(', ')}` : '';
     notes.push(`No listed ${what} covers the whole request${gaps}. Each pick's match says what it covers.`);
   }
+  if (installFallback && choice.picks.some((p) => installOnlyNote(entries.get(p.slug)!) !== null)) {
+    notes.push(
+      `Fewer than ${MIN_BEYOND_INSTALL} tools pickfit saw work clearly fit this request, so tools it only installed are included; each says so in its trade-offs.`,
+    );
+  }
   if (passed > MAX_CARDS) {
     notes.push(
       byRelevance > 0
@@ -598,6 +681,12 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
     picks: choice.picks.map((chosen) => pickOut(entries.get(chosen.slug)!, chosen, cond.os, cond.arch, matchedBy, passed, now, deps.videoBase)),
     best_free: choice.bestFree,
     no_install_option: choice.noInstall,
+    build_it_yourself: choice.buildItYourself
+      ? {
+          advice: choice.buildItYourself,
+          similar: similarTools(choice.picks.map((p) => p.slug), candidates, rulesScores(), cond.os),
+        }
+      : null,
     well_known_option: choice.wellKnown.option
       ? { ...choice.wellKnown.option, verified: false, how_we_know: outsideHowWeKnow(matchedBy, cond) }
       : null,
@@ -633,6 +722,8 @@ async function recommend(req: MatchRequest, deps: Deps): Promise<{ output: FindO
             ? { name: choice.wellKnown.name, dropped: choice.wellKnown.dropped }
             : null,
         ...(choice.matchQuality ? { match_quality: choice.matchQuality } : {}),
+        // P2-01: install-level tools came in because too few tools pickfit saw work fit.
+        ...(installFallback ? { install_fallback: true } : {}),
         // How the cards were chosen when not all could be sent; counts and outcomes only.
         shortlist:
           passed > MAX_CARDS ? { by_relevance: byRelevance, keywords: expansion?.outcome ?? null } : null,

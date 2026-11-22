@@ -11,9 +11,12 @@ import { ERROR_EXCERPT_MAX, LAST_USED, NOTE_MAX, reportOutcome, STAGES, UnknownT
 import { NOTE_MAX as SUBMIT_NOTE_MAX, SubmitError, submitSoftware } from './submit.ts';
 import { NO_INSTALL_LABEL } from './webapp.ts';
 import { findSummary, installSummary } from './summary.ts';
+import { REUSE_MODES } from './prompt.ts';
 
 const ABOUT =
   "pickfit matches software to the user's need; each was installed and tested in a sandbox. Scope: dev CLIs, local AI tools, MCP servers, DevOps, security, data, docs and media tools, desktop GUI apps, web apps. ";
+/** Brief 15.1 (P2-02): pickfit is where an agent checks before it builds, not only where a person shops for a tool. */
+export const BEFORE_BUILDING = 'Before writing a new tool, script or integration for the user, call find_software with the job. ';
 const RULES = "Ask 1-2 questions only if you can't guess (OS; must be free/offline). No ads or affiliate links; ranking is fit, not stars. ";
 /** How to write the answer to the user, from reading agents' answers: pick first, alternative before the steps, no narration. */
 const ANSWER =
@@ -26,6 +29,7 @@ const ANSWER =
 
 export const INSTRUCTIONS =
   ABOUT +
+  BEFORE_BUILDING +
   'Flow: find_software (or find_alternatives to replace one) -> get_install_guide -> run steps with consent -> report_outcome. ' +
   RULES +
   ANSWER +
@@ -34,6 +38,7 @@ export const INSTRUCTIONS =
 /** TOOLS=readonly: no mention of the tools that are not registered. */
 export const READONLY_INSTRUCTIONS =
   ABOUT +
+  BEFORE_BUILDING +
   'Flow: find_software (or find_alternatives to replace one) -> get_install_guide -> run steps with consent. ' +
   RULES +
   ANSWER;
@@ -197,6 +202,14 @@ const pick = z.object({
   why: z.array(reason).describe('Reasons, each tied to one field of the verified profile'),
   tradeoffs: z.array(z.string()),
   vs_well_known: z.string().nullable(),
+  reuse: z
+    .enum(REUSE_MODES)
+    .nullable()
+    .describe(
+      'How to use it: use_directly = run it as it is; extend = add the missing part through its extension point (reuse_note names it); ' +
+        'reference = read how it solves the job and its pitfalls, then write your own. null = not judged',
+    ),
+  reuse_note: z.string().nullable().describe('One sentence on why, from the profile; null without reuse'),
   platforms: z.array(os),
   pricing: z.enum(['free', 'freemium', 'paid', 'unknown']),
   processing: z.enum(['local', 'cloud', 'hybrid', 'unknown']),
@@ -310,6 +323,24 @@ const findOutput = z.object({
     .string()
     .nullable()
     .describe("Something built in or already installed that would be enough; from the model's general knowledge, not checked by pickfit"),
+  build_it_yourself: z
+    .object({
+      advice: z.string().describe("Why writing it is simpler, and what to watch for; from the model's general knowledge, not checked by pickfit"),
+      similar: z
+        .array(
+          z.object({
+            slug: z.string(),
+            name: z.string(),
+            pitfalls: z.array(z.string()).describe("Where its README was wrong in pickfit's run: likely traps for your own version too"),
+            tested_features: z.array(z.string()).describe('Features pickfit saw work in it: cases worth testing in your own version'),
+          }),
+        )
+        .describe('Similar tools pickfit ran, picks first'),
+    })
+    .nullable()
+    .describe(
+      'Set when the job is a small one-off tool that stores no data and needs no outside service: say writing it is simpler (never set beside no_install_option). null otherwise',
+    ),
   well_known_option: z
     .object({
       name: z.string(),
@@ -553,6 +584,7 @@ export function buildServer(deps: Deps): McpServer {
       title: 'Find software',
       description:
         'Use when the user wants a tool for a job and has not settled on a product (e.g. "a free offline CLI to transcribe audio on my Mac"). ' +
+        'Before writing a new tool, script or integration for the user, call find_software with the job (each pick has reuse; build_it_yourself says when writing it is simpler). ' +
         'Before calling, ask at most two questions, only if you cannot guess: which OS, and whether it must be free or run offline. ' +
         'Returns up to 3 tools pickfit actually ran, ranked by fit (not popularity), each with reasons, trade-offs, evidence and quality/popularity scores, plus the best free option. ' +
         'well_known_option names a well-known free tool pickfit does not list that may fit better: tag it "(not verified by pickfit)" beside its name. ' +

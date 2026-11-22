@@ -7,7 +7,7 @@ import { INSTRUCTIONS, READONLY_INSTRUCTIONS } from '../src/server.ts';
 import { answer, fixtureCatalog, harness, modelResponse } from './helpers.ts';
 
 const MAC_OFFLINE: FindInput = {
-  need: 'run a small language model offline on my Mac (secret-project-xyz)',
+  need: 'chat with a small language model offline on my Mac (secret-project-xyz)',
   os: 'macos',
   budget: 'free_only',
   must_run_locally: true,
