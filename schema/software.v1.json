@@ -1562,6 +1562,53 @@
       "title": "LegacyComponents",
       "type": "object"
     },
+    "MaintenanceSignals": {
+      "additionalProperties": false,
+      "description": "Signs it is still kept up when there is no GitHub push time to read (brief 15.4).",
+      "properties": {
+        "content_updated_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "When the site's content last changed (Last-Modified or a date it shows); for data products such as maps, how fresh the data is."
+        },
+        "registry_latest_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "When the package registry's latest version was published."
+        },
+        "site_alive_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "When pickfit last found the site answering."
+        }
+      },
+      "title": "MaintenanceSignals",
+      "type": "object"
+    },
     "Maturity": {
       "enum": [
         "stable",
@@ -1601,6 +1648,10 @@
       ],
       "title": "McpClientConfig",
       "type": "object"
+    },
+    "McpDescriptionFlag": {
+      "pattern": "^[a-z][a-z0-9_]{0,39}$",
+      "type": "string"
     },
     "McpEnvVar": {
       "additionalProperties": false,
@@ -1655,6 +1706,22 @@
           ],
           "default": null,
           "description": "A tool tools/call ran without an error (level service)."
+        },
+        "description_flags": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/McpDescriptionFlag"
+              },
+              "maxItems": 20,
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Prompt-injection pattern codes the probe matched in the tool list (pickfit/verify/mcp_probe.py FLAGS), each once; [] when it looked and matched none; null: not recorded (older runs)."
         },
         "launch": {
           "description": "argv that started the server, as the replay ran it: the probe's own over stdio, the background setup's over HTTP.",
@@ -1712,6 +1779,18 @@
             }
           ],
           "default": null
+        },
+        "tool_annotations": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/McpToolAnnotationsSummary"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How many listed tools declare each MCP annotation hint; null: not recorded (older runs)."
         },
         "tool_count": {
           "description": "Tools listed, also those past MCP_TOOLS_MAX.",
@@ -1802,6 +1881,32 @@
         }
       },
       "title": "McpServer",
+      "type": "object"
+    },
+    "McpToolAnnotationsSummary": {
+      "additionalProperties": false,
+      "description": "Counts of tools/list entries whose annotations set each hint to true (MCP ToolAnnotations): what a server\nsays about its own tools, untrusted, kept as counts so names and text never leave the box.",
+      "properties": {
+        "destructive": {
+          "default": 0,
+          "description": "Tools with destructiveHint true.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "open_world": {
+          "default": 0,
+          "description": "Tools with openWorldHint true.",
+          "minimum": 0,
+          "type": "integer"
+        },
+        "read_only": {
+          "default": 0,
+          "description": "Tools with readOnlyHint true.",
+          "minimum": 0,
+          "type": "integer"
+        }
+      },
+      "title": "McpToolAnnotationsSummary",
       "type": "object"
     },
     "McpTransport": {
@@ -2135,6 +2240,50 @@
         }
       },
       "title": "Prerequisites",
+      "type": "object"
+    },
+    "PreviewImage": {
+      "maxLength": 200,
+      "pattern": "^[A-Za-z0-9_][A-Za-z0-9_.-]*(/[A-Za-z0-9_][A-Za-z0-9_.-]*)*\\.(png|jpg|jpeg|webp|gif|mp4|webm)$",
+      "type": "string"
+    },
+    "PreviewMedia": {
+      "additionalProperties": false,
+      "description": "A one-image or few-second preview of a run (tracks B and C), not a tutorial.",
+      "properties": {
+        "captured_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "image": {
+          "$ref": "#/$defs/PreviewImage",
+          "description": "File name or served path of the image or short clip."
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RunId"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "The verification run it was captured in."
+        }
+      },
+      "required": [
+        "image"
+      ],
+      "title": "PreviewMedia",
       "type": "object"
     },
     "Pricing": {
@@ -2567,6 +2716,39 @@
       "maxLength": 200,
       "pattern": "^(?:gh:[1-9][0-9]*|web:[a-z0-9.-]+(?:/[A-Za-z0-9._~-]+)*)$",
       "type": "string"
+    },
+    "ReuseFit": {
+      "additionalProperties": false,
+      "description": "How to use it (brief 15.5): as is, through its extension points, as a reference, or not as a base at all.",
+      "properties": {
+        "basis": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Why: e.g. 'has a plugin API', 'tests present and modular'; the rule or reviewer behind mode."
+        },
+        "mode": {
+          "enum": [
+            "use_directly",
+            "extend",
+            "reference",
+            "fork_not_advised"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "mode"
+      ],
+      "title": "ReuseFit",
+      "type": "object"
     },
     "RubricItem": {
       "additionalProperties": false,
@@ -4115,6 +4297,57 @@
       "title": "SmokeTest",
       "type": "object"
     },
+    "SoftwareInterface": {
+      "additionalProperties": false,
+      "description": "One way other software (an agent, a script) can drive it besides its UI (brief 15.3 C).",
+      "properties": {
+        "coverage": {
+          "anyOf": [
+            {
+              "enum": [
+                "full",
+                "partial",
+                "read_only"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "How much of what the UI does it reaches: full, partial, or read_only; null: not assessed."
+        },
+        "evidence": {
+          "anyOf": [
+            {
+              "maxLength": 300,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Where this rests: a run id, a docs URL, or the repo of a separate MCP server."
+        },
+        "kind": {
+          "enum": [
+            "mcp",
+            "cli",
+            "scripting",
+            "plugin",
+            "api"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "SoftwareInterface",
+      "type": "object"
+    },
     "Source": {
       "additionalProperties": false,
       "properties": {
@@ -4492,9 +4725,49 @@
           ],
           "description": "Latest run time; null when no runs."
         },
+        "last_passed_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "When a check last passed (brief 15.4): unlike checked_at, a later failure leaves it, and a re-verification that passes with the same steps moves it; null: not recorded."
+        },
         "level": {
           "$ref": "#/$defs/VerificationLevel",
           "description": "best_level(runs); unverified when no runs."
+        },
+        "reverify_cycle_days": {
+          "anyOf": [
+            {
+              "maximum": 730,
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Days between re-verifications, from how fast what it depends on changes (external APIs, MCP, other sites ~30; local CLI ~90; halved for new work); null: no cycle set."
+        },
+        "reverify_due_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "When it is next due for re-verification; past it, answers say how old the check is and queue one; null: no cycle set."
         },
         "runs": {
           "default": [],
@@ -5407,6 +5680,22 @@
     "install": {
       "$ref": "#/$defs/InstallByOS"
     },
+    "interfaces": {
+      "anyOf": [
+        {
+          "items": {
+            "$ref": "#/$defs/SoftwareInterface"
+          },
+          "maxItems": 10,
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Ways to drive it besides its UI (MCP, CLI, scripting, plugins, API); [] when it has none; null: not assessed."
+    },
     "kind": {
       "$ref": "#/$defs/Kind"
     },
@@ -5431,6 +5720,18 @@
         }
       ],
       "description": "SPDX id from the host API; null when unknown or NOASSERTION."
+    },
+    "maintenance_signals": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/MaintenanceSignals"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Upkeep signs beyond GitHub (registry release, site alive, content date); null: not collected."
     },
     "maturity": {
       "anyOf": [
@@ -5482,6 +5783,18 @@
     "prerequisites": {
       "$ref": "#/$defs/Prerequisites"
     },
+    "preview": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PreviewMedia"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Tracks B and C: one image or a few seconds from a run; null: none."
+    },
     "pricing": {
       "$ref": "#/$defs/Pricing"
     },
@@ -5509,6 +5822,18 @@
     "repo_id": {
       "$ref": "#/$defs/RepoId",
       "description": "Primary key: 'gh:' + GitHub numeric repository id; 'web:' + host and path for a web app with no repo."
+    },
+    "reuse_fit": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ReuseFit"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "How to use it (brief 15.5); null: not assessed."
     },
     "schema_version": {
       "const": "software.v1",
@@ -5549,6 +5874,37 @@
       "minItems": 1,
       "type": "array"
     },
+    "standing": {
+      "anyOf": [
+        {
+          "enum": [
+            "active",
+            "new",
+            "stale",
+            "broken"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Apart from status (brief 15.4, 15.6): active; new (not yet through enough re-verification cycles); stale (re-verification overdue); broken (a re-verification failed: kept in the catalog, never recommended). Null: not assessed."
+    },
+    "standing_note": {
+      "anyOf": [
+        {
+          "maxLength": 200,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "A short reason for the standing, e.g. what the failed re-verification hit."
+    },
     "status": {
       "description": "Only listed entries are recommended.",
       "enum": [
@@ -5581,6 +5937,41 @@
         "$ref": "#/$defs/Tag"
       },
       "type": "array"
+    },
+    "track": {
+      "anyOf": [
+        {
+          "enum": [
+            "A",
+            "B",
+            "C",
+            "none"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Intake track (brief 15.3): A agent capabilities, B human-facing web, C human-agent creative and document tools, none outside all three. Null: not assessed."
+    },
+    "track_basis": {
+      "anyOf": [
+        {
+          "enum": [
+            "rule",
+            "model",
+            "human"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "What set track: a rule over kind, a model, or a person."
     },
     "updated_at": {
       "format": "date-time",
@@ -5616,6 +6007,23 @@
         "type": "string"
       },
       "type": "array"
+    },
+    "used_by": {
+      "anyOf": [
+        {
+          "enum": [
+            "human",
+            "agent",
+            "both"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "description": "Who uses the software once recommended: a person, an agent, or both (not audience, which is end_user or import_only). Null: not assessed."
     },
     "verification": {
       "$ref": "#/$defs/Verification"

@@ -10,6 +10,7 @@ from pickfit.schema import (
     SETUP_MAX,
     Cited,
     ExtractionResult,
+    McpHandshake,
     SmokeTest,
     SoftwareRecord,
     binding_cap,
@@ -742,3 +743,156 @@ def test_a_web_run_that_did_not_load_stays_unverified(web_app):
     run["web"].update(screen="sign_in_wall", account_needed=True, operations=[], data_sent="unknown")
     web_app["verification"].update(level="unverified", unverified_reason="needs_account")
     assert SoftwareRecord.model_validate(web_app).verification.level == "unverified"
+
+
+# --- Positioning revision fields (brief 15; gap audit P1-04, P1-10) ---------------------------------------------------
+
+V15_FIELDS = {
+    "used_by": "agent",
+    "track": "A",
+    "track_basis": "rule",
+    "interfaces": [{"kind": "cli", "coverage": "full", "evidence": "run-20261031-linux-1"}, {"kind": "api"}],
+    "reuse_fit": {"mode": "extend", "basis": "has a plugin API"},
+    "standing": "broken",
+    "standing_note": "re-verification on 11/30: install step 2 exited 1",
+    "maintenance_signals": {"registry_latest_at": "2026-11-01T00:00:00Z", "site_alive_at": "2026-11-20T03:00:00Z"},
+    "preview": {"image": "frobtail/after.png", "captured_at": "2026-10-31T08:20:00Z", "run_id": "run-20261031-linux-1"},
+}
+V15_VERIFICATION = {
+    "last_passed_at": "2026-11-15T00:00:00Z",
+    "reverify_cycle_days": 90,
+    "reverify_due_at": "2027-02-13T00:00:00Z",
+}
+
+
+def with_v15(doc):
+    doc.update(copy.deepcopy(V15_FIELDS))
+    doc["verification"].update(V15_VERIFICATION)
+    return doc
+
+
+def test_existing_records_gain_no_v15_keys(example):
+    # Every new field is optional and absent until set: a record written before 11/22 dumps exactly as before.
+    record = SoftwareRecord.model_validate(example)
+    dumped = record.model_dump(mode="json")
+    assert dumped == example
+    assert not set(V15_FIELDS) & set(dumped)
+    assert not set(V15_VERIFICATION) & set(dumped["verification"])
+    assert (record.used_by, record.track, record.standing, record.verification.last_passed_at) == (None,) * 4
+    assert record.audience == example["audience"]
+
+
+def test_v15_fields_validate_and_round_trip(example):
+    doc = with_v15(example)
+    record = SoftwareRecord.model_validate(doc)
+    assert (record.used_by, record.track, record.track_basis) == ("agent", "A", "rule")
+    assert [(i.kind, i.coverage) for i in record.interfaces] == [("cli", "full"), ("api", None)]
+    assert (record.reuse_fit.mode, record.standing) == ("extend", "broken")
+    assert record.verification.reverify_cycle_days == 90
+    assert record.verification.last_passed_at.isoformat() == "2026-11-15T00:00:00+00:00"
+    assert record.maintenance_signals.content_updated_at is None
+    dumped = record.model_dump(mode="json")
+    assert dumped == doc
+    assert "content_updated_at" not in dumped["maintenance_signals"]
+    assert SoftwareRecord.model_validate_json(record.model_dump_json()) == record
+
+
+def test_empty_interfaces_means_none_found(example):
+    example["interfaces"] = []
+    assert SoftwareRecord.model_validate(example).model_dump(mode="json")["interfaces"] == []
+
+
+V15_INVALID = {
+    "used_by": set_path("used_by", "robot"),
+    "track": set_path("track", "D"),
+    "track_basis": both(set_path("track", "A"), set_path("track_basis", "guess")),
+    "standing": set_path("standing", "removed"),
+    "interface_kind": set_path("interfaces", [{"kind": "gui"}]),
+    "interface_coverage": set_path("interfaces", [{"kind": "mcp", "coverage": "most"}]),
+    "interface_no_kind": set_path("interfaces", [{"coverage": "full"}]),
+    "reuse_mode": set_path("reuse_fit", {"mode": "copy_paste"}),
+    "reuse_no_mode": set_path("reuse_fit", {"basis": "no mode"}),
+    "signal_naive_time": set_path("maintenance_signals", {"site_alive_at": "2026-11-20T03:00:00"}),
+    "signal_unknown_key": set_path("maintenance_signals", {"downloads": 3}),
+    "preview_no_image": set_path("preview", {"captured_at": "2026-10-31T08:20:00Z"}),
+    "preview_dotdot": set_path("preview", {"image": "../secrets.png"}),
+    "preview_nested_dotdot": set_path("preview", {"image": "a/../b.png"}),
+    "preview_url": set_path("preview", {"image": "https://example.com/a.png"}),
+    "preview_absolute": set_path("preview", {"image": "/abs/a.png"}),
+    "preview_extension": set_path("preview", {"image": "a.exe"}),
+    "preview_unknown_run": set_path("preview", {"image": "a.png", "run_id": "run-unknown"}),
+    "basis_without_track": set_path("track_basis", "rule"),
+    "note_without_standing": set_path("standing_note", "a note without a standing"),
+    "cycle_zero": set_path("verification", "reverify_cycle_days", 0),
+    "due_naive_date": set_path("verification", "reverify_due_at", "2027-01-01"),
+    "last_pass_before_run": set_path("verification", "last_passed_at", "2026-10-01T00:00:00Z"),
+    "last_pass_without_run": both(without_runs, set_path("verification", "last_passed_at", "2026-11-15T00:00:00Z")),
+}
+
+
+@pytest.mark.parametrize("mutate", V15_INVALID.values(), ids=V15_INVALID.keys())
+def test_invalid_v15_fields_rejected(example, mutate):
+    mutate(example)
+    with pytest.raises(ValidationError):
+        SoftwareRecord.model_validate(example)
+
+
+def test_last_passed_at_may_trail_a_rerun_that_kept_its_run(example):
+    # A re-verification that passes with the same steps moves last_passed_at, not the run (reverify.py).
+    example["verification"]["last_passed_at"] = "2026-11-20T00:00:00Z"
+    SoftwareRecord.model_validate(example)
+    example["verification"]["last_passed_at"] = example["verification"]["checked_at"]
+    SoftwareRecord.model_validate(example)
+
+
+HANDSHAKE = {"transport": "stdio", "launch": ["npx", "-y", "frob-mcp"], "tools": ["read", "write"], "tool_count": 3}
+
+
+def test_handshake_without_new_facts_dumps_as_before():
+    handshake = McpHandshake.model_validate(HANDSHAKE)
+    assert (handshake.description_flags, handshake.tool_annotations) == (None, None)
+    dumped = handshake.model_dump(mode="json")
+    assert "description_flags" not in dumped and "tool_annotations" not in dumped
+
+
+def test_handshake_keeps_flags_and_annotation_counts():
+    doc = {**HANDSHAKE, "description_flags": ["override", "hidden_unicode"],
+           "tool_annotations": {"read_only": 1, "destructive": 2}}
+    handshake = McpHandshake.model_validate(doc)
+    assert handshake.tool_annotations.open_world == 0
+    dumped = handshake.model_dump(mode="json")
+    assert dumped["description_flags"] == ["override", "hidden_unicode"]
+    assert dumped["tool_annotations"] == {"read_only": 1, "destructive": 2, "open_world": 0}
+    assert McpHandshake.model_validate(dumped) == handshake
+    assert McpHandshake.model_validate({**HANDSHAKE, "description_flags": []}).description_flags == []
+
+
+def test_handshake_flag_codes_cover_the_probe():
+    from pickfit.verify.mcp_probe import FLAGS
+
+    McpHandshake.model_validate({**HANDSHAKE, "description_flags": [label for label, _ in FLAGS]})
+
+
+@pytest.mark.parametrize(
+    "extra",
+    [
+        {"description_flags": ["override", "override"]},
+        {"description_flags": ["Ignore previous instructions"]},
+        {"description_flags": ["x" * 41]},
+        {"tool_annotations": {"read_only": -1}},
+        {"tool_annotations": {"destructive": 4}},
+        {"tool_annotations": {"idempotent": 1}},
+    ],
+)
+def test_invalid_handshake_facts_rejected(extra):
+    with pytest.raises(ValidationError):
+        McpHandshake.model_validate({**HANDSHAKE, **extra})
+
+
+def test_committed_records_stay_valid_and_unchanged():
+    # Backward compatibility over the whole catalog: every data/software record validates and dumps as written.
+    files = sorted((ROOT / "data" / "software").glob("*.json"))
+    assert files
+    for path in files:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        assert SoftwareRecord.model_validate(raw).model_dump(mode="json") == raw, path.name

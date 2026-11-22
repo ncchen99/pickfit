@@ -272,6 +272,12 @@ class _Model(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+def _is_none(value: Any) -> bool:
+    """exclude_if for an optional field added after records were written: absent until a value is set, so
+    existing files dump exactly as before."""
+    return value is None
+
+
 def is_passed(level: str) -> bool:
     return level in PASSED_LEVELS
 
@@ -1028,6 +1034,20 @@ class RunEvidence(_Model):
     )
 
 
+# A probe pattern code (pickfit/verify/mcp_probe.py FLAGS): pickfit's own label, never text from the server.
+type McpDescriptionFlag = Annotated[str, StringConstraints(pattern=r"^[a-z][a-z0-9_]{0,39}$")]
+MCP_DESCRIPTION_FLAGS_MAX = 20
+
+
+class McpToolAnnotationsSummary(_Model):
+    """Counts of tools/list entries whose annotations set each hint to true (MCP ToolAnnotations): what a server
+    says about its own tools, untrusted, kept as counts so names and text never leave the box."""
+
+    read_only: int = Field(default=0, ge=0, description="Tools with readOnlyHint true.")
+    destructive: int = Field(default=0, ge=0, description="Tools with destructiveHint true.")
+    open_world: int = Field(default=0, ge=0, description="Tools with openWorldHint true.")
+
+
 class McpHandshake(_Model):
     """What pickfit's MCP probe saw when a fresh box started the server (the replay's check).
 
@@ -1056,11 +1076,26 @@ class McpHandshake(_Model):
     offline: bool | None = Field(
         default=None, description="true: the handshake passed with the network off; false: only with it on."
     )
+    description_flags: list[McpDescriptionFlag] | None = Field(
+        default=None, max_length=MCP_DESCRIPTION_FLAGS_MAX, exclude_if=_is_none,
+        description="Prompt-injection pattern codes the probe matched in the tool list (pickfit/verify/mcp_probe.py "
+                    "FLAGS), each once; [] when it looked and matched none; null: not recorded (older runs).",
+    )
+    tool_annotations: McpToolAnnotationsSummary | None = Field(
+        default=None, exclude_if=_is_none,
+        description="How many listed tools declare each MCP annotation hint; null: not recorded (older runs).",
+    )
 
     @model_validator(mode="after")
     def _count_covers_names(self) -> McpHandshake:
         if self.tool_count < len(self.tools):
             raise ValueError("tool_count must be at least the number of tool names")
+        if self.description_flags is not None and len(set(self.description_flags)) != len(self.description_flags):
+            raise ValueError("description_flags must name each pattern once")
+        if self.tool_annotations is not None:
+            counts = self.tool_annotations
+            if max(counts.read_only, counts.destructive, counts.open_world) > self.tool_count:
+                raise ValueError("tool_annotations counts cannot exceed tool_count")
         return self
 
 
@@ -1451,6 +1486,9 @@ def best_level(runs: list[VerificationRun]) -> str:
     return "failed" if "failed" in levels else "unverified"
 
 
+REVERIFY_CYCLE_DAYS_MAX = 730
+
+
 class Verification(_Model):
     """Summary over runs; keeps only the latest run per OS, arch and method.
 
@@ -1462,10 +1500,31 @@ class Verification(_Model):
     unverified_reason: UnverifiedReason | None = None
     checked_at: AwareDatetime | None = Field(description="Latest run time; null when no runs.")
     runs: list[VerificationRun] = []
+    last_passed_at: AwareDatetime | None = Field(
+        default=None, exclude_if=_is_none,
+        description="When a check last passed (brief 15.4): unlike checked_at, a later failure leaves it, and a "
+                    "re-verification that passes with the same steps moves it; null: not recorded.",
+    )
+    reverify_cycle_days: int | None = Field(
+        default=None, ge=1, le=REVERIFY_CYCLE_DAYS_MAX, exclude_if=_is_none,
+        description="Days between re-verifications, from how fast what it depends on changes (external APIs, MCP, "
+                    "other sites ~30; local CLI ~90; halved for new work); null: no cycle set.",
+    )
+    reverify_due_at: AwareDatetime | None = Field(
+        default=None, exclude_if=_is_none,
+        description="When it is next due for re-verification; past it, answers say how old the check is and queue "
+                    "one; null: no cycle set.",
+    )
 
     @model_validator(mode="after")
     def _matches_runs(self) -> Verification:
         _check_reason(self.level, self.unverified_reason)
+        if self.last_passed_at is not None:
+            passed = [run.checked_at for run in self.runs if is_passed(run.level)]
+            if not passed:
+                raise ValueError("last_passed_at needs a passed run")
+            if self.last_passed_at < max(passed):
+                raise ValueError("last_passed_at cannot be before the latest passed run's checked_at")
         if self.level != best_level(self.runs):
             raise ValueError(f"level must be {best_level(self.runs)!r} for these runs")
         latest = max((run.checked_at for run in self.runs), default=None)
@@ -2495,6 +2554,71 @@ class Capability(_Model):
         description="One or two lowercase words that group it on a page, such as formats or subcommands.")
 
 
+# --- Positioning revision fields (docs/brief.md section 15; docs/proposals/brief-v15-gap-audit.md 2.3) -----------------
+#
+# All optional and absent from a file until set, so records written before 11/22 validate and dump unchanged.
+
+UsedBy = Literal["human", "agent", "both"]
+Track = Literal["A", "B", "C", "none"]
+TrackBasis = Literal["rule", "model", "human"]
+InterfaceKind = Literal["mcp", "cli", "scripting", "plugin", "api"]
+InterfaceCoverage = Literal["full", "partial", "read_only"]
+ReuseMode = Literal["use_directly", "extend", "reference", "fork_not_advised"]
+Standing = Literal["active", "new", "stale", "broken"]
+INTERFACES_MAX = 10
+PREVIEW_IMAGE_MAX = 200
+# A preview image's file name or relative served path: no scheme, no leading slash, no segment starting with a dot
+# (so no '..').
+type PreviewImage = Annotated[
+    str, StringConstraints(pattern=r"^[A-Za-z0-9_][A-Za-z0-9_.-]*(/[A-Za-z0-9_][A-Za-z0-9_.-]*)*"
+                                   r"\.(png|jpg|jpeg|webp|gif|mp4|webm)$",
+                           max_length=PREVIEW_IMAGE_MAX)
+]
+
+
+class SoftwareInterface(_Model):
+    """One way other software (an agent, a script) can drive it besides its UI (brief 15.3 C)."""
+
+    kind: InterfaceKind
+    coverage: InterfaceCoverage | None = Field(
+        default=None, exclude_if=_is_none,
+        description="How much of what the UI does it reaches: full, partial, or read_only; null: not assessed.")
+    evidence: str | None = Field(
+        default=None, max_length=300, exclude_if=_is_none,
+        description="Where this rests: a run id, a docs URL, or the repo of a separate MCP server.")
+
+
+class ReuseFit(_Model):
+    """How to use it (brief 15.5): as is, through its extension points, as a reference, or not as a base at all."""
+
+    mode: ReuseMode
+    basis: str | None = Field(
+        default=None, max_length=300, exclude_if=_is_none,
+        description="Why: e.g. 'has a plugin API', 'tests present and modular'; the rule or reviewer behind mode.")
+
+
+class MaintenanceSignals(_Model):
+    """Signs it is still kept up when there is no GitHub push time to read (brief 15.4)."""
+
+    registry_latest_at: AwareDatetime | None = Field(
+        default=None, exclude_if=_is_none, description="When the package registry's latest version was published.")
+    site_alive_at: AwareDatetime | None = Field(
+        default=None, exclude_if=_is_none, description="When pickfit last found the site answering.")
+    content_updated_at: AwareDatetime | None = Field(
+        default=None, exclude_if=_is_none,
+        description="When the site's content last changed (Last-Modified or a date it shows); for data products "
+                    "such as maps, how fresh the data is.")
+
+
+class PreviewMedia(_Model):
+    """A one-image or few-second preview of a run (tracks B and C), not a tutorial."""
+
+    image: PreviewImage = Field(description="File name or served path of the image or short clip.")
+    captured_at: AwareDatetime | None = Field(default=None, exclude_if=_is_none)
+    run_id: RunId | None = Field(
+        default=None, exclude_if=_is_none, description="The verification run it was captured in.")
+
+
 class SoftwareRecord(_Model):
     """One software entry: the canonical file data/software/<slug>.json (software.v1)."""
 
@@ -2510,9 +2634,40 @@ class SoftwareRecord(_Model):
         description="Only listed entries are recommended."
     )
     status_reason: str | None = Field(default=None, max_length=200)
+    standing: Standing | None = Field(
+        default=None, exclude_if=_is_none,
+        description="Apart from status (brief 15.4, 15.6): active; new (not yet through enough re-verification "
+                    "cycles); stale (re-verification overdue); broken (a re-verification failed: kept in the "
+                    "catalog, never recommended). Null: not assessed.",
+    )
+    standing_note: str | None = Field(
+        default=None, max_length=200, exclude_if=_is_none,
+        description="A short reason for the standing, e.g. what the failed re-verification hit.",
+    )
     category: Category
     kind: Kind
     audience: Audience | None
+    used_by: UsedBy | None = Field(
+        default=None, exclude_if=_is_none,
+        description="Who uses the software once recommended: a person, an agent, or both (not audience, which is "
+                    "end_user or import_only). Null: not assessed.",
+    )
+    track: Track | None = Field(
+        default=None, exclude_if=_is_none,
+        description="Intake track (brief 15.3): A agent capabilities, B human-facing web, C human-agent creative and "
+                    "document tools, none outside all three. Null: not assessed.",
+    )
+    track_basis: TrackBasis | None = Field(
+        default=None, exclude_if=_is_none, description="What set track: a rule over kind, a model, or a person.",
+    )
+    interfaces: list[SoftwareInterface] | None = Field(
+        default=None, max_length=INTERFACES_MAX, exclude_if=_is_none,
+        description="Ways to drive it besides its UI (MCP, CLI, scripting, plugins, API); [] when it has none; "
+                    "null: not assessed.",
+    )
+    reuse_fit: ReuseFit | None = Field(
+        default=None, exclude_if=_is_none, description="How to use it (brief 15.5); null: not assessed.",
+    )
     maturity: Maturity | None
     tags: list[Tag] = []
     use_cases: list[str] = []
@@ -2556,6 +2711,14 @@ class SoftwareRecord(_Model):
     processing: Processing | None
     last_release: Release | None
     verification: Verification
+    maintenance_signals: MaintenanceSignals | None = Field(
+        default=None, exclude_if=_is_none,
+        description="Upkeep signs beyond GitHub (registry release, site alive, content date); null: not collected.",
+    )
+    preview: PreviewMedia | None = Field(
+        default=None, exclude_if=_is_none,
+        description="Tracks B and C: one image or a few seconds from a run; null: none.",
+    )
     mcp: McpServer | None = Field(
         default=None,
         exclude_if=lambda value: value is None,
@@ -2599,6 +2762,19 @@ class SoftwareRecord(_Model):
                 raise ValueError(f"evidence {item.field} cites unknown source {item.source_id!r}")
             if item.field.split("/")[1] not in type(self).model_fields:
                 raise ValueError(f"evidence points to unknown field {item.field}")
+        return self
+
+    @model_validator(mode="after")
+    def _check_positioning(self) -> SoftwareRecord:
+        """The section 15 fields hang together: a basis goes with a track, a note with a standing, and a
+        preview's run is one of the record's runs."""
+        if self.track_basis is not None and self.track is None:
+            raise ValueError("track_basis needs a track")
+        if self.standing_note is not None and self.standing is None:
+            raise ValueError("standing_note needs a standing")
+        if self.preview is not None and self.preview.run_id is not None and self.preview.run_id not in {
+                run.id for run in self.verification.runs}:
+            raise ValueError(f"preview cites unknown run {self.preview.run_id!r}")
         return self
 
     @model_validator(mode="after")
