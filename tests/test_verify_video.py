@@ -9,6 +9,7 @@ import shutil
 import subprocess
 from dataclasses import replace
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import pytest
@@ -24,14 +25,39 @@ CONCESSIO = REPO / "data" / "software" / "concessio.json"
 FFMPEG = shutil.which("ffmpeg")
 
 
-def test_only_a_replays_operations_are_recorded_unless_told(monkeypatch: pytest.MonkeyPatch):
+def test_nothing_is_recorded_unless_told(monkeypatch: pytest.MonkeyPatch):
+    # brief §15.7 (11/22): no new tutorial recordings. Unset, PICKFIT_RECORD is off, a replay's operations too.
     monkeypatch.delenv("PICKFIT_RECORD", raising=False)
     monkeypatch.setattr("pickfit.verify.record.get_env", lambda name, default=None: None)
+    assert not record.wanted("replay-x") and not record.wanted("replay-6-2") and not record.wanted(6)
+    monkeypatch.setattr("pickfit.verify.record.get_env", lambda name, default=None: "replay")
     assert record.wanted("replay-6-2") and not record.wanted(6)
     monkeypatch.setattr("pickfit.verify.record.get_env", lambda name, default=None: "all")
     assert record.wanted(6)
     monkeypatch.setattr("pickfit.verify.record.get_env", lambda name, default=None: "off")
     assert not record.wanted("replay-6-2")
+    monkeypatch.setattr("pickfit.verify.record.get_env", lambda name, default=None: "bogus")
+    assert not record.wanted("replay-6-2")
+
+
+def test_no_recorder_is_made_when_recording_is_off(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr("pickfit.verify.record.get_env", lambda name, default=None: None)
+    box = SimpleNamespace(os="linux", display=":99", xvfb_pid=7)
+    assert record.for_box(box, "replay-1", tmp_path) is None  # type: ignore[arg-type]
+
+
+def test_a_video_only_command_needs_its_own_allowance(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr("pickfit.verify.record.get_env", lambda name, default=None: None)
+    assert not record.allowed()
+    monkeypatch.setattr("pickfit.verify.record.get_env",
+                        lambda name, default=None: "1" if name == record.ALLOW_ENV else None)
+    assert record.allowed()
+
+
+def test_a_video_replay_refuses_while_recording_is_off(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr("pickfit.verify.record.get_env", lambda name, default=None: None)
+    with pytest.raises(SystemExit, match="PICKFIT_RECORD is off"):
+        video.record_run("tool", editor=video.EDITORS["rules"], log=lambda s: None)
 
 
 def test_the_display_uid_records_pickfits_own_xvfb_and_never_the_box_user():
@@ -694,6 +720,9 @@ def test_the_recorded_box_is_given_what_the_runs_boxes_were_given(tmp_path: Path
     from pickfit.verify.grants import Grant, package_grants, parse_policy
     from test_verify_grants import KindBox, table
     from test_verify_sysdeps import RootBox
+
+    monkeypatch.setattr("pickfit.verify.record.get_env",
+                        lambda name, default=None: "replay" if name == "PICKFIT_RECORD" else None)
 
     held = parse_policy(table())
     run_id = "verify-tool-20261121-000000-abcd"

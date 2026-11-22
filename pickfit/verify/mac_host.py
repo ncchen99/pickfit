@@ -720,6 +720,7 @@ class Step:
     name: str
     argv: tuple[str, ...]
     paid: bool = False  # model calls: only when asked for
+    env: tuple[tuple[str, str], ...] = ()  # set for this step's process only
 
 
 def plan_steps(*, rebuild: bool, has_base: bool, has_gui_base: bool, verify: str | None,
@@ -736,8 +737,9 @@ def plan_steps(*, rebuild: bool, has_base: bool, has_gui_base: bool, verify: str
         steps.append(Step("verify", ("-m", "pickfit.cli", "verify", "--batch", "1", "--repo", verify, "--force",
                                      "--runner", "tart", "--model", "prod", "--concurrency", "1"), paid=True))
     if record:
+        # PICKFIT_RECORD is off by default (brief §15.7): the step that exists to make a video turns it on for itself
         steps.append(Step("record", ("-m", "pickfit.verify.video", "make", record, "--editor", "claude",
-                                     "--runner", "tart"), paid=True))
+                                     "--runner", "tart"), paid=True, env=(("PICKFIT_RECORD", "replay"),)))
     return steps
 
 
@@ -755,7 +757,7 @@ def run_test(rec: HostRecord, steps: list[Step], out_dir: Path, *, log: Callable
         began = time.monotonic()
         path = out_dir / f"{step.name}.log"
         with path.open("w", encoding="utf-8") as fh:
-            done = runner([python, *step.argv], env=env, stdout=fh, stderr=subprocess.STDOUT, text=True)
+            done = runner([python, *step.argv], env={**env, **dict(step.env)}, stdout=fh, stderr=subprocess.STDOUT, text=True)
         tail = path.read_text(encoding="utf-8", errors="replace").strip().splitlines()[-6:]
         entry = {"step": step.name, "exit": done.returncode, "seconds": round(time.monotonic() - began, 1),
                  "paid": step.paid, "log": str(path), "tail": tail}
@@ -871,6 +873,12 @@ def main_command(args: Any) -> int:
             _print_checks(checks)
             return 0 if ready(checks) else 1
         if cmd == "test":
+            from pickfit.verify import record as recording
+
+            if args.record and not recording.allowed():
+                print(f"--record makes a new verification video, which pickfit stopped doing (brief §15.7); "
+                      f"set {recording.ALLOW_ENV}=1 to make one anyway", file=sys.stderr)
+                return 2
             ops = HostOps(rec)
             checks = ops.checks(boot=True)
             _print_checks(checks)
@@ -938,7 +946,8 @@ def add_parser(sub: Any) -> None:
     t.add_argument("--rebuild", action="store_true", help="rebuild the bases even if they exist")
     t.add_argument("--verify", default=None, metavar="OWNER/REPO", help="also verify this repo (model calls)")
     t.add_argument("--record", default=None, metavar="SLUG",
-                   help="also record and edit a clip (model calls); pick an app that runs on the host's macOS "
+                   help="also record and edit a clip (model calls; needs PICKFIT_ALLOW_RECORD=1: new videos stopped "
+                        "11/22, brief §15.7); pick an app that runs on the host's macOS "
                         "(11/18: gifski's build needs macOS 26, LaunchServices -10825 in a macOS 15 guest)")
     t.add_argument("--keep-going", action="store_true")
     d = msub.add_parser("down", help="delete the machine (Scaleway: only after its 24 h); needs --yes")

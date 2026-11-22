@@ -1,5 +1,7 @@
 # 驗證影片
 
+> **狀態：已停止（2026-11-22），superseded by [docs/brief.md](../brief.md) §15.7。** 不再新增教學螢幕錄影：`PICKFIT_RECORD` 預設改成 `off`，`pickfit mac-host test --record` 要另外設 `PICKFIT_ALLOW_RECORD=1` 才會跑，coverage 的 video 維度改成 preview，沒有影片的紀錄不再算缺口。已經上線的 10 支影片保留，照舊顯示。之後改用機器讀得懂的驗證紀錄（指令、輸出、檢查結果），B、C 賽道另附幾秒的畫面預覽或一張截圖。落差與後續工作見 [brief-v15-gap-audit.md](brief-v15-gap-audit.md) 第 3.1 節。下面的原文保留供追溯，不再照著實作。
+>
 > 提案（2026-11-19）。總覽和共同規則在 [README.md](README.md)。
 
 ## 現況

@@ -26,13 +26,17 @@ with status verified | partial | unverified | not_applicable:
 | docs         | the install-docs rubric was graded                                | not web_app (no README to        |
 |              |                                                                   | install from)                    |
 | usability    | ease.v1 was judged on a passed GUI or web run                     | desktop_app, web_app             |
-| video        | a clip of pickfit operating the app was recorded                  | desktop_app, web_app             |
+| preview      | a preview of pickfit operating the app is on the page (today: one | desktop_app, web_app that have   |
+|              | of the clips recorded before 11/22); never a gap (brief §15.7)    | one; not_applicable otherwise    |
 | repo_signals | GitHub signals read: stars, push and release dates, the file      | records with a repository        |
 |              | tree, outside issues (reliability n / (n + 5) once counted, R6)   |                                  |
 
-A dimension that could not start because an earlier one did not pass names it in `blocked_by` (function, service,
-usability and video wait for install; video also for an operation) and carries no gap of its own: the earlier
-dimension's gap is the reason, counted once.
+A dimension that could not start because an earlier one did not pass names it in `blocked_by` (function, service
+and usability wait for install) and carries no gap of its own: the earlier dimension's gap is the reason, counted once.
+
+The preview dimension was `video` until 11/22. brief §15.7 stopped new tutorial screen recordings, so a GUI or web
+record without a clip is no longer a gap (it was `video.not_recorded`, counted against every new record): without a
+preview the dimension does not apply. The clips already made stay, and a record that has one counts it as verified.
 
 Whose fault: the split in pickfit/verify/failure.py, reused as it is (fault_split()). A run the software itself
 broke (suspected_tool_fault, a failed run, a feature that failed with the tool's own error) is a quality result:
@@ -58,7 +62,7 @@ first_seen, last_seen; GAP_CODES below has every code with its category and capa
 |                   | limit, a check the log does not show passing, the feature judge                          |
 | docs_missing      | no README to grade                                                                       |
 | timeout           | its time or money budget ran out                                                         |
-| tool_error        | a tool or service pickfit uses failed (the GitHub API, the recorder)                      |
+| tool_error        | a tool or service pickfit uses failed (the GitHub API)                                    |
 | unclassified      | none of these (an agent's free-text reason): to be sorted into new codes                 |
 
 Capabilities (CAPABILITIES): each gap names the harness capability that would close it; a capability has an id, a
@@ -90,7 +94,7 @@ from typing import Any
 from pickfit import security as sec
 
 VERSION = "cov.v1"
-DIMENSIONS = ("install", "function", "service", "security", "docs", "usability", "video", "repo_signals")
+DIMENSIONS = ("install", "function", "service", "security", "docs", "usability", "preview", "repo_signals")
 STATUSES = ("verified", "partial", "unverified", "not_applicable")
 PLATFORMS = ("linux", "macos", "windows", "web")
 PASSED = ("inference", "service", "function", "install")  # schema.PASSED_LEVELS, strongest first
@@ -184,7 +188,6 @@ GAP_CODES: dict[str, GapKind] = {
     "usability.first_look_only": _k("usability", "not_attempted", "ease_judge", "a first look, no operation scored"),
     "usability.stale": _k("usability", "not_attempted", "ease_judge", "judged on a run the record no longer has"),
     "usability.no_gui_run": _k("usability", "sandbox_missing", "box_display", "passed, but no GUI or browser run"),
-    "video.not_recorded": _k("video", "not_attempted", "video_recording", "an operation passed, no clip recorded"),
     "repo_signals.not_scored": _k("repo_signals", "not_attempted", "score_records", "the record has no scores"),
     "repo_signals.no_snapshot": _k("repo_signals", "tool_error", "github_fetch", "no GitHub snapshot was read"),
     "repo_signals.no_file_tree": _k("repo_signals", "tool_error", "github_fetch", "no file tree in the snapshot"),
@@ -312,7 +315,6 @@ _COVERAGE_CAPABILITIES = [
     _cap("docs_rubric", {1: "2026-10-29"}, _codes("docs_rubric"), "pickfit score grades the README"),
     _cap("docs_from_site", {}, _codes("docs_from_site"), "grade docs from the project's site when there is no README"),
     _cap("ease_judge", {1: "2026-11-02"}, _codes("ease_judge"), "pickfit usability (ease.v1, shown, not scored)"),
-    _cap("video_recording", {1: "2026-11-12"}, _codes("video_recording"), "recorded replays cut into a clip"),
     _cap("github_fetch", {1: "2026-10-29"}, _codes("github_fetch"), "GitHub snapshots and issues"),
     _cap("score_records", {1: "2026-10-29"}, _codes("score_records"), "pickfit score"),
 ]
@@ -756,10 +758,6 @@ def _docs(record: dict[str, Any]) -> dict[str, Any]:
                       [make_gap(code, component="README", first_seen=_day(record.get("updated_at")))])
 
 
-def _operated(run: dict[str, Any]) -> bool:
-    return bool(_g(run, "gui", "operations") or _g(run, "web", "operations"))
-
-
 def _usability(record: dict[str, Any], runs: list[dict[str, Any]], install: dict[str, Any]) -> dict[str, Any]:
     if record.get("kind") not in GUI_KINDS:
         return _dimension("not_applicable")
@@ -793,25 +791,17 @@ def _usability(record: dict[str, Any], runs: list[dict[str, Any]], install: dict
                       checked_at=usability.get("checked_at"), harness_version=usability.get("version"))
 
 
-def _video(record: dict[str, Any], runs: list[dict[str, Any]], install: dict[str, Any]) -> dict[str, Any]:
+def _preview(record: dict[str, Any], runs: list[dict[str, Any]]) -> dict[str, Any]:
+    """A preview on the page: today one of the clips made before 11/22 (a run's video). Without one it does not apply,
+    never a gap: brief §15.7 stopped new recordings."""
     if record.get("kind") not in GUI_KINDS:
         return _dimension("not_applicable")
-    passed = [r for r in runs if _passed(r)]
-    if not passed:
-        return _dimension("unverified", _ratio(0, 1, "clip"), blocked_by="install", checked_at=install["checked_at"])
     recorded = [r for r in runs if r.get("video")]
-    operated = [r for r in passed if _operated(r)]
-    if recorded:
-        clip = recorded[0]["video"]
-        return _dimension("verified", _ratio(len(recorded), max(len(recorded), len(operated)), "clip"),
-                          checked_at=clip.get("recorded_at"), harness_version=clip.get("model"))
-    if not operated:
-        return _dimension("unverified", _ratio(0, 1, "clip"), blocked_by="function",
-                          checked_at=install["checked_at"])
-    run = operated[0]
-    return _dimension("unverified", _ratio(0, len(operated), "clip"),
-                      [make_gap("video.not_recorded", platform=_run_platform(record, run), component=run.get("id"),
-                                first_seen=_day(run.get("checked_at")))])
+    if not recorded:
+        return _dimension("not_applicable")
+    clip = recorded[0]["video"]
+    return _dimension("verified", _ratio(1, 1, "preview", source="video"),
+                      checked_at=clip.get("recorded_at"), harness_version=clip.get("model"))
 
 
 REPO_PARTS = ("popularity", "maintenance", "engineering_hygiene", "responsiveness")
@@ -894,7 +884,7 @@ def compute_coverage(record: Any) -> dict[str, Any]:
         "security": _security(data),
         "docs": _docs(data),
         "usability": _usability(data, runs, install),
-        "video": _video(data, runs, install),
+        "preview": _preview(data, runs),
         "repo_signals": _repo_signals(data),
     }
     return {"version": VERSION, "slug": data.get("slug"), "category": data.get("category"), "kind": data.get("kind"),
@@ -1186,7 +1176,9 @@ RERUN = {
     "security": "uv run pickfit security --slug {slug} --write  # $0",
     "docs": "uv run pickfit score --slug {slug} --force  # grades the README (paid)",
     "usability": "uv run pickfit usability --slug {slug} --write  # paid",
-    "video": "uv run python scripts/loop_state.py add --kind reverify --target {slug}  # a verify run records it",
+    # No command makes a preview: a verify run records nothing (PICKFIT_RECORD off, brief §15.7), and the old clips
+    # were cut by hand (python -m pickfit.verify.video).
+    "preview": "# no rerun: new recordings stopped 11/22 (brief §15.7); old clips stay as they are",
     "repo_signals": "uv run pickfit score --slug {slug} --no-registries  # GitHub; grades a README that changed",
 }
 

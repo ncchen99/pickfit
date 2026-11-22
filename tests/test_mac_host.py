@@ -235,7 +235,35 @@ def test_plan_runs_free_steps_and_paid_ones_only_when_asked():
     steps = mh.plan_steps(rebuild=True, has_base=True, has_gui_base=True, verify="oraios/serena", record="gifski")
     assert [s.name for s in steps] == ["base", "limits", "gui-base", "gui-limits", "verify", "record"]
     assert [s.name for s in steps if s.paid] == ["verify", "record"]
-    assert "--editor" in next(s for s in steps if s.name == "record").argv
+    record = next(s for s in steps if s.name == "record")
+    # PICKFIT_RECORD is off by default (brief §15.7): only the video step turns it on, for its own process.
+    assert "--editor" in record.argv and dict(record.env) == {"PICKFIT_RECORD": "replay"}
+    assert not any(s.env for s in steps if s.name != "record")
+
+
+def test_record_needs_an_explicit_allowance(tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+                                            capsys: pytest.CaptureFixture[str]):
+    monkeypatch.setattr(mh, "HOSTS_DIR", tmp_path)
+    mh.HostRecord(name="mac1", provider="ssh", target="m1@203.0.113.7").save()
+    monkeypatch.setattr("pickfit.verify.record.get_env", lambda name, default=None: None)
+    monkeypatch.setattr(mh, "HostOps", lambda *a, **k: pytest.fail("the host was touched without the allowance"))
+    args = SimpleNamespace(mac_command="test", name="mac1", record="gifski", verify=None, rebuild=False,
+                           keep_going=False)
+    assert mh.main_command(args) == 2
+    assert "PICKFIT_ALLOW_RECORD=1" in capsys.readouterr().err
+
+
+def test_a_steps_own_env_reaches_only_its_process(tmp_path: Path):
+    rec = mh.HostRecord(name="mac1", provider="ssh", target="m1@203.0.113.7", key="/k/mac", macos=15)
+    seen: dict[str, dict[str, str]] = {}
+
+    def runner(argv, *, env, stdout, stderr, text):
+        seen[argv[-1]] = env
+        return subprocess.CompletedProcess(argv, 0)
+
+    steps = [mh.Step("a", ("x", "a")), mh.Step("b", ("x", "b"), env=(("PICKFIT_RECORD", "replay"),))]
+    mh.run_test(rec, steps, tmp_path / "out", log=lambda s: None, python="py", runner=runner)
+    assert seen["b"]["PICKFIT_RECORD"] == "replay" and seen["a"].get("PICKFIT_RECORD") != "replay"
 
 
 def test_run_test_uses_the_hosts_env_and_stops_at_the_first_failure(tmp_path: Path):

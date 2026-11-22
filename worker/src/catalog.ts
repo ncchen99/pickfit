@@ -454,7 +454,8 @@ export interface Catalog {
   bySlug: Map<string, Entry>;
 }
 
-export const COVERAGE_DIMENSIONS = ['install', 'function', 'service', 'security', 'docs', 'usability', 'video', 'repo_signals'] as const;
+/** coverage.py DIMENSIONS. preview was video until 11/22 (brief §15.7: no new recordings); it is left out unless an old clip exists. */
+export const COVERAGE_DIMENSIONS = ['install', 'function', 'service', 'security', 'docs', 'usability', 'preview', 'repo_signals'] as const;
 export type CoverageDimension = (typeof COVERAGE_DIMENSIONS)[number];
 export type CoverageStatus = 'verified' | 'partial' | 'unverified';
 

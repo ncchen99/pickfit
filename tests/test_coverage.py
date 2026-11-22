@@ -206,21 +206,36 @@ def test_an_mcp_server_needs_its_handshake_and_a_tool_call() -> None:
 
 def test_gui_dimensions_apply_to_apps_and_wait_for_what_comes_before() -> None:
     cli = dims(record(runs=[run()]))
-    assert cli["usability"]["status"] == cli["video"]["status"] == "not_applicable"
+    assert cli["usability"]["status"] == cli["preview"]["status"] == "not_applicable"
     nothing = dims(record(kind="desktop_app", platforms=("linux",), reason="not_run"))
-    assert nothing["usability"]["blocked_by"] == nothing["video"]["blocked_by"] == "install"
+    assert nothing["usability"]["blocked_by"] == "install"
     gui = {"tier": "action_checked", "screen": "main_ui", "command": "app", "display": "Xvfb",
            "operations": [{"goal": "save", "passed": True}]}
     operated = dims(record(kind="desktop_app", platforms=("linux",), runs=[run() | {"gui": gui}]))
-    assert codes(operated["video"]) == ["video.not_recorded"] and codes(operated["usability"]) == [
-        "usability.not_judged"]
-    launched = dims(record(kind="desktop_app", platforms=("linux",), runs=[run() | {"gui": gui | {"operations": []}}]))
-    assert launched["video"]["blocked_by"] == "function" and launched["video"]["gaps"] == []
+    assert codes(operated["usability"]) == ["usability.not_judged"]
     recorded = dims(record(kind="desktop_app", platforms=("linux",), runs=[
         run() | {"gui": gui, "video": {"recorded_at": "2026-11-12T10:00:00+08:00", "model": "claude-opus"}}]))
-    assert recorded["video"]["status"] == "verified" and recorded["video"]["harness_version"] == "claude-opus"
+    assert recorded["preview"]["status"] == "verified" and recorded["preview"]["harness_version"] == "claude-opus"
     web = dims(record(kind="web_app", runs=[run() | {"web": {"operations": []}}]))
     assert web["docs"]["status"] == "not_applicable" and web["install"]["measure"]["by_platform"] == {"web": "verified"}
+
+
+def test_no_preview_is_never_a_gap_since_new_recordings_stopped() -> None:
+    # brief §15.7 (11/22): no new tutorial recordings. A GUI or web record without a clip has no preview dimension at
+    # all (not a gap, not in the share); the clips made before stay and count.
+    gui = {"tier": "action_checked", "screen": "main_ui", "command": "app", "display": "Xvfb",
+           "operations": [{"goal": "save", "passed": True}]}
+    for rec in (record(kind="desktop_app", platforms=("linux",), reason="not_run"),
+                record(kind="desktop_app", platforms=("linux",), runs=[run() | {"gui": gui}]),
+                record(kind="desktop_app", platforms=("linux",), runs=[run() | {"gui": gui | {"operations": []}}]),
+                record(kind="web_app", runs=[run() | {"web": {"operations": [{"goal": "go", "passed": True}]}}])):
+        cov = coverage.compute_coverage(rec)
+        preview = cov["dimensions"]["preview"]
+        assert preview["status"] == "not_applicable" and preview["gaps"] == [] and not preview.get("blocked_by")
+        assert not any(c.startswith("video.") or c.startswith("preview.") for c in coverage.GAP_CODES)
+    old = record(kind="desktop_app", platforms=("linux",), runs=[run() | {"gui": gui, "video": {"recorded_at": "x"}}])
+    assert dims(old)["preview"]["status"] == "verified"
+    assert "video" not in coverage.DIMENSIONS and "preview" in coverage.DIMENSIONS
 
 
 def test_the_security_dimension_is_security_py_coverage_and_never_its_level() -> None:

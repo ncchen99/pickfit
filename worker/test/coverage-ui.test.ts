@@ -25,16 +25,27 @@ test('the tool page says per dimension what pickfit checked, how much, and why n
   assert.match(html, /<span class="cov-mark mark-pass">.*?<span>Checked<\/span><\/span><span class="cov-what"><b>Install<\/b><span class="cov-detail">2 of 2 systems it claims installed and checked<\/span>/);
   assert.match(html, /<span class="cov-mark mark-caution">.*?<span>Partly<\/span><\/span><span class="cov-what"><b>Features<\/b><span class="cov-detail">1 of 2 features reached a verdict\. Not covered: the test machine lacks something it needs/);
   assert.match(html, /<span>Not yet<\/span><\/span><span class="cov-what"><b>Known vulnerabilities<\/b><span class="cov-detail">Not covered: not tried yet/);
-  // An MCP server has a service row; usability and video do not apply to it.
+  // An MCP server has a service row; usability does not apply to it. No preview is never named (brief §15.7).
   assert.match(html, /<b>Service starts and answers<\/b>/);
-  assert.match(html, /Doesn’t apply to this kind of tool: ease of use, video of it in use\./);
+  assert.match(html, /Doesn’t apply to this kind of tool: ease of use\./);
+  assert.doesNotMatch(html, /[Vv]ideo|[Pp]review/);
 });
 
 test('zh-TW: the same section in Chinese', async () => {
   const html = section(await page('fixture-transcribe', fixtureIndex(), 'zh-TW'));
   assert.match(html, /pickfit 檢查到哪些部分/);
   assert.match(html, /3 項功能中 2 項有結論。沒涵蓋到：需要 pickfit 沒有的硬體/);
-  assert.match(html, /這類工具不適用：服務啟動與回應、好不好上手、操作影片。/);
+  assert.match(html, /這類工具不適用：服務啟動與回應、好不好上手。/);
+  assert.doesNotMatch(html, /影片|預覽/);
+});
+
+test('a preview shows only for a tool with an old clip, and its absence is never a gap', () => {
+  withLang('en', () => {
+    const none = coverageSection({ version: 'cov.v1', share: 1, dimensions: { install: { status: 'verified', done: 1, of: 1 } } });
+    assert.doesNotMatch(none, /[Pp]review|[Vv]ideo/);
+    const old = coverageSection({ version: 'cov.v1', share: 1, dimensions: { install: { status: 'verified', done: 1, of: 1 }, preview: { status: 'verified', done: 1, of: 1 } } });
+    assert.match(old, /<span>Checked<\/span><\/span><span class="cov-what"><b>Preview of it in use<\/b><\/span>/);
+  });
 });
 
 test('an index from before coverage leaves the section out; a check-only function reads in words', () => {

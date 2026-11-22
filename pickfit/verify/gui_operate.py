@@ -2145,8 +2145,8 @@ def _operated(box: Box, args: OperateArgs, tag: str | int, op: Operation, nonce:
             op.result = check_screen(last_png, args.check, nonce, op.typed(), read_screen, before=first_png,
                                      words=words, ocr=screen_ocr())
             op.cost_usd += float(op.result.pop("cost_usd", 0.0) or 0.0)
-    if recorder is not None:
-        if recorder.recording:
+    if recorder is not None:  # None unless PICKFIT_RECORD asked for this operation (off by default, record.wanted)
+        if recorder.recording:  # only a recording that started waits: nothing to wait for otherwise
             sleep(record.TAIL_S)  # the result on screen a little longer, for the clip
         op.video = recorder.stop().to_dict()
         log(f"    recording · {op.video['error'] or op.video['path']}")

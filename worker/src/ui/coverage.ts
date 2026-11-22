@@ -16,11 +16,11 @@ const LABEL: Record<CoverageDimension, () => string> = {
   security: () => L('Known vulnerabilities', '已知漏洞'),
   docs: () => L('Install docs', '安裝文件'),
   usability: () => L('Ease of use', '好不好上手'),
-  video: () => L('Video of it in use', '操作影片'),
+  preview: () => L('Preview of it in use', '使用畫面預覽'),
   repo_signals: () => L('Project activity', '專案活躍度'),
 };
 
-/** A dimension's count in words; a one-off check (docs, usability, video) has none, its status says it. */
+/** A dimension's count in words; a one-off check (docs, usability, preview) has none, its status says it. */
 const COUNT: Partial<Record<CoverageDimension, (done: number, of: number) => string>> = {
   install: (d, o) => L(`${d} of ${o} ${o === 1 ? 'system it claims' : 'systems it claims'} installed and checked`, `宣稱支援的 ${o} 個系統中，${d} 個已安裝並檢查`),
   function: (d, o) => L(`${d} of ${o} ${o === 1 ? 'feature' : 'features'} reached a verdict`, `${o} 項功能中 ${d} 項有結論`),
@@ -84,7 +84,9 @@ export function coverageSection(coverage: CoverageSummary | null | undefined): s
       `<span class="cov-what"><b>${esc(LABEL[d]())}</b>${detail.length ? `<span class="cov-detail">${detail.map(esc).join(L('. ', '。'))}</span>` : ''}</span></li>`
     );
   });
-  const skipped = COVERAGE_DIMENSIONS.filter((d) => !coverage.dimensions[d]).map((d) => LABEL[d]());
+  // A preview is shown when an old clip exists and is never a check pickfit skipped (brief §15.7: no new recordings),
+  // so its absence is not named among what does not apply.
+  const skipped = COVERAGE_DIMENSIONS.filter((d) => d !== 'preview' && !coverage.dimensions[d]).map((d) => LABEL[d]());
   const share = coverage.share === null ? null : Math.round(coverage.share * 100);
   return (
     `<section class="block coverage" id="coverage" aria-labelledby="coverage-title"><h2 id="coverage-title">${L('What pickfit could check', 'pickfit 檢查到哪些部分')}</h2>` +
