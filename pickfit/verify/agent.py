@@ -225,8 +225,9 @@ OPERATE_GUI_TOOL = _fn(
                     "text": {**_NULL_STR, "description": "The file's text ({nonce} allowed), or null."},
                     "sample": {"type": ["string", "null"], "enum": [*gui_operate.SAMPLES, None],
                                "description": "pickfit's own sample file instead of text (an image, a 3-frame gif, "
-                                              "a one-page pdf, a 1 s wav tone, a 2 s mp4, a zip of 3 png pages), "
-                                              "or null."}},
+                                              "a one-page pdf, a 1 s wav tone, a 2 s mp4, a zip of 3 png pages, "
+                                              "an svg drawing, a one-paragraph docx, a one-cell xlsx, a one-slide "
+                                              "pptx), or null."}},
                     "required": ["path", "text", "sample"], "additionalProperties": False}},
      "check": {"type": "object", "description": "What pickfit checks after the operation.", "properties": {
          "kind": {"type": "string", "enum": ["file", "clipboard", "screen_text", "gone"]},
