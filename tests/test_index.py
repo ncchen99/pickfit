@@ -402,3 +402,34 @@ def test_entries_carry_a_short_coverage_summary(data_dir: Path) -> None:
     assert "usability" not in runner and "video" not in runner
     # Small: under 600 bytes a tool (about 414 on average over the real catalog, 11/21).
     assert all(len(json.dumps(e["coverage"], separators=(",", ":"))) < 600 for e in entries.values())
+
+
+V15_TOP = ("used_by", "track", "standing", "standing_note")
+V15_VERIFICATION = ("last_passed_at", "reverify_cycle_days", "reverify_due_at")
+
+
+def test_brief_15_fields_are_left_out_while_unset(data_dir: Path) -> None:
+    """Records written before brief 15's fields build the same entries as before: no key, not a null."""
+    for entry in build_index(data_dir).index["entries"]:
+        assert not set(V15_TOP) & set(entry), entry["slug"]
+        assert not set(V15_VERIFICATION) & set(entry["verification"]), entry["slug"]
+
+
+def test_brief_15_fields_reach_the_index_when_set(data_dir: Path) -> None:
+    def change(record: dict) -> None:
+        record.update(used_by="agent", track="A", standing="broken", standing_note="re-verification: install failed")
+        record["verification"].update(last_passed_at="2026-11-01T00:00:00Z", reverify_cycle_days=30,
+                                      reverify_due_at="2026-12-01T00:00:00Z")
+
+    edit(data_dir / "fixture-llm-runner.json", change)
+    edit(data_dir / "fixture-transcribe.json", lambda r: r.update(standing="new"))
+    entries = {e["slug"]: e for e in build_index(data_dir).index["entries"]}
+    runner = entries["fixture-llm-runner"]
+    assert [runner[k] for k in V15_TOP] == ["agent", "A", "broken", "re-verification: install failed"]
+    assert [runner["verification"][k] for k in V15_VERIFICATION] == [
+        "2026-11-01T00:00:00Z", 30, "2026-12-01T00:00:00Z"]
+    # Only what is set: a record with standing alone gets standing alone.
+    transcribe = entries["fixture-transcribe"]
+    assert transcribe["standing"] == "new"
+    assert not {"used_by", "track", "standing_note"} & set(transcribe)
+    assert not set(V15_VERIFICATION) & set(transcribe["verification"])

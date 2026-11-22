@@ -7,12 +7,19 @@ import { bestGuide, isWebApp, OSES, verifiedOn, verifiedOnUserSystem, webCheck, 
 import { matchedCapabilities } from './capabilities.ts';
 import { featuresOut, shownWorking, standInOnly } from './features.ts';
 import { runDay } from './evidence.ts';
+import { verifiedDaysAgo } from './freshness.ts';
 
 const MCP_TOOLS_SHOWN = 40;
 
 export type CardValue = string | number | boolean | string[] | null;
 export type Card = Record<CoreField, CardValue> &
-  Partial<Record<WebField | MatchedField, CardValue>> & { slug: string };
+  Partial<Record<WebField | MatchedField | StandingField, CardValue>> & { slug: string };
+
+/** Brief 15 facts, each only when the record has it: its track, who uses it, its standing (new, stale; broken never
+ * reaches a card, filter.ts), and whole days since it last passed a check, counted here so the model never works out
+ * dates. Records not yet assessed leave them out, so their cards stay as they were. */
+export const STANDING_FIELDS = ['track', 'used_by', 'standing', 'verified_days_ago'] as const;
+export type StandingField = (typeof STANDING_FIELDS)[number];
 
 /** A web app's card only: what pickfit's browser saw. Other cards leave them out (60 cards, fewer tokens). */
 export const WEB_FIELDS = [
@@ -68,7 +75,7 @@ const CORE_FIELDS = [
 type CoreField = (typeof CORE_FIELDS)[number];
 
 /** Fields a reason may cite. The model's schema enumerates exactly these. */
-export const CARD_FIELDS = [...CORE_FIELDS, ...WEB_FIELDS, ...MATCHED_FIELDS] as const;
+export const CARD_FIELDS = [...CORE_FIELDS, ...WEB_FIELDS, ...MATCHED_FIELDS, ...STANDING_FIELDS] as const;
 export type CardField = (typeof CARD_FIELDS)[number];
 
 /** "linux x86_64: function check passed 2026-10-28, sandbox, replayed": the OS first (rules and the guard read it). */
@@ -97,8 +104,19 @@ function webFields(entry: Entry): Partial<Record<WebField, CardValue>> {
   };
 }
 
-/** query: the request's terms (relevance.ts), which choose the capabilities the card shows; none without it. */
-export function toCard(entry: Entry, os?: OS, arch?: Arch, query: readonly string[] = []): Card {
+function standingFields(entry: Entry, now: Date | undefined): Partial<Record<StandingField, CardValue>> {
+  const out: Partial<Record<StandingField, CardValue>> = {};
+  if (entry.track) out.track = entry.track;
+  if (entry.used_by) out.used_by = entry.used_by;
+  if (entry.standing) out.standing = entry.standing;
+  const days = now ? verifiedDaysAgo(entry, now) : null;
+  if (days !== null) out.verified_days_ago = days;
+  return out;
+}
+
+/** query: the request's terms (relevance.ts), which choose the capabilities the card shows; none without it.
+ * now: the request's clock, for verified_days_ago; without it the card leaves that field out. */
+export function toCard(entry: Entry, os?: OS, arch?: Arch, query: readonly string[] = [], now?: Date): Card {
   const userGuide = os ? entry.install[os] : undefined;
   const pre = entry.prerequisites;
   const features = featuresOut(entry, bestGuide(entry, os));
@@ -149,6 +167,7 @@ export function toCard(entry: Entry, os?: OS, arch?: Arch, query: readonly strin
     mcp_env_vars: (entry.mcp?.env_vars ?? []).map((v) => v.name),
     ...webFields(entry),
     ...matchedFields(entry, query),
+    ...standingFields(entry, now),
   };
 }
 

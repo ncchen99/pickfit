@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import type { Env } from '../src/env.ts';
 import { findSoftware } from '../src/find.ts';
-import { freshness, releasedAfter } from '../src/freshness.ts';
+import { freshness, releasedAfter, STALE_DAYS } from '../src/freshness.ts';
+import { findSummary } from '../src/summary.ts';
 import { loadCatalog, type Entry } from '../src/catalog.ts';
 import { installGuide } from '../src/install.ts';
 import { makeWorker } from '../src/worker.ts';
@@ -52,13 +53,65 @@ test('a report from another site, for an unknown tool or OS, is refused', async 
   assert.equal((s.sqlite.prepare("SELECT count(*) AS n FROM events WHERE type = 'outcome'").get() as any).n, 0);
 });
 
-test('freshness: a release after the check warns; an old check says how old; a fresh one says nothing', () => {
+test('freshness: a release after the check warns; an old check warns how old; every check says its age', () => {
   const now = new Date('2026-11-20T00:00:00Z');
   assert.match(freshness('2026-10-28T08:00:00Z', '2026-11-10', now).warning ?? '', /new release came out on 2026-11-10, after pickfit's check on 2026-10-28/);
-  assert.equal(freshness('2026-10-28T08:00:00Z', '2026-10-20', now).warning, null);
+  const fresh = freshness('2026-10-28T08:00:00Z', '2026-10-20', now);
+  assert.equal(fresh.warning, null);
+  assert.equal(fresh.verified_ago, 'pickfit verified it 22 days ago (2026-10-28).');
+  assert.deepEqual([fresh.cycle_days, fresh.overdue, fresh.note], [STALE_DAYS, false, null]);
   assert.equal(freshness('2026-10-28T08:00:00Z', null, now).age_days, 22);
-  assert.match(freshness('2026-07-01T00:00:00Z', null, now).warning ?? '', /142 days ago/);
+  const old = freshness('2026-07-01T00:00:00Z', null, now);
+  assert.equal(old.warning, 'pickfit checked these steps 142 days ago, on 2026-07-01.');
+  assert.equal(old.overdue, true);
+  assert.equal(freshness('2026-11-19T00:00:00Z', null, now).verified_ago, 'pickfit verified it 1 day ago (2026-11-19).');
+  assert.equal(freshness('2026-11-20T00:00:00Z', null, now).verified_ago, 'pickfit verified it today (2026-11-20).');
+  const none = freshness(null, null, now);
+  assert.deepEqual([none.age_days, none.verified_ago, none.overdue, none.warning], [null, null, false, null]);
   assert.equal(releasedAfter(null, '2026-11-10'), null);
+});
+
+test("freshness: the record's own cycle, due date, standing and last pass", () => {
+  const now = new Date('2026-11-20T00:00:00Z');
+  // A 30-day cycle: 40 days is overdue, and the warning names the cycle.
+  const monthly = freshness('2026-10-11T00:00:00Z', null, now, { cycleDays: 30 });
+  assert.deepEqual([monthly.cycle_days, monthly.overdue], [30, true]);
+  assert.equal(monthly.warning, 'pickfit checked these steps 40 days ago, on 2026-10-11; it is re-verified every 30 days.');
+  assert.equal(freshness('2026-10-31T00:00:00Z', null, now, { cycleDays: 30 }).overdue, false);
+  // A past due date is overdue inside the cycle.
+  const due = freshness('2026-11-01T00:00:00Z', null, now, { cycleDays: 90, dueAt: '2026-11-15T00:00:00Z' });
+  assert.equal(due.overdue, true);
+  assert.match(due.warning ?? '', /19 days ago, on 2026-11-01; it is re-verified every 90 days\./);
+  // Standing stale: due, without claiming the cycle ran out.
+  const stale = freshness('2026-11-01T00:00:00Z', null, now, { standing: 'stale' });
+  assert.equal(stale.overdue, true);
+  assert.equal(stale.warning, 'pickfit checked these steps 19 days ago, on 2026-11-01; a re-verification is due.');
+  // A release after the check still comes first.
+  assert.match(freshness('2026-10-11T00:00:00Z', '2026-11-01', now, { cycleDays: 30 }).warning ?? '', /new release came out/);
+  // New work: a short note, no warning while inside the cycle.
+  const fresh = freshness('2026-11-10T00:00:00Z', null, now, { standing: 'new', cycleDays: 45 });
+  assert.equal(fresh.warning, null);
+  assert.equal(fresh.note, 'New work: confidence is lower until it passes more re-verifications.');
+  // A later pass (same steps re-verified) counts from its day; an earlier one does not.
+  assert.equal(freshness('2026-07-01T00:00:00Z', null, now, { lastPassedAt: '2026-11-18T00:00:00Z' }).age_days, 2);
+  assert.equal(freshness('2026-11-18T00:00:00Z', null, now, { lastPassedAt: '2026-07-01T00:00:00Z' }).age_days, 2);
+});
+
+test('every find_software pick says how many days ago it was verified, and a new one says so', async () => {
+  const index = structuredClone(fixtureIndex()) as { entries: Entry[] };
+  const runner = index.entries.find((e) => e.slug === 'fixture-llm-runner')!;
+  runner.standing = 'new';
+  runner.verification.reverify_cycle_days = 45;
+  const h = harness(() => modelResponse(answer()));
+  h.deps.catalog = loadCatalog(index);
+  const out = await findSoftware({ need: 'run a language model offline on my laptop', os: 'macos', must_run_locally: true }, h.deps);
+  assert.ok(out.picks.length > 0);
+  for (const pick of out.picks) assert.match(pick.freshness.verified_ago ?? '', /^pickfit verified it (today|\d+ days? ago) \(\d{4}-\d{2}-\d{2}\)\.$/);
+  const pick = out.picks.find((p) => p.slug === 'fixture-llm-runner')!;
+  assert.deepEqual([pick.freshness.cycle_days, pick.freshness.overdue], [45, false]);
+  assert.match(pick.freshness.note ?? '', /^New work/);
+  const text = findSummary(out);
+  assert.match(text, /Freshness: pickfit verified it \d+ days? ago .*New work/);
 });
 
 test('find_software picks and the install guide carry it; the tool page shows the day and the warning', async () => {

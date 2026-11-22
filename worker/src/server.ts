@@ -219,8 +219,12 @@ const pick = z.object({
   freshness: z
     .object({
       age_days: z.number().int().nullable().describe('Days since pickfit ran the shown steps (or opened the web app)'),
+      verified_ago: z.string().nullable().describe('"pickfit verified it N days ago (date)": say it with every pick'),
+      cycle_days: z.number().int().describe("Days between pickfit's re-verifications of this tool"),
+      overdue: z.boolean().describe('The check is past its re-verification cycle'),
       last_release: z.string().nullable().describe("The project's last release date"),
-      warning: z.string().nullable().describe('When the check may be out of date (a newer release, or over 90 days old): mention it before the steps'),
+      warning: z.string().nullable().describe('When the check may be out of date (a newer release, or past its re-verification cycle): mention it before the steps'),
+      note: z.string().nullable().describe('New work: lower confidence; mention it in a few words'),
     })
     .describe('How fresh the check is'),
   how_we_know: z.string(),

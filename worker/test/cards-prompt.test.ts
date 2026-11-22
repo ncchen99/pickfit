@@ -4,7 +4,8 @@
  */
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { promptCard, toCard } from '../src/cards.ts';
+import { CARD_FIELDS, promptCard, STANDING_FIELDS, toCard } from '../src/cards.ts';
+import type { Entry } from '../src/catalog.ts';
 import { reasonHolds } from '../src/guard.ts';
 import { matchInput } from '../src/prompt.ts';
 import { fixtureCatalog } from './helpers.ts';
@@ -44,4 +45,37 @@ test('a feature not checked says why only when the reason is about the tool', ()
   for (const item of card.features_not_checked as string[]) {
     assert.doesNotMatch(item, /\((not_attempted|beyond_budget|not_recorded|other)\)$/);
   }
+});
+
+test('brief 15 fields: on the card only when the record has them, with days counted in code', () => {
+  const base = catalog.bySlug.get('fixture-json-query')!;
+  const now = new Date('2026-11-22T12:00:00Z');
+  // A record not yet assessed, read without a clock: the card is what it was.
+  const plain = toCard(base, 'linux');
+  for (const field of STANDING_FIELDS) assert.equal(field in plain, false, field);
+  // With the request's clock: whole days since checked_at, and nothing else added.
+  const days = Math.floor((now.getTime() - Date.parse(base.verification.checked_at!)) / 86_400_000);
+  const timed = toCard(base, 'linux', undefined, [], now);
+  assert.equal(timed.verified_days_ago, days);
+  for (const field of ['track', 'used_by', 'standing']) assert.equal(field in timed, false, field);
+  // last_passed_at wins over checked_at.
+  const assessed: Entry = {
+    ...base,
+    track: 'A',
+    used_by: 'agent',
+    standing: 'new',
+    verification: { ...base.verification, last_passed_at: '2026-11-19T00:00:00Z' },
+  };
+  const card = toCard(assessed, 'linux', undefined, [], now);
+  assert.deepEqual([card.track, card.used_by, card.standing, card.verified_days_ago], ['A', 'agent', 'new', 3]);
+  const sent = promptCard(card);
+  assert.deepEqual([sent.track, sent.used_by, sent.standing, sent.verified_days_ago], ['A', 'agent', 'new', 3]);
+  for (const field of STANDING_FIELDS) assert.ok((CARD_FIELDS as readonly string[]).includes(field), field);
+  assert.equal(reasonHolds(card, { claim: 'Made for agents', field: 'used_by', value: 'agent' }), true);
+  // Verified today is 0, and a 0 still reaches the prompt.
+  const today = toCard(
+    { ...assessed, verification: { ...assessed.verification, last_passed_at: now.toISOString() } },
+    'linux', undefined, [], now,
+  );
+  assert.equal(promptCard(today).verified_days_ago, 0);
 });

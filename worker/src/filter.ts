@@ -43,6 +43,8 @@ function webFits(entry: Entry, cond: Conditions): boolean {
 }
 
 function fits(entry: Entry, cond: Conditions): boolean {
+  // A re-verification failed (brief 15.4): kept in the catalog and on its tool page, never recommended.
+  if (entry.standing === 'broken') return false;
   if (cond.exclude?.includes(entry.slug)) return false;
   if (cond.category && cond.category !== 'any' && entry.category !== cond.category) return false;
   if (cond.budget === 'free_only' && entry.pricing !== 'free') return false;
