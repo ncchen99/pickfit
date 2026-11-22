@@ -257,6 +257,9 @@ def record_run(slug: str, run_id: str | None = None, *, data_dir: Path = DATA_DI
     from pickfit.verify.sysdeps import install_named
     from pickfit.verify.task import VerifyTask
 
+    if not recording.wanted("replay-0"):  # off by default since brief §15.7: a replay recorded nothing
+        raise SystemExit(f"{slug}: PICKFIT_RECORD is off (no new videos since 11/22, brief §15.7); "
+                         "set PICKFIT_RECORD=replay to record one anyway")
     editor = editor or editor_for()
     rec = load_record(slug, data_dir)
     run = pick_run(rec, run_id)

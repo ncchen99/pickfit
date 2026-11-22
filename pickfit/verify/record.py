@@ -19,9 +19,9 @@ material every later cut is made from (video.py re-cuts offline, no box), and a 
 back. Measured on pickfit's own lossless screenshots of two Mac operations held as the screen held them, a minute
 took 2.6-3.7 MB before and 4.1-5.8 MB after; Xvfb's black desktop takes a tenth of that. On Linux the root window
 gets the arrow pointer (left_ptr) before ffmpeg starts: with no window manager X draws its default X-shaped one.
-Which operations are recorded: PICKFIT_RECORD=all (every one), off (none), else only a replay's (tag replay-...):
-the replay is the run whose checks a record keeps. A recorder that fails never fails the operation: the recording
-is just missing, with the reason.
+Which operations are recorded: PICKFIT_RECORD=off (none; the default since 11/22, brief §15.7 stopped new tutorial
+recordings), replay (only a replay's, tag replay-...: the replay is the run whose checks a record keeps) or all
+(every one). A recorder that fails never fails the operation: the recording is just missing, with the reason.
 """
 
 from __future__ import annotations
@@ -79,12 +79,25 @@ x.XCloseDisplay(d)
 """
 
 
+RECORD_SETTINGS = ("off", "replay", "all")
+ALLOW_ENV = "PICKFIT_ALLOW_RECORD"  # a command that exists only to make a video (mac-host test --record) needs it
+
+
 def wanted(tag: str | int) -> bool:
-    """Whether to record this operation (PICKFIT_RECORD: all, off, or by default a replay's only)."""
-    setting = (get_env("PICKFIT_RECORD") or "replay").strip().lower()
-    if setting in ("off", "0", "no", "false"):
-        return False
-    return setting == "all" or str(tag).startswith("replay-")
+    """Whether to record this operation. PICKFIT_RECORD: off (the default), replay (a replay's operations only, tag
+    replay-...) or all. brief §15.7 (11/22): no new tutorial screen recordings; a recording is made only when someone
+    asks for one, and the ten videos already made stay as they are."""
+    setting = (get_env("PICKFIT_RECORD") or "off").strip().lower()
+    if setting == "all":
+        return True
+    if setting == "replay":
+        return str(tag).startswith("replay-")
+    return False  # off, 0, no, false, or anything else
+
+
+def allowed() -> bool:
+    """Whether a command whose only purpose is a new video may run (PICKFIT_ALLOW_RECORD=1)."""
+    return (get_env(ALLOW_ENV) or "").strip().lower() in ("1", "yes", "true", "on")
 
 
 @dataclass

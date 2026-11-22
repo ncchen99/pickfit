@@ -399,6 +399,6 @@ def test_entries_carry_a_short_coverage_summary(data_dir: Path) -> None:
             assert ("unit" in dim) == (name == "function" and "done" in dim)
     runner = entries["fixture-llm-runner"]["coverage"]["dimensions"]
     assert runner["function"] == {"status": "partial", "done": 1, "of": 2, "unit": "feature", "gaps": ["sandbox_missing"]}
-    assert "usability" not in runner and "video" not in runner
+    assert "usability" not in runner and "preview" not in runner and "video" not in runner
     # Small: under 600 bytes a tool (about 414 on average over the real catalog, 11/21).
     assert all(len(json.dumps(e["coverage"], separators=(",", ":"))) < 600 for e in entries.values())

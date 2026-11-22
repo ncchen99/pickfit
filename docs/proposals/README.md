@@ -13,7 +13,7 @@
 | [tokens.md](tokens.md) | token 和模型用量 | 預設模型改 Opus、驗證 agent 第一輪就快取 | `pickfit/anthropic_messages.py`、`pickfit/meta.py`、`pickfit/verify/judge.py`、新的 `pickfit/msg_batch.py` |
 | [throughput.md](throughput.md) | watch 吞吐量和 loop runner | 拿掉卡住吞吐量的入場限制 | `pickfit/watch.py`、`deploy/watch/`、`scripts/loop.sh`、`.claude/skills/pickfit-loop/` |
 | [machines-cost.md](machines-cost.md) | 機器時間和成本帳 | 帳本記下每個箱子的實際用量 | `pickfit/ledger.py`、`pickfit/verify/modal_box.py`、`ec2_*.py`、`tart_box.py`、`mac_host.py`、`pipeline.py`（只動 replay 箱開啟的時間點） |
-| [video.md](video.md) | 驗證影片 | 原始錄影品質、動作紀錄存 R2、字幕改 WebVTT | `pickfit/verify/record.py`、`video.py`、`web_video.py`、`pickfit/i18n.py`、`worker/src/pages/tool.ts`（影片區） |
+| [video.md](video.md) | 驗證影片（**已停止**，2026-11-22 起由 [brief](../brief.md) §15.7 取代：不再新增錄影，舊的 10 支保留） | ~~原始錄影品質、動作紀錄存 R2、字幕改 WebVTT~~ 不做 | `pickfit/verify/record.py`、`video.py`、`web_video.py`、`pickfit/i18n.py`、`worker/src/pages/tool.ts`（影片區） |
 | [security.md](security.md) | 安全審查 | 掃使用者實際裝到的東西、observation 和 assessment 分開存 | `pickfit/security.py`、新的 `pickfit/sbom.py`、`pipeline.py`（只加 SBOM 那一步）、`worker/src/server.ts`、`tool.ts`（安全區） |
 | [scoring.md](scoring.md) | 評分和抽取 | 存原始評分輸入、rubric 版本、抽取重用的 key | `pickfit/score.py`、`pickfit/extract.py` |
 | [coverage.md](coverage.md) | Verification Coverage（11/19 念誠定的方向） | 品質分數和驗證範圍分開、沒驗證的原因分類、把缺口轉成 harness 任務 | 新的 `pickfit/coverage.py`、`score.py` 和 `schema.py`（patch） |
