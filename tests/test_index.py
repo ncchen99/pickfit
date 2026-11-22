@@ -206,6 +206,36 @@ def test_mcp_server_entries_carry_the_runs_handshake(data_dir: Path) -> None:
     assert other["mcp"] is None and all(g["mcp"] is None for g in other["install"].values())
 
 
+def test_mcp_safety_only_when_the_run_recorded_a_safety_fact(data_dir: Path) -> None:
+    before = {e["slug"]: e for e in build_index(data_dir).index["entries"]}
+    assert all("mcp_safety" not in e for e in before.values())  # no fact recorded: entries exactly as they were
+
+    def safety(record: dict) -> None:
+        run = next(r for r in record["verification"]["runs"] if r["id"] == record["install"]["linux"]["run_id"])
+        run["mcp"] |= {"description_flags": ["override"], "tool_annotations": {"read_only": 1, "destructive": 1},
+                       "egress_hosts": ["Sync.Notes.example", "93.184.216.34"]}
+
+    edit(data_dir / "fixture-notes-mcp.json", safety)
+    entries = {e["slug"]: e for e in build_index(data_dir).index["entries"]}
+    mcp = entries["fixture-notes-mcp"]
+    assert mcp["mcp_safety"] == {"description_flags": ["override"],
+                                 "tool_annotations": {"read_only": 1, "destructive": 1, "open_world": 0},
+                                 "egress_hosts": ["sync.notes.example", "93.184.216.34"], "tool_count": 2}
+    assert mcp["install"]["linux"]["mcp"]["egress_hosts"] == ["sync.notes.example", "93.184.216.34"]
+    assert {k: v for k, v in mcp.items() if k != "mcp_safety" and k != "install"} == {
+        k: v for k, v in before["fixture-notes-mcp"].items() if k != "install"}
+
+    def only_egress(record: dict) -> None:
+        run = next(r for r in record["verification"]["runs"] if r["id"] == record["install"]["linux"]["run_id"])
+        for key in ("description_flags", "tool_annotations"):
+            run["mcp"].pop(key, None)
+        run["mcp"]["egress_hosts"] = []
+
+    edit(data_dir / "fixture-notes-mcp.json", only_egress)
+    mcp = {e["slug"]: e for e in build_index(data_dir).index["entries"]}["fixture-notes-mcp"]
+    assert mcp["mcp_safety"] == {"egress_hosts": [], "tool_count": 2}
+
+
 def test_a_gui_apps_run_carries_what_pickfit_saw_but_not_the_window_title(data_dir: Path) -> None:
     launch = "fixture-chat-tui --gui"
 

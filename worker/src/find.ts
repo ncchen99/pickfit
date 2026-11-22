@@ -27,6 +27,7 @@ import { checkBudget, recordSpend } from './budget.ts';
 import { ranSentence, videoSentence } from './evidence.ts';
 import { featureSentence, featuresOut, shownWorking, type FeaturesOut } from './features.ts';
 import { securityLine, securityOut, type SecurityOut } from './security.ts';
+import { mcpRisk, type McpRisk } from './mcprisk.ts';
 import type { Settings } from './env.ts';
 import { logEvent, logFailure, newId, type Reporter } from './events.ts';
 import { englishKeywords, EXPAND_TIMEOUT_MS, type Expansion } from './expand.ts';
@@ -127,6 +128,9 @@ export interface PickOut {
   security: SecurityOut;
   /** The one line about security to say before recommending it; null when there is nothing to say. */
   security_warning: string | null;
+  /** MCP servers whose run recorded them: injection patterns, destructive / open-world tool counts, egress hosts and
+   * a line to say before the user adds it to a client; absent for other software and older runs. */
+  mcp_risk?: McpRisk;
   /** Where the README's install instructions were wrong on the shown run: "README says X; actually needed Y". */
   readme_wrong: string[];
   /** null for a web app with no public repository. */
@@ -266,6 +270,7 @@ function pickOut(
   // A web app opens in any browser: no install steps ran on any OS.
   const onUserOs = isWebApp(entry) ? null : verifiedOnUserSystem(entry, os, arch);
   const security = securityOut(entry);
+  const risk = mcpRisk(entry);
   const tradeoffs = [...chosen.tradeoffs];
   if (os && !onUserOs && guide) {
     // Run on the user's OS but another CPU architecture, or on another OS.
@@ -322,6 +327,7 @@ function pickOut(
     },
     security,
     security_warning: securityLine(security, isWebApp(entry)),
+    ...(risk ? { mcp_risk: risk } : {}),
     readme_wrong: (guide?.pitfalls ?? [])
       .filter((p) => p.kind === 'readme_wrong' || !p.kind)
       .slice(0, README_WRONG_MAX)

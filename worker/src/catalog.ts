@@ -162,6 +162,27 @@ export interface McpHandshake {
   /** A tool tools/call ran without an error (level service). */
   called_tool: string | null;
   offline: boolean | null;
+  /** The probe's prompt-injection pattern codes; [] = looked, none; absent: not recorded (older runs). */
+  description_flags?: string[];
+  /** How many listed tools declare each MCP annotation hint; absent: not recorded. */
+  tool_annotations?: McpToolAnnotations;
+  /** Public hosts the box's egress log saw while the server ran; [] = none; absent: not logged. */
+  egress_hosts?: string[];
+}
+
+export interface McpToolAnnotations {
+  read_only: number;
+  destructive: number;
+  open_world: number;
+}
+
+/** pickfit/index.py _mcp_safety: the safety facts of a verified guide's handshake (Linux first), only those recorded. */
+export interface McpSafety {
+  description_flags?: string[];
+  tool_annotations?: McpToolAnnotations;
+  egress_hosts?: string[];
+  /** The tools the annotation counts are out of. */
+  tool_count: number;
 }
 
 /** The README's MCP facts (record.mcp): claims, not run. */
@@ -342,6 +363,8 @@ export interface Entry {
   install: Partial<Record<OS, InstallGuide>>;
   /** MCP servers only: what the README says about using it from an MCP client. */
   mcp?: McpFacts | null;
+  /** MCP servers whose run recorded them (brief 15.7): injection patterns, tool hints, egress hosts; absent: none. */
+  mcp_safety?: McpSafety;
   /** Hosted web apps only (kind web_app): no install guides, a URL to open instead. */
   web?: WebApp | null;
   /** Desktop and web apps only: what pickfit's visual check of its own screenshots found (pickfit/index.py _visual). */
