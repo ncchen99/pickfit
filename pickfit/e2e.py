@@ -390,7 +390,7 @@ def _main_records(data_dir: Path, ref: str) -> tuple[Path, Path, str]:
 
 def publish_leg(site_hosts: list[Site], data_dir: Path, *, ref: str = "origin/main", fetch: bool = True) -> dict[str, Any]:
     """Without publishing: do the public hosts serve origin/main's records? A mismatch is a deploy that did not reach
-    a host (pickfit.app is a Cloud Run service deployed by worker/cloudrun/deploy.sh, not by the CI), or one still
+    a host (pickfit.app and workers.dev are the same Cloudflare Worker, deployed by the CI), or one still
     running for a push of the last few minutes."""
     from pickfit.index import IndexBuildError, load_records
 

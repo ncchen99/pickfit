@@ -7,19 +7,15 @@
 #
 # A push to main (or a manual run on main) then deploys, only after check passed:
 #
-# - deploy-workers-dev: the Cloudflare Worker pickfit-mcp on pickfit-mcp.ncchen99.workers.dev, for MCP clients
-#   still set to that address. Remote D1 migrations first, then `pickfit publish`, which rebuilds
-#   src/generated/index.json and runs `npx wrangler deploy` (top-level Worker only; the frozen evaluation envs
-#   eval and eval-rules are never touched). `--no-translate`: new page sentences show in English until a local
-#   `uv run pickfit publish` translates them (that needs Modal, which CI does not have).
-#   Secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID.
+# - deploy: the Cloudflare Worker pickfit-mcp, which serves both https://pickfit.app (custom domain) and
+#   pickfit-mcp.ncchen99.workers.dev (for MCP clients still set to that address). Remote D1 migrations first,
+#   then `pickfit publish`, which rebuilds src/generated/index.json and runs `npx wrangler deploy` (top-level
+#   Worker only; the frozen evaluation envs eval and eval-rules are never touched). `--no-translate`: new page
+#   sentences show in English until a local `uv run pickfit publish` translates them (that needs Modal, which CI
+#   does not have). Secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID.
 #
-# - deploy-cloudrun: pickfit.app itself, on Google Cloud Run (worker/cloudrun/README.md). Only when the push
-#   changes what the site is built from (scripts/cloudrun_deploy.py DEPLOY_PATHS). It runs
-#   worker/cloudrun/deploy.sh, then checks that pickfit.app serves the data just built and that /mcp lists its
-#   tools; if not, the traffic goes back to the revision that served before, and the job fails.
-#   Logs in to GCP with Workload Identity Federation, no key: repository variables GCP_WIF_PROVIDER and
-#   GCP_DEPLOY_SA (one-time setup: worker/cloudrun/setup-ci-wif.md). Without both variables the job is skipped.
+# pickfit.app ran on Google Cloud Run from 2026-11-18 to 11-22; that deploy job was removed when Cloud Run was
+# shut down (worker/cloudrun/README.md).
 
 name: Worker
 
@@ -74,7 +70,7 @@ jobs:
         working-directory: .
         run: uv run pickfit publish --dry-run --no-translate
 
-  deploy-workers-dev:
+  deploy:
     needs: check
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
@@ -103,78 +99,8 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
-      - name: Deploy the Worker on workers.dev
+      - name: Deploy the Worker (pickfit.app and workers.dev)
         run: uv run --project .. pickfit publish --no-translate
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-
-  deploy-cloudrun:
-    needs: check
-    # Skipped (not failed) until both repository variables are set; unset either one to turn the deploy off.
-    if: >-
-      github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-      && vars.GCP_WIF_PROVIDER != '' && vars.GCP_DEPLOY_SA != ''
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    # One Cloud Run deploy at a time; a newer push waits for the running one (only the newest waiting run is kept).
-    concurrency:
-      group: cloudrun-deploy
-      cancel-in-progress: false
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Does this push change the site?
-        id: changes
-        env:
-          BEFORE: ${{ github.event.before }}
-        run: |
-          if [ "$GITHUB_EVENT_NAME" = workflow_dispatch ]; then
-            echo "deploy=true" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          # The checkout is shallow: fetch the commit before the push so the two can be compared.
-          # If that fails, the script cannot list the changes and deploys anyway.
-          if [ -n "$BEFORE" ] && [ "$BEFORE" != 0000000000000000000000000000000000000000 ]; then
-            git fetch --no-tags --depth=1 origin "$BEFORE" || true
-          fi
-          python3 scripts/cloudrun_deploy.py changed --base "$BEFORE" --head "$GITHUB_SHA" >> "$GITHUB_OUTPUT"
-
-      - uses: google-github-actions/auth@v3
-        if: steps.changes.outputs.deploy == 'true'
-        with:
-          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
-          service_account: ${{ vars.GCP_DEPLOY_SA }}
-
-      - uses: google-github-actions/setup-gcloud@v3
-        if: steps.changes.outputs.deploy == 'true'
-
-      - uses: actions/setup-node@v4
-        if: steps.changes.outputs.deploy == 'true'
-        with:
-          node-version: 24
-
-      - uses: astral-sh/setup-uv@v6
-        if: steps.changes.outputs.deploy == 'true'
-        with:
-          enable-cache: true
-
-      - name: Record the revision serving now
-        id: prev
-        if: steps.changes.outputs.deploy == 'true'
-        run: |
-          revision="$(python3 scripts/cloudrun_deploy.py serving)"
-          echo "revision=$revision" >> "$GITHUB_OUTPUT"
-
-      - name: Deploy pickfit.app to Cloud Run
-        if: steps.changes.outputs.deploy == 'true'
-        run: worker/cloudrun/deploy.sh
-
-      - name: Check the site serves this build, else roll back
-        if: steps.changes.outputs.deploy == 'true'
-        env:
-          PREV: ${{ steps.prev.outputs.revision }}
-        run: python3 scripts/cloudrun_deploy.py verify --prev "$PREV"

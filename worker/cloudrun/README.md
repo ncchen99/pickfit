@@ -1,4 +1,8 @@
-# pickfit on Google Cloud Run
+# pickfit on Google Cloud Run (retired 2026-11-22)
+
+> **Retired on 2026-11-22.** The Cloud Run service is shut down and CI no longer deploys it; https://pickfit.app is
+> served by the Cloudflare Worker `pickfit-mcp` again (the `routes` in `../wrangler.jsonc`). This directory stays
+> for the record, and `../test/cloudrun.test.ts` still runs against it. The text below describes 2026-11-18 to 11-22.
 
 Since 2026-11-18, https://pickfit.app is served by Google Cloud Run: service `pickfit` in GCP project
 `pickfit-app`, region `asia-east1` (Taiwan). The code is the same Worker code in `../src/`; `server.ts`
