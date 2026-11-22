@@ -4,14 +4,25 @@
  * recordings it was cut from, and the clip's poster (<clip stem>.jpg). Everything else, and every request when
  * the binding is missing, is 404. Range requests get 206; names carry a timestamp, so responses are immutable.
  *
+ * The record's preview (brief 15.7: one still for a tool with no clip, tracks B and C) is served from the same bucket,
+ * beside the clips: a plain file name (no folder) ending .jpg, .png or .webp, and only the one the record names.
+ *
  * A clip with captions also has them as a WebVTT track per page language (<clip stem>.en.vtt, .zh-TW.vtt), made
  * here from the record (the zh-TW one from the page's translations of the same sentences), not from R2.
  */
 import { OSES, type Catalog, type Entry, type RunSummary, type RunVideo, type VideoCaption } from './catalog.ts';
 import { LANGS, type Lang, type Translations } from './i18n.ts';
 
-const PATH = /^\/video\/([a-z0-9]+(?:-[a-z0-9]+)*)\/([A-Za-z0-9_][A-Za-z0-9_.-]{0,119}\.(mp4|jpg|vtt))$/;
-const TYPES: Record<string, string> = { mp4: 'video/mp4', jpg: 'image/jpeg', vtt: 'text/vtt; charset=utf-8' };
+const PATH = /^\/video\/([a-z0-9]+(?:-[a-z0-9]+)*)\/([A-Za-z0-9_][A-Za-z0-9_.-]{0,119}\.(mp4|jpg|png|webp|vtt))$/;
+const TYPES: Record<string, string> = {
+  mp4: 'video/mp4',
+  jpg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  vtt: 'text/vtt; charset=utf-8',
+};
+/** A preview image this route can serve: a file name alone, of an image type the page shows in <img>. */
+const PREVIEW_FILE = /^[A-Za-z0-9_][A-Za-z0-9_.-]{0,119}\.(jpg|png|webp)$/;
 const IMMUTABLE = 'public, max-age=31536000, immutable';
 const CAPTIONS_CACHE = 'public, max-age=3600'; // a caption's translation can change under the same name
 
@@ -36,6 +47,12 @@ export function captionsVtt(captions: VideoCaption[], map?: Record<string, strin
   return `WEBVTT\n\n${cues.join('\n')}`;
 }
 
+/** The entry's preview image name when it is one /video/<slug>/ serves (PREVIEW_FILE), else null. */
+export function previewImage(entry: Entry): string | null {
+  const image = entry.preview?.image;
+  return image && PREVIEW_FILE.test(image) ? image : null;
+}
+
 /** Every run with a clip: the install guides' runs and the other passed runs, once each. */
 export function runsWithVideo(entry: Entry): (RunSummary & { video: RunVideo })[] {
   const runs = [...OSES.flatMap((os) => (entry.install[os] ? [entry.install[os].run] : [])), ...entry.verification.passed_runs];
@@ -51,6 +68,8 @@ export function videoFiles(entry: Entry): Set<string> {
     for (const raw of video.raw) files.add(raw.file);
     if (video.captions?.length) for (const lang of LANGS) files.add(captionsOf(video.clip, lang));
   }
+  const preview = previewImage(entry);
+  if (preview) files.add(preview);
   return files;
 }
 

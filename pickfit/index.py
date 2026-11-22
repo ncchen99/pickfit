@@ -434,6 +434,7 @@ def _entry(record: SoftwareRecord) -> dict[str, Any]:
         "mcp": record.mcp.model_dump() if record.mcp else None,
         "web": _web(record),
         "visual": _visual(record),
+        **_preview(record),
         "security": _security(record),
         "coverage": _coverage(record),
         "scores": {
@@ -457,6 +458,14 @@ def _standing(record: SoftwareRecord) -> dict[str, Any]:
     fields = {"used_by": record.used_by, "track": record.track, "standing": record.standing,
               "standing_note": record.standing_note}
     return {key: value for key, value in fields.items() if value is not None}
+
+
+def _preview(record: SoftwareRecord) -> dict[str, Any]:
+    """The record's preview (brief 15.7: one image, not a tutorial; the Worker serves it from R2 at
+    /video/<slug>/<image>), under "preview"; nothing when there is none, so every other entry is exactly what it was."""
+    if record.preview is None:
+        return {}
+    return {"preview": record.preview.model_dump(mode="json")}
 
 
 def _verification_cycle(record: SoftwareRecord) -> dict[str, Any]:

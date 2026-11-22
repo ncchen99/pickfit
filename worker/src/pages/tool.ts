@@ -20,7 +20,7 @@ import { icon, osMark, type IconName } from '../ui/icons.ts';
 import { age, badge, compareToggle, confidenceRow, coverage, fitz, kindTag, levelIcon, measure, osList, popover, runFacts, tape, type FitzName, type MeasureRow } from '../ui/kit.ts';
 import { renderShell } from '../ui/shell.ts';
 import { coverageSection } from '../ui/coverage.ts';
-import { captionsOf, posterOf, videoPath } from '../video.ts';
+import { captionsOf, posterOf, previewImage, videoPath } from '../video.ts';
 import { NO_INSTALL_LABEL, noInstallLabel } from '../webapp.ts';
 
 const MATURITY: Record<string, string> = {
@@ -571,6 +571,27 @@ export function chaptersOf(entry: Entry, video: RunVideo): Chapter[] {
 }
 
 /**
+ * A tool with no clip but a preview (brief 15.7, tracks B and C): one still from pickfit's verification run, served
+ * from R2 beside the clips. It says what it is, a look at the screen, not a tutorial; a plain <img>, so it needs no
+ * script, and the caption says when it was taken.
+ */
+function still(entry: Entry): string {
+  const image = previewImage(entry);
+  if (!image) return '';
+  const when = day(entry.preview?.captured_at ?? null);
+  const alt = L(`${entry.name}'s screen, as pickfit's verification run saw it`, `pickfit 驗證時看到的 ${entry.name} 畫面`);
+  return (
+    `<figure class="showcase showcase-still">` +
+    `<img src="${esc(videoPath(entry.slug, image))}" alt="${esc(alt)}" decoding="async" aria-describedby="showcase-cap">` +
+    `<figcaption id="showcase-cap">${L(
+      `A still from pickfit's verification run${when ? ` on ${esc(when)}` : ''}: a look at the screen, not a tutorial`,
+      `pickfit 驗證時${when ? `（${esc(when)}）` : ''}截下的畫面，讓你先看看長什麼樣子，不是教學`,
+    )}</figcaption>` +
+    `</figure>`
+  );
+}
+
+/**
  * The app itself, first: pickfit's own clip of it running. With chapters, the page script swaps the native
  * controls for a seek bar cut into the chapters (data-player), and the list under the clip jumps to each one.
  * Without the script, or without chapters, it is the browser's own player. A clip has no sound (no mute button)
@@ -579,7 +600,7 @@ export function chaptersOf(entry: Entry, video: RunVideo): Chapter[] {
  */
 function showcase(entry: Entry): string {
   const video = firstVideo(entry);
-  if (!video) return '';
+  if (!video) return still(entry);
   const slug = entry.slug;
   const chapters = chaptersOf(entry, video);
   const seconds = Math.round(video.seconds);
@@ -1152,7 +1173,7 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string, opts: 
     .join('');
   // The clip is the page's focal point: with chapters it gets its own row, the chapters beside it where
   // At a glance would be; a clip without chapters leads the main column. Without a clip, how to use it leads
-  // (the screen's one action), then what it does.
+  // (the screen's one action), then what it does; a preview still (no clip) sits above it, in the main column.
   const video = firstVideo(entry);
   const wide = !!video && chaptersOf(entry, video).length > 0;
   const clip = showcase(entry);
@@ -1170,7 +1191,7 @@ export function renderTool(catalog: Catalog, entry: Entry, nonce: string, opts: 
     `<div class="wrap layout tool-layout"><div class="tool-main">` +
     (wide ? '' : clip) +
     (ran ? '' : progress(entry)) +
-    (clip ? about(entry, features) + install(catalog, entry, opts.reported) : install(catalog, entry, opts.reported) + about(entry, features)) +
+    (video ? about(entry, features) + install(catalog, entry, opts.reported) : install(catalog, entry, opts.reported) + about(entry, features)) +
     `<div class="tool-more">` +
     (ran ? progress(entry) : '') +
     (features.checked.length + features.not_checked.length ? goodFor(entry, true) : '') +

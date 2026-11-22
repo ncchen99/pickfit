@@ -433,3 +433,27 @@ def test_brief_15_fields_reach_the_index_when_set(data_dir: Path) -> None:
     assert transcribe["standing"] == "new"
     assert not {"used_by", "track", "standing_note"} & set(transcribe)
     assert not set(V15_VERIFICATION) & set(transcribe["verification"])
+
+
+def test_a_preview_reaches_the_index_only_when_the_record_has_one(data_dir: Path) -> None:
+    """Brief 15.7 (P2-06): the record's preview image goes to the entry for the Worker to serve; an entry without one
+    carries no key at all, so every other entry is what it was."""
+    for entry in build_index(data_dir).index["entries"]:
+        assert "preview" not in entry, entry["slug"]
+    edit(data_dir / "fixture-web-sketch.json", lambda r: r.update(preview={
+        "image": "preview-run-20261102-web-1.jpg", "captured_at": "2026-11-02T08:00:00Z",
+        "run_id": "run-20261102-web-1"}))
+    edit(data_dir / "fixture-transcribe.json", lambda r: r.update(preview={"image": "preview-plain.jpg"}))
+    entries = {e["slug"]: e for e in build_index(data_dir).index["entries"]}
+    assert entries["fixture-web-sketch"]["preview"] == {
+        "image": "preview-run-20261102-web-1.jpg", "captured_at": "2026-11-02T08:00:00Z",
+        "run_id": "run-20261102-web-1"}
+    assert entries["fixture-transcribe"]["preview"] == {"image": "preview-plain.jpg"}
+    assert "preview" not in entries["fixture-llm-runner"]
+
+
+def test_a_preview_citing_a_run_the_record_lacks_fails_the_build(data_dir: Path) -> None:
+    edit(data_dir / "fixture-web-sketch.json", lambda r: r.update(preview={
+        "image": "preview-x.jpg", "run_id": "run-not-there"}))
+    with pytest.raises(IndexBuildError, match="unknown run"):
+        build_index(data_dir)

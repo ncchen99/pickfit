@@ -277,6 +277,13 @@ export type UsedBy = 'human' | 'agent' | 'both';
 export type Track = 'A' | 'B' | 'C' | 'none';
 export type Standing = 'active' | 'new' | 'stale' | 'broken';
 
+/** A record's preview (schema.py PreviewMedia): the image's file name beside the clips in R2, when and in which run it was taken. */
+export interface PreviewMedia {
+  image: string;
+  captured_at?: string;
+  run_id?: string;
+}
+
 export interface Entry {
   slug: string;
   name: string;
@@ -339,6 +346,9 @@ export interface Entry {
   web?: WebApp | null;
   /** Desktop and web apps only: what pickfit's visual check of its own screenshots found (pickfit/index.py _visual). */
   visual?: VisualCheck | null;
+  /** One still of it running (brief 15.7, tracks B and C: a preview, not a tutorial; pickfit/index.py _preview), served
+   * from R2 at /video/<slug>/<image> (video.ts). Shown on the tool page only when there is no clip; absent: none. */
+  preview?: PreviewMedia;
   /** Known high or critical vulnerabilities (OSV.dev) in what a fresh install brings (pickfit/index.py _security).
    * Older indexes lack it: read a missing one as unchecked, reason not_run (securityOf). */
   security?: SecurityCheck | null;

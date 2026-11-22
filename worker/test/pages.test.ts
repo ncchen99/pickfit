@@ -392,6 +392,26 @@ function siteWith(edit: (index: { built_at: string; entries: IndexEntry[] }, byS
 
 const proofOf = (html: string) => /<ul class="proof">(.*?)<\/ul>/s.exec(html)?.[1] ?? '';
 
+test('a web app with a preview and no clip leads with the still, captioned in the page language; how to open it stays first', async () => {
+  const get = siteWith((_, bySlug) => {
+    (bySlug('fixture-web-sketch') as any).preview = { image: 'preview-run-20261102-web-1.jpg', captured_at: '2026-11-02T08:00:00Z', run_id: 'run-20261102-web-1' };
+  });
+  const figure = '<figure class="showcase showcase-still"><img src="/video/fixture-web-sketch/preview-run-20261102-web-1.jpg"';
+  const en = await get('/tool/fixture-web-sketch');
+  assert.ok(en.includes(figure));
+  // A still is not the app running: the open section keeps its place ahead of what it does, as without a preview.
+  assert.ok(en.indexOf(figure) < en.indexOf('id="install-title"'));
+  assert.ok(en.indexOf('id="install-title"') < en.indexOf('id="about-title"') || !en.includes('id="about-title"'));
+  const zh = await get('/tool/fixture-web-sketch?lang=zh-TW');
+  assert.ok(zh.includes('alt="pickfit 驗證時看到的 Fixture Web Sketch 畫面"'));
+  assert.match(zh, /<figcaption id="showcase-cap">pickfit 驗證時（2026年11月2日）截下的畫面，讓你先看看長什麼樣子，不是教學<\/figcaption>/);
+  // Without captured_at the caption names no day, and a preview the route cannot serve shows nothing.
+  const undated = await siteWith((_, bySlug) => { (bySlug('fixture-web-sketch') as any).preview = { image: 'preview-x.png' }; })('/tool/fixture-web-sketch');
+  assert.ok(undated.includes(`<figcaption id="showcase-cap">A still from pickfit's verification run: a look at the screen, not a tutorial</figcaption>`));
+  const odd = await siteWith((_, bySlug) => { (bySlug('fixture-web-sketch') as any).preview = { image: '../x.jpg' }; })('/tool/fixture-web-sketch');
+  assert.ok(!odd.includes('<figure class="showcase'));
+});
+
 test('home: the headline number is how many passed a check in the last 30 days; hidden gems are not in it', async () => {
   // On 29 Nov the 31 Oct and 2 Nov runs are inside 30 days, the 28 Oct ones are not.
   const get = siteWith((index) => { index.built_at = '2026-11-29T12:00:00Z'; });

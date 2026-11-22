@@ -159,6 +159,65 @@ test('the tool page plays the clip first with its poster, and links the raw reco
   assert.ok(!other.includes('<video'));
 });
 
+// P2-06 (brief 15.7): a tool with no clip may have a preview still, served from the same bucket beside the clips.
+const WEB = 'fixture-web-sketch';
+const STILL = 'preview-run-20261102-web-1.jpg';
+
+/** The index with a preview on the web fixture (as index.py writes it), and on the clip's tool when `onClip`. */
+function previewed(image: string = STILL, onClip = false): unknown {
+  const data = index() as any;
+  const entry = data.entries.find((e: any) => e.slug === WEB);
+  entry.preview = { image, captured_at: '2026-11-02T08:00:00Z', run_id: 'run-20261102-web-1' };
+  if (onClip) data.entries.find((e: any) => e.slug === SLUG).preview = { image: 'preview-clip.png' };
+  return data;
+}
+
+test('a record’s preview is served beside the clips with its image type, and only the one it names', async () => {
+  const png = 'preview-run-20261102-web-1.png';
+  const webp = 'preview-run-20261102-web-1.webp';
+  const files = { [`${WEB}/${STILL}`]: BYTES.slice(0, 20), [`${WEB}/${png}`]: BYTES.slice(0, 20), [`${WEB}/${webp}`]: BYTES.slice(0, 20) };
+  for (const [name, type] of [[STILL, 'image/jpeg'], [png, 'image/png'], [webp, 'image/webp']]) {
+    const res = await site(bucket(files).r2, previewed(name))(`/video/${WEB}/${name}`);
+    assert.deepEqual([res.status, res.headers.get('content-type'), res.headers.get('x-content-type-options')], [200, type, 'nosniff'], name);
+    assert.equal(res.headers.get('cache-control'), 'public, max-age=31536000, immutable');
+  }
+  const { r2, calls } = bucket(files);
+  const get = site(r2, previewed());
+  calls.length = 0;
+  for (const path of [
+    `/video/${WEB}/${png}`, // not the one the record names
+    `/video/${SLUG}/${STILL}`, // another tool's
+    `/video/${WEB}/preview.gif`,
+    `/video/${WEB}/%2e%2e%2f${STILL}`,
+  ]) assert.equal((await get(path)).status, 404, path);
+  assert.deepEqual(calls, [], 'nothing outside the allowlist reaches the bucket');
+  // A preview the route cannot serve as an image (a folder in its name, a short clip) is never on the allowlist.
+  for (const odd of ['shots/preview.jpg', 'preview.mp4', 'preview.gif']) {
+    const res = await site(bucket({ [`${WEB}/${odd}`]: BYTES }).r2, previewed(odd))(`/video/${WEB}/${odd}`);
+    assert.equal(res.status, 404, odd);
+  }
+  // Without the binding, a preview is 404 like a clip, and the page still renders.
+  assert.equal((await site(undefined, previewed())(`/video/${WEB}/${STILL}`)).status, 404);
+});
+
+test('a tool with no clip shows its preview still first, with a caption that says what it is; a clip keeps its player', async () => {
+  const html = await (await site(undefined, previewed(STILL, true))(`/tool/${WEB}`, { headers: { accept: 'text/html' } })).text();
+  assert.ok(html.includes(`<figure class="showcase showcase-still"><img src="/video/${WEB}/${STILL}" alt="Fixture Web Sketch&#39;s screen, as pickfit&#39;s verification run saw it" decoding="async" aria-describedby="showcase-cap">`));
+  assert.ok(html.includes(`<figcaption id="showcase-cap">A still from pickfit's verification run on 2 Nov 2026: a look at the screen, not a tutorial</figcaption>`));
+  assert.ok(!html.includes('<video'), 'a still, not a player');
+  assert.ok(!/<img[^>]*\sstyle=/.test(html), 'no inline style (strict CSP)');
+  // The still leads the main column, above how to use it, as a clip without chapters does.
+  const at = html.indexOf('<figure class="showcase showcase-still">');
+  assert.ok(at > html.indexOf('<div class="wrap layout tool-layout">') && at < html.indexOf('<div class="tool-more">'));
+  // The clip's tool keeps its clip exactly as before; its preview is not shown in place of or beside it.
+  const clip = await (await site(undefined, previewed(STILL, true))(`/tool/${SLUG}`, { headers: { accept: 'text/html' } })).text();
+  assert.match(clip, new RegExp(`<figure class="showcase"><div class="player"><video controls preload="metadata" playsinline poster="/video/${SLUG}/${CLIP.replace('.mp4', '.jpg')}"`));
+  assert.ok(!clip.includes('<figure class="showcase showcase-still">') && !clip.includes('preview-clip.png'));
+  // No preview, no clip: nothing at the top, as before.
+  const plain = await (await site(undefined)(`/tool/${WEB}`, { headers: { accept: 'text/html' } })).text();
+  assert.ok(!plain.includes('<figure class="showcase'));
+});
+
 /** The index with chapters on the clip: an opening card, the feature, a closing card (as the video step writes them). */
 function chaptered(): unknown {
   const data = index() as any;

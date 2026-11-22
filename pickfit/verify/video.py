@@ -60,7 +60,8 @@ from pydantic import BaseModel, Field
 from pickfit.env import REPO_ROOT, get_env
 from pickfit.ledger import taipei_now
 from pickfit.meta import PROD_MODEL, call_meta, resolve_model
-from pickfit.schema import RunVideo, SoftwareRecord, VerificationRun, VideoRaw, meta_strict_schema
+from pickfit.schema import (PreviewMedia, RunVideo, SoftwareRecord, VerificationRun, VideoRaw, is_passed,
+                            meta_strict_schema)
 from pickfit.verify import record as recording
 from pickfit.verify.gui_operate import fill
 
@@ -2568,15 +2569,91 @@ def upload(clip: ClipResult, video: RunVideo, folder: Path, *, passed_only: bool
         if name and (folder / name).is_file():
             files.append((name, ref.sha256 if ref is not None else recording.sha256_file(folder / name),
                           "application/json"))
-    sent = []
-    for name, digest, kind in files:
-        key = f"{BUCKET}/{clip.slug}/{name}"
-        wrangler(["r2", "object", "put", key, "--file", str(folder / name), "--content-type", kind, "--remote"])
-        back = wrangler(["r2", "object", "get", key, "--pipe", "--remote"])
-        if hashlib.sha256(back).hexdigest() != digest:
-            raise RuntimeError(f"{key} read back does not match its sha256")
-        sent.append((f"{clip.slug}/{name}", len(back)))
-    return sent
+    return [_put_checked(clip.slug, folder / name, digest, kind, wrangler) for name, digest, kind in files]
+
+
+def _put_checked(slug: str, path: Path, digest: str, kind: str, wrangler: Any) -> tuple[str, int]:
+    """One file into R2 at <slug>/<its name>, read back and matched against its sha256. Returns (key, bytes)."""
+    key = f"{BUCKET}/{slug}/{path.name}"
+    wrangler(["r2", "object", "put", key, "--file", str(path), "--content-type", kind, "--remote"])
+    back = wrangler(["r2", "object", "get", key, "--pipe", "--remote"])
+    if hashlib.sha256(back).hexdigest() != digest:
+        raise RuntimeError(f"{key} read back does not match its sha256")
+    return f"{slug}/{path.name}", len(back)
+
+
+# A run's preview (brief 15.7: tracks B and C get a picture, not a tutorial): one of its screenshots as a JPEG, made as
+# a poster is (make_poster) and put in R2 beside the clips (keys <slug>/<file>); the Worker serves it at
+# /video/<slug>/<file> only when the record's preview names it. A web visit's after.png shows the app once it was used,
+# its install.png the app as it opened; anything else the run kept comes after those.
+PREVIEW_SHOTS = ("after.png", "install.png")
+
+
+def preview_name(run_id: str) -> str:
+    """The preview's file name: the run's id in it, so a newer run's preview never takes an older one's (immutable) URL."""
+    return f"preview-{run_id}.jpg"
+
+
+def preview_source(run: VerificationRun, root: Path = REPO_ROOT) -> Path | None:
+    """The screenshot a run's preview is made from (PREVIEW_SHOTS first, then the run's other screenshots in order),
+    when it is still on disk; None when the run kept none."""
+    shots = [root / p for p in run.evidence.screenshot_paths]
+    ranked = sorted(shots, key=lambda p: PREVIEW_SHOTS.index(p.name) if p.name in PREVIEW_SHOTS else len(PREVIEW_SHOTS))
+    return next((p for p in ranked if p.is_file()), None)
+
+
+def prepare_preview(run: VerificationRun, folder: Path, *, root: Path = REPO_ROOT, poster: Any = make_poster) -> tuple[Path, PreviewMedia]:
+    """A run's preview image in `folder` (preview_name) from its screenshot, and the record's preview field for it.
+    ValueError when the run has no screenshot on disk."""
+    shot = preview_source(run, root)
+    if shot is None:
+        raise ValueError(f"run {run.id} has no screenshot on disk")
+    folder.mkdir(parents=True, exist_ok=True)
+    dest = folder / preview_name(run.id)
+    poster(shot, 0.0, dest)
+    if not dest.is_file():
+        raise ValueError(f"no preview was made from {shot}")
+    return dest, PreviewMedia(image=dest.name, captured_at=run.checked_at, run_id=run.id)
+
+
+def upload_preview(slug: str, image: Path, *, wrangler: Any = run_wrangler) -> tuple[str, int]:
+    """Put a preview image in R2 (BUCKET, key <slug>/<file>), read back against its sha256. Returns (key, bytes)."""
+    return _put_checked(slug, image, recording.sha256_file(image), "image/jpeg", wrangler)
+
+
+def write_preview(slug: str, run_id: str | None = None, data_dir: Path = DATA_DIR, *, folder: Path | None = None,
+                  root: Path = REPO_ROOT, upload_to_r2: bool = False, poster: Any = make_poster,
+                  wrangler: Any = run_wrangler) -> str:
+    """Put a run's preview on data/software/<slug>.json (the newest passed run with a screenshot on disk, unless
+    run_id names one); the record is validated as a whole. With upload_to_r2 the image goes to R2 first and the
+    record is written only once it reads back matching."""
+    path = data_dir / f"{slug}.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    record = SoftwareRecord.model_validate(data)
+    runs = [r for r in record.verification.runs if run_id is None or r.id == run_id]
+    if run_id is None:
+        runs = sorted((r for r in runs if is_passed(r.level)), key=lambda r: r.checked_at, reverse=True)
+    run = next((r for r in runs if preview_source(r, root) is not None), None)
+    if run is None:
+        return f"not written: no {'run ' + run_id if run_id else 'passed run'} of {slug} has a screenshot on disk"
+    try:
+        image, preview = prepare_preview(run, folder or videos_dir() / slug, root=root, poster=poster)
+    except (RuntimeError, ValueError) as exc:
+        return f"not written: {exc}"
+    data["preview"] = preview.model_dump(mode="json")
+    data["updated_at"] = taipei_now().isoformat()
+    updated = SoftwareRecord.model_validate(data)
+    sent = ""
+    if upload_to_r2:
+        try:
+            key, size = upload_preview(slug, image, wrangler=wrangler)
+        except (RuntimeError, ValueError, subprocess.TimeoutExpired) as exc:
+            return f"not written: upload failed: {exc}"
+        sent = f"; uploaded {key} ({size} bytes)"
+    tmp = path.with_suffix(".json.tmp")
+    tmp.write_text(json.dumps(updated.model_dump(mode="json"), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    tmp.replace(path)
+    return f"written to {path.relative_to(REPO_ROOT) if path.is_relative_to(REPO_ROOT) else path}{sent}"
 
 
 def write_back(clip: ClipResult, data_dir: Path = DATA_DIR, *, passed_only: bool = False,
@@ -2675,6 +2752,12 @@ def main(argv: list[str] | None = None) -> int:
     chap.add_argument("clip_json", type=Path)
     chap.add_argument("--passed-only", action="store_true")
     chap.add_argument("--data-dir", type=Path, default=DATA_DIR)
+    prev = sub.add_parser("preview", help="put a run's preview (one of its screenshots, as a JPEG) on the record "
+                                          "(brief 15.7: no recording, no model)")
+    prev.add_argument("slug")
+    prev.add_argument("--run", default=None, help="the run id (default: the newest passed run with a screenshot)")
+    prev.add_argument("--data-dir", type=Path, default=DATA_DIR)
+    prev.add_argument("--upload", action="store_true", help="put the image in R2 first (wrangler's login, worker/)")
     up = sub.add_parser("upload", help="put a written clip, its raw recordings, poster, edit list and action log in R2")
     up.add_argument("clip_json", type=Path)
     up.add_argument("--passed-only", action="store_true")
@@ -2702,6 +2785,10 @@ def main(argv: list[str] | None = None) -> int:
     if args.cmd == "write-back":
         note = write_back(load_clip(args.clip_json), args.data_dir, passed_only=args.passed_only,
                           upload_to_r2=args.upload)
+        print(note)
+        return 0 if note.startswith("written") else 1
+    if args.cmd == "preview":
+        note = write_preview(args.slug, args.run, args.data_dir, upload_to_r2=args.upload)
         print(note)
         return 0 if note.startswith("written") else 1
     if args.cmd == "chapters":

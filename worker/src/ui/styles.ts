@@ -1042,6 +1042,9 @@ a.check-mark:hover .check-count,button.check-mark:hover .check-count{text-decora
 /* With tools pinned, the compare tray covers the window's foot: the clip gives up the tray's height too, so its bar stays in view. */
 body.has-tray .showcase video{max-height:max(400px,calc(100svh - 356px - var(--tray-h)))}
 .showcase figcaption{margin-top:8px;font-size:var(--t-small);color:var(--ink-3)}
+/* A preview still (no clip, brief 15.7): the screen as it was, held to the clip's first-view height, with a hairline
+   so a white page does not run into the page's own background. */
+.showcase-still img{display:block;width:auto;max-width:100%;height:auto;max-height:max(400px,calc(100svh - 356px));object-fit:contain;border:1px solid var(--rule)}
 /* Media, not a card: the player keeps its dark frame with straight edges. */
 .player{width:fit-content;max-width:100%;border-radius:0;overflow:hidden;background:#000}
 .player:fullscreen{display:flex;flex-direction:column;justify-content:center;width:100%;max-width:none;border-radius:0}

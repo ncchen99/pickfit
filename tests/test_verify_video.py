@@ -798,3 +798,81 @@ def test_the_recorded_box_is_given_what_the_runs_boxes_were_given(tmp_path: Path
     with pytest.raises(SystemExit, match="did not get the packages .* \\(libxcb1\\)"):
         video.record_run("tool", editor=video.EDITORS["rules"], log=lambda s: None)
     assert len(replayed) == 1 and made[1][1].closed
+
+
+# P2-06 (brief 15.7): a preview is one screenshot made a JPEG the way a poster is, put in R2 beside the clips.
+WEB_SKETCH = REPO / "worker" / "test" / "fixtures" / "software" / "fixture-web-sketch.json"
+
+
+def _fake_poster(calls: list[tuple[Path, float, Path]]) -> Any:
+    def poster(src: Path, at: float, dest: Path) -> None:
+        calls.append((src, at, dest))
+        dest.write_bytes(b"jpeg of " + src.read_bytes())
+    return poster
+
+
+def _sketch_with_shots(tmp_path: Path, shots: list[str], on_disk: list[str]) -> tuple[Path, Path]:
+    """The web fixture's record in tmp_path/data with its run's screenshot_paths set; the named ones on disk under
+    tmp_path/root (the repo root the paths are relative to)."""
+    data = tmp_path / "data"
+    data.mkdir(parents=True)
+    record = json.loads(WEB_SKETCH.read_text(encoding="utf-8"))
+    record["verification"]["runs"][0]["evidence"]["screenshot_paths"] = [f"runs/web-1/{s}" for s in shots]
+    (data / "fixture-web-sketch.json").write_text(json.dumps(record), encoding="utf-8")
+    root = tmp_path / "root"
+    (root / "runs" / "web-1").mkdir(parents=True)
+    for name in on_disk:
+        (root / "runs" / "web-1" / name).write_bytes(name.encode())
+    return data, root
+
+
+def test_a_preview_is_made_from_the_runs_screenshot_after_use_first(tmp_path: Path):
+    data, root = _sketch_with_shots(tmp_path, ["install.png", "offline.png", "after.png"],
+                                    ["install.png", "offline.png", "after.png"])
+    run = SoftwareRecord.model_validate_json((data / "fixture-web-sketch.json").read_text()).verification.runs[0]
+    calls: list[tuple[Path, float, Path]] = []
+    image, preview = video.prepare_preview(run, tmp_path / "out", root=root, poster=_fake_poster(calls))
+    # after.png (the app once used) over install.png; the poster's own maker, at the image's only frame.
+    assert calls == [(root / "runs/web-1/after.png", 0.0, tmp_path / "out" / f"preview-{run.id}.jpg")]
+    assert image.read_bytes() == b"jpeg of after.png"
+    assert preview.model_dump(mode="json") == {"image": f"preview-{run.id}.jpg",
+                                               "captured_at": run.checked_at.isoformat().replace("+00:00", "Z"),
+                                               "run_id": run.id}
+    # Without after.png on disk, install.png; with no screenshot on disk at all, no preview.
+    (root / "runs/web-1/after.png").unlink()
+    assert video.preview_source(run, root) == root / "runs/web-1/install.png"
+    (root / "runs/web-1/install.png").unlink()
+    assert video.preview_source(run, root) == root / "runs/web-1/offline.png"
+    (root / "runs/web-1/offline.png").unlink()
+    with pytest.raises(ValueError, match="no screenshot on disk"):
+        video.prepare_preview(run, tmp_path / "out", root=root, poster=_fake_poster(calls))
+
+
+def test_a_preview_goes_up_to_r2_and_is_read_back_before_the_record_names_it(tmp_path: Path):
+    data, root = _sketch_with_shots(tmp_path, ["install.png"], ["install.png"])
+    r2 = _FakeR2()
+    note = video.write_preview("fixture-web-sketch", data_dir=data, folder=tmp_path / "out", root=root,
+                               upload_to_r2=True, poster=_fake_poster([]), wrangler=r2)
+    name = "preview-run-20261102-web-1.jpg"
+    assert note.startswith("written") and f"fixture-web-sketch/{name}" in note
+    assert r2.objects == {f"{video.BUCKET}/fixture-web-sketch/{name}": b"jpeg of install.png"}
+    put = r2.calls[0]
+    assert put[2] == "put" and put[put.index("--content-type") + 1] == "image/jpeg"
+    saved = json.loads((data / "fixture-web-sketch.json").read_text(encoding="utf-8"))
+    assert saved["preview"]["image"] == name and saved["preview"]["run_id"] == "run-20261102-web-1"
+    SoftwareRecord.model_validate(saved)
+
+
+def test_a_preview_that_does_not_read_back_leaves_the_record_alone(tmp_path: Path):
+    data, root = _sketch_with_shots(tmp_path, ["after.png"], ["after.png"])
+    before = (data / "fixture-web-sketch.json").read_text(encoding="utf-8")
+    note = video.write_preview("fixture-web-sketch", data_dir=data, folder=tmp_path / "out", root=root,
+                               upload_to_r2=True, poster=_fake_poster([]), wrangler=_FakeR2(corrupt=".jpg"))
+    assert note.startswith("not written: upload failed") and "sha256" in note
+    assert (data / "fixture-web-sketch.json").read_text(encoding="utf-8") == before
+    # A run with no screenshot on disk writes nothing either, and never calls R2.
+    data2, root2 = _sketch_with_shots(tmp_path / "b", ["after.png"], [])
+    r2 = _FakeR2()
+    note = video.write_preview("fixture-web-sketch", data_dir=data2, folder=tmp_path / "out", root=root2,
+                               upload_to_r2=True, poster=_fake_poster([]), wrangler=r2)
+    assert note.startswith("not written: no passed run") and r2.calls == []
