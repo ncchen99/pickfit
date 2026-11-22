@@ -4,7 +4,7 @@
  */
 import type { Arch, Category, Entry, GuiEvidence, InstallGuide, NamedCategory, OS, WebCheck } from '../catalog.ts';
 import { operatedText } from '../evidence.ts';
-import { featuresOut, type FeaturesOut } from '../features.ts';
+import { featuresOut, shownWorking, type FeaturesOut } from '../features.ts';
 import { L, isZh } from '../i18n.ts';
 
 export const OS_NAME: Record<OS, string> = { macos: 'macOS', linux: 'Linux', windows: 'Windows' };
@@ -78,7 +78,8 @@ export function workedFeatures(
   features?: FeaturesOut | null,
 ): { used: boolean; names: string[] } {
   const passed = ops.filter((o) => o.passed);
-  const counted = features?.recorded ? new Set(features.checked.map((c) => c.feature)) : null;
+  // Not the ones checked only against a stand-in: this sentence says a feature worked.
+  const counted = features?.recorded ? new Set(shownWorking(features).map((c) => c.feature)) : null;
   const names = passed
     .filter((o) => !counted || (o.feature !== null && counted.has(o.feature)))
     .map((o) => (o.feature ? (guideTitle(entry, o.feature) ?? o.feature) : L('a task', '一項任務')));

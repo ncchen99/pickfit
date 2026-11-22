@@ -124,6 +124,15 @@ export function capabilityTexts(entry: Entry): string[] {
   return (entry.capabilities ?? []).flatMap((c) => [c.label, ...(c.items ?? [])]);
 }
 
+/**
+ * What a feature's check ran against, when that was something outside the tool (docs/proposals/privileges.md P1):
+ * real = the real service; compatible = a compatible endpoint with a real model behind it; stand_in = a stand-in or
+ * made-up data (a mail sink, an S3 emulator, a tiny model, an HTTP mock), which shows the tool connects and nothing
+ * about whether it works with the real service. A stand_in feature is never shown as plainly verified.
+ */
+export const FIDELITIES = ['real', 'compatible', 'stand_in'] as const;
+export type Fidelity = (typeof FIDELITIES)[number];
+
 /** One advertised feature as the run behind a guide covered it (index.py _feature_coverage). */
 export interface FeatureCoverage {
   feature: string;
@@ -133,6 +142,8 @@ export interface FeatureCoverage {
   note: string | null;
   /** The run's smoke tests behind it; a feature counts as checked only when one passed. */
   checks: { command: string; passed: boolean }[];
+  /** Absent: nothing outside the tool was used, or the run is from before this was recorded. */
+  fidelity?: Fidelity | null;
 }
 
 /** What a fresh sandbox saw when pickfit's MCP probe started the server (verification.runs[].mcp). */
@@ -461,6 +472,8 @@ export interface CoverageSummary {
         of?: number;
         /** function only: feature, or check when there is no feature list. */
         unit?: string;
+        /** function only: how many of the features counted were checked only against a stand-in; absent when none. */
+        stand_in?: number;
         /** The dimension that had to pass first and did not. */
         blocked_by?: CoverageDimension;
         /** Categories of what pickfit could not do (coverage.py CATEGORIES, security.py GAP_CATEGORIES), at most three. */

@@ -58,11 +58,13 @@ const MARK = {
   unverified: { cls: 'mark-open', icon: 'circle-dashed', word: () => L('Not yet', '尚未') },
 } as const;
 
-function count(dim: CoverageDimension, done: number, of: number, unit?: string): string {
+/** standIn: of the features counted, how many were checked only against a stand-in (function only). */
+function count(dim: CoverageDimension, done: number, of: number, unit?: string, standIn = 0): string {
   if (dim === 'function' && unit === 'check') {
     return done ? L('A check beyond --version passed', '超過 --version 的檢查通過了') : L('No check beyond --version passed yet', '還沒有超過 --version 的檢查通過');
   }
-  return COUNT[dim]?.(done, of) ?? '';
+  const words = COUNT[dim]?.(done, of) ?? '';
+  return words && dim === 'function' && standIn > 0 ? words + L(`, ${standIn} of them against a stand-in`, `，其中 ${standIn} 項是用替身驗的`) : words;
 }
 
 export function coverageSection(coverage: CoverageSummary | null | undefined): string {
@@ -72,7 +74,7 @@ export function coverageSection(coverage: CoverageSummary | null | undefined): s
   const rows = applies.map((d) => {
     const dim = coverage.dimensions[d]!;
     const mark = MARK[dim.status];
-    const how = dim.done !== undefined && dim.of !== undefined ? count(d, dim.done, dim.of, dim.unit) : '';
+    const how = dim.done !== undefined && dim.of !== undefined ? count(d, dim.done, dim.of, dim.unit, dim.stand_in) : '';
     const waits = dim.blocked_by ? L(`Waits for ${LABEL[dim.blocked_by]().toLowerCase()} to pass`, `要先通過「${LABEL[dim.blocked_by]()}」`) : '';
     const why = (dim.gaps ?? []).map((g) => GAP[g]?.() ?? g);
     const gaps = why.length ? L(`Not covered: ${why.join('; ')}`, `沒涵蓋到：${why.join('；')}`) : '';

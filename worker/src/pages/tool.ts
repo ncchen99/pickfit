@@ -7,7 +7,7 @@
  * which names the model that wrote them.
  */
 import { bestGuide, isVerified, isWebApp, OSES, securityOf, verifiedOn, webCheck, type Catalog, type Entry, type InstallGuide, type OS, type RunVideo, type GapCategory, type SecurityCheck, type SecurityFinding } from '../catalog.ts';
-import { featuresOut, type FeaturesOut, type NotCheckedReason } from '../features.ts';
+import { featuresOut, shownWorking, standInOnly, type FeaturesOut, type NotCheckedReason } from '../features.ts';
 import { advisoriesOf } from '../security.ts';
 import { freshness } from '../freshness.ts';
 import { ERROR_EXCERPT_MAX } from '../outcome.ts';
@@ -592,7 +592,16 @@ interface Stage {
   tip: string;
 }
 
-const featuresWork = (checked: number, total: number) => L(`${checked} of ${total} features work`, `${total} 項功能中 ${checked} 項可用`);
+/** "2 of 4 features work": only the ones seen working. The ones checked against a stand-in are said apart, never counted as working. */
+function featuresWork(f: FeaturesOut): string {
+  const total = f.checked.length + f.not_checked.length;
+  const works = shownWorking(f).length;
+  const standIn = standInOnly(f).length;
+  return (
+    L(`${works} of ${total} features work`, `${total} 項功能中 ${works} 項可用`) +
+    (standIn ? L(`, ${standIn} more checked against a stand-in`, `，另有 ${standIn} 項是用替身驗的`) : '')
+  );
+}
 
 /** A run's progress in four stages a reader can scan: installed, started, used, offline. */
 function stagesFor(entry: Entry, g: InstallGuide): Stage[] {
@@ -614,7 +623,7 @@ function stagesFor(entry: Entry, g: InstallGuide): Stage[] {
       : { label: L('Starts', '可以啟動'), state: 'done', tip: L('It ran on a clean machine', '在乾淨的機器上能執行') };
   const used: Stage =
     f.recorded && total
-      ? { label: featuresWork(f.checked.length, total), state: f.checked.length ? 'done' : 'open', tip: L('Features pickfit used and checked', 'pickfit 實際用過並檢查的功能') }
+      ? { label: featuresWork(f), state: shownWorking(f).length ? 'done' : 'open', tip: L('Features pickfit used and checked', 'pickfit 實際用過並檢查的功能') }
       : deep
         ? {
             label: g.mcp
@@ -659,7 +668,7 @@ function progress(entry: Entry): string {
     const stages: Stage[] = [
       { label: L('Opens in a browser', '可在瀏覽器開啟'), state: 'done', tip: L('Its main screen loaded in pickfit’s browser', '主畫面在 pickfit 的瀏覽器中載入') },
       total
-        ? { label: featuresWork(f.checked.length, total), state: f.checked.length ? 'done' : 'open', tip: L('Features pickfit used and checked', 'pickfit 實際用過並檢查的功能') }
+        ? { label: featuresWork(f), state: shownWorking(f).length ? 'done' : 'open', tip: L('Features pickfit used and checked', 'pickfit 實際用過並檢查的功能') }
         : check.level === 'function'
           ? { label: L('Used in a browser', '已在瀏覽器中使用'), state: 'done', tip: webLevelLabel(check) }
           : { label: L('Not used yet', '還沒實際使用'), state: 'open', tip: webLevelLabel(check) },
@@ -770,19 +779,33 @@ function featureClip(entry: Entry, feature: string): string {
 }
 
 
+/** Under a feature whose check ran against a stand-in (a mail sink, a storage emulator, a tiny model, an HTTP mock). */
+const STAND_IN_NOTE = () =>
+  L('Checked against a stand-in: this shows it connects, not that it works with the real service.', '用替身驗的：只確認接得上，沒有對真的服務驗過。');
+/** Under a ticked feature whose check went through a compatible endpoint with a real model behind it. */
+const COMPATIBLE_NOTE = () => L('Checked through a compatible endpoint, not the service it names.', '用相容的端點驗的，不是它指定的那個服務。');
+
 function featureList(entry: Entry, f: FeaturesOut): string {
   const guide = entry.usage_guide ?? null;
   const titles = new Map((guide?.features ?? []).map((g) => [g.feature, g]));
   const title = (feature: string) => esc(titles.get(feature)?.title ?? feature.charAt(0).toUpperCase() + feature.slice(1));
   const items = [
-    ...f.checked.map(({ feature }) => {
+    ...f.checked.map(({ feature, fidelity }) => {
       const steps = titles.get(feature)?.steps ?? [];
       const clip = featureClip(entry, feature);
       const how =
         steps.length || clip
           ? `<details class="how-to"><summary>${L('How to use it', '怎麼使用')}</summary>${steps.length ? `<ol>${steps.map((s) => `<li>${stepText(s)}</li>`).join('')}</ol>` : ''}${clip}</details>`
           : '';
-      return `<li class="feat-ok"><div><span class="feat-title">${title(feature)}</span>${how}</div><span class="feat-state">${icon('check')}${L('Tested', '已測試')}</span></li>`;
+      // Checked against a stand-in: it connected, which is not the feature working, so no tick; a quiet plug and one line.
+      if (fidelity === 'stand_in') {
+        return (
+          `<li class="feat-standin"><div><span class="feat-title">${title(feature)}</span><span class="feat-note">${STAND_IN_NOTE()}</span>${how}</div>` +
+          `<span class="feat-state">${icon('plug')}${L('Stand-in only', '只用替身驗')}</span></li>`
+        );
+      }
+      const note = fidelity === 'compatible' ? `<span class="feat-note">${COMPATIBLE_NOTE()}</span>` : '';
+      return `<li class="feat-ok"><div><span class="feat-title">${title(feature)}</span>${note}${how}</div><span class="feat-state">${icon('check')}${L('Tested', '已測試')}</span></li>`;
     }),
     // The feature is the row; whether pickfit tested it is the mark on the right, and why not is only its tooltip.
     ...f.not_checked.map((n) => {
